@@ -2,7 +2,7 @@ import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
-import type { VitestWorkspace } from '../workspace'
+import type { WorkspaceProject } from '../workspace'
 import type { BrowserProvider } from '../../types/browser'
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
@@ -14,14 +14,14 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     return defer
   }
 
-  const runTests = async (workspace: VitestWorkspace, files: string[]) => {
-    const provider = workspace.browserProvider!
+  const runTests = async (project: WorkspaceProject, files: string[]) => {
+    const provider = project.browserProvider!
     providers.add(provider)
 
-    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${workspace.browser.config.server.port}`
-    const paths = files.map(file => relative(workspace.config.root, file))
+    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
+    const paths = files.map(file => relative(project.config.root, file))
 
-    const isolate = workspace.config.isolate
+    const isolate = project.config.isolate
     if (isolate) {
       for (const path of paths) {
         const url = new URL('/', origin)
@@ -40,16 +40,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  const runWorkspaceTests = async (specs: [VitestWorkspace, string][]) => {
-    const groupedFiles = new Map<VitestWorkspace, string[]>()
-    for (const [workspace, file] of specs) {
-      const files = groupedFiles.get(workspace) || []
+  const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
+    const groupedFiles = new Map<WorkspaceProject, string[]>()
+    for (const [project, file] of specs) {
+      const files = groupedFiles.get(project) || []
       files.push(file)
-      groupedFiles.set(workspace, files)
+      groupedFiles.set(project, files)
     }
 
-    for (const [workspace, files] of groupedFiles.entries())
-      await runTests(workspace, files)
+    for (const [project, files] of groupedFiles.entries())
+      await runTests(project, files)
   }
 
   return {

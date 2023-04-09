@@ -251,9 +251,9 @@ test('importing the next module imports mocked one', async () => {
 
   When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
-  import example from './example'
-  
-  vi.mock('./example')
+  import example from './example.js'
+
+  vi.mock('./example.js')
 
   test('1+1 equals 2', async () => {
     vi.mocked(example.calc).mockRestore()
@@ -271,8 +271,8 @@ test('importing the next module imports mocked one', async () => {
   Imports module, bypassing all checks if it should be mocked. Can be useful if you want to mock module partially.
 
   ```ts
-  vi.mock('./example', async () => {
-    const axios = await vi.importActual('./example')
+  vi.mock('./example.js', async () => {
+    const axios = await vi.importActual('./example.js')
 
     return { ...axios, get: vi.fn() }
   })

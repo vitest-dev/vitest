@@ -1,7 +1,7 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
-import type { VitestWorkspace } from './workspace'
+import type { WorkspaceProject } from './workspace'
 
 interface CollectingPromise {
   promise: Promise<void>
@@ -86,12 +86,12 @@ export class StateManager {
     })
   }
 
-  clearFiles(workspace: VitestWorkspace, paths: string[] = []) {
+  clearFiles(project: WorkspaceProject, paths: string[] = []) {
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       if (!files)
         return
-      const filtered = files.filter(file => file.projectName !== workspace.config.name)
+      const filtered = files.filter(file => file.projectName !== project.config.name)
       if (!filtered.length)
         this.filesMap.delete(path)
       else

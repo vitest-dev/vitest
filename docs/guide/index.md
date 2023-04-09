@@ -61,6 +61,40 @@ export default defineConfig({
 
 See the list of config options in the [Config Reference](../config/)
 
+## Workspaces Support
+
+Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define you workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+
+```ts
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  // you can use a list of glob patterns to define your workspaces
+  // Vitest expects a list of config files
+  // or directories where there is a config file
+  'packages/*',
+  'tests/*/vitest.config.{e2e,unit}.ts',
+  // you can even run the same tests,
+  // but with different configs in the same "vitest" process
+  {
+    test: {
+      name: 'jsdom',
+      root: './shared_tests',
+      environment: 'jsdom',
+      setupFiles: ['./setup.jsdom.ts'],
+    },
+  },
+  {
+    test: {
+      name: 'node',
+      root: './shared_tests',
+      environment: 'node',
+      setupFiles: ['./setup.node.ts'],
+    },
+  },
+])
+```
+
 ## Command Line Interface
 
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:

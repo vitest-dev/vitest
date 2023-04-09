@@ -7,9 +7,9 @@ import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
-import type { VitestWorkspace } from './workspace'
+import type { WorkspaceProject } from './workspace'
 
-export type WorkspaceSpec = [VitestWorkspace, string]
+export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
 
 export interface ProcessPool {
@@ -32,20 +32,20 @@ export function createPool(ctx: Vitest): ProcessPool {
     browser: null,
   }
 
-  function getDefaultPoolName(workspace: VitestWorkspace) {
-    if (workspace.config.browser.enabled)
+  function getDefaultPoolName(project: WorkspaceProject) {
+    if (project.config.browser.enabled)
       return 'browser'
-    if (workspace.config.threads)
+    if (project.config.threads)
       return 'threads'
     return 'child_process'
   }
 
-  function getPoolName([workspace, file]: WorkspaceSpec) {
-    for (const [glob, pool] of workspace.config.poolMatchGlobs || []) {
-      if (mm.isMatch(file, glob, { cwd: workspace.config.root }))
+  function getPoolName([project, file]: WorkspaceSpec) {
+    for (const [glob, pool] of project.config.poolMatchGlobs || []) {
+      if (mm.isMatch(file, glob, { cwd: project.config.root }))
         return pool
     }
-    return getDefaultPoolName(workspace)
+    return getDefaultPoolName(project)
   }
 
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {

@@ -12,7 +12,7 @@ export const CONFIG_NAMES = [
 ]
 
 const WORKSPACES_NAMES = [
-  'vitest.workspaces',
+  'vitest.workspace',
   'vitest.projects',
 ]
 

@@ -109,13 +109,13 @@ export class Logger {
     if (this.ctx.config.sequence.sequencer === RandomSequencer)
       this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
 
-    this.ctx.workspaces.forEach((workspace) => {
-      if (!workspace.browser)
+    this.ctx.projects.forEach((project) => {
+      if (!project.browser)
         return
-      const name = workspace.getName()
-      const output = workspace.isCore() ? '' : ` [${name}]`
+      const name = project.getName()
+      const output = project.isCore() ? '' : ` [${name}]`
 
-      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${workspace.config.browser.api?.host || 'localhost'}:${c.bold(`${workspace.browser.config.server.port}`)}`)))
+      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${project.config.browser.api?.host || 'localhost'}:${c.bold(`${project.browser.config.server.port}`)}`)))
     })
 
     if (this.ctx.config.ui)

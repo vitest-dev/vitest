@@ -685,7 +685,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   runner?: string
 }
 
-export type WorkspaceConfig = Omit<
+export type ProjectConfig = Omit<
   UserConfig,
   | 'sequencer'
   | 'shard'
@@ -712,7 +712,6 @@ export type WorkspaceConfig = Omit<
   | 'slowTestThreshold'
   | 'inspect'
   | 'inspectBrk'
-  | 'workspaces'
   | 'deps'
   | 'coverage'
 > & {

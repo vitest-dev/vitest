@@ -19,8 +19,8 @@ interface InitializeOptions {
   runner?: ViteNodeRunner
 }
 
-export async function initializeWorkspace(workspacePath: string | number, ctx: Vitest, options: UserWorkspaceConfig = {}) {
-  const workspace = new VitestWorkspace(workspacePath, ctx)
+export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: UserWorkspaceConfig = {}) {
+  const project = new WorkspaceProject(workspacePath, ctx)
 
   const configFile = options.extends
     ? resolve(ctx.config.root, options.extends)
@@ -39,22 +39,22 @@ export async function initializeWorkspace(workspacePath: string | number, ctx: V
     mode: options.mode || ctx.config.mode || process.env.NODE_ENV,
     plugins: [
       ...options.plugins || [],
-      WorkspaceVitestPlugin(workspace, { ...options, root, workspacePath }),
+      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
     ],
   }
 
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || workspace.config.deps?.experimentalOptimizer?.enabled)
+  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
 
-  return workspace
+  return project
 }
 
-export class VitestWorkspace {
+export class WorkspaceProject {
   configOverride: Partial<ResolvedConfig> | undefined
 
   config!: ResolvedConfig
@@ -77,7 +77,7 @@ export class VitestWorkspace {
   }
 
   isCore() {
-    return this.ctx.getCoreWorkspace() === this
+    return this.ctx.getCoreWorkspaceProject() === this
   }
 
   get reporters() {

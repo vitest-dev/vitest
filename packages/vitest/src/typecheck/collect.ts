@@ -5,7 +5,7 @@ import type { RawSourceMap } from 'vite-node'
 
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '@vitest/runner/utils'
 import type { File, Suite, Test } from '../types'
-import type { VitestWorkspace } from '../node/workspace'
+import type { WorkspaceProject } from '../node/workspace'
 
 interface ParsedFile extends File {
   start: number
@@ -39,7 +39,7 @@ export interface FileInformation {
   definitions: LocalCallDefinition[]
 }
 
-export async function collectTests(ctx: VitestWorkspace, filepath: string): Promise<null | FileInformation> {
+export async function collectTests(ctx: WorkspaceProject, filepath: string): Promise<null | FileInformation> {
   const request = await ctx.vitenode.transformRequest(filepath)
   if (!request)
     return null

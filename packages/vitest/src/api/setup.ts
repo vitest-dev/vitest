@@ -10,11 +10,11 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive } from '../utils'
-import type { VitestWorkspace } from '../node/workspace'
+import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(vitestOrWorkspace: Vitest | VitestWorkspace, server?: ViteDevServer) {
+export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: ViteDevServer) {
   const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
 
   const wss = new WebSocketServer({ noServer: true })

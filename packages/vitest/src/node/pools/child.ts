@@ -10,14 +10,14 @@ import type { PoolProcessOptions, ProcessPool, WorkspaceSpec } from '../pool'
 import { distDir } from '../../paths'
 import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import type { VitestWorkspace } from '../workspace'
+import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
-function setupChildProcessChannel(workspace: VitestWorkspace, fork: ChildProcess): void {
+function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess): void {
   createBirpc<{}, RuntimeRPC>(
-    createMethodsRPC(workspace),
+    createMethodsRPC(project),
     {
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
@@ -37,7 +37,7 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-function getTestConfig(ctx: VitestWorkspace): ResolvedConfig {
+function getTestConfig(ctx: WorkspaceProject): ResolvedConfig {
   const config = ctx.getSerializableConfig()
   // v8 serialize does not support regex
   return <ResolvedConfig>{
@@ -54,9 +54,9 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
   const Sequencer = ctx.config.sequence.sequencer
   const sequencer = new Sequencer(ctx)
 
-  function runFiles(workspace: VitestWorkspace, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
-    const config = getTestConfig(workspace)
-    ctx.state.clearFiles(workspace, files)
+  function runFiles(project: WorkspaceProject, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    const config = getTestConfig(project)
+    ctx.state.clearFiles(project, files)
 
     const data: ChildContext = {
       command: 'start',
@@ -71,7 +71,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       env,
     })
     children.add(child)
-    setupChildProcessChannel(workspace, child)
+    setupChildProcessChannel(project, child)
 
     return new Promise<void>((resolve, reject) => {
       child.send(data, (err) => {
@@ -109,14 +109,14 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       if (!files?.length)
         continue
 
-      const filesByOptions = groupBy(files, ({ workspace, environment }) => workspace.getName() + JSON.stringify(environment.options))
+      const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
 
       for (const option in filesByOptions) {
         const files = filesByOptions[option]
 
         if (files?.length) {
           const filenames = files.map(f => f.file)
-          await runFiles(files[0].workspace, filenames, files[0].environment, invalidates)
+          await runFiles(files[0].project, filenames, files[0].environment, invalidates)
         }
       }
     }

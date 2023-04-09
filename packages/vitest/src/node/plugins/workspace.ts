@@ -3,7 +3,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
-import type { VitestWorkspace } from '../workspace'
+import type { WorkspaceProject } from '../workspace'
 import type { UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -15,10 +15,10 @@ interface WorkspaceOptions extends UserWorkspaceConfig {
   workspacePath: string | number
 }
 
-export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: WorkspaceOptions) {
+export function WorkspaceVitestPlugin(project: WorkspaceProject, options: WorkspaceOptions) {
   return <VitePlugin[]>[
     {
-      name: 'vitest:workspace',
+      name: 'vitest:project',
       enforce: 'pre',
       options() {
         this.meta.watchMode = false
@@ -109,7 +109,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
           config.css.modules ??= {}
           if (config.css.modules) {
             config.css.modules.generateScopedName = (name: string, filename: string) => {
-              const root = workspace.config.root
+              const root = project.config.root
               return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
             }
           }
@@ -124,10 +124,10 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
             configDefaults,
             server.config.test || {},
           )
-          await workspace.setServer(options, server)
+          await project.setServer(options, server)
         }
         catch (err) {
-          await workspace.ctx.logger.printError(err, true)
+          await project.ctx.logger.printError(err, true)
           process.exit(1)
         }
 
@@ -135,8 +135,8 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
       },
     },
     EnvReplacerPlugin(),
-    ...CSSEnablerPlugin(workspace),
-    CoverageTransform(workspace.ctx),
-    GlobalSetupPlugin(workspace, workspace.ctx.logger),
+    ...CSSEnablerPlugin(project),
+    CoverageTransform(project.ctx),
+    GlobalSetupPlugin(project, project.ctx.logger),
   ]
 }

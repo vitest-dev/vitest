@@ -14,9 +14,9 @@ interface GlobalSetupFile {
 
 type SetupInstance = Pick<Vitest, 'runner' | 'server'>
 
-async function loadGlobalSetupFiles(workspace: SetupInstance): Promise<GlobalSetupFile[]> {
-  const server = workspace.server
-  const runner = workspace.runner
+async function loadGlobalSetupFiles(project: SetupInstance): Promise<GlobalSetupFile[]> {
+  const server = project.server
+  const runner = project.runner
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
@@ -45,17 +45,17 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
   }
 }
 
-export function GlobalSetupPlugin(workspace: SetupInstance, logger: Logger): Plugin {
+export function GlobalSetupPlugin(project: SetupInstance, logger: Logger): Plugin {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
 
     async buildStart() {
-      if (!workspace.server.config.test?.globalSetup)
+      if (!project.server.config.test?.globalSetup)
         return
 
-      globalSetupFiles = await loadGlobalSetupFiles(workspace)
+      globalSetupFiles = await loadGlobalSetupFiles(project)
 
       try {
         for (const globalSetupFile of globalSetupFiles) {

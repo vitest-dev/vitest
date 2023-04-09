@@ -47,7 +47,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      ctx.getModuleWorkspaces(stack.file).length
+      ctx.getModuleProjects(stack.file).length
       && existsSync(stack.file),
     )
 

@@ -12,7 +12,7 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
-import { CONFIG_NAMES, configFiles, workspacesFiles } from '../constants'
+import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -20,7 +20,7 @@ import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
-import { VitestWorkspace, initializeWorkspace } from './workspace'
+import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
@@ -51,10 +51,10 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private coreWorkspace!: VitestWorkspace
+  private coreWorkspace!: WorkspaceProject
 
-  public workspaces: VitestWorkspace[] = []
-  private workspacesTestFiles = new Map<string, Set<VitestWorkspace>>()
+  public projects: WorkspaceProject[] = []
+  private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -129,14 +129,14 @@ export class Vitest {
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
-    this.workspaces = await this.resolveWorkspaces(options, cliOptions)
+    this.projects = await this.resolveWorkspace(options, cliOptions)
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
   private async createCoreWorkspace(options: UserConfig) {
-    const coreWorkspace = new VitestWorkspace(this.config.root, this)
+    const coreWorkspace = new WorkspaceProject(this.config.root, this)
     await coreWorkspace.setServer(options, this.server, {
       runner: this.runner,
       server: this.vitenode,
@@ -145,39 +145,39 @@ export class Vitest {
     return coreWorkspace
   }
 
-  public getCoreWorkspace() {
+  public getCoreWorkspaceProject() {
     if (!this.coreWorkspace)
-      throw new Error('Core workspace not initialized')
+      throw new Error('Core workspace project is not initialized')
     return this.coreWorkspace
   }
 
-  private async resolveWorkspaces(options: UserConfig, cliOptions: UserConfig) {
+  private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
     const configDir = dirname(this.server.config.configFile || this.config.root)
     const rootFiles = await fs.readdir(configDir)
-    const workspacesConfigName = workspacesFiles.find((configFile) => {
+    const workspaceConfigName = workspaceFiles.find((configFile) => {
       return rootFiles.includes(configFile)
     })
 
-    if (!workspacesConfigName)
+    if (!workspaceConfigName)
       return [await this.createCoreWorkspace(options)]
 
-    const workspacesConfigPath = join(configDir, workspacesConfigName)
+    const workspacesConfigPath = join(configDir, workspaceConfigName)
 
     const workspacesModule = await this.runner.executeFile(workspacesConfigPath) as {
       default: (string | UserWorkspaceConfig)[]
     }
 
     if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
-      throw new Error(`Workspaces config file ${workspacesConfigPath} must export a default array of workspace paths`)
+      throw new Error(`Workspace config file ${workspacesConfigPath} must export a default array of project paths.`)
 
     const workspacesGlobMatches: string[] = []
-    const workspacesOptions: UserWorkspaceConfig[] = []
+    const projectsOptions: UserWorkspaceConfig[] = []
 
-    for (const workspace of workspacesModule.default) {
-      if (typeof workspace === 'string')
-        workspacesGlobMatches.push(workspace.replace('<rootDir>', this.config.root))
+    for (const project of workspacesModule.default) {
+      if (typeof project === 'string')
+        workspacesGlobMatches.push(project.replace('<rootDir>', this.config.root))
       else
-        workspacesOptions.push(workspace)
+        projectsOptions.push(project)
     }
 
     const globOptions: fg.Options = {
@@ -228,33 +228,33 @@ export class Vitest {
       return acc
     }, {} as UserConfig)
 
-    const workspaces = resolvedWorkspacesPaths.map(async (workspacePath) => {
+    const projects = resolvedWorkspacesPaths.map(async (workspacePath) => {
       // don't start a new server, but reuse existing one
       if (
         this.server.config.configFile === workspacePath
       )
         return this.createCoreWorkspace(options)
-      return initializeWorkspace(workspacePath, this, { test: cliOverrides })
+      return initializeProject(workspacePath, this, { test: cliOverrides })
     })
 
-    workspacesOptions.forEach((options, index) => {
-      workspaces.push(initializeWorkspace(index, this, mergeConfig(options, { test: cliOverrides })))
+    projectsOptions.forEach((options, index) => {
+      projects.push(initializeProject(index, this, mergeConfig(options, { test: cliOverrides })))
     })
 
-    if (!workspaces.length)
+    if (!projects.length)
       return [await this.createCoreWorkspace(options)]
 
-    const resolvedWorkspaces = await Promise.all(workspaces)
+    const resolvedProjects = await Promise.all(projects)
     const names = new Set<string>()
 
-    for (const workspace of resolvedWorkspaces) {
-      const name = workspace.getName()
+    for (const project of resolvedProjects) {
+      const name = project.getName()
       if (names.has(name))
-        throw new Error(`Workspace name "${name}" is not unique. All workspaces should have unique names.`)
+        throw new Error(`Project name "${name}" is not unique. All projects in a workspace should have unique names.`)
       names.add(name)
     }
 
-    return resolvedWorkspaces
+    return resolvedProjects
   }
 
   private async initCoverageProvider() {
@@ -269,11 +269,11 @@ export class Vitest {
   }
 
   private async initBrowserProviders() {
-    return Promise.all(this.workspaces.map(w => w.initBrowserProvider()))
+    return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
   typecheck(filters?: string[]) {
-    return Promise.all(this.workspaces.map(workspace => workspace.typecheck(filters)))
+    return Promise.all(this.projects.map(project => project.typecheck(filters)))
   }
 
   async start(filters?: string[]) {
@@ -321,8 +321,8 @@ export class Vitest {
   private async getTestDependencies(filepath: WorkspaceSpec) {
     const deps = new Set<string>()
 
-    const addImports = async ([workspace, filepath]: WorkspaceSpec) => {
-      const transformed = await workspace.vitenode.transformRequest(filepath)
+    const addImports = async ([project, filepath]: WorkspaceSpec) => {
+      const transformed = await project.vitenode.transformRequest(filepath)
       if (!transformed)
         return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
@@ -332,7 +332,7 @@ export class Vitest {
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           deps.add(fsPath)
 
-          await addImports([workspace, fsPath])
+          await addImports([project, fsPath])
         }
       }
     }
@@ -386,11 +386,11 @@ export class Vitest {
     return runningTests
   }
 
-  getWorkspacesByTestFile(file: string) {
-    const workspaces = this.workspacesTestFiles.get(file)
-    if (!workspaces)
+  getProjectsByTestFile(file: string) {
+    const projects = this.projectsTestFiles.get(file)
+    if (!projects)
       return []
-    return Array.from(workspaces).map(workspace => [workspace, file] as WorkspaceSpec)
+    return Array.from(projects).map(project => [project, file] as WorkspaceSpec)
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
@@ -428,7 +428,7 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        // can be duplicate files if different workspaces are using the same file
+        // can be duplicate files if different projects are using the same file
         const specs = Array.from(new Set(paths.map(([, p]) => p)))
         await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
         this.runningPromise = undefined
@@ -447,7 +447,7 @@ export class Vitest {
       await this.coverageProvider.clean()
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getWorkspacesByTestFile(file)))
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
 
     await this.reportCoverage(!trigger)
 
@@ -541,7 +541,7 @@ export class Vitest {
       const triggerLabel = Array.from(triggerIds).join(', ')
       await this.report('onWatcherRerun', files, triggerLabel)
 
-      await this.runFiles(files.flatMap(file => this.getWorkspacesByTestFile(file)))
+      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
 
       await this.reportCoverage(false)
 
@@ -549,19 +549,19 @@ export class Vitest {
     }, WATCHER_DEBOUNCE)
   }
 
-  public getModuleWorkspaces(id: string) {
-    return this.workspaces.filter((workspace) => {
-      return workspace.server.moduleGraph.getModuleById(id)
-        || workspace.browser?.moduleGraph.getModuleById(id)
-        || workspace.browser?.moduleGraph.getModulesByFile(id)?.size
+  public getModuleProjects(id: string) {
+    return this.projects.filter((project) => {
+      return project.server.moduleGraph.getModuleById(id)
+        || project.browser?.moduleGraph.getModuleById(id)
+        || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
   }
 
   private unregisterWatcher = noop
   private registerWatcher() {
     const updateLastChanged = (id: string) => {
-      const workspaces = this.getModuleWorkspaces(id)
-      workspaces.forEach(({ server, browser }) => {
+      const projects = this.getModuleProjects(id)
+      projects.forEach(({ server, browser }) => {
         const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
         if (mod)
           server.moduleGraph.invalidateModule(mod)
@@ -626,13 +626,13 @@ export class Vitest {
       return []
     }
 
-    const workspaces = this.getModuleWorkspaces(id)
-    if (!workspaces.length)
+    const projects = this.getModuleProjects(id)
+    if (!projects.length)
       return []
 
     const files: string[] = []
 
-    for (const { server, browser } of workspaces) {
+    for (const { server, browser } of projects) {
       const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
       if (!mod) {
         // files with `?v=` query from the browser
@@ -689,7 +689,7 @@ export class Vitest {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
         this.server.close(),
-        ...this.workspaces.map(w => w.close()),
+        ...this.projects.map(w => w.close()),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)
@@ -725,13 +725,13 @@ export class Vitest {
 
   public async globTestFiles(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
-    await Promise.all(this.workspaces.map(async (workspace) => {
-      const specs = await workspace.globTestFiles(filters)
+    await Promise.all(this.projects.map(async (project) => {
+      const specs = await project.globTestFiles(filters)
       specs.forEach((file) => {
-        files.push([workspace, file])
-        const workspaces = this.workspacesTestFiles.get(file) || new Set()
-        workspaces.add(workspace)
-        this.workspacesTestFiles.set(file, workspaces)
+        files.push([project, file])
+        const projects = this.projectsTestFiles.get(file) || new Set()
+        projects.add(project)
+        this.projectsTestFiles.set(file, projects)
       })
     }))
     return files

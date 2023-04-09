@@ -1,7 +1,7 @@
 import type { Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
-import type { VitestWorkspace } from '../workspace'
+import type { WorkspaceProject } from '../workspace'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = typeof playwrightBrowsers[number]
@@ -15,13 +15,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private cachedBrowser: Page | null = null
   private browser!: PlaywrightBrowser
-  private ctx!: VitestWorkspace
+  private ctx!: WorkspaceProject
 
   getSupportedBrowsers() {
     return playwrightBrowsers
   }
 
-  async initialize(ctx: VitestWorkspace, { browser }: PlaywrightProviderOptions) {
+  async initialize(ctx: WorkspaceProject, { browser }: PlaywrightProviderOptions) {
     this.ctx = ctx
     this.browser = browser
 

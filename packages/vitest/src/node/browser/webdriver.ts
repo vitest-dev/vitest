@@ -1,7 +1,7 @@
 import type { Browser } from 'webdriverio'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
-import type { VitestWorkspace } from '../workspace'
+import type { WorkspaceProject } from '../workspace'
 
 export const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 export type WebdriverBrowser = typeof webdriverBrowsers[number]
@@ -16,13 +16,13 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private cachedBrowser: Browser | null = null
   private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
-  private ctx!: VitestWorkspace
+  private ctx!: WorkspaceProject
 
   getSupportedBrowsers() {
     return webdriverBrowsers
   }
 
-  async initialize(ctx: VitestWorkspace, { browser }: WebdriverProviderOptions) {
+  async initialize(ctx: WorkspaceProject, { browser }: WebdriverProviderOptions) {
     this.ctx = ctx
     this.browser = browser
 

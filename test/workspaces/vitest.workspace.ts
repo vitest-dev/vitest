@@ -1,6 +1,6 @@
-import { defineWorkspaces } from 'vitest/config'
+import { defineWorkspace } from 'vitest/config'
 
-export default defineWorkspaces([
+export default defineWorkspace([
   './space_2/*',
   './space_*/*.config.ts',
   {
