@@ -15,7 +15,7 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
-    return rpc().writeFile(filepath, snapshot)
+    return rpc().writeFile(filepath, snapshot, true)
   }
 
   resolvePath(filepath: string): Promise<string> {
