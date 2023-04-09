@@ -1,7 +1,7 @@
 import { createServer } from 'vite'
 import { resolve } from 'pathe'
 import { findUp } from 'find-up'
-import { configFiles } from '../../constants'
+import { configFiles, defaultBrowserPort } from '../../constants'
 import type { UserConfig } from '../../types/config'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
@@ -38,23 +38,11 @@ export async function createBrowserServer(workspace: VitestWorkspace, options: U
         name: 'vitest:browser:config',
         async config(config) {
           const server = resolveApiServerConfig(config.test?.browser || {}) || {
-            port: 63315,
+            port: defaultBrowserPort,
           }
 
           config.server = server
           config.server.fs = { strict: false }
-
-          // TODO: support experimental optimizer
-          // config.optimizeDeps ??= {}
-          // config.optimizeDeps.entries ??= []
-
-          // const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
-          // entries.push(...ctx.config.setupFiles)
-
-          // if (typeof config.optimizeDeps.entries === 'string')
-          //   config.optimizeDeps.entries = [config.optimizeDeps.entries]
-
-          // config.optimizeDeps.entries.push(...entries)
 
           return {
             resolve: {

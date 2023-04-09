@@ -6,6 +6,7 @@ export interface UserConfig extends ViteUserConfig {
 }
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
+  extends?: string
   test?: WorkspaceConfig
 }
 

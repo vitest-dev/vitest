@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
-import { dirname, toNamespacedPath } from 'pathe'
+import { dirname, resolve, toNamespacedPath } from 'pathe'
 import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
@@ -22,9 +22,11 @@ interface InitializeOptions {
 export async function initializeWorkspace(workspacePath: string | number, ctx: Vitest, options: UserWorkspaceConfig = {}) {
   const workspace = new VitestWorkspace(workspacePath, ctx)
 
-  const configFile = (typeof workspacePath === 'number' || workspacePath.endsWith('/'))
-    ? false
-    : workspacePath
+  const configFile = options.extends
+    ? resolve(ctx.config.root, options.extends)
+    : (typeof workspacePath === 'number' || workspacePath.endsWith('/'))
+        ? false
+        : workspacePath
 
   const root = options.root || (typeof workspacePath === 'number' ? undefined : dirname(workspacePath))
 

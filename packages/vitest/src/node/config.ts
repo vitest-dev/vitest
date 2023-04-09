@@ -4,7 +4,7 @@ import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
@@ -274,7 +274,7 @@ export function resolveConfig(
   resolved.browser.headless ??= isCI
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
-    port: 63315,
+    port: defaultBrowserPort,
   }
 
   return resolved

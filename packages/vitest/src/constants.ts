@@ -1,5 +1,6 @@
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204
+export const defaultBrowserPort = 63315
 
 export const EXIT_CODE_RESTART = 43
 
@@ -13,8 +14,6 @@ export const CONFIG_NAMES = [
 const WORKSPACES_NAMES = [
   'vitest.workspaces',
   'vitest.projects',
-  'vite.workspaces',
-  'vite.projects',
 ]
 
 const CONFIG_EXTENSIONS = [
@@ -30,8 +29,13 @@ export const configFiles = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),
 )
 
+const WORKSPACES_EXTENSIONS = [
+  ...CONFIG_EXTENSIONS,
+  '.json',
+]
+
 export const workspacesFiles = WORKSPACES_NAMES.flatMap(name =>
-  CONFIG_EXTENSIONS.map(ext => name + ext),
+  WORKSPACES_EXTENSIONS.map(ext => name + ext),
 )
 
 export const globalApis = [
