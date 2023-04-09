@@ -78,10 +78,10 @@ export default defineWorkspace([
   // but with different configs in the same "vitest" process
   {
     test: {
-      name: 'jsdom',
+      name: 'happy-dom',
       root: './shared_tests',
-      environment: 'jsdom',
-      setupFiles: ['./setup.jsdom.ts'],
+      environment: 'happy-dom',
+      setupFiles: ['./setup.happy-dom.ts'],
     },
   },
   {

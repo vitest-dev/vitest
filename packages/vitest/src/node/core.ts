@@ -210,7 +210,6 @@ export class Vitest {
     }))
 
     const overridesOptions = [
-      'environment',
       'logHeapUsage',
       'allowOnly',
       'sequence',
@@ -218,7 +217,7 @@ export class Vitest {
       'threads',
       'singleThread',
       'isolate',
-      'browser',
+      'globals',
       'mode',
     ] as const
 

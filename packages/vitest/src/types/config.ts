@@ -689,6 +689,9 @@ export type ProjectConfig = Omit<
   UserConfig,
   | 'sequencer'
   | 'shard'
+  | 'watch'
+  | 'run'
+  | 'cache'
   | 'update'
   | 'reporters'
   | 'outputFile'
@@ -715,6 +718,7 @@ export type ProjectConfig = Omit<
   | 'deps'
   | 'coverage'
 > & {
+  sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'registerNodeLoader'>
 }
 
