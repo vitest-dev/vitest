@@ -54,7 +54,10 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
   const Sequencer = ctx.config.sequence.sequencer
   const sequencer = new Sequencer(ctx)
 
-  function runFiles(workspace: VitestWorkspace, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+  function runFiles(workspace: VitestWorkspace, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    const config = getTestConfig(workspace)
+    ctx.state.clearFiles(workspace, files)
+
     const data: ChildContext = {
       command: 'start',
       config,
@@ -86,17 +89,13 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     })
   }
 
-  async function runWithFiles(workspace: VitestWorkspace, files: string[], invalidates: string[] = []): Promise<void> {
+  async function runTests(specs: WorkspaceSpec[], invalidates: string[] = []): Promise<void> {
     const { shard } = ctx.config
-    let specs = files.map(file => [workspace, file] as WorkspaceSpec)
 
     if (shard)
       specs = await sequencer.shard(specs)
 
     specs = await sequencer.sort(specs)
-
-    ctx.state.clearFiles(workspace, files)
-    const config = getTestConfig(workspace)
 
     const filesByEnv = await groupFilesByEnv(specs)
     const envs = envsOrder.concat(
@@ -110,33 +109,21 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       if (!files?.length)
         continue
 
-      const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+      const filesByOptions = groupBy(files, ({ workspace, environment }) => workspace.getName() + JSON.stringify(environment.options))
 
       for (const option in filesByOptions) {
         const files = filesByOptions[option]
 
         if (files?.length) {
           const filenames = files.map(f => f.file)
-          await runFiles(workspace, config, filenames, files[0].environment, invalidates)
+          await runFiles(files[0].workspace, filenames, files[0].environment, invalidates)
         }
       }
     }
   }
 
-  async function runWorkspaceFiles(specs: [VitestWorkspace, string][], invalidates?: string[]) {
-    const groupedFiles = new Map<VitestWorkspace, string[]>()
-    for (const [workspace, file] of specs) {
-      const files = groupedFiles.get(workspace) || []
-      files.push(file)
-      groupedFiles.set(workspace, files)
-    }
-
-    for (const [workspace, files] of groupedFiles.entries())
-      await runWithFiles(workspace, files, invalidates)
-  }
-
   return {
-    runTests: runWorkspaceFiles,
+    runTests,
     async close() {
       children.forEach((child) => {
         if (!child.killed)

@@ -1,5 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
+import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
@@ -64,7 +65,7 @@ export class Vitest {
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
 
-  async setServer(options: UserConfig, server: ViteDevServer) {
+  async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -128,7 +129,7 @@ export class Vitest {
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
-    this.workspaces = await this.resolveWorkspaces(options)
+    this.workspaces = await this.resolveWorkspaces(options, cliOptions)
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
@@ -150,7 +151,7 @@ export class Vitest {
     return this.coreWorkspace
   }
 
-  private async resolveWorkspaces(options: UserConfig) {
+  private async resolveWorkspaces(options: UserConfig, cliOptions: UserConfig) {
     const configDir = dirname(this.server.config.configFile || this.config.root)
     const rootFiles = await fs.readdir(configDir)
     const workspacesConfigName = workspacesFiles.find((configFile) => {
@@ -160,14 +161,14 @@ export class Vitest {
     if (!workspacesConfigName)
       return [await this.createCoreWorkspace(options)]
 
-    const workspacesConcigPath = join(configDir, workspacesConfigName)
+    const workspacesConfigPath = join(configDir, workspacesConfigName)
 
-    const workspacesModule = await this.runner.executeFile(workspacesConcigPath) as {
+    const workspacesModule = await this.runner.executeFile(workspacesConfigPath) as {
       default: (string | UserWorkspaceConfig)[]
     }
 
     if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
-      throw new Error(`Workspaces config file ${workspacesConcigPath} must export a default array of workspace paths`)
+      throw new Error(`Workspaces config file ${workspacesConfigPath} must export a default array of workspace paths`)
 
     const workspacesGlobMatches: string[] = []
     const workspacesOptions: UserWorkspaceConfig[] = []
@@ -208,17 +209,36 @@ export class Vitest {
       return filepath
     }))
 
+    const overridesOptions = [
+      'environment',
+      'logHeapUsage',
+      'allowOnly',
+      'sequence',
+      'testTimeout',
+      'threads',
+      'singleThread',
+      'isolate',
+      'browser',
+      'mode',
+    ] as const
+
+    const cliOverrides = overridesOptions.reduce((acc, name) => {
+      if (name in cliOptions)
+        acc[name] = cliOptions[name] as any
+      return acc
+    }, {} as UserConfig)
+
     const workspaces = resolvedWorkspacesPaths.map(async (workspacePath) => {
       // don't start a new server, but reuse existing one
       if (
         this.server.config.configFile === workspacePath
       )
         return this.createCoreWorkspace(options)
-      return initializeWorkspace(workspacePath, this)
+      return initializeWorkspace(workspacePath, this, { test: cliOverrides })
     })
 
     workspacesOptions.forEach((options, index) => {
-      workspaces.push(initializeWorkspace(index, this, options))
+      workspaces.push(initializeWorkspace(index, this, mergeConfig(options, { test: cliOverrides })))
     })
 
     if (!workspaces.length)
@@ -228,9 +248,10 @@ export class Vitest {
     const names = new Set<string>()
 
     for (const workspace of resolvedWorkspaces) {
-      if (names.has(workspace.getName()))
-        throw new Error(`Workspace name "${workspace.getName()}" is not unique. All workspaces should have unique names.`)
-      names.add(workspace.getName())
+      const name = workspace.getName()
+      if (names.has(name))
+        throw new Error(`Workspace name "${name}" is not unique. All workspaces should have unique names.`)
+      names.add(name)
     }
 
     return resolvedWorkspaces

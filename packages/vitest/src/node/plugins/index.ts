@@ -223,7 +223,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
       async configureServer(server) {
         try {
-          await ctx.setServer(options, server)
+          await ctx.setServer(options, server, userConfig)
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }

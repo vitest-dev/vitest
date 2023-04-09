@@ -158,7 +158,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
           if (!files?.length)
             continue
 
-          const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+          const filesByOptions = groupBy(files, ({ workspace, environment }) => workspace.getName() + JSON.stringify(environment.options))
 
           const promises = Object.values(filesByOptions).map(async (files) => {
             const filenames = files.map(f => f.file)
