@@ -18,6 +18,7 @@ import {
   addExtraLineBreaks,
   getSnapshotData,
   keyToTestName,
+  normalizeNewlines,
   prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
@@ -243,6 +244,12 @@ export default class SnapshotState {
 
     if (!rawSnapshot)
       receivedSerialized = addExtraLineBreaks(receivedSerialized)
+
+    if (rawSnapshot) {
+      // normalize EOL when snapshot contains CRLF but received is LF
+      if (rawSnapshot.content && rawSnapshot.content.match(/\r\n/) && !receivedSerialized.match(/\r\n/))
+        rawSnapshot.content = normalizeNewlines(rawSnapshot.content)
+    }
 
     const expected = isInline
       ? inlineSnapshot
