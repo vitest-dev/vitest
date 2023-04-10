@@ -1,4 +1,5 @@
 import v8 from 'node:v8'
+import { performance } from 'node:perf_hooks'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
 import type { ResolvedConfig } from '../types'
