@@ -1,5 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 
+import { dirname } from 'pathe'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -81,8 +82,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         snapshotSaved(snapshot) {
           ctx.snapshot.add(snapshot)
         },
-        writeFile(id, content) {
-          return fs.writeFile(id, content, 'utf-8')
+        async writeFile(id, content, ensureDir) {
+          if (ensureDir)
+            await fs.mkdir(dirname(id), { recursive: true })
+          return await fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
           await ctx.rerunFiles(files)
