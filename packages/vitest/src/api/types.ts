@@ -19,7 +19,7 @@ export interface WebSocketHandlers {
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
   readFile(id: string): Promise<string | null>
-  writeFile(id: string, content: string): Promise<void>
+  writeFile(id: string, content: string, ensureDir?: boolean): Promise<void>
   removeFile(id: string): Promise<void>
   createDirectory(id: string): Promise<string | undefined>
   snapshotSaved(snapshot: SnapshotResult): void
