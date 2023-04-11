@@ -19,7 +19,7 @@ interface InitializeOptions {
   runner?: ViteNodeRunner
 }
 
-export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: UserWorkspaceConfig = {}) {
+export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: (UserWorkspaceConfig & { extends?: string }) = {}) {
   const project = new WorkspaceProject(workspacePath, ctx)
 
   const configFile = options.extends
