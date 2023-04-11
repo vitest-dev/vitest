@@ -6,7 +6,6 @@ export interface UserConfig extends ViteUserConfig {
 }
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
-  extends?: string
   test?: ProjectConfig
 }
 
@@ -29,6 +28,6 @@ export function defineProject(config: UserProjectConfigExport) {
   return config
 }
 
-export function defineWorkspace(config: (string | UserProjectConfigExport)[]) {
+export function defineWorkspace(config: (string | (UserProjectConfigExport & { extends?: string }))[]) {
   return config
 }

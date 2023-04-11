@@ -133,3 +133,13 @@ export function getEnvironmentTransformMode(config: ResolvedConfig, environment:
     return undefined
   return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
+
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
+  }
+}
+export { AggregateErrorPonyfill as AggregateError }

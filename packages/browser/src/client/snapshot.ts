@@ -15,7 +15,7 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
-    return rpc().writeFile(filepath, snapshot)
+    return rpc().writeFile(filepath, snapshot, true)
   }
 
   resolvePath(filepath: string): Promise<string> {
@@ -30,7 +30,7 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
     return rpc().removeFile(filepath)
   }
 
-  async prepareDirectory(filepath: string): Promise<void> {
-    await rpc().createDirectory(filepath)
+  async prepareDirectory(dirPath: string): Promise<void> {
+    await rpc().createDirectory(dirPath)
   }
 }

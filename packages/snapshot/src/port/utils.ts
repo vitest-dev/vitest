@@ -135,7 +135,7 @@ export async function ensureDirectoryExists(environment: SnapshotEnvironment, fi
   catch { }
 }
 
-function normalizeNewlines(string: string) {
+export function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
@@ -152,7 +152,7 @@ export async function saveSnapshotFile(
 
   const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
   const oldContent = await environment.readSnapshotFile(snapshotPath)
-  const skipWriting = oldContent && oldContent === content
+  const skipWriting = oldContent != null && oldContent === content
 
   if (skipWriting)
     return
@@ -170,7 +170,7 @@ export async function saveSnapshotFileRaw(
   snapshotPath: string,
 ) {
   const oldContent = await environment.readSnapshotFile(snapshotPath)
-  const skipWriting = oldContent && oldContent === content
+  const skipWriting = oldContent != null && oldContent === content
 
   if (skipWriting)
     return

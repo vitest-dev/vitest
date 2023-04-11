@@ -44,7 +44,8 @@ declare global {
   // support augmenting jest.Matchers by other libraries
   namespace jest {
 
-    interface Matchers<_R, _T = {}> {}
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    interface Matchers<R, T = {}> {}
   }
 
   namespace Vi {

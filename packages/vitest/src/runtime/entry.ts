@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import { resolve } from 'pathe'
