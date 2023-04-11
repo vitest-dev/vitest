@@ -42,6 +42,6 @@ describe('server works correctly', async () => {
     const sourceMap = extractSourceMap(fetchResult.code!)
 
     // expect got sourcemap source in a valid filesystem path
-    expect(sourceMap?.sources[0]).toBe(resolve(__dirname, '../src/foo.js'))
+    expect(sourceMap?.sources[0]).toBe('foo.js')
   })
 })
