@@ -1,5 +1,10 @@
-import concordance, { type DisplayOptions } from 'concordance'
+import concordance from 'concordance'
 import { getColors } from './colors'
+
+interface DisplayOptions {
+  theme?: any
+  maxDepth?: number
+}
 
 export function getConcordanceTheme() {
   const c = getColors()
@@ -86,8 +91,4 @@ export function getConcordanceTheme() {
 
 export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions) {
   return concordance.diff(expected, actual, options)
-}
-
-export function formatDescriptor(value: unknown, options: DisplayOptions) {
-  return concordance.formatDescriptor(value, options)
 }
