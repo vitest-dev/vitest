@@ -52,16 +52,6 @@ export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T 
   return obj
 }
 
-// AggregateError is supported in Node.js 15.0.0+
-class AggregateErrorPonyfill extends Error {
-  errors: unknown[]
-  constructor(errors: Iterable<unknown>, message = '') {
-    super(message)
-    this.errors = [...errors]
-  }
-}
-export { AggregateErrorPonyfill as AggregateError }
-
 export function objectAttr(source: any, path: string, defaultValue = undefined) {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')

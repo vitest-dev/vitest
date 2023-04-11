@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'

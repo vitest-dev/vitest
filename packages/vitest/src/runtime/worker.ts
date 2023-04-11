@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
 import type { RuntimeRPC, WorkerContext } from '../types'

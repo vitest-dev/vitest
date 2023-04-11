@@ -9,7 +9,7 @@ import { distDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { groupBy } from '../../utils/base'
+import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
