@@ -1,5 +1,5 @@
 import type { TransformResult } from 'vite'
-import { dirname, isAbsolute, join, resolve } from 'pathe'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import { install } from './source-map-handler'
 
@@ -24,17 +24,19 @@ export function withInlineSourcemap(result: TransformResult, options: {
   if (!map || code.includes(VITE_NODE_SOURCEMAPPING_SOURCE))
     return result
 
-  // sources path from `ViteDevServer` may be not a valid filesystem path (eg. /src/main.js),
-  // so we try to convert them to valid filesystem path
   map.sources = map.sources?.map((source) => {
     if (!source)
       return source
-    // make source absolute again, it might not be relative to the root, but to the "source root"
-    // https://github.com/bmeurer/vite/blob/172c3e36226ec4bdf2c9d5f8fa84310bde3fec54/packages/vite/src/node/server/transformRequest.ts#L281
-    if (!isAbsolute(source))
-      return resolve(dirname(options.filepath), source)
-    if (!source.startsWith(options.root))
-      return join(options.root, source)
+    // sometimes files here are absolute,
+    // but they are considered absolute to the server url, not the file system
+    // this is a bug in Vite
+    // all files should be either absolute to the file system or relative to the source map file
+    if (isAbsolute(source)) {
+      const actualPath = (!source.startsWith(options.root) && source.startsWith('/'))
+        ? resolve(options.root, source.slice(1))
+        : source
+      return relative(dirname(options.filepath), actualPath)
+    }
     return source
   })
 
