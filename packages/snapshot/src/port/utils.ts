@@ -135,7 +135,7 @@ export async function ensureDirectoryExists(environment: SnapshotEnvironment, fi
   catch { }
 }
 
-function normalizeNewlines(string: string) {
+export function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
