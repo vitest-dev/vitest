@@ -119,11 +119,11 @@ export class ViteNodeServer {
     return this.fetchPromiseMap.get(id)!
   }
 
-  async transformRequest(id: string) {
+  async transformRequest(id: string, filepath = id) {
     // reuse transform for concurrent requests
     if (!this.transformPromiseMap.has(id)) {
       this.transformPromiseMap.set(id,
-        this._transformRequest(id, id)
+        this._transformRequest(id, filepath)
           .finally(() => {
             this.transformPromiseMap.delete(id)
           }),

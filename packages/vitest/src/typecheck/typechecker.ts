@@ -1,7 +1,7 @@
 import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
-import { extname, resolve } from 'pathe'
+import { basename, extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { getTasks } from '../utils'
 import { ensurePackageInstalled } from '../node/pkg'
@@ -132,7 +132,7 @@ export class Typechecker {
         const processedPos = mapConsumer?.generatedPositionFor({
           line: originalError.line,
           column: originalError.column,
-          source: path,
+          source: basename(path),
         }) || originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column

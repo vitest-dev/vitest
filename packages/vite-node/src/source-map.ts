@@ -31,8 +31,10 @@ export function withInlineSourcemap(result: TransformResult, options: {
     // but they are considered absolute to the server url, not the file system
     // this is a bug in Vite
     // all files should be either absolute to the file system or relative to the source map file
-    if (isAbsolute(source) && !source.startsWith(options.root) && source.startsWith('/')) {
-      const actualPath = resolve(options.root, source.slice(1))
+    if (isAbsolute(source)) {
+      const actualPath = (!source.startsWith(options.root) && source.startsWith('/'))
+        ? resolve(options.root, source.slice(1))
+        : source
       return relative(dirname(options.filepath), actualPath)
     }
     return source
