@@ -152,7 +152,9 @@ export class Vitest {
   }
 
   private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
-    const configDir = dirname(this.server.config.configFile || this.config.root)
+    const configDir = this.server.config.configFile
+      ? dirname(this.server.config.configFile)
+      : this.config.root
     const rootFiles = await fs.readdir(configDir)
     const workspaceConfigName = workspaceFiles.find((configFile) => {
       return rootFiles.includes(configFile)
@@ -161,21 +163,21 @@ export class Vitest {
     if (!workspaceConfigName)
       return [await this.createCoreWorkspace(options)]
 
-    const workspacesConfigPath = join(configDir, workspaceConfigName)
+    const workspaceConfigPath = join(configDir, workspaceConfigName)
 
-    const workspacesModule = await this.runner.executeFile(workspacesConfigPath) as {
+    const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
       default: (string | UserWorkspaceConfig)[]
     }
 
-    if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
-      throw new Error(`Workspace config file ${workspacesConfigPath} must export a default array of project paths.`)
+    if (!workspaceModule.default || !Array.isArray(workspaceModule.default))
+      throw new Error(`Workspace config file ${workspaceConfigPath} must export a default array of project paths.`)
 
-    const workspacesGlobMatches: string[] = []
+    const workspaceGlobMatches: string[] = []
     const projectsOptions: UserWorkspaceConfig[] = []
 
-    for (const project of workspacesModule.default) {
+    for (const project of workspaceModule.default) {
       if (typeof project === 'string')
-        workspacesGlobMatches.push(project.replace('<rootDir>', this.config.root))
+        workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
       else
         projectsOptions.push(project)
     }
@@ -189,7 +191,7 @@ export class Vitest {
       ignore: ['**/node_modules/**'],
     }
 
-    const workspacesFs = await fg(workspacesGlobMatches, globOptions)
+    const workspacesFs = await fg(workspaceGlobMatches, globOptions)
     const resolvedWorkspacesPaths = await Promise.all(workspacesFs.filter((file) => {
       if (file.endsWith('/')) {
         // if it's a directory, check that we don't already have a workspace with a config inside
@@ -204,7 +206,7 @@ export class Vitest {
       if (filepath.endsWith('/')) {
         const filesInside = await fs.readdir(filepath)
         const configFile = configFiles.find(config => filesInside.includes(config))
-        return configFile || filepath
+        return configFile ? join(filepath, configFile) : filepath
       }
       return filepath
     }))
@@ -233,11 +235,11 @@ export class Vitest {
         this.server.config.configFile === workspacePath
       )
         return this.createCoreWorkspace(options)
-      return initializeProject(workspacePath, this, { test: cliOverrides })
+      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
     })
 
     projectsOptions.forEach((options, index) => {
-      projects.push(initializeProject(index, this, mergeConfig(options, { test: cliOverrides })))
+      projects.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
     })
 
     if (!projects.length)
