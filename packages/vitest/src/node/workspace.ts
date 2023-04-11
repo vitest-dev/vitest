@@ -14,16 +14,21 @@ import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { VitestServer } from './server'
 
-interface InitializeOptions {
+interface InitializeServerOptions {
   server?: VitestServer
   runner?: ViteNodeRunner
 }
 
-export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: (UserWorkspaceConfig & { extends?: string }) = {}) {
+interface InitializeProjectOptions extends UserWorkspaceConfig {
+  workspaceConfigPath: string
+  extends?: string
+}
+
+export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: InitializeProjectOptions) {
   const project = new WorkspaceProject(workspacePath, ctx)
 
   const configFile = options.extends
-    ? resolve(ctx.config.root, options.extends)
+    ? resolve(dirname(options.workspaceConfigPath), options.extends)
     : (typeof workspacePath === 'number' || workspacePath.endsWith('/'))
         ? false
         : workspacePath
@@ -143,7 +148,7 @@ export class WorkspaceProject {
     this.browser = await createBrowserServer(this, options)
   }
 
-  async setServer(options: UserConfig, server: ViteDevServer, params: InitializeOptions = {}) {
+  async setServer(options: UserConfig, server: ViteDevServer, params: InitializeServerOptions = {}) {
     this.config = resolveConfig(this.ctx.mode, options, server.config)
     this.server = server
 
