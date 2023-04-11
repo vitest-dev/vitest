@@ -12,7 +12,14 @@ interface CustomMatchers<R = unknown> {
   toBeTestedSync(): R
   toBeTestedPromise(): R
 }
+
 declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeJestCompatible(): R
+    }
+  }
+
   namespace Vi {
     interface JestAssertion extends CustomMatchers {}
     interface AsymmetricMatchersContaining extends CustomMatchers {}
@@ -182,6 +189,12 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
+      toBeJestCompatible() {
+        return {
+          pass: true,
+          message: () => '',
+        }
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -195,6 +208,8 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+
+    expect(expect).toBeJestCompatible()
   })
 
   it('object', () => {
