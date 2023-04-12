@@ -75,7 +75,7 @@ In addition to the following options, you can also use any configuration option 
 :::
 
 ::: tip
-All configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next them.
+All configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
 :::
 
 ### include
@@ -105,7 +105,7 @@ Handling for dependencies resolution.
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 ::: warning
-This feature is temporary disabled since Vitest 0.30.0.
+This feature is temporarily disabled since Vitest 0.30.0.
 :::
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.

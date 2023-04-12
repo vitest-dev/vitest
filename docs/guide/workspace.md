@@ -4,7 +4,7 @@ Vitest provides built-in support for monorepositories through a workspace config
 
 ## Defining a workspace
 
-A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder with your config file, if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
+A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
 
 Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder with your projects named `packages`, you can define a workspace with this config file:
 
@@ -69,7 +69,7 @@ export default defineWorkspace([
 :::
 
 ::: warning
-All projects should have unique names. Otherwise Vitest will throw an error. If you do not provide a name inside inline config, Vitest will assign a number. If you don't provide a name inside a project config defined with glob syntax, Vitest will use the directory name by default.
+All projects should have unique names. Otherwise, Vitest will throw an error. If you do not provide a name inside the inline config, Vitest will assign a number. If you don't provide a name inside a project config defined with glob syntax, Vitest will use the directory name by default.
 :::
 
 If you don't rely on inline configs, you can just create a small json file in your root directory:
@@ -119,7 +119,7 @@ export default mergeConfig(
 ```
 :::
 
-Also some of the configuration options are not allowed in a project config. Most notably:
+Also, some of the configuration options are not allowed in a project config. Most notably:
 
 - `coverage`: coverage is done for the whole workspace
 - `reporters`: only root-level reporters can be supported
@@ -132,6 +132,6 @@ All configuration options that are not supported inside a project config have <N
 
 ## Coverage
 
-Coverage for workspace projects works out of the box. But if you have [`all`](/config/#coverage-all) option enabled and use non-conventional extensions in some of you projects, you will need to have a plugin that handles this extension in your root configuration file.
+Coverage for workspace projects works out of the box. But if you have [`all`](/config/#coverage-all) option enabled and use non-conventional extensions in some of your projects, you will need to have a plugin that handles this extension in your root configuration file.
 
 For example, if you have a package that uses Vue files and it has its own config file, but some of the files are not imported in your tests, coverage will fail trying to analyze the usage of unused files, because it relies on the root configuration rather than project configuration.
