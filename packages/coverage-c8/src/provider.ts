@@ -187,6 +187,7 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
           lines: this.options.lines,
           statements: this.options.statements,
         },
+        perFile: this.options.perFile,
         configurationFile: this.ctx.server.config.configFile,
       })
     }
