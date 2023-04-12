@@ -1,7 +1,7 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "0.30.0",
+  "version": "0.30.1",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
   "repository": {

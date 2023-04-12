@@ -13,6 +13,9 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
+  chaiConfig?: {
+    truncateThreshold?: number
+  }
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
