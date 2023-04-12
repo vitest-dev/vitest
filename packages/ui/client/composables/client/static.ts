@@ -4,7 +4,7 @@ import type { WebSocketHandlers } from 'vitest/src/api/types'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
 import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
-import { StateManager } from 'vitest/src/node/state'
+import { StateManager } from '../../../../vitest/src/node/state'
 
 interface HTMLReportMetadata {
   paths: string[]
