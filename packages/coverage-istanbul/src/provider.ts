@@ -164,6 +164,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
           lines: this.options.lines,
           statements: this.options.statements,
         },
+        perFile: this.options.perFile,
         configurationFile: this.ctx.server.config.configFile,
       })
     }
