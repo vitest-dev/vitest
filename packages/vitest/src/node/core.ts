@@ -145,10 +145,8 @@ export class Vitest {
     return coreWorkspace
   }
 
-  public getCoreWorkspaceProject() {
-    if (!this.coreWorkspace)
-      throw new Error('Core workspace project is not initialized')
-    return this.coreWorkspace
+  public getCoreWorkspaceProject(): WorkspaceProject | null {
+    return this.coreWorkspace || null
   }
 
   private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
@@ -687,10 +685,13 @@ export class Vitest {
 
   async close() {
     if (!this.closingPromise) {
+      const closePromises = this.projects.map(w => w.close())
+      // close the core workspace server only once
+      if (this.coreWorkspace && !this.projects.includes(this.coreWorkspace))
+        closePromises.push(this.server.close())
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
-        this.server.close(),
-        ...this.projects.map(w => w.close()),
+        ...closePromises,
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)
