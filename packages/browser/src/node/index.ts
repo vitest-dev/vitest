@@ -39,7 +39,21 @@ export default (base = '/'): Plugin[] => {
       config() {
         return {
           optimizeDeps: {
-            exclude: [...polyfills, ...builtinModules],
+            exclude: [
+              ...polyfills,
+              ...builtinModules,
+              'vitest',
+              'vitest/utils',
+              'vitest/browser',
+              'vitest/runners',
+              '@vitest/utils',
+            ],
+            include: [
+              '@vitest/utils > concordance',
+              '@vitest/utils > loupe',
+              '@vitest/utils > pretty-format',
+              'vitest > chai',
+            ],
           },
         }
       },
