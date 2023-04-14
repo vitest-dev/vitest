@@ -73,6 +73,7 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.projectsTestFiles.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config)
 
@@ -591,7 +592,15 @@ export class Vitest {
     const onAdd = async (id: string) => {
       id = slash(id)
       updateLastChanged(id)
-      if (await this.isTargetFile(id)) {
+
+      const matchingProjects: WorkspaceProject[] = []
+      await Promise.all(this.projects.map(async (project) => {
+        if (await this.isTargetFile(id, project))
+          matchingProjects.push(project)
+      }))
+
+      if (matchingProjects.length > 0) {
+        this.projectsTestFiles.set(id, new Set(matchingProjects))
         this.changedTests.add(id)
         this.scheduleRerun([id])
       }
@@ -738,13 +747,13 @@ export class Vitest {
     return files
   }
 
-  private async isTargetFile(id: string, source?: string): Promise<boolean> {
-    const relativeId = relative(this.config.dir || this.config.root, id)
-    if (mm.isMatch(relativeId, this.config.exclude))
+  private async isTargetFile(id: string, project: WorkspaceProject, source?: string): Promise<boolean> {
+    const relativeId = relative(project.config.dir || project.config.root, id)
+    if (mm.isMatch(relativeId, project.config.exclude))
       return false
-    if (mm.isMatch(relativeId, this.config.include))
+    if (mm.isMatch(relativeId, project.config.include))
       return true
-    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
+    if (project.config.includeSource?.length && mm.isMatch(relativeId, project.config.includeSource)) {
       source = source || await fs.readFile(id, 'utf-8')
       return this.isInSourceTestFile(source)
     }
