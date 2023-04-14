@@ -190,10 +190,10 @@ export class ViteNodeRunner {
 
     const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
+    // check circular dependency
     if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
       if (mod.exports)
         return mod.exports
-      throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
     }
 
     let debugTimer: any
