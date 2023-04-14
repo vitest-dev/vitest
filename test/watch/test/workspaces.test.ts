@@ -48,7 +48,7 @@ it('editing a file that is imported in different workspaces reruns both files', 
   writeFileSync(srcMathFile, `${srcMathContent}\n`, 'utf8')
 
   await vitest.waitForOutput('RERUN  src/math.ts')
-  await vitest.waitForOutput('|space_3| math.space-test.ts')
+  await vitest.waitForOutput('|space_3| math.space-3-test.ts')
   await vitest.waitForOutput('|space_1| test/math.spec.ts')
   await vitest.waitForOutput('Test Files  2 passed')
 })
