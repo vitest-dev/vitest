@@ -1,7 +1,8 @@
 import { performance } from 'node:perf_hooks'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
-import type { RuntimeRPC, WorkerContext } from '../types'
+import type { CancelReason } from '@vitest/runner'
+import type { RunnerRPC, RuntimeRPC, WorkerContext } from '../types'
 import { getWorkerState } from '../utils/global'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
@@ -17,6 +18,11 @@ function init(ctx: WorkerContext) {
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  let setCancel = (_reason: CancelReason) => {}
+  const onCancel = new Promise<CancelReason>((resolve) => {
+    setCancel = resolve
+  })
+
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = config.environment
   // @ts-expect-error I know what I am doing :P
@@ -25,12 +31,15 @@ function init(ctx: WorkerContext) {
     moduleCache,
     config,
     mockMap,
+    onCancel,
     durations: {
       environment: 0,
       prepare: performance.now(),
     },
-    rpc: createBirpc<RuntimeRPC>(
-      {},
+    rpc: createBirpc<RuntimeRPC, RunnerRPC>(
+      {
+        onCancel: setCancel,
+      },
       {
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
         post(v) { port.postMessage(v) },

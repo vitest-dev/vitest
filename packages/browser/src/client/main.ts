@@ -1,7 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
-import type { VitestRunner } from '@vitest/runner'
+import type { CancelReason, VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
@@ -30,7 +30,16 @@ function getQueryPaths() {
   return url.searchParams.getAll('path')
 }
 
-export const client = createClient(ENTRY_URL)
+let setCancel = (_: CancelReason) => {}
+const onCancel = new Promise<CancelReason>((resolve) => {
+  setCancel = resolve
+})
+
+export const client = createClient(ENTRY_URL, {
+  handlers: {
+    onCancel: setCancel,
+  },
+})
 
 const ws = client.ws
 
@@ -102,6 +111,10 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
+
+  onCancel.then((reason) => {
+    runner?.onCancel?.(reason)
+  })
 
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()

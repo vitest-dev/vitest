@@ -115,11 +115,13 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
         serialize: stringify,
         deserialize: parse,
       },
     )
+
+    ctx.onCancel(reason => rpc.onCancel(reason))
 
     clients.set(ws, rpc)
 

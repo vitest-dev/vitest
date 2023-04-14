@@ -13,6 +13,7 @@ const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
+const WAIT_FOR_CHANGE_CANCELLED = `\n${c.bold(c.inverse(c.red(' CANCELLED ')))}${c.red(' Test run cancelled. Watching for file changes...')}`
 
 const LAST_RUN_LOG_TIMEOUT = 1_500
 
@@ -102,8 +103,12 @@ export abstract class BaseReporter implements Reporter {
 
     const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
+    const cancelled = this.ctx.isCancelling
+
     if (failed)
       this.ctx.logger.log(WAIT_FOR_CHANGE_FAIL)
+    else if (cancelled)
+      this.ctx.logger.log(WAIT_FOR_CHANGE_CANCELLED)
     else
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 

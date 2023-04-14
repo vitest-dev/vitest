@@ -85,6 +85,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
     setupChaiConfig(config.chaiConfig)
 
   const runner = await getTestRunner(config, executor)
+  workerState.onCancel.then(reason => runner.onCancel?.(reason))
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
