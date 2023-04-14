@@ -25,7 +25,7 @@ export function getContext(): Context {
   }
 
   const state: Partial<StateManager> = {
-    filesMap: new Map<string, File>(),
+    filesMap: new Map<string, File[]>(),
   }
 
   const context: Partial<Vitest> = {

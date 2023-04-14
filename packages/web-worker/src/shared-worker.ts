@@ -9,7 +9,7 @@ interface SharedInlineWorkerContext extends Omit<InlineWorkerContext, 'onmessage
   global: SharedInlineWorkerContext
 }
 
-const convertNodePortToWebPort = (port: NodeMessagePort): MessagePort => {
+function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
   if (!('addEventListener' in port)) {
     Object.defineProperty(port, 'addEventListener', {
       value(...args: any[]) {

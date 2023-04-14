@@ -23,6 +23,11 @@ export interface WorkerGlobalState {
   rpc: BirpcReturn<RuntimeRPC>
   current?: Test
   filepath?: string
+  environmentTeardownRun?: boolean
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  durations: {
+    environment: number
+    prepare: number
+  }
 }

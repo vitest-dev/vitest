@@ -61,6 +61,10 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   fails?: boolean
   context: TestContext & ExtraContext
   onFailed?: OnTestFailedHandler[]
+  /**
+   * Store promises (from async expects) to wait for them before finishing the test
+   */
+  promises?: Promise<any>[]
 }
 
 export type Task = Test | Suite | TaskCustom | File
@@ -238,3 +242,4 @@ export interface TestContext {
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
+export type SequenceSetupFiles = 'list' | 'parallel'

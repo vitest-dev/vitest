@@ -186,7 +186,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
   ```ts
   import { expect, test } from 'vitest'
-  const myAsyncFunc = () => new Promise(resolve => resolve(1))
+
+  function myAsyncFunc() {
+    return new Promise(resolve => resolve(1))
+  }
   test.fails('fail test', async () => {
     await expect(myAsyncFunc()).rejects.toBe(1)
   })
@@ -283,6 +286,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   ```
 
   If you want to have access to `TestContext`, use `describe.each` with a single test.
+
+::: tip
+Vitest processes `$values` with chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
+:::
 
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
@@ -474,7 +481,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   ```ts
   import { describe, expect, test } from 'vitest'
 
-  const numberToCurrency = (value) => {
+  function numberToCurrency(value) {
     if (typeof value !== 'number')
       throw new Error('Value must be a number')
 

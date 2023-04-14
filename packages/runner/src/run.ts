@@ -96,7 +96,7 @@ async function sendTasksUpdate(runner: VitestRunner) {
   }
 }
 
-const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
+async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   await Promise.all(cleanups.map(async (fn) => {
     if (typeof fn !== 'function')
       return
@@ -137,8 +137,18 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
+        // some async expect will be added to this array, in case user forget to await theme
+        if (test.promises) {
+          const result = await Promise.allSettled(test.promises)
+          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+          if (errors.length)
+            throw errors
+        }
+      
         test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
+
+        await runner.onAfterTryTest?.(test, retryCount)
 
         if (runner.runTest) {
           await runner.runTest(test)
@@ -205,10 +215,15 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
 function failTask(result: TaskResult, err: unknown) {
   result.state = 'fail'
-  const error = processError(err)
-  result.error = error
-  result.errors ??= []
-  result.errors.push(error)
+  const errors = Array.isArray(err)
+    ? err
+    : [err]
+  for (const e of errors) {
+    const error = processError(e)
+    result.error ??= error
+    result.errors ??= []
+    result.errors.push(error)
+  }
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {

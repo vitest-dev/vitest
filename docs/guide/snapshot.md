@@ -26,7 +26,7 @@ it('toUpperCase', () => {
 The first time this test is run, Vitest creates a snapshot file that looks like this:
 
 ```js
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports['toUpperCase 1'] = '"FOOBAR"'
 ```
@@ -78,6 +78,23 @@ Or you can use the `--update` or `-u` flag in the CLI to make Vitest update snap
 ```bash
 vitest -u
 ```
+
+## File Snapshots
+
+When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escaping some characters (namely the double-quote `"` and backtick `\``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
+
+To improve this case, we introduce [`toMatchFileSnapshot()`](/api/expect#tomatchfilesnapshot) to explicitly snapshot in a file. This allows you to assign any file extension to the snapshot file, and making them more readable.
+
+```ts
+import { expect, it } from 'vitest'
+
+it('render basic', async () => {
+  const result = renderHTML(h('div', { class: 'foo' }))
+  await expect(result).toMatchFileSnapshot('./test/basic.output.html')
+})
+```
+
+It will compare with the content of `./test/basic.output.html`. And can be written back with the `--update` flag.
 
 ## Image Snapshots
 
@@ -147,8 +164,8 @@ Vitest provides an almost compatible Snapshot feature with [Jest's](https://jest
 #### 1. Comment header in the snapshot file is different
 
 ```diff
-- // Jest Snapshot v1
-+ // Vitest Snapshot v1
+- // Jest Snapshot v1, https://goo.gl/fbAQLP
++ // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 ```
 
 This does not really affect the functionality but might affect your commit diff when migrating from Jest.

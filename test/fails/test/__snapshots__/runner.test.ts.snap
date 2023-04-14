@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should fails > .dot-folder/dot-test.test.ts > .dot-folder/dot-test.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
@@ -18,6 +18,8 @@ Error: before all"
 exports[`should fails > mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
+
+exports[`should fails > primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 
 exports[`should fails > stall.test.ts > stall.test.ts 1`] = `
 "TypeError: failure

@@ -17,7 +17,7 @@ import {
   subsetEquality,
 } from './jest-utils'
 
-const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion, expect: Vi.ExpectStatic) => {
+function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expect: Vi.ExpectStatic) {
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''

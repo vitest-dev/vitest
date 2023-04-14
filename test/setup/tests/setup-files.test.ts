@@ -1,8 +1,10 @@
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { execa } from 'execa'
 
-const run = async () => await execa('vitest', ['run', '--changed', '--config', 'setup.vitest.config.ts'])
+async function run() {
+  return await execa('vitest', ['run', '--changed', '--config', 'setup.vitest.config.ts'])
+}
 
 describe('setup files with forceRerunTrigger', () => {
   const file = './setupFiles/empty-setup.ts'

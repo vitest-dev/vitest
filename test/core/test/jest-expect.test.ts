@@ -1,5 +1,5 @@
 /* eslint-disable no-sparse-arrays */
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage } from '@vitest/expect'
 
@@ -12,7 +12,14 @@ interface CustomMatchers<R = unknown> {
   toBeTestedSync(): R
   toBeTestedPromise(): R
 }
+
 declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeJestCompatible(): R
+    }
+  }
+
   namespace Vi {
     interface JestAssertion extends CustomMatchers {}
     interface AsymmetricMatchersContaining extends CustomMatchers {}
@@ -182,6 +189,12 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
+      toBeJestCompatible() {
+        return {
+          pass: true,
+          message: () => '',
+        }
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -195,6 +208,8 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+
+    expect(expect).toBeJestCompatible()
   })
 
   it('object', () => {
@@ -544,7 +559,7 @@ describe('async expect', () => {
     })()).resolves.not.toThrow(Error)
   })
 
-  it('resolves trows chai', async () => {
+  it('resolves throws chai', async () => {
     const assertion = async () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow()
     }
@@ -552,7 +567,7 @@ describe('async expect', () => {
     await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
   })
 
-  it('resolves trows jest', async () => {
+  it('resolves throws jest', async () => {
     const assertion = async () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
     }
@@ -678,6 +693,31 @@ describe('async expect', () => {
     catch (error) {
       expect(error).toEqual(toEqualError2)
     }
+  })
+
+  describe('promise auto queuing', () => {
+    it.fails('fails', () => {
+      expect(() => new Promise((resolve, reject) => setTimeout(reject, 500)))
+        .resolves
+        .toBe('true')
+    })
+
+    let value = 0
+
+    it('pass first', () => {
+      expect((async () => {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        value += 1
+        return value
+      })())
+        .resolves
+        .toBe(1)
+    })
+
+    it('pass second', () => {
+    // even if 'pass first' is sync, we will still wait the expect to resolve
+      expect(value).toBe(1)
+    })
   })
 })
 

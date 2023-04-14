@@ -4,9 +4,11 @@ import MyWorker from '../src/worker?worker'
 import MyEventListenerWorker from '../src/eventListenerWorker?worker'
 import MySelfWorker from '../src/selfWorker?worker'
 
-const sleep = (time: number) => new Promise(resolve => setTimeout(resolve, time))
+function sleep(time: number) {
+  return new Promise(resolve => setTimeout(resolve, time))
+}
 
-const testWorker = (worker: Worker) => {
+function testWorker(worker: Worker) {
   return new Promise<void>((resolve) => {
     worker.postMessage('hello')
     worker.onmessage = (e) => {
@@ -17,7 +19,7 @@ const testWorker = (worker: Worker) => {
   })
 }
 
-const testSelfWorker = (worker: Worker) => {
+function testSelfWorker(worker: Worker) {
   return new Promise<boolean>((resolve) => {
     worker.onmessage = (e) => {
       resolve(e.data)

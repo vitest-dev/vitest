@@ -22,13 +22,13 @@ debouncedWatch(
   { debounce: 100, immediate: true },
 )
 
-const open = () => {
+function open() {
   const filePath = current.value?.filepath
   if (filePath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
-const changeViewMode = (view: Params['view']) => {
+function changeViewMode(view: Params['view']) {
   if (view === 'graph')
     hasGraphBeenDisplayed.value = true
 

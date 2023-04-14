@@ -7,7 +7,6 @@ process.stdin.setRawMode = () => process.stdin
 export default defineConfig({
   test: {
     watch: true,
-    outputTruncateLength: 999,
 
     // This configuration is edited by tests
     reporters: 'verbose',

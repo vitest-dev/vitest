@@ -3,10 +3,9 @@ import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { isNodeBuiltin } from 'mlly'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -44,7 +43,7 @@ const clientStub = {
   },
 }
 
-export const DEFAULT_REQUEST_STUBS = {
+export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }
@@ -90,6 +89,14 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
 
   delete(fsPath: string) {
     return this.deleteByModuleId(this.normalizePath(fsPath))
+  }
+
+  invalidateModule(mod: ModuleCache) {
+    delete mod.evaluated
+    delete mod.resolving
+    delete mod.promise
+    delete mod.exports
+    return true
   }
 
   /**

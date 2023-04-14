@@ -1,1 +1,3 @@
-export const increment = (num: number) => num + 1
+export function increment(num: number) {
+  return num + 1
+}

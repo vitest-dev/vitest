@@ -1,4 +1,4 @@
-import type { File, SequenceHooks, Suite, TaskResult, Test, TestContext } from './tasks'
+import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResult, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -11,6 +11,10 @@ export interface VitestRunnerConfig {
     shuffle?: boolean
     seed: number
     hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
+  }
+  chaiConfig?: {
+    truncateThreshold?: number
   }
   maxConcurrency: number
   testTimeout: number
@@ -20,7 +24,7 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new (config: VitestRunnerConfig): VitestRunner
+  new(config: VitestRunnerConfig): VitestRunner
 }
 
 export interface VitestRunner {

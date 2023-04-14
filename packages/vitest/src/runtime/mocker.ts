@@ -1,12 +1,14 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
+import { isNodeBuiltin } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
+
+const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
 
 class RefTracker {
   private idMap = new Map<any, number>()
@@ -48,10 +50,6 @@ export class VitestMocker {
     return this.executor.options.root
   }
 
-  private get base() {
-    return this.executor.options.base
-  }
-
   private get mockMap() {
     return this.executor.options.mockMap
   }
@@ -85,7 +83,7 @@ export class VitestMocker {
     const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = !isAbsolute(fsPath) || fsPath.includes('/node_modules/') ? rawId : null
+    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
 
     return {
       id,
@@ -139,7 +137,7 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          if (prop === '__esModule')
+          if (filterPublicKeys.includes(prop))
             return undefined
           const c = getColors()
           throw new Error(

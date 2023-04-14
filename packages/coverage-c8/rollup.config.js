@@ -1,4 +1,4 @@
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import commonjs from '@rollup/plugin-commonjs'
@@ -6,16 +6,18 @@ import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { join } from 'pathe'
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const entries = {
   index: 'src/index.ts',
+  provider: 'src/provider.ts',
 }
 
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  'node:inspector',
   'c8/lib/report.js',
   'c8/lib/commands/check-coverage.js',
   'vitest',

@@ -61,7 +61,7 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
   }
 }
 
-export function getRunnerOptions() {
+export function getRunnerOptions(): any {
   const { config, ctx, rpc, mockMap, moduleCache } = getWorkerState()
 
   return {

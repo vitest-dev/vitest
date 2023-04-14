@@ -5,7 +5,7 @@ import { cleanUrl } from 'vite-node/utils'
 
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
-export const EnvReplacerPlugin = (): Plugin => {
+export function EnvReplacerPlugin(): Plugin {
   return {
     name: 'vitest:env-replacer',
     enforce: 'pre',

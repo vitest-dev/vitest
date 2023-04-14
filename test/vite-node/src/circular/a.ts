@@ -1,1 +1,3 @@
-export const a = () => 'A'
+export function a() {
+  return 'A'
+}

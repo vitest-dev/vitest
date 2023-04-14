@@ -9,13 +9,15 @@ const taskErrorSelector = '.task-error'
 const viewReportSelector = '[data-testid=view-report]'
 const stackRowSelector = '[data-testid=stack]'
 
-const makeTextStack = () => ({
-  line: faker.datatype.number({ min: 0, max: 120 }),
-  column: faker.datatype.number({ min: 0, max: 5000 }),
-  // Absolute file paths
-  file: faker.system.filePath(),
-  method: faker.hacker.verb(),
-})
+function makeTextStack() {
+  return {
+    line: faker.datatype.number({ min: 0, max: 120 }),
+    column: faker.datatype.number({ min: 0, max: 5000 }),
+    // Absolute file paths
+    file: faker.system.filePath(),
+    method: faker.hacker.verb(),
+  }
+}
 
 // 5 Stacks
 const textStacks = Array.from(new Array(5)).map(makeTextStack)

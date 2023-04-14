@@ -1,4 +1,4 @@
-import fs, { promises as fsp } from 'fs'
+import fs, { promises as fsp } from 'node:fs'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { VitestCache } from '../../../packages/vitest/src/node/cache/index'

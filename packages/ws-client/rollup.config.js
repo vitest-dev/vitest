@@ -18,6 +18,8 @@ const external = [
   'node:fs',
   'vitest',
   'inspector',
+  '@vitest/snapshot/environment',
+  '@vitest/snapshot/manager',
 ]
 
 export default () => [

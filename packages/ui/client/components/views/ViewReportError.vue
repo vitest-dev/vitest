@@ -20,9 +20,7 @@ const isDiffShowable = computed(() => {
 })
 
 function diff() {
-  return unifiedDiff(props.error.actual, props.error.expected, {
-    outputTruncateLength: 80,
-  })
+  return unifiedDiff(props.error.actual, props.error.expected)
 }
 </script>
 

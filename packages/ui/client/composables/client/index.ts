@@ -3,14 +3,13 @@ import type { WebSocketStatus } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import type { RunState } from '../../../types'
+import { ENTRY_URL, isReport } from '../../constants'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 import type { File, ResolvedConfig } from '#types'
 
-export const PORT = import.meta.hot ? '51204' : location.port
-export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
-export const isReport = !!window.METADATA_PATH
+export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
+
 export const testRunState: Ref<RunState> = ref('idle')
 
 export const client = (function createVitestClient() {
@@ -38,7 +37,7 @@ export const files = computed(() => client.state.getFiles())
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
-export const findById = (id: string) => {
+export function findById(id: string) {
   return files.value.find(file => file.id === id)
 }
 

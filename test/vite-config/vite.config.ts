@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { join } from 'pathe'
 import { defineConfig } from 'vite'
 

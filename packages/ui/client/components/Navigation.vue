@@ -8,7 +8,9 @@ import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value))
-const updateSnapshot = () => client.rpc.updateSnapshot()
+function updateSnapshot() {
+  return client.rpc.updateSnapshot()
+}
 
 function onItemClick(task: Task) {
   activeFileId.value = task.id

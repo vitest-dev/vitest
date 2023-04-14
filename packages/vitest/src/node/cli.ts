@@ -25,18 +25,14 @@ cli
   .option('--silent', 'Silent console output from tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')
-  .option('--outputDiffMaxSize <length>', 'Object diff output max size (default: 10000)')
-  .option('--outputDiffMaxLines <length>', 'Max lines in diff output window (default: 50)')
-  .option('--outputTruncateLength <length>', 'Diff output line length (default: 80)')
-  .option('--outputDiffLines <lines>', 'Number of lines in single diff (default: 15)')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser api with happy-dom')
-  .option('--browser', 'Run tests in browser')
-  .option('--environment <env>', 'Specify runner environment (default: node)')
+  .option('--browser [options]', 'Run tests in the browser (default: false)')
+  .option('--environment <env>', 'Specify runner environment, if not running in the browser (default: node)')
   .option('--passWithNoTests', 'Pass when no tests found')
   .option('--logHeapUsage', 'Show the size of heap for each test')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
@@ -48,6 +44,7 @@ cli
   .option('--no-color', 'Removes colors from the console output')
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
+  .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
   .help()
 
 cli
@@ -128,7 +125,7 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.config.watch)
+    if (!ctx?.shouldKeepServer())
       await ctx?.exit()
     return ctx
   }

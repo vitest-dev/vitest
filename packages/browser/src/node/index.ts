@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'url'
-// eslint-disable-next-line no-restricted-imports
-import { resolve } from 'path'
-import { builtinModules } from 'module'
+import { fileURLToPath } from 'node:url'
+
+import { resolve } from 'node:path'
+import { builtinModules } from 'node:module'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
@@ -18,20 +18,10 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr)
-          return
-
-        if (id === '/__vitest_index__')
-          return this.resolve('vitest/browser')
-
-        if (id === '/__vitest_runners__')
-          return this.resolve('vitest/runners')
-
-        if (polyfills.includes(id))
-          return polyfillPath(normalizeId(id))
-
-        return null
+      async config(viteConfig) {
+        // Enables using ignore hint for coverage providers with @preserve keyword
+        viteConfig.esbuild ||= {}
+        viteConfig.esbuild.legalComments = 'inline'
       },
       async configureServer(server) {
         server.middlewares.use(
@@ -45,8 +35,16 @@ export default (base = '/'): Plugin[] => {
     },
     {
       name: 'modern-node-polyfills',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr || !builtinModules.includes(id))
+      enforce: 'pre',
+      config() {
+        return {
+          optimizeDeps: {
+            exclude: [...polyfills, ...builtinModules],
+          },
+        }
+      },
+      async resolveId(id) {
+        if (!builtinModules.includes(id) && !polyfills.includes(id) && !id.startsWith('node:'))
           return
 
         id = normalizeId(id)
