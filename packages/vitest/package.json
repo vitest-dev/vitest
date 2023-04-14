@@ -5,7 +5,7 @@
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/antfu",
+  "funding": "https://opencollective.com/vitest",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "repository": {
     "type": "git",

@@ -2,12 +2,17 @@
   "name": "@vitest/snapshot",
   "type": "module",
   "version": "0.30.1",
-  "description": "Vitest Snapshot Resolver",
+  "description": "Vitest snapshot manager",
   "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/snapshot#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/snapshot"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "sideEffects": false,
   "exports": {
