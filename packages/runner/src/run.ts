@@ -125,7 +125,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   setCurrentTest(test)
 
-  const repeats = test.repeats ? test.repeats || 1 : 1
+  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
 
   for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
     const retry = test.retry || 1
@@ -133,22 +133,12 @@ export async function runTest(test: Test, runner: VitestRunner) {
     for (let retryCount = 0; retryCount < retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
-        await runner.onBeforeTryTest?.(test, retryCount)
+        await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
-
-        // some async expect will be added to this array, in case user forget to await theme
-        if (test.promises) {
-          const result = await Promise.allSettled(test.promises)
-          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
-          if (errors.length)
-            throw errors
-        }
-      
         test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
 
-        await runner.onAfterTryTest?.(test, retryCount)
+        beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
         if (runner.runTest) {
           await runner.runTest(test)
@@ -160,7 +150,15 @@ export async function runTest(test: Test, runner: VitestRunner) {
           await fn()
         }
 
-        await runner.onAfterTryTest?.(test, retryCount)
+        // some async expect will be added to this array, in case user forget to await theme
+        if (test.promises) {
+          const result = await Promise.allSettled(test.promises)
+          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+          if (errors.length)
+            throw errors
+        }
+
+        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
         if (!test.repeats)
           test.result.state = 'pass'
@@ -263,74 +261,67 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     suite.result.state = 'todo'
   }
   else {
-    const retry = suite.retry || 1
+    try {
+      beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
-    for (let retryCount = 0; retryCount < retry; retryCount++) {
-      try {
-        beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
-
-        if (runner.runSuite) {
-          await runner.runSuite(suite)
-        }
-        else {
-          for (let tasksGroup of partitionSuiteChildren(suite)) {
-            if (tasksGroup[0].concurrent === true) {
-              const mutex = limit(runner.config.maxConcurrency)
-              await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+      if (runner.runSuite) {
+        await runner.runSuite(suite)
+      }
+      else {
+        for (let tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            const mutex = limit(runner.config.maxConcurrency)
+            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+          }
+          else {
+            const { sequence } = runner.config
+            if (sequence.shuffle || suite.shuffle) {
+              // run describe block independently from tests
+              const suites = tasksGroup.filter(group => group.type === 'suite')
+              const tests = tasksGroup.filter(group => group.type === 'test')
+              const groups = shuffle([suites, tests], sequence.seed)
+              tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
             }
-            else {
-              const { sequence } = runner.config
-              if (sequence.shuffle || suite.shuffle) {
-                // run describe block independently from tests
-                const suites = tasksGroup.filter(group => group.type === 'suite')
-                const tests = tasksGroup.filter(group => group.type === 'test')
-                const groups = shuffle([suites, tests], sequence.seed)
-                tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
-              }
-              for (const c of tasksGroup)
-                await runSuiteChild(c, runner)
-            }
+            for (const c of tasksGroup)
+              await runSuiteChild(c, runner)
           }
         }
       }
-      catch (e) {
-        failTask(suite.result, e)
-      }
-
-      try {
-        await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-        await callCleanupHooks(beforeAllCleanups)
-      }
-      catch (e) {
-        failTask(suite.result, e)
-      }
-
-      if (suite.mode === 'run') {
-        if (!hasTests(suite)) {
-          suite.result.state = 'fail'
-          if (!suite.result.error) {
-            const error = processError(new Error(`No test found in suite ${suite.name}`))
-            suite.result.error = error
-            suite.result.errors = [error]
-          }
-        }
-        else if (hasFailed(suite)) {
-          suite.result.state = 'fail'
-        }
-        else {
-          suite.result.state = 'pass'
-        }
-      }
-
-      updateTask(suite, runner)
-
-      suite.result.duration = now() - start
-
-      await runner.onAfterRunSuite?.(suite)
-
-      if (suite.result.state === 'pass')
-        break
     }
+    catch (e) {
+      failTask(suite.result, e)
+    }
+
+    try {
+      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+      await callCleanupHooks(beforeAllCleanups)
+    }
+    catch (e) {
+      failTask(suite.result, e)
+    }
+
+    if (suite.mode === 'run') {
+      if (!hasTests(suite)) {
+        suite.result.state = 'fail'
+        if (!suite.result.error) {
+          const error = processError(new Error(`No test found in suite ${suite.name}`))
+          suite.result.error = error
+          suite.result.errors = [error]
+        }
+      }
+      else if (hasFailed(suite)) {
+        suite.result.state = 'fail'
+      }
+      else {
+        suite.result.state = 'pass'
+      }
+    }
+
+    updateTask(suite, runner)
+
+    suite.result.duration = now() - start
+
+    await runner.onAfterRunSuite?.(suite)
   }
 }
 

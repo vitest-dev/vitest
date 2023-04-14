@@ -65,6 +65,14 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof options === 'number')
       options = { timeout: options }
 
+    // inherit repeats and retry from suite
+    if (typeof suiteOptions === 'object') {
+      options = {
+        ...suiteOptions,
+        ...options,
+      }
+    }
+
     const test: Test = {
       id: '',
       type: 'test',
@@ -199,14 +207,14 @@ function createSuite() {
   suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
-    ['concurrent', 'shuffle', 'skip', 'only', 'todo', 'repeats'],
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
     suiteFn,
   ) as unknown as SuiteAPI
 }
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'repeats', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
@@ -236,7 +244,7 @@ function createTest(fn: (
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails', 'repeats'],
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
   ) as TestAPI
 }
