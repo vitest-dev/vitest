@@ -595,7 +595,7 @@ export class Vitest {
 
       const matchingProjects: WorkspaceProject[] = []
       await Promise.all(this.projects.map(async (project) => {
-        if (await this.isTargetFile(id, project))
+        if (await project.isTargetFile(id))
           matchingProjects.push(project)
       }))
 
@@ -747,26 +747,9 @@ export class Vitest {
     return files
   }
 
-  private async isTargetFile(id: string, project: WorkspaceProject, source?: string): Promise<boolean> {
-    const relativeId = relative(project.config.dir || project.config.root, id)
-    if (mm.isMatch(relativeId, project.config.exclude))
-      return false
-    if (mm.isMatch(relativeId, project.config.include))
-      return true
-    if (project.config.includeSource?.length && mm.isMatch(relativeId, project.config.includeSource)) {
-      source = source || await fs.readFile(id, 'utf-8')
-      return this.isInSourceTestFile(source)
-    }
-    return false
-  }
-
   // The server needs to be running for communication
   shouldKeepServer() {
     return !!this.config?.watch
-  }
-
-  isInSourceTestFile(code: string) {
-    return code.includes('import.meta.vitest')
   }
 
   onServerRestart(fn: OnServerRestartHandler) {
