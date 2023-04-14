@@ -92,8 +92,22 @@ async function run(files: string[], options: CliOptions = {}) {
   // provide the vite define variable in this context
   await runner.executeId('/@vite/env')
 
-  for (const file of files)
-    await runner.executeFile(file)
+  for (const file of files) {
+    try {
+      await runner.executeFile(file)
+    }
+    catch (e) {
+      if (options.watch) {
+        process.exitCode = 1
+        // Circular reference throws a TypeError
+        if (e instanceof Error && e.name === 'TypeError')
+          continue
+
+        console.error(e)
+      }
+      else { throw e }
+    }
+  }
 
   if (!options.watch)
     await server.close()
