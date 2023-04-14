@@ -21,7 +21,10 @@ export const ENTRY_URL = `${
 
 let config: ResolvedConfig | undefined
 let runner: VitestRunner | undefined
+let vitestBC: BroadcastChannel | undefined
+let currentModule: string | undefined
 const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
+const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
@@ -76,13 +79,41 @@ ws.addEventListener('open', async () => {
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
+  const button = document.getElementById('vitest-browser-button') as HTMLButtonElement
+  button.addEventListener('click', () => {
+    if (currentModule && browserHashMap.has(currentModule)) {
+      const hidden = iFrame.classList.contains('hidden')
+      button.innerText = hidden ? 'Show Test UI' : 'Hide Test UI'
+      iFrame.classList.toggle('hidden')
+      const targetIFrame = browserIFrames.get(currentModule)
+      targetIFrame?.classList.remove('show')
+      if (!hidden)
+        targetIFrame?.classList.add('show')
+    }
+  })
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'vueuse-color-scheme')
+      document.documentElement.classList.toggle('dark', e.newValue === 'dark')
+  })
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
-  await runTests(paths, config!)
+  await runTests(paths, config!, (e) => {
+    if (e.data.type === 'navigate') {
+      currentModule = e.data.filename
+      button.removeAttribute('disabled')
+      if (!currentModule)
+        button.setAttribute('disabled', 'true')
+    }
+  })
 })
 
-async function runTests(paths: string[], config: ResolvedConfig) {
+async function runTests(
+  paths: string[],
+  config: ResolvedConfig,
+  navigate: (ev: BroadcastChannelEventMap['message']) => void,
+) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
@@ -98,9 +129,11 @@ async function runTests(paths: string[], config: ResolvedConfig) {
   }
 
   if (!runner) {
+    vitestBC = new BroadcastChannel('vitest-browser')
+    vitestBC.addEventListener('message', navigate)
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
-    runner = new BrowserRunner({ config, browserHashMap })
+    runner = new BrowserRunner({ config, browserHashMap, vitestBC })
   }
 
   if (!config.snapshotOptions.snapshotEnvironment)
@@ -113,7 +146,18 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     })
 
     const now = `${new Date().getTime()}`
-    files.forEach(i => browserHashMap.set(i, [true, now]))
+    files.forEach((i) => {
+      browserHashMap.set(i, [true, now])
+      const iFrame = document.createElement('iframe')
+      // by default hidden
+      iFrame.setAttribute('loading', 'eager')
+      iFrame.classList.add('iframe-test')
+      iFrame.setAttribute('src', `${url.pathname}/__vitest_test__/${i}.html`.replace('//', '/'))
+      browserIFrames.set(i, iFrame)
+      document.body.appendChild(iFrame)
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     for (const file of files)
       await startTests([file], runner)

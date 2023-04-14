@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
-
 import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
+import { readFile } from 'node:fs/promises'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
@@ -24,6 +24,23 @@ export default (base = '/'): Plugin[] => {
         viteConfig.esbuild.legalComments = 'inline'
       },
       async configureServer(server) {
+        const testMatcher = new RegExp(`^${base}__vitest_test__/(.*)\.html$`)
+        const testerHtml = await readFile(resolve(distRoot, 'client/tester.html'), 'utf-8')
+        server.middlewares.use((req, res, next) => {
+          const match = req.url?.match(testMatcher)
+          if (match) {
+            let [, test] = match
+            if (/^\w:/.test(test))
+              test = `/@fs/${test}`
+
+            res.setHeader('Content-Type', 'text/html; charset=utf-8')
+            res.write(testerHtml.replace('</body>', `<script type="module">await runTest('${test}');</script></body>`), 'utf-8')
+            res.end()
+          }
+          else {
+            next()
+          }
+        })
         server.middlewares.use(
           base,
           sirv(resolve(distRoot, 'client'), {

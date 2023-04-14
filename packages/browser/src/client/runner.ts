@@ -3,6 +3,7 @@ import { rpc } from './rpc'
 import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
+  vitestBC: BroadcastChannel
   config: ResolvedConfig
   browserHashMap: Map<string, [test: boolean, timstamp: string]>
 }
@@ -14,12 +15,14 @@ interface CoverageHandler {
 export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
+    vitestBC: BroadcastChannel
     hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.hashMap = options.browserHashMap
+      this.vitestBC = options.vitestBC
     }
 
     async onAfterRunTest(task: Test) {

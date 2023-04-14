@@ -62,6 +62,12 @@ export function runCurrent() {
     return runFiles([current.value])
 }
 
+let browser: BroadcastChannel | undefined
+
+export function notifySelectedTestBrowser(filename: string) {
+  browser?.postMessage({ type: 'navigate', filename })
+}
+
 watch(
   () => client.ws,
   (ws) => {
@@ -76,6 +82,8 @@ watch(
       ])
       client.state.collectFiles(files)
       config.value = _config
+      if (_config.browser.enabled && !_config.browser.headless && _config.browser.enableUI)
+        browser = new BroadcastChannel('vitest-browser')
     })
 
     ws.addEventListener('close', () => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { currentModule, dashboardVisible, showDashboard } from '../composables/navigation'
-import { client, findById } from '../composables/client'
+import { client, findById, notifySelectedTestBrowser } from '../composables/client'
 import type { Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
 import { files, isReport, runAll } from '~/composables/client'
@@ -16,6 +16,9 @@ function onItemClick(task: Task) {
   activeFileId.value = task.id
   currentModule.value = findById(task.id)
   showDashboard(false)
+  nextTick(() => {
+    notifySelectedTestBrowser(currentModule.value.filepath)
+  })
 }
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 </script>

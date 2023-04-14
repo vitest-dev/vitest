@@ -51,6 +51,13 @@ export interface BrowserConfigOptions {
    * The default port is 63315.
    */
   api?: ApiConfig | number
+
+  /**
+   * When running on browser, enable this flag to show the result.
+   *
+   * @default false
+   */
+  enableUI?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
