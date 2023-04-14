@@ -246,12 +246,12 @@ export class ViteNodeRunner {
   /** @internal */
   async dependencyRequest(id: string, fsPath: string, callstack: string[]) {
     const getStack = () => {
-      return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
+      return `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
     }
 
     let debugTimer: any
     if (this.debug)
-      debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
+      debugTimer = setTimeout(() => console.warn(`[vite-node] module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
     try {
       if (callstack.includes(fsPath)) {
