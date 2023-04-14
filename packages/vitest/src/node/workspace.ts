@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
-import { dirname, resolve, toNamespacedPath } from 'pathe'
+import mm from 'micromatch'
+import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
 import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
@@ -108,7 +109,7 @@ export class WorkspaceProject {
       await Promise.all(files.map(async (file) => {
         try {
           const code = await fs.readFile(file, 'utf-8')
-          if (this.ctx.isInSourceTestFile(code))
+          if (this.isInSourceTestFile(code))
             testFiles.push(file)
         }
         catch {
@@ -129,6 +130,23 @@ export class WorkspaceProject {
     }
 
     return fg(include, globOptions)
+  }
+
+  async isTargetFile(id: string, source?: string): Promise<boolean> {
+    const relativeId = relative(this.config.dir || this.config.root, id)
+    if (mm.isMatch(relativeId, this.config.exclude))
+      return false
+    if (mm.isMatch(relativeId, this.config.include))
+      return true
+    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
+      source = source || await fs.readFile(id, 'utf-8')
+      return this.isInSourceTestFile(source)
+    }
+    return false
+  }
+
+  isInSourceTestFile(code: string) {
+    return code.includes('import.meta.vitest')
   }
 
   filterFiles(testFiles: string[], filters: string[] = []) {
