@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url'
 
 import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
-import { readFile } from 'node:fs/promises'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
@@ -60,23 +59,9 @@ export default (base = '/'): Plugin[] => {
       },
       async resolveId(id) {
         if (!builtinModules.includes(id) && !polyfills.includes(id) && !id.startsWith('node:')) {
-          if (/\?browserv=\w+$/.test(id)) {
-            let useId = id.slice(0, id.lastIndexOf('?'))
-            if (useId.startsWith('/@fs/'))
-              useId = useId.slice(5)
+          if (!/\?browserv=\w+$/.test(id))
+            return
 
-            if (/^\w:/.test(useId))
-              useId = useId.replace(/\\/g, '/')
-          }
-
-          return
-        }
-
-        id = normalizeId(id)
-        return { id: await polyfillPath(id), moduleSideEffects: false }
-      },
-      async load(id) {
-        if (/\?browserv=\w+$/.test(id)) {
           let useId = id.slice(0, id.lastIndexOf('?'))
           if (useId.startsWith('/@fs/'))
             useId = useId.slice(5)
@@ -84,8 +69,11 @@ export default (base = '/'): Plugin[] => {
           if (/^\w:/.test(useId))
             useId = useId.replace(/\\/g, '/')
 
-          return await readFile(resolve(useId), 'utf-8')
+          return useId
         }
+
+        id = normalizeId(id)
+        return { id: await polyfillPath(id), moduleSideEffects: false }
       },
     },
   ]
