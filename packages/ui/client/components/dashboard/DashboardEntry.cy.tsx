@@ -1,8 +1,12 @@
 import { faker } from '@faker-js/faker'
 import DashboardEntry from './DashboardEntry.vue'
 
-const body = () => (<div data-testid="body-content">{ faker.lorem.words(2) }</div>)
-const header = () => (<div data-testid="header-content">{ faker.hacker.phrase() }</div>)
+function body() {
+  return <div data-testid="body-content">{ faker.lorem.words(2) }</div>
+}
+function header() {
+  return <div data-testid="header-content">{ faker.hacker.phrase() }</div>
+}
 const bodySelector = '[data-testid=body-content]'
 const headerSelector = '[data-testid=header-content]'
 // const tailSelector = '[data-testid=tail]'

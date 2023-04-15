@@ -96,7 +96,7 @@ async function sendTasksUpdate(runner: VitestRunner) {
   }
 }
 
-const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
+async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   await Promise.all(cleanups.map(async (fn) => {
     if (typeof fn !== 'function')
       return
@@ -125,47 +125,63 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   setCurrentTest(test)
 
-  const retry = test.retry || 1
-  for (let retryCount = 0; retryCount < retry; retryCount++) {
-    let beforeEachCleanups: HookCleanupCallback[] = []
-    try {
-      await runner.onBeforeTryTest?.(test, retryCount)
+  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
 
-      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
+  for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
+    const retry = test.retry || 1
 
-      test.result.retryCount = retryCount
+    for (let retryCount = 0; retryCount < retry; retryCount++) {
+      let beforeEachCleanups: HookCleanupCallback[] = []
+      try {
+        await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-      if (runner.runTest) {
-        await runner.runTest(test)
+        test.result.retryCount = retryCount
+        test.result.repeatCount = repeatCount
+
+        beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
+
+        if (runner.runTest) {
+          await runner.runTest(test)
+        }
+        else {
+          const fn = getFn(test)
+          if (!fn)
+            throw new Error('Test function is not found. Did you add it using `setFn`?')
+          await fn()
+        }
+
+        // some async expect will be added to this array, in case user forget to await theme
+        if (test.promises) {
+          const result = await Promise.allSettled(test.promises)
+          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+          if (errors.length)
+            throw errors
+        }
+
+        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+
+        if (!test.repeats)
+          test.result.state = 'pass'
+        else if (test.repeats && retry === retryCount)
+          test.result.state = 'pass'
       }
-      else {
-        const fn = getFn(test)
-        if (!fn)
-          throw new Error('Test function is not found. Did you add it using `setFn`?')
-        await fn()
+      catch (e) {
+        failTask(test.result, e)
       }
 
-      await runner.onAfterTryTest?.(test, retryCount)
+      try {
+        await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
+        await callCleanupHooks(beforeEachCleanups)
+      }
+      catch (e) {
+        failTask(test.result, e)
+      }
 
-      test.result.state = 'pass'
+      if (test.result.state === 'pass')
+        break
+      // update retry info
+      updateTask(test, runner)
     }
-    catch (e) {
-      failTask(test.result, e, runner)
-    }
-
-    try {
-      await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
-      await callCleanupHooks(beforeEachCleanups)
-    }
-    catch (e) {
-      failTask(test.result, e, runner)
-    }
-
-    if (test.result.state === 'pass')
-      break
-
-    // update retry info
-    updateTask(test, runner)
   }
 
   if (test.result.state === 'fail')
@@ -195,12 +211,17 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown, runner: VitestRunner) {
+function failTask(result: TaskResult, err: unknown) {
   result.state = 'fail'
-  const error = processError(err, runner.config)
-  result.error = error
-  result.errors ??= []
-  result.errors.push(error)
+  const errors = Array.isArray(err)
+    ? err
+    : [err]
+  for (const e of errors) {
+    const error = processError(e)
+    result.error ??= error
+    result.errors ??= []
+    result.errors.push(error)
+  }
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
@@ -268,7 +289,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       }
     }
     catch (e) {
-      failTask(suite.result, e, runner)
+      failTask(suite.result, e)
     }
 
     try {
@@ -276,32 +297,32 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      failTask(suite.result, e, runner)
+      failTask(suite.result, e)
     }
-  }
 
-  suite.result.duration = now() - start
-
-  if (suite.mode === 'run') {
-    if (!hasTests(suite)) {
-      suite.result.state = 'fail'
-      if (!suite.result.error) {
-        const error = processError(new Error(`No test found in suite ${suite.name}`))
-        suite.result.error = error
-        suite.result.errors = [error]
+    if (suite.mode === 'run') {
+      if (!hasTests(suite)) {
+        suite.result.state = 'fail'
+        if (!suite.result.error) {
+          const error = processError(new Error(`No test found in suite ${suite.name}`))
+          suite.result.error = error
+          suite.result.errors = [error]
+        }
+      }
+      else if (hasFailed(suite)) {
+        suite.result.state = 'fail'
+      }
+      else {
+        suite.result.state = 'pass'
       }
     }
-    else if (hasFailed(suite)) {
-      suite.result.state = 'fail'
-    }
-    else {
-      suite.result.state = 'pass'
-    }
+
+    updateTask(suite, runner)
+
+    suite.result.duration = now() - start
+
+    await runner.onAfterRunSuite?.(suite)
   }
-
-  await runner.onAfterRunSuite?.(suite)
-
-  updateTask(suite, runner)
 }
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {

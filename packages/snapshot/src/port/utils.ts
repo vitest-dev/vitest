@@ -18,23 +18,22 @@ import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
 
-export const testNameToKey = (testName: string, count: number): string =>
-  `${testName} ${count}`
+export function testNameToKey(testName: string, count: number): string {
+  return `${testName} ${count}`
+}
 
-export const keyToTestName = (key: string): string => {
+export function keyToTestName(key: string): string {
   if (!/ \d+$/.test(key))
     throw new Error('Snapshot keys must end with a number.')
 
   return key.replace(/ \d+$/, '')
 }
 
-export const getSnapshotData = (
-  content: string | null,
-  options: SnapshotStateOptions,
-): {
-  data: SnapshotData
-  dirty: boolean
-} => {
+export function getSnapshotData(content: string | null,
+  options: SnapshotStateOptions): {
+    data: SnapshotData
+    dirty: boolean
+  } {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
@@ -64,16 +63,18 @@ export const getSnapshotData = (
 
 // Add extra line breaks at beginning and end of multiline snapshot
 // to make the content easier to read.
-export const addExtraLineBreaks = (string: string): string =>
-  string.includes('\n') ? `\n${string}\n` : string
+export function addExtraLineBreaks(string: string): string {
+  return string.includes('\n') ? `\n${string}\n` : string
+}
 
 // Remove extra line breaks at beginning and end of multiline snapshot.
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
-export const removeExtraLineBreaks = (string: string): string =>
-  string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
+export function removeExtraLineBreaks(string: string): string {
+  return (string.length > 2 && string.startsWith('\n') && string.endsWith('\n'))
     ? string.slice(1, -1)
     : string
+}
 
 // export const removeLinesBeforeExternalMatcherTrap = (stack: string): string => {
 //   const lines = stack.split('\n')
@@ -134,7 +135,7 @@ export async function ensureDirectoryExists(environment: SnapshotEnvironment, fi
   catch { }
 }
 
-function normalizeNewlines(string: string) {
+export function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
@@ -151,7 +152,25 @@ export async function saveSnapshotFile(
 
   const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
   const oldContent = await environment.readSnapshotFile(snapshotPath)
-  const skipWriting = oldContent && oldContent === content
+  const skipWriting = oldContent != null && oldContent === content
+
+  if (skipWriting)
+    return
+
+  await ensureDirectoryExists(environment, snapshotPath)
+  await environment.saveSnapshotFile(
+    snapshotPath,
+    content,
+  )
+}
+
+export async function saveSnapshotFileRaw(
+  environment: SnapshotEnvironment,
+  content: string,
+  snapshotPath: string,
+) {
+  const oldContent = await environment.readSnapshotFile(snapshotPath)
+  const skipWriting = oldContent != null && oldContent === content
 
   if (skipWriting)
     return

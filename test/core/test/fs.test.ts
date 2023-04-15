@@ -1,5 +1,5 @@
-import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { timeout } from '../src/timeout'

@@ -1,4 +1,4 @@
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
 import type { File, Suite, Task } from 'vitest'
 
 function createSuiteHavingFailedTestWithXmlInError(): File[] {

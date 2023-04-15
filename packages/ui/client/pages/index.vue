@@ -18,7 +18,7 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   })
 }, 0)
 
-const resizeMain = () => {
+function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
   mainSizes[0] = (100 * panelWidth) / width

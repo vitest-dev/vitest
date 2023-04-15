@@ -1,4 +1,5 @@
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { builtinModules } from 'node:module'
 import { existsSync } from 'node:fs'
 import { resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
@@ -34,8 +35,9 @@ export function normalizeRequestId(id: string, base?: string): string {
 export const queryRE = /\?.*$/s
 export const hashRE = /#.*$/s
 
-export const cleanUrl = (url: string): string =>
-  url.replace(hashRE, '').replace(queryRE, '')
+export function cleanUrl(url: string): string {
+  return url.replace(hashRE, '').replace(queryRE, '')
+}
 
 const internalRequests = [
   '@vite/client',
@@ -44,7 +46,7 @@ const internalRequests = [
 
 const internalRequestRegexp = new RegExp(`^/?(${internalRequests.join('|')})$`)
 
-export const isInternalRequest = (id: string): boolean => {
+export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
@@ -82,11 +84,37 @@ export function toFilePath(id: string, root: string): { path: string; exists: bo
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
-    path: isWindows && absolute.startsWith('/')
+    path: (isWindows && absolute.startsWith('/'))
       ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
       : absolute,
     exists,
   }
+}
+
+const builtins = new Set([
+  ...builtinModules,
+  'assert/strict',
+  'diagnostics_channel',
+  'dns/promises',
+  'fs/promises',
+  'path/posix',
+  'path/win32',
+  'readline/promises',
+  'stream/consumers',
+  'stream/promises',
+  'stream/web',
+  'timers/promises',
+  'util/types',
+  'wasi',
+])
+
+const NODE_BUILTIN_NAMESPACE = 'node:'
+export function isNodeBuiltin(id: string): boolean {
+  return builtins.has(
+    id.startsWith(NODE_BUILTIN_NAMESPACE)
+      ? id.slice(NODE_BUILTIN_NAMESPACE.length)
+      : id,
+  )
 }
 
 /**

@@ -1,8 +1,9 @@
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
+import type { RawSnapshotInfo } from './port/rawSnapshot'
 
-const createMismatchError = (message: string, actual: unknown, expected: unknown) => {
+function createMismatchError(message: string, actual: unknown, expected: unknown) {
   const error = new Error(message)
   Object.defineProperty(error, 'actual', {
     value: actual,
@@ -35,6 +36,7 @@ interface AssertOptions {
   inlineSnapshot?: string
   error?: Error
   errorMessage?: string
+  rawSnapshot?: RawSnapshotInfo
 }
 
 export class SnapshotClient {
@@ -79,7 +81,7 @@ export class SnapshotClient {
   }
 
   /**
-   * Should be overriden by the consumer.
+   * Should be overridden by the consumer.
    *
    * Vitest checks equality with @vitest/expect.
    */
@@ -97,6 +99,7 @@ export class SnapshotClient {
       inlineSnapshot,
       error,
       errorMessage,
+      rawSnapshot,
     } = options
     let { received } = options
 
@@ -134,10 +137,36 @@ export class SnapshotClient {
       isInline,
       error,
       inlineSnapshot,
+      rawSnapshot,
     })
 
     if (!pass)
       throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, actual?.trim(), expected?.trim())
+  }
+
+  async assertRaw(options: AssertOptions): Promise<void> {
+    if (!options.rawSnapshot)
+      throw new Error('Raw snapshot is required')
+
+    const {
+      filepath = this.filepath,
+      rawSnapshot,
+    } = options
+
+    if (rawSnapshot.content == null) {
+      if (!filepath)
+        throw new Error('Snapshot cannot be used outside of test')
+
+      const snapshotState = this.getSnapshotState(filepath)
+
+      // save the filepath, so it don't lose even if the await make it out-of-context
+      options.filepath ||= filepath
+      // resolve and read the raw snapshot file
+      rawSnapshot.file = await snapshotState.environment.resolveRawPath(filepath, rawSnapshot.file)
+      rawSnapshot.content = await snapshotState.environment.readSnapshotFile(rawSnapshot.file) || undefined
+    }
+
+    return this.assert(options)
   }
 
   async resetCurrent() {

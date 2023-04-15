@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
+import { isNodeBuiltin } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { spyOn } from '../integrations/spy'
@@ -50,10 +50,6 @@ export class VitestMocker {
     return this.executor.options.root
   }
 
-  private get base() {
-    return this.executor.options.base
-  }
-
   private get mockMap() {
     return this.executor.options.mockMap
   }
@@ -87,7 +83,7 @@ export class VitestMocker {
     const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = !isAbsolute(fsPath) || fsPath.includes('/node_modules/') ? rawId : null
+    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
 
     return {
       id,
@@ -120,7 +116,7 @@ export class VitestMocker {
       const vitestError = new Error(
         '[vitest] There was an error when mocking a module. '
       + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
-      + 'Read more: https://vitest.dev/api/#vi-mock')
+      + 'Read more: https://vitest.dev/api/vi.html#vi-mock')
       vitestError.cause = err
       throw vitestError
     }

@@ -1,6 +1,11 @@
+// eslint-disable-next-line unicorn/prefer-node-protocol
 import util from 'util'
 // @ts-expect-error doesn't have types
 import loupeImport from 'loupe'
+
+interface LoupeOptions {
+  truncateThreshold?: number
+}
 
 const loupe = (typeof loupeImport.default === 'function' ? loupeImport.default : loupeImport)
 
@@ -13,22 +18,24 @@ export function utilInspect(item: unknown, options?: util.InspectOptions) {
 }
 
 // chai utils
-export function loupeInspect(obj: unknown): string {
+export function loupeInspect(obj: unknown, options: LoupeOptions = {}): string {
   return loupe(obj, {
     depth: 2,
-    truncate: 40,
+    truncate: options.truncateThreshold === 0
+      ? Infinity
+      : (options.truncateThreshold ?? 40),
   })
 }
 
-export function objDisplay(obj: unknown) {
-  const truncateThreshold = 40
-  const str = loupeInspect(obj)
+export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
+  const truncateThreshold = options.truncateThreshold ?? 40
+  const str = loupeInspect(obj, options)
   const type = Object.prototype.toString.call(obj)
 
-  if (str.length >= truncateThreshold) {
+  if (truncateThreshold && str.length >= truncateThreshold) {
     if (type === '[object Function]') {
       const fn = obj as () => void
-      return !fn.name || fn.name === ''
+      return (!fn.name || fn.name === '')
         ? '[Function]'
         : `[Function: ${fn.name}]`
     }

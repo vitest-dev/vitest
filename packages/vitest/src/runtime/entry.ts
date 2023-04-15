@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import { resolve } from 'pathe'
@@ -6,6 +7,7 @@ import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { distDir } from '../paths'
 import { startCoverageInsideWorker, stopCoverageInsideWorker, takeCoverageInsideWorker } from '../integrations/coverage'
+import { setupChaiConfig } from '../integrations/chai'
 import { setupGlobalEnv, withEnv } from './setup.node'
 import { rpc } from './rpc'
 import type { VitestExecutor } from './execute'
@@ -50,6 +52,14 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 
   const originalOnCollected = testRunner.onCollected
   testRunner.onCollected = async (files) => {
+    const state = getWorkerState()
+    files.forEach((file) => {
+      file.prepareDuration = state.durations.prepare
+      file.environmentLoad = state.durations.environment
+      // should be collected only for a single test file in a batch
+      state.durations.prepare = 0
+      state.durations.environment = 0
+    })
     rpc().onCollected(files)
     await originalOnCollected?.call(testRunner, files)
   }
@@ -66,17 +76,26 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
+  const workerState = getWorkerState()
+
   await setupGlobalEnv(config)
   await startCoverageInsideWorker(config.coverage, executor)
 
-  const workerState = getWorkerState()
+  if (config.chaiConfig)
+    setupChaiConfig(config.chaiConfig)
 
   const runner = await getTestRunner(config, executor)
+
+  workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = environment
 
+  workerState.durations.environment = performance.now()
+
   await withEnv(environment.name, environment.options || config.environmentOptions || {}, executor, async () => {
+    workerState.durations.environment = performance.now() - workerState.durations.environment
+
     for (const file of files) {
       // it doesn't matter if running with --threads
       // if running with --no-threads, we usually want to reset everything before running a test

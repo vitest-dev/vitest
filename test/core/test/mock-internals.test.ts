@@ -1,5 +1,5 @@
-import childProcess, { exec } from 'child_process'
-import timers from 'timers'
+import childProcess, { exec } from 'node:child_process'
+import timers from 'node:timers'
 import { expect, test, vi } from 'vitest'
 import { execDefault, execHelloWorld, execImportAll } from '../src/exec'
 import { dynamicImport } from '../src/dynamic-import'

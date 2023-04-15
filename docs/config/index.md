@@ -54,8 +54,7 @@ export default defineConfig({
 When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
 
 ```ts
-import { mergeConfig } from 'vite'
-import { defineConfig } from 'vitest/config'
+import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
 export default mergeConfig(viteConfig, defineConfig({
@@ -65,10 +64,18 @@ export default mergeConfig(viteConfig, defineConfig({
 }))
 ```
 
+::: warning
+`mergeConfig` helper is availabe in Vitest since v0.30.0. You can import it from `vite` directly, if you use lower version.
+:::
+
 ## Options
 
 :::tip
 In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+:::
+
+::: tip
+All configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
 :::
 
 ### include
@@ -96,6 +103,10 @@ Handling for dependencies resolution.
 - **Type:** `DepOptimizationConfig & { enabled: boolean }`
 - **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
+
+::: warning
+This feature is temporarily disabled since Vitest 0.30.0.
+:::
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
 
@@ -138,7 +149,7 @@ When a dependency is a valid ESM package, try to guess the cjs version based on 
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
-#### deps.registerNodeLoader
+#### deps.registerNodeLoader<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -408,7 +419,7 @@ export default defineConfig({
 })
 ```
 
-### update
+### update<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -416,7 +427,7 @@ export default defineConfig({
 
 Update snapshot files. This will update all changed snapshots and delete obsolete ones.
 
-### watch
+### watch<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -431,7 +442,7 @@ Enable watch mode
 
 Project root
 
-### reporters
+### reporters<NonProjectOption />
 
 - **Type:** `Reporter | Reporter[]`
 - **Default:** `'default'`
@@ -449,26 +460,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
- ### outputDiffLines
-
- - **Type:** `number`
- - **Default:** `15`
- - **CLI:** `--outputDiffLines=<lines>`, `--output-diff-lines=<lines>`
-
- Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
-
- ```diff
- - test: 1,
- + test: 2,
- - obj: '1',
- ...
- - test2: 1,
- + test2: 1,
- - obj2: '2',
- ...
- ```
-
-### outputFile
+### outputFile<NonProjectOption />
 
 - **Type:** `string | Record<string, string>`
 - **CLI:** `--outputFile=<path>`, `--outputFile.json=./path`
@@ -501,21 +493,21 @@ Even though this option will force tests to run one after another, this option i
 This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
 :::
 
-### maxThreads
+### maxThreads<NonProjectOption />
 
 - **Type:** `number`
 - **Default:** _available CPUs_
 
 Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
-### minThreads
+### minThreads<NonProjectOption />
 
 - **Type:** `number`
 - **Default:** _available CPUs_
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
-### useAtomics
+### useAtomics<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -540,14 +532,14 @@ Default timeout of a test in milliseconds
 
 Default timeout of a hook in milliseconds
 
-### teardownTimeout
+### teardownTimeout<NonProjectOption />
 
 - **Type:** `number`
 - **Default:** `10000`
 
 Default timeout to wait for close when Vitest shuts down, in milliseconds
 
-### silent
+### silent<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -607,14 +599,14 @@ Beware that the global setup is run in a different global scope, so your tests d
 :::
 
 
-### watchExclude
+### watchExclude<NonProjectOption />
 
 - **Type:** `string[]`
 - **Default:** `['**/node_modules/**', '**/dist/**']`
 
 Glob pattern of file paths to be ignored from triggering watch rerun.
 
-### forceRerunTriggers
+### forceRerunTriggers<NonProjectOption />
 
 - **Type**: `string[]`
 - **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**']`
@@ -642,7 +634,7 @@ Make sure that your files are not excluded by `watchExclude`.
 
 Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
 
-### coverage
+### coverage<NonProjectOption />
 
 You can use [`c8`](https://github.com/bcoe/c8), [`istanbul`](https://istanbul.js.org/)  or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
@@ -719,7 +711,7 @@ List of files excluded from coverage as glob patterns.
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8' | 'istanbul'`
-- **CLI:** `--coverage.all`, --coverage.all=false`
+- **CLI:** `--coverage.all`, `--coverage.all=false`
 
 Whether to include all files, including the untested ones into report.
 
@@ -922,7 +914,7 @@ Watermarks for statements, lines, branches and functions. See [istanbul document
 
 Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
 
-### testNamePattern
+### testNamePattern<NonProjectOption />
 
 - **Type** `string | RegExp`
 - **CLI:** `-t <pattern>`, `--testNamePattern=<pattern>`, `--test-name-pattern=<pattern>`
@@ -944,7 +936,7 @@ test('doNotRun', () => {
 })
 ```
 
-### open
+### open<NonProjectOption />
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -1107,13 +1099,13 @@ export default defineConfig({
 })
 ```
 
-### snapshotFormat
+### snapshotFormat<NonProjectOption />
 
 - **Type:** `PrettyFormatOptions`
 
 Format options for snapshot testing. These options are passed down to [`pretty-format`](https://www.npmjs.com/package/pretty-format).
 
-### resolveSnapshotPath
+### resolveSnapshotPath<NonProjectOption />
 
 - **Type**: `(testPath: string, snapExtension: string) => string`
 - **Default**: stores snapshot files in `__snapshots__` directory
@@ -1138,7 +1130,7 @@ export default defineConfig({
 
 Allow tests and suites that are marked as only.
 
-### dangerouslyIgnoreUnhandledErrors
+### dangerouslyIgnoreUnhandledErrors<NonProjectOption />
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -1146,7 +1138,7 @@ Allow tests and suites that are marked as only.
 
 Ignore any unhandled errors that occur.
 
-### passWithNoTests
+### passWithNoTests<NonProjectOption />
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -1215,7 +1207,7 @@ A number of tests that are allowed to run at the same time marked with `test.con
 
 Test above this limit will be queued to run when available slot appears.
 
-### cache
+### cache<NonProjectOption />
 
 - **Type**: `false | { dir? }`
 
@@ -1240,7 +1232,7 @@ You can provide sequence options to CLI with dot notation:
 npx vitest --sequence.shuffle --sequence.seed=1000
 ```
 
-#### sequence.sequencer
+#### sequence.sequencer<NonProjectOption />
 
 - **Type**: `TestSequencerConstructor`
 - **Default**: `BaseSequencer`
@@ -1259,7 +1251,7 @@ If you want tests to run randomly, you can enable it with this option, or CLI ar
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 
-#### sequence.seed
+#### sequence.seed<NonProjectOption />
 
 - **Type**: `number`
 - **Default**: `Date.now()`
@@ -1346,9 +1338,40 @@ By default, if Vitest finds source error, it will fail test suite.
 
 Path to custom tsconfig, relative to the project root.
 
-### slowTestThreshold
+### slowTestThreshold<NonProjectOption />
 
 - **Type**: `number`
 - **Default**: `300`
 
 The number of milliseconds after which a test is considered slow and reported as such in the results.
+
+### chaiConfig
+
+- **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`
+- **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40 }`
+- **Version:** Vitest 0.30.0
+
+Equivalent to [Chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js).
+
+#### chaiConfig.includeStack
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Influences whether stack trace is included in Assertion error message. Default of false suppresses stack trace in the error message.
+
+#### chaiConfig.showDiff
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Influences whether or not the `showDiff` flag should be included in the thrown AssertionErrors. `false` will always be `false`; `true` will be true when the assertion has requested a diff to be shown.
+
+#### chaiConfig.truncateThreshold
+
+- **Type:** `number`
+- **Default:** `40`
+
+Sets length threshold for actual and expected values in assertion errors. If this threshold is exceeded, for example for large data structures, the value is replaced with something like `[ Array(3) ]` or `{ Object (prop1, prop2) }`. Set it to `0` if you want to disable truncating altogether.
+
+This config option affects truncating values in `test.each` titles and inside the assertion error message.

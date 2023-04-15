@@ -4,6 +4,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
+import type { ChaiConfig } from '../integrations/chai'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -33,6 +34,89 @@ export interface EnvironmentOptions {
 }
 
 export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+
+interface SequenceOptions {
+  /**
+   * Class that handles sorting and sharding algorithm.
+   * If you only need to change sorting, you can extend
+   * your custom sequencer from `BaseSequencer` from `vitest/node`.
+   * @default BaseSequencer
+   */
+  sequencer?: TestSequencerConstructor
+  /**
+   * Should tests run in random order.
+   * @default false
+   */
+  shuffle?: boolean
+  /**
+   * Defines how setup files should be ordered
+   * - 'parallel' will run all setup files in parallel
+   * - 'list' will run all setup files in the order they are defined in the config file
+   * @default 'parallel'
+   */
+  setupFiles?: SequenceSetupFiles
+  /**
+   * Seed for the random number generator.
+   * @default Date.now()
+   */
+  seed?: number
+  /**
+   * Defines how hooks should be ordered
+   * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
+   * - `list` will order hooks in the order they are defined
+   * - `parallel` will run hooks in a single group in parallel
+   * @default 'parallel'
+   */
+  hooks?: SequenceHooks
+}
+
+interface DepsOptions {
+  /**
+   * Enable dependency optimization. This can improve the performance of your tests.
+   */
+  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled'> & {
+    enabled: boolean
+  }
+  /**
+   * Externalize means that Vite will bypass the package to native Node.
+   *
+   * Externalized dependencies will not be applied Vite's transformers and resolvers.
+   * And does not support HMR on reload.
+   *
+   * Typically, packages under `node_modules` are externalized.
+   */
+  external?: (string | RegExp)[]
+  /**
+   * Vite will process inlined modules.
+   *
+   * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+   *
+   * If `true`, every dependency will be inlined
+   */
+  inline?: (string | RegExp)[] | true
+
+  /**
+   * Interpret CJS module's default as named exports
+   *
+   * @default true
+   */
+  interopDefault?: boolean
+
+  /**
+   * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+   * This will significantly improve the performance in huge repo, but might potentially
+   * cause some misalignment if a package have different logic in ESM and CJS mode.
+   *
+   * @default false
+   */
+  fallbackCJS?: boolean
+
+  /**
+   * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
+   * @default false
+   */
+  registerNodeLoader?: boolean
+}
 
 export interface InlineConfig {
   /**
@@ -70,53 +154,7 @@ export interface InlineConfig {
   /**
    * Handling for dependencies inlining or externalizing
    */
-  deps?: {
-    /**
-     * Enable dependency optimization. This can improve the performance of your tests.
-     */
-    experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled'> & {
-      enabled: boolean
-    }
-    /**
-     * Externalize means that Vite will bypass the package to native Node.
-     *
-     * Externalized dependencies will not be applied Vite's transformers and resolvers.
-     * And does not support HMR on reload.
-     *
-     * Typically, packages under `node_modules` are externalized.
-     */
-    external?: (string | RegExp)[]
-    /**
-     * Vite will process inlined modules.
-     *
-     * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
-     *
-     * If `true`, every dependency will be inlined
-     */
-    inline?: (string | RegExp)[] | true
-
-    /**
-     * Interpret CJS module's default as named exports
-     *
-     * @default true
-     */
-    interopDefault?: boolean
-
-    /**
-     * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
-     * This will significantly improve the performance in huge repo, but might potentially
-     * cause some misalignment if a package have different logic in ESM and CJS mode.
-     *
-     * @default false
-     */
-    fallbackCJS?: boolean
-
-    /**
-     * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
-     * @default false
-     */
-    registerNodeLoader?: boolean
-  }
+  deps?: DepsOptions
 
   /**
    * Base directory to scan for the test files
@@ -205,12 +243,6 @@ export interface InlineConfig {
    * and/or paths to custom reporters.
    */
   reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
-
-  /**
-   * Maximum number of line to show in a single diff.
-   * @default 15
-   */
-  outputDiffLines?: number
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
@@ -485,40 +517,7 @@ export interface InlineConfig {
   /**
    * Options for configuring the order of running tests.
    */
-  sequence?: {
-    /**
-     * Class that handles sorting and sharding algorithm.
-     * If you only need to change sorting, you can extend
-     * your custom sequencer from `BaseSequencer` from `vitest/node`.
-     * @default BaseSequencer
-     */
-    sequencer?: TestSequencerConstructor
-    /**
-     * Should tests run in random order.
-     * @default false
-     */
-    shuffle?: boolean
-    /**
-     * Defines how setup files should be ordered
-     * - 'parallel' will run all setup files in parallel
-     * - 'list' will run all setup files in the order they are defined in the config file
-     * @default 'parallel'
-     */
-    setupFiles?: SequenceSetupFiles
-    /**
-     * Seed for the random number generator.
-     * @default Date.now()
-     */
-    seed?: number
-    /**
-     * Defines how hooks should be ordered
-     * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
-     * - `list` will order hooks in the order they are defined
-     * - `parallel` will run hooks in a single group in parallel
-     * @default 'parallel'
-     */
-    hooks?: SequenceHooks
-  }
+  sequence?: SequenceOptions
 
   /**
    * Specifies an `Object`, or an `Array` of `Object`,
@@ -562,6 +561,12 @@ export interface InlineConfig {
    * Requires `singleThread: true` OR `threads: false`.
    */
   inspectBrk?: boolean
+
+  /**
+   * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
+   * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
+  */
+  chaiConfig?: ChaiConfig
 }
 
 export interface TypecheckConfig {
@@ -680,6 +685,43 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   runner?: string
 }
 
+export type ProjectConfig = Omit<
+  UserConfig,
+  | 'sequencer'
+  | 'shard'
+  | 'watch'
+  | 'run'
+  | 'cache'
+  | 'update'
+  | 'reporters'
+  | 'outputFile'
+  | 'maxThreads'
+  | 'minThreads'
+  | 'useAtomics'
+  | 'teardownTimeout'
+  | 'silent'
+  | 'watchExclude'
+  | 'forceRerunTriggers'
+  | 'testNamePattern'
+  | 'ui'
+  | 'open'
+  | 'uiBase'
+  // TODO: allow snapshot options
+  | 'snapshotFormat'
+  | 'resolveSnapshotPath'
+  | 'passWithNoTests'
+  | 'onConsoleLog'
+  | 'dangerouslyIgnoreUnhandledErrors'
+  | 'slowTestThreshold'
+  | 'inspect'
+  | 'inspectBrk'
+  | 'deps'
+  | 'coverage'
+> & {
+  sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
+  deps?: Omit<DepsOptions, 'registerNodeLoader'>
+}
+
 export type RuntimeConfig = Pick<
   UserConfig,
   | 'allowOnly'
@@ -691,3 +733,5 @@ export type RuntimeConfig = Pick<
   | 'fakeTimers'
   | 'maxConcurrency'
 > & { sequence?: { hooks?: SequenceHooks } }
+
+export type { UserWorkspaceConfig } from '../config'

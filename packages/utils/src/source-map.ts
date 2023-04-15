@@ -53,7 +53,7 @@ export function parseSingleStack(raw: string): ParsedStack | null {
   // because this line doesn't have function name
   const [url, lineNumber, columnNumber] = extractLocation(location ? location[1] : sanitizedLine)
   let method = (location && sanitizedLine) || ''
-  let file = url && ['eval', '<anonymous>'].includes(url) ? undefined : url
+  let file = (url && ['eval', '<anonymous>'].includes(url)) ? undefined : url
 
   if (!file || !lineNumber || !columnNumber)
     return null

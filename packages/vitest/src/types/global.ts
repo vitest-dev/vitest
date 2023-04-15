@@ -26,6 +26,11 @@ declare module '@vitest/runner' {
     expect: Vi.ExpectStatic
   }
 
+  interface File {
+    prepareDuration?: number
+    environmentLoad?: number
+  }
+
   interface TaskBase {
     logs?: UserConsoleLog[]
   }
@@ -38,7 +43,8 @@ declare module '@vitest/runner' {
 declare global {
   // support augmenting jest.Matchers by other libraries
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+    // eslint-disable-next-line unused-imports/no-unused-vars
     interface Matchers<R, T = {}> {}
   }
 
@@ -66,12 +72,13 @@ declare global {
 
     interface JestAssertion<T = any> extends jest.Matchers<void, T> {
       // Snapshot
-      toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
-      toMatchSnapshot(message?: string): void
       matchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
       matchSnapshot(message?: string): void
+      toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
+      toMatchSnapshot(message?: string): void
       toMatchInlineSnapshot<U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
       toMatchInlineSnapshot(snapshot?: string, message?: string): void
+      toMatchFileSnapshot(filepath: string, message?: string): Promise<void>
       toThrowErrorMatchingSnapshot(message?: string): void
       toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void
 

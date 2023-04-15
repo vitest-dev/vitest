@@ -148,6 +148,10 @@ export default withPwa(defineConfig({
               link: '/guide/features',
             },
             {
+              text: 'Workspace',
+              link: '/guide/workspace',
+            },
+            {
               text: 'CLI',
               link: '/guide/cli',
             },

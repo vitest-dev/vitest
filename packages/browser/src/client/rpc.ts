@@ -41,14 +41,14 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export const rpcDone = async () => {
+export async function rpcDone() {
   if (!promises.size)
     return
   const awaitable = Array.from(promises)
   return Promise.all(awaitable)
 }
 
-export const createSafeRpc = (client: VitestClient, getTimers: () => any): VitestClient['rpc'] => {
+export function createSafeRpc(client: VitestClient, getTimers: () => any): VitestClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)
@@ -68,7 +68,7 @@ export const createSafeRpc = (client: VitestClient, getTimers: () => any): Vites
   })
 }
 
-export const rpc = (): VitestClient['rpc'] => {
+export function rpc(): VitestClient['rpc'] {
   // @ts-expect-error not typed global
   return globalThis.__vitest_worker__.safeRpc
 }

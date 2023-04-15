@@ -1,7 +1,12 @@
-import concordance, { type DisplayOptions } from 'concordance'
+import concordance from 'concordance'
 import { getColors } from './colors'
 
-export const getConcordanceTheme = () => {
+interface DisplayOptions {
+  theme?: any
+  maxDepth?: number
+}
+
+export function getConcordanceTheme() {
   const c = getColors()
 
   // this theme is taken from ava: https://github.com/avajs/ava/blob/main/lib/concordance-options.js
@@ -86,8 +91,4 @@ export const getConcordanceTheme = () => {
 
 export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions) {
   return concordance.diff(expected, actual, options)
-}
-
-export function formatDescriptor(value: unknown, options: DisplayOptions) {
-  return concordance.formatDescriptor(value, options)
 }

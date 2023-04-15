@@ -1,6 +1,6 @@
-import { existsSync, promises as fs } from 'fs'
-import _url from 'url'
-import type { Profiler } from 'inspector'
+import { existsSync, promises as fs } from 'node:fs'
+import _url from 'node:url'
+import type { Profiler } from 'node:inspector'
 import { extname, resolve } from 'pathe'
 import c from 'picocolors'
 import { provider } from 'std-env'
@@ -187,6 +187,7 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
           lines: this.options.lines,
           statements: this.options.statements,
         },
+        perFile: this.options.perFile,
         configurationFile: this.ctx.server.config.configFile,
       })
     }

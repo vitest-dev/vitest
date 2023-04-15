@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-const noop = () => {}
+function noop() {}
 
 export default defineConfig({
   test: {

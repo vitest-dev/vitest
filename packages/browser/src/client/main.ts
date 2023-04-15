@@ -26,7 +26,7 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
-const getQueryPaths = () => {
+function getQueryPaths() {
   return url.searchParams.getAll('path')
 }
 
@@ -66,6 +66,10 @@ ws.addEventListener('open', async () => {
     moduleCache: new Map(),
     rpc: client.rpc,
     safeRpc,
+    durations: {
+      environment: 0,
+      prepare: 0,
+    },
   }
 
   const paths = getQueryPaths()

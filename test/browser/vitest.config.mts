@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-const noop = () => {}
+function noop() {}
 
 export default defineConfig({
   test: {

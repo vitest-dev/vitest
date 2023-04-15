@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'url'
-// eslint-disable-next-line no-restricted-imports
-import { resolve } from 'path'
-import { builtinModules } from 'module'
+import { fileURLToPath } from 'node:url'
+
+import { resolve } from 'node:path'
+import { builtinModules } from 'node:module'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'

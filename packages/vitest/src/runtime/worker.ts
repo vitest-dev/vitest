@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
 import type { RuntimeRPC, WorkerContext } from '../types'
@@ -24,6 +25,10 @@ function init(ctx: WorkerContext) {
     moduleCache,
     config,
     mockMap,
+    durations: {
+      environment: 0,
+      prepare: performance.now(),
+    },
     rpc: createBirpc<RuntimeRPC>(
       {},
       {

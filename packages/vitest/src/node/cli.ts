@@ -25,7 +25,6 @@ cli
   .option('--silent', 'Silent console output from tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')
-  .option('--outputDiffLines <lines>', 'Number of lines in single diff (default: 15)')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
   .option('--run', 'Disable watch mode')

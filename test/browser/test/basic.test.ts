@@ -7,3 +7,10 @@ it('basic', async () => {
 it('basic 2', () => {
   expect(globalThis.window).toBeDefined()
 })
+
+it.each([
+  ['x', true],
+  ['y', false],
+])('%s is x', (val, expectedResult) => {
+  expect(val === 'x').toBe(expectedResult)
+})

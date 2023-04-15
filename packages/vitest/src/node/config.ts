@@ -4,7 +4,7 @@ import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
@@ -86,6 +86,10 @@ export function resolveConfig(
     mode,
   } as ResolvedConfig
 
+  resolved.inspect = Boolean(resolved.inspect)
+  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  resolved.singleThread = Boolean(resolved.singleThread)
+
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
@@ -151,7 +155,7 @@ export function resolveConfig(
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: isCI && !UPDATE_SNAPSHOT
+    updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'
@@ -270,7 +274,7 @@ export function resolveConfig(
   resolved.browser.headless ??= isCI
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
-    port: 63315,
+    port: defaultBrowserPort,
   }
 
   return resolved

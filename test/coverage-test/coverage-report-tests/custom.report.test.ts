@@ -2,7 +2,7 @@
  * Custom coverage provider specific test cases
  */
 
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 
 test('custom json report', async () => {

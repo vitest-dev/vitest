@@ -1,5 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
-import { basename, dirname, join } from 'pathe'
+import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 import type { SnapshotEnvironment } from '../types'
 
 export class NodeSnapshotEnvironment implements SnapshotEnvironment {
@@ -11,6 +11,12 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
     return `// Snapshot v${this.getVersion()}`
   }
 
+  async resolveRawPath(testPath: string, rawPath: string) {
+    return isAbsolute(rawPath)
+      ? rawPath
+      : resolve(dirname(testPath), rawPath)
+  }
+
   async resolvePath(filepath: string): Promise<string> {
     return join(
       join(
@@ -19,11 +25,12 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
     )
   }
 
-  async prepareDirectory(filepath: string): Promise<void> {
-    await fs.mkdir(filepath, { recursive: true })
+  async prepareDirectory(dirPath: string): Promise<void> {
+    await fs.mkdir(dirPath, { recursive: true })
   }
 
   async saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
+    await fs.mkdir(dirname(filepath), { recursive: true })
     await fs.writeFile(filepath, snapshot, 'utf-8')
   }
 

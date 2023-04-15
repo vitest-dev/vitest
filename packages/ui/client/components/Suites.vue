@@ -6,8 +6,9 @@ import { client, current, isReport, runCurrent } from '~/composables/client'
 const name = computed(() => current.value?.name.split(/\//g).pop())
 
 const failedSnapshot = computed(() => current.value?.tasks && hasFailedSnapshot(current.value?.tasks))
-const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.value)
-
+function updateSnapshot() {
+  return current.value && client.rpc.updateSnapshot(current.value)
+}
 async function onRunCurrent() {
   if (coverageEnabled.value) {
     disableCoverage.value = true

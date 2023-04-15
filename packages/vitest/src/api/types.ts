@@ -15,10 +15,11 @@ export interface WebSocketHandlers {
   getPaths(): string[]
   getConfig(): ResolvedConfig
   resolveSnapshotPath(testPath: string): string
+  resolveSnapshotRawPath(testPath: string, rawPath: string): string
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
   readFile(id: string): Promise<string | null>
-  writeFile(id: string, content: string): Promise<void>
+  writeFile(id: string, content: string, ensureDir?: boolean): Promise<void>
   removeFile(id: string): Promise<void>
   createDirectory(id: string): Promise<string | undefined>
   snapshotSaved(snapshot: SnapshotResult): void

@@ -1,5 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 
+import { dirname } from 'pathe'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -10,10 +11,13 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive } from '../utils'
+import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(ctx: Vitest, server?: ViteDevServer) {
+export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: ViteDevServer) {
+  const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
+
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents>>()
@@ -61,6 +65,9 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
         resolveSnapshotPath(testPath) {
           return ctx.snapshot.resolvePath(testPath)
         },
+        resolveSnapshotRawPath(testPath, rawPath) {
+          return ctx.snapshot.resolveRawPath(testPath, rawPath)
+        },
         removeFile(id) {
           return fs.unlink(id)
         },
@@ -75,8 +82,10 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
         snapshotSaved(snapshot) {
           ctx.snapshot.add(snapshot)
         },
-        writeFile(id, content) {
-          return fs.writeFile(id, content, 'utf-8')
+        async writeFile(id, content, ensureDir) {
+          if (ensureDir)
+            await fs.mkdir(dirname(id), { recursive: true })
+          return await fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
           await ctx.rerunFiles(files)

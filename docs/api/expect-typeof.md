@@ -47,8 +47,12 @@
   import { expectTypeOf } from 'vitest'
 
   type ResponsiveProp<T> = T | T[] | { xs?: T; sm?: T; md?: T }
-  const getResponsiveProp = <T>(_props: T): ResponsiveProp<T> => ({})
+
   interface CSSProperties { margin?: string; padding?: string }
+
+  function getResponsiveProp<T>(_props: T): ResponsiveProp<T> {
+    return {}
+  }
 
   const cssProperties: CSSProperties = { margin: '1px', padding: '2px' }
 
@@ -75,8 +79,12 @@
   import { expectTypeOf } from 'vitest'
 
   type ResponsiveProp<T> = T | T[] | { xs?: T; sm?: T; md?: T }
-  const getResponsiveProp = <T>(_props: T): ResponsiveProp<T> => ({})
+
   interface CSSProperties { margin?: string; padding?: string }
+
+  function getResponsiveProp<T>(_props: T): ResponsiveProp<T> {
+    return {}
+  }
 
   const cssProperties: CSSProperties = { margin: '1px', padding: '2px' }
 
@@ -140,7 +148,9 @@
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  const foo = (a: number, b: string) => [a, b]
+  function foo(a: number, b: string) {
+    return [a, b]
+  }
 
   expectTypeOf(foo).parameter(0).toBeNumber()
   expectTypeOf(foo).parameter(1).toBeString()
@@ -208,7 +218,9 @@
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  const asyncFunc = async () => 123
+  async function asyncFunc() {
+    return 123
+  }
 
   expectTypeOf(asyncFunc).returns.resolves.toBeNumber()
   expectTypeOf(Promise.resolve('string')).resolves.toBeString()
@@ -227,7 +239,9 @@
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  const isString = (v: any): v is string => typeof v === 'string'
+  function isString(v: any): v is string {
+    return typeof v === 'string'
+  }
   expectTypeOf(isString).guards.toBeString()
   ```
 
@@ -244,7 +258,7 @@
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  const assertNumber = (v: any): asserts v is number => {
+  function assertNumber(v: any): asserts v is number {
     if (typeof v !== 'number')
       throw new TypeError('Nope !')
   }
