@@ -30,11 +30,21 @@ export default (base = '/'): Plugin[] => {
           const match = req.url?.match(testMatcher)
           if (match) {
             let [, test] = match
+            const title = ` - ${test}</title>`
             if (/^\w:/.test(test))
               test = `/@fs/${test}`
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8')
-            res.write(testerHtml.replace('</body>', `<script type="module">await runTest('${test}');</script></body>`), 'utf-8')
+            res.write(
+              testerHtml.replace(
+                'href="favicon.svg"', `href="${base}/favicon.svg"`.replace('//', '/'),
+              ).replace(
+                '</title>', title,
+              ).replace(
+                '</body>', `<script type="module">await runTest('${test}');</script></body>`,
+              ),
+              'utf-8',
+            )
             res.end()
           }
           else {
