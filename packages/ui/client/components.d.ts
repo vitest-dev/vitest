@@ -30,6 +30,7 @@ declare module '@vue/runtime-core' {
     TestFilesEntry: typeof import('./components/dashboard/TestFilesEntry.vue')['default']
     TestsEntry: typeof import('./components/dashboard/TestsEntry.vue')['default']
     TestsFilesContainer: typeof import('./components/dashboard/TestsFilesContainer.vue')['default']
+    ViewBrowserUI: typeof import('./components/views/ViewBrowserUI.vue')['default']
     ViewConsoleOutput: typeof import('./components/views/ViewConsoleOutput.vue')['default']
     ViewConsoleOutputEntry: typeof import('./components/views/ViewConsoleOutputEntry.vue')['default']
     ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']

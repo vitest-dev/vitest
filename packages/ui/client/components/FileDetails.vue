@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, current, currentLogs, isReport } from '~/composables/client'
+import { browser, client, current, currentLogs, isReport } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
@@ -88,6 +88,15 @@ function onDraft(value: boolean) {
           {{ draft ? '*&#160;' : '' }}Code
         </button>
         <button
+          v-if="browser"
+          tab-button
+          data-testid="btn-console"
+          :class="{ 'tab-button-active': viewMode === 'browser' }"
+          @click="changeViewMode('browser')"
+        >
+          Browser UI
+        </button>
+        <button
           tab-button
           data-testid="btn-console"
           :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && consoleCount === 0 }"
@@ -104,6 +113,7 @@ function onDraft(value: boolean) {
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" data-testid="editor" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />
+      <ViewBrowserUI v-else-if="viewMode === 'browser'" />
       <ViewReport v-else-if="!viewMode" :file="current" data-testid="report" />
     </div>
   </div>

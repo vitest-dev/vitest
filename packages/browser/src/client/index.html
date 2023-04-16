@@ -144,6 +144,7 @@
         width: 100vw;
         height: calc(100vh - 40px);
         border: none;
+        z-index: 1;
       }
       #vitest-ui.hidden {
         width: 0;
@@ -157,22 +158,30 @@
         height: calc(100vh - 82px);
       }
       .iframe-test {
-        overflow: hidden;
+        /*overflow: hidden;
         padding: 0;
         margin: 0;
         width: 0;
-        height: 0;
+        height: 0;*/
+        /* create stacking context */
+        position: fixed;
+        z-index: -1;
       }
       .iframe-test.show {
         width: 100vw;
-        height: calc(100vh - 40px);
+        height: calc(100vh - 124px);
         border: none;
         grid-row: 1;
+        top: 134px;
+        right: 14px;
+        bottom: 14px;
+        z-index: 1;
       }
       #vitest-browser-button {
         border: none;
         padding: 0.5em;
         min-width: 70px;
+        display: none;
       }
       #vitest-browser-button:not([disabled]) {
         cursor: pointer;

@@ -32,6 +32,8 @@ export const client = (function createVitestClient() {
 })()
 
 export const config = shallowRef<ResolvedConfig>({} as any)
+export const browser = ref(false)
+
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const files = computed(() => client.state.getFiles())
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
@@ -62,10 +64,14 @@ export function runCurrent() {
     return runFiles([current.value])
 }
 
-let browser: BroadcastChannel | undefined
+let browserChannel: BroadcastChannel | undefined
 
-export function notifySelectedTestBrowser(filename: string) {
-  browser?.postMessage({ type: 'navigate', filename })
+export function hideSelectedTestBrowser() {
+  nextTick().then(() => browserChannel?.postMessage({ type: 'hide' }))
+}
+
+export function notifySelectedTestBrowser(filename: string, position: number) {
+  nextTick().then(() => browserChannel?.postMessage({ type: 'navigate', filename, position }))
 }
 
 watch(
@@ -82,8 +88,10 @@ watch(
       ])
       client.state.collectFiles(files)
       config.value = _config
-      if (_config.browser.enabled && !_config.browser.headless && _config.browser.enableUI)
-        browser = new BroadcastChannel('vitest-browser')
+      if (_config.browser.enabled && !_config.browser.headless && _config.browser.enableUI) {
+        browserChannel = new BroadcastChannel('vitest-browser')
+        browser.value = true
+      }
     })
 
     ws.addEventListener('close', () => {

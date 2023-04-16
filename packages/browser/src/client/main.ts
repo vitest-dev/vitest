@@ -55,19 +55,50 @@ ws.addEventListener('open', async () => {
   await setupConsoleLogSpy()
   setupDialogsSpy()
   const waitingPaths = [...paths]
+  const hideIFrames = () => {
+    for (const [, targetIFrame] of browserIFrames.entries())
+      targetIFrame.classList.remove('show')
+
+    currentModule = undefined
+  }
   await runTests(paths, config!, async (e) => {
+    if (e.data.type === 'hide') {
+      hideIFrames()
+      return
+    }
+
     if (e.data.type === 'done') {
       waitingPaths.splice(waitingPaths.indexOf(e.data.filename))
       if (!waitingPaths.length) {
         await rpcDone()
         await rpc().onDone('no-isolate')
       }
+      return
     }
+
     if (e.data.type === 'navigate') {
+      // currentModule = e.data.filename
+      // button.removeAttribute('disabled')
+      // if (!currentModule)
+      //   button.setAttribute('disabled', 'true')
+
+      if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
+        hideIFrames()
+
       currentModule = e.data.filename
-      button.removeAttribute('disabled')
       if (!currentModule)
-        button.setAttribute('disabled', 'true')
+        return
+
+      const targetIFrame = browserIFrames.get(currentModule)
+      if (targetIFrame) {
+        const left: number = e.data.position
+        targetIFrame.style.left = `${left + 14}px`
+        targetIFrame.style.width = `${window.innerWidth - left + 14}px`
+        if (!targetIFrame.classList.contains('show')) {
+          testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
+          requestAnimationFrame(() => targetIFrame.classList.add('show'))
+        }
+      }
     }
   })
 })

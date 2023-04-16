@@ -2,10 +2,16 @@
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { initializeNavigation } from '../composables/navigation'
+import { iFrameX } from '../composables/iframe'
 
 const dashboardVisible = initializeNavigation()
 const mainSizes = reactive([33, 67])
 const detailSizes = reactive([33, 67])
+const detailsPanel = ref()
+
+const { x } = useElementBounding(detailsPanel)
+
+watch(x, pos => (iFrameX.value = pos), { immediate: true })
 
 const onMainResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
@@ -44,7 +50,7 @@ function resizeMain() {
               <Suites />
             </Pane>
             <Pane :size="detailSizes[1]">
-              <FileDetails />
+              <FileDetails ref="detailsPanel" />
             </Pane>
           </Splitpanes>
         </transition>
