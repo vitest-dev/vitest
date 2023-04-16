@@ -92,6 +92,15 @@ Files to include in the test run, using glob pattern.
 
 Files to exclude from the test run, using glob pattern.
 
+### includeSource
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Include globs for in-source test files.
+
+When defined, Vitest will run all matched files with `import.meta.vitest` inside.
+
 ### deps
 
 - **Type:** `{ external?, inline?, ... }`
