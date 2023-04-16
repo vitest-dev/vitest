@@ -1,11 +1,8 @@
-import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
-import type { VitestRunner } from '@vitest/runner'
-import { createBrowserRunner } from './runner'
-import { importId } from './utils'
+import { assignVitestGlobals, browserHashMap, client, instantiateRunner, loadConfig } from './utils'
 import { setupConsoleLogSpy } from './logger'
-import { createSafeRpc, rpc, rpcDone } from './rpc'
+import { rpc, rpcDone } from './rpc'
 import { setupDialogsSpy } from './dialog'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
@@ -13,67 +10,21 @@ import { BrowserSnapshotEnvironment } from './snapshot'
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
 
-export const PORT = import.meta.hot ? '51204' : location.port
-export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const ENTRY_URL = `${
-  location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_api__`
-
-let config: ResolvedConfig | undefined
-let runner: VitestRunner | undefined
-let vitestBC: BroadcastChannel | undefined
 let currentModule: string | undefined
-const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
 const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
-const testId = url.searchParams.get('id') || 'unknown'
 
 function getQueryPaths() {
   return url.searchParams.getAll('path')
 }
 
-export const client = createClient(ENTRY_URL)
-
 const ws = client.ws
 
-async function loadConfig() {
-  let retries = 5
-  do {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 150))
-      config = await client.rpc.getConfig()
-      return
-    }
-    catch (_) {
-      // just ignore
-    }
-  }
-  while (--retries > 0)
-
-  throw new Error('cannot load configuration after 5 retries')
-}
-
 ws.addEventListener('open', async () => {
-  await loadConfig()
+  const config: ResolvedConfig = await loadConfig()
 
-  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
-  const safeRpc = createSafeRpc(client, getSafeTimers)
-
-  // @ts-expect-error untyped global for internal use
-  globalThis.__vitest_browser__ = true
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_worker__ = {
-    config,
-    browserHashMap,
-    moduleCache: new Map(),
-    rpc: client.rpc,
-    safeRpc,
-    durations: {
-      environment: 0,
-      prepare: 0,
-    },
-  }
+  await assignVitestGlobals()
 
   const paths = getQueryPaths()
 
@@ -99,7 +50,15 @@ ws.addEventListener('open', async () => {
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
-  await runTests(paths, config!, (e) => {
+  const waitingPaths = [...paths]
+  await runTests(paths, config!, async (e) => {
+    if (e.data.type === 'done') {
+      waitingPaths.splice(waitingPaths.indexOf(e.data.filename))
+      if (!waitingPaths.length) {
+        await rpcDone()
+        await rpc().onDone('no-isolate')
+      }
+    }
     if (e.data.type === 'navigate') {
       currentModule = e.data.filename
       button.removeAttribute('disabled')
@@ -118,29 +77,13 @@ async function runTests(
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  const {
-    startTests,
-    setupCommonEnv,
-    takeCoverageInsideWorker,
-  } = await importId('vitest/browser') as typeof import('vitest/browser')
-
-  const executor = {
-    executeId: (id: string) => importId(id),
-  }
-
-  if (!runner) {
-    vitestBC = new BroadcastChannel('vitest-browser')
-    vitestBC.addEventListener('message', navigate)
-    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
-    runner = new BrowserRunner({ config, browserHashMap, vitestBC })
-  }
+  const {channel} = await instantiateRunner()
+  channel.addEventListener('message', navigate)
 
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
-    await setupCommonEnv(config)
     const files = paths.map((path) => {
       return (`${config.root}/${path}`).replace(/\/+/g, '/')
     })
@@ -156,14 +99,6 @@ async function runTests(
       browserIFrames.set(i, iFrame)
       document.body.appendChild(iFrame)
     })
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    for (const file of files)
-      await startTests([file], runner)
-  }
-  finally {
-    await rpcDone()
-    await rpc().onDone(testId)
+  } catch {
   }
 }

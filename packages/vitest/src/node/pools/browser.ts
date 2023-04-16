@@ -22,7 +22,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const paths = files.map(file => relative(project.config.root, file))
 
     const isolate = project.config.isolate
-    if (isolate) {
+    /* if (isolate) {
       for (const path of paths) {
         const url = new URL('/', origin)
         url.searchParams.append('path', path)
@@ -31,13 +31,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         await waitForTest(path)
       }
     }
-    else {
+    else { */
       const url = new URL('/', origin)
       url.searchParams.set('id', 'no-isolate')
       paths.forEach(path => url.searchParams.append('path', path))
       await provider.openPage(url.toString())
       await waitForTest('no-isolate')
-    }
+    // }
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
