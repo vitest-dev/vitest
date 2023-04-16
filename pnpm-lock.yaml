@@ -290,7 +290,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.1.0_vite@4.2.1
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 9.6.1
+      happy-dom: 9.7.1
       jsdom: 21.1.1
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.2.1
@@ -1089,7 +1089,7 @@ importers:
       '@vitejs/plugin-vue': 4.1.0_vite@4.2.1+vue@3.2.47
       '@vitest/browser': link:../../packages/browser
       '@vue/test-utils': 2.3.2_vue@3.2.47
-      happy-dom: 9.6.1
+      happy-dom: 9.7.1
       vite: 4.2.1
       vitest: link:../../packages/vitest
       vue: 3.2.47
@@ -14670,8 +14670,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/9.6.1:
-    resolution: {integrity: sha512-lbRsmw8toqKUCwMIZQtoTW/F3XGOovazC+sdTf+gire4ITx9mPUx2TrdCr/JbB1CF4QplCwdn3+p1/2O5slWDw==}
+  /happy-dom/9.7.1:
+    resolution: {integrity: sha512-C5KQXt5JA3Og1qNf32Zqg65Oj5DKe/IeeGo8269DKE4VFK8NZpOEBY1R6ofJLCqsaPppu1t73okYuh7CPJUB6A==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0

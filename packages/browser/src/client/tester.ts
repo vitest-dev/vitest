@@ -1,18 +1,23 @@
-import { setupDialogsSpy } from "./dialog"
-import { setupConsoleLogSpy } from "./logger"
-import { assignVitestGlobals, importId, loadConfig, instantiateRunner } from "./utils"
-import { BrowserSnapshotEnvironment } from "./snapshot"
+import { setupDialogsSpy } from './dialog'
+import { setupConsoleLogSpy } from './logger'
+import { assignVitestGlobals, browserHashMap, importId, instantiateRunner, loadConfig } from './utils'
+import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
-async function runTest(file: string) {
+
+async function runTest(filename: string, version: string) {
   const config = await loadConfig()
   await assignVitestGlobals()
   await setupConsoleLogSpy()
   setupDialogsSpy()
 
-  const {runner, channel} = await instantiateRunner()
+  const currentVersion = browserHashMap.get(filename)
+  if (!currentVersion || currentVersion[1] !== version)
+    browserHashMap.set(filename, [true, version])
+
+  const { runner, channel } = await instantiateRunner()
 
   const {
     startTests,
@@ -25,12 +30,12 @@ async function runTest(file: string) {
   try {
     await setupCommonEnv(config)
 
-    await startTests([file], runner)
-  } finally {
-    channel.postMessage({ type: 'done', filename: file })
+    await startTests([filename], runner)
+  }
+  finally {
+    channel.postMessage({ type: 'done', filename })
   }
 }
 
-// todo: add logic to run the test, maybe we need broadcastchannel to await execution from main.ts
-
-globalThis.runTest = runTest
+// @ts-expect-error untyped global
+globalThis.__vitest_browser_runner__ = { runTest }

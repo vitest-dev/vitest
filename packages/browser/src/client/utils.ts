@@ -1,9 +1,10 @@
+// eslint-disable-next-line no-restricted-imports
+import type { ResolvedConfig } from 'vitest'
 import { createClient } from '@vitest/ws-client'
-import { createSafeRpc } from './rpc'
-import { ResolvedConfig } from 'vitest'
-import { VitestRunner } from '@vitest/runner'
-import { createBrowserRunner } from './runner'
+import type { VitestRunner } from '@vitest/runner'
 import { takeCoverageInsideWorker } from 'vitest/browser'
+import { createBrowserRunner } from './runner'
+import { createSafeRpc } from './rpc'
 
 export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
@@ -15,12 +16,12 @@ export const browserHashMap = new Map<string, [test: boolean, timestamp: string]
 
 export const client = createClient(ENTRY_URL)
 
-export let config: ResolvedConfig | null
+let config: ResolvedConfig | null
 
 export async function loadConfig() {
-  if (config) {
+  if (config)
     return config
-  }
+
   let retries = 5
   do {
     try {
@@ -58,19 +59,7 @@ export async function assignVitestGlobals() {
   }
 }
 
-let result: {channel: BroadcastChannel, runner: VitestRunner} | undefined
-export async function instantiateRunner() {
-  if (result) {
-    return result
-  }
-  const channel = new BroadcastChannel('vitest-browser')
-  const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-  const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config!.coverage, executor) })
-  const runner = new BrowserRunner({ config: config!, browserHashMap, vitestBC: channel })
-
-  result = {channel, runner}
-  return result
-}
+let result: { channel: BroadcastChannel; runner: VitestRunner } | undefined
 
 export function importId(id: string) {
   const name = `/@id/${id}`
@@ -79,4 +68,18 @@ export function importId(id: string) {
 
 export const executor = {
   executeId: (id: string) => importId(id),
+}
+
+export async function instantiateRunner() {
+  if (result)
+    return result
+
+  const channel = new BroadcastChannel('vitest-browser')
+  const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
+  const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config!.coverage, executor) })
+  const runner = new BrowserRunner({ config: config!, browserHashMap, vitestBC: channel })
+
+  result = { channel, runner }
+
+  return result
 }

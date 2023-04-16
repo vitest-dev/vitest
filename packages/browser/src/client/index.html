@@ -17,6 +17,7 @@
       })()
     </script>
     <style>
+      /*
       :root {
         --color-text-light: #000;
         --color-text-dark: #ddd;
@@ -103,6 +104,124 @@
         display: block;
         vertical-align: middle;
       }
+      */
+      :root {
+        --color-text-light: #000;
+        --color-text-dark: #ddd;
+        --color-text: var(--color-text-light);
+        --background-color: #e4e4e4;
+      }
+      html {
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        display: block;
+        view-transition-name: root;
+        font-family: Readex Pro,sans-serif;
+      }
+      html.dark {
+        --color-text: var(--color-text-dark);
+        --background-color: #141414;
+        color: var(--color-text);
+        background-color: var(--background-color);
+        color-scheme: dark;
+      }
+      html.dark {
+        --color-text: #fff;
+        --color-link: #333;
+        --color-node-external: #857a40;
+        --color-node-inline: #468b60;
+        --color-node-root: #467d8b;
+      }
+      body {
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-row-gap: 0;
+      }
+      #vitest-ui {
+        width: 100vw;
+        height: calc(100vh - 40px);
+        border: none;
+      }
+      #vitest-ui.hidden {
+        width: 0;
+        height: 0;
+      }
+      #vitest-ui.hidden + .vitest-browser-runner-container > #vitest-browser-runner-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-row-gap: 0;
+        width: 100vw;
+        height: calc(100vh - 82px);
+      }
+      .iframe-test {
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        width: 0;
+        height: 0;
+      }
+      .iframe-test.show {
+        width: 100vw;
+        height: calc(100vh - 40px);
+        border: none;
+        grid-row: 1;
+      }
+      #vitest-browser-button {
+        border: none;
+        padding: 0.5em;
+        min-width: 70px;
+      }
+      #vitest-browser-button:not([disabled]) {
+        cursor: pointer;
+      }
+      .vitest-browser {
+        padding: 0 0.5rem;
+        margin: 0;
+        border-bottom-width: 1px;
+        grid-gap: 0.5rem;
+        gap: 0.5rem;
+        align-items: center;
+        display: flex;
+        height: 40px;
+        background-color: #6b72800d;
+        border-color: #6b72801a;
+      }
+      .vitest-browser span {
+        font-weight: 300;
+        font-size: .875rem;
+        line-height: 1.25rem;
+        flex: 1 1 0;
+      }
+      .vitest-browser img {
+        height: 1.5rem;
+        width: 1.5rem;
+        max-width: 100%;
+        display: block;
+        vertical-align: middle;
+      }
+      #vitest-ui.hidden + .vitest-browser-runner-container > #vitest-browser-runner-tester {
+        padding: 0 0.5rem;
+        margin: 0;
+        grid-gap: 0.5rem;
+        gap: 0.5rem;
+        align-items: center;
+        display: flex;
+        border-top: 1px solid #6b72801a;
+        border-bottom: 1px solid #6b72801a;
+        height: 42px;
+        background-color: #6b72800d;
+        font-weight: 300;
+        font-size: .875rem;
+        line-height: 1.25rem;
+        font-family: Readex Pro,sans-serif;
+      }
+      html.dark #vitest-ui.hidden + .vitest-browser-runner-container > #vitest-browser-runner-tester {
+        background-color: #6b728014;
+        color: #fff;
+      }
     </style>
   </head>
   <body>
@@ -112,6 +231,10 @@
       <button id="vitest-browser-button" disabled>Show Test</button>
     </div>
     <iframe id="vitest-ui" src=""></iframe>
+    <div class="vitest-browser-runner-container">
+      <div id="vitest-browser-runner-tester"></div>
+      <div id="vitest-browser-runner-container"></div>
+    </div>
     <script type="module" src="/main.ts"></script>
   </body>
 </html>
