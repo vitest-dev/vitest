@@ -93,7 +93,7 @@ ws.addEventListener('open', async () => {
       if (targetIFrame) {
         const left: number = e.data.position
         targetIFrame.style.left = `${left + 14}px`
-        targetIFrame.style.width = `${window.innerWidth - left + 14}px`
+        targetIFrame.style.width = `${window.innerWidth - left - 28}px`
         if (!targetIFrame.classList.contains('show')) {
           testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
           requestAnimationFrame(() => targetIFrame.classList.add('show'))
