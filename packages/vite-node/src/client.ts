@@ -24,6 +24,7 @@ const clientStub = {
       decline: () => {},
       invalidate: () => {},
       on: () => {},
+      send: () => {},
     }
   },
   updateStyle(id: string, css: string) {
