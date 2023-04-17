@@ -19,7 +19,7 @@ interface ContextCache {
 
 const cache = new Map<string, ContextCache>()
 
-const getPotentialSource = async (filepath: string, result: ResolveResult) => {
+async function getPotentialSource(filepath: string, result: ResolveResult) {
   if (!result.url.startsWith('file://') || result.format === 'module')
     return null
   let source = cache.get(result.url)?.source
@@ -28,7 +28,7 @@ const getPotentialSource = async (filepath: string, result: ResolveResult) => {
   return source
 }
 
-const detectESM = (url: string, source: string | null) => {
+function detectESM(url: string, source: string | null) {
   const cached = cache.get(url)
   if (cached)
     return cached.isPseudoESM
@@ -38,7 +38,7 @@ const detectESM = (url: string, source: string | null) => {
 }
 
 // apply transformations only to libraries
-// inline code proccessed by vite-node
+// inline code processed by vite-node
 // make Node pseudo ESM
 export const resolve: Resolver = async (url, context, next) => {
   const { parentURL } = context
@@ -50,7 +50,7 @@ export const resolve: Resolver = async (url, context, next) => {
 
   const id = normalizeModuleId(url)
   const importer = normalizeModuleId(parentURL)
-  const resolved = await resolver(id, importer)
+  const resolved = await resolver(id, importer, state.ctx.environment.name)
 
   let result: ResolveResult
   let filepath: string

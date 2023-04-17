@@ -1,5 +1,9 @@
 import type { Arrayable, Nullable } from './types'
 
+export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
+  return v != null
+}
+
 export function assertTypes(value: unknown, name: string, types: string[]): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
@@ -7,8 +11,29 @@ export function assertTypes(value: unknown, name: string, types: string[]): void
     throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }
 
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
+}
+
 export function slash(path: string) {
   return path.replace(/\\/g, '/')
+}
+
+// convert RegExp.toString to RegExp
+export function parseRegexp(input: string): RegExp {
+  // Parse input
+  const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
+
+  // match nothing
+  if (!m)
+    return /$^/
+
+  // Invalid flags
+  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3]))
+    return RegExp(input)
+
+  // Create the regular expression
+  return new RegExp(m[2], m[3])
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
@@ -69,8 +94,26 @@ export function clone<T>(val: T, seen: WeakMap<any, any>): T {
     seen.set(val, out)
     // we don't need properties from prototype
     const props = getOwnProperties(val)
-    for (const k of props)
-      out[k] = clone((val as any)[k], seen)
+    for (const k of props) {
+      const descriptor = Object.getOwnPropertyDescriptor(val, k)
+      if (!descriptor)
+        continue
+      const cloned = clone((val as any)[k], seen)
+      if ('get' in descriptor) {
+        Object.defineProperty(out, k, {
+          ...descriptor,
+          get() {
+            return cloned
+          },
+        })
+      }
+      else {
+        Object.defineProperty(out, k, {
+          ...descriptor,
+          value: cloned,
+        })
+      }
+    }
     return out
   }
 
@@ -108,4 +151,46 @@ export function createDefer<T>(): DeferPromise<T> {
   p.resolve = resolve!
   p.reject = reject!
   return p
+}
+
+/**
+ * If code starts with a function call, will return its last index, respecting arguments.
+ * This will return 25 - last ending character of toMatch ")"
+ * Also works with callbacks
+ * ```
+ * toMatch({ test: '123' });
+ * toBeAliased('123')
+ * ```
+ */
+export function getCallLastIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
 }

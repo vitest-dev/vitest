@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-workspaces",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "jsdom": "latest",
+    "vitest": "workspace:*"
+  }
+}

@@ -1,6 +1,7 @@
-import { assert, describe, expect, test, vi, vitest } from 'vitest'
+import { afterEach, assert, beforeEach, describe, expect, test, vi, vitest } from 'vitest'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
+import { createColors, getDefaultColors, setupColors } from '@vitest/utils'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
@@ -135,6 +136,13 @@ test('async functions should be mocked', () => {
 })
 
 describe('mocked function which fails on toReturnWith', () => {
+  beforeEach(() => {
+    setupColors(getDefaultColors())
+  })
+  afterEach(() => {
+    setupColors(createColors(true))
+  })
+
   test('zero call', () => {
     const mock = vi.fn(() => 1)
     expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
@@ -168,4 +176,89 @@ describe('mocked function which fails on toReturnWith', () => {
 // This is here because mocking streams previously caused some problems (#1671).
 test('streams', () => {
   expect(exportedStream).toBeDefined()
+})
+
+describe('temporary mock implementation', () => {
+  test('temporary mock implementation works as expected', () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('original implementation restored as undefined, when there is none', () => {
+    const mock = vi.fn()
+
+    expect.assertions(5)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock.getMockImplementation()).toBeTypeOf('function')
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(undefined)
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
+  test('temporary mock implementation return value can be of different type than the original', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation with async callback works as expecetd', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    await mock.withImplementation(() => 2, async () => {
+      await Promise.resolve()
+
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation can be async', async () => {
+    const mock = vi.fn(async () => 1)
+
+    expect.assertions(3)
+
+    await mock.withImplementation(async () => 2, async () => {
+      expect(await mock()).toBe(2)
+      expect(await mock()).toBe(2)
+    })
+
+    expect(await mock()).toBe(1)
+  })
+
+  test('temporary mock implementation takes precedence over mockImplementationOnce', () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.mockImplementationOnce(() => 2)
+    mock.withImplementation(() => 3, () => {
+      expect(mock()).toBe(3)
+      expect(mock()).toBe(3)
+    })
+
+    expect(mock()).toBe(2)
+  })
 })

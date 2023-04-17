@@ -73,11 +73,11 @@ export interface VitestRunner {
    */
   extendTestContext?(context: TestContext): TestContext
   /**
-   * Called, when files are imported. Can be called in two situations: when collecting tests and when importing setup files.
+   * Called, when certain files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
   importFile(filepath: string, source: VitestRunnerImportSource): unknown
   /**
-   * Publically available configuration.
+   * Publicly available configuration.
    */
   config: VitestRunnerConfig
 }
@@ -86,7 +86,9 @@ export interface VitestRunner {
 When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property.
 
 ::: warning
-`importFile` method in your custom runner must be inlined in `deps.inline` config option, if you call Node `import` inside.
+Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` property. You can use it to process files in `importFile` method (this is default behavior of `TestRunner`` and `BenchmarkRunner`).
+
+`ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it.
 :::
 
 ::: tip
@@ -100,6 +102,7 @@ You can extend Vitest task system with your tasks. A task is an object that is p
 ```js
 // ./utils/custom.js
 import { getCurrentSuite, setFn } from 'vitest/suite'
+
 export { describe, beforeAll, afterAll } from 'vitest'
 
 // this function will be called, when Vitest collects tasks
@@ -117,7 +120,7 @@ export const myCustomTask = function (name, fn) {
 import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
 import { gardener } from './gardener.js'
 
-deccribe('take care of the garden', () => {
+describe('take care of the garden', () => {
   beforeAll(() => {
     gardener.putWorkingClothes()
   })
@@ -136,7 +139,7 @@ deccribe('take care of the garden', () => {
 ```
 
 ```bash
-vitest ./garder/tasks.test.js
+vitest ./garden/tasks.test.js
 ```
 
 ::: warning

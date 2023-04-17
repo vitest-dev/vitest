@@ -105,6 +105,10 @@ async function _shouldExternalize(
 
   id = patchWindowsImportPath(id)
 
+  // always externalize Vite deps, they are too big to inline
+  if (options?.cacheDir && id.includes(options.cacheDir))
+    return id
+
   if (matchExternalizePattern(id, options?.inline))
     return false
   if (matchExternalizePattern(id, options?.external))
@@ -112,7 +116,7 @@ async function _shouldExternalize(
 
   const isNodeModule = id.includes('/node_modules/')
   const guessCJS = isNodeModule && options?.fallbackCJS
-  id = guessCJS ? guessCJSversion(id) || id : id
+  id = guessCJS ? (guessCJSversion(id) || id) : id
 
   if (matchExternalizePattern(id, defaultInline))
     return false

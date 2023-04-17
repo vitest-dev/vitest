@@ -1186,6 +1186,8 @@ describe('FakeTimers', () => {
 
       expect(global.setImmediate).not.toBe(nativeSetImmediate)
       expect(global.clearImmediate).not.toBe(nativeClearImmediate)
+
+      fakeTimers.useRealTimers()
     })
   })
 

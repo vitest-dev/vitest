@@ -1,17 +1,17 @@
 import { createRequire } from 'node:module'
-import p from 'picocolors'
+import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
-import { setColors } from '@vitest/utils'
+import { createColors, setupColors } from '@vitest/utils'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
+import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
 import { RealDate } from '../integrations/mock/date'
 import { expect } from '../integrations/chai'
-import { setupSnapshotEnvironment } from '../integrations/snapshot/env'
-import { NodeSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { rpc } from './rpc'
 import { setupCommonEnv } from './setup.common'
+import type { VitestExecutor } from './execute'
 
 // this should only be used in Node
 let globalSetup = false
@@ -23,20 +23,22 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
     enumerable: false,
   })
 
+  const state = getWorkerState()
+
+  if (!state.config.snapshotOptions.snapshotEnvironment)
+    state.config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment()
+
   if (globalSetup)
     return
 
   globalSetup = true
-  setupSnapshotEnvironment(new NodeSnapshotEnvironment())
-  setColors(p)
+  setupColors(createColors(isatty(1)))
 
-  const require = createRequire(import.meta.url)
+  const _require = createRequire(import.meta.url)
   // always mock "required" `css` files, because we cannot process them
-  require.extensions['.css'] = () => ({})
-  require.extensions['.scss'] = () => ({})
-  require.extensions['.sass'] = () => ({})
-
-  const state = getWorkerState()
+  _require.extensions['.css'] = () => ({})
+  _require.extensions['.scss'] = () => ({})
+  _require.extensions['.sass'] = () => ({})
 
   installSourcemapsSupport({
     getSourceMap: source => state.moduleCache.getSourceMap(source),
@@ -154,8 +156,8 @@ export async function setupConsoleLogSpy() {
   })
 }
 
-async function loadEnvironment(name: string) {
-  const pkg = await import(`vitest-environment-${name}`)
+async function loadEnvironment(name: string, executor: VitestExecutor) {
+  const pkg = await executor.executeId(`vitest-environment-${name}`)
   if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
     throw new Error(
       `Environment "${name}" is not a valid environment. `
@@ -168,9 +170,10 @@ async function loadEnvironment(name: string) {
 export async function withEnv(
   name: ResolvedConfig['environment'],
   options: ResolvedConfig['environmentOptions'],
+  executor: VitestExecutor,
   fn: () => Promise<void>,
 ) {
-  const config: Environment = (environments as any)[name] || await loadEnvironment(name)
+  const config: Environment = (environments as any)[name] || await loadEnvironment(name, executor)
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = config.name || name
   expect.setState({
@@ -181,6 +184,10 @@ export async function withEnv(
     await fn()
   }
   finally {
+    // Run possible setTimeouts, e.g. the onces used by ConsoleLogSpy
+    const { setTimeout } = getSafeTimers()
+    await new Promise(resolve => setTimeout(resolve))
+
     await env.teardown(globalThis)
   }
 }

@@ -3,61 +3,53 @@ import { startVitest } from 'vitest/node'
 // Set this to true when intentionally updating the snapshots
 const UPDATE_SNAPSHOTS = false
 
-const provider = getArgument('--provider')
+const provider = process.argv[1 + process.argv.indexOf('--provider')]
+const isBrowser = process.argv.includes('--browser')
 
 const configs = [
   // Run test cases. Generates coverage report.
   ['test/', {
     include: ['test/*.test.*'],
-    exclude: ['coverage-report-tests/**/*'],
+    exclude: [
+      'coverage-report-tests/**/*',
+      // TODO: Include once mocking is supported in browser
+      isBrowser && '**/no-esbuild-transform.test.js',
+    ].filter(Boolean),
+    coverage: { enabled: true },
+    browser: { enabled: isBrowser, name: 'chrome', headless: true },
   }],
 
   // Run tests for checking coverage report contents.
   ['coverage-report-tests', {
     include: [
-      './coverage-report-tests/generic.report.test.ts',
+      ['c8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
       `./coverage-report-tests/${provider}.report.test.ts`,
-    ],
+    ].filter(Boolean),
     coverage: { enabled: false, clean: false },
   }],
 ]
 
-runTests()
+// Prevent the "vitest/src/node/browser/webdriver.ts" from calling process.exit
+const exit = process.exit
+process.exit = () => !isBrowser && exit()
 
-async function runTests() {
-  for (const threads of [true, false]) {
+for (const threads of [{ threads: true }, { threads: false }, { singleThread: true }]) {
+  for (const isolate of [true, false]) {
     for (const [directory, config] of configs) {
       await startVitest('test', [directory], {
-        run: true,
-        update: UPDATE_SNAPSHOTS,
+        name: `With settings: ${JSON.stringify({ ...threads, isolate, directory, browser: config.browser?.enabled })}`,
         ...config,
-        threads,
-        coverage: {
-          include: ['src/**'],
-          provider,
-          ...config.coverage,
-        },
+        update: UPDATE_SNAPSHOTS,
+        ...threads,
+        isolate,
       })
 
-      if (process.exitCode)
-        process.exit()
+      if (process.exitCode) {
+        console.error(`process.exitCode was set to ${process.exitCode}, exiting.`)
+        exit()
+      }
     }
   }
-
-  process.exit(0)
 }
 
-function getArgument(name) {
-  const args = process.argv
-  const index = args.indexOf(name)
-
-  if (index === -1)
-    throw new Error(`Missing argument ${name}, received ${args}`)
-
-  const value = args[index + 1]
-
-  if (!value)
-    throw new Error(`Missing value of ${name}, received ${args}`)
-
-  return value
-}
+exit()

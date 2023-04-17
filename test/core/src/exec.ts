@@ -1,7 +1,7 @@
 /* eslint-disable import/no-duplicates */
-import { exec } from 'child_process'
-import * as child_process from 'child_process'
-import defaultProcess from 'child_process'
+import { exec } from 'node:child_process'
+import * as child_process from 'node:child_process'
+import defaultProcess from 'node:child_process'
 
 export function execHelloWorld() {
   exec('hello world')

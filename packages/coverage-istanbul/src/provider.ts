@@ -1,9 +1,10 @@
 /* eslint-disable no-restricted-imports */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import { BaseCoverageProvider } from 'vitest/coverage'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -31,7 +32,7 @@ interface TestExclude {
   }
 }
 
-export class IstanbulCoverageProvider implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -48,8 +49,20 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   coverages: any[] = []
 
   initialize(ctx: Vitest) {
+    const config: CoverageIstanbulOptions = ctx.config.coverage
+
     this.ctx = ctx
-    this.options = resolveIstanbulOptions(ctx.config.coverage, ctx.config.root)
+    this.options = {
+      ...coverageConfigDefaults,
+
+      // User's options
+      ...config,
+
+      // Resolved fields
+      provider: 'istanbul',
+      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
+      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+    }
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -123,9 +136,10 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     })
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter, {
+      reports.create(reporter[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
+        ...reporter[1],
       }).execute(context)
     }
 
@@ -138,6 +152,20 @@ export class IstanbulCoverageProvider implements CoverageProvider {
         functions: this.options.functions,
         lines: this.options.lines,
         statements: this.options.statements,
+      })
+    }
+
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        perFile: this.options.perFile,
+        configurationFile: this.ctx.server.config.configFile,
       })
     }
   }
@@ -217,25 +245,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       }
     }
   }
-}
-
-function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string): Options {
-  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-  const reporter = options.reporter || coverageConfigDefaults.reporter
-
-  const resolved: Options = {
-    ...coverageConfigDefaults,
-
-    // User's options
-    ...options,
-
-    // Resolved fields
-    provider: 'istanbul',
-    reportsDirectory,
-    reporter: Array.isArray(reporter) ? reporter : [reporter],
-  }
-
-  return resolved
 }
 
 /**

@@ -3,7 +3,7 @@ import type { TaskResultPack } from '../../types'
 import { getFullName } from '../../utils'
 import { F_RIGHT } from '../../utils/figures'
 import { DefaultReporter } from './default'
-import { getStateSymbol } from './renderers/utils'
+import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
   constructor() {
@@ -17,7 +17,10 @@ export class VerboseReporter extends DefaultReporter {
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
       if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-        let title = ` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
+        let title = ` ${getStateSymbol(task)} `
+        if (task.suite?.projectName)
+          title += formatProjectName(task.suite.projectName)
+        title += getFullName(task, c.dim(' > '))
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
         this.ctx.logger.log(title)

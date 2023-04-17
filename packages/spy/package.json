@@ -1,13 +1,18 @@
 {
   "name": "@vitest/spy",
   "type": "module",
-  "version": "0.28.4",
+  "version": "0.30.1",
   "description": "Lightweight Jest compatible spy implementation",
   "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/spy#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/spy"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "sideEffects": false,
   "exports": {
@@ -29,6 +34,6 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "tinyspy": "^1.0.2"
+    "tinyspy": "^2.1.0"
   }
 }

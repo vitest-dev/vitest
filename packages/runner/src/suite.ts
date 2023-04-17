@@ -65,6 +65,14 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof options === 'number')
       options = { timeout: options }
 
+    // inherit repeats and retry from suite
+    if (typeof suiteOptions === 'object') {
+      options = {
+        ...suiteOptions,
+        ...options,
+      }
+    }
+
     const test: Test = {
       id: '',
       type: 'test',
@@ -73,6 +81,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       suite: undefined!,
       fails: this.fails,
       retry: options?.retry,
+      repeats: options?.repeats,
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -124,6 +133,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   function initSuite() {
+    if (typeof suiteOptions === 'number')
+      suiteOptions = { timeout: suiteOptions }
+
     suite = {
       id: '',
       type: 'suite',
@@ -132,6 +144,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       shuffle,
       tasks: [],
     }
+
     setHooks(suite, createSuiteHooks())
   }
 
@@ -248,7 +261,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_.]+)/g,
-      (_, key) => objDisplay(objectAttr(items[0], key)) as unknown as string,
+      (_, key) => objDisplay(objectAttr(items[0], key), runner?.config?.chaiConfig) as unknown as string,
     // https://github.com/chaijs/chai/pull/1490
     )
   }

@@ -1,13 +1,18 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "0.28.4",
+  "version": "0.30.1",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/expect#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/expect"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "sideEffects": false,
   "exports": {

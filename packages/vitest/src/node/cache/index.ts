@@ -12,12 +12,12 @@ export class VitestCache {
   results = new ResultsCache()
   stats = new FilesStatsCache()
 
-  getFileTestResults(id: string) {
-    return this.results.getResults(id)
+  getFileTestResults(key: string) {
+    return this.results.getResults(key)
   }
 
-  getFileStats(id: string) {
-    return this.stats.getStats(id)
+  getFileStats(key: string) {
+    return this.stats.getStats(key)
   }
 
   static resolveCacheDir(root: string, dir: string | undefined) {

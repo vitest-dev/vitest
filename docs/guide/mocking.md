@@ -7,14 +7,14 @@ title: Mocking | Guide
 When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
-Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
+Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/mock#mockreset) docs for more info.
 :::
 
-If you wanna dive in head first, check out the [API section](/api/#vi) otherwise keep reading to take a deeper dive into the world of mocking.
+If you wanna dive in head first, check out the [API section](/api/vi) otherwise keep reading to take a deeper dive into the world of mocking.
 
 ## Dates
 
-Sometimes you need to be in control of the date to ensure consistency when testing. Vitest uses [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers) package for manipulating timers, as well as system date. You can find more about the specific API in detail [here](/api/#vi-setsystemtime).
+Sometimes you need to be in control of the date to ensure consistency when testing. Vitest uses [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers) package for manipulating timers, as well as system date. You can find more about the specific API in detail [here](/api/vi#vi-setsystemtime).
 
 ### Example
 
@@ -23,7 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
-const purchase = () => {
+function purchase() {
   const currentHour = new Date().getHours()
   const [open, close] = businessHours
 
@@ -68,9 +68,9 @@ describe('purchasing flow', () => {
 
 Mocking functions can be split up into two different categories; *spying & mocking*.
 
-Sometimes all you need is to validate whether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/#vi-spyon)).
+Sometimes all you need is to validate whether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/vi#vi-spyon)).
 
-However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/#vi-fn)).
+However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/vi#vi-fn)).
 
 We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
 
@@ -79,7 +79,9 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 ```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const getLatest = (index = messages.items.length - 1) => messages.items[index]
+function getLatest(index = messages.items.length - 1) {
+  return messages.items[index]
+}
 
 const messages = {
   items: [
@@ -133,7 +135,7 @@ describe('reading messages', () => {
 
 ## Globals
 
-You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
 
 ```ts
 import { vi } from 'vitest'
@@ -154,7 +156,7 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-mock) for a more in-depth detailed API description.
+See the [`vi.mock()` api section](/api/vi#vi-mock) for a more in-depth detailed API description.
 
 ### Automocking algorithm
 
@@ -171,14 +173,14 @@ The following principles apply
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
-import { failure, success } from './handlers'
+import { failure, success } from './handlers.js'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
 
 // get todos
-export const getTodos = async (event, context) => {
+export async function getTodos(event, context) {
   const client = new Client({
     // ...clientOptions
   })
@@ -214,7 +216,7 @@ vi.mock('pg', () => {
   return { Client }
 })
 
-vi.mock('./handlers', () => {
+vi.mock('./handlers.js', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
@@ -324,18 +326,18 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 Whenever we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.usefaketimers` api section](/api/#vi-usefaketimers) for a more in depth detailed API description.
+See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const executeAfterTwoHours = (func) => {
+function executeAfterTwoHours(func) {
   setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
 }
 
-const executeEveryMinute = (func) => {
+function executeEveryMinute(func) {
   setInterval(func, 1000 * 60) // 1 minute
 }
 
@@ -385,13 +387,14 @@ vi.spyOn(instance, 'method')
 ```
 
 - Mock exported variables
-```ts
-// some-path.ts
+```js
+// some-path.js
 export const getter = 'variable'
 ```
 ```ts
 // some-path.test.ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
@@ -399,12 +402,13 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 
 Example with `vi.mock`:
 ```ts
-// ./some-path.ts
+// ./some-path.js
 export function method() {}
 ```
 ```ts
-import { method } from './some-path.ts'
-vi.mock('./some-path.ts', () => ({
+import { method } from './some-path.js'
+
+vi.mock('./some-path.js', () => ({
   method: vi.fn()
 }))
 ```
@@ -415,7 +419,8 @@ Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `
 
 Example with `vi.spyOn`:
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
@@ -427,8 +432,9 @@ Example with `vi.mock` and prototype:
 export class SomeClass {}
 ```
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
   return { SomeClass }
@@ -438,8 +444,9 @@ vi.mock('some-path', () => {
 
 Example with `vi.mock` and return value:
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn(() => ({
     someMethod: vi.fn()
   }))
@@ -451,7 +458,8 @@ vi.mock('some-path', () => {
 Example with `vi.spyOn`:
 
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
   // whatever suites you from first two examples
 })
@@ -470,15 +478,17 @@ export function useObject() {
 
 ```ts
 // useObject.js
-import { useObject } from 'some-path'
+import { useObject } from './some-path.js'
+
 const obj = useObject()
 obj.method()
 ```
 
 ```ts
 // useObject.test.js
-import { useObject } from 'some-path'
-vi.mock('some-path', () => {
+import { useObject } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   let _cache
   const useObject = () => {
     if (!_cache) {
@@ -486,7 +496,7 @@ vi.mock('some-path', () => {
         method: vi.fn(),
       }
     }
-    // now everytime useObject() is called it will
+    // now every time that useObject() is called it will
     // return the same object reference
     return _cache
   }
@@ -501,9 +511,10 @@ expect(obj.method).toHaveBeenCalled()
 - Mock part of a module
 
 ```ts
-import { mocked, original } from 'some-path'
-vi.mock('some-path', async () => {
-  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+import { mocked, original } from './some-path.js'
+
+vi.mock('./some-path.js', async () => {
+  const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
   return {
     ...mod,
     mocked: vi.fn()
@@ -530,7 +541,7 @@ vi.useRealTimers()
 
 - Mock global variable
 
-You can set global variable by assigning a value to `globalThis` or using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. When using `vi.stubGlobal`, it will **not** automatically reset between different tests, unless you enable [`unstubGlobals`](/config/#unstubglobals) config option or call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals).
+You can set global variable by assigning a value to `globalThis` or using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. When using `vi.stubGlobal`, it will **not** automatically reset between different tests, unless you enable [`unstubGlobals`](/config/#unstubglobals) config option or call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals).
 
 ```ts
 vi.stubGlobal('__VERSION__', '1.0.0')
@@ -557,7 +568,7 @@ it('changes value', () => {
 })
 ```
 
-If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubEnvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) manually in `beforeEach` hook):
+If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubEnvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) manually in `beforeEach` hook):
 
 ```ts
 import { expect, it, vi } from 'vitest'

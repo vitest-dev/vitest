@@ -1,38 +1,40 @@
-import { promises as fs } from 'node:fs'
-import mm from 'micromatch'
+import { performance } from 'node:perf_hooks'
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
-import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
+import { resolve } from 'pathe'
+import type { ContextTestEnvironment, ResolvedConfig } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
-import { envs } from '../integrations/env'
-import { takeCoverageInsideWorker } from '../integrations/coverage'
+import { distDir } from '../paths'
+import { startCoverageInsideWorker, stopCoverageInsideWorker, takeCoverageInsideWorker } from '../integrations/coverage'
+import { setupChaiConfig } from '../integrations/chai'
 import { setupGlobalEnv, withEnv } from './setup.node'
-import { VitestTestRunner } from './runners/test'
-import { NodeBenchmarkRunner } from './runners/benchmark'
 import { rpc } from './rpc'
+import type { VitestExecutor } from './execute'
 
-function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
-  return collection.reduce((acc, item) => {
-    const key = iteratee(item)
-    acc[key] ||= []
-    acc[key].push(item)
-    return acc
-  }, {} as Record<K, T[]>)
-}
+const runnersFile = resolve(distDir, 'runners.js')
 
-async function getTestRunnerConstructor(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
-  if (!config.runner)
-    return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
-  const mod = await import(config.runner)
+async function getTestRunnerConstructor(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunnerConstructor> {
+  if (!config.runner) {
+    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(runnersFile)
+    return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as VitestRunnerConstructor
+  }
+  const mod = await executor.executeId(config.runner)
   if (!mod.default && typeof mod.default !== 'function')
     throw new Error(`Runner must export a default function, but got ${typeof mod.default} imported from ${config.runner}`)
   return mod.default as VitestRunnerConstructor
 }
 
-async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
-  const TestRunner = await getTestRunnerConstructor(config)
+async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunner> {
+  const TestRunner = await getTestRunnerConstructor(config, executor)
   const testRunner = new TestRunner(config)
+
+  // inject private executor to every runner
+  Object.defineProperty(testRunner, '__vitest_executor', {
+    value: executor,
+    enumerable: false,
+    configurable: false,
+  })
 
   if (!testRunner.config)
     testRunner.config = config
@@ -50,13 +52,21 @@ async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
 
   const originalOnCollected = testRunner.onCollected
   testRunner.onCollected = async (files) => {
+    const state = getWorkerState()
+    files.forEach((file) => {
+      file.prepareDuration = state.durations.prepare
+      file.environmentLoad = state.durations.environment
+      // should be collected only for a single test file in a batch
+      state.durations.prepare = 0
+      state.durations.environment = 0
+    })
     rpc().onCollected(files)
     await originalOnCollected?.call(testRunner, files)
   }
 
   const originalOnAfterRun = testRunner.onAfterRun
   testRunner.onAfterRun = async (files) => {
-    const coverage = await takeCoverageInsideWorker(config.coverage)
+    const coverage = await takeCoverageInsideWorker(config.coverage, executor)
     rpc().onAfterSuiteRun({ coverage })
     await originalOnAfterRun?.call(testRunner, files)
   }
@@ -65,84 +75,50 @@ async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
 }
 
 // browser shouldn't call this!
-export async function run(files: string[], config: ResolvedConfig): Promise<void> {
-  await setupGlobalEnv(config)
-
+export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
-  const runner = await getTestRunner(config)
+  await setupGlobalEnv(config)
+  await startCoverageInsideWorker(config.coverage, executor)
 
-  // if calling from a worker, there will always be one file
-  // if calling with no-threads, this will be the whole suite
-  const filesWithEnv = await Promise.all(files.map(async (file) => {
-    const code = await fs.readFile(file, 'utf-8')
+  if (config.chaiConfig)
+    setupChaiConfig(config.chaiConfig)
 
-    // 1. Check for control comments in the file
-    let env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1]
-    // 2. Check for globals
-    if (!env) {
-      for (const [glob, target] of config.environmentMatchGlobs || []) {
-        if (mm.isMatch(file, glob)) {
-          env = target
-          break
-        }
+  const runner = await getTestRunner(config, executor)
+
+  workerState.durations.prepare = performance.now() - workerState.durations.prepare
+
+  // @ts-expect-error untyped global
+  globalThis.__vitest_environment__ = environment
+
+  workerState.durations.environment = performance.now()
+
+  await withEnv(environment.name, environment.options || config.environmentOptions || {}, executor, async () => {
+    workerState.durations.environment = performance.now() - workerState.durations.environment
+
+    for (const file of files) {
+      // it doesn't matter if running with --threads
+      // if running with --no-threads, we usually want to reset everything before running a test
+      // but we have --isolate option to disable this
+      if (config.isolate) {
+        workerState.mockMap.clear()
+        resetModules(workerState.moduleCache, true)
       }
+
+      workerState.filepath = file
+
+      await startTests([file], runner)
+
+      workerState.filepath = undefined
+
+      // reset after tests, because user might call `vi.setConfig` in setupFile
+      vi.resetConfig()
+      // mocks should not affect different files
+      vi.restoreAllMocks()
     }
-    // 3. Fallback to global env
-    env ||= config.environment || 'node'
 
-    const envOptions = JSON.parse(code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1] || 'null')
-    return {
-      file,
-      env: env as VitestEnvironment,
-      envOptions: envOptions ? { [env]: envOptions } as EnvironmentOptions : null,
-    }
-  }))
+    await stopCoverageInsideWorker(config.coverage, executor)
+  })
 
-  const filesByEnv = groupBy(filesWithEnv, ({ env }) => env)
-
-  const orderedEnvs = envs.concat(
-    Object.keys(filesByEnv).filter(env => !envs.includes(env)),
-  )
-
-  for (const env of orderedEnvs) {
-    const environment = env as VitestEnvironment
-    const files = filesByEnv[environment]
-
-    if (!files || !files.length)
-      continue
-
-    // @ts-expect-error untyped global
-    globalThis.__vitest_environment__ = environment
-
-    const filesByOptions = groupBy(files, ({ envOptions }) => JSON.stringify(envOptions))
-
-    for (const options of Object.keys(filesByOptions)) {
-      const files = filesByOptions[options]
-
-      if (!files || !files.length)
-        continue
-
-      await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, async () => {
-        for (const { file } of files) {
-          // it doesn't matter if running with --threads
-          // if running with --no-threads, we usually want to reset everything before running a test
-          // but we have --isolate option to disable this
-          if (config.isolate) {
-            workerState.mockMap.clear()
-            resetModules(workerState.moduleCache, true)
-          }
-
-          workerState.filepath = file
-
-          await startTests([file], runner)
-
-          workerState.filepath = undefined
-
-          // reset after tests, because user might call `vi.setConfig` in setupFile
-          vi.resetConfig()
-        }
-      })
-    }
-  }
+  workerState.environmentTeardownRun = true
 }

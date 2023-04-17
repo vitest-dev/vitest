@@ -25,7 +25,7 @@ const defaultCoverageExcludes = [
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 
-// These are the generic defaults for coverage. Providers may also set some provider speficic defaults.
+// These are the generic defaults for coverage. Providers may also set some provider specific defaults.
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'c8',
   enabled: false,
@@ -33,7 +33,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   cleanOnRerun: true,
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
-  reporter: ['text', 'html', 'clover', 'json'],
+  reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],

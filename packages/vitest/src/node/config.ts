@@ -4,7 +4,7 @@ import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
@@ -17,22 +17,16 @@ const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
-  // Vitest
-  /\/vitest\/dist\/(runners-chunk|entry)\.js/,
-  // yarn's .store folder
-  /vitest-virtual-\w+\/dist\/(runners-chunk|entry)\.js/,
-  // cnpm
-  /@vitest\/dist\/(runners-chunk|entry)\.js/,
   // Nuxt
   '@nuxt/test-utils',
 ]
 
-export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
+export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
-  if ((options.ui || options.browser) && !options.api)
+  if (options.ui && !options.api)
     api = { port: defaultPort }
   else if (options.api === true)
     api = { port: defaultPort }
@@ -92,6 +86,10 @@ export function resolveConfig(
     mode,
   } as ResolvedConfig
 
+  resolved.inspect = Boolean(resolved.inspect)
+  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  resolved.singleThread = Boolean(resolved.singleThread)
+
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
@@ -111,6 +109,16 @@ export function resolveConfig(
 
     resolved.shard = { index, count }
   }
+
+  if (resolved.inspect || resolved.inspectBrk) {
+    if (resolved.threads !== false && resolved.singleThread !== true) {
+      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
+      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+    }
+  }
+
+  if (resolved.coverage.provider === 'c8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
+    throw new Error('@vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
@@ -147,12 +155,14 @@ export function resolveConfig(
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: isCI && !UPDATE_SNAPSHOT
+    updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
+    // resolved inside the worker
+    snapshotEnvironment: null as any,
   }
 
   if (options.resolveSnapshotPath)
@@ -202,15 +212,22 @@ export function resolveConfig(
   ]
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiConfig(options)
+  resolved.api = resolveApiServerConfig(options)
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   if (mode !== 'benchmark') {
-    // @ts-expect-error from CLI
-    const reporters = resolved.reporter ?? resolved.reporters
-    resolved.reporters = Array.from(new Set(toArray(reporters))).filter(Boolean)
+    // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
+    // it is passed down as "vitest --reporter ../reporter.js"
+    const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
+      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+      if (/^\.\.?\//.test(reporter))
+        return resolve(process.cwd(), reporter)
+      return reporter
+    })
+    const reporters = cliReporters.length ? cliReporters : resolved.reporters
+    resolved.reporters = Array.from(new Set(toArray(reporters as 'json'[]))).filter(Boolean)
   }
 
   if (!resolved.reporters.length)
@@ -237,6 +254,8 @@ export function resolveConfig(
       : BaseSequencer
   }
   resolved.sequence.hooks ??= 'parallel'
+  if (resolved.sequence.sequencer === RandomSequencer)
+    resolved.sequence.seed ??= Date.now()
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -250,5 +269,20 @@ export function resolveConfig(
     resolved.exclude = resolved.typecheck.exclude
   }
 
+  resolved.browser ??= {} as any
+  resolved.browser.enabled ??= false
+  resolved.browser.headless ??= isCI
+
+  resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
+    port: defaultBrowserPort,
+  }
+
   return resolved
+}
+
+export function isBrowserEnabled(config: ResolvedConfig) {
+  if (config.browser?.enabled)
+    return true
+
+  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
 }

@@ -37,10 +37,10 @@ function formatNumber(number: number) {
 const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
 
 function renderTableHead(tasks: Task[]) {
-  const benchs = tasks
+  const benches = tasks
     .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
     .filter(notNullish)
-  const allItems = benchs.map(renderBenchmarkItems).concat([tableHead])
+  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
   return `${' '.repeat(3)}${tableHead.map((i, idx) => {
     const width = Math.max(...allItems.map(i => i[idx].length))
     return idx
@@ -69,10 +69,10 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   if (!result)
     return task.name
 
-  const benchs = tasks
+  const benches = tasks
     .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
     .filter(notNullish)
-  const allItems = benchs.map(renderBenchmarkItems).concat([tableHead])
+  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
   const items = renderBenchmarkItems(result)
   const padded = items.map((i, idx) => {
     const width = Math.max(...allItems.map(i => i[idx].length))
@@ -95,14 +95,14 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.dim(padded[10]), // sample
     result.rank === 1
       ? c.bold(c.green(' fastest'))
-      : result.rank === benchs.length && benchs.length > 2
-        ? c.bold(c.gray(' slowest'))
-        : '',
+      : (result.rank === benches.length && benches.length > 2)
+          ? c.bold(c.gray(' slowest'))
+          : '',
   ].join('  ')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
-  let output: string[] = []
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0): string {
+  const output: string[] = []
 
   let idx = 0
   for (const task of tasks) {
@@ -154,7 +154,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
     if (task.type === 'suite' && task.tasks.length > 0) {
       if (task.result?.state)
-        output = output.concat(renderTree(task.tasks, options, level + 1))
+        output.push(renderTree(task.tasks, options, level + 1))
     }
     idx++
   }
@@ -162,7 +162,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   return output.filter(Boolean).join('\n')
 }
 
-export const createTableRenderer = (_tasks: Task[], options: ListRendererOptions) => {
+export function createTableRenderer(_tasks: Task[], options: ListRendererOptions) {
   let tasks = _tasks
   let timer: any
 

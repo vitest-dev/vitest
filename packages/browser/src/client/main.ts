@@ -1,13 +1,16 @@
-import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
 import type { VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
+import { importId } from './utils'
+import { setupConsoleLogSpy } from './logger'
+import { createSafeRpc, rpc, rpcDone } from './rpc'
+import { setupDialogsSpy } from './dialog'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } }
+globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
 
 export const PORT = import.meta.hot ? '51204' : location.port
@@ -20,20 +23,14 @@ let config: ResolvedConfig | undefined
 let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
-export const client = createClient(ENTRY_URL, {
-  handlers: {
-    async onPathsCollected(paths) {
-      if (!paths)
-        return
-      // const config = __vitest_worker__.config
-      const now = `${new Date().getTime()}`
-      paths.forEach((i) => {
-        browserHashMap.set(i, now)
-      })
-      await runTests(paths, config, client)
-    },
-  },
-})
+const url = new URL(location.href)
+const testId = url.searchParams.get('id') || 'unknown'
+
+function getQueryPaths() {
+  return url.searchParams.getAll('path')
+}
+
+export const client = createClient(ENTRY_URL)
 
 const ws = client.ws
 
@@ -57,47 +54,72 @@ async function loadConfig() {
 ws.addEventListener('open', async () => {
   await loadConfig()
 
+  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const safeRpc = createSafeRpc(client, getSafeTimers)
+
+  // @ts-expect-error untyped global for internal use
+  globalThis.__vitest_browser__ = true
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    moduleCache: new Map(),
     rpc: client.rpc,
+    safeRpc,
+    durations: {
+      environment: 0,
+      prepare: 0,
+    },
   }
 
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_mocker__ = {}
-  const paths = await client.rpc.getPaths()
-
-  const now = `${new Date().getTime()}`
-  paths.forEach(i => browserHashMap.set(i, now))
+  const paths = getQueryPaths()
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  await runTests(paths, config, client)
+  await setupConsoleLogSpy()
+  setupDialogsSpy()
+  await runTests(paths, config!)
 })
 
-let hasSnapshot = false
-async function runTests(paths: string[], config: any, client: VitestClient) {
-  // we use dynamic import here, because this file is bundled with UI,
-  // but we need to resolve correct path at runtime
-  const path = '/__vitest_index__'
-  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await import(path) as typeof import('vitest/browser')
+async function runTests(paths: string[], config: ResolvedConfig) {
+  // need to import it before any other import, otherwise Vite optimizer will hang
+  const viteClientPath = '/@vite/client'
+  await import(viteClientPath)
+
+  const {
+    startTests,
+    setupCommonEnv,
+    takeCoverageInsideWorker,
+  } = await importId('vitest/browser') as typeof import('vitest/browser')
+
+  const executor = {
+    executeId: (id: string) => importId(id),
+  }
 
   if (!runner) {
-    const runnerPath = '/__vitest_runners__'
-    const { VitestTestRunner } = await import(runnerPath) as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner)
-    runner = new BrowserRunner({ config, client, browserHashMap })
+    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
+    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
+    runner = new BrowserRunner({ config, browserHashMap })
   }
 
-  if (!hasSnapshot) {
-    setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
-    hasSnapshot = true
-  }
-  await setupCommonEnv(config)
-  await startTests(paths, runner)
+  if (!config.snapshotOptions.snapshotEnvironment)
+    config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
-  await client.rpc.onFinished()
-  await client.rpc.onWatcherStart()
+  try {
+    await setupCommonEnv(config)
+    const files = paths.map((path) => {
+      return (`${config.root}/${path}`).replace(/\/+/g, '/')
+    })
+
+    const now = `${new Date().getTime()}`
+    files.forEach(i => browserHashMap.set(i, now))
+
+    for (const file of files)
+      await startTests([file], runner)
+  }
+  finally {
+    await rpcDone()
+    await rpc().onDone(testId)
+  }
 }

@@ -1,5 +1,6 @@
-import fs from 'fs'
-import { builtinModules } from 'module'
+import fs from 'node:fs'
+import { builtinModules } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
@@ -11,7 +12,7 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const entries = [
   'src/index.ts',
@@ -23,20 +24,25 @@ const entries = [
   'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
+  'src/runtime/child.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/integrations/spy.ts',
+  'src/coverage.ts',
+  'src/public/utils.ts',
 ]
 
-const dtsEntries = [
-  'src/index.ts',
-  'src/node.ts',
-  'src/environments.ts',
-  'src/browser.ts',
-  'src/runners.ts',
-  'src/suite.ts',
-  'src/config.ts',
-]
+const dtsEntries = {
+  index: 'src/index.ts',
+  node: 'src/node.ts',
+  environments: 'src/environments.ts',
+  browser: 'src/browser.ts',
+  runners: 'src/runners.ts',
+  suite: 'src/suite.ts',
+  config: 'src/config.ts',
+  coverage: 'src/coverage.ts',
+  utils: 'src/public/utils.ts',
+}
 
 const external = [
   ...builtinModules,
@@ -46,6 +52,9 @@ const external = [
   'node:worker_threads',
   'node:fs',
   'inspector',
+  'webdriverio',
+  'safaridriver',
+  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
@@ -53,7 +62,11 @@ const external = [
   '@vitest/utils/diff',
   '@vitest/runner/utils',
   '@vitest/runner/types',
+  '@vitest/snapshot/environment',
+  '@vitest/snapshot/manager',
 ]
+
+const dir = dirname(fileURLToPath(import.meta.url))
 
 const plugins = [
   nodeResolve({
@@ -73,11 +86,9 @@ export default ({ watch }) => defineConfig([
       dir: 'dist',
       format: 'esm',
       chunkFileNames: (chunkInfo) => {
-        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
+        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.moduleIds).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
           id = normalize(id)
-          if (id.includes('runtime/runners'))
-            return 'runners-chunk.js'
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
@@ -131,7 +142,7 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(
-        resolve(__dirname, '../../LICENSE'),
+        resolve(dir, '../../LICENSE'),
       )
       function sortLicenses(licenses) {
         let withParenthesis = []
@@ -149,7 +160,7 @@ function licensePlugin() {
       }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
-        .filter(({ name }) => !name.startsWith('@vitest/'))
+        .filter(({ name }) => !name?.startsWith('@vitest/'))
         .sort(({ name: nameA }, { name: nameB }) =>
           nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )

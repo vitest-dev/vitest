@@ -15,7 +15,7 @@ const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
 export const config: UserConfig = {
   root: __dirname,
-  base: '/__vitest__/',
+  base: './',
   resolve: {
     dedupe: ['vue'],
     alias: {
@@ -24,7 +24,7 @@ export const config: UserConfig = {
     },
   },
   define: {
-    __REPORT__: false,
+    __BASE_PATH__: '"/__vitest__/"',
   },
   plugins: [
     Vue(),
@@ -65,7 +65,7 @@ export const config: UserConfig = {
       name: 'debug-html-report',
       apply: 'serve',
       transformIndexHtml(html) {
-        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json"</script>`)
+        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
       },
     },
   ],

@@ -4,6 +4,7 @@ import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { divider } from './reporters/renderers/utils'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
 import { printError } from './error'
 
@@ -105,9 +106,19 @@ export class Logger {
 
     this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
 
-    if (this.ctx.config.browser)
-      this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
-    else if (this.ctx.config.ui)
+    if (this.ctx.config.sequence.sequencer === RandomSequencer)
+      this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
+
+    this.ctx.projects.forEach((project) => {
+      if (!project.browser)
+        return
+      const name = project.getName()
+      const output = project.isCore() ? '' : ` [${name}]`
+
+      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${project.config.browser.api?.host || 'localhost'}:${c.bold(`${project.browser.config.server.port}`)}`)))
+    })
+
+    if (this.ctx.config.ui)
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
     else if (this.ctx.config.api)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))

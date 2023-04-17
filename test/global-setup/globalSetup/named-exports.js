@@ -1,4 +1,8 @@
-const sleep = async n => new Promise(resolve => setTimeout(resolve, n))
+async function sleep(n) {
+  return new Promise(resolve => setTimeout(resolve, n))
+}
+
+let teardownHappened = false
 
 // let start
 
@@ -11,6 +15,9 @@ export async function setup() {
 }
 
 export async function teardown() {
+  if (teardownHappened)
+    throw new Error('teardown called twice')
+  teardownHappened = true
   // tear it down here
   // await server.close()
   await sleep(25)

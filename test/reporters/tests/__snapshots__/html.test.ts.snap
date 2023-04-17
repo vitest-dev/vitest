@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`html reporter > resolves to "failing" status for test file "json-fail" > tests are failing 1`] = `
 {
@@ -6,10 +6,12 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
       "id": 0,
       "mode": "run",
       "name": "json-fail.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {
@@ -41,6 +43,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "error": {
               "actual": "2",
               "constructor": "Function<AssertionError>",
+              "diff": "  - Expected  - 1
+  + Received  + 1
+
+  - 1
+  + 2",
               "expected": "1",
               "message": "expected 2 to deeply equal 1",
               "name": "AssertionError",
@@ -56,6 +63,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               {
                 "actual": "2",
                 "constructor": "Function<AssertionError>",
+                "diff": "  - Expected  - 1
+  + Received  + 1
+
+  - 1
+  + 2",
                 "expected": "1",
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
@@ -72,6 +84,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "afterEach": "pass",
               "beforeEach": "pass",
             },
+            "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "fail",
@@ -115,10 +128,12 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
       "id": 0,
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {
@@ -141,6 +156,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
               "afterEach": "pass",
               "beforeEach": "pass",
             },
+            "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "pass",
@@ -187,6 +203,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
                     "afterEach": "pass",
                     "beforeEach": "pass",
                   },
+                  "repeatCount": 0,
                   "retryCount": 0,
                   "startTime": 0,
                   "state": "pass",

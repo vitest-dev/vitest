@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { assertTypes, deepClone, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
-import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
-import type { ModuleCacheMap } from '../../../packages/vite-node/src/types'
+import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
+import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
+import { ModuleCacheMap } from '../../../packages/vite-node/dist/client'
 
 describe('assertTypes', () => {
   test('the type of value should be number', () => {
@@ -148,39 +149,88 @@ describe('deepClone', () => {
     objD.ref = objD
     expect(deepClone(objD)).toEqual(objD)
   })
+
+  test('can clone classes with proxied enumerable getters', () => {
+    const obj = Symbol.for('aClass')
+    interface TestShape { a: number; b: string }
+    class A {
+      [obj]: TestShape
+      constructor(data: TestShape) {
+        this[obj] = data
+        return new Proxy(this, {
+          ownKeys() {
+            return Reflect.ownKeys(data)
+          },
+          getOwnPropertyDescriptor(target, p) {
+            return {
+              ...Reflect.getOwnPropertyDescriptor(data, p),
+              enumerable: true,
+            }
+          },
+        })
+      }
+
+      get a() {
+        return this[obj].a
+      }
+
+      get b() {
+        return this[obj].b
+      }
+    }
+    const shape = { a: 1 } as TestShape
+    Object.defineProperty(shape, 'b', {
+      configurable: true,
+      enumerable: true,
+      get: () => 'B',
+    })
+    const aClass = new A(shape)
+    expect(aClass.a).toEqual(1)
+    expect(aClass.b).toEqual('B')
+    expect(Object.keys(aClass)).toEqual(['a', 'b'])
+    expect(deepClone({ aClass })).toEqual({ aClass: new A({ a: 1, b: 'B' }) })
+  })
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
-  test('resets user modules', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('/some-module.ts', {})
-    moduleCache.set('/@fs/some-path.ts', {})
+  const mod = () => ({ evaluated: true, promise: Promise.resolve({}), resolving: false, exports: {}, map: {} as EncodedSourceMap })
 
+  const moduleCache = new ModuleCacheMap()
+  const modules = [
+    ['/some-module.ts', true],
+    ['/@fs/some-path.ts', true],
+    ['/node_modules/vitest/dist/index.js', false],
+    ['/node_modules/vitest-virtual-da9876a/dist/index.js', false],
+    ['/node_modules/some-module@vitest/dist/index.js', false],
+    ['/packages/vitest/dist/index.js', false],
+    ['mock:/some-module.ts', false],
+    ['mock:/@fs/some-path.ts', false],
+  ] as const
+
+  beforeAll(() => {
+    modules.forEach(([path]) => {
+      moduleCache.set(path, mod())
+    })
     resetModules(moduleCache)
-
-    expect(moduleCache.size).toBe(0)
   })
 
-  test('doesn\'t reset vitest modules', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('/node_modules/vitest/dist/index.js', {})
-    moduleCache.set('/node_modules/vitest-virtual-da9876a/dist/index.js', {})
-    moduleCache.set('/node_modules/some-module@vitest/dist/index.js', {})
-    moduleCache.set('/packages/vitest/dist/index.js', {})
+  test.each(modules)('Cashe for %s is reseted (%s)', (path, reset) => {
+    const cached = moduleCache.get(path)
 
-    resetModules(moduleCache)
+    if (reset) {
+      expect(cached).not.toHaveProperty('evaluated')
+      expect(cached).not.toHaveProperty('resolving')
+      expect(cached).not.toHaveProperty('exports')
+      expect(cached).not.toHaveProperty('promise')
+    }
+    else {
+      expect(cached).toHaveProperty('evaluated')
+      expect(cached).toHaveProperty('resolving')
+      expect(cached).toHaveProperty('exports')
+      expect(cached).toHaveProperty('promise')
+    }
 
-    expect(moduleCache.size).toBe(4)
-  })
-
-  test('doesn\'t reset mocks', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('mock:/some-module.ts', {})
-    moduleCache.set('mock:/@fs/some-path.ts', {})
-
-    resetModules(moduleCache)
-
-    expect(moduleCache.size).toBe(2)
+    expect(cached).toHaveProperty('map')
   })
 })
 

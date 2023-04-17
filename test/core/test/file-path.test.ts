@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import { existsSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/utils'
 // @ts-expect-error aliased to ../src/aliased-mod.ts

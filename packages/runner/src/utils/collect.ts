@@ -1,4 +1,5 @@
 import type { Suite, TaskBase } from '../types'
+import { processError } from './error'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
@@ -65,7 +66,7 @@ function skipAllTasks(suite: Suite) {
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   if (allowOnly)
     return
-  const error = new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')
+  const error = processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error'))
   task.result = {
     state: 'fail',
     error,
