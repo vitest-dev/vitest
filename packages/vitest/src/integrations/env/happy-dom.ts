@@ -5,6 +5,28 @@ import { populateGlobal } from './utils'
 export default <Environment>({
   name: 'happy-dom',
   transformMode: 'web',
+  async setupVm() {
+    const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
+    const win = new Window()
+
+    win.global = win.window
+    Object.defineProperty(win.document, 'defaultView', {
+      value: win.window,
+      configurable: true,
+    })
+
+    return {
+      getGlobal() {
+        return win.globalThis
+      },
+      getVmContext() {
+        return win
+      },
+      teardown() {
+        win.happyDOM.cancelAsync()
+      },
+    }
+  },
   async setup(global) {
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour

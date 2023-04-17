@@ -1,3 +1,5 @@
+import type { Context } from 'node:vm'
+
 export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
@@ -21,9 +23,16 @@ export interface EnvironmentReturn {
   teardown: (global: any) => Awaitable<void>
 }
 
+export interface VmEnvironmentReturn {
+  getGlobal(): Context
+  getVmContext(): Context
+  teardown: (global: any) => Awaitable<void>
+}
+
 export interface Environment {
   name: string
   transformMode?: 'web' | 'ssr'
+  setupVm?(global: any, options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

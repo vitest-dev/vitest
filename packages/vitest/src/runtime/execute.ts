@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url'
+import type { Context } from 'node:vm'
 import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
@@ -36,7 +37,7 @@ let _viteNode: {
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 
-export async function startViteNode(ctx: ContextRPC) {
+export async function startViteNode(ctx: ContextRPC, vmContext?: Context) {
   if (_viteNode)
     return _viteNode
 
@@ -80,6 +81,7 @@ export async function startViteNode(ctx: ContextRPC) {
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
+    context: vmContext,
   })
 
   const environment = await loadEnvironment(ctx.environment.name, executor)

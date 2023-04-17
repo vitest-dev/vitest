@@ -147,6 +147,7 @@
     "cac": "^6.7.14",
     "chai": "^4.3.7",
     "debug": "^4.3.4",
+    "import-meta-resolve": "^2.2.2",
     "local-pkg": "^0.4.3",
     "magic-string": "^0.30.1",
     "pathe": "^1.1.1",

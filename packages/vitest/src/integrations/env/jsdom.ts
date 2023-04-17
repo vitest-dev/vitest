@@ -29,6 +29,53 @@ function catchWindowErrors(window: Window) {
 export default <Environment>({
   name: 'jsdom',
   transformMode: 'web',
+  async setupVm(_: any, { jsdom = {} }) {
+    const {
+      CookieJar,
+      JSDOM,
+      ResourceLoader,
+      VirtualConsole,
+    } = await importModule('jsdom') as typeof import('jsdom')
+    const {
+      html = '<!DOCTYPE html>',
+      userAgent,
+      url = 'http://localhost:3000',
+      contentType = 'text/html',
+      pretendToBeVisual = true,
+      includeNodeLocations = false,
+      runScripts = 'dangerously',
+      resources,
+      console = false,
+      cookieJar = false,
+      ...restOptions
+    } = jsdom as any
+    const dom = new JSDOM(
+      html,
+      {
+        pretendToBeVisual,
+        resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+        runScripts,
+        url,
+        virtualConsole: (console && global.console) ? new VirtualConsole().sendTo(global.console) : undefined,
+        cookieJar: cookieJar ? new CookieJar() : undefined,
+        includeNodeLocations,
+        contentType,
+        userAgent,
+        ...restOptions,
+      },
+    )
+    return {
+      getGlobal() {
+        return dom.window
+      },
+      getVmContext() {
+        return dom.getInternalVMContext()
+      },
+      teardown() {
+        dom.window.close()
+      },
+    }
+  },
   async setup(global, { jsdom = {} }) {
     const {
       CookieJar,

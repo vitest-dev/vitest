@@ -7,6 +7,7 @@ import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
+import { createVmPool } from './pools/vm'
 import type { WorkspaceProject } from './workspace'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
@@ -30,6 +31,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     child_process: null,
     threads: null,
     browser: null,
+    vm: null,
   }
 
   function getDefaultPoolName(project: WorkspaceProject) {
@@ -67,6 +69,7 @@ export function createPool(ctx: Vitest): ProcessPool {
             suppressLoaderWarningsPath,
             '--experimental-loader',
             loaderPath,
+            ...conditions,
           ]
         : [
             ...execArgv,
@@ -86,6 +89,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       child_process: [] as WorkspaceSpec[],
       threads: [] as WorkspaceSpec[],
       browser: [] as WorkspaceSpec[],
+      vm: [] as WorkspaceSpec[],
     }
 
     for (const spec of files) {
@@ -100,6 +104,11 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
         return pools.browser.runTests(files, invalidate)
+      }
+
+      if (pool === 'vm') {
+        pools.vm ??= createVmPool(ctx, options)
+        return pools.vm.runTests(files, invalidate)
       }
 
       if (pool === 'threads') {

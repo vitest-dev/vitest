@@ -163,10 +163,10 @@ function createVitest(): VitestUtils {
     // @ts-expect-error injected by vite-nide
     ? __vitest_mocker__
     : new Proxy({}, {
-      get(name) {
+      get(_, name) {
         throw new Error(
           'Vitest mocker was not initialized in this environment. '
-          + `vi.${name}() is forbidden.`,
+          + `vi.${String(name)}() is forbidden.`,
         )
       },
     })

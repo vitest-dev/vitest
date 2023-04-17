@@ -29,6 +29,7 @@ const external = [
   'vite/types/hot',
   'node:url',
   'node:events',
+  'node:vm',
 ]
 
 const plugins = [

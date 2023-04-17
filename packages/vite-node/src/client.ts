@@ -4,7 +4,10 @@ import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
+import { readFile } from 'node:fs/promises'
 import { resolve } from 'pathe'
+import { hasESMSyntax } from 'mlly'
+import { resolve as resolveModule } from 'import-meta-resolve'
 import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -181,10 +184,12 @@ export class ViteNodeRunner {
    * Keys of the map are filepaths, or plain package names
    */
   moduleCache: ModuleCacheMap
+  externalCache: ModuleCacheMap
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
+    this.externalCache = options.externalCache ?? new ModuleCacheMap()
     this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
   }
 
@@ -309,7 +314,7 @@ export class ViteNodeRunner {
 
     if (externalize) {
       debugNative(externalize)
-      const exports = await this.interopedImport(externalize)
+      const { exports } = await this.interopedImport(externalize)
       mod.exports = exports
       return exports
     }
@@ -416,18 +421,77 @@ export class ViteNodeRunner {
     if (transformed[0] === '#')
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
+    await this.runModule(context, transformed)
+
+    return exports
+  }
+
+  async runModule(context: Record<string, any>, transformed: string) {
+    const vmContext = this.options.context
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
-    const fn = vm.runInThisContext(code, {
-      filename: __filename,
+    const options = {
+      filename: context.__filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
-    })
+    }
 
-    await fn(...Object.values(context))
+    if (vmContext) {
+      const fn = vm.runInContext(code, vmContext, {
+        ...options,
+        // if we encountered an import, it's not inlined
+        importModuleDynamically: this.importModuleDynamically.bind(this) as any,
+      })
+      await fn(...Object.values(context))
+    }
+    else {
+      const fn = vm.runInThisContext(code, options)
+      await fn(...Object.values(context))
+    }
+  }
 
-    return exports
+  async importModuleDynamically(specifier: string, script: vm.Script) {
+    const vmContext = this.options.context
+    if (!vmContext)
+      throw new Error('[vite-node] importModuleDynamically is not supported without a context')
+
+    // @ts-expect-error - private API
+    const moduleUrl = await resolveModule(specifier, script.identifier)
+    return this.createModule(moduleUrl.toString())
+  }
+
+  private async createModule(identifier: string) {
+    const vmContext = this.options.context!
+    const { format, module } = await this.interopedImport(identifier)
+    if (format === 'esm')
+      return module
+    const moduleKeys = Object.keys(module)
+    const importModuleDynamically = this.importModuleDynamically.bind(this)
+    const m: any = new vm.SyntheticModule(
+      // TODO: fix "default" shenanigans
+      Array.from(new Set([...moduleKeys, 'default'])),
+      () => {
+        for (const key of moduleKeys)
+          m.setExport(key, module[key])
+        if (format === 'cjs' && !moduleKeys.includes('default'))
+          m.setExport('default', module)
+      },
+      {
+        context: vmContext,
+        identifier,
+        // @ts-expect-error actually supported
+        importModuleDynamically,
+      },
+    )
+
+    if (m.status === 'unlinked')
+      await m.link(importModuleDynamically)
+
+    if (m.status === 'linked')
+      await m.evaluate()
+
+    return m
   }
 
   prepareContext(context: Record<string, any>) {
@@ -446,18 +510,89 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
+  async externalizedImport(identifier: string) {
+    const vmContext = this.options.context
+
+    if (!vmContext || isNodeBuiltin(identifier))
+      return { format: 'builtin', module: await import(identifier) }
+
+    const importModuleDynamically = this.importModuleDynamically.bind(this) as any
+    const fileUrl = identifier.startsWith('file:') ? identifier : pathToFileURL(identifier).toString()
+    const pathUrl = identifier.startsWith('file:') ? fileURLToPath(identifier) : identifier
+
+    // TODO: dependencies are in the loop
+    const mod = this.externalCache.get(pathUrl)
+
+    if (mod.promise)
+      return await mod.promise
+
+    const content = await readFile(pathUrl, 'utf-8')
+
+    // TODO: dirty check
+    if (!hasESMSyntax(content)) {
+      const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${content} })`
+      const fn = vm.runInContext(cjsModule, vmContext, {
+        filename: pathUrl,
+      })
+      const exports = mod.exports ??= (mod.exports = {})
+      const module = { exports }
+      const require = createRequire(fileUrl)
+      const __dirname = dirname(pathUrl)
+      fn(module.exports, require, module, pathUrl, __dirname)
+      return { format: 'cjs', module: exports }
+    }
+
+    const m = new vm.SourceTextModule(
+      content,
+      {
+        identifier: fileUrl,
+        context: vmContext,
+        importModuleDynamically,
+        initializeImportMeta(meta, mod) {
+          meta.url = mod.identifier
+        },
+      },
+    )
+
+    const promise = new Promise((resolve) => {
+      const result = { format: 'esm', module: m }
+      const finish = () => resolve(result)
+      if (m.status === 'unlinked') {
+        m.link(importModuleDynamically).then(() => {
+          if (m.status === 'linked')
+            m.evaluate().then(finish)
+          else
+            finish()
+        })
+      }
+      else {
+        finish()
+      }
+    })
+
+    mod.promise = promise
+
+    return await promise
+  }
+
   /**
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const importedModule = await import(path)
+    const { format, module: importedModule } = await this.externalizedImport(path)
 
-    if (!this.shouldInterop(path, importedModule))
-      return importedModule
+    let namespace
+    if (importedModule instanceof vm.Module)
+      namespace = importedModule.namespace
+    else
+      namespace = importedModule
 
-    const { mod, defaultExport } = interopModule(importedModule)
+    if (!this.shouldInterop(path, namespace))
+      return { format, exports: namespace, module: importedModule }
 
-    return new Proxy(mod, {
+    const { mod, defaultExport } = interopModule(namespace)
+
+    const exports = new Proxy(mod, {
       get(mod, prop) {
         if (prop === 'default')
           return defaultExport
@@ -481,6 +616,8 @@ export class ViteNodeRunner {
         }
       },
     })
+
+    return { format, exports, module: importedModule }
   }
 }
 
