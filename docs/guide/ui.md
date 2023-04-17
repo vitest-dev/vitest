@@ -22,7 +22,7 @@ Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/"
 <img alt="Vitest UI" img-light src="https://user-images.githubusercontent.com/11247099/171992267-5cae2fa0-b927-400a-8eb1-da776974cb61.png">
 <img alt="Vitest UI" img-dark src="https://user-images.githubusercontent.com/11247099/171992272-7c6057e2-80c3-4b17-a7b6-0ac28e5a5e0b.png">
 
-Since Vitest 0.26.0, UI can also be used as a reporter. Use `'html'` reporter in your Vitest configuration to generate HTML output and preview results of your tests:
+Since Vitest 0.26.0, UI can also be used as a reporter. Use `'html'` reporter in your Vitest configuration to generate HTML output and preview the results of your tests:
 
 ```ts
 // vitest.config.ts
@@ -42,7 +42,7 @@ If you still want to see how your tests are running in real time in the terminal
 To preview your HTML report, you can use [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
-npx vite preview --base __vitest__ --outDir ./html
+npx vite preview --outDir ./html
 ```
 
 You can configure output with [`outputFile`](/config/#outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.

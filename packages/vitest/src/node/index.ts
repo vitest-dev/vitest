@@ -1,9 +1,11 @@
 export type { Vitest } from './core'
+export type { WorkspaceProject as VitestWorkspace } from './workspace'
 export { createVitest } from './create'
 export { VitestPlugin } from './plugins'
 export { startVitest } from './cli-api'
+export type { WorkspaceSpec } from './pool'
 
-export { VitestRunner } from '../runtime/execute'
+export { VitestExecutor } from '../runtime/execute'
 export type { ExecuteOptions } from '../runtime/execute'
 
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'

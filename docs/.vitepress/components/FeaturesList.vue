@@ -13,6 +13,7 @@
     <ListItem>Workers multi-threading via <a target="_blank" href="https://github.com/tinylibs/tinypool" rel="noopener noreferrer">Tinypool</a></ListItem>
     <ListItem>Benchmarking support with <a target="_blank" href="https://github.com/tinylibs/tinybench" rel="noopener noreferrer">Tinybench</a></ListItem>
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
+    <ListItem><a href="/guide/workspace">Workspace</a> support</ListItem>
     <ListItem>
       <a href="/guide/snapshot">
         Jest-compatible Snapshot

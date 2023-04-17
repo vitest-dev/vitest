@@ -1,7 +1,7 @@
-import { performance } from 'perf_hooks'
+import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -20,7 +20,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  isTTY = isNode && process.stdout?.isTTY && !process.env.CI
+  isTTY = isNode && process.stdout?.isTTY && !isCI
   ctx: Vitest = undefined!
 
   private _filesInWatchMode = new Map<string, number>()
@@ -80,11 +80,15 @@ export abstract class BaseReporter implements Reporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
-        logger.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+        let title = ` ${getStateSymbol(task)} `
+        if (task.projectName)
+          title += formatProjectName(task.projectName)
+        title += `${task.name} ${suffix}`
+        logger.log(title)
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
-          logger.log(c.red(`   ${pointer} ${getFullName(test)}`))
+          logger.log(c.red(`   ${pointer} ${getFullName(test, c.dim(' > '))}`))
           test.result?.errors?.forEach((e) => {
             logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
           })
@@ -103,7 +107,7 @@ export abstract class BaseReporter implements Reporter {
     else
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
-    const hints = []
+    const hints: string[] = []
     // TODO typecheck doesn't support these for now
     if (this.mode !== 'typecheck')
       hints.push(HELP_HINT)
@@ -123,6 +127,7 @@ export abstract class BaseReporter implements Reporter {
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
+      const { setInterval } = getSafeTimers()
       this._lastRunTimer = setInterval(
         () => {
           this._lastRunTimeout += 1
@@ -137,6 +142,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private resetLastRunLog() {
+    const { clearInterval } = getSafeTimers()
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
     this.ctx.logger.logUpdate.clear()
@@ -153,15 +159,18 @@ export abstract class BaseReporter implements Reporter {
 
     const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
+    const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
+    const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.configOverride.testNamePattern))}\n` : ''
+
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
       this._lastRunCount = 0
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
       this._lastRunCount = rerun
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
     }
 
     this._timeStart = new Date()
@@ -172,8 +181,8 @@ export abstract class BaseReporter implements Reporter {
     if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    this.ctx.logger.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
-    process[log.type].write(`${log.content}\n`)
+    const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : 'unknown test'}`))
+    process[log.type].write(`${header}\n${log.content}\n`)
   }
 
   shouldLog(log: UserConsoleLog) {
@@ -209,7 +218,11 @@ export abstract class BaseReporter implements Reporter {
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
-    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
+    const transformTime = this.ctx.projects
+      .flatMap(w => Array.from(w.vitenode.fetchCache.values()).map(i => i.duration || 0))
+      .reduce((a, b) => a + b, 0)
+    const environmentTime = files.reduce((acc, file) => acc + Math.max(0, file.environmentLoad || 0), 0)
+    const prepareTime = files.reduce((acc, file) => acc + Math.max(0, file.prepareDuration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
@@ -249,7 +262,7 @@ export abstract class BaseReporter implements Reporter {
     else if (this.mode === 'typecheck')
       logger.log(padTitle('Duration'), time(executionTime))
     else
-      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)})`))
 
     logger.log()
   }
@@ -284,16 +297,16 @@ export abstract class BaseReporter implements Reporter {
 
   async reportBenchmarkSummary(files: File[]) {
     const logger = this.ctx.logger
-    const benchs = getTests(files)
+    const benches = getTests(files)
 
-    const topBenchs = benchs.filter(i => i.result?.benchmark?.rank === 1)
+    const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
     logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
-    for (const bench of topBenchs) {
+    for (const bench of topBenches) {
       const group = bench.suite
       if (!group)
         continue
-      const groupName = getFullName(group)
+      const groupName = getFullName(group, c.dim(' > '))
       logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
       const siblings = group.tasks
         .filter(i => i.result?.benchmark && i !== bench)
@@ -322,7 +335,7 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName
-        let name = getFullName(task)
+        let name = getFullName(task, c.dim(' > '))
         if (filepath)
           name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`
 

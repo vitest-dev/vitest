@@ -1,9 +1,9 @@
 import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
-import * as matcherUtils from './jest-matcher-utils'
+import { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
-import { equals, isA } from './jest-utils'
+import { equals, isA, iterableEquality, subsetEquality } from './jest-utils'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean
@@ -26,8 +26,14 @@ export abstract class AsymmetricMatcher<
       ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
-      utils: matcherUtils,
-    } as any
+      utils: {
+        ...getMatcherUtils(),
+        diff,
+        stringify,
+        iterableEquality,
+        subsetEquality,
+      },
+    }
   }
 
   abstract asymmetricMatch(other: unknown): boolean

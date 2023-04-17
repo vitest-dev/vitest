@@ -1,9 +1,10 @@
 /* eslint-disable no-restricted-imports */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
-import { configDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import { BaseCoverageProvider } from 'vitest/coverage'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -13,6 +14,8 @@ import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
 import { COVERAGE_STORE_KEY } from './constants'
+
+type Options = ResolvedCoverageOptions<'istanbul'>
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -29,11 +32,11 @@ interface TestExclude {
   }
 }
 
-export class IstanbulCoverageProvider implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
-  options!: ResolvedCoverageOptions & CoverageIstanbulOptions & { provider: 'istanbul' }
+  options!: Options
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
@@ -46,8 +49,20 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   coverages: any[] = []
 
   initialize(ctx: Vitest) {
+    const config: CoverageIstanbulOptions = ctx.config.coverage
+
     this.ctx = ctx
-    this.options = resolveIstanbulOptions(ctx.config.coverage, ctx.config.root)
+    this.options = {
+      ...coverageConfigDefaults,
+
+      // User's options
+      ...config,
+
+      // Resolved fields
+      provider: 'istanbul',
+      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
+      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+    }
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -70,7 +85,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     })
   }
 
-  resolveOptions(): ResolvedCoverageOptions {
+  resolveOptions() {
     return this.options
   }
 
@@ -103,7 +118,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
       return map
-    }, {})
+    }, libCoverage.createCoverageMap({}))
 
     if (this.options.all && allTestsRun)
       await this.includeUntestedFiles(mergedCoverage)
@@ -121,9 +136,10 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     })
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter as any, {
+      reports.create(reporter[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
+        ...reporter[1],
       }).execute(context)
     }
 
@@ -136,6 +152,20 @@ export class IstanbulCoverageProvider implements CoverageProvider {
         functions: this.options.functions,
         lines: this.options.lines,
         statements: this.options.statements,
+      })
+    }
+
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        perFile: this.options.perFile,
+        configurationFile: this.ctx.server.config.configFile,
       })
     }
   }
@@ -215,21 +245,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       }
     }
   }
-}
-
-function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) {
-  const reportsDirectory = resolve(root, options.reportsDirectory || configDefaults.coverage.reportsDirectory!)
-
-  const resolved = {
-    ...configDefaults.coverage,
-    ...options,
-    provider: 'istanbul',
-    reportsDirectory,
-    tempDirectory: resolve(reportsDirectory, 'tmp'),
-    reporter: Array.isArray(options.reporter) ? options.reporter : [options.reporter],
-  }
-
-  return resolved as ResolvedCoverageOptions & { provider: 'istanbul' }
 }
 
 /**

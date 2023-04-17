@@ -11,9 +11,15 @@ declare let SOME: {
 }
 
 // functions to test that they are not statically replaced
-const get__DEFINE__ = () => __DEFINE__
-const get__JSON__ = () => __JSON__
-const get__MODE__ = () => __MODE__
+function get__DEFINE__() {
+  return __DEFINE__
+}
+function get__JSON__() {
+  return __JSON__
+}
+function get__MODE__() {
+  return __MODE__
+}
 
 const MODE = process.env.MODE
 

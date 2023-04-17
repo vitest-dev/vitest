@@ -2,6 +2,7 @@
  *  @vitest-environment edge-runtime
  */
 import { describe, expect, it } from 'vitest'
+
 describe('edge runtime api', () => {
   it('TextEncoder references the same global Uint8Array constructor', () => {
     expect(new TextEncoder().encode('abc')).toBeInstanceOf(Uint8Array)

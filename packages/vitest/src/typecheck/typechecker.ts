@@ -1,10 +1,12 @@
 import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
-import { extname, resolve } from 'pathe'
+import { basename, extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
-import { ensurePackageInstalled, getTasks } from '../utils'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import { getTasks } from '../utils'
+import { ensurePackageInstalled } from '../node/pkg'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
+import type { WorkspaceProject } from '../node/workspace'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -39,7 +41,7 @@ export class Typechecker {
   private allowJs?: boolean
   private process!: ExecaChildProcess
 
-  constructor(protected ctx: Vitest, protected files: string[]) {}
+  constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
@@ -121,21 +123,23 @@ export class Typechecker {
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
+          state: (task.mode === 'run' || task.mode === 'only') ? state : task.mode,
         }
         if (task.suite)
           markState(task.suite, state)
       }
       errors.forEach(({ error, originalError }) => {
-        const originalPos = mapConsumer?.generatedPositionFor({
+        const processedPos = mapConsumer?.generatedPositionFor({
           line: originalError.line,
           column: originalError.column,
-          source: path,
+          source: basename(path),
         }) || originalError
-        const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
+        const line = processedPos.line ?? originalError.line
+        const column = processedPos.column ?? originalError.column
+        const index = indexMap.get(`${line}:${column}`)
         const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
         const suite = definition ? definition.task : file
-        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = (suite.mode === 'run' || suite.mode === 'only') ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,
@@ -243,7 +247,7 @@ export class Typechecker {
         this._onWatcherRerun?.()
         this._result.sourceErrors = []
         this._result.files = []
-        this._tests = null // test structure migh've changed
+        this._tests = null // test structure might've changed
         rerunTriggered = true
       }
       if (/Found \w+ errors*. Watching for/.test(output)) {

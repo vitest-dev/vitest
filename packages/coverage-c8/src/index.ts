@@ -1,6 +1,11 @@
-export * from './takeCoverage'
+import * as coverage from './takeCoverage'
 
-export async function getProvider() {
-  const { C8CoverageProvider } = await import('./provider')
-  return new C8CoverageProvider()
+export default {
+  ...coverage,
+  async getProvider() {
+    // to not bundle the provider
+    const name = './provider.js'
+    const { C8CoverageProvider } = await import(name) as typeof import('./provider')
+    return new C8CoverageProvider()
+  },
 }

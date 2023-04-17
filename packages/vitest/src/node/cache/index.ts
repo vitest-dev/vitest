@@ -12,12 +12,12 @@ export class VitestCache {
   results = new ResultsCache()
   stats = new FilesStatsCache()
 
-  getFileTestResults(id: string) {
-    return this.results.getResults(id)
+  getFileTestResults(key: string) {
+    return this.results.getResults(key)
   }
 
-  getFileStats(id: string) {
-    return this.stats.getStats(id)
+  getFileStats(key: string) {
+    return this.stats.getStats(key)
   }
 
   static resolveCacheDir(root: string, dir: string | undefined) {
@@ -27,13 +27,17 @@ export class VitestCache {
   static async clearCache(options: CliOptions) {
     const root = resolve(options.root || process.cwd())
 
-    const configPath = options.config
-      ? resolve(root, options.config)
-      : await findUp(configFiles, { cwd: root } as any)
+    const configPath = options.config === false
+      ? false
+      : options.config
+        ? resolve(root, options.config)
+        : await findUp(configFiles, { cwd: root } as any)
 
-    const config = await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath)
+    const config = configPath
+      ? (await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath))?.config
+      : undefined
 
-    const cache = config?.config.test?.cache
+    const cache = config?.test?.cache
 
     if (cache === false)
       throw new Error('Cache is disabled')

@@ -1,4 +1,4 @@
-const noop = () => {}
+function noop() {}
 
 export interface AssertType {
   <T>(value: T): void

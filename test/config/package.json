@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-config",
+  "private": true,
+  "scripts": {
+    "test": "vitest run test/**"
+  },
+  "devDependencies": {
+    "execa": "^7.0.0",
+    "strip-ansi": "^7.0.1",
+    "vite": "latest",
+    "vitest": "workspace:*"
+  }
+}

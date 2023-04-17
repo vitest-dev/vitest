@@ -1,34 +1,73 @@
 import c from 'picocolors'
 import type { Task } from '../../../types'
-import { clearInterval, getTests, setInterval } from '../../../utils'
+import { getTests } from '../../../utils'
 import type { Logger } from '../../logger'
 
 export interface DotRendererOptions {
   logger: Logger
 }
 
-const check = c.green('·')
-const cross = c.red('x')
-const pending = c.yellow('*')
-const skip = c.dim(c.gray('-'))
+interface Icon { char: string; color: (char: string) => string }
 
-function render(tasks: Task[]) {
-  const all = getTests(tasks)
-  return all.map((i) => {
-    if (i.mode === 'skip' || i.mode === 'todo')
-      return skip
-    switch (i.result?.state) {
-      case 'pass':
-        return check
-      case 'fail':
-        return cross
-      default:
-        return pending
-    }
-  }).join('')
+const check: Icon = { char: '·', color: c.green }
+const cross: Icon = { char: 'x', color: c.red }
+const pending: Icon = { char: '*', color: c.yellow }
+const skip: Icon = { char: '-', color: (char: string) => c.dim(c.gray(char)) }
+
+function getIcon(task: Task) {
+  if (task.mode === 'skip' || task.mode === 'todo')
+    return skip
+  switch (task.result?.state) {
+    case 'pass':
+      return check
+    case 'fail':
+      return cross
+    default:
+      return pending
+  }
 }
 
-export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) => {
+function render(tasks: Task[]): string {
+  const all = getTests(tasks)
+  const output: string[] = []
+
+  // The log-update uses various ANSI helper utilities, e.g. ansi-warp, ansi-slice,
+  // when printing. Passing it hundreds of single characters containing ANSI codes reduces
+  // performances. We can optimize it by reducing amount of ANSI codes, e.g. by coloring
+  // multiple tasks at once instead of each task separately.
+  let currentIcon = pending
+  let currentTasks = 0
+
+  const addOutput = () => output.push(currentIcon.color(currentIcon.char.repeat(currentTasks)))
+
+  for (const task of all) {
+    const icon = getIcon(task)
+    const isLast = all.indexOf(task) === all.length - 1
+
+    if (icon === currentIcon) {
+      currentTasks++
+
+      if (isLast)
+        addOutput()
+
+      continue
+    }
+
+    // Task mode/state has changed, add previous group to output
+    addOutput()
+
+    // Start tracking new group
+    currentTasks = 1
+    currentIcon = icon
+
+    if (isLast)
+      addOutput()
+  }
+
+  return output.join('')
+}
+
+export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
   let tasks = _tasks
   let timer: any
 
@@ -42,12 +81,11 @@ export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) =
     start() {
       if (timer)
         return this
-      timer = setInterval(update, 200)
+      timer = setInterval(update, 16)
       return this
     },
     update(_tasks: Task[]) {
       tasks = _tasks
-      update()
       return this
     },
     async stop() {

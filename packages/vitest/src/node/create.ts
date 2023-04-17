@@ -11,9 +11,11 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
   const ctx = new Vitest(mode)
   const root = resolve(options.root || process.cwd())
 
-  const configPath = options.config
-    ? resolve(root, options.config)
-    : await findUp(configFiles, { cwd: root } as any)
+  const configPath = options.config === false
+    ? false
+    : options.config
+      ? resolve(root, options.config)
+      : await findUp(configFiles, { cwd: root } as any)
 
   const config: ViteInlineConfig = {
     logLevel: 'error',
@@ -25,7 +27,8 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
 
   const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
-  if (ctx.config.api?.port)
+  // optimizer needs .listen() to be called
+  if (ctx.config.api?.port || ctx.config.deps?.experimentalOptimizer?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})

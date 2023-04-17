@@ -2,6 +2,7 @@ import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
 import type { WebSocketHandlers } from 'vitest/src/api/types'
 import { parse } from 'flatted'
+import { decompressSync, strFromU8 } from 'fflate'
 import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
 import { StateManager } from '../../../../vitest/src/node/state'
 
@@ -32,7 +33,7 @@ export function createStaticClient(): VitestClient {
     getFiles: () => {
       return metadata.files
     },
-    getPaths: async () => {
+    getPaths: () => {
       return metadata.paths
     },
     getConfig: () => {
@@ -50,13 +51,16 @@ export function createStaticClient(): VitestClient {
     readFile: async (id) => {
       return Promise.resolve(id)
     },
-    onWatcherStart: asyncNoop,
-    onFinished: asyncNoop,
+    onDone: noop,
     onCollected: asyncNoop,
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
     updateSnapshot: asyncNoop,
+    removeFile: asyncNoop,
+    createDirectory: asyncNoop,
+    resolveSnapshotPath: asyncNoop,
+    snapshotSaved: asyncNoop,
   } as WebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers>
@@ -69,7 +73,15 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    metadata = parse(await res.text()) as HTMLReportMetadata
+    const contentType = res.headers.get('content-type')?.toLowerCase() || ''
+    if (contentType.includes('application/gzip')) {
+      const compressed = new Uint8Array(await res.arrayBuffer())
+      const decompressed = strFromU8(decompressSync(compressed))
+      metadata = parse(decompressed) as HTMLReportMetadata
+    }
+    else {
+      metadata = parse(await res.text()) as HTMLReportMetadata
+    }
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
   }

@@ -2,7 +2,7 @@
 /**
  * Wrapper of the CLI with child process to manage segfaults and retries.
  */
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 import c from 'picocolors'
 import { execa } from 'execa'
 import { EXIT_CODE_RESTART } from '../constants'
@@ -11,8 +11,6 @@ const ENTRY = new URL('./cli.js', import.meta.url)
 
 /** Arguments passed to Node before the script */
 const NODE_ARGS = [
-  '--inspect',
-  '--inspect-brk',
   '--trace-deprecation',
   '--experimental-wasm-threads',
   '--wasm-atomics-on-non-shared-memory',

@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`c8 json report 1`] = `
 {
@@ -2515,8 +2515,8 @@ exports[`c8 json report 1`] = `
     "f": {
       "0": 1,
       "1": 1,
-      "10": 0,
-      "11": 0,
+      "10": 1,
+      "11": 1,
       "2": 2,
       "3": 2,
       "4": 0,
@@ -2579,22 +2579,22 @@ exports[`c8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 29,
+            "line": 30,
           },
           "start": {
             "column": 7,
-            "line": 27,
+            "line": 28,
           },
         },
-        "line": 27,
+        "line": 28,
         "loc": {
           "end": {
             "column": 1,
-            "line": 29,
+            "line": 30,
           },
           "start": {
             "column": 7,
-            "line": 27,
+            "line": 28,
           },
         },
         "name": "ignoredFunction",
@@ -2603,22 +2603,22 @@ exports[`c8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 29,
+            "line": 30,
           },
           "start": {
             "column": 0,
-            "line": 29,
+            "line": 30,
           },
         },
-        "line": 29,
+        "line": 30,
         "loc": {
           "end": {
             "column": 1,
-            "line": 29,
+            "line": 30,
           },
           "start": {
             "column": 0,
-            "line": 29,
+            "line": 30,
           },
         },
         "name": "get",
@@ -2838,8 +2838,9 @@ exports[`c8 json report 1`] = `
       "24": 1,
       "25": 1,
       "26": 1,
-      "27": 0,
-      "28": 0,
+      "27": 1,
+      "28": 1,
+      "29": 1,
       "3": 1,
       "4": 1,
       "5": 2,
@@ -3031,7 +3032,7 @@ exports[`c8 json report 1`] = `
       },
       "25": {
         "end": {
-          "column": 39,
+          "column": 22,
           "line": 26,
         },
         "start": {
@@ -3041,7 +3042,7 @@ exports[`c8 json report 1`] = `
       },
       "26": {
         "end": {
-          "column": 35,
+          "column": 39,
           "line": 27,
         },
         "start": {
@@ -3051,7 +3052,7 @@ exports[`c8 json report 1`] = `
       },
       "27": {
         "end": {
-          "column": 59,
+          "column": 35,
           "line": 28,
         },
         "start": {
@@ -3061,12 +3062,22 @@ exports[`c8 json report 1`] = `
       },
       "28": {
         "end": {
-          "column": 1,
+          "column": 62,
           "line": 29,
         },
         "start": {
           "column": 0,
           "line": 29,
+        },
+      },
+      "29": {
+        "end": {
+          "column": 1,
+          "line": 30,
+        },
+        "start": {
+          "column": 0,
+          "line": 30,
         },
       },
       "3": {

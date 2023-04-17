@@ -1,5 +1,6 @@
-import { RealDate } from '../integrations/mock/date'
-import type { Arrayable, DeepMerge, Nullable } from '../types'
+import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
+
+export { notNullish, getCallLastIndex } from '@vitest/utils'
 
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
@@ -9,6 +10,19 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
+}
+
+export function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
+  return collection.reduce((acc, item) => {
+    const key = iteratee(item)
+    acc[key] ||= []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<K, T[]>)
+}
+
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
 export function getAllMockableProperties(obj: any, isModule: boolean) {
@@ -35,57 +49,16 @@ export function getAllMockableProperties(obj: any, isModule: boolean) {
   return Array.from(allProps.values())
 }
 
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
-}
-
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export const noop = () => { }
+export function noop() { }
 
 export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function getOwnProperties(obj: any) {
-  const ownProps = new Set<string | symbol>()
-  if (isFinalObj(obj))
-    return []
-  collectOwnProperties(obj, ownProps)
-  return Array.from(ownProps)
-}
-
-export function deepClone<T>(val: T): T {
-  const seen = new WeakMap()
-  return clone(val, seen)
-}
-
-export function clone<T>(val: T, seen: WeakMap<any, any>): T {
-  let k: any, out: any
-  if (seen.has(val))
-    return seen.get(val)
-  if (Array.isArray(val)) {
-    out = Array(k = val.length)
-    seen.set(val, out)
-    while (k--)
-      out[k] = clone(val[k], seen)
-    return out as any
-  }
-
-  if (Object.prototype.toString.call(val) === '[object Object]') {
-    out = Object.create(Object.getPrototypeOf(val))
-    seen.set(val, out)
-    // we don't need properties from prototype
-    const props = getOwnProperties(val)
-    for (const k of props)
-      out[k] = clone((val as any)[k], seen)
-    return out
-  }
-
-  return val
-}
 /**
  * Convert `Arrayable<T>` to `Array<T>`
  *
@@ -102,12 +75,12 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   return [array]
 }
 
-export const toString = (v: any) => Object.prototype.toString.call(v)
-export const isPlainObject = (val: any): val is object =>
-  // `Object.create(null).constructor` is `undefined`
-  // `{}.constructor.name` is `Object`
-  // `new (class A{})().constructor.name` is `A`
-  toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+export function toString(v: any) {
+  return Object.prototype.toString.call(v)
+}
+export function isPlainObject(val: any): val is object {
+  return toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+}
 
 export function isObject(item: unknown): boolean {
   return item != null && typeof item === 'object' && !Array.isArray(item)
@@ -117,8 +90,10 @@ export function isObject(item: unknown): boolean {
  * Deep merge :P
  *
  * Will merge objects only if they are plain
+ *
+ * Do not merge types - it is very expensive and usually it's better to case a type here
  */
-export function deepMerge<T extends object = object, S extends object = T>(target: T, ...sources: S[]): DeepMerge<T, S> {
+export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
   if (!sources.length)
     return target as any
 
@@ -127,7 +102,7 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
     return target as any
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
-    (Object.keys(source) as (keyof S & keyof T)[]).forEach((key) => {
+    (Object.keys(source) as (keyof T)[]).forEach((key) => {
       if (isMergeableObject(source[key])) {
         if (!target[key])
           target[key] = {} as any
@@ -147,35 +122,24 @@ function isMergeableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 
-export function assertTypes(value: unknown, name: string, types: string[]): void {
-  const receivedType = typeof value
-  const pass = types.includes(receivedType)
-  if (!pass)
-    throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
-}
-
 export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
 }
 
-function random(seed: number) {
-  const x = Math.sin(seed++) * 10000
-  return x - Math.floor(x)
+export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
+  if (!config.deps?.experimentalOptimizer?.enabled)
+    return undefined
+  return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
 
-export function shuffle<T>(array: T[], seed = RealDate.now()): T[] {
-  let length = array.length
-
-  while (length) {
-    const index = Math.floor(random(seed) * length--)
-
-    const previous = array[length]
-    array[length] = array[index]
-    array[index] = previous
-    ++seed
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
   }
-
-  return array
 }
+export { AggregateErrorPonyfill as AggregateError }

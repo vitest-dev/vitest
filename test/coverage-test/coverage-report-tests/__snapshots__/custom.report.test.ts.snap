@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`custom json report 1`] = `
+{
+  "calls": [
+    "initialized with context",
+    "resolveOptions",
+    "clean with force",
+    "onAfterSuiteRun with {\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"}}",
+    "reportCoverage with {\\"allTestsRun\\":true}",
+  ],
+  "transformedFiles": [
+    "<process-cwd>/src/Counter/Counter.component.ts",
+    "<process-cwd>/src/Counter/Counter.vue",
+    "<process-cwd>/src/Counter/index.ts",
+    "<process-cwd>/src/Defined.vue",
+    "<process-cwd>/src/Hello.vue",
+    "<process-cwd>/src/another-setup.ts",
+    "<process-cwd>/src/implicitElse.ts",
+    "<process-cwd>/src/importEnv.ts",
+    "<process-cwd>/src/index.mts",
+    "<process-cwd>/src/utils.ts",
+  ],
+}
+`;

@@ -1,7 +1,23 @@
-import { assert, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { timeout } from '../src/timeout'
 
 describe.skip('skipped suite', () => {
+  beforeAll(() => {
+    throw new Error('should not run')
+  })
+
+  beforeEach(() => {
+    throw new Error('should not run')
+  })
+
+  afterEach(() => {
+    throw new Error('should not run')
+  })
+
+  afterAll(() => {
+    throw new Error('should not run')
+  })
+
   it('no fail as suite is skipped', () => {
     assert.equal(Math.sqrt(4), 3)
   })
@@ -17,7 +33,9 @@ describe('test modes', () => {
   it.todo('unimplemented test')
 })
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 describe('concurrent tests', () => {
   let count = 0

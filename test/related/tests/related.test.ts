@@ -1,4 +1,4 @@
-import { access } from 'fs'
+import { access } from 'node:fs'
 import { sep } from 'pathe'
 import { expect, test } from 'vitest'
 import { A } from '../src/sourceA'

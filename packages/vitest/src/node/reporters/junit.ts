@@ -2,9 +2,11 @@ import { existsSync, promises as fs } from 'node:fs'
 import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
+import type { Task } from '@vitest/runner'
+import type { ErrorWithDiff } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
-import type { ErrorWithDiff, Reporter, Task } from '../../types'
-import { parseStacktrace } from '../../utils/source-map'
+import type { Reporter } from '../../types/reporter'
+import { parseErrorStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
@@ -99,7 +101,7 @@ export class JUnitReporter implements Reporter {
   }
 
   async writeElement(name: string, attrs: Record<string, any>, children: () => Promise<void>) {
-    const pairs = []
+    const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
       if (attr === undefined)
@@ -123,13 +125,13 @@ export class JUnitReporter implements Reporter {
     // Be sure to escape any XML in the error Details
     await this.baseLog(escapeXML(errorDetails))
 
-    const stack = parseStacktrace(error)
+    const stack = parseErrorStacktrace(error)
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {
       const path = relative(this.ctx.config.root, frame.file)
 
-      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`)
+      await this.baseLog(escapeXML(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`))
 
       // reached at test file, skip the follow stack
       if (frame.file in this.ctx.state.filesMap)

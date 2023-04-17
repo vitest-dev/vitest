@@ -6,6 +6,7 @@ import {
   discord,
   font,
   github,
+  mastodon,
   ogImage,
   ogUrl,
   releases,
@@ -20,6 +21,17 @@ export default withPwa(defineConfig({
   lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
+  locales: {
+    root: {
+      label: 'English',
+      lang: 'en',
+    },
+    en: {
+      label: '简体中文',
+      lang: 'zh',
+      link: 'https://cn.vitest.dev/',
+    },
+  },
   head: [
     ['meta', { name: 'theme-color', content: '#729b1a' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
@@ -71,6 +83,7 @@ export default withPwa(defineConfig({
     },
 
     socialLinks: [
+      { icon: 'mastodon', link: mastodon },
       { icon: 'twitter', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
@@ -85,6 +98,7 @@ export default withPwa(defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
+      { text: 'Advanced', link: '/advanced/api' },
       {
         text: `v${version}`,
         items: [
@@ -102,6 +116,21 @@ export default withPwa(defineConfig({
 
     sidebar: {
       // TODO: bring sidebar of apis and config back
+      '/advanced': [
+        {
+          text: 'Advanced',
+          items: [
+            {
+              text: 'Vitest Node API',
+              link: '/advanced/api',
+            },
+            {
+              text: 'Runner API',
+              link: '/advanced/runner',
+            },
+          ],
+        },
+      ],
       '/': [
         {
           text: 'Guide',
@@ -117,6 +146,10 @@ export default withPwa(defineConfig({
             {
               text: 'Features',
               link: '/guide/features',
+            },
+            {
+              text: 'Workspace',
+              link: '/guide/workspace',
             },
             {
               text: 'CLI',
@@ -145,6 +178,10 @@ export default withPwa(defineConfig({
             {
               text: 'Vitest UI',
               link: '/guide/ui',
+            },
+            {
+              text: 'Browser Mode',
+              link: '/guide/browser',
             },
             {
               text: 'In-source Testing',

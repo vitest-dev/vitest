@@ -44,5 +44,6 @@ export default defineConfig({
     threads: false,
     isolate: false,
     include: ['**/*.{test,spec}.{imba,js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['./setup.js'],
   },
 })

@@ -1,7 +1,9 @@
 export const isAliased = true
 
-export const getPaths = () => ({
-  __filename,
-  __dirname,
-  url: import.meta.url,
-})
+export function getPaths() {
+  return {
+    __filename,
+    __dirname,
+    url: import.meta.url,
+  }
+}

@@ -1,4 +1,4 @@
-import { version } from 'process'
+import { version } from 'node:process'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MyWorker from '../src/objectWorker?worker'

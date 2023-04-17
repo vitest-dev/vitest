@@ -16,11 +16,13 @@ test('module is processed and scoped', async () => {
     />
   `)
 
-  element.className = `${styles.module} ${styles.main}`
-  const computedModules = window.getComputedStyle(element)
+  const mangledElement = document.createElement('div')
+
+  mangledElement.className = `${styles.module} ${styles.main}`
+  const computedModules = window.getComputedStyle(mangledElement)
   expect(computedModules.display).toBe('flex')
   expect(computedModules.width).toBe('100px')
-  expect(element).toMatchInlineSnapshot(`
+  expect(mangledElement).toMatchInlineSnapshot(`
     <div
       class="_module_19cso_5 _main_19cso_1"
     />

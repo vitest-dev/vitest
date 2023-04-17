@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 
 import type { Options } from 'execa'
 import type { Deferred, Event, Target } from 'benchmark'
@@ -72,7 +72,7 @@ export function runBench(callback: (data: Result[]) => void) {
       defer: true,
       fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], execaOptions)
         .on('exit', (code) => {
-          if (code > 0)
+          if (code)
             exit(suite, code)
           else
             deferred.resolve()
@@ -83,7 +83,7 @@ export function runBench(callback: (data: Result[]) => void) {
       defer: true,
       fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], execaOptions)
         .on('exit', (code) => {
-          if (code > 0)
+          if (code)
             exit(suite, code)
           else
             deferred.resolve()
@@ -94,8 +94,8 @@ export function runBench(callback: (data: Result[]) => void) {
   bench.on('complete', () => {
     const results = bench
       .map((run: Target): Result => ({
-        name: run.name,
-        ...run.stats,
+        name: run.name!,
+        ...run.stats!,
       }))
       .sort((a, b) => { return a.mean - b.mean })
 

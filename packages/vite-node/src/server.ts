@@ -1,8 +1,10 @@
 import { performance } from 'node:perf_hooks'
-import { resolve } from 'pathe'
+import { existsSync } from 'node:fs'
+import { join, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
@@ -15,6 +17,8 @@ const debugRequest = createDebug('vite-node:server:request')
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
+
+  private existingOptimizedDeps = new Set<string>()
 
   fetchCache = new Map<string, {
     duration?: number
@@ -33,9 +37,12 @@ export class ViteNodeServer {
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = server.config.ssr
-    if (ssrOptions) {
-      options.deps ??= {}
 
+    options.deps ??= {}
+
+    options.deps.cacheDir = relative(server.config.root, server.config.cacheDir)
+
+    if (ssrOptions) {
       // we don't externalize ssr, because it has different semantics in Vite
       // if (ssrOptions.external) {
       //   options.deps.external ??= []
@@ -64,10 +71,26 @@ export class ViteNodeServer {
     return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
-  async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+  private async ensureExists(id: string): Promise<boolean> {
+    if (this.existingOptimizedDeps.has(id))
+      return true
+    if (existsSync(id)) {
+      this.existingOptimizedDeps.add(id)
+      return true
+    }
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        this.ensureExists(id).then(() => {
+          resolve(true)
+        })
+      })
+    })
+  }
+
+  async resolveId(id: string, importer?: string, transformMode?: 'web' | 'ssr'): Promise<ViteNodeResolveId | null> {
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
-    const mode = (importer && this.getTransformMode(importer)) || 'ssr'
+    const mode = transformMode ?? ((importer && this.getTransformMode(importer)) || 'ssr')
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
@@ -76,15 +99,15 @@ export class ViteNodeServer {
     if (fetchResult?.map)
       return fetchResult.map
     const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
-    return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
+    return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
   }
 
-  async fetchModule(id: string): Promise<FetchResult> {
+  async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
     id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
-        this._fetchModule(id)
+        this._fetchModule(id, transformMode)
           .then((r) => {
             return this.options.sourcemap !== true ? { ...r, map: undefined } : r
           })
@@ -96,11 +119,11 @@ export class ViteNodeServer {
     return this.fetchPromiseMap.get(id)!
   }
 
-  async transformRequest(id: string) {
+  async transformRequest(id: string, filepath = id) {
     // reuse transform for concurrent requests
     if (!this.transformPromiseMap.has(id)) {
       this.transformPromiseMap.set(id,
-        this._transformRequest(id)
+        this._transformRequest(id, filepath)
           .finally(() => {
             this.transformPromiseMap.delete(id)
           }),
@@ -122,15 +145,27 @@ export class ViteNodeServer {
     return 'web'
   }
 
-  private async _fetchModule(id: string): Promise<FetchResult> {
+  private async _fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
+
+    const cacheDir = this.options.deps?.cacheDir
+
+    if (cacheDir && id.includes(cacheDir)) {
+      if (!id.startsWith(this.server.config.root))
+        id = join(this.server.config.root, id)
+      const timeout = setTimeout(() => {
+        throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
+      }, 5000) // CI can be quite slow
+      await this.ensureExists(id)
+      clearTimeout(timeout)
+    }
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
     const cache = this.fetchCache.get(filePath)
-    if (timestamp !== null && cache && cache.timestamp >= timestamp)
+    if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
 
     const time = Date.now()
@@ -142,9 +177,9 @@ export class ViteNodeServer {
     }
     else {
       const start = performance.now()
-      const r = await this._transformRequest(id)
+      const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
+      result = { code: r?.code, map: r?.map as any }
     }
 
     this.fetchCache.set(filePath, {
@@ -156,7 +191,15 @@ export class ViteNodeServer {
     return result
   }
 
-  private async _transformRequest(id: string) {
+  protected async processTransformResult(filepath: string, result: TransformResult) {
+    const mod = this.server.moduleGraph.getModuleById(filepath)
+    return withInlineSourcemap(result, {
+      filepath: mod?.file || filepath,
+      root: this.server.config.root,
+    })
+  }
+
+  private async _transformRequest(id: string, filepath: string, customTransformMode?: 'web' | 'ssr') {
     debugRequest(id)
 
     let result: TransformResult | null = null
@@ -167,7 +210,9 @@ export class ViteNodeServer {
         return result
     }
 
-    if (this.getTransformMode(id) === 'web') {
+    const transformMode = customTransformMode ?? this.getTransformMode(id)
+
+    if (transformMode === 'web') {
       // for components like Vue, we want to use the client side
       // plugins but then convert the code to be consumed by the server
       result = await this.server.transformRequest(id)
@@ -180,7 +225,7 @@ export class ViteNodeServer {
 
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
-      withInlineSourcemap(result)
+      result = await this.processTransformResult(filepath, result)
 
     if (this.options.debug?.dumpModules)
       await this.debugger?.dumpFile(id, result)

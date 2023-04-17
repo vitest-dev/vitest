@@ -1,8 +1,8 @@
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
 import pathe from 'pathe'
 import { expect, test } from 'vitest'
 
-const println = () => {
+function println() {
   const message = `
 export default function () {
   function Foo() {

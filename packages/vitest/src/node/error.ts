@@ -1,14 +1,14 @@
 /* eslint-disable prefer-template */
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
-import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
+import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
-import { type DiffOptions, unifiedDiff } from '../utils/diff'
+import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
@@ -23,10 +23,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const { showCodeFrame = true, fullStack = false, type } = options
   let e = error as ErrorWithDiff
 
-  if (typeof error === 'string') {
+  if (isPrimitive(e)) {
     e = {
-      message: error.split(/\n/g)[0],
-      stack: error,
+      message: String(error).split(/\n/g)[0],
+      stack: String(error),
     } as any
   }
 
@@ -38,12 +38,16 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
-  const stacks = parseStacktrace(e, fullStack)
+  // Error may have occured even before the configuration was resolved
+  if (!ctx.config)
+    return printErrorMessage(e, ctx.logger)
+
+  const stacks = parseErrorStacktrace(e, fullStack ? [] : undefined)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      ctx.server.moduleGraph.getModuleById(stack.file)
+      ctx.getModuleProjects(stack.file).length
       && existsSync(stack.file),
     )
 
@@ -68,6 +72,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
+  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath)
     ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
@@ -75,6 +80,11 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
     + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+  }
+  if (afterEnvTeardown) {
+    ctx.logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
+    + '\n- cancel timeouts using clearTimeout and clearInterval'
+    + '\n- wait for promises to resolve using the await keyword'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
@@ -85,13 +95,8 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
-  if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
-      outputTruncateLength: ctx.config.outputTruncateLength,
-      outputDiffLines: ctx.config.outputDiffLines,
-      outputDiffMaxLines: ctx.config.outputDiffMaxLines,
-    })
-  }
+  if (e.diff)
+    displayDiff(e.diff, ctx.logger.console)
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -106,10 +111,12 @@ const skipErrorProperties = new Set([
   'stackStr',
   'type',
   'showDiff',
+  'diff',
   'actual',
   'expected',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
+  'VITEST_AFTER_ENV_TEARDOWN',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -163,14 +170,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
-  const diff = unifiedDiff(actual, expected, options)
-  const dim = options.noColor ? (s: string) => s : c.dim
-  const black = options.noColor ? (s: string) => s : c.black
-  if (diff)
-    console.error(diff + '\n')
-  else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
-    console.error(dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + black('--outputDiffMaxSize') + dim(' option.\n'))
+export function displayDiff(diff: string, console: Console) {
+  console.error(diff)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
@@ -185,9 +186,6 @@ function printStack(
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  if (!stack.length)
-    return
-
   const logger = ctx.logger
 
   for (const frame of stack) {
@@ -197,7 +195,8 @@ function printStack(
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
   }
-  logger.error()
+  if (stack.length)
+    logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
     logger.error(c.red(c.dim(divider())))
