@@ -3,9 +3,7 @@ import { ModuleCacheMap } from 'vite-node/client'
 import type { BirpcReturn } from 'birpc'
 import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
-import { relative, resolve } from 'pathe'
-import { processError } from '@vitest/runner/utils'
-import { isPrimitive } from '@vitest/utils'
+import { resolve } from 'pathe'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
@@ -42,7 +40,7 @@ export async function run(ctx: WorkerContext) {
       on(fn) { port.addListener('message', fn) },
     },
   )
-  const __vitest_worker__: WorkerGlobalState = {
+  const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
@@ -59,41 +57,18 @@ export async function run(ctx: WorkerContext) {
     getSourceMap: source => moduleCache.getSourceMap(source),
   })
 
-  const processExit = process.exit
-
-  process.exit = (code = process.exitCode || 0): never => {
-    const error = new Error(`process.exit called with "${code}"`)
-    rpc.onWorkerExit(error, code)
-    return processExit(code)
-  }
-
-  function catchError(err: unknown, type: string) {
-    const worker = __vitest_worker__
-    const error = processError(err)
-    if (!isPrimitive(error)) {
-      error.VITEST_TEST_NAME = worker.current?.name
-      if (worker.filepath)
-        error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
-      error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
-    }
-    rpc.onUnhandledError(error, type)
-  }
-
-  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
-  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
-
   config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(rpc)
 
   const environment = environments[ctx.environment.name as 'happy-dom']
 
-  const vm = await environment.setupVm!({}, ctx.environment.options || {})
+  const vm = await environment.setupVM!({}, ctx.environment.options || {})
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
   const context = vm.getVmContext()
 
-  context.__vitest_worker__ = __vitest_worker__
+  context.__vitest_worker__ = state
   // TODO: all globals for test/core to work
   // TODO: copy more globals
   context.process = process
@@ -106,7 +81,7 @@ export async function run(ctx: WorkerContext) {
   context.setInterval = setInterval
   context.clearInterval = clearInterval
   context.global = context
-  context.console = createCustomConsole(__vitest_worker__)
+  context.console = createCustomConsole(state)
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
@@ -120,7 +95,7 @@ export async function run(ctx: WorkerContext) {
     context,
     moduleCache,
     mockMap,
-    state: __vitest_worker__,
+    state,
   })
 
   context.__vitest_mocker__ = executor.mocker
@@ -132,6 +107,6 @@ export async function run(ctx: WorkerContext) {
   }
   finally {
     await vm.teardown({})
-    __vitest_worker__.environmentTeardownRun = true
+    state.environmentTeardownRun = true
   }
 }
