@@ -49,6 +49,9 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    poolMatchGlobs: [
+      ['**/*', 'vm'],
+    ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
