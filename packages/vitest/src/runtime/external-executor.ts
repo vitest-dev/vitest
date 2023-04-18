@@ -19,6 +19,8 @@ export class ExternalModulesExecutor {
 
   constructor(context: vm.Context) {
     this.context = context
+    for (const file in this.requireCache)
+      delete this.requireCache[file]
   }
 
   importModuleDynamically = async (specifier: string, script: vm.Module) => {

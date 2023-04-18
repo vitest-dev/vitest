@@ -1,6 +1,5 @@
 import { URL, pathToFileURL } from 'node:url'
 import { ModuleCacheMap } from 'vite-node/client'
-import type { BirpcReturn } from 'birpc'
 import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
@@ -14,25 +13,12 @@ import { createCustomConsole } from './console'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
-let rpc: BirpcReturn<RuntimeRPC>
-
-const caches: Record<string, {
-  moduleCache: ModuleCacheMap
-  mockMap: Map<any, any>
-}> = {}
-
 // TODO: currently expects only one file in this function, which makes sense because the function itself is called for each file separately
 export async function run(ctx: WorkerContext) {
-  const file = ctx.files[0]
-  // cache is for reruning the same file in watch mode
-  const cache = caches[file] || {}
-  const moduleCache = cache.moduleCache ??= new ModuleCacheMap()
-  cache.moduleCache = moduleCache
-  const mockMap = cache.mockMap ?? new Map()
-  cache.mockMap = mockMap
-  caches[file] = cache
+  const moduleCache = new ModuleCacheMap()
+  const mockMap = new Map()
   const { config, port } = ctx
-  rpc = createBirpc<RuntimeRPC>(
+  const rpc = createBirpc<RuntimeRPC>(
     {},
     {
       eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
@@ -103,7 +89,7 @@ export async function run(ctx: WorkerContext) {
   const { run } = await executor.importExternalModule(entryFile)
 
   try {
-    await run(ctx.files, ctx.config, ctx.environment, executor)
+    await run(ctx.files, ctx.config, executor)
   }
   finally {
     await vm.teardown({})

@@ -4,13 +4,13 @@ import { startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
 import { setupChaiConfig } from '../integrations/chai'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
-import type { ContextTestEnvironment, ResolvedConfig } from '../types'
+import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils/global'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup.common'
 
-export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
+export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
   await setupCommonEnv(config)

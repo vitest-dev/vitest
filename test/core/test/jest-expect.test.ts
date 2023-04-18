@@ -687,24 +687,24 @@ describe('async expect', () => {
     try {
       expect(actual).toBe({ ...actual })
     }
-    catch (error) {
-      expect(error).toEqual(toStrictEqualError1)
+    catch (error: any) {
+      expect(error.message).toBe(toStrictEqualError1.message)
     }
 
     const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
     try {
       expect(new FakeClass()).toBe(new FakeClass())
     }
-    catch (error) {
-      expect(error).toEqual(toStrictEqualError2)
+    catch (error: any) {
+      expect(error.message).toBe(toStrictEqualError2.message)
     }
 
     const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
     try {
       expect({}).toBe(new FakeClass())
     }
-    catch (error) {
-      expect(error).toEqual(toEqualError1)
+    catch (error: any) {
+      expect(error.message).toBe(toEqualError1.message)
       // expect(error).toEqual('1234')
     }
 
@@ -712,8 +712,8 @@ describe('async expect', () => {
     try {
       expect(new FakeClass()).toBe({})
     }
-    catch (error) {
-      expect(error).toEqual(toEqualError2)
+    catch (error: any) {
+      expect(error.message).toBe(toEqualError2.message)
     }
   })
 
