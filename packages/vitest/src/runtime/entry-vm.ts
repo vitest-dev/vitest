@@ -13,8 +13,6 @@ import { setupCommonEnv } from './setup.common'
 export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
-  process.stdout.write(`worker state ${workerState.filepath}\n`)
-
   await setupCommonEnv(config)
 
   setupColors(createColors(isatty(1)))
