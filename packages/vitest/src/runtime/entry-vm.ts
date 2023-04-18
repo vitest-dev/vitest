@@ -13,6 +13,8 @@ import { setupCommonEnv } from './setup.common'
 export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
+  process.stdout.write(`worker state ${workerState.filepath}\n`)
+
   await setupCommonEnv(config)
 
   setupColors(createColors(isatty(1)))
@@ -22,6 +24,8 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   _require.extensions['.css'] = () => ({})
   _require.extensions['.scss'] = () => ({})
   _require.extensions['.sass'] = () => ({})
+
+  Error.stackTraceLimit = 1000
 
   await startCoverageInsideWorker(config.coverage, executor)
 

@@ -24,8 +24,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
-  // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = environment.name
+  workerState.environment = environment.name
 
   workerState.durations.environment = performance.now()
 

@@ -6,12 +6,10 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
-import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { loadEnvironment } from '../integrations/env'
 import { VitestMocker } from './mocker'
-import { rpc as getRpc } from './rpc'
 import { ExternalModulesExecutor } from './external-executor'
 
 const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
@@ -20,7 +18,7 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
   moduleDirectories?: string[]
   context?: vm.Context
-  state?: WorkerGlobalState
+  state: WorkerGlobalState
 }
 
 export async function createVitestExecutor(options: ExecuteOptions) {
@@ -40,11 +38,11 @@ let _viteNode: {
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 
-export async function startViteNode(ctx: ContextRPC) {
+export async function startViteNode(ctx: ContextRPC, options: ContextExecutorOptions) {
   if (_viteNode)
     return _viteNode
 
-  const executor = await startVitestExecutor(ctx)
+  const executor = await startVitestExecutor(ctx, options)
 
   const environment = await loadEnvironment(ctx.environment.name, executor)
   ctx.environment.environment = environment
@@ -60,14 +58,13 @@ export interface ContextExecutorOptions {
   mockMap?: MockMap
   moduleCache?: ModuleCacheMap
   context?: vm.Context
-  state?: WorkerGlobalState
-  rpc?: typeof getRpc
+  state: WorkerGlobalState
 }
 
-export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecutorOptions = {}) {
+export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecutorOptions) {
   const { config } = ctx
 
-  const rpc = options.rpc ?? getRpc
+  const rpc = () => options.state.rpc
 
   const processExit = process.exit
 
@@ -78,7 +75,7 @@ export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecu
   }
 
   function catchError(err: unknown, type: string) {
-    const worker = options.state || getWorkerState()
+    const worker = options.state
     const error = processError(err)
     if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
@@ -132,10 +129,14 @@ export class VitestExecutor extends ViteNodeRunner {
       this.externalModules = new ExternalModulesExecutor(options.context)
   }
 
+  get state() {
+    return this.options.state
+  }
+
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
     if (isInternalRequest(id) || id.startsWith('data:'))
       return false
-    const environment = getCurrentEnvironment()
+    const environment = this.options.state.environment
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
     return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
@@ -189,7 +190,7 @@ export class VitestExecutor extends ViteNodeRunner {
     await fn(...Object.values(context))
   }
 
-  protected async importExternalModule(path: string): Promise<any> {
+  public async importExternalModule(path: string): Promise<any> {
     if (this.externalModules)
       return this.externalModules.import(path)
     return super.importExternalModule(path)
@@ -206,7 +207,7 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   prepareContext(context: Record<string, any>) {
-    const workerState = this.options.state || getWorkerState()
+    const workerState = this.state
 
     // support `import.meta.vitest` for test entry
     if (workerState.filepath && normalize(workerState.filepath) === normalize(context.__filename)) {

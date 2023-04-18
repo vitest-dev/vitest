@@ -6,13 +6,15 @@ import { createBirpc } from 'birpc'
 import { relative, resolve } from 'pathe'
 import { processError } from '@vitest/runner/utils'
 import { isPrimitive } from '@vitest/utils'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+// import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { environments } from '../integrations/env'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { startVitestExecutor } from './execute'
-import { createCustomConsole } from './console'
+// import { createCustomConsole } from './console'
+
+const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
 let rpc: BirpcReturn<RuntimeRPC>
 
@@ -45,6 +47,7 @@ export async function run(ctx: WorkerContext) {
     moduleCache,
     config,
     mockMap,
+    environment: ctx.environment.name,
     durations: {
       environment: 0,
       prepare: performance.now(),
@@ -52,9 +55,9 @@ export async function run(ctx: WorkerContext) {
     rpc,
   }
 
-  installSourcemapsSupport({
-    getSourceMap: source => moduleCache.getSourceMap(source),
-  })
+  // installSourcemapsSupport({
+  //   getSourceMap: source => moduleCache.getSourceMap(source),
+  // })
 
   const processExit = process.exit
 
@@ -79,16 +82,11 @@ export async function run(ctx: WorkerContext) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment()
+  config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(rpc)
 
   const environment = environments[ctx.environment.name as 'happy-dom']
 
   const vm = await environment.setupVm!({}, ctx.environment.options || {})
-
-  // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = config.environment
-  // @ts-expect-error untyped global
-  globalThis.__vitest_worker__ = __vitest_worker__
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -96,7 +94,6 @@ export async function run(ctx: WorkerContext) {
   const context = vm.getVmContext()
 
   context.__vitest_worker__ = __vitest_worker__
-  context.__vitest_environment__ = config.environment
   // TODO: all globals for test/core to work
   // TODO: copy more globals
   context.process = process
@@ -109,7 +106,7 @@ export async function run(ctx: WorkerContext) {
   context.setInterval = setInterval
   context.clearInterval = clearInterval
   context.global = context
-  context.console = createCustomConsole()
+  // context.console = createCustomConsole()
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
@@ -124,12 +121,11 @@ export async function run(ctx: WorkerContext) {
     moduleCache,
     mockMap,
     state: __vitest_worker__,
-    rpc: () => rpc,
   })
 
   context.__vitest_mocker__ = executor.mocker
 
-  const { run } = await executor.executeId(pathToFileURL(resolve(distDir, 'entry-vm.js')).href)
+  const { run } = await executor.importExternalModule(entryFile)
 
   try {
     await run(ctx.files, ctx.config, ctx.environment, executor)

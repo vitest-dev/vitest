@@ -2,7 +2,6 @@ import { existsSync, readdirSync } from 'node:fs'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
-import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import { spyOn } from '../integrations/spy'
@@ -73,7 +72,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return getWorkerState().filepath || 'global'
+    return this.executor.state.filepath || 'global'
   }
 
   public getMocks() {

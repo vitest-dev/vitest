@@ -137,6 +137,9 @@ export class ExternalModulesExecutor {
 
   async createEsmModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
+    // if (fileUrl.includes('entry')) {
+    //   console.log('esm', fileUrl, !!cached, this.context.__vitest_worker__)
+    // }
     if (cached)
       return cached
     const m = new vm.SourceTextModule(

@@ -8,7 +8,7 @@ export default <Environment>({
   async setupVm() {
     const vm = await importModule('node:vm')
     const global = {} // TODO: copy more globals
-    const context = vm.createContext(global)
+    const context = vm.createContext()
     return {
       getGlobal() {
         return global

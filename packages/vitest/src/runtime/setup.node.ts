@@ -22,7 +22,7 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   const state = getWorkerState()
 
   if (!state.config.snapshotOptions.snapshotEnvironment)
-    state.config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment()
+    state.config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(state.rpc)
 
   if (globalSetup)
     return

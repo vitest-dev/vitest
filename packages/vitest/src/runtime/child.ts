@@ -3,7 +3,7 @@ import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
 import type { CancelReason } from '@vitest/runner'
-import type { ResolvedConfig } from '../types'
+import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
 import { mockMap, moduleCache, startViteNode } from './execute'
@@ -21,15 +21,13 @@ function init(ctx: ChildContext) {
     setCancel = resolve
   })
 
-  // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = environment.name
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = {
+  const state = {
     ctx,
     moduleCache,
     config,
     mockMap,
     onCancel,
+    environment: config.environment,
     durations: {
       environment: 0,
       prepare: performance.now(),
@@ -50,6 +48,9 @@ function init(ctx: ChildContext) {
     ),
   }
 
+  // @ts-expect-error I know what I am doing :P
+  globalThis.__vitest_worker__ = state
+
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
       moduleCache.delete(fsPath)
@@ -57,6 +58,8 @@ function init(ctx: ChildContext) {
     })
   }
   ctx.files.forEach(i => moduleCache.delete(i))
+
+  return state as unknown as WorkerGlobalState
 }
 
 function parsePossibleRegexp(str: string | RegExp) {
@@ -76,9 +79,11 @@ export async function run(ctx: ChildContext) {
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
-    init(ctx)
-    const { run, executor, environment } = await startViteNode(ctx)
-    await run(ctx.files, ctx.config, { ...ctx.environment, environment }, executor)
+    const state = init(ctx)
+    const { run, executor } = await startViteNode(ctx, {
+      state,
+    })
+    await run(ctx.files, ctx.config, ctx.environment, executor)
     await rpcDone()
   }
   finally {
