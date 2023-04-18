@@ -6,13 +6,13 @@ import { createBirpc } from 'birpc'
 import { relative, resolve } from 'pathe'
 import { processError } from '@vitest/runner/utils'
 import { isPrimitive } from '@vitest/utils'
-// import { installSourcemapsSupport } from 'vite-node/source-map'
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { environments } from '../integrations/env'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { startVitestExecutor } from './execute'
-// import { createCustomConsole } from './console'
+import { createCustomConsole } from './console'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
@@ -55,9 +55,9 @@ export async function run(ctx: WorkerContext) {
     rpc,
   }
 
-  // installSourcemapsSupport({
-  //   getSourceMap: source => moduleCache.getSourceMap(source),
-  // })
+  installSourcemapsSupport({
+    getSourceMap: source => moduleCache.getSourceMap(source),
+  })
 
   const processExit = process.exit
 
@@ -106,7 +106,7 @@ export async function run(ctx: WorkerContext) {
   context.setInterval = setInterval
   context.clearInterval = clearInterval
   context.global = context
-  // context.console = createCustomConsole()
+  context.console = createCustomConsole(__vitest_worker__)
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

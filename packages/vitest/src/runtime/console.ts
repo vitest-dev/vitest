@@ -2,10 +2,9 @@ import { Writable } from 'node:stream'
 import { Console } from 'node:console'
 import { getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
-import { getWorkerState } from '../utils/global'
-import { rpc } from './rpc'
+import type { WorkerGlobalState } from '../types'
 
-export function createCustomConsole() {
+export function createCustomConsole(state: WorkerGlobalState) {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
@@ -35,7 +34,7 @@ export function createCustomConsole() {
       return
     const content = buffer.map(i => String(i)).join('')
     const timer = timers.get(taskId)!
-    rpc().onUserConsoleLog({
+    state.rpc.onUserConsoleLog({
       type: 'stdout',
       content: content || '<empty line>',
       taskId,
@@ -51,7 +50,7 @@ export function createCustomConsole() {
       return
     const content = buffer.map(i => String(i)).join('')
     const timer = timers.get(taskId)!
-    rpc().onUserConsoleLog({
+    state.rpc.onUserConsoleLog({
       type: 'stderr',
       content: content || '<empty line>',
       taskId,
@@ -64,7 +63,7 @@ export function createCustomConsole() {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id ?? unknownTestId
+      const id = state?.current?.id ?? unknownTestId
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -85,7 +84,7 @@ export function createCustomConsole() {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id ?? unknownTestId
+      const id = state?.current?.id ?? unknownTestId
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
