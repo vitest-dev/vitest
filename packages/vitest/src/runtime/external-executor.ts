@@ -135,7 +135,7 @@ export class ExternalModulesExecutor {
     if (extension === '.css' || extension === '.scss' || extension === '.sass')
       return this.evaluateCssCommonJSModule(filename)
 
-    const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${code} })`
+    const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${code}\n})`
     const script = new vm.Script(cjsModule, {
       filename,
       importModuleDynamically: this.importModuleDynamically as any,
@@ -172,6 +172,7 @@ export class ExternalModulesExecutor {
     return m
   }
 
+  // TODO: return custom "createRequire" function for "node:module"
   private requireCoreModule(identifier: string) {
     return _require(identifier)
   }
