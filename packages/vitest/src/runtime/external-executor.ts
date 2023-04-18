@@ -17,14 +17,21 @@ export class ExternalModulesExecutor {
   private requireCache = _require.cache
   private moduleCache = new Map<string, vm.Module>()
 
+  private esmLinkMap = new WeakMap<vm.Module, Promise<void>>()
+
   constructor(context: vm.Context) {
     this.context = context
     for (const file in this.requireCache)
       delete this.requireCache[file]
   }
 
-  importModuleDynamically = async (specifier: string, script: vm.Module) => {
-    const identifier = await this.resolveAsync(specifier, script.identifier)
+  importModuleDynamically = async (specifier: string, referencer: vm.Module) => {
+    const module = await this.resolveModule(specifier, referencer)
+    return this.evaluateModule(module)
+  }
+
+  resolveModule = async (specifier: string, referencer: vm.Module) => {
+    const identifier = await this.resolveAsync(specifier, referencer.identifier)
     return await this.createModule(identifier)
   }
 
@@ -32,15 +39,16 @@ export class ExternalModulesExecutor {
     return resolveModule(specifier, parent)
   }
 
-  private wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {
+  private async wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {
     const moduleKeys = Object.keys(exports)
+    if (format !== 'esm' && !moduleKeys.includes('default'))
+      moduleKeys.push('default')
     const m: any = new vm.SyntheticModule(
-      // TODO: fix "default" shenanigans
-      Array.from(new Set([...moduleKeys, 'default'])),
+      moduleKeys,
       () => {
         for (const key of moduleKeys)
           m.setExport(key, exports[key])
-        if (format !== 'esm' && !moduleKeys.includes('default'))
+        if (format !== 'esm')
           m.setExport('default', exports)
       },
       {
@@ -52,8 +60,14 @@ export class ExternalModulesExecutor {
   }
 
   async evaluateModule<T extends vm.Module>(m: T): Promise<T> {
-    if (m.status === 'unlinked')
-      await m.link(this.importModuleDynamically)
+    if (m.status === 'unlinked') {
+      this.esmLinkMap.set(
+        m,
+        m.link(this.resolveModule),
+      )
+    }
+
+    await this.esmLinkMap.get(m)
 
     if (m.status === 'linked')
       await m.evaluate()
@@ -139,9 +153,6 @@ export class ExternalModulesExecutor {
 
   async createEsmModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
-    // if (fileUrl.includes('entry')) {
-    //   console.log('esm', fileUrl, !!cached, this.context.__vitest_worker__)
-    // }
     if (cached)
       return cached
     const m = new vm.SourceTextModule(
@@ -161,21 +172,31 @@ export class ExternalModulesExecutor {
     return m
   }
 
+  private requireCoreModule(identifier: string) {
+    return _require(identifier)
+  }
+
+  private getIdentifierCode(code: string) {
+    if (code.startsWith('data:text/javascript'))
+      return code.match(/data:text\/javascript;.*,(.*)/)?.[1]
+  }
+
   async createModule(identifier: string): Promise<vm.Module> {
     const extension = extname(identifier)
 
-    if (extension === '.node' || isNodeBuiltin(identifier) || identifier.startsWith('data:text/')) {
-      const exports = await import(identifier)
+    if (extension === '.node' || isNodeBuiltin(identifier)) {
+      const exports = this.requireCoreModule(identifier)
       return await this.wrapSynteticModule(identifier, 'builtin', exports)
     }
 
     const isFileUrl = identifier.startsWith('file://')
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
     const pathUrl = isFileUrl ? fileURLToPath(identifier) : identifier
-    const code = await readFile(pathUrl, 'utf-8')
+    const inlineCode = this.getIdentifierCode(identifier)
+    const code = inlineCode || await readFile(pathUrl, 'utf-8')
 
-    // TODO: very dirty check for cjs
-    if (extension === '.cjs' || !hasESMSyntax(code)) {
+    // TODO: very dirty check for cjs, it should actually check filepath
+    if (!inlineCode && (extension === '.cjs' || !hasESMSyntax(code))) {
       const exports = this.evaluateCommonJSModule(pathUrl, code)
       return this.wrapSynteticModule(fileUrl, 'cjs', exports)
     }
