@@ -9,7 +9,6 @@ import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
-import { NativeNodeVmClient } from './native'
 
 const { setTimeout, clearTimeout } = globalThis
 
@@ -183,14 +182,10 @@ export class ViteNodeRunner {
    */
   moduleCache: ModuleCacheMap
 
-  nativeImporter?: NativeNodeVmClient
-
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
-    if (this.options.context)
-      this.nativeImporter = new NativeNodeVmClient(this.options.context)
   }
 
   async executeFile(file: string) {
@@ -426,8 +421,7 @@ export class ViteNodeRunner {
     return exports
   }
 
-  async runModule(context: Record<string, any>, transformed: string) {
-    const vmContext = this.options.context
+  protected async runModule(context: Record<string, any>, transformed: string) {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
@@ -437,18 +431,8 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
-    if (vmContext && this.nativeImporter) {
-      const fn = vm.runInContext(code, vmContext, {
-        ...options,
-        // if we encountered an import, it's not inlined
-        importModuleDynamically: this.nativeImporter.importModuleDynamically as any,
-      })
-      await fn(...Object.values(context))
-    }
-    else {
-      const fn = vm.runInThisContext(code, options)
-      await fn(...Object.values(context))
-    }
+    const fn = vm.runInThisContext(code, options)
+    await fn(...Object.values(context))
   }
 
   prepareContext(context: Record<string, any>) {
@@ -467,13 +451,15 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
+  protected importExternalModule(path: string) {
+    return import(path)
+  }
+
   /**
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const importedModule = this.nativeImporter
-      ? this.nativeImporter.import(path)
-      : await import(path)
+    const importedModule = await this.importExternalModule(path)
 
     if (!this.shouldInterop(path, importedModule))
       return importedModule

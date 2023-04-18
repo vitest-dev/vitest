@@ -54,6 +54,7 @@ const external = [
   'node:worker_threads',
   'node:fs',
   'rollup',
+  'node:vm',
   'inspector',
   'webdriverio',
   'safaridriver',

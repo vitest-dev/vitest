@@ -1,6 +1,7 @@
 import { URL, pathToFileURL } from 'node:url'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { BirpcReturn } from 'birpc'
+import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
 import { relative, resolve } from 'pathe'
 import { processError } from '@vitest/runner/utils'
@@ -10,7 +11,8 @@ import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { environments } from '../integrations/env'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
-import { createVitestExecutor } from './execute'
+import { startVitestExecutor } from './execute'
+import { createCustomConsole } from './console'
 
 let rpc: BirpcReturn<RuntimeRPC>
 
@@ -22,6 +24,7 @@ const caches: Record<string, {
 // TODO: currently expects only one file in this function, which makes sense because the function itself is called for each file separately
 export async function run(ctx: WorkerContext) {
   const file = ctx.files[0]
+  // cache is for reruning the same file in watch mode
   const cache = caches[file] || {}
   const moduleCache = cache.moduleCache ??= new ModuleCacheMap()
   cache.moduleCache = moduleCache
@@ -87,6 +90,9 @@ export async function run(ctx: WorkerContext) {
   // @ts-expect-error untyped global
   globalThis.__vitest_worker__ = __vitest_worker__
 
+  process.env.VITEST_WORKER_ID = String(ctx.workerId)
+  process.env.VITEST_POOL_ID = String(poolId)
+
   const context = vm.getVmContext()
 
   context.__vitest_worker__ = __vitest_worker__
@@ -103,7 +109,7 @@ export async function run(ctx: WorkerContext) {
   context.setInterval = setInterval
   context.clearInterval = clearInterval
   context.global = context
-  context.console = console
+  context.console = createCustomConsole()
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
@@ -113,19 +119,12 @@ export async function run(ctx: WorkerContext) {
   }
   ctx.files.forEach(i => moduleCache.delete(i))
 
-  const executor = await createVitestExecutor({
-    fetchModule(id) {
-      return rpc.fetch(id, ctx.environment.name)
-    },
-    resolveId(id, importer) {
-      return rpc.resolveId(id, importer, ctx.environment.name)
-    },
+  const executor = await startVitestExecutor(ctx, {
+    context,
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault,
-    root: config.root,
-    base: config.base,
-    context,
+    state: __vitest_worker__,
+    rpc: () => rpc,
   })
 
   context.__vitest_mocker__ = executor.mocker
@@ -137,5 +136,6 @@ export async function run(ctx: WorkerContext) {
   }
   finally {
     await vm.teardown({})
+    __vitest_worker__.environmentTeardownRun = true
   }
 }
