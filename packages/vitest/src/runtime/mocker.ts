@@ -96,7 +96,7 @@ export class VitestMocker {
     return new Error(message)
   }
 
-  private getFinalPrototypes(): GlobalConstructors {
+  private getFinalConstructors(): GlobalConstructors {
     const context = this.executor.options.context
     if (!context)
       return { Object, Function, RegExp, Array, Map }
@@ -261,7 +261,7 @@ export class VitestMocker {
   public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
-    const constructors = this.getFinalPrototypes()
+    const constructors = this.getFinalConstructors()
 
     const define = (container: Record<Key, any>, key: Key, value: any) => {
       try {
