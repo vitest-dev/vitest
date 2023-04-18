@@ -147,6 +147,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [iconify](https://github.com/iconify/iconify)
 - [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
 - [cz-git](https://github.com/Zhengqbbb/cz-git)
+- [wagmi](https://github.com/wagmi-dev/wagmi)
 
 <!--
 For contributors:
