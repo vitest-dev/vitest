@@ -111,6 +111,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
             return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
+        onCancel(reason) {
+          ctx.cancelCurrentRun(reason)
+        },
+        getCountOfFailedTests() {
+          return ctx.state.getCountOfFailedTests()
+        },
       },
       {
         post: msg => ws.send(msg),

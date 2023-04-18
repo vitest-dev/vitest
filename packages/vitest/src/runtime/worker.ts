@@ -41,7 +41,7 @@ function init(ctx: WorkerContext) {
         onCancel: setCancel,
       },
       {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
         post(v) { port.postMessage(v) },
         on(fn) { port.addListener('message', fn) },
       },

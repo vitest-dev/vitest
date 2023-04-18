@@ -1381,6 +1381,24 @@ importers:
         specifier: ^2.79.1
         version: 2.79.1
 
+  test/bail:
+    devDependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
+      execa:
+        specifier: ^7.0.0
+        version: 7.1.1
+      vite:
+        specifier: ^4.2.1
+        version: 4.2.1(@types/node@18.15.11)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+      webdriverio:
+        specifier: latest
+        version: 8.7.0(typescript@5.0.3)
+
   test/base:
     devDependencies:
       vitest:

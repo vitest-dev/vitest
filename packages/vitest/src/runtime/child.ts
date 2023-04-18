@@ -38,7 +38,7 @@ function init(ctx: ChildContext) {
         onCancel: setCancel,
       },
       {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
         serialize: v8.serialize,
         deserialize: v => v8.deserialize(Buffer.from(v)),
         post(v) {

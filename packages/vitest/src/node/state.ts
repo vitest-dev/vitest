@@ -127,6 +127,10 @@ export class StateManager {
     }
   }
 
+  getCountOfFailedTests() {
+    return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
+  }
+
   cancelFiles(files: string[], root: string) {
     this.collectFiles(files.map(filepath => ({
       filepath,
@@ -134,7 +138,9 @@ export class StateManager {
       id: filepath,
       mode: 'skip',
       type: 'suite',
-
+      result: {
+        state: 'skip',
+      },
       // Cancelled files have not yet collected tests
       tasks: [],
     })))

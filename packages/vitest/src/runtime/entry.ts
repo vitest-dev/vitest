@@ -71,6 +71,20 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
     await originalOnAfterRun?.call(testRunner, files)
   }
 
+  const originalOnAfterRunTest = testRunner.onAfterRunTest
+  testRunner.onAfterRunTest = async (test) => {
+    if (config.bail && test.result?.state === 'fail') {
+      const previousFailures = await rpc().getCountOfFailedTests()
+      const currentFailures = 1 + previousFailures
+
+      if (currentFailures >= config.bail) {
+        rpc().onCancel('test-failure')
+        testRunner.onCancel?.('test-failure')
+      }
+    }
+    await originalOnAfterRunTest?.call(testRunner, test)
+  }
+
   return testRunner
 }
 

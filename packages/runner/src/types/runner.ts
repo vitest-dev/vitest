@@ -27,7 +27,7 @@ export interface VitestRunnerConstructor {
   new(config: VitestRunnerConfig): VitestRunner
 }
 
-export type CancelReason = 'keyboard-input' | string & {}
+export type CancelReason = 'keyboard-input' | 'test-failure' | string & {}
 
 export interface VitestRunner {
   /**

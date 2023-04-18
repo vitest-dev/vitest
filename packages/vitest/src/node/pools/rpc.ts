@@ -58,5 +58,11 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     onFinished(files) {
       project.report('onFinished', files, ctx.state.getUnhandledErrors())
     },
+    onCancel(reason) {
+      ctx.cancelCurrentRun(reason)
+    },
+    getCountOfFailedTests() {
+      return ctx.state.getCountOfFailedTests()
+    },
   }
 }

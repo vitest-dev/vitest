@@ -50,6 +50,7 @@ export abstract class BaseReporter implements Reporter {
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
+
     await this.reportSummary(files)
     if (errors.length) {
       if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)

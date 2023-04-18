@@ -19,6 +19,8 @@ export interface RuntimeRPC {
   onCollected: (files: File[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
+  onCancel(reason: CancelReason): void
+  getCountOfFailedTests(): number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
