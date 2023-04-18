@@ -24,15 +24,14 @@ export interface EnvironmentReturn {
 }
 
 export interface VmEnvironmentReturn {
-  getGlobal(): Context
   getVmContext(): Context
-  teardown: (global: any) => Awaitable<void>
+  teardown(): Awaitable<void>
 }
 
 export interface Environment {
   name: string
   transformMode?: 'web' | 'ssr'
-  setupVm?(global: any, options: Record<string, any>): Awaitable<VmEnvironmentReturn>
+  setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

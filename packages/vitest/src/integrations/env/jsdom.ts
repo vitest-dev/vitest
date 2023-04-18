@@ -29,7 +29,7 @@ function catchWindowErrors(window: Window) {
 export default <Environment>({
   name: 'jsdom',
   transformMode: 'web',
-  async setupVm(_: any, { jsdom = {} }) {
+  async setupVM({ jsdom = {} }) {
     const {
       CookieJar,
       JSDOM,
@@ -65,9 +65,6 @@ export default <Environment>({
       },
     )
     return {
-      getGlobal() {
-        return dom.window
-      },
       getVmContext() {
         return dom.getInternalVMContext()
       },

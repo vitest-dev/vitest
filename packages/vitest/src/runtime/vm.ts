@@ -6,14 +6,12 @@ import { resolve } from 'pathe'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
-import { environments } from '../integrations/env'
-import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { startVitestExecutor } from './execute'
 import { createCustomConsole } from './console'
+import { loadEnvironment } from './environment'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
-// TODO: currently expects only one file in this function, which makes sense because the function itself is called for each file separately
 export async function run(ctx: WorkerContext) {
   const moduleCache = new ModuleCacheMap()
   const mockMap = new Map()
@@ -33,7 +31,7 @@ export async function run(ctx: WorkerContext) {
     mockMap,
     environment: ctx.environment.name,
     durations: {
-      environment: 0,
+      environment: performance.now(),
       prepare: performance.now(),
     },
     rpc,
@@ -43,11 +41,11 @@ export async function run(ctx: WorkerContext) {
     getSourceMap: source => moduleCache.getSourceMap(source),
   })
 
-  config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(rpc)
+  const environment = await loadEnvironment(ctx.environment.name, 'setupVM')
 
-  const environment = environments[ctx.environment.name as 'happy-dom']
+  const vm = await environment.setupVM!(ctx.environment.options || {})
 
-  const vm = await environment.setupVM!({}, ctx.environment.options || {})
+  state.durations.environment = performance.now() - state.durations.environment
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -92,7 +90,7 @@ export async function run(ctx: WorkerContext) {
     await run(ctx.files, ctx.config, executor)
   }
   finally {
-    await vm.teardown({})
+    await vm.teardown()
     state.environmentTeardownRun = true
   }
 }

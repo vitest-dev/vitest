@@ -6,6 +6,7 @@ import { setupChaiConfig } from '../integrations/chai'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils/global'
+import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup.common'
@@ -15,6 +16,8 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   await setupCommonEnv(config)
 
+  config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(workerState.rpc)
+
   setupColors(createColors(isatty(1)))
 
   const _require = createRequire(import.meta.url)
@@ -23,14 +26,14 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
   _require.extensions['.scss'] = () => ({})
   _require.extensions['.sass'] = () => ({})
 
-  Error.stackTraceLimit = 1000
-
   await startCoverageInsideWorker(config.coverage, executor)
 
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
 
   const runner = await resolveTestRunner(config, executor)
+
+  workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
   for (const file of files) {
     workerState.filepath = file

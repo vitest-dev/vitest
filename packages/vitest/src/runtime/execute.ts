@@ -25,6 +25,7 @@ export async function createVitestExecutor(options: ExecuteOptions) {
   const runner = new VitestExecutor(options)
 
   await runner.executeId('/@vite/env')
+  await runner.mocker.initializeSpyModule()
 
   return runner
 }
