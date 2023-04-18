@@ -1,5 +1,4 @@
 import { relative } from 'pathe'
-import type { ModuleCacheMap } from 'vite-node'
 import { getWorkerState } from '../utils'
 import { isNode } from './env'
 
@@ -8,8 +7,8 @@ export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
-export * from './import'
 export * from './env'
+export * from './modules'
 
 export const isWindows = isNode && process.platform === 'win32'
 export function getRunMode() {
@@ -24,25 +23,6 @@ export function isRunningInBenchmark() {
 
 export const relativePath = relative
 export { resolve } from 'pathe'
-
-export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
-  const skipPaths = [
-    // Vitest
-    /\/vitest\/dist\//,
-    /\/vite-node\/dist\//,
-    // yarn's .store folder
-    /vitest-virtual-\w+\/dist/,
-    // cnpm
-    /@vitest\/dist/,
-    // don't clear mocks
-    ...(!resetMocks ? [/^mock:/] : []),
-  ]
-  modules.forEach((mod, path) => {
-    if (skipPaths.some(re => re.test(path)))
-      return
-    modules.invalidateModule(mod)
-  })
-}
 
 export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
   for (const key in Object.keys(obj)) {

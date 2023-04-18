@@ -120,14 +120,16 @@ export class VitestExecutor extends ViteNodeRunner {
 
     this.mocker = new VitestMocker(this)
 
-    Object.defineProperty(globalThis, '__vitest_mocker__', {
-      value: this.mocker,
-      writable: true,
-      configurable: true,
-    })
-
-    if (options.context)
+    if (!options.context) {
+      Object.defineProperty(globalThis, '__vitest_mocker__', {
+        value: this.mocker,
+        writable: true,
+        configurable: true,
+      })
+    }
+    else {
       this.externalModules = new ExternalModulesExecutor(options.context)
+    }
   }
 
   get state() {
