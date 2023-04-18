@@ -15,7 +15,7 @@ export class NativeNodeVmClient {
   private context: vm.Context
 
   private requireCache = _require.cache
-  private moduleCache = new Map<string, Promise<vm.Module>>()
+  private moduleCache = new Map<string, vm.Module>()
 
   constructor(context: vm.Context) {
     this.context = context
@@ -23,8 +23,7 @@ export class NativeNodeVmClient {
 
   importModuleDynamically = async (specifier: string, script: vm.Module) => {
     const identifier = await this.resolveAsync(specifier, script.identifier)
-    const { module } = await this.evaluateImport(identifier)
-    return module
+    return await this.createModule(identifier)
   }
 
   async resolveAsync(specifier: string, parent: string) {
@@ -50,7 +49,7 @@ export class NativeNodeVmClient {
     return m
   }
 
-  private async evaluateModule<T extends vm.Module>(m: T): Promise<T> {
+  async evaluateModule<T extends vm.Module>(m: T): Promise<T> {
     if (m.status === 'unlinked')
       await m.link(this.importModuleDynamically)
 
@@ -60,7 +59,7 @@ export class NativeNodeVmClient {
     return m
   }
 
-  private createCjsModule(filename: string) {
+  private createCjsNodeModule(filename: string) {
     const _require = createRequire(filename)
     // doesn't respect "extensions"
     const require: NodeRequire = (id: string) => {
@@ -92,7 +91,7 @@ export class NativeNodeVmClient {
   }
 
   private evaluateJsonCjsModule(filename: string, code: string): Record<string, unknown> {
-    const module = this.createCjsModule(filename)
+    const module = this.createCjsNodeModule(filename)
     this.requireCache[filename] = module
     module.exports = JSON.parse(code)
     module.loaded = true
@@ -101,6 +100,7 @@ export class NativeNodeVmClient {
 
   // very naive implementation for Node.js require
   private evaluateCjsModule(filename: string, code: string): Record<string, unknown> {
+    // console.log('cjs', filename)
     const cached = this.requireCache[filename]
     if (cached)
       return cached.exports
@@ -117,14 +117,14 @@ export class NativeNodeVmClient {
     script.identifier = filename
     const fn = script.runInContext(this.context)
     const __dirname = dirname(filename)
-    const module = this.createCjsModule(filename)
+    const module = this.createCjsNodeModule(filename)
     this.requireCache[filename] = module
     fn(module.exports, module.require, module, filename, __dirname)
     module.loaded = true
     return module.exports
   }
 
-  async evaluateEsmModule(fileUrl: string, code: string) {
+  async createEsmModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
@@ -141,20 +141,14 @@ export class NativeNodeVmClient {
         },
       },
     )
-    const promise = this.evaluateModule(m)
-    this.moduleCache.set(fileUrl, promise)
-    return await promise
+    this.moduleCache.set(fileUrl, m)
+    return m
   }
 
-  async evaluateImport(identifier: string) {
+  async createModule(identifier: string): Promise<vm.Module> {
     if (isNodeBuiltin(identifier)) {
       const exports = await import(identifier)
-      const module = await this.evaluateModule(this.wrapSynteticModule(identifier, 'builtin', exports))
-      return {
-        format: 'builtin',
-        module,
-        exports,
-      }
+      return await this.wrapSynteticModule(identifier, 'builtin', exports)
     }
 
     const isFileUrl = identifier.startsWith('file://')
@@ -164,25 +158,15 @@ export class NativeNodeVmClient {
 
     if (identifier.endsWith('.cjs') || !hasESMSyntax(code)) {
       const exports = this.evaluateCjsModule(pathUrl, code)
-      const module = await this.evaluateModule(this.wrapSynteticModule(fileUrl, 'cjs', exports))
-      return {
-        format: 'cjs',
-        module,
-        exports,
-      }
+      return this.wrapSynteticModule(fileUrl, 'cjs', exports)
     }
 
-    const module = await this.evaluateEsmModule(fileUrl, code)
-
-    return {
-      format: 'esm',
-      module,
-      exports: module.namespace,
-    }
+    return await this.createEsmModule(fileUrl, code)
   }
 
   async import(identifier: string) {
-    const { exports } = await this.evaluateImport(identifier)
-    return exports
+    const module = await this.createModule(identifier)
+    await this.evaluateModule(module)
+    return module.namespace
   }
 }

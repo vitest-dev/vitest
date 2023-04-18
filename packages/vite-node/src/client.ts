@@ -437,11 +437,11 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
-    if (vmContext) {
+    if (vmContext && this.nativeImporter) {
       const fn = vm.runInContext(code, vmContext, {
         ...options,
         // if we encountered an import, it's not inlined
-        importModuleDynamically: this.importModuleDynamically.bind(this) as any,
+        importModuleDynamically: this.nativeImporter.importModuleDynamically as any,
       })
       await fn(...Object.values(context))
     }
@@ -449,16 +449,6 @@ export class ViteNodeRunner {
       const fn = vm.runInThisContext(code, options)
       await fn(...Object.values(context))
     }
-  }
-
-  async importModuleDynamically(specifier: string, script: vm.Module): Promise<vm.Module> {
-    const importer = this.nativeImporter
-    if (!importer)
-      throw new Error('[vite-node] importModuleDynamically is not supported without a context')
-
-    const identifier = await importer.resolveAsync(specifier, script.identifier)
-    const { module } = await importer.evaluateImport(identifier)
-    return module
   }
 
   prepareContext(context: Record<string, any>) {
@@ -490,7 +480,7 @@ export class ViteNodeRunner {
 
     const { mod, defaultExport } = interopModule(importedModule)
 
-    const exports = new Proxy(mod, {
+    return new Proxy(mod, {
       get(mod, prop) {
         if (prop === 'default')
           return defaultExport
@@ -514,8 +504,6 @@ export class ViteNodeRunner {
         }
       },
     })
-
-    return exports
   }
 }
 
