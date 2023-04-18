@@ -146,7 +146,7 @@ export class NativeNodeVmClient {
   }
 
   async createModule(identifier: string): Promise<vm.Module> {
-    if (isNodeBuiltin(identifier)) {
+    if (isNodeBuiltin(identifier) || identifier.startsWith('data:text/')) {
       const exports = await import(identifier)
       return await this.wrapSynteticModule(identifier, 'builtin', exports)
     }

@@ -1,4 +1,4 @@
-import { pathToFileURL } from 'node:url'
+import { URL, pathToFileURL } from 'node:url'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
@@ -14,9 +14,12 @@ import { createVitestExecutor } from './execute'
 
 let rpc: BirpcReturn<RuntimeRPC>
 
-const caches: Record<string, { moduleCache: ModuleCacheMap; mockMap: Map<any, any> }> = {}
+const caches: Record<string, {
+  moduleCache: ModuleCacheMap
+  mockMap: Map<any, any>
+}> = {}
 
-// TODO: currently expect only one file in this function, which makes sense because the function itself is called for each file separately
+// TODO: currently expects only one file in this function, which makes sense because the function itself is called for each file separately
 export async function run(ctx: WorkerContext) {
   const file = ctx.files[0]
   const cache = caches[file] || {}
@@ -88,13 +91,17 @@ export async function run(ctx: WorkerContext) {
 
   context.__vitest_worker__ = __vitest_worker__
   context.__vitest_environment__ = config.environment
+  // TODO: all globals for test/core to work
   // TODO: copy more globals
   context.process = process
-  context.performance = performance
+  context.URL ??= URL
+  context.performance ??= performance
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
   context.setTimeout = setTimeout
   context.clearTimeout = clearTimeout
+  context.setInterval = setInterval
+  context.clearInterval = clearInterval
   context.global = context
   context.console = console
 
