@@ -25,10 +25,7 @@ function createWorkerChannel(project: WorkspaceProject) {
     createMethodsRPC(project),
     {
       post(v) {
-        try {
-          port.postMessage(v)
-        }
-        catch {}
+        port.postMessage(v)
       },
       on(fn) {
         port.on('message', fn)
