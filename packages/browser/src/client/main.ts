@@ -101,8 +101,6 @@ ws.addEventListener('open', async () => {
   })
 })
 
-const iframeCache = new Map<string, Element>()
-
 async function runTests(
   paths: string[],
   config: ResolvedConfig,
@@ -125,13 +123,16 @@ async function runTests(
   paths
     .map(path => (`${config.root}/${path}`).replace(/\/+/g, '/'))
     .forEach((path) => {
-      if (iframeCache.has(path)) {
-        container.removeChild(iframeCache.get(path)!)
-        iframeCache.delete(path)
+      if (browserIFrames.has(path)) {
+        browserIFrames.get(path)!.classList.remove('show')
+        container.removeChild(browserIFrames.get(path)!)
+        browserIFrames.delete(path)
       }
       browserHashMap.set(path, [true, now])
       const iFrame = document.createElement('iframe')
       iFrame.setAttribute('loading', 'eager')
+      // requires Access-Control-Allow-Origin: '*' on every resource
+      // iFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms')
       iFrame.classList.add('iframe-test')
       iFrame.setAttribute(
         'src',
