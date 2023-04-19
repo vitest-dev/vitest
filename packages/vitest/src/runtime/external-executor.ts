@@ -9,15 +9,89 @@ import { hasESMSyntax } from 'mlly'
 import { extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
 
+// need to copy paste types for vm
+// because they require latest @types/node which we don't bundle
+
+interface ModuleEvaluateOptions {
+  timeout?: vm.RunningScriptOptions['timeout'] | undefined
+  breakOnSigint?: vm.RunningScriptOptions['breakOnSigint'] | undefined
+}
+
+type ModuleLinker = (specifier: string, referencingModule: VMModule, extra: { assert: Object }) => VMModule | Promise<VMModule>
+type ModuleStatus = 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluated' | 'errored'
+declare class VMModule {
+  dependencySpecifiers: readonly string[]
+  error: any
+  identifier: string
+  context: vm.Context
+  namespace: Object
+  status: ModuleStatus
+  evaluate(options?: ModuleEvaluateOptions): Promise<void>
+  link(linker: ModuleLinker): Promise<void>
+}
+interface SyntheticModuleOptions {
+  /**
+     * String used in stack traces.
+     * @default 'vm:module(i)' where i is a context-specific ascending index.
+     */
+  identifier?: string | undefined
+  /**
+     * The contextified object as returned by the `vm.createContext()` method, to compile and evaluate this module in.
+     */
+  context?: vm.Context | undefined
+}
+declare class VMSyntheticModule extends VMModule {
+  /**
+     * Creates a new `SyntheticModule` instance.
+     * @param exportNames Array of names that will be exported from the module.
+     * @param evaluateCallback Called when the module is evaluated.
+     */
+  constructor(exportNames: string[], evaluateCallback: (this: VMSyntheticModule) => void, options?: SyntheticModuleOptions)
+  /**
+     * This method is used after the module is linked to set the values of exports.
+     * If it is called before the module is linked, an `ERR_VM_MODULE_STATUS` error will be thrown.
+     * @param name
+     * @param value
+     */
+  setExport(name: string, value: any): void
+}
+
+declare interface ImportModuleDynamically {
+  (specifier: string, script: VMModule, importAssertions: Object): VMModule | Promise<VMModule>
+}
+
+interface SourceTextModuleOptions {
+  identifier?: string | undefined
+  cachedData?: vm.ScriptOptions['cachedData'] | undefined
+  context?: vm.Context | undefined
+  lineOffset?: vm.BaseOptions['lineOffset'] | undefined
+  columnOffset?: vm.BaseOptions['columnOffset'] | undefined
+  /**
+   * Called during evaluation of this module to initialize the `import.meta`.
+   */
+  initializeImportMeta?: ((meta: ImportMeta, module: VMSourceTextModule) => void) | undefined
+  importModuleDynamically?: ImportModuleDynamically
+}
+declare class VMSourceTextModule extends VMModule {
+  /**
+   * Creates a new `SourceTextModule` instance.
+   * @param code JavaScript Module code to parse
+   */
+  constructor(code: string, options?: SourceTextModuleOptions)
+}
+
+const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
+const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
+
 const _require = createRequire(import.meta.url)
 
 export class ExternalModulesExecutor {
   private context: vm.Context
 
   private requireCache = _require.cache
-  private moduleCache = new Map<string, vm.Module>()
+  private moduleCache = new Map<string, VMModule>()
 
-  private esmLinkMap = new WeakMap<vm.Module, Promise<void>>()
+  private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
 
   constructor(context: vm.Context) {
     this.context = context
@@ -25,12 +99,12 @@ export class ExternalModulesExecutor {
       delete this.requireCache[file]
   }
 
-  importModuleDynamically = async (specifier: string, referencer: vm.Module) => {
+  importModuleDynamically = async (specifier: string, referencer: VMModule) => {
     const module = await this.resolveModule(specifier, referencer)
     return this.evaluateModule(module)
   }
 
-  resolveModule = async (specifier: string, referencer: vm.Module) => {
+  resolveModule = async (specifier: string, referencer: VMModule) => {
     const identifier = await this.resolveAsync(specifier, referencer.identifier)
     return await this.createModule(identifier)
   }
@@ -43,7 +117,7 @@ export class ExternalModulesExecutor {
     const moduleKeys = Object.keys(exports)
     if (format !== 'esm' && !moduleKeys.includes('default'))
       moduleKeys.push('default')
-    const m: any = new vm.SyntheticModule(
+    const m: any = new SyntheticModule(
       moduleKeys,
       () => {
         for (const key of moduleKeys)
@@ -59,7 +133,7 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  async evaluateModule<T extends vm.Module>(m: T): Promise<T> {
+  async evaluateModule<T extends VMModule>(m: T): Promise<T> {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
@@ -138,8 +212,8 @@ export class ExternalModulesExecutor {
     const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${code}\n})`
     const script = new vm.Script(cjsModule, {
       filename,
-      importModuleDynamically: this.importModuleDynamically as any,
-    })
+      importModuleDynamically: this.importModuleDynamically,
+    } as any)
     // @ts-expect-error mark script with current identifier
     script.identifier = filename
     const fn = script.runInContext(this.context)
@@ -155,12 +229,12 @@ export class ExternalModulesExecutor {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
-    const m = new vm.SourceTextModule(
+    const m = new SourceTextModule(
       code,
       {
         identifier: fileUrl,
         context: this.context,
-        importModuleDynamically: this.importModuleDynamically as any,
+        importModuleDynamically: this.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
           // meta.resolve = (specifier: string, importer?: string) =>
@@ -182,7 +256,7 @@ export class ExternalModulesExecutor {
       return code.match(/data:text\/javascript;.*,(.*)/)?.[1]
   }
 
-  async createModule(identifier: string): Promise<vm.Module> {
+  async createModule(identifier: string): Promise<VMModule> {
     const extension = extname(identifier)
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
