@@ -7,7 +7,7 @@ import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
 import { mockMap, moduleCache, startViteNode } from './execute'
-import { rpcDone } from './rpc'
+import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
 function init(ctx: ChildContext) {
@@ -21,6 +21,21 @@ function init(ctx: ChildContext) {
     setCancel = resolve
   })
 
+  const rpc = createBirpc<RuntimeRPC, RunnerRPC>(
+    {
+      onCancel: setCancel,
+    },
+    {
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      serialize: v8.serialize,
+      deserialize: v => v8.deserialize(Buffer.from(v)),
+      post(v) {
+        process.send?.(v)
+      },
+      on(fn) { process.on('message', fn) },
+    },
+  )
+
   const state = {
     ctx,
     moduleCache,
@@ -32,20 +47,7 @@ function init(ctx: ChildContext) {
       environment: 0,
       prepare: performance.now(),
     },
-    rpc: createBirpc<RuntimeRPC, RunnerRPC>(
-      {
-        onCancel: setCancel,
-      },
-      {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
-        serialize: v8.serialize,
-        deserialize: v => v8.deserialize(Buffer.from(v)),
-        post(v) {
-          process.send?.(v)
-        },
-        on(fn) { process.on('message', fn) },
-      },
-    ),
+    rpc: createSafeRpc(rpc),
   }
 
   // @ts-expect-error I know what I am doing :P

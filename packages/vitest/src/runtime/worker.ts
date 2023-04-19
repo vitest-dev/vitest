@@ -6,7 +6,7 @@ import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '..
 import { getWorkerState } from '../utils/global'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
-import { rpcDone } from './rpc'
+import { createSafeRpc, rpcDone } from './rpc'
 
 function init(ctx: WorkerContext) {
   // @ts-expect-error untyped global
@@ -22,6 +22,18 @@ function init(ctx: WorkerContext) {
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
   })
+
+  const rpc = createBirpc<RuntimeRPC, RunnerRPC>(
+    {
+      onCancel: setCancel,
+    },
+    {
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      post(v) { port.postMessage(v) },
+      on(fn) { port.addListener('message', fn) },
+    },
+  )
+
   const state = {
     ctx,
     moduleCache,
@@ -33,16 +45,7 @@ function init(ctx: WorkerContext) {
       environment: 0,
       prepare: performance.now(),
     },
-    rpc: createBirpc<RuntimeRPC, RunnerRPC>(
-      {
-        onCancel: setCancel,
-      },
-      {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
-        post(v) { port.postMessage(v) },
-        on(fn) { port.addListener('message', fn) },
-      },
-    ),
+    rpc: createSafeRpc(rpc),
   }
 
   // @ts-expect-error I know what I am doing :P

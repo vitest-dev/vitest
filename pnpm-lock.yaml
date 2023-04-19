@@ -328,7 +328,7 @@ importers:
         version: 20.4.1
       '@types/react':
         specifier: latest
-        version: 18.0.36
+        version: 18.0.37
       '@vitejs/plugin-react':
         specifier: latest
         version: 4.0.3(vite@4.3.9)
@@ -9056,14 +9056,6 @@ packages:
 
   /@types/react@18.0.25:
     resolution: {integrity: sha512-xD6c0KDT4m7n9uD4ZHi02lzskaiqcBxf4zi+tXZY98a04wvc0hi/TcCPC2FOESZi51Nd7tlUeOJY8RofL799/g==}
-    dependencies:
-      '@types/prop-types': 15.7.5
-      '@types/scheduler': 0.16.2
-      csstype: 3.1.0
-    dev: true
-
-  /@types/react@18.0.36:
-    resolution: {integrity: sha512-Hqbi2s6k4X1CKRYwUb9BwhNN4jbCgs6BfakDTY5b5GEJ5h9i+uf24mRsbNXFh6rHI5zpk5h1b5jOm/eSUrfVNQ==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
