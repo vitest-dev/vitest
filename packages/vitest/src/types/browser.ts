@@ -10,6 +10,7 @@ export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
   initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
+  isOpen(): boolean
   openPage(url: string): Awaitable<void>
   close(): Awaitable<void>
 }

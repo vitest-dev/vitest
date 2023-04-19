@@ -1,9 +1,11 @@
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
+import { stringify } from 'flatted'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import type { BrowserProvider } from '../../types/browser'
+import { WebSocketReporter } from '../../api/setup'
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
@@ -21,7 +23,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
     const paths = files.map(file => relative(project.config.root, file))
 
-    const isolate = project.config.isolate
+    // const isolate = project.config.isolate
     /* if (isolate) {
       for (const path of paths) {
         const url = new URL('/', origin)
@@ -32,12 +34,17 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       }
     }
     else { */
-      const url = new URL('/', origin)
-      url.searchParams.set('id', 'no-isolate')
-      paths.forEach(path => url.searchParams.append('path', path))
+    const url = new URL('/', origin)
+    url.searchParams.set('id', 'no-isolate')
+    if (!provider.isOpen()) {
       await provider.openPage(url.toString())
-      await waitForTest('no-isolate')
-    // }
+      await project.ctx.browserPromise
+    }
+    const wsClients = project.ctx.reporters.filter(r => r instanceof WebSocketReporter).flatMap(r => [...(r as WebSocketReporter).clients.keys()])
+    for (const ws of wsClients)
+      ws.send(stringify({ event: 'run', paths }))
+
+    await waitForTest('no-isolate')
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {

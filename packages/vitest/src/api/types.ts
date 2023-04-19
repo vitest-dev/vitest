@@ -24,6 +24,7 @@ export interface WebSocketHandlers {
   createDirectory(id: string): Promise<string | undefined>
   snapshotSaved(snapshot: SnapshotResult): void
   rerun(files: string[]): Promise<void>
+  initializeBrowser(): void
   updateSnapshot(file?: File): Promise<void>
 }
 

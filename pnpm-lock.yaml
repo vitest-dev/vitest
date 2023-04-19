@@ -625,6 +625,7 @@ importers:
       '@vitest/runner': workspace:*
       '@vitest/ui': workspace:*
       '@vitest/ws-client': workspace:*
+      flatted: ^3.2.7
       modern-node-polyfills: 0.1.0
       sirv: ^2.0.2
       vitest: workspace:*
@@ -636,6 +637,7 @@ importers:
       '@vitest/runner': link:../runner
       '@vitest/ui': link:../ui
       '@vitest/ws-client': link:../ws-client
+      flatted: 3.2.7
       vitest: link:../vitest
 
   packages/coverage-c8:

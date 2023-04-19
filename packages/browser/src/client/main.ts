@@ -1,9 +1,8 @@
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
+import { parse } from 'flatted'
 import { assignVitestGlobals, browserHashMap, client, instantiateRunner, loadConfig } from './utils'
-import { setupConsoleLogSpy } from './logger'
 import { rpc, rpcDone } from './rpc'
-import { setupDialogsSpy } from './dialog'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
@@ -15,23 +14,72 @@ const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
 
-function getQueryPaths() {
-  return url.searchParams.getAll('path')
-}
-
 const ws = client.ws
+const testTitle = document.getElementById('vitest-browser-runner-tester') as HTMLDivElement
+
+ws.addEventListener('message', async (data) => {
+  const { event, paths } = parse(data.data)
+  if (event === 'run') {
+    const config: ResolvedConfig = await loadConfig()
+
+    const waitingPaths = [...paths]
+    const hideIFrames = () => {
+      for (const [, targetIFrame] of browserIFrames.entries())
+        targetIFrame.classList.remove('show')
+
+      currentModule = undefined
+    }
+    await runTests(paths, config!, async (e) => {
+      if (e.data.type === 'hide') {
+        hideIFrames()
+        return
+      }
+
+      if (e.data.type === 'done') {
+        waitingPaths.splice(waitingPaths.indexOf(e.data.filename))
+        if (!waitingPaths.length) {
+          await rpcDone()
+          await rpc().onDone('no-isolate')
+        }
+        return
+      }
+
+      if (e.data.type === 'navigate') {
+        // currentModule = e.data.filename
+        // button.removeAttribute('disabled')
+        // if (!currentModule)
+        //   button.setAttribute('disabled', 'true')
+
+        if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
+          hideIFrames()
+
+        currentModule = e.data.filename
+        if (!currentModule)
+          return
+
+        const targetIFrame = browserIFrames.get(currentModule)
+        if (targetIFrame) {
+          const left: number = e.data.position
+          targetIFrame.style.left = `${left + 14}px`
+          targetIFrame.style.width = `${window.innerWidth - left - 28}px`
+          if (!targetIFrame.classList.contains('show')) {
+            testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
+            requestAnimationFrame(() => targetIFrame.classList.add('show'))
+          }
+        }
+      }
+    })
+  }
+})
 
 ws.addEventListener('open', async () => {
-  const config: ResolvedConfig = await loadConfig()
+  await client.rpc.initializeBrowser()
 
   await assignVitestGlobals()
-
-  const paths = getQueryPaths()
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', `${url.pathname}/__vitest__/`.replace('//', '/'))
   const button = document.getElementById('vitest-browser-button') as HTMLButtonElement
-  const testTitle = document.getElementById('vitest-browser-runner-tester') as HTMLDivElement
   button.addEventListener('click', () => {
     if (currentModule && browserHashMap.has(currentModule)) {
       const hidden = iFrame.classList.contains('hidden')
@@ -51,57 +99,9 @@ ws.addEventListener('open', async () => {
     if (e.key === 'vueuse-color-scheme')
       document.documentElement.classList.toggle('dark', e.newValue === 'dark')
   })
-
-  await setupConsoleLogSpy()
-  setupDialogsSpy()
-  const waitingPaths = [...paths]
-  const hideIFrames = () => {
-    for (const [, targetIFrame] of browserIFrames.entries())
-      targetIFrame.classList.remove('show')
-
-    currentModule = undefined
-  }
-  await runTests(paths, config!, async (e) => {
-    if (e.data.type === 'hide') {
-      hideIFrames()
-      return
-    }
-
-    if (e.data.type === 'done') {
-      waitingPaths.splice(waitingPaths.indexOf(e.data.filename))
-      if (!waitingPaths.length) {
-        await rpcDone()
-        await rpc().onDone('no-isolate')
-      }
-      return
-    }
-
-    if (e.data.type === 'navigate') {
-      // currentModule = e.data.filename
-      // button.removeAttribute('disabled')
-      // if (!currentModule)
-      //   button.setAttribute('disabled', 'true')
-
-      if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
-        hideIFrames()
-
-      currentModule = e.data.filename
-      if (!currentModule)
-        return
-
-      const targetIFrame = browserIFrames.get(currentModule)
-      if (targetIFrame) {
-        const left: number = e.data.position
-        targetIFrame.style.left = `${left + 14}px`
-        targetIFrame.style.width = `${window.innerWidth - left - 28}px`
-        if (!targetIFrame.classList.contains('show')) {
-          testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
-          requestAnimationFrame(() => targetIFrame.classList.add('show'))
-        }
-      }
-    }
-  })
 })
+
+const iframeCache = new Map<string, Element>()
 
 async function runTests(
   paths: string[],
@@ -125,6 +125,10 @@ async function runTests(
   paths
     .map(path => (`${config.root}/${path}`).replace(/\/+/g, '/'))
     .forEach((path) => {
+      if (iframeCache.has(path)) {
+        container.removeChild(iframeCache.get(path)!)
+        iframeCache.delete(path)
+      }
       browserHashMap.set(path, [true, now])
       const iFrame = document.createElement('iframe')
       iFrame.setAttribute('loading', 'eager')

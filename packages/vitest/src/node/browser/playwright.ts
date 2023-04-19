@@ -31,6 +31,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "playwright" package. Please install it manually.')
   }
 
+  isOpen() {
+    return !!this.cachedBrowser
+  }
+
   async openBrowser() {
     if (this.cachedBrowser)
       return this.cachedBrowser
