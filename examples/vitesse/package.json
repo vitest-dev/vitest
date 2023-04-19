@@ -12,8 +12,8 @@
     "@vitejs/plugin-vue": "latest",
     "@vue/test-utils": "^2.0.2",
     "jsdom": "latest",
-    "unplugin-auto-import": "^0.11.1",
-    "unplugin-vue-components": "^0.22.4",
+    "unplugin-auto-import": "latest",
+    "unplugin-vue-components": "latest",
     "vite": "latest",
     "vitest": "latest"
   },
