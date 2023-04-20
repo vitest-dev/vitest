@@ -17,6 +17,10 @@ async function resolveCoverageProviderModule(options: CoverageOptions | undefine
 
   if (provider === 'c8' || provider === 'istanbul') {
     const { default: coverageModule } = await loader.executeId(CoverageProviderMap[provider])
+
+    if (!coverageModule)
+      throw new Error(`Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`)
+
     return coverageModule
   }
 
