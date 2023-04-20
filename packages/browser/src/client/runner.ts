@@ -16,7 +16,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
     vitestBC: BroadcastChannel
-    hashMap = new Map<string, [test: boolean, timstamp: string]>()
+    hashMap = new Map<string, [test: boolean, timestamp: string]>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)

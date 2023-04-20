@@ -19,6 +19,15 @@ async function runTest(filename: string, version: string) {
 
   const { runner, channel } = await instantiateRunner()
 
+  function removeBrowserChannel(event: BroadcastChannelEventMap['message']) {
+    if (event.data.type === 'disconnect' && filename === event.data.filename) {
+      channel.removeEventListener('message', removeBrowserChannel)
+      channel.close()
+    }
+  }
+  channel.removeEventListener('message', removeBrowserChannel)
+  channel.addEventListener('message', removeBrowserChannel)
+
   const {
     startTests,
     setupCommonEnv,

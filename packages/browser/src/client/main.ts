@@ -43,7 +43,8 @@ ws.addEventListener('message', async (data) => {
   if (event === 'run') {
     const config: ResolvedConfig = await loadConfig()
 
-    const waitingPaths = [...paths]
+    const waitingPaths = [...paths.map((path: string) => (`${config.root}/${path}`).replace(/\/+/g, '/'))]
+    console.log(waitingPaths)
     await runTests(paths, config!, async (e) => {
       if (e.data.type === 'hide') {
         hideIFrames()
@@ -51,7 +52,19 @@ ws.addEventListener('message', async (data) => {
       }
 
       if (e.data.type === 'done') {
-        waitingPaths.splice(waitingPaths.indexOf(e.data.filename))
+        const filename = e.data.filename
+        if (!filename)
+          return
+
+        console.log('done received', filename)
+        const idx = waitingPaths.indexOf(filename)
+        if (idx === -1)
+          return
+
+        console.log('done1', filename, waitingPaths)
+        waitingPaths.splice(idx, 1)
+
+        console.log('done2', filename, waitingPaths)
         if (!waitingPaths.length) {
           await rpcDone()
           await rpc().onDone('no-isolate')
@@ -60,11 +73,6 @@ ws.addEventListener('message', async (data) => {
       }
 
       if (e.data.type === 'navigate') {
-        // currentModule = e.data.filename
-        // button.removeAttribute('disabled')
-        // if (!currentModule)
-        //   button.setAttribute('disabled', 'true')
-
         if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
           hideIFrames()
 
@@ -86,21 +94,6 @@ ws.addEventListener('open', async () => {
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', `${url.pathname}/__vitest__/`.replace('//', '/'))
-  const button = document.getElementById('vitest-browser-button') as HTMLButtonElement
-  button.addEventListener('click', () => {
-    if (currentModule && browserHashMap.has(currentModule)) {
-      const hidden = iFrame.classList.contains('hidden')
-      button.innerText = hidden ? 'Show Test UI' : 'Hide Test UI'
-      iFrame.classList.toggle('hidden')
-      const targetIFrame = browserIFrames.get(currentModule)
-      targetIFrame?.classList.remove('show')
-      testTitle.innerText = ''
-      if (!hidden) {
-        testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
-        targetIFrame?.classList.add('show')
-      }
-    }
-  })
 
   window.addEventListener('storage', (e) => {
     if (e.key === 'vueuse-color-scheme')
@@ -118,7 +111,17 @@ async function runTests(
   await import(viteClientPath)
 
   const { channel } = await instantiateRunner()
+  channel.removeEventListener('message', navigate)
   channel.addEventListener('message', navigate)
+
+  function removeBrowserChannel() {
+    channel.removeEventListener('message', navigate)
+    ws.close()
+    channel.close()
+  }
+
+  window.removeEventListener('beforeunload', removeBrowserChannel)
+  window.addEventListener('beforeunload', removeBrowserChannel)
 
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
@@ -126,29 +129,37 @@ async function runTests(
   const now = `${new Date().getTime()}`
   const container = document.getElementById('vitest-browser-runner-container') as HTMLDivElement
 
-  // isolate test on iframes
-  paths
+  const normalizedPaths = paths
     .map(path => (`${config.root}/${path}`).replace(/\/+/g, '/'))
-    .forEach((path) => {
-      // don't hide iframes here, we only need to reload changed tests modules
-      if (browserIFrames.has(path)) {
-        browserIFrames.get(path)!.classList.remove('show')
-        container.removeChild(browserIFrames.get(path)!)
-        browserIFrames.delete(path)
-      }
-      browserHashMap.set(path, [true, now])
-      const iFrame = document.createElement('iframe')
-      iFrame.setAttribute('loading', 'eager')
-      // requires Access-Control-Allow-Origin: '*' on every resource
-      // iFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms')
-      iFrame.classList.add('iframe-test')
-      iFrame.setAttribute(
-        'src',
-        `${url.pathname}/__vitest_test__/${path}.html?browserv=${now}`.replace('//', '/'),
-      )
-      browserIFrames.set(path, iFrame)
-      container.appendChild(iFrame)
-    })
+
+  const cleanup = normalizedPaths.filter(path => browserHashMap.has(path))
+
+  if (cleanup.length) {
+    cleanup.forEach(path => channel.postMessage({ type: 'disconnect', filename: path }))
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+
+  // isolate test on iframes
+  normalizedPaths.forEach((path) => {
+    // don't hide iframes here, we only need to reload changed tests modules
+    if (browserIFrames.has(path)) {
+      browserIFrames.get(path)!.classList.remove('show')
+      container.removeChild(browserIFrames.get(path)!)
+      browserIFrames.delete(path)
+    }
+    browserHashMap.set(path, [true, now])
+    const iFrame = document.createElement('iframe')
+    iFrame.setAttribute('loading', 'eager')
+    // requires Access-Control-Allow-Origin: '*' on every resource
+    // iFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms')
+    iFrame.classList.add('iframe-test')
+    iFrame.setAttribute(
+      'src',
+      `${url.pathname}/__vitest_test__/${path}.html?browserv=${now}`.replace('//', '/'),
+    )
+    browserIFrames.set(path, iFrame)
+    container.appendChild(iFrame)
+  })
 
   if (currentModule) {
     const savedCurrentModule = currentModule
