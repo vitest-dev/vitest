@@ -41,8 +41,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       await project.ctx.browserPromise
     }
     const wsClients = project.ctx.reporters.filter(r => r instanceof WebSocketReporter).flatMap(r => [...(r as WebSocketReporter).clients.keys()])
+    const payload = stringify({ event: 'run', paths })
     for (const ws of wsClients)
-      ws.send(stringify({ event: 'run', paths }))
+      ws.send(payload)
 
     await waitForTest('no-isolate')
   }

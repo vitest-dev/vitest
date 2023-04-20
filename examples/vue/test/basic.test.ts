@@ -8,6 +8,7 @@ test('mount component', async () => {
     props: {
       count: 4,
     },
+    attachTo: document.body,
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')

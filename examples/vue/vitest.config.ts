@@ -11,7 +11,9 @@ export default defineConfig({
     globals: true,
     // environment: 'jsdom',
     browser: {
-      enabled: true,name: 'chrome'
-    }
+      enabled: true,
+      name: 'chrome',
+      enableUI: true,
+    },
   },
 })

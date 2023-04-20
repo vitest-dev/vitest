@@ -10,6 +10,7 @@ globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () =>
 globalThis.global = globalThis
 
 let currentModule: string | undefined
+let currentModuleLeft: number | undefined
 const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
@@ -17,18 +18,32 @@ const url = new URL(location.href)
 const ws = client.ws
 const testTitle = document.getElementById('vitest-browser-runner-tester') as HTMLDivElement
 
+function hideIFrames() {
+  for (const [, targetIFrame] of browserIFrames.entries())
+    targetIFrame.classList.remove('show')
+
+  currentModule = undefined
+  currentModuleLeft = undefined
+}
+
+function activateIFrame(useCurrentModule: string, left?: number) {
+  const targetIFrame = browserIFrames.get(useCurrentModule)
+  if (targetIFrame && typeof left === 'number') {
+    targetIFrame.style.left = `${left + 14}px`
+    targetIFrame.style.width = `${window.innerWidth - left - 28}px`
+    if (!targetIFrame.classList.contains('show')) {
+      testTitle.innerText = `${useCurrentModule.replace(/^\/@fs\//, '')}`
+      requestAnimationFrame(() => targetIFrame.classList.add('show'))
+    }
+  }
+}
+
 ws.addEventListener('message', async (data) => {
   const { event, paths } = parse(data.data)
   if (event === 'run') {
     const config: ResolvedConfig = await loadConfig()
 
     const waitingPaths = [...paths]
-    const hideIFrames = () => {
-      for (const [, targetIFrame] of browserIFrames.entries())
-        targetIFrame.classList.remove('show')
-
-      currentModule = undefined
-    }
     await runTests(paths, config!, async (e) => {
       if (e.data.type === 'hide') {
         hideIFrames()
@@ -57,16 +72,8 @@ ws.addEventListener('message', async (data) => {
         if (!currentModule)
           return
 
-        const targetIFrame = browserIFrames.get(currentModule)
-        if (targetIFrame) {
-          const left: number = e.data.position
-          targetIFrame.style.left = `${left + 14}px`
-          targetIFrame.style.width = `${window.innerWidth - left - 28}px`
-          if (!targetIFrame.classList.contains('show')) {
-            testTitle.innerText = `${currentModule.replace(/^\/@fs\//, '')}`
-            requestAnimationFrame(() => targetIFrame.classList.add('show'))
-          }
-        }
+        currentModuleLeft = e.data.position
+        activateIFrame(currentModule, currentModuleLeft)
       }
     })
   }
@@ -123,6 +130,7 @@ async function runTests(
   paths
     .map(path => (`${config.root}/${path}`).replace(/\/+/g, '/'))
     .forEach((path) => {
+      // don't hide iframes here, we only need to reload changed tests modules
       if (browserIFrames.has(path)) {
         browserIFrames.get(path)!.classList.remove('show')
         container.removeChild(browserIFrames.get(path)!)
@@ -141,4 +149,13 @@ async function runTests(
       browserIFrames.set(path, iFrame)
       container.appendChild(iFrame)
     })
+
+  if (currentModule) {
+    const savedCurrentModule = currentModule
+    const savedCurrentModuleLeft = currentModuleLeft
+    hideIFrames()
+    currentModule = savedCurrentModule
+    currentModuleLeft = savedCurrentModuleLeft
+    activateIFrame(savedCurrentModule, savedCurrentModuleLeft)
+  }
 }
