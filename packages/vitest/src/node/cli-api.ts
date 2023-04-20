@@ -56,6 +56,9 @@ export async function startVitest(
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
+  if ('threads' in options && options.experimentalVmThreads)
+    throw new Error('Cannot use both "threads" (or "no-threads") and "experimentalVmThreads" at the same time.')
+
   const ctx = await createVitest(mode, options, viteOverrides)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {

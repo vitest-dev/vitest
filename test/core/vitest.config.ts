@@ -50,7 +50,7 @@ export default defineConfig({
       './test/setup.ts',
     ],
     poolMatchGlobs: [
-      ['**/*', 'vm'],
+      ['**/*', 'experimentalVmThreads'],
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {

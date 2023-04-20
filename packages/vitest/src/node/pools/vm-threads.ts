@@ -36,7 +36,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createVmPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const threadsCount = ctx.config.watch
     ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
@@ -117,14 +117,6 @@ export function createVmPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions)
         return config
       }
 
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
-      }
-
-      // it's possible that project defines a file that is also defined by another project
       const { shard } = ctx.config
 
       if (shard)

@@ -7,7 +7,7 @@ import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
-import { createVmPool } from './pools/vm'
+import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
@@ -31,12 +31,14 @@ export function createPool(ctx: Vitest): ProcessPool {
     child_process: null,
     threads: null,
     browser: null,
-    vm: null,
+    experimentalVmThreads: null,
   }
 
-  function getDefaultPoolName(project: WorkspaceProject) {
+  function getDefaultPoolName(project: WorkspaceProject): VitestPool {
     if (project.config.browser.enabled)
       return 'browser'
+    if (project.config.experimentalVmThreads)
+      return 'experimentalVmThreads'
     if (project.config.threads)
       return 'threads'
     return 'child_process'
@@ -89,7 +91,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       child_process: [] as WorkspaceSpec[],
       threads: [] as WorkspaceSpec[],
       browser: [] as WorkspaceSpec[],
-      vm: [] as WorkspaceSpec[],
+      experimentalVmThreads: [] as WorkspaceSpec[],
     }
 
     for (const spec of files) {
@@ -106,9 +108,9 @@ export function createPool(ctx: Vitest): ProcessPool {
         return pools.browser.runTests(files, invalidate)
       }
 
-      if (pool === 'vm') {
-        pools.vm ??= createVmPool(ctx, options)
-        return pools.vm.runTests(files, invalidate)
+      if (pool === 'experimentalVmThreads') {
+        pools.experimentalVmThreads ??= createVmThreadsPool(ctx, options)
+        return pools.experimentalVmThreads.runTests(files, invalidate)
       }
 
       if (pool === 'threads') {

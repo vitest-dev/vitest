@@ -19,7 +19,7 @@ export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
-export type VitestPool = 'browser' | 'threads' | 'child_process' | 'vm'
+export type VitestPool = 'browser' | 'threads' | 'child_process' | 'experimentalVmThreads'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
@@ -300,6 +300,16 @@ export interface InlineConfig {
    * Also definable individually per reporter by using an object instead.
    */
   outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
+
+  /**
+   * Run tests using VM context in a worker pool.
+   *
+   * This makes tests run faster, but VM module is unstable. Your tests might leak memory.
+   */
+  experimentalVmThreads?: boolean
+
+  // TODO: document that "--no-isolate" has no effect on experimentalVmThreads
+  // TODO: workerIdleMemoryLimit for experimentalVmThreads, so they don't leak
 
   /**
    * Enable multi-threading
