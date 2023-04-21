@@ -1,7 +1,13 @@
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
 import { parse } from 'flatted'
-import { assignVitestGlobals, browserHashMap, client, instantiateRunner, loadConfig } from './utils'
+import {
+  assignVitestGlobals,
+  browserHashMap,
+  client,
+  instantiateRunner,
+  loadConfig,
+} from './utils'
 import { rpc, rpcDone } from './rpc'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
@@ -38,13 +44,28 @@ function activateIFrame(useCurrentModule: string, left?: number) {
   }
 }
 
+function normalizePaths(config: ResolvedConfig, paths: string[]) {
+  return paths
+    .map((path) => {
+      if (path.startsWith('/@fs/'))
+        return path
+
+      if (path.startsWith(config.root))
+        return path
+
+      return `${config.root}/${path}`.replace(/\/+/g, '/')
+    })
+}
+
 ws.addEventListener('message', async (data) => {
   const { event, paths } = parse(data.data)
-  if (event === 'run') {
+  // we receive 2 run events in a row, former with paths, latter with empty paths
+  // TODO: review what's happening here
+  if (event === 'run' && paths?.length) {
     const config: ResolvedConfig = await loadConfig()
 
-    const waitingPaths = [...paths.map((path: string) => (`${config.root}/${path}`).replace(/\/+/g, '/'))]
-    console.log(waitingPaths)
+    const waitingPaths = normalizePaths(config, paths)
+    console.log(paths, waitingPaths)
     await runTests(paths, config!, async (e) => {
       if (e.data.type === 'hide') {
         hideIFrames()
@@ -52,6 +73,7 @@ ws.addEventListener('message', async (data) => {
       }
 
       if (e.data.type === 'done') {
+        console.log('done', e.data.filename, e.data.version)
         const filename = e.data.filename
         if (!filename)
           return
@@ -104,18 +126,20 @@ ws.addEventListener('open', async () => {
 async function runTests(
   paths: string[],
   config: ResolvedConfig,
-  navigate: (ev: BroadcastChannelEventMap['message']) => void,
+  listener?: (ev: BroadcastChannelEventMap['message']) => void,
 ) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
   const { channel } = await instantiateRunner()
-  channel.removeEventListener('message', navigate)
-  channel.addEventListener('message', navigate)
+  if (listener) {
+    channel.removeEventListener('message', listener)
+    channel.addEventListener('message', listener)
+  }
 
   function removeBrowserChannel() {
-    channel.removeEventListener('message', navigate)
+    listener && channel.removeEventListener('message', listener)
     ws.close()
     channel.close()
   }
@@ -129,15 +153,12 @@ async function runTests(
   const now = `${new Date().getTime()}`
   const container = document.getElementById('vitest-browser-runner-container') as HTMLDivElement
 
-  const normalizedPaths = paths
-    .map(path => (`${config.root}/${path}`).replace(/\/+/g, '/'))
+  const normalizedPaths = normalizePaths(config, paths)
 
   const cleanup = normalizedPaths.filter(path => browserHashMap.has(path))
 
-  if (cleanup.length) {
+  if (cleanup.length)
     cleanup.forEach(path => channel.postMessage({ type: 'disconnect', filename: path }))
-    await new Promise(resolve => setTimeout(resolve, 100))
-  }
 
   // isolate test on iframes
   normalizedPaths.forEach((path) => {
