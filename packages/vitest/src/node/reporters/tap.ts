@@ -52,7 +52,7 @@ export class TapReporter implements Reporter {
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
-      const ok = task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo' ? 'ok' : 'not ok'
+      const ok = (task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo') ? 'ok' : 'not ok'
 
       const comment = TapReporter.getComment(task)
 

@@ -2,10 +2,11 @@ import type { Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource }
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getWorkerState } from '../../utils'
+import { getFullName, getNames, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
+import { rpc } from '../rpc'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -25,7 +26,9 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onAfterRun() {
-    await this.snapshotClient.saveCurrent()
+    const result = await this.snapshotClient.resetCurrent()
+    if (result)
+      await rpc().snapshotSaved(result)
   }
 
   onAfterRunSuite(suite: Suite) {
@@ -43,13 +46,15 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onBeforeRunTest(test: Test) {
+    const name = getNames(test).slice(1).join(' > ')
+
     if (test.mode !== 'run') {
-      this.snapshotClient.skipTestSnapshots(test)
+      this.snapshotClient.skipTestSnapshots(name)
       return
     }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.setTest(test)
+    await this.snapshotClient.setTest(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }

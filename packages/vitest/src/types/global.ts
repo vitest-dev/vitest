@@ -1,6 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { MatchersObject } from '@vitest/expect'
-import type SnapshotState from '../integrations/snapshot/port/state'
+import type { SnapshotState } from '@vitest/snapshot'
 import type { MatcherState } from './chai'
 import type { Constructable, UserConsoleLog } from './general'
 import type { VitestEnvironment } from './config'
@@ -26,6 +26,11 @@ declare module '@vitest/runner' {
     expect: Vi.ExpectStatic
   }
 
+  interface File {
+    prepareDuration?: number
+    environmentLoad?: number
+  }
+
   interface TaskBase {
     logs?: UserConsoleLog[]
   }
@@ -38,7 +43,8 @@ declare module '@vitest/runner' {
 declare global {
   // support augmenting jest.Matchers by other libraries
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+    // eslint-disable-next-line unused-imports/no-unused-vars
     interface Matchers<R, T = {}> {}
   }
 
@@ -59,19 +65,20 @@ declare global {
 
     interface AsymmetricMatchersContaining {
       stringContaining(expected: string): any
-      objectContaining(expected: any): any
+      objectContaining<T = any>(expected: T): any
       arrayContaining<T = unknown>(expected: Array<T>): any
       stringMatching(expected: string | RegExp): any
     }
 
     interface JestAssertion<T = any> extends jest.Matchers<void, T> {
       // Snapshot
-      toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
-      toMatchSnapshot(message?: string): void
       matchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
       matchSnapshot(message?: string): void
+      toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
+      toMatchSnapshot(message?: string): void
       toMatchInlineSnapshot<U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
       toMatchInlineSnapshot(snapshot?: string, message?: string): void
+      toMatchFileSnapshot(filepath: string, message?: string): Promise<void>
       toThrowErrorMatchingSnapshot(message?: string): void
       toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void
 

@@ -43,7 +43,7 @@ export function stringify(object: unknown, maxDepth = 10, { maxLength, ...option
     })
   }
 
-  return result.length >= MAX_LENGTH && maxDepth > 1
+  return (result.length >= MAX_LENGTH && maxDepth > 1)
     ? stringify(object, Math.floor(maxDepth / 2))
     : result
 }

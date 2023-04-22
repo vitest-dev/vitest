@@ -73,10 +73,6 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
-| `--outputDiffMaxSize <length>` | Object diff output max size (default: 10000) |
-| `--outputDiffMaxLines <lines>` | Max lines in diff output window (default: 50) |
-| `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
-| `--outputDiffLines <lines>` | Limit number of output diff lines up to `<lines>`. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
@@ -84,7 +80,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--browser` | Run tests in browser |
+| `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--logHeapUsage` | Show the size of heap for each test |
@@ -149,3 +145,5 @@ vitest --api=false
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
+
+[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

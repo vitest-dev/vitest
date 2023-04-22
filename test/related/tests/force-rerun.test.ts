@@ -1,8 +1,10 @@
-import { unlink, writeFile } from 'fs'
+import { unlink, writeFile } from 'node:fs'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { execa } from 'execa'
 
-const run = async () => await execa('vitest', ['run', '--changed', '--config', 'force-rerun.vitest.config.ts'])
+async function run() {
+  return await execa('vitest', ['run', '--changed', '--config', 'force-rerun.vitest.config.ts'])
+}
 
 const fileName = 'rerun.temp'
 

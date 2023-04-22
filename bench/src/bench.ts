@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 
 import type { Options } from 'execa'
 import type { Deferred, Event, Target } from 'benchmark'

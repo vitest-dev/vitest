@@ -1,30 +1,29 @@
 import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
-import type { CSSModuleScopeStrategy } from '../../types'
+import type { CSSModuleScopeStrategy, ResolvedConfig } from '../../types'
 import { toArray } from '../../utils'
-import type { Vitest } from '../core'
 
 const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
 const cssLangRE = new RegExp(cssLangs)
 const cssModuleRE = new RegExp(`\\.module${cssLangs}`)
 
-const isCSS = (id: string) => {
+function isCSS(id: string) {
   return cssLangRE.test(id)
 }
 
-const isCSSModule = (id: string) => {
+function isCSSModule(id: string) {
   return cssModuleRE.test(id)
 }
 
-const getCSSModuleProxyReturn = (strategy: CSSModuleScopeStrategy, filename: string) => {
+function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
   if (strategy === 'non-scoped')
     return 'style'
   const hash = generateCssFilenameHash(filename)
   return `\`_\${style}_${hash}\``
 }
 
-export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
+export function CSSEnablerPlugin(ctx: { config: ResolvedConfig }): VitePlugin[] {
   const shouldProcessCSS = (id: string) => {
     const { css } = ctx.config
     if (typeof css === 'boolean')

@@ -148,6 +148,10 @@ export default withPwa(defineConfig({
               link: '/guide/features',
             },
             {
+              text: 'Workspace',
+              link: '/guide/workspace',
+            },
+            {
               text: 'CLI',
               link: '/guide/cli',
             },
@@ -174,6 +178,10 @@ export default withPwa(defineConfig({
             {
               text: 'Vitest UI',
               link: '/guide/ui',
+            },
+            {
+              text: 'Browser Mode',
+              link: '/guide/browser',
             },
             {
               text: 'In-source Testing',

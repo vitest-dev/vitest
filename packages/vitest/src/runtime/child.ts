@@ -6,6 +6,7 @@ import type { RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { rpcDone } from './rpc'
+import { setupInspect } from './inspector'
 
 function init(ctx: ChildContext) {
   const { config } = ctx
@@ -21,6 +22,10 @@ function init(ctx: ChildContext) {
     moduleCache,
     config,
     mockMap,
+    durations: {
+      environment: 0,
+      prepare: performance.now(),
+    },
     rpc: createBirpc<RuntimeRPC>(
       {},
       {
@@ -58,10 +63,17 @@ function unwrapConfig(config: ResolvedConfig) {
 }
 
 export async function run(ctx: ChildContext) {
-  init(ctx)
-  const { run, executor } = await startViteNode(ctx)
-  await run(ctx.files, ctx.config, ctx.environment, executor)
-  await rpcDone()
+  const inspectorCleanup = setupInspect(ctx.config)
+
+  try {
+    init(ctx)
+    const { run, executor } = await startViteNode(ctx)
+    await run(ctx.files, ctx.config, ctx.environment, executor)
+    await rpcDone()
+  }
+  finally {
+    inspectorCleanup()
+  }
 }
 
 const procesExit = process.exit

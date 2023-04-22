@@ -1,4 +1,4 @@
-import type { File, SequenceHooks, Suite, TaskResult, Test, TestContext } from './tasks'
+import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResult, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -11,6 +11,10 @@ export interface VitestRunnerConfig {
     shuffle?: boolean
     seed: number
     hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
+  }
+  chaiConfig?: {
+    truncateThreshold?: number
   }
   maxConcurrency: number
   testTimeout: number
@@ -20,7 +24,7 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new (config: VitestRunnerConfig): VitestRunner
+  new(config: VitestRunnerConfig): VitestRunner
 }
 
 export interface VitestRunner {
@@ -40,7 +44,7 @@ export interface VitestRunner {
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTest?(test: Test, retryCount: number): unknown
+  onBeforeTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
   /**
    * Called after result and state are set.
    */
@@ -48,7 +52,7 @@ export interface VitestRunner {
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTest?(test: Test, retryCount: number): unknown
+  onAfterTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.

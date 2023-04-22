@@ -2,7 +2,7 @@
  * Test cases shared by both coverage providers
 */
 
-import fs from 'fs'
+import fs from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 

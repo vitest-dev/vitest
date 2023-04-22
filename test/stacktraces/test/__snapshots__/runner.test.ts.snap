@@ -1,4 +1,22 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`stacktrace should print error frame source file correctly > error-in-deps > error-in-deps 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  error-in-deps.test.js > error in deps
+ReferenceError: bar is not defined
+ ❯ Module.add foo.js:3:3
+      1| export function add() {
+      2|   // eslint-disable-next-line no-undef
+      3|   return bar()
+       |   ^
+      4| }
+      5| 
+ ❯ error-in-deps.test.js:5:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+"
+`;
 
 exports[`stacktraces should pick error frame if present > frame.spec.imba > frame.spec.imba 1`] = `
 " FAIL  frame.spec.imba [ frame.spec.imba ]
@@ -41,5 +59,56 @@ exports[`stacktraces should respect sourcemaps > add-in-js.test.js > add-in-js.t
        |                 ^
       7|   expect(add(1)).toBe(1)
       8|   return expect(add(1, 2, 3)).toBe(6)
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-in-deps.test.js 1`] = `
+" ❯ error-in-deps.test.js:5:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > mocked-global.test.js > mocked-global.test.js 1`] = `
+" ❯ mocked-global.test.js:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > mocked-imported.test.js > mocked-imported.test.js 1`] = `
+" ❯ mocked-imported.test.js:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts > mocked-imported.test.ts 1`] = `
+" ❯ mocked-imported.test.ts:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > reset-modules.test.ts > reset-modules.test.ts 1`] = `
+" ❯ reset-modules.test.ts:16:26
+     14|     expect(2 + 1).eq(3)
+     15|     assert.equal(Math.sqrt(4), 2)
+     16|     expect(Math.sqrt(4)).toBe(1)
+       |                          ^
+     17|   })
+     18| })
 "
 `;

@@ -1,6 +1,8 @@
 import { createServer } from 'vite'
 import { resolve } from 'pathe'
 
+let teardownHappened = false
+
 export async function setup() {
   const server = await createServer({
     root: resolve(__dirname, '..'),
@@ -11,6 +13,9 @@ export async function setup() {
 
   await server.listen(9988)
   return async () => {
+    if (teardownHappened)
+      throw new Error('teardown called twice')
+    teardownHappened = true
     await server.close()
   }
 }

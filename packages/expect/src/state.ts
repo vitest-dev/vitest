@@ -16,13 +16,14 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
   })
 }
 
-export const getState = <State extends MatcherState = MatcherState>(expect: Vi.ExpectStatic): State =>
-  (globalThis as any)[MATCHERS_OBJECT].get(expect)
+export function getState<State extends MatcherState = MatcherState>(expect: Vi.ExpectStatic): State {
+  return (globalThis as any)[MATCHERS_OBJECT].get(expect)
+}
 
-export const setState = <State extends MatcherState = MatcherState>(
+export function setState<State extends MatcherState = MatcherState>(
   state: Partial<State>,
   expect: Vi.ExpectStatic,
-): void => {
+): void {
   const map = (globalThis as any)[MATCHERS_OBJECT]
   const current = map.get(expect) || {}
   Object.assign(current, state)

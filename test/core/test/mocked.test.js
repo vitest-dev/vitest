@@ -11,13 +11,11 @@ import { timeout } from '../src/timeout'
 
 // vi.mock('../src/timeout', () => ({ timeout: 0 }))
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const text = `
+const _text = `
   vi.mock('../src/timeout', () => ({ timeout: 0 }))
 `
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const textComment = `
+const _textComment = `
   vi.mock('../src/timeout', () => ({ timeout: 0 }))
   /**
     vi.mock('../src/timeout', () => ({ timeout: 0 }))

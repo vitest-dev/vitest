@@ -3,10 +3,9 @@ import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { isNodeBuiltin } from 'mlly'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -25,6 +24,7 @@ const clientStub = {
       decline: () => {},
       invalidate: () => {},
       on: () => {},
+      send: () => {},
     }
   },
   updateStyle(id: string, css: string) {
@@ -44,7 +44,7 @@ const clientStub = {
   },
 }
 
-export const DEFAULT_REQUEST_STUBS = {
+export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }
@@ -90,6 +90,14 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
 
   delete(fsPath: string) {
     return this.deleteByModuleId(this.normalizePath(fsPath))
+  }
+
+  invalidateModule(mod: ModuleCache) {
+    delete mod.evaluated
+    delete mod.resolving
+    delete mod.promise
+    delete mod.exports
+    return true
   }
 
   /**
@@ -181,22 +189,31 @@ export class ViteNodeRunner {
     if (importee)
       mod.importers.add(importee)
 
-    // the callstack reference itself circularly
-    if (callstack.includes(fsPath) && mod.exports)
-      return mod.exports
+    const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
-    // cached module
-    if (mod.promise)
-      return mod.promise
+    // check circular dependency
+    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
+      if (mod.exports)
+        return mod.exports
+    }
 
-    const promise = this.directRequest(id, fsPath, callstack)
-    Object.assign(mod, { promise, evaluated: false })
+    let debugTimer: any
+    if (this.debug)
+      debugTimer = setTimeout(() => console.warn(`[vite-node] module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
     try {
+      // cached module
+      if (mod.promise)
+        return await mod.promise
+
+      const promise = this.directRequest(id, fsPath, callstack)
+      Object.assign(mod, { promise, evaluated: false })
       return await promise
     }
     finally {
       mod.evaluated = true
+      if (debugTimer)
+        clearTimeout(debugTimer)
     }
   }
 
@@ -238,28 +255,7 @@ export class ViteNodeRunner {
 
   /** @internal */
   async dependencyRequest(id: string, fsPath: string, callstack: string[]) {
-    const getStack = () => {
-      return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
-    }
-
-    let debugTimer: any
-    if (this.debug)
-      debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
-
-    try {
-      if (callstack.includes(fsPath)) {
-        const depExports = this.moduleCache.get(fsPath)?.exports
-        if (depExports)
-          return depExports
-        throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
-      }
-
-      return await this.cachedRequest(id, fsPath, callstack)
-    }
-    finally {
-      if (debugTimer)
-        clearTimeout(debugTimer)
-    }
+    return await this.cachedRequest(id, fsPath, callstack)
   }
 
   /** @internal */

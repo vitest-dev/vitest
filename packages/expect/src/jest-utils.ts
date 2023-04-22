@@ -288,15 +288,14 @@ export function isImmutableUnorderedSet(maybeSet: any) {
  */
 const IteratorSymbol = Symbol.iterator
 
-const hasIterator = (object: any) =>
-  !!(object != null && object[IteratorSymbol])
+function hasIterator(object: any) {
+  return !!(object != null && object[IteratorSymbol])
+}
 
-export const iterableEquality = (
-  a: any,
+export function iterableEquality(a: any,
   b: any,
   aStack: Array<any> = [],
-  bStack: Array<any> = [],
-): boolean | undefined => {
+  bStack: Array<any> = []): boolean | undefined {
   if (
     typeof a !== 'object'
     || typeof b !== 'object'
@@ -409,7 +408,7 @@ export const iterableEquality = (
 /**
  * Checks if `hasOwnProperty(object, key)` up the prototype chain, stopping at `Object.prototype`.
  */
-const hasPropertyInObject = (object: object, key: string): boolean => {
+function hasPropertyInObject(object: object, key: string): boolean {
   const shouldTerminate
     = !object || typeof object !== 'object' || object === Object.prototype
 
@@ -422,16 +421,15 @@ const hasPropertyInObject = (object: object, key: string): boolean => {
   )
 }
 
-const isObjectWithKeys = (a: any) =>
-  isObject(a)
+function isObjectWithKeys(a: any) {
+  return isObject(a)
   && !(a instanceof Error)
   && !(Array.isArray(a))
   && !(a instanceof Date)
+}
 
-export const subsetEquality = (
-  object: unknown,
-  subset: unknown,
-): boolean | undefined => {
+export function subsetEquality(object: unknown,
+  subset: unknown): boolean | undefined {
   // subsetEquality needs to keep track of the references
   // it has already visited to avoid infinite loops in case
   // there are circular references in the subset passed to it.
@@ -468,17 +466,15 @@ export const subsetEquality = (
   return subsetEqualityWithContext()(object, subset)
 }
 
-export const typeEquality = (a: any, b: any): boolean | undefined => {
+export function typeEquality(a: any, b: any): boolean | undefined {
   if (a == null || b == null || a.constructor === b.constructor)
     return undefined
 
   return false
 }
 
-export const arrayBufferEquality = (
-  a: unknown,
-  b: unknown,
-): boolean | undefined => {
+export function arrayBufferEquality(a: unknown,
+  b: unknown): boolean | undefined {
   if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
     return undefined
 
@@ -498,10 +494,8 @@ export const arrayBufferEquality = (
   return true
 }
 
-export const sparseArrayEquality = (
-  a: unknown,
-  b: unknown,
-): boolean | undefined => {
+export function sparseArrayEquality(a: unknown,
+  b: unknown): boolean | undefined {
   if (!Array.isArray(a) || !Array.isArray(b))
     return undefined
 
@@ -513,11 +507,9 @@ export const sparseArrayEquality = (
   )
 }
 
-export const generateToBeMessage = (
-  deepEqualityName: string,
+export function generateToBeMessage(deepEqualityName: string,
   expected = '#{this}',
-  actual = '#{exp}',
-) => {
+  actual = '#{exp}') {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))

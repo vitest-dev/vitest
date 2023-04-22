@@ -19,7 +19,7 @@ interface ContextCache {
 
 const cache = new Map<string, ContextCache>()
 
-const getPotentialSource = async (filepath: string, result: ResolveResult) => {
+async function getPotentialSource(filepath: string, result: ResolveResult) {
   if (!result.url.startsWith('file://') || result.format === 'module')
     return null
   let source = cache.get(result.url)?.source
@@ -28,7 +28,7 @@ const getPotentialSource = async (filepath: string, result: ResolveResult) => {
   return source
 }
 
-const detectESM = (url: string, source: string | null) => {
+function detectESM(url: string, source: string | null) {
   const cached = cache.get(url)
   if (cached)
     return cached.isPseudoESM

@@ -48,6 +48,9 @@
   --vp-button-brand-active-border: var(--vp-c-brand-light);
   --vp-button-brand-active-text: var(--vp-c-text-dark-1);
   --vp-button-brand-active-bg: var(--vp-button-brand-bg);
+  --vp-code-tab-active-text-color: var(--vp-c-brand);
+  --vp-code-tab-active-bar-color: var(--vp-c-brand-darker);
+  --vp-code-tab-divider: var(--vp-c-brand);
 }
 
 /**

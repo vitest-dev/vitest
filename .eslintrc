@@ -2,6 +2,8 @@
   "extends": "@antfu",
   "rules": {
     "no-only-tests/no-only-tests": "off",
+    // prefer global Buffer to not initialize the whole module
+    "n/prefer-global/buffer": "off",
     "no-restricted-imports": [
       "error",
       {

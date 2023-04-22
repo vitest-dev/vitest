@@ -33,7 +33,9 @@ describe('test modes', () => {
   it.todo('unimplemented test')
 })
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 describe('concurrent tests', () => {
   let count = 0

@@ -104,11 +104,7 @@ export function getMatcherUtils() {
 
 // TODO: do something with options
 export function diff(a: any, b: any, options?: DiffOptions) {
-  const c = getColors()
-  return unifiedDiff(stringify(b), stringify(a), {
-    colorDim: c.dim,
-    colorSuccess: c.green,
-    colorError: c.red,
+  return unifiedDiff(b, a, {
     showLegend: options?.showLegend,
   })
 }

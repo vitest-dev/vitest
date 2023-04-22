@@ -1,6 +1,6 @@
 import MagicString from 'magic-string'
 import { describe, expect, it } from 'vitest'
-import { replaceInlineSnap } from '../../../packages/vitest/src/integrations/snapshot/port/inlineSnapshot'
+import { replaceInlineSnap } from '../../../packages/snapshot/src/port/inlineSnapshot'
 
 describe('inline-snap utils', () => {
   it('replaceInlineSnap', async () => {

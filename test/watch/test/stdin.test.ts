@@ -1,6 +1,6 @@
-import { expect, test } from 'vitest'
+import { test } from 'vitest'
 
-import { startWatchMode, waitFor } from './utils'
+import { startWatchMode } from './utils'
 
 test('quit watch mode', async () => {
   const vitest = await startWatchMode()
@@ -15,16 +15,12 @@ test('filter by filename', async () => {
 
   vitest.write('p')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('Input filename pattern')
-  })
+  await vitest.waitForOutput('Input filename pattern')
 
   vitest.write('math\n')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('Filename pattern: math')
-    expect(vitest.getOutput()).toMatch('1 passed')
-  })
+  await vitest.waitForOutput('Filename pattern: math')
+  await vitest.waitForOutput('1 passed')
 })
 
 test('filter by test name', async () => {
@@ -32,14 +28,10 @@ test('filter by test name', async () => {
 
   vitest.write('t')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('Input test name pattern')
-  })
+  await vitest.waitForOutput('Input test name pattern')
 
   vitest.write('sum\n')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('Test name pattern: /sum/')
-    expect(vitest.getOutput()).toMatch('1 passed')
-  })
+  await vitest.waitForOutput('Test name pattern: /sum/')
+  await vitest.waitForOutput('1 passed')
 })

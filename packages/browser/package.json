@@ -1,12 +1,18 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.29.2",
+  "version": "0.30.1",
   "description": "Browser running for Vitest",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/browser#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/browser"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "sideEffects": false,
   "exports": {
@@ -24,27 +30,26 @@
     "stubs"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm copy",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
     "dev:node": "rollup -c --watch --watch.include src/node/index.ts",
     "dev": "rimraf dist && run-p dev:node dev:client",
-    "copy": "esno scripts/copy-ui-to-browser.ts",
     "prepublishOnly": "pnpm build"
   },
+  "peerDependencies": {
+    "vitest": ">=0.29.4"
+  },
   "dependencies": {
-    "@vitest/runner": "workspace:*",
-    "local-pkg": "^0.4.2",
-    "mlly": "^1.1.0",
-    "modern-node-polyfills": "0.0.9",
-    "rollup-plugin-node-polyfills": "^0.2.1",
+    "modern-node-polyfills": "0.1.0",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
     "@types/ws": "^8.5.4",
+    "@vitest/runner": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "rollup": "^2.79.1",
     "vitest": "workspace:*"
   }
 }

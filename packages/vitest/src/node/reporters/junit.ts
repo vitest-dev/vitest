@@ -131,7 +131,7 @@ export class JUnitReporter implements Reporter {
     for (const frame of stack) {
       const path = relative(this.ctx.config.root, frame.file)
 
-      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`)
+      await this.baseLog(escapeXML(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`))
 
       // reached at test file, skip the follow stack
       if (frame.file in this.ctx.state.filesMap)

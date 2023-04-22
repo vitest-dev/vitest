@@ -26,4 +26,8 @@ export interface WorkerGlobalState {
   environmentTeardownRun?: boolean
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  durations: {
+    environment: number
+    prepare: number
+  }
 }

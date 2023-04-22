@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
@@ -88,30 +89,31 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
       })
     })
 
-    Promise.all(benchmarkGroup.map(async (benchmark) => {
+    const tasks: BenchTask[] = []
+    for (const benchmark of benchmarkGroup) {
       await benchmark.meta.task!.warmup()
       const { setTimeout } = getSafeTimers()
-      return await new Promise<BenchTask>(resolve => setTimeout(async () => {
+      tasks.push(await new Promise<BenchTask>(resolve => setTimeout(async () => {
         resolve(await benchmark.meta.task!.run())
-      }))
-    })).then((tasks) => {
-      suite.result!.duration = performance.now() - start
-      suite.result!.state = 'pass'
+      })))
+    }
 
-      tasks
-        .sort((a, b) => a.result!.mean - b.result!.mean)
-        .forEach((cycle, idx) => {
-          const benchmark = benchmarkMap[cycle.name || '']
-          benchmark.result!.state = 'pass'
-          if (benchmark) {
-            const result = benchmark.result!.benchmark!
-            result.rank = Number(idx) + 1
-            updateTask(benchmark)
-          }
-        })
-      updateTask(suite)
-      defer.resolve(null)
-    })
+    suite.result!.duration = performance.now() - start
+    suite.result!.state = 'pass'
+
+    tasks
+      .sort((a, b) => a.result!.mean - b.result!.mean)
+      .forEach((cycle, idx) => {
+        const benchmark = benchmarkMap[cycle.name || '']
+        benchmark.result!.state = 'pass'
+        if (benchmark) {
+          const result = benchmark.result!.benchmark!
+          result.rank = Number(idx) + 1
+          updateTask(benchmark)
+        }
+      })
+    updateTask(suite)
+    defer.resolve(null)
 
     await defer
   }

@@ -19,3 +19,27 @@ test('shard index must be smaller than count', async () => {
 
   expect(error).toMatch('Error: --shard <index> must be a positive number less then <count>')
 })
+
+test('inspect requires changing threads or singleThread', async () => {
+  const { error } = await runVitest('run', ['--inspect'])
+
+  expect(error).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+})
+
+test('inspect cannot be used with threads', async () => {
+  const { error } = await runVitest('run', ['--inspect', '--threads', 'true'])
+
+  expect(error).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+})
+
+test('inspect-brk cannot be used with threads', async () => {
+  const { error } = await runVitest('run', ['--inspect-brk', '--threads', 'true'])
+
+  expect(error).toMatch('Error: You cannot use --inspect-brk without "threads: false" or "singleThread: true"')
+})
+
+test('c8 coverage provider cannot be used with browser', async () => {
+  const { error } = await runVitest('run', ['--coverage.enabled', '--browser'])
+
+  expect(error).toMatch('Error: @vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})

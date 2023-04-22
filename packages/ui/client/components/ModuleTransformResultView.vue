@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { client } from '~/composables/client'
+
 const props = defineProps<{ id: string }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
