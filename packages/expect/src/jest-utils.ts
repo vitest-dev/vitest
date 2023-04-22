@@ -135,6 +135,10 @@ function eq(
   if (typeof a !== 'object' || typeof b !== 'object')
     return false
 
+  // Use DOM3 method isEqualNode (IE>=9)
+  if (isDomNode(a) && isDomNode(b))
+    return a.isEqualNode(b)
+
   // Used to detect circular references.
   let length = aStack.length
   while (length--) {
@@ -209,6 +213,19 @@ function hasKey(obj: any, key: string) {
 
 export function isA(typeName: string, value: unknown) {
   return Object.prototype.toString.apply(value) === `[object ${typeName}]`
+}
+
+function isDomNode(obj: any): boolean {
+  return (
+    obj !== null
+    && typeof obj === 'object'
+    && 'nodeType' in obj
+    && typeof obj.nodeType === 'number'
+    && 'nodeName' in obj
+    && typeof obj.nodeName === 'string'
+    && 'isEqualNode' in obj
+    && typeof obj.isEqualNode === 'function'
+  )
 }
 
 export function fnNameFor(func: Function) {
