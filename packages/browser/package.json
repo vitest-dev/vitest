@@ -42,7 +42,7 @@
     "vitest": ">=0.29.4"
   },
   "dependencies": {
-    "modern-node-polyfills": "0.1.0",
+    "modern-node-polyfills": "^0.1.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
