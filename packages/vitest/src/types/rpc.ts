@@ -1,5 +1,4 @@
-import type { RawSourceMap } from 'source-map'
-import type { FetchResult, ViteNodeResolveId } from 'vite-node'
+import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
 import type { UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
