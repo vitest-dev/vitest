@@ -19,6 +19,7 @@ Will only execute test files that contain `basic`, e.g.
 ```
 basic.test.ts
 basic-foo.test.ts
+basic/foo.test.ts
 ```
 
 ## Specifying a Timeout
