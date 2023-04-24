@@ -695,68 +695,10 @@ exports[`c8 json report 1`] = `
   },
   "<process-cwd>/src/Counter/index.ts": {
     "all": false,
-    "b": {
-      "0": [
-        1,
-      ],
-    },
-    "branchMap": {
-      "0": {
-        "line": 4,
-        "loc": {
-          "end": {
-            "column": 39,
-            "line": 4,
-          },
-          "start": {
-            "column": 27,
-            "line": 4,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 39,
-              "line": 4,
-            },
-            "start": {
-              "column": 27,
-              "line": 4,
-            },
-          },
-        ],
-        "type": "branch",
-      },
-    },
-    "f": {
-      "0": 1,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 39,
-            "line": 4,
-          },
-          "start": {
-            "column": 27,
-            "line": 4,
-          },
-        },
-        "line": 4,
-        "loc": {
-          "end": {
-            "column": 39,
-            "line": 4,
-          },
-          "start": {
-            "column": 27,
-            "line": 4,
-          },
-        },
-        "name": "get",
-      },
-    },
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
     "path": "<process-cwd>/src/Counter/index.ts",
     "s": {
       "0": 1,
@@ -1312,9 +1254,6 @@ exports[`c8 json report 1`] = `
       "2": [
         1,
       ],
-      "3": [
-        1,
-      ],
     },
     "branchMap": {
       "0": {
@@ -1370,32 +1309,6 @@ exports[`c8 json report 1`] = `
         "type": "branch",
       },
       "2": {
-        "line": 21,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 21,
-          },
-          "start": {
-            "column": 0,
-            "line": 21,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 21,
-            },
-            "start": {
-              "column": 0,
-              "line": 21,
-            },
-          },
-        ],
-        "type": "branch",
-      },
-      "3": {
         "line": 34,
         "loc": {
           "end": {
@@ -1425,11 +1338,9 @@ exports[`c8 json report 1`] = `
     "f": {
       "0": 1,
       "1": 1,
-      "2": 1,
+      "2": 0,
       "3": 0,
-      "4": 0,
-      "5": 0,
-      "6": 1,
+      "4": 1,
     },
     "fnMap": {
       "0": {
@@ -1484,30 +1395,6 @@ exports[`c8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 21,
-          },
-          "start": {
-            "column": 0,
-            "line": 21,
-          },
-        },
-        "line": 21,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 21,
-          },
-          "start": {
-            "column": 0,
-            "line": 21,
-          },
-        },
-        "name": "get",
-      },
-      "3": {
-        "decl": {
-          "end": {
-            "column": 1,
             "line": 26,
           },
           "start": {
@@ -1528,31 +1415,7 @@ exports[`c8 json report 1`] = `
         },
         "name": "third",
       },
-      "4": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 26,
-          },
-          "start": {
-            "column": 0,
-            "line": 26,
-          },
-        },
-        "line": 26,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 26,
-          },
-          "start": {
-            "column": 0,
-            "line": 26,
-          },
-        },
-        "name": "get",
-      },
-      "5": {
+      "3": {
         "decl": {
           "end": {
             "column": 1,
@@ -1576,7 +1439,7 @@ exports[`c8 json report 1`] = `
         },
         "name": "fourth",
       },
-      "6": {
+      "4": {
         "decl": {
           "end": {
             "column": 1,
@@ -2009,9 +1872,6 @@ exports[`c8 json report 1`] = `
       "0": [
         1,
       ],
-      "1": [
-        1,
-      ],
     },
     "branchMap": {
       "0": {
@@ -2040,36 +1900,9 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "1": {
-        "line": 8,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 8,
-          },
-          "start": {
-            "column": 0,
-            "line": 8,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 8,
-            },
-            "start": {
-              "column": 0,
-              "line": 8,
-            },
-          },
-        ],
-        "type": "branch",
-      },
     },
     "f": {
       "0": 1,
-      "1": 1,
     },
     "fnMap": {
       "0": {
@@ -2095,30 +1928,6 @@ exports[`c8 json report 1`] = `
           },
         },
         "name": "implicitElse",
-      },
-      "1": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 8,
-          },
-          "start": {
-            "column": 0,
-            "line": 8,
-          },
-        },
-        "line": 8,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 8,
-          },
-          "start": {
-            "column": 0,
-            "line": 8,
-          },
-        },
-        "name": "get",
       },
     },
     "path": "<process-cwd>/src/implicitElse.ts",
@@ -2221,9 +2030,6 @@ exports[`c8 json report 1`] = `
       "0": [
         1,
       ],
-      "1": [
-        1,
-      ],
     },
     "branchMap": {
       "0": {
@@ -2252,36 +2058,9 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "1": {
-        "line": 3,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 3,
-            },
-            "start": {
-              "column": 0,
-              "line": 3,
-            },
-          },
-        ],
-        "type": "branch",
-      },
     },
     "f": {
       "0": 1,
-      "1": 1,
     },
     "fnMap": {
       "0": {
@@ -2307,30 +2086,6 @@ exports[`c8 json report 1`] = `
           },
         },
         "name": "useImportEnv",
-      },
-      "1": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "line": 3,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "name": "get",
       },
     },
     "path": "<process-cwd>/src/importEnv.ts",
@@ -2378,9 +2133,6 @@ exports[`c8 json report 1`] = `
       "0": [
         1,
       ],
-      "1": [
-        1,
-      ],
     },
     "branchMap": {
       "0": {
@@ -2409,36 +2161,9 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "1": {
-        "line": 7,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 7,
-            },
-            "start": {
-              "column": 0,
-              "line": 7,
-            },
-          },
-        ],
-        "type": "branch",
-      },
     },
     "f": {
       "0": 1,
-      "1": 1,
     },
     "fnMap": {
       "0": {
@@ -2464,30 +2189,6 @@ exports[`c8 json report 1`] = `
           },
         },
         "name": "pythagoras",
-      },
-      "1": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "line": 7,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "name": "get",
       },
     },
     "path": "<process-cwd>/src/index.mts",
@@ -3013,22 +2714,13 @@ exports[`c8 json report 1`] = `
         1,
       ],
       "1": [
-        1,
+        2,
       ],
       "2": [
-        2,
+        1,
       ],
       "3": [
-        2,
-      ],
-      "4": [
-        1,
-      ],
-      "5": [
         0,
-      ],
-      "6": [
-        1,
       ],
     },
     "branchMap": {
@@ -3059,32 +2751,6 @@ exports[`c8 json report 1`] = `
         "type": "branch",
       },
       "1": {
-        "line": 3,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 3,
-            },
-            "start": {
-              "column": 0,
-              "line": 3,
-            },
-          },
-        ],
-        "type": "branch",
-      },
-      "2": {
         "line": 5,
         "loc": {
           "end": {
@@ -3110,33 +2776,7 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "3": {
-        "line": 7,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 7,
-            },
-            "start": {
-              "column": 0,
-              "line": 7,
-            },
-          },
-        ],
-        "type": "branch",
-      },
-      "4": {
+      "2": {
         "line": 14,
         "loc": {
           "end": {
@@ -3162,7 +2802,7 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "5": {
+      "3": {
         "line": 16,
         "loc": {
           "end": {
@@ -3188,46 +2828,14 @@ exports[`c8 json report 1`] = `
         ],
         "type": "branch",
       },
-      "6": {
-        "line": 19,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 19,
-          },
-          "start": {
-            "column": 0,
-            "line": 19,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 1,
-              "line": 19,
-            },
-            "start": {
-              "column": 0,
-              "line": 19,
-            },
-          },
-        ],
-        "type": "branch",
-      },
     },
     "f": {
       "0": 1,
-      "1": 1,
-      "10": 1,
-      "11": 1,
-      "2": 2,
-      "3": 2,
+      "1": 2,
+      "2": 0,
+      "3": 1,
       "4": 0,
-      "5": 0,
-      "6": 1,
-      "7": 1,
-      "8": 0,
-      "9": 0,
+      "5": 1,
     },
     "fnMap": {
       "0": {
@@ -3258,78 +2866,6 @@ exports[`c8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "line": 3,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 0,
-            "line": 3,
-          },
-        },
-        "name": "get",
-      },
-      "10": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 30,
-          },
-          "start": {
-            "column": 7,
-            "line": 28,
-          },
-        },
-        "line": 28,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 30,
-          },
-          "start": {
-            "column": 7,
-            "line": 28,
-          },
-        },
-        "name": "ignoredFunction",
-      },
-      "11": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 30,
-          },
-          "start": {
-            "column": 0,
-            "line": 30,
-          },
-        },
-        "line": 30,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 30,
-          },
-          "start": {
-            "column": 0,
-            "line": 30,
-          },
-        },
-        "name": "get",
-      },
-      "2": {
-        "decl": {
-          "end": {
-            "column": 1,
             "line": 7,
           },
           "start": {
@@ -3350,31 +2886,7 @@ exports[`c8 json report 1`] = `
         },
         "name": "multiply",
       },
-      "3": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "line": 7,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 7,
-          },
-          "start": {
-            "column": 0,
-            "line": 7,
-          },
-        },
-        "name": "get",
-      },
-      "4": {
+      "2": {
         "decl": {
           "end": {
             "column": 1,
@@ -3398,31 +2910,7 @@ exports[`c8 json report 1`] = `
         },
         "name": "divide",
       },
-      "5": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 12,
-          },
-          "start": {
-            "column": 0,
-            "line": 12,
-          },
-        },
-        "line": 12,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 12,
-          },
-          "start": {
-            "column": 0,
-            "line": 12,
-          },
-        },
-        "name": "get",
-      },
-      "6": {
+      "3": {
         "decl": {
           "end": {
             "column": 1,
@@ -3446,31 +2934,7 @@ exports[`c8 json report 1`] = `
         },
         "name": "sqrt",
       },
-      "7": {
-        "decl": {
-          "end": {
-            "column": 1,
-            "line": 19,
-          },
-          "start": {
-            "column": 0,
-            "line": 19,
-          },
-        },
-        "line": 19,
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 19,
-          },
-          "start": {
-            "column": 0,
-            "line": 19,
-          },
-        },
-        "name": "get",
-      },
-      "8": {
+      "4": {
         "decl": {
           "end": {
             "column": 1,
@@ -3494,29 +2958,29 @@ exports[`c8 json report 1`] = `
         },
         "name": "run",
       },
-      "9": {
+      "5": {
         "decl": {
           "end": {
             "column": 1,
-            "line": 24,
+            "line": 30,
           },
           "start": {
-            "column": 0,
-            "line": 24,
+            "column": 7,
+            "line": 28,
           },
         },
-        "line": 24,
+        "line": 28,
         "loc": {
           "end": {
             "column": 1,
-            "line": 24,
+            "line": 30,
           },
           "start": {
-            "column": 0,
-            "line": 24,
+            "column": 7,
+            "line": 28,
           },
         },
-        "name": "get",
+        "name": "ignoredFunction",
       },
     },
     "path": "<process-cwd>/src/utils.ts",

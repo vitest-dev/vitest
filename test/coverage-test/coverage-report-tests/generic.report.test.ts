@@ -84,7 +84,7 @@ test('thresholdAutoUpdate updates thresholds', async () => {
   fs.writeFileSync(configFilename, updatedConfig)
 })
 
-test.skip('function count is correct', async () => {
+test('function count is correct', async () => {
   const coverageJson = await readCoverageJson()
   const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/function-count.ts')
