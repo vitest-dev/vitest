@@ -2,7 +2,8 @@ import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { basename, extname, resolve } from 'pathe'
-import { SourceMapConsumer } from 'source-map'
+import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping'
+import type { RawSourceMap } from '@ampproject/remapping'
 import { getTasks } from '../utils'
 import { ensurePackageInstalled } from '../node/pkg'
 import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
@@ -119,7 +120,7 @@ export class Typechecker {
       }
       const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
       // has no map for ".js" files that use // @ts-check
-      const mapConsumer = map && new SourceMapConsumer(map)
+      const traceMap = map && new TraceMap(map as unknown as RawSourceMap)
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
@@ -129,11 +130,13 @@ export class Typechecker {
           markState(task.suite, state)
       }
       errors.forEach(({ error, originalError }) => {
-        const processedPos = mapConsumer?.generatedPositionFor({
-          line: originalError.line,
-          column: originalError.column,
-          source: basename(path),
-        }) || originalError
+        const processedPos = traceMap
+          ? generatedPositionFor(traceMap, {
+            line: originalError.line,
+            column: originalError.column,
+            source: basename(path),
+          })
+          : originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
