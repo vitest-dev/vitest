@@ -1,6 +1,8 @@
 import { existsSync, promises as fs } from 'node:fs'
 import _url from 'node:url'
 import type { Profiler } from 'node:inspector'
+import MagicString from 'magic-string'
+import remapping from '@ampproject/remapping'
 import { extname, resolve } from 'pathe'
 import c from 'picocolors'
 import { provider } from 'std-env'
@@ -17,6 +19,9 @@ import createReport from 'c8/lib/report.js'
 import { checkCoverages } from 'c8/lib/commands/check-coverage.js'
 
 type Options = ResolvedCoverageOptions<'c8'>
+
+// Note that this needs to match the line ending as well
+const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
 
 export class C8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'c8'
@@ -169,7 +174,7 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
 
       return {
         sourceMap: {
-          sourcemap: data.map,
+          sourcemap: removeViteHelpersFromSourceMaps(data.source, data.map),
         },
         source: Array(offset).fill('.').join('') + data.source,
       }
@@ -192,4 +197,28 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
       })
     }
   }
+}
+
+/**
+ * Remove generated code from the source maps:
+ * - Vite's export helpers: e.g. `Object.defineProperty(__vite_ssr_exports__, "sum", { enumerable: true, configurable: true, get(){ return sum }});`
+ */
+function removeViteHelpersFromSourceMaps(source: string | undefined, map: EncodedSourceMap) {
+  if (!source || !source.match(VITE_EXPORTS_LINE_PATTERN))
+    return map
+
+  const sourceWithoutHelpers = new MagicString(source)
+  sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+
+  const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
+    hires: true,
+  })
+
+  // A merged source map where the first one excludes helpers
+  const combinedMap = remapping(
+    [{ ...mapWithoutHelpers, version: 3 }, map],
+    () => null,
+  )
+
+  return combinedMap
 }
