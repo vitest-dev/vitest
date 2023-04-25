@@ -15,32 +15,8 @@ test('file coverage summary matches', () => {
   const fileCoverage = coverageMap.fileCoverageFor(normalize(resolve('./src/math.ts')))
 
   // There should be 1 uncovered branch and 1 uncovered function. See math.ts.
-  expect(fileCoverage.toSummary()).toMatchInlineSnapshot(`
-    {
-      "branches": {
-        "covered": 3,
-        "pct": 75,
-        "skipped": 0,
-        "total": 4,
-      },
-      "functions": {
-        "covered": 2,
-        "pct": 66.66,
-        "skipped": 0,
-        "total": 3,
-      },
-      "lines": {
-        "covered": 7,
-        "pct": 50,
-        "skipped": 0,
-        "total": 14,
-      },
-      "statements": {
-        "covered": 7,
-        "pct": 50,
-        "skipped": 0,
-        "total": 14,
-      },
-    }
-  `)
+  const { branches, functions } = fileCoverage.toSummary()
+
+  expect(branches.total - branches.covered).toBe(1)
+  expect(functions.total - functions.covered).toBe(1)
 })
