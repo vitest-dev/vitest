@@ -519,6 +519,216 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/function-count.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+      "1": 1,
+      "2": 0,
+      "3": 0,
+      "4": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 17,
+            "line": 11,
+          },
+          "start": {
+            "column": 9,
+            "line": 11,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 13,
+          },
+          "start": {
+            "column": 17,
+            "line": 11,
+          },
+        },
+        "name": "first",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 25,
+            "line": 18,
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 21,
+          },
+          "start": {
+            "column": 25,
+            "line": 18,
+          },
+        },
+        "name": "second",
+      },
+      "2": {
+        "decl": {
+          "end": {
+            "column": 24,
+            "line": 24,
+          },
+          "start": {
+            "column": 16,
+            "line": 24,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 26,
+          },
+          "start": {
+            "column": 24,
+            "line": 24,
+          },
+        },
+        "name": "third",
+      },
+      "3": {
+        "decl": {
+          "end": {
+            "column": 18,
+            "line": 29,
+          },
+          "start": {
+            "column": 9,
+            "line": 29,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 31,
+          },
+          "start": {
+            "column": 18,
+            "line": 29,
+          },
+        },
+        "name": "fourth",
+      },
+      "4": {
+        "decl": {
+          "end": {
+            "column": 17,
+            "line": 34,
+          },
+          "start": {
+            "column": 9,
+            "line": 34,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 36,
+          },
+          "start": {
+            "column": 17,
+            "line": 34,
+          },
+        },
+        "name": "fifth",
+      },
+    },
+    "path": "<process-cwd>/src/function-count.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "6": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 2,
+          "line": 12,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 15,
+        },
+        "start": {
+          "column": 0,
+          "line": 15,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 19,
+        },
+        "start": {
+          "column": 2,
+          "line": 19,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 20,
+        },
+        "start": {
+          "column": 2,
+          "line": 20,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 25,
+        },
+        "start": {
+          "column": 2,
+          "line": 25,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 30,
+        },
+        "start": {
+          "column": 2,
+          "line": 30,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 35,
+        },
+        "start": {
+          "column": 2,
+          "line": 35,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/implicitElse.ts": {
     "b": {
       "0": [
