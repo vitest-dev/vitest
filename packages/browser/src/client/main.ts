@@ -73,7 +73,8 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
-    moduleCache: new Map(),
+    // @ts-expect-error untyped global for internal use
+    moduleCache: globalThis.__vitest_module_cache__,
     rpc: client.rpc,
     safeRpc,
     durations: {

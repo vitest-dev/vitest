@@ -50,6 +50,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
+    "rollup": "3.20.2",
     "vitest": "workspace:*"
   }
 }
