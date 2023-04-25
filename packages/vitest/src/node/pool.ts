@@ -43,7 +43,7 @@ export function createPool(ctx: Vitest): ProcessPool {
   function getPoolName([project, file]: WorkspaceSpec) {
     for (const [glob, pool] of project.config.poolMatchGlobs || []) {
       if (pool === 'browser')
-        throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in paralle. Read more: https://vitest.dev/guide/workspace')
+        throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
       if (mm.isMatch(file, glob, { cwd: project.config.root }))
         return pool as VitestPool
     }

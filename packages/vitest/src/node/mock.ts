@@ -172,15 +172,21 @@ export function transformMockableFile(project: WorkspaceProject | Vitest, id: st
         if (methodName === 'hoisted') {
           const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
           const init = declarationNode?.declarations[0]?.init
-          if (
-            init
+          const isViHoisted = (node: CallExpression) => {
+            return node.callee.type === 'MemberExpression'
+              && isIdentifier(node.callee.object)
+              && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
+              && isIdentifier(node.callee.property)
+              && node.callee.property.name === 'hoisted'
+          }
+          const canMoveDeclaration = (init
             && init.type === 'CallExpression'
-            && init.callee.type === 'MemberExpression'
-            && isIdentifier(init.callee.object)
-            && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-            && isIdentifier(init.callee.property)
-            && init.callee.property.name === 'hoisted'
-          ) {
+            && isViHoisted(init))
+            || (init
+                && init.type === 'AwaitExpression'
+                && init.argument.type === 'CallExpression'
+                && isViHoisted(init.argument))
+          if (canMoveDeclaration) {
             // hoist "const variable = vi.hoisted(() => {})"
             hoistedCalls += `${source.slice(declarationNode.start, declarationNode.end)}\n`
             magicString.remove(declarationNode.start, declarationNode.end)
