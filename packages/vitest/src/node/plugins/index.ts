@@ -11,6 +11,7 @@ import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
+import { ESMMockerPlugin } from './esm-mocker'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -242,6 +243,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     options.ui
       ? await UIPlugin()
       : null,
+    ESMMockerPlugin(ctx),
   ]
     .filter(notNullish)
 }

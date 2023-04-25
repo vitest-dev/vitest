@@ -1,5 +1,5 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import { createSimpleStackTrace } from '@vitest/utils'
+import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
@@ -29,6 +29,12 @@ interface VitestUtils {
 
   spyOn: typeof spyOn
   fn: typeof fn
+
+  /**
+   * Run the factory before imports are evaluated. You can return a value from the factory
+   * to reuse it inside your `vi.mock` factory and tests.
+   */
+  hoisted<T>(factory: () => T): T
 
   /**
    * Makes all `imports` to passed module to be mocked.
@@ -275,6 +281,11 @@ function createVitest(): VitestUtils {
 
     spyOn,
     fn,
+
+    hoisted<T>(factory: () => T): T {
+      assertTypes(factory, '"vi.hoisted" factory', ['function'])
+      return factory()
+    },
 
     mock(path: string, factory?: MockFactoryWithHelper) {
       const importer = getImporter()

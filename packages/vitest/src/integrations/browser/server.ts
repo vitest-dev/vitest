@@ -42,7 +42,8 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
           }
 
           config.server = server
-          config.server.fs = { strict: false }
+          config.server.fs ??= {}
+          config.server.fs.strict = false
 
           return {
             resolve: {

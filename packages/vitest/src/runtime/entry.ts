@@ -124,8 +124,6 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
       await startTests([file], runner)
 
-      workerState.filepath = undefined
-
       // reset after tests, because user might call `vi.setConfig` in setupFile
       vi.resetConfig()
       // mocks should not affect different files

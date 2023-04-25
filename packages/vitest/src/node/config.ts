@@ -277,6 +277,9 @@ export function resolveConfig(
     port: defaultBrowserPort,
   }
 
+  if (resolved.browser.enabled)
+    resolved.slowHijackESM ??= true
+
   return resolved
 }
 

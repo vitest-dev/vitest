@@ -9,6 +9,7 @@ import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason } from '@vitest/runner'
+import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -22,7 +23,6 @@ import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
-import { VitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -40,7 +40,7 @@ export class Vitest {
   logger: Logger
   pool: ProcessPool | undefined
 
-  vitenode: VitestServer = undefined!
+  vitenode: ViteNodeServer = undefined!
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
@@ -89,7 +89,7 @@ export class Vitest {
     if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
-    this.vitenode = new VitestServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
