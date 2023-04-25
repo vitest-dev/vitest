@@ -34,7 +34,7 @@ To fix this issue you can either:
 const API_NOT_FOUND_CHECK = 'if (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
 + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
 
-const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoist)\(/m
+const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
 const hashbangRE = /^#!.*\n/
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
@@ -181,12 +181,12 @@ export function transformMockableFile(project: WorkspaceProject | Vitest, id: st
             && isIdentifier(init.callee.property)
             && init.callee.property.name === 'hoisted'
           ) {
-            // hoist const variable = vi.hoisted(() => {})
+            // hoist "const variable = vi.hoisted(() => {})"
             hoistedCalls += `${source.slice(declarationNode.start, declarationNode.end)}\n`
             magicString.remove(declarationNode.start, declarationNode.end)
           }
           else {
-            // hoist vi.hoisted(() => {})
+            // hoist "vi.hoisted(() => {})"
             hoistedCalls += `${source.slice(node.start, node.end)}\n`
             magicString.remove(node.start, node.end)
           }
@@ -206,7 +206,7 @@ export function transformMockableFile(project: WorkspaceProject | Vitest, id: st
   )
 
   const code = magicString.toString()
-  const map = needMap ? magicString.generateMap({ hires: true }) : null
+  const map = needMap ? magicString.generateMap({ hires: true, source: id }) : null
 
   return {
     code,
