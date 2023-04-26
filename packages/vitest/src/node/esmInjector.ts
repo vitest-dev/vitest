@@ -10,6 +10,15 @@ import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProper
 import type { WorkspaceProject } from './workspace'
 import type { Vitest } from './core'
 
+const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
+You may encounter this issue when importing the mocks API from another module other than 'vitest'.
+To fix this issue you can either:
+- import the mocks API directly from 'vitest'
+- enable the 'globals' options`
+
+const API_NOT_FOUND_CHECK = '\nif (typeof vi === "undefined" && typeof vitest === "undefined") '
++ `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+
 const parsers = new WeakMap<ViteDevServer, typeof Parser>()
 
 function getAcornParser(server: ViteDevServer) {
@@ -393,6 +402,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
   if (hoistedCode || hoistedVitestImports) {
     s.prepend(
       hoistedVitestImports
+      + ((!hoistedVitestImports && hoistedCode) ? API_NOT_FOUND_CHECK : '')
       + hoistedCode,
     )
   }
