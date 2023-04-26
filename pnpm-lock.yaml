@@ -1500,6 +1500,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      acorn:
+        specifier: ^8.8.2
+        version: 8.8.2
       tinyspy:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8307,7 +8310,7 @@ packages:
   /@types/jsdom@21.1.1:
     resolution: {integrity: sha512-cZFuoVLtzKP3gmq9eNosUL1R50U+USkbLtUQ1bYVgl/lKp0FZM7Cq4aIHAL8oIvQ17uSHi7jXPtfDOdjPwBE7A==}
     dependencies:
-      '@types/node': 18.16.0
+      '@types/node': 18.16.1
       '@types/tough-cookie': 4.0.2
       parse5: 7.1.2
     dev: true
@@ -8410,7 +8413,7 @@ packages:
   /@types/prompts@2.4.4:
     resolution: {integrity: sha512-p5N9uoTH76lLvSAaYSZtBCdEXzpOOufsRjnhjVSrZGXikVGHX9+cc9ERtHRV4hvBKHyZb1bg4K+56Bd2TqUn4A==}
     dependencies:
-      '@types/node': 18.16.0
+      '@types/node': 18.16.1
       kleur: 3.0.3
     dev: true
 
@@ -9934,12 +9937,6 @@ packages:
 
   /acorn@7.4.1:
     resolution: {integrity: sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-    dev: true
-
-  /acorn@8.8.1:
-    resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
@@ -17391,7 +17388,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.8.1
+      acorn: 8.8.2
       acorn-globals: 7.0.1
       cssom: 0.5.0
       cssstyle: 2.3.0
@@ -24154,7 +24151,7 @@ packages:
     resolution: {integrity: sha512-fyRdDc7vUBje5II0NdpjTTGh9BeTRtva+pDO52dmHiou1lF5Zths7/RlYpRb8xqYeWnCsAaSb7NTkskDvZxbow==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 18.16.0
+      '@types/node': 18.16.1
       '@wdio/config': 8.6.8
       '@wdio/logger': 8.6.6
       '@wdio/protocols': 8.6.6

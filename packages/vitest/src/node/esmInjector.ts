@@ -124,8 +124,8 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
     const hasSpecifiers = node.specifiers.length > 0
     if (hasMocks) {
       const code = hasSpecifiers
-        ? `const { ${viInjectedKey}: ${importId} } = await import('${source}')\n`
-        : `await import('${source}')\n`
+        ? `const { ${viInjectedKey}: ${importId} } = await __vi_wrap_module__(import('${source}'))\n`
+        : `await __vi_wrap_module__(import('${source}'))\n`
       return {
         code,
         id: importId,
