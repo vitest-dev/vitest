@@ -2,7 +2,7 @@ import { Parser } from 'acorn'
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
 import type { CallExpression, Expression, Identifier, ImportDeclaration, VariableDeclaration } from 'estree'
-import { findNodeAround } from 'acorn-walk'
+import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
 import type { ViteDevServer } from 'vite'
 import { toArray } from '../utils'
 import type { Node, Positioned } from './esmWalker'
@@ -294,51 +294,53 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     }
   }
 
-  if (hijackEsm) {
-    // 3. convert references to import bindings & import.meta references
-    esmWalker(ast, {
-      onCallExpression(node) {
-        if (
-          node.callee.type === 'MemberExpression'
+  function CallExpression(node: Positioned<CallExpression>) {
+    if (
+      node.callee.type === 'MemberExpression'
+    && isIdentifier(node.callee.object)
+    && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
+    && isIdentifier(node.callee.property)
+    ) {
+      const methodName = node.callee.property.name
+      if (methodName === 'mock' || methodName === 'unmock') {
+        hoistedCode += `${code.slice(node.start, node.end)}\n`
+        s.remove(node.start, node.end)
+      }
+      if (methodName === 'hoisted') {
+        const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
+        const init = declarationNode?.declarations[0]?.init
+        const isViHoisted = (node: CallExpression) => {
+          return node.callee.type === 'MemberExpression'
         && isIdentifier(node.callee.object)
         && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
         && isIdentifier(node.callee.property)
-        ) {
-          const methodName = node.callee.property.name
-          if (methodName === 'mock' || methodName === 'unmock') {
-            hoistedCode += `${code.slice(node.start, node.end)}\n`
-            s.remove(node.start, node.end)
-          }
-          if (methodName === 'hoisted') {
-            const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
-            const init = declarationNode?.declarations[0]?.init
-            const isViHoisted = (node: CallExpression) => {
-              return node.callee.type === 'MemberExpression'
-            && isIdentifier(node.callee.object)
-            && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-            && isIdentifier(node.callee.property)
-            && node.callee.property.name === 'hoisted'
-            }
-            const canMoveDeclaration = (init
-          && init.type === 'CallExpression'
-          && isViHoisted(init))
-          || (init
-              && init.type === 'AwaitExpression'
-              && init.argument.type === 'CallExpression'
-              && isViHoisted(init.argument))
-            if (canMoveDeclaration) {
-              // hoist "const variable = vi.hoisted(() => {})"
-              hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
-              s.remove(declarationNode.start, declarationNode.end)
-            }
-            else {
-              // hoist "vi.hoisted(() => {})"
-              hoistedCode += `${code.slice(node.start, node.end)}\n`
-              s.remove(node.start, node.end)
-            }
-          }
+        && node.callee.property.name === 'hoisted'
         }
-      },
+        const canMoveDeclaration = (init
+      && init.type === 'CallExpression'
+      && isViHoisted(init))
+      || (init
+          && init.type === 'AwaitExpression'
+          && init.argument.type === 'CallExpression'
+          && isViHoisted(init.argument))
+        if (canMoveDeclaration) {
+          // hoist "const variable = vi.hoisted(() => {})"
+          hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
+          s.remove(declarationNode.start, declarationNode.end)
+        }
+        else {
+          // hoist "vi.hoisted(() => {})"
+          hoistedCode += `${code.slice(node.start, node.end)}\n`
+          s.remove(node.start, node.end)
+        }
+      }
+    }
+  }
+
+  if (hijackEsm) {
+    // 3. convert references to import bindings & import.meta references
+    esmWalker(ast, {
+      onCallExpression: CallExpression,
       onIdentifier(id, parent, parentStack) {
         const grandparent = parentStack[1]
         const binding = idToImportMap.get(id.name)
@@ -382,10 +384,14 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
       },
     })
   }
+  else {
+    simpleWalk(ast, {
+      CallExpression: CallExpression as any,
+    })
+  }
 
   if (hoistedCode || hoistedVitestImports) {
-    s.appendLeft(
-      0,
+    s.prepend(
       hoistedVitestImports
       + hoistedCode,
     )
