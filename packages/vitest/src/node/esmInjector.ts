@@ -16,7 +16,7 @@ To fix this issue you can either:
 - import the mocks API directly from 'vitest'
 - enable the 'globals' options`
 
-const API_NOT_FOUND_CHECK = '\nif (typeof vi === "undefined" && typeof vitest === "undefined") '
+const API_NOT_FOUND_CHECK = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
 + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
 
 const parsers = new WeakMap<ViteDevServer, typeof Parser>()
@@ -411,6 +411,8 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
     s.append(`\nexport { ${viInjectedKey} }`)
   }
+
+  console.error(s.toString())
 
   return {
     ast,
