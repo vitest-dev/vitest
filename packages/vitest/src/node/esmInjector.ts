@@ -1,10 +1,8 @@
-import { Parser } from 'acorn'
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
 import type { CallExpression, Expression, Identifier, ImportDeclaration, VariableDeclaration } from 'estree'
 import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
-import type { ViteDevServer } from 'vite'
-import { toArray } from '../utils'
+import type { AcornNode } from 'rollup'
 import type { Node, Positioned } from './esmWalker'
 import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
 import type { WorkspaceProject } from './workspace'
@@ -18,18 +16,6 @@ To fix this issue you can either:
 
 const API_NOT_FOUND_CHECK = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
 + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
-
-const parsers = new WeakMap<ViteDevServer, typeof Parser>()
-
-function getAcornParser(server: ViteDevServer) {
-  let parser = parsers.get(server)!
-  if (!parser) {
-    const acornPlugins = server.pluginContainer.options.acornInjectPlugins || []
-    parser = Parser.extend(...toArray(acornPlugins) as any)
-    parsers.set(server, parser)
-  }
-  return parser
-}
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
@@ -75,7 +61,11 @@ const skipHijack = [
 ]
 
 // this is basically copypaste from Vite SSR
-export function injectVitestModule(project: WorkspaceProject | Vitest, code: string, id: string) {
+// this method transforms all import and export statements into `__vi_injected__` variable
+// to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
+// to not parse the module twice, we reuse the ast to hoist vi.mock here
+// and transform imports into dynamic ones if vi.mock is present
+export function injectVitestModule(project: WorkspaceProject | Vitest, code: string, id: string, parse: (code: string, options: any) => AcornNode) {
   if (skipHijack.some(skip => id.match(skip)))
     return
 
@@ -86,15 +76,13 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     return
 
   const s = new MagicString(code)
-  const parser = getAcornParser(project.server)
 
   let ast: any
   try {
-    ast = parser.parse(code, {
+    ast = parse(code, {
       sourceType: 'module',
       ecmaVersion: 'latest',
       locations: true,
-      ranges: true,
     })
   }
   catch (err) {
@@ -150,6 +138,8 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
   }
 
   function defineImport(node: ImportDeclaration) {
+    // always hoist vitest import to top of the file, so
+    // "vi" helpers can access it
     if (node.source.value === 'vitest') {
       const importId = `__vi_esm_${uid++}__`
       const code = hijackEsm
@@ -308,32 +298,36 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
   function CallExpression(node: Positioned<CallExpression>) {
     if (
       node.callee.type === 'MemberExpression'
-    && isIdentifier(node.callee.object)
-    && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-    && isIdentifier(node.callee.property)
+      && isIdentifier(node.callee.object)
+      && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
+      && isIdentifier(node.callee.property)
     ) {
       const methodName = node.callee.property.name
+
       if (methodName === 'mock' || methodName === 'unmock') {
         hoistedCode += `${code.slice(node.start, node.end)}\n`
         s.remove(node.start, node.end)
       }
+
       if (methodName === 'hoisted') {
         const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
         const init = declarationNode?.declarations[0]?.init
         const isViHoisted = (node: CallExpression) => {
           return node.callee.type === 'MemberExpression'
-        && isIdentifier(node.callee.object)
-        && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-        && isIdentifier(node.callee.property)
-        && node.callee.property.name === 'hoisted'
+            && isIdentifier(node.callee.object)
+            && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
+            && isIdentifier(node.callee.property)
+            && node.callee.property.name === 'hoisted'
         }
+
         const canMoveDeclaration = (init
-      && init.type === 'CallExpression'
-      && isViHoisted(init))
-      || (init
-          && init.type === 'AwaitExpression'
-          && init.argument.type === 'CallExpression'
-          && isViHoisted(init.argument))
+          && init.type === 'CallExpression'
+          && isViHoisted(init)) /* const v = vi.hoisted() */
+          || (init
+              && init.type === 'AwaitExpression'
+              && init.argument.type === 'CallExpression'
+              && isViHoisted(init.argument)) /* const v = await vi.hoisted() */
+
         if (canMoveDeclaration) {
           // hoist "const variable = vi.hoisted(() => {})"
           hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
@@ -348,6 +342,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     }
   }
 
+  // if we don't need to inject anything, skip the walking
   if (hijackEsm) {
     // 3. convert references to import bindings & import.meta references
     esmWalker(ast, {
@@ -395,6 +390,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
       },
     })
   }
+  // we still need to hoist "vi" helper
   else {
     simpleWalk(ast, {
       CallExpression: CallExpression as any,
@@ -410,6 +406,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
   }
 
   if (hasInjected) {
+    // make sure "__vi_injected__" is declared as soon as possible
     s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
     s.append(`\nexport { ${viInjectedKey} }`)
   }

@@ -8,7 +8,7 @@ export function ESMTransformPlugin(ctx: WorkspaceProject | Vitest): Plugin {
     name: 'vitest:mocker-plugin',
     enforce: 'post',
     transform(source, id) {
-      return injectVitestModule(ctx, source, id)
+      return injectVitestModule(ctx, source, id, (code, options) => this.parse(code, options))
     },
   }
 }
