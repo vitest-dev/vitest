@@ -117,13 +117,15 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
   const transformImportDeclaration = (node: ImportDeclaration) => {
+    const source = node.source.value as string
+
     // if we don't hijack ESM and process this file, then we definetly have mocks,
     // so we need to transform imports into dynamic ones, so "vi.mock" can be executed before
-    if (!hijackEsm) {
+    if (!hijackEsm || skipHijack.some(skip => source.match(skip))) {
       const specifiers = transformImportSpecifiers(node)
       const code = specifiers
-        ? `const ${specifiers} = await import('${node.source.value}')\n`
-        : `await import('${node.source.value}')\n`
+        ? `const ${specifiers} = await import('${source}')\n`
+        : `await import('${source}')\n`
       return { code }
     }
 
@@ -131,16 +133,16 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     const hasSpecifiers = node.specifiers.length > 0
     if (hasMocks) {
       const code = hasSpecifiers
-        ? `const { ${viInjectedKey}: ${importId} } = await import('${node.source.value}')\n`
-        : `await import('${node.source.value}')\n`
+        ? `const { ${viInjectedKey}: ${importId} } = await import('${source}')\n`
+        : `await import('${source}')\n`
       return {
         code,
         id: importId,
       }
     }
     const code = hasSpecifiers
-      ? `import { ${viInjectedKey} as ${importId} } from '${node.source.value}'\n`
-      : `import '${node.source.value}'\n`
+      ? `import { ${viInjectedKey} as ${importId} } from '${source}'\n`
+      : `import '${source}'\n`
     return {
       code,
       id: importId,
