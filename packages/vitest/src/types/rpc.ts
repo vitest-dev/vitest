@@ -1,4 +1,5 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { CancelReason } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
 import type { UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
@@ -18,9 +19,15 @@ export interface RuntimeRPC {
   onCollected: (files: File[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
+  onCancel(reason: CancelReason): void
+  getCountOfFailedTests(): number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
+}
+
+export interface RunnerRPC {
+  onCancel: (reason: CancelReason) => void
 }
 
 export interface ContextTestEnvironment {

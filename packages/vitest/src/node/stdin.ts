@@ -12,6 +12,7 @@ const keys = [
   ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
+const cancelKeys = ['space', 'c', ...keys.map(key => key[0])]
 
 export function printShortcutsHelp() {
   stdout().write(
@@ -37,11 +38,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return
     }
 
-    // is running, ignore keypress
-    if (ctx.runningPromise)
-      return
-
     const name = key?.name
+
+    if (ctx.runningPromise) {
+      if (cancelKeys.includes(name))
+        await ctx.cancelCurrentRun('keyboard-input')
+      return
+    }
 
     // quit
     if (name === 'q')
@@ -83,8 +86,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input test name pattern (RegExp)',
       initial: ctx.configOverride.testNamePattern?.source || '',
     }])
-    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
     on()
+    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
   }
 
   async function inputFilePattern() {
@@ -96,8 +99,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       initial: latestFilename,
     }])
     latestFilename = filter.trim()
-    await ctx.changeFilenamePattern(filter.trim())
     on()
+    await ctx.changeFilenamePattern(filter.trim())
   }
 
   let rl: readline.Interface | undefined

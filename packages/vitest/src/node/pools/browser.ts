@@ -15,6 +15,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   }
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
+    ctx.state.clearFiles(project, files)
+
+    let isCancelled = false
+    project.ctx.onCancel(() => {
+      isCancelled = true
+    })
+
     const provider = project.browserProvider!
     providers.add(provider)
 
@@ -24,6 +31,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const isolate = project.config.isolate
     if (isolate) {
       for (const path of paths) {
+        if (isCancelled) {
+          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root)
+          break
+        }
+
         const url = new URL('/', origin)
         url.searchParams.append('path', path)
         url.searchParams.set('id', path)

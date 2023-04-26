@@ -567,6 +567,11 @@ export interface InlineConfig {
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
   */
   chaiConfig?: ChaiConfig
+
+  /**
+   * Stop test execution when given number of tests have failed.
+   */
+  bail?: number
 }
 
 export interface TypecheckConfig {

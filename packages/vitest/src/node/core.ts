@@ -8,6 +8,7 @@ import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
+import type { CancelReason } from '@vitest/runner'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -46,6 +47,7 @@ export class Vitest {
   filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+  isCancelling = false
 
   isFirstRun = true
   restartsCount = 0
@@ -64,6 +66,7 @@ export class Vitest {
 
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
+  private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
@@ -395,13 +398,14 @@ export class Vitest {
 
   async runFiles(paths: WorkspaceSpec[]) {
     const filepaths = paths.map(([, file]) => file)
-
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
 
     // previous run
     await this.runningPromise
+    this._onCancelListeners = []
+    this.isCancelling = false
 
     // schedule the new run
     this.runningPromise = (async () => {
@@ -435,6 +439,11 @@ export class Vitest {
       })
 
     return await this.runningPromise
+  }
+
+  async cancelCurrentRun(reason: CancelReason) {
+    this.isCancelling = true
+    await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -759,5 +768,9 @@ export class Vitest {
 
   onAfterSetServer(fn: OnServerRestartHandler) {
     this._onSetServer.push(fn)
+  }
+
+  onCancel(fn: (reason: CancelReason) => void) {
+    this._onCancelListeners.push(fn)
   }
 }
