@@ -5,8 +5,6 @@ import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
 import type { AcornNode } from 'rollup'
 import type { Node, Positioned } from './esmWalker'
 import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
-import type { WorkspaceProject } from './workspace'
-import type { Vitest } from './core'
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
 You may encounter this issue when importing the mocks API from another module other than 'vitest'.
@@ -60,17 +58,22 @@ const skipHijack = [
   /vite\/dist\/client/,
 ]
 
+interface Options {
+  hijackESM?: boolean
+  cacheDir: string
+}
+
 // this is basically copypaste from Vite SSR
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
 // to not parse the module twice, we reuse the ast to hoist vi.mock here
 // and transform imports into dynamic ones if vi.mock is present
-export function injectVitestModule(project: WorkspaceProject | Vitest, code: string, id: string, parse: (code: string, options: any) => AcornNode) {
+export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode, options: Options) {
   if (skipHijack.some(skip => id.match(skip)))
     return
 
   const hasMocks = regexpHoistable.test(code)
-  const hijackEsm = project.config.slowHijackESM ?? false
+  const hijackEsm = options.hijackESM ?? false
 
   if (!hasMocks && !hijackEsm)
     return
@@ -273,7 +276,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
           node.start + 14 /* 'export default'.length */,
           `${viInjectedKey}.default =`,
         )
-        if (id.startsWith(project.server.config.cacheDir)) {
+        if (id.startsWith(options.cacheDir)) {
           // keep export default for optimized dependencies
           s.append(`\nexport default { ${viInjectedKey}: ${viInjectedKey}.default };\n`)
         }
