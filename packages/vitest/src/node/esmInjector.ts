@@ -98,7 +98,7 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     })
   }
   catch (err) {
-    console.error(err)
+    console.error(`Cannot parse ${id}:\n${(err as any).message}`)
     return
   }
 
@@ -411,8 +411,6 @@ export function injectVitestModule(project: WorkspaceProject | Vitest, code: str
     s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
     s.append(`\nexport { ${viInjectedKey} }`)
   }
-
-  console.error(s.toString())
 
   return {
     ast,
