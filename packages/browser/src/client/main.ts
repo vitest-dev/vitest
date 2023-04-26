@@ -74,7 +74,7 @@ ws.addEventListener('open', async () => {
     config,
     browserHashMap,
     // @ts-expect-error untyped global for internal use
-    moduleCache: globalThis.__vitest_module_cache__,
+    moduleCache: globalThis.__vi_module_cache__,
     rpc: client.rpc,
     safeRpc,
     durations: {

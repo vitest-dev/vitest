@@ -7,7 +7,7 @@ import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
-import { ESMMockerPlugin } from '../../node/plugins/esm-mocker'
+import { ESMTransformPlugin } from '../../node/plugins/esmTransform'
 
 export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
   const root = project.config.root
@@ -34,7 +34,7 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
     plugins: [
       (await import('@vitest/browser')).default('/'),
       CoverageTransform(project.ctx),
-      ESMMockerPlugin(project),
+      ESMTransformPlugin(project),
       {
         enforce: 'post',
         name: 'vitest:browser:config',

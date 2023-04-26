@@ -9,7 +9,7 @@ import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
-import { ESMMockerPlugin } from './esm-mocker'
+import { ESMTransformPlugin } from './esmTransform'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -139,6 +139,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     GlobalSetupPlugin(project, project.ctx.logger),
-    ESMMockerPlugin(project),
+    ESMTransformPlugin(project),
   ]
 }
