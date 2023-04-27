@@ -163,3 +163,13 @@ if (condition) {
 ## Other Options
 
 To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
+
+## Vitest UI
+
+Since Vitest 0.31.0, you can check your coverage report in `Vitest UI`, you only need to add `html` reporter your reporters list.
+
+<img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
+<img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
+
+<img alt="html coverage in Vitest UI" img-light src="/vitest-ui-coverage-light.png">
+<img alt="html coverage in Vitest UI" img-dark src="/vitest-ui-coverage-dark.png">
