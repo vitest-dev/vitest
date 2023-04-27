@@ -1036,6 +1036,9 @@ importers:
       sirv:
         specifier: ^2.0.2
         version: 2.0.2
+      vitest:
+        specifier: '>=0.30.1 <1'
+        version: link:../vitest
     devDependencies:
       '@faker-js/faker':
         specifier: ^7.6.0
