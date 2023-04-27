@@ -285,17 +285,11 @@ export class Vitest {
       return
     }
 
-    try {
-      await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
-    }
-    catch (e) {
-      this.logger.error(e)
-      process.exit(1)
-    }
-
     await this.report('onInit', this)
+
+    await this.initCoverageProvider()
+    await this.coverageProvider?.clean(this.config.coverage.clean)
+    await this.initBrowserProviders()
 
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
