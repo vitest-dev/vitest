@@ -9,7 +9,6 @@ import { provider } from 'std-env'
 import type { EncodedSourceMap } from 'vite-node'
 import { coverageConfigDefaults } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
-// eslint-disable-next-line no-restricted-imports
 import type { AfterSuiteRunMeta, CoverageC8Options, CoverageProvider, ReportContext, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import type { Report } from 'c8'

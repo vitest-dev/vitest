@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-imports */
 import { existsSync, promises as fs } from 'node:fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'

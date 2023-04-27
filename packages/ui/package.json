@@ -43,6 +43,9 @@
     "test:open": "cypress open --component",
     "prepublishOnly": "pnpm build"
   },
+  "peerDependencies": {
+    "vitest": ">=0.31.0 <1"
+  },
   "dependencies": {
     "@vitest/utils": "workspace:*",
     "fast-glob": "^3.2.12",

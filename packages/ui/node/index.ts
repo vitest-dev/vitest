@@ -3,7 +3,7 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import type { ResolvedConfig, Vitest } from '#types'
+import type { ResolvedConfig, Vitest } from 'vitest'
 
 export default (ctx: Vitest) => {
   return <Plugin>{

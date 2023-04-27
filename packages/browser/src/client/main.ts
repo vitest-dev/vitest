@@ -1,5 +1,4 @@
 import { createClient } from '@vitest/ws-client'
-// eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'

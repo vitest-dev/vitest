@@ -6,7 +6,6 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
-// eslint-disable-next-line no-restricted-imports
 import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { getOutputFile } from '../../vitest/src/utils/config-helpers'
