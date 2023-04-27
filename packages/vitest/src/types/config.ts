@@ -188,6 +188,7 @@ export interface InlineConfig {
 
   /**
    * Automatically assign environment based on globs. The first match will be used.
+   * This has effect only when running tests inside Node.js.
    *
    * Format: [glob, environment-name]
    *
@@ -209,13 +210,13 @@ export interface InlineConfig {
    *
    * @default []
    * @example [
-   *   // all tests in "browser" directory will run in an actual browser
-   *   ['tests/browser/**', 'browser'],
+   *   // all tests in "child_process" directory will run using "child_process" API
+   *   ['tests/child_process/**', 'child_process'],
    *   // all other tests will run based on "threads" option, if you didn't specify other globs
    *   // ...
    * ]
    */
-  poolMatchGlobs?: [string, VitestPool][]
+  poolMatchGlobs?: [string, Omit<VitestPool, 'browser'>][]
 
   /**
    * Update snapshot

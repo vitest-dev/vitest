@@ -8,6 +8,7 @@ import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
 import { setupDialogsSpy } from './dialog'
 import { BrowserSnapshotEnvironment } from './snapshot'
+import { VitestBrowserClientMocker } from './mocker'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -72,7 +73,8 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
-    moduleCache: new Map(),
+    // @ts-expect-error untyped global for internal use
+    moduleCache: globalThis.__vi_module_cache__,
     rpc: client.rpc,
     safeRpc,
     durations: {
@@ -80,6 +82,8 @@ ws.addEventListener('open', async () => {
       prepare: 0,
     },
   }
+  // @ts-expect-error mocking vitest apis
+  globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()
 
   const paths = getQueryPaths()
 

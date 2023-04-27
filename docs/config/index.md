@@ -963,7 +963,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 
 ### browser
 
-- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
+- **Type:** `{ enabled?, name?, provider?, headless?, api?, slowHijackESM? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **Version:** Since Vitest 0.29.4
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
@@ -1034,6 +1034,19 @@ export interface BrowserProvider {
 ::: warning
 This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
 :::
+
+#### browser.slowHijackESM
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Version:** Since Vitest 0.31.0
+
+When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
+
+This option has no effect on tests running inside Node.js.
+
+This options is enabled by default when running in the browser. If you don't rely on spying on ES modules with `vi.spyOn` and don't use `vi.mock`, you can disable this to get a slight boost to performance.
+
 
 ### clearMocks
 
@@ -1358,7 +1371,7 @@ The number of milliseconds after which a test is considered slow and reported as
 
 - **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`
 - **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40 }`
-- **Version:** Vitest 0.30.0
+- **Version:** Since Vitest 0.30.0
 
 Equivalent to [Chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js).
 
