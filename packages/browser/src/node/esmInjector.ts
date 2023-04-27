@@ -23,15 +23,10 @@ interface Options {
 // this is basically copypaste from Vite SSR
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
-// to not parse the module twice, we reuse the ast to hoist vi.mock here
-// and transform imports into dynamic ones if vi.mock is present
 export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode, options: Options) {
-  if (skipHijack.some(skip => id.match(skip)))
-    return
-
   const hijackEsm = options.hijackESM ?? false
 
-  if (!hijackEsm)
+  if (!hijackEsm || skipHijack.some(skip => id.match(skip)))
     return
 
   const s = new MagicString(code)
