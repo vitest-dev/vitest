@@ -1026,10 +1026,7 @@ export interface BrowserProvider {
 This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
 :::
 
-### browser.slowHijackESM
-
-
-#### slowHijackESM
+#### browser.slowHijackESM
 
 - **Type:** `boolean`
 - **Default:** `true`
