@@ -855,6 +855,9 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2
     devDependencies:
+      '@types/estree':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@types/ws':
         specifier: ^8.5.4
         version: 8.5.4
@@ -867,6 +870,12 @@ importers:
       '@vitest/ws-client':
         specifier: workspace:*
         version: link:../ws-client
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
+      periscopic:
+        specifier: ^3.1.0
+        version: 3.1.0
       rollup:
         specifier: 3.20.2
         version: 3.20.2
@@ -1203,9 +1212,6 @@ importers:
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
-      estree-walker:
-        specifier: ^3.0.3
-        version: 3.0.3
       local-pkg:
         specifier: ^0.4.3
         version: 0.4.3
@@ -1327,9 +1333,6 @@ importers:
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
-      periscopic:
-        specifier: ^3.1.0
-        version: 3.1.0
       pkg-types:
         specifier: ^1.0.2
         version: 1.0.2
@@ -8214,12 +8217,13 @@ packages:
 
   /@types/estree@1.0.1:
     resolution: {integrity: sha512-LG4opVs2ANWZ1TJoKc937iMmNstM/d0ae1vNbnBvBhqCSezgVUOzcLCqbI5elV8Vy6WKwKjaqR+zO9VKirBBCA==}
+    dev: true
 
   /@types/fs-extra@11.0.1:
     resolution: {integrity: sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==}
     dependencies:
       '@types/jsonfile': 6.1.1
-      '@types/node': 18.16.0
+      '@types/node': 18.16.1
     dev: true
 
   /@types/fs-extra@9.0.13:
@@ -8374,10 +8378,6 @@ packages:
 
   /@types/node@18.15.11:
     resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
-
-  /@types/node@18.16.0:
-    resolution: {integrity: sha512-BsAaKhB+7X+H4GnSjGhJG9Qi8Tw+inU9nJDwmD5CgOmBLEI6ArdhikpLX7DjbjDRDTbqZzU2LSQNZg8WGPiSZQ==}
-    dev: true
 
   /@types/node@18.16.1:
     resolution: {integrity: sha512-DZxSZWXxFfOlx7k7Rv4LAyiMroaxa3Ly/7OOzZO8cBNho0YzAi4qlbrx8W27JGqG57IgR/6J7r+nOJWw6kcvZA==}
@@ -8600,7 +8600,7 @@ packages:
   /@types/ws@8.5.4:
     resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
     dependencies:
-      '@types/node': 18.16.0
+      '@types/node': 18.16.1
     dev: true
 
   /@types/yargs-parser@21.0.0:
@@ -14238,6 +14238,7 @@ packages:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
     dependencies:
       '@types/estree': 1.0.1
+    dev: true
 
   /esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}

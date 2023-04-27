@@ -272,13 +272,11 @@ export function resolveConfig(
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  resolved.browser.slowHijackESM ??= true
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
   }
-
-  if (resolved.browser.enabled)
-    resolved.slowHijackESM ??= true
 
   return resolved
 }

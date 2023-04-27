@@ -425,15 +425,6 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
-   * Enabled by default when running in browser.
-   *
-   * @default false
-   * @experimental
-   */
-  slowHijackESM?: boolean
-
-  /**
    * Determine the transform method of modules
    */
   transformMode?: {

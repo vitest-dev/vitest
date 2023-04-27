@@ -1,27 +1,17 @@
 import { Parser } from 'acorn'
-import { injectVitestModule } from 'vitest/src/node/esmInjector'
+import { hoistMocks } from 'vitest/src/node/hoistMocks'
 import { expect, test } from 'vitest'
 
 function parse(code: string, options: any) {
   return Parser.parse(code, options)
 }
 
-function injectSimpleCode(code: string) {
-  return injectVitestModule(code, '/test.js', parse, {
-    hijackESM: false,
-    cacheDir: '/tmp',
-  })?.code.trim()
-}
-
-function injectHijackedCode(code: string) {
-  return injectVitestModule(code, '/test.js', parse, {
-    hijackESM: true,
-    cacheDir: '/tmp',
-  })?.code.trim()
+function hoistSimpleCode(code: string) {
+  return hoistMocks(code, '/test.js', parse)?.code.trim()
 }
 
 test('hoists mock, unmock, hoisted', () => {
-  expect(injectSimpleCode(`
+  expect(hoistSimpleCode(`
   vi.mock('path', () => {})
   vi.unmock('path')
   vi.hoisted(() => {})
@@ -34,33 +24,15 @@ test('hoists mock, unmock, hoisted', () => {
 })
 
 test('always hoists import from vitest', () => {
-  expect(injectSimpleCode(`
+  expect(hoistSimpleCode(`
   import { vi } from 'vitest'
   vi.mock('path', () => {})
   vi.unmock('path')
   vi.hoisted(() => {})
   import { test } from 'vitest'
   `)).toMatchInlineSnapshot(`
-    "import { vi } from 'vitest'
-    import { test } from 'vitest'
-    vi.mock('path', () => {})
-    vi.unmock('path')
-    vi.hoisted(() => {})"
-  `)
-})
-
-test('always hoists mock, unmock, hoisted when modules are hijacked', () => {
-  expect(injectHijackedCode(`
-  import { vi } from 'vitest'
-  vi.mock('path', () => {})
-  vi.unmock('path')
-  vi.hoisted(() => {})
-  import { test } from 'vitest'
-  `)).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vitest'
-    const { vi } = __vi_esm_0__;
-    import { __vi_inject__ as __vi_esm_1__ } from 'vitest'
-    const { test } = __vi_esm_1__;
+    "const { vi } = await import('vitest')
+    const { test } = await import('vitest')
     vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})"
@@ -68,7 +40,7 @@ test('always hoists mock, unmock, hoisted when modules are hijacked', () => {
 })
 
 test('always hoists all imports but they are under mocks', () => {
-  expect(injectSimpleCode(`
+  expect(hoistSimpleCode(`
   import { vi } from 'vitest'
   import { someValue } from './path.js'
   import { someValue2 } from './path2.js'
@@ -77,34 +49,12 @@ test('always hoists all imports but they are under mocks', () => {
   vi.hoisted(() => {})
   import { test } from 'vitest'
   `)).toMatchInlineSnapshot(`
-    "import { vi } from 'vitest'
-    import { test } from 'vitest'
+    "const { vi } = await import('vitest')
+    const { test } = await import('vitest')
     vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})
     const { someValue } = await import('./path.js')
     const { someValue2 } = await import('./path2.js')"
-  `)
-})
-
-test('always hoists all imports but they are under mocks when modules are hijacked', () => {
-  expect(injectHijackedCode(`
-  import { vi } from 'vitest'
-  import { someValue } from './path.js'
-  import { someValue2 } from './path2.js'
-  vi.mock('path', () => {})
-  vi.unmock('path')
-  vi.hoisted(() => {})
-  import { test } from 'vitest'
-  `)).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vitest'
-    const { vi } = __vi_esm_0__;
-    import { __vi_inject__ as __vi_esm_3__ } from 'vitest'
-    const { test } = __vi_esm_3__;
-    vi.mock('path', () => {})
-    vi.unmock('path')
-    vi.hoisted(() => {})
-    const { __vi_inject__: __vi_esm_1__ } = await __vi_wrap_module__(import('./path.js'))
-    const { __vi_inject__: __vi_esm_2__ } = await __vi_wrap_module__(import('./path2.js'))"
   `)
 })

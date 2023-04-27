@@ -1,56 +1,13 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
-import type { CallExpression, Expression, Identifier, ImportDeclaration, VariableDeclaration } from 'estree'
-import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
+import type { Expression, ImportDeclaration } from 'estree'
 import type { AcornNode } from 'rollup'
 import type { Node, Positioned } from './esmWalker'
 import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
 
-const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
-You may encounter this issue when importing the mocks API from another module other than 'vitest'.
-To fix this issue you can either:
-- import the mocks API directly from 'vitest'
-- enable the 'globals' options`
-
-const API_NOT_FOUND_CHECK = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
-+ `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
-
-function isIdentifier(node: any): node is Positioned<Identifier> {
-  return node.type === 'Identifier'
-}
-
-function transformImportSpecifiers(node: ImportDeclaration, mode: 'object' | 'named' = 'object') {
-  const specifiers = node.specifiers
-
-  if (specifiers.length === 1 && specifiers[0].type === 'ImportNamespaceSpecifier')
-    return specifiers[0].local.name
-
-  const dynamicImports = node.specifiers.map((specifier) => {
-    if (specifier.type === 'ImportDefaultSpecifier')
-      return `default ${mode === 'object' ? ':' : 'as'} ${specifier.local.name}`
-
-    if (specifier.type === 'ImportSpecifier') {
-      const local = specifier.local.name
-      const imported = specifier.imported.name
-      if (local === imported)
-        return local
-      return `${imported} ${mode === 'object' ? ':' : 'as'} ${local}`
-    }
-
-    return null
-  }).filter(Boolean).join(', ')
-
-  if (!dynamicImports.length)
-    return ''
-
-  return `{ ${dynamicImports} }`
-}
-
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
 const viExportAllHelper = '__vi_export_all__'
-
-const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
 
 const skipHijack = [
   '/@vite/client',
@@ -72,10 +29,9 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   if (skipHijack.some(skip => id.match(skip)))
     return
 
-  const hasMocks = regexpHoistable.test(code)
   const hijackEsm = options.hijackESM ?? false
 
-  if (!hasMocks && !hijackEsm)
+  if (!hijackEsm)
     return
 
   const s = new MagicString(code)
@@ -100,8 +56,6 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   const hoistIndex = 0
 
   let hasInjected = false
-  let hoistedCode = ''
-  let hoistedVitestImports = ''
 
   // this will tranfrom import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
@@ -110,27 +64,11 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   const transformImportDeclaration = (node: ImportDeclaration) => {
     const source = node.source.value as string
 
-    // if we don't hijack ESM and process this file, then we definetly have mocks,
-    // so we need to transform imports into dynamic ones, so "vi.mock" can be executed before
-    if (!hijackEsm || skipHijack.some(skip => source.match(skip))) {
-      const specifiers = transformImportSpecifiers(node)
-      const code = specifiers
-        ? `const ${specifiers} = await import('${source}')\n`
-        : `await import('${source}')\n`
-      return { code }
-    }
+    if (skipHijack.some(skip => source.match(skip)))
+      return null
 
     const importId = `__vi_esm_${uid++}__`
     const hasSpecifiers = node.specifiers.length > 0
-    if (hasMocks) {
-      const code = hasSpecifiers
-        ? `const { ${viInjectedKey}: ${importId} } = await __vi_wrap_module__(import('${source}'))\n`
-        : `await __vi_wrap_module__(import('${source}'))\n`
-      return {
-        code,
-        id: importId,
-      }
-    }
     const code = hasSpecifiers
       ? `import { ${viInjectedKey} as ${importId} } from '${source}'\n`
       : `import '${source}'\n`
@@ -141,19 +79,11 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   }
 
   function defineImport(node: ImportDeclaration) {
-    // always hoist vitest import to top of the file, so
-    // "vi" helpers can access it
-    if (node.source.value === 'vitest') {
-      const importId = `__vi_esm_${uid++}__`
-      const code = hijackEsm
-        ? `import { ${viInjectedKey} as ${importId} } from 'vitest'\nconst ${transformImportSpecifiers(node)} = ${importId};\n`
-        : `import ${transformImportSpecifiers(node, 'named')} from 'vitest'\n`
-      hoistedVitestImports += code
-      return
-    }
-    const { code, id } = transformImportDeclaration(node)
-    s.appendLeft(hoistIndex, code)
-    return id
+    const declaration = transformImportDeclaration(node)
+    if (!declaration)
+      return null
+    s.appendLeft(hoistIndex, declaration.code)
+    return declaration.id
   }
 
   function defineImportAll(source: string) {
@@ -178,9 +108,9 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
     // import * as ok from 'foo' --> ok -> __import_foo__
     if (node.type === 'ImportDeclaration') {
       const importId = defineImport(node)
-      s.remove(node.start, node.end)
-      if (!hijackEsm || !importId)
+      if (!importId)
         continue
+      s.remove(node.start, node.end)
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
           idToImportMap.set(
@@ -201,9 +131,6 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
 
   // 2. check all export statements and define exports
   for (const node of ast.body as Node[]) {
-    if (!hijackEsm)
-      break
-
     // named exports
     if (node.type === 'ExportNamedDeclaration') {
       if (node.declaration) {
@@ -298,115 +225,50 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
     }
   }
 
-  function CallExpression(node: Positioned<CallExpression>) {
-    if (
-      node.callee.type === 'MemberExpression'
-      && isIdentifier(node.callee.object)
-      && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-      && isIdentifier(node.callee.property)
-    ) {
-      const methodName = node.callee.property.name
+  // 3. convert references to import bindings & import.meta references
+  esmWalker(ast, {
+    onIdentifier(id, parent, parentStack) {
+      const grandparent = parentStack[1]
+      const binding = idToImportMap.get(id.name)
+      if (!binding)
+        return
 
-      if (methodName === 'mock' || methodName === 'unmock') {
-        hoistedCode += `${code.slice(node.start, node.end)}\n`
-        s.remove(node.start, node.end)
-      }
-
-      if (methodName === 'hoisted') {
-        const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
-        const init = declarationNode?.declarations[0]?.init
-        const isViHoisted = (node: CallExpression) => {
-          return node.callee.type === 'MemberExpression'
-            && isIdentifier(node.callee.object)
-            && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-            && isIdentifier(node.callee.property)
-            && node.callee.property.name === 'hoisted'
-        }
-
-        const canMoveDeclaration = (init
-          && init.type === 'CallExpression'
-          && isViHoisted(init)) /* const v = vi.hoisted() */
-          || (init
-              && init.type === 'AwaitExpression'
-              && init.argument.type === 'CallExpression'
-              && isViHoisted(init.argument)) /* const v = await vi.hoisted() */
-
-        if (canMoveDeclaration) {
-          // hoist "const variable = vi.hoisted(() => {})"
-          hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
-          s.remove(declarationNode.start, declarationNode.end)
-        }
-        else {
-          // hoist "vi.hoisted(() => {})"
-          hoistedCode += `${code.slice(node.start, node.end)}\n`
-          s.remove(node.start, node.end)
-        }
-      }
-    }
-  }
-
-  // if we don't need to inject anything, skip the walking
-  if (hijackEsm) {
-    // 3. convert references to import bindings & import.meta references
-    esmWalker(ast, {
-      onCallExpression: CallExpression,
-      onIdentifier(id, parent, parentStack) {
-        const grandparent = parentStack[1]
-        const binding = idToImportMap.get(id.name)
-        if (!binding)
-          return
-
-        if (isStaticProperty(parent) && parent.shorthand) {
-          // let binding used in a property shorthand
-          // { foo } -> { foo: __import_x__.foo }
-          // skip for destructuring patterns
-          if (
-            !isNodeInPattern(parent)
+      if (isStaticProperty(parent) && parent.shorthand) {
+        // let binding used in a property shorthand
+        // { foo } -> { foo: __import_x__.foo }
+        // skip for destructuring patterns
+        if (
+          !isNodeInPattern(parent)
             || isInDestructuringAssignment(parent, parentStack)
-          )
-            s.appendLeft(id.end, `: ${binding}`)
-        }
-        else if (
-          (parent.type === 'PropertyDefinition'
+        )
+          s.appendLeft(id.end, `: ${binding}`)
+      }
+      else if (
+        (parent.type === 'PropertyDefinition'
             && grandparent?.type === 'ClassBody')
           || (parent.type === 'ClassDeclaration' && id === parent.superClass)
-        ) {
-          if (!declaredConst.has(id.name)) {
-            declaredConst.add(id.name)
-            // locate the top-most node containing the class declaration
-            const topNode = parentStack[parentStack.length - 2]
-            s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
-          }
+      ) {
+        if (!declaredConst.has(id.name)) {
+          declaredConst.add(id.name)
+          // locate the top-most node containing the class declaration
+          const topNode = parentStack[parentStack.length - 2]
+          s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
         }
-        else {
-          s.update(id.start, id.end, binding)
-        }
-      },
-      // TODO: make env updatable
-      onImportMeta() {
-        // s.update(node.start, node.end, viImportMetaKey)
-      },
-      onDynamicImport(node) {
-        const replace = '__vi_wrap_module__(import('
-        s.overwrite(node.start, (node.source as Positioned<Expression>).start, replace)
-        s.overwrite(node.end - 1, node.end, '))')
-      },
-    })
-  }
-  // we still need to hoist "vi" helper
-  else {
-    simpleWalk(ast, {
-      CallExpression: CallExpression as any,
-    })
-  }
-
-  if (hoistedCode || hoistedVitestImports) {
-    s.prepend(
-      hoistedVitestImports
-      + ((!hoistedVitestImports && hoistedCode) ? API_NOT_FOUND_CHECK : '')
-      + hoistedCode,
-    )
-  }
+      }
+      else {
+        s.update(id.start, id.end, binding)
+      }
+    },
+    // TODO: make env updatable
+    onImportMeta() {
+      // s.update(node.start, node.end, viImportMetaKey)
+    },
+    onDynamicImport(node) {
+      const replace = '__vi_wrap_module__(import('
+      s.overwrite(node.start, (node.source as Positioned<Expression>).start, replace)
+      s.overwrite(node.end - 1, node.end, '))')
+    },
+  })
 
   if (hasInjected) {
     // make sure "__vi_injected__" is declared as soon as possible

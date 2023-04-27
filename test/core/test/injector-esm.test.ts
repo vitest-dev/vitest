@@ -1,5 +1,5 @@
 import { Parser } from 'acorn'
-import { injectVitestModule } from 'vitest/src/node/esmInjector'
+import { injectVitestModule } from '@vitest/browser/src/node/esmInjector'
 import { expect, test } from 'vitest'
 import { transformWithEsbuild } from 'vite'
 
@@ -753,6 +753,35 @@ export default (function getRandom() {
     "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
     __vi_inject__.default = (class A {});
     export { __vi_inject__ }"
+  `)
+})
+
+test('track scope in for loops', async () => {
+  expect(
+    injectSimpleCode(`
+import { test } from './test.js'
+for (const test of tests) {
+  console.log(test)
+}
+for (let test = 0; test < 10; test++) {
+  console.log(test)
+}
+for (const test in tests) {
+  console.log(test)
+}`),
+  ).toMatchInlineSnapshot(`
+    "import { __vi_inject__ as __vi_esm_0__ } from './test.js'
+
+
+    for (const test of tests) {
+      console.log(test)
+    }
+    for (let test = 0; test < 10; test++) {
+      console.log(test)
+    }
+    for (const test in tests) {
+      console.log(test)
+    }"
   `)
 })
 

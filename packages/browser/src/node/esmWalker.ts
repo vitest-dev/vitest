@@ -1,5 +1,4 @@
 import type {
-  CallExpression,
   Function as FunctionNode,
   Identifier,
   ImportExpression,
@@ -23,7 +22,6 @@ interface Visitors {
     parent: Node,
     parentStack: Node[],
   ) => void
-  onCallExpression: (node: Positioned<CallExpression>) => void
   onImportMeta: (node: Node) => void
   onDynamicImport: (node: Positioned<ImportExpression>) => void
 }
@@ -42,7 +40,7 @@ export function isNodeInPattern(node: _Node): node is Property {
  */
 export function esmWalker(
   root: Node,
-  { onIdentifier, onImportMeta, onDynamicImport, onCallExpression }: Visitors,
+  { onIdentifier, onImportMeta, onDynamicImport }: Visitors,
 ) {
   const parentStack: Node[] = []
   const varKindStack: VariableDeclaration['kind'][] = []
@@ -116,9 +114,6 @@ export function esmWalker(
 
       else if (node.type === 'ImportExpression')
         onDynamicImport(node)
-
-      else if (node.type === 'CallExpression')
-        onCallExpression(node)
 
       if (node.type === 'Identifier') {
         if (
@@ -280,14 +275,16 @@ export function isFunctionNode(node: _Node): node is FunctionNode {
   return functionNodeTypeRE.test(node.type)
 }
 
+const blockNodeTypeRE = /^BlockStatement$|^For(?:In|Of)?Statement$/
+function isBlock(node: _Node) {
+  return blockNodeTypeRE.test(node.type)
+}
+
 function findParentScope(
   parentStack: _Node[],
   isVar = false,
 ): _Node | undefined {
-  const predicate = isVar
-    ? isFunctionNode
-    : (node: _Node) => node.type === 'BlockStatement'
-  return parentStack.find(predicate)
+  return parentStack.find(isVar ? isFunctionNode : isBlock)
 }
 
 export function isInDestructuringAssignment(

@@ -378,9 +378,4 @@ export class VitestMocker {
   public queueUnmock(id: string, importer: string) {
     VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
   }
-
-  public async prepare() {
-    if (VitestMocker.pendingIds.length)
-      await this.resolveMocks()
-  }
 }
