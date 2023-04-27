@@ -1,5 +1,9 @@
-import concordance from 'concordance'
+import * as concordance from 'concordance'
 import { getColors } from './colors'
+
+const concordanceModule = 'default' in concordance
+  ? concordance.default
+  : concordance as any
 
 interface DisplayOptions {
   theme?: any
@@ -89,6 +93,6 @@ export function getConcordanceTheme() {
   }
 }
 
-export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions) {
-  return concordance.diff(expected, actual, options)
+export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions): string {
+  return concordanceModule.diff(expected, actual, options)
 }

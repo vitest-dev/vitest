@@ -188,6 +188,18 @@ export interface BaseCoverageOptions {
   statements?: number
 
   /**
+   * Watermarks for statements, lines, branches and functions.
+   *
+   * Default value is `[50,80]` for each property.
+   */
+  watermarks?: {
+    statements?: [number, number]
+    functions?: [number, number]
+    branches?: [number, number]
+    lines?: [number, number]
+  }
+
+  /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
    *
    * @default false
@@ -202,18 +214,6 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
-
-  /**
-   * Watermarks for statements, lines, branches and functions.
-   *
-   * Default value is `[50,80]` for each property.
-   */
-  watermarks?: {
-    statements?: [number, number]
-    functions?: [number, number]
-    branches?: [number, number]
-    lines?: [number, number]
-  }
 }
 
 export interface CoverageC8Options extends BaseCoverageOptions {

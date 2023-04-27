@@ -1,0 +1,14 @@
+{
+  "name": "@vitest/test-bail",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:*",
+    "execa": "^7.0.0",
+    "vite": "latest",
+    "vitest": "workspace:*",
+    "webdriverio": "latest"
+  }
+}

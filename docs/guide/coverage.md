@@ -159,3 +159,7 @@ For `c8` this does not cause any issues. You can use `c8 ignore` comments with T
 /* c8 ignore next 3 */
 if (condition) {
 ```
+
+## Other Options
+
+To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).

@@ -1,3 +1,4 @@
+import { relative } from 'pathe'
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
@@ -124,5 +125,24 @@ export class StateManager {
         task.logs = []
       task.logs.push(log)
     }
+  }
+
+  getCountOfFailedTests() {
+    return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
+  }
+
+  cancelFiles(files: string[], root: string) {
+    this.collectFiles(files.map(filepath => ({
+      filepath,
+      name: relative(root, filepath),
+      id: filepath,
+      mode: 'skip',
+      type: 'suite',
+      result: {
+        state: 'skip',
+      },
+      // Cancelled files have not yet collected tests
+      tasks: [],
+    })))
   }
 }
