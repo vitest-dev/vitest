@@ -1412,7 +1412,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 8.7.0(typescript@5.0.3)
+        version: 8.8.0(typescript@5.0.3)
 
   test/base:
     devDependencies:
