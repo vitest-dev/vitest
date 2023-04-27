@@ -9,7 +9,6 @@ function parse(code: string, options: any) {
 
 function injectSimpleCode(code: string) {
   return injectVitestModule(code, '/test.js', parse, {
-    hijackESM: true,
     cacheDir: '/tmp',
   })?.code
 }

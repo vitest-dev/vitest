@@ -16,7 +16,6 @@ const skipHijack = [
 ]
 
 interface Options {
-  hijackESM?: boolean
   cacheDir: string
 }
 
@@ -24,9 +23,7 @@ interface Options {
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
 export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode, options: Options) {
-  const hijackEsm = options.hijackESM ?? false
-
-  if (!hijackEsm || skipHijack.some(skip => id.match(skip)))
+  if (skipHijack.some(skip => id.match(skip)))
     return
 
   const s = new MagicString(code)

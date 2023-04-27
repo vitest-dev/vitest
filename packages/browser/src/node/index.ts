@@ -57,8 +57,10 @@ export default (project: any, base = '/'): Plugin[] => {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
       transform(source, id) {
+        const hijackESM = project.config.browser.slowHijackESM ?? false
+        if (!hijackESM)
+          return
         return injectVitestModule(source, id, this.parse, {
-          hijackESM: project.config.browser.slowHijackESM ?? false,
           cacheDir: project.server.config.cacheDir,
         })
       },
