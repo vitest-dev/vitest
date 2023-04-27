@@ -100,8 +100,12 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
     const sourceMapMeta: Record<SourceMapMeta['url'], MapAndSource> = {}
     const extensions = Array.isArray(this.options.extension) ? this.options.extension : [this.options.extension]
 
+    const fetchCache = this.ctx.projects.map(project =>
+      Array.from(project.vitenode.fetchCache.entries()),
+    ).flat()
+
     const entries = Array
-      .from(this.ctx.vitenode.fetchCache.entries())
+      .from(fetchCache)
       .filter(entry => report._shouldInstrument(entry[0]))
       .map(([file, { result }]) => {
         if (!result.map)
