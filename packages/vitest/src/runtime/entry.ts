@@ -71,6 +71,20 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
     await originalOnAfterRun?.call(testRunner, files)
   }
 
+  const originalOnAfterRunTest = testRunner.onAfterRunTest
+  testRunner.onAfterRunTest = async (test) => {
+    if (config.bail && test.result?.state === 'fail') {
+      const previousFailures = await rpc().getCountOfFailedTests()
+      const currentFailures = 1 + previousFailures
+
+      if (currentFailures >= config.bail) {
+        rpc().onCancel('test-failure')
+        testRunner.onCancel?.('test-failure')
+      }
+    }
+    await originalOnAfterRunTest?.call(testRunner, test)
+  }
+
   return testRunner
 }
 
@@ -85,6 +99,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
     setupChaiConfig(config.chaiConfig)
 
   const runner = await getTestRunner(config, executor)
+  workerState.onCancel.then(reason => runner.onCancel?.(reason))
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
@@ -108,8 +123,6 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
       workerState.filepath = file
 
       await startTests([file], runner)
-
-      workerState.filepath = undefined
 
       // reset after tests, because user might call `vi.setConfig` in setupFile
       vi.resetConfig()

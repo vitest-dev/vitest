@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
+import { second } from '../src/function-count'
 
 const { pythagoras } = await (() => {
   if ('__vitest_browser__' in globalThis)
@@ -21,4 +22,8 @@ test('implicit else', () => {
 
 test('import meta env', () => {
   expect(useImportEnv()).toBe(true)
+})
+
+test('cover function counts', () => {
+  expect(second()).toBe(2)
 })

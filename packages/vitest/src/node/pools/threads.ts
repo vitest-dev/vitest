@@ -6,7 +6,7 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { distDir } from '../../paths'
-import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest, WorkerContext } from '../../types'
+import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
@@ -20,9 +20,10 @@ function createWorkerChannel(project: WorkspaceProject) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  createBirpc<{}, RuntimeRPC>(
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
     createMethodsRPC(project),
     {
+      eventNames: ['onCancel'],
       post(v) {
         port.postMessage(v)
       },
@@ -31,6 +32,8 @@ function createWorkerChannel(project: WorkspaceProject) {
       },
     },
   )
+
+  project.ctx.onCancel(reason => rpc.onCancel(reason))
 
   return { workerPort, port }
 }
@@ -93,6 +96,11 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         // Worker got stuck and won't terminate - this may cause process to hang
         if (error instanceof Error && /Failed to terminate worker/.test(error.message))
           ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}.`)
+
+        // Intentionally cancelled
+        else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
+          ctx.state.cancelFiles(files, ctx.config.root)
+
         else
           throw error
       }
@@ -106,6 +114,9 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     const sequencer = new Sequencer(ctx)
 
     return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
+
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
         if (configs.has(project))

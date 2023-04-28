@@ -50,7 +50,7 @@ it('toUpperCase', () => {
 })
 ```
 
-Instead of creating a snapshot file, Vitest will modify the test file directory to update the snapshot as a string:
+Instead of creating a snapshot file, Vitest will modify the test file directly to update the snapshot as a string:
 
 ```ts
 import { expect, it } from 'vitest'

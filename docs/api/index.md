@@ -11,8 +11,20 @@ type Awaitable<T> = T | PromiseLike<T>
 type TestFunction = () => Awaitable<void>
 
 interface TestOptions {
+  /**
+   * Will fail the test if it takes too long to execute
+   */
   timeout?: number
+  /**
+   * Will retry the test specific number of times if it fails
+   */
   retry?: number
+  /**
+   * Will repeat the same test several times even if it fails each time
+   * If you have "retry" option and it fails, it will use every retry in each cycle
+   * Useful for debugging random failings
+   */
+  repeats?: number
 }
 ```
 
