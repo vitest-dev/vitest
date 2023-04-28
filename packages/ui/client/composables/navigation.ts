@@ -7,12 +7,15 @@ export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
 export const disableCoverage = ref(true)
 export const coverage = computed(() => config.value?.coverage)
-export const coverageEnabled = computed(() => {
+export const coverageConfigured = computed(() => {
   if (!config.value?.api?.port)
     return false
 
-  const cov = coverage.value
-  return cov?.enabled && cov.reporter.map(([reporterName]) => reporterName).includes('html')
+  return coverage.value?.enabled
+})
+export const coverageEnabled = computed(() => {
+  return coverageConfigured.value
+    && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {

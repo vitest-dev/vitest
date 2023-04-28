@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { Tooltip as VueTooltip } from 'floating-vue'
 import {
+  coverageConfigured,
   coverageEnabled,
   coverageVisible,
   currentModule,
@@ -45,8 +47,24 @@ async function onRunAll(files?: File[]) {
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
+        <VueTooltip
+          v-if="coverageConfigured && !coverageEnabled"
+          title="Coverage enabled but missing html reporter"
+          class="w-1.4em h-1.4em op100 rounded flex color-red5 dark:color-#f43f5e"
+        >
+          <div class="i-carbon:folder-off ma" />
+          <template #popper>
+            <div class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+              <div class="i-carbon:information-square w-1.5em h-1.5em" />
+              <div>Coverage enabled but missing html reporter.</div>
+              <div style="grid-column: 2">
+                Add html reporter to your configuration to see coverage here.
+              </div>
+            </div>
+          </template>
+        </VueTooltip>
         <IconButton
-          v-show="!dashboardVisible"
+          v-show="(coverageConfigured && !coverageEnabled) || !dashboardVisible"
           v-tooltip.bottom="'Dashboard'"
           title="Show dashboard"
           class="!animate-100ms"
