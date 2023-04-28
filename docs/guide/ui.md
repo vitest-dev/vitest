@@ -34,7 +34,7 @@ export default {
 }
 ```
 
-Since Vitest 0.31.0, you can check your coverage report in `Vitest UI`, you only need to add `html` reporter: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+Since Vitest 0.31.0, you can check your coverage report in `Vitest UI`: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
 ::: warning
 If you still want to see how your tests are running in real time in the terminal, don't forget to add `default` reporter to `reporters` option: `['default', 'html']`.

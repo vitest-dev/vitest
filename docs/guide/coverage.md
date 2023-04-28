@@ -166,8 +166,9 @@ To see all configurable options for coverage, see the [coverage Config Reference
 
 ## Vitest UI
 
-Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](./ui), you only need to add `html` reporter.
+Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](./ui).
 
+If you have configured coverage reporters, don't forget to add `html` reporter to the list, Vitest UI will only enable html coverage report if it is present.
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
