@@ -776,7 +776,7 @@ The reporter has three different types:
   }
   ```
 
-Since Vitest 0.31.0, you can check your coverage report in `Vitest UI`: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
 #### coverage.skipFull
 
