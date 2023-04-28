@@ -47,10 +47,19 @@ async function onRunAll(files?: File[]) {
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
+        <IconButton
+          v-show="(coverageConfigured && !coverageEnabled) || !dashboardVisible"
+          v-tooltip.bottom="'Dashboard'"
+          title="Show dashboard"
+          class="!animate-100ms"
+          animate-count-1
+          icon="i-carbon:dashboard"
+          @click="showDashboard(true)"
+        />
         <VueTooltip
           v-if="coverageConfigured && !coverageEnabled"
           title="Coverage enabled but missing html reporter"
-          class="w-1.4em h-1.4em op100 rounded flex color-red5 dark:color-#f43f5e"
+          class="w-1.4em h-1.4em op100 rounded flex color-red5 dark:color-#f43f5e cursor-help"
         >
           <div class="i-carbon:folder-off ma" />
           <template #popper>
@@ -63,15 +72,6 @@ async function onRunAll(files?: File[]) {
             </div>
           </template>
         </VueTooltip>
-        <IconButton
-          v-show="(coverageConfigured && !coverageEnabled) || !dashboardVisible"
-          v-tooltip.bottom="'Dashboard'"
-          title="Show dashboard"
-          class="!animate-100ms"
-          animate-count-1
-          icon="i-carbon:dashboard"
-          @click="showDashboard(true)"
-        />
         <IconButton
           v-if="coverageEnabled"
           v-show="!coverageVisible"
