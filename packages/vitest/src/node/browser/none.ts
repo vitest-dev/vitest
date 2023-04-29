@@ -2,7 +2,7 @@ import type { BrowserProvider } from '../../types/browser'
 import type { WorkspaceProject } from '../workspace'
 
 export class NoneBrowserProvider implements BrowserProvider {
-  public name = 'playwright'
+  public name = 'none'
   private ctx!: WorkspaceProject
 
   getSupportedBrowsers() {
