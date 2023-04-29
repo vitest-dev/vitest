@@ -1,3 +1,4 @@
+import { NoneBrowserProvider } from '../node/browser/none'
 import { PlaywrightBrowserProvider } from '../node/browser/playwright'
 import { WebdriverBrowserProvider } from '../node/browser/webdriver'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
@@ -14,6 +15,9 @@ export async function getBrowserProvider(options: ResolvedBrowserOptions, loader
 
     case 'playwright':
       return PlaywrightBrowserProvider
+
+    case 'none':
+      return NoneBrowserProvider
 
     default:
       break

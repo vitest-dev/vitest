@@ -36,7 +36,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'webdriverio'
    */
-  provider?: 'webdriverio' | 'playwright' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
 
   /**
    * enable headless mode

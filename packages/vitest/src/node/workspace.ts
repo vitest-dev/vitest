@@ -295,10 +295,12 @@ export class WorkspaceProject {
     this.browserProvider = new Provider()
     const browser = this.config.browser.name
     const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
-    if (!browser)
-      throw new Error(`[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`)
-    if (!supportedBrowsers.includes(browser))
-      throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
+    if (this.config.browser.provider !== 'none') {
+      if (!browser)
+        throw new Error(`[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`)
+      if (!supportedBrowsers.includes(browser))
+        throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
+    }
     await this.browserProvider.initialize(this, { browser })
   }
 }
