@@ -59,10 +59,16 @@ function normalizePaths(config: ResolvedConfig, paths: string[]) {
 
 ws.addEventListener('message', async (data) => {
   const { event, paths } = parse(data.data)
-  // we receive 2 run events in a row, former with paths, latter with empty paths
-  // TODO: review what's happening here
-  if (event === 'run' && paths?.length) {
+  // we receive N run events in a row, some with paths, last one always with empty paths
+  // running Node 16/17 we receive 2 run events, with Node 18 we receive 3 run events
+  // tests done with examples/vue folder
+  // TODO: review what's happening here, just move the guard to allow load config
+  if (event === 'run'/* && paths?.length */) {
+    console.log(paths)
     const config: ResolvedConfig = await loadConfig()
+
+    if (!paths?.length)
+      return
 
     const waitingPaths = normalizePaths(config, paths)
     console.log(paths, waitingPaths)
