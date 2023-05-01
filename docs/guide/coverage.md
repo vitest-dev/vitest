@@ -44,6 +44,7 @@ npm i -D @vitest/coverage-istanbul
 ## Coverage Setup
 
 To test with coverage enabled, you can pass the `--coverage` flag in CLI.
+By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 
 ```json
 {
