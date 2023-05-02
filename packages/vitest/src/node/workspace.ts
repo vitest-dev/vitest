@@ -5,6 +5,7 @@ import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
 import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
+import { ViteNodeServer } from 'vite-node/server'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge, hasFailed } from '../utils'
@@ -13,10 +14,9 @@ import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { VitestServer } from './server'
 
 interface InitializeServerOptions {
-  server?: VitestServer
+  server?: ViteNodeServer
   runner?: ViteNodeRunner
 }
 
@@ -65,7 +65,7 @@ export class WorkspaceProject {
 
   config!: ResolvedConfig
   server!: ViteDevServer
-  vitenode!: VitestServer
+  vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
   browser: ViteDevServer = undefined!
   typechecker?: Typechecker
@@ -170,7 +170,7 @@ export class WorkspaceProject {
     this.config = resolveConfig(this.ctx.mode, options, server.config)
     this.server = server
 
-    this.vitenode = params.server ?? new VitestServer(server, this.config)
+    this.vitenode = params.server ?? new ViteNodeServer(server, this.config)
     const node = this.vitenode
     this.runner = params.runner ?? new ViteNodeRunner({
       root: server.config.root,

@@ -8,6 +8,8 @@ import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
+import type { CancelReason } from '@vitest/runner'
+import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -21,7 +23,6 @@ import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
-import { VitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -39,13 +40,14 @@ export class Vitest {
   logger: Logger
   pool: ProcessPool | undefined
 
-  vitenode: VitestServer = undefined!
+  vitenode: ViteNodeServer = undefined!
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
   filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+  isCancelling = false
 
   isFirstRun = true
   restartsCount = 0
@@ -64,6 +66,7 @@ export class Vitest {
 
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
+  private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
@@ -86,7 +89,7 @@ export class Vitest {
     if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
-    this.vitenode = new VitestServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
@@ -282,17 +285,11 @@ export class Vitest {
       return
     }
 
-    try {
-      await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
-    }
-    catch (e) {
-      this.logger.error(e)
-      process.exit(1)
-    }
-
     await this.report('onInit', this)
+
+    await this.initCoverageProvider()
+    await this.coverageProvider?.clean(this.config.coverage.clean)
+    await this.initBrowserProviders()
 
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
@@ -395,13 +392,14 @@ export class Vitest {
 
   async runFiles(paths: WorkspaceSpec[]) {
     const filepaths = paths.map(([, file]) => file)
-
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
 
     // previous run
     await this.runningPromise
+    this._onCancelListeners = []
+    this.isCancelling = false
 
     // schedule the new run
     this.runningPromise = (async () => {
@@ -435,6 +433,11 @@ export class Vitest {
       })
 
     return await this.runningPromise
+  }
+
+  async cancelCurrentRun(reason: CancelReason) {
+    this.isCancelling = true
+    await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -759,5 +762,9 @@ export class Vitest {
 
   onAfterSetServer(fn: OnServerRestartHandler) {
     this._onSetServer.push(fn)
+  }
+
+  onCancel(fn: (reason: CancelReason) => void) {
+    this._onCancelListeners.push(fn)
   }
 }

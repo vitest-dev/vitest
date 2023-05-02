@@ -92,6 +92,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
+| `--bail <number>` | Stop test execution when given number of tests have failed |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

@@ -7,6 +7,7 @@ import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
+import { MocksPlugin } from '../../node/plugins/mocks'
 
 export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
   const root = project.config.root
@@ -31,7 +32,7 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
       },
     },
     plugins: [
-      (await import('@vitest/browser')).default('/'),
+      (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {
         enforce: 'post',
@@ -42,7 +43,8 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
           }
 
           config.server = server
-          config.server.fs = { strict: false }
+          config.server.fs ??= {}
+          config.server.fs.strict = false
 
           return {
             resolve: {
@@ -51,6 +53,7 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
           }
         },
       },
+      MocksPlugin(),
     ],
   })
 

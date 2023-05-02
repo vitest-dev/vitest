@@ -9,6 +9,7 @@ if (process.env.TEST_WATCH) {
 export default defineConfig({
   test: {
     coverage: {
+      enabled: true,
       all: true,
     },
     reporters: ['default', 'json'],

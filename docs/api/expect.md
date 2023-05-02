@@ -138,7 +138,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { Stocks } from './stocks.js'
-  
+
   const stocks = new Stocks()
   stocks.sync('Bill')
   if (stocks.getInfo('Bill'))
@@ -150,7 +150,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
-  
+
   const stocks = new Stocks()
 
   test('if we know Bill stock, sell apples to him', () => {
@@ -171,7 +171,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { Stocks } from './stocks.js'
-  
+
   const stocks = new Stocks()
   stocks.sync('Bill')
   if (!stocks.stockFailed('Bill'))
@@ -183,7 +183,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
-  
+
   const stocks = new Stocks()
 
   test('if Bill stock hasn\'t failed, sell apples to him', () => {
@@ -242,7 +242,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { expect, test } from 'vitest'
-  
+
   const actual = 'stock'
 
   test('stock is type of string', () => {
@@ -259,7 +259,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
-  
+
   const stocks = new Stocks()
 
   test('stocks are instance of Stocks', () => {
@@ -695,7 +695,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 ## toMatchFileSnapshot
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
-- **Version:** Vitest 0.30.0
+- **Version:** Since Vitest 0.30.0
 
   Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 

@@ -92,6 +92,15 @@ Files to include in the test run, using glob pattern.
 
 Files to exclude from the test run, using glob pattern.
 
+### includeSource
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Include globs for in-source test files.
+
+When defined, Vitest will run all matched files with `import.meta.vitest` inside.
+
 ### deps
 
 - **Type:** `{ external?, inline?, ... }`
@@ -902,7 +911,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 }
 ```
 
-- **Available for providers:** `'istanbul'`
+- **Available for providers:** `'c8' | 'istanbul'`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
@@ -954,7 +963,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 
 ### browser
 
-- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
+- **Type:** `{ enabled?, name?, provider?, headless?, api?, slowHijackESM? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **Version:** Since Vitest 0.29.4
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
@@ -1025,6 +1034,19 @@ export interface BrowserProvider {
 ::: warning
 This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
 :::
+
+#### browser.slowHijackESM
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Version:** Since Vitest 0.31.0
+
+When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
+
+This option has no effect on tests running inside Node.js.
+
+This options is enabled by default when running in the browser. If you don't rely on spying on ES modules with `vi.spyOn` and don't use `vi.mock`, you can disable this to get a slight boost to performance.
+
 
 ### clearMocks
 
@@ -1349,7 +1371,7 @@ The number of milliseconds after which a test is considered slow and reported as
 
 - **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`
 - **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40 }`
-- **Version:** Vitest 0.30.0
+- **Version:** Since Vitest 0.30.0
 
 Equivalent to [Chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js).
 
@@ -1375,3 +1397,13 @@ Influences whether or not the `showDiff` flag should be included in the thrown A
 Sets length threshold for actual and expected values in assertion errors. If this threshold is exceeded, for example for large data structures, the value is replaced with something like `[ Array(3) ]` or `{ Object (prop1, prop2) }`. Set it to `0` if you want to disable truncating altogether.
 
 This config option affects truncating values in `test.each` titles and inside the assertion error message.
+
+### bail
+
+- **Type:** `number`
+- **Default:** `0`
+- **CLI**: `--bail=<value>`
+
+Stop test execution when given number of tests have failed.
+
+By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occured.

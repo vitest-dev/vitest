@@ -51,6 +51,15 @@ export interface BrowserConfigOptions {
    * The default port is 63315.
    */
   api?: ApiConfig | number
+
+  /**
+   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
+   * Enabled by default when running in browser.
+   *
+   * @default true
+   * @experimental
+   */
+  slowHijackESM?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
