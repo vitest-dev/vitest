@@ -20,7 +20,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', getRoot())
-    return (await import('@vitest/ui')).default(options.uiBase)
+    return (await import('@vitest/ui')).default(ctx)
   }
 
   return [
