@@ -1,8 +1,10 @@
-import type { TransformResult } from 'vite'
+import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
+
+type TransformResult = string | Partial<ViteTransformResult> | undefined | null
 
 export interface CoverageProvider {
   name: string
@@ -20,7 +22,7 @@ export interface CoverageProvider {
     id: string,
     // TODO: when upgrading vite, import Rollup from vite
     pluginCtx: any
-  ): undefined | TransformResult | Promise<TransformResult | undefined>
+  ): TransformResult | Promise<TransformResult>
 }
 
 export interface ReportContext {
