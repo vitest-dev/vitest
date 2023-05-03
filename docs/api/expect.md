@@ -1290,18 +1290,16 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 
   This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-  If you are using TypeScript, you can extend default `Matchers` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+  If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
   ```ts
   interface CustomMatchers<R = unknown> {
     toBeFoo(): R
   }
 
-  declare namespace Vi {
-    interface Assertion extends CustomMatchers {}
+  declare module '@vitest/expect' {
+    interface Assertion<T = any> extends CustomMatchers<T> {}
     interface AsymmetricMatchersContaining extends CustomMatchers {}
-
-    // Note: augmenting jest.Matchers interface will also work.
   }
   ```
 

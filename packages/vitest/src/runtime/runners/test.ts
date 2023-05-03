@@ -1,4 +1,5 @@
 import type { CancelReason, Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
@@ -103,7 +104,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   extendTestContext(context: TestContext): TestContext {
-    let _expect: Vi.ExpectStatic | undefined
+    let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
         if (!_expect)
