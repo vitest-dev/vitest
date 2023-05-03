@@ -150,7 +150,14 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   else
     name = name.split('/')[0]
 
-  ctx.logger.error(c.yellow(
+  if (name)
+    printModuleWarningForPackage(ctx.logger, path, name)
+  else
+    printModuleWarningForSourceCode(ctx.logger, path)
+}
+
+function printModuleWarningForPackage(logger: Logger, path: string, name: string) {
+  logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
@@ -168,6 +175,13 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
     }
   }
 }\n`)))
+}
+
+function printModuleWarningForSourceCode(logger: Logger, path: string) {
+  logger.error(c.yellow(
+    `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
++ 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
+  ))
 }
 
 export function displayDiff(diff: string, console: Console) {
