@@ -2,11 +2,11 @@ import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 import type { ProjectConfig } from './types'
 
 export interface UserConfig extends ViteUserConfig {
-  test?: ViteUserConfig['test']
+  test?: ViteUserConfig['test'] | undefined
 }
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
+  test?: ProjectConfig | undefined
 }
 
 // will import vitest declare test in module 'vite'
