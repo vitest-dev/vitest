@@ -4,7 +4,7 @@ import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
-  browserHashMap: Map<string, string>
+  browserHashMap: Map<string, [test: boolean, timstamp: string]>
 }
 
 interface CoverageHandler {
@@ -14,7 +14,7 @@ interface CoverageHandler {
 export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
-    hashMap = new Map<string, string>()
+    hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -54,15 +54,16 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     }
 
     async importFile(filepath: string) {
-      const match = filepath.match(/^(\w:\/)/)
-      let hash = this.hashMap.get(filepath)
-      if (!hash) {
+      let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
+      if (hash === '') {
         hash = Date.now().toString()
-        this.hashMap.set(filepath, hash)
+        this.hashMap.set(filepath, [false, hash])
       }
-      const importpath = match
-        ? `/@fs/${filepath.slice(match[1].length)}?v=${hash}`
-        : `${filepath}?v=${hash}`
+
+      // on Windows we need the unit to resolve the test file
+      const importpath = /^\w:/.test(filepath)
+        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
       await import(importpath)
     }
   }

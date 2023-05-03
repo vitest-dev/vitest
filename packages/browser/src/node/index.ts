@@ -41,13 +41,38 @@ export default (project: any, base = '/'): Plugin[] => {
       config() {
         return {
           optimizeDeps: {
-            exclude: [...polyfills, ...builtinModules],
+            exclude: [
+              ...polyfills,
+              ...builtinModules,
+              'vitest',
+              'vitest/utils',
+              'vitest/browser',
+              'vitest/runners',
+              '@vitest/utils',
+            ],
+            include: [
+              '@vitest/utils > concordance',
+              '@vitest/utils > loupe',
+              '@vitest/utils > pretty-format',
+              'vitest > chai',
+            ],
           },
         }
       },
       async resolveId(id) {
-        if (!builtinModules.includes(id) && !polyfills.includes(id) && !id.startsWith('node:'))
-          return
+        if (!builtinModules.includes(id) && !polyfills.includes(id) && !id.startsWith('node:')) {
+          if (!/\?browserv=\w+$/.test(id))
+            return
+
+          let useId = id.slice(0, id.lastIndexOf('?'))
+          if (useId.startsWith('/@fs/'))
+            useId = useId.slice(5)
+
+          if (/^\w:/.test(useId))
+            useId = useId.replace(/\\/g, '/')
+
+          return useId
+        }
 
         id = normalizeId(id)
         return { id: await polyfillPath(id), moduleSideEffects: false }
