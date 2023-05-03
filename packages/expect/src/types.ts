@@ -191,3 +191,14 @@ export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, 
   resolves: Promisify<Assertion<T>>
   rejects: Promisify<Assertion<T>>
 }
+
+declare global {
+  // support augmenting jest.Matchers by other libraries
+  namespace jest {
+
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    interface Matchers<R, T = {}> {}
+  }
+}
+
+export {}

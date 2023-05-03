@@ -47,14 +47,3 @@ declare module '@vitest/runner' {
     benchmark?: BenchmarkResult
   }
 }
-
-declare global {
-  // support augmenting jest.Matchers by other libraries
-  namespace jest {
-
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    interface Matchers<R, T = {}> {}
-  }
-}
-
-export {}
