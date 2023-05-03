@@ -165,8 +165,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
   nthReturnedWith<E>(nthCall: number, value: E): void
 }
 
-// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-// @ts-ignore build namespace conflict
 type VitestAssertion<A, T> = {
   [K in keyof A]: A[K] extends Chai.Assertion
     ? Assertion<T>
