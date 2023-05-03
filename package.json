@@ -60,7 +60,7 @@
     "ohmyfetch": "^0.4.21",
     "pathe": "^1.1.0",
     "pnpm": "7.31.0",
-    "rimraf": "^4.4.1",
+    "rimraf": "^5.0.0",
     "rollup": "^3.20.2",
     "rollup-plugin-dts": "^5.3.0",
     "rollup-plugin-esbuild": "^5.0.0",
