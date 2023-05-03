@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/example-testing-lib-react",
+  "name": "@vitest/example-testing-lib-react-in-browser",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",
@@ -7,7 +7,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:stackblitz": "BROWSER_PROVIDE=none vitest"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -28,7 +28,7 @@
     "vite": "latest",
     "vitest": "latest"
   },
-  "stackblitz": {
-    "startCommand": "npm run test:ui"
+  "xstackblitz": {
+    "startCommand": "npm run test:stackblitz"
   }
 }

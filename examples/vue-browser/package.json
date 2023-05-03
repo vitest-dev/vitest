@@ -1,0 +1,22 @@
+{
+  "name": "@vitest/example-vue-in-browser",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "test:stackblitz": "BROWSER_PROVIDE=none vitest"
+  },
+  "dependencies": {
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "latest",
+    "jsdom": "latest",
+    "std-env": "^3.3.2",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "xstackblitz": {
+    "startCommand": "npm run test:stackblitz"
+  }
+}

@@ -290,7 +290,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 4.0.0_vite@4.2.1
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 9.10.7
+      happy-dom: 9.10.8
       jsdom: 22.0.0
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.2.1
@@ -614,6 +614,23 @@ importers:
       '@vitejs/plugin-vue': 4.2.1_vite@4.2.1+vue@3.2.47
       '@vue/test-utils': 2.0.0_vue@3.2.47
       jsdom: 22.0.0
+      vite: 4.2.1
+      vitest: link:../../packages/vitest
+
+  examples/vue-browser:
+    specifiers:
+      '@vitejs/plugin-vue': latest
+      jsdom: latest
+      std-env: ^3.3.2
+      vite: ^4.2.1
+      vitest: workspace:*
+      vue: latest
+    dependencies:
+      vue: 3.2.47
+    devDependencies:
+      '@vitejs/plugin-vue': 4.2.1_vite@4.2.1+vue@3.2.47
+      jsdom: 22.0.0
+      std-env: 3.3.2
       vite: 4.2.1
       vitest: link:../../packages/vitest
 
@@ -1126,7 +1143,7 @@ importers:
       '@vitejs/plugin-vue': 4.2.1_vite@4.2.1+vue@3.2.47
       '@vitest/browser': link:../../packages/browser
       '@vue/test-utils': 2.3.2_vue@3.2.47
-      happy-dom: 9.10.7
+      happy-dom: 9.10.8
       vite: 4.2.1
       vitest: link:../../packages/vitest
       vue: 3.2.47
@@ -2297,7 +2314,7 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
-      '@babel/types': 7.21.3
+      '@babel/types': 7.21.5
 
   /@babel/parser/7.21.8:
     resolution: {integrity: sha512-6zavDGdzG3gUqAdWvlLFfk+36RilI+Pwyuuh7HItyeScCWP3k6i8vKclAQ0bM/0y/Kz/xiwvxhMv9MgTJP5gmA==}
@@ -4489,14 +4506,6 @@ packages:
 
   /@babel/types/7.18.13:
     resolution: {integrity: sha512-ePqfTihzW0W6XAU+aMw2ykilisStJfDnsejDCXRchCcMJ4O0+8DhPXf2YUbZ6wjBlsEmZwLK/sPweWtu8hcJYQ==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-string-parser': 7.19.4
-      '@babel/helper-validator-identifier': 7.19.1
-      to-fast-properties: 2.0.0
-
-  /@babel/types/7.21.3:
-    resolution: {integrity: sha512-sBGdETxC+/M4o/zKC0sl6sjWv62WFR/uzxrJ6uYyMLZOUlPnwzw0tKgVHOXxaAd5l2g8pEDM5RZ495GPQI77kg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-string-parser': 7.19.4
@@ -8641,7 +8650,7 @@ packages:
   /@vue/compiler-core/3.2.39:
     resolution: {integrity: sha512-mf/36OWXqWn0wsC40nwRRGheR/qoID+lZXbIuLnr4/AngM0ov8Xvv8GHunC0rKRIkh60bTqydlqTeBo49rlbqw==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.8
       '@vue/shared': 3.2.39
       estree-walker: 2.0.2
       source-map: 0.6.1
@@ -8649,7 +8658,7 @@ packages:
   /@vue/compiler-core/3.2.47:
     resolution: {integrity: sha512-p4D7FDnQb7+YJmO2iPEv0SQNeNzcbHdGByJDsT4lynf63AFkOTFN07HsiRSvjGo0QrxR/o3d0hUyNCUnBU2Tig==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.8
       '@vue/shared': 3.2.47
       estree-walker: 2.0.2
       source-map: 0.6.1
@@ -8690,7 +8699,7 @@ packages:
   /@vue/compiler-sfc/3.2.47:
     resolution: {integrity: sha512-rog05W+2IFfxjMcFw10tM9+f7i/+FFpZJJ5XHX72NP9eC2uRD+42M3pYcQqDXVYoj74kHMSEdQ/WmCjt8JFksQ==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.8
       '@vue/compiler-core': 3.2.47
       '@vue/compiler-dom': 3.2.47
       '@vue/compiler-ssr': 3.2.47
@@ -8724,7 +8733,7 @@ packages:
   /@vue/reactivity-transform/3.2.39:
     resolution: {integrity: sha512-HGuWu864zStiWs9wBC6JYOP1E00UjMdDWIG5W+FpUx28hV3uz9ODOKVNm/vdOy/Pvzg8+OcANxAVC85WFBbl3A==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.8
       '@vue/compiler-core': 3.2.39
       '@vue/shared': 3.2.39
       estree-walker: 2.0.2
@@ -8733,7 +8742,7 @@ packages:
   /@vue/reactivity-transform/3.2.47:
     resolution: {integrity: sha512-m8lGXw8rdnPVVIdIFhf0LeQ/ixyHkH5plYuS83yop5n7ggVJU+z5v0zecwEnX7fa7HNLBhh2qngJJkxpwEEmYA==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.8
       '@vue/compiler-core': 3.2.47
       '@vue/shared': 3.2.47
       estree-walker: 2.0.2
@@ -14883,8 +14892,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/9.10.7:
-    resolution: {integrity: sha512-AF9qCTEDmwY+4Rc+YQ9mHSFuw7dxwhLeSnNMJWGKUsOz3VWsC7O9kniuil5yVgnpx9UIzAjtK9UdbuRKMSGfSQ==}
+  /happy-dom/9.10.8:
+    resolution: {integrity: sha512-zcRFDygyTxigkglFyFA/Gim1H36bIdYdWkI28kC1bLG5Kk/Ad8MnVzT+XzaUhMRAhd7SfZrizCQueS8mjf6tDw==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -20137,7 +20146,7 @@ packages:
       rollup: 3.20.2
       typescript: 5.0.3
     optionalDependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
     dev: true
 
   /rollup-plugin-esbuild/5.0.0_5zw4jabzuz2ebdah44cz4bpddu:
