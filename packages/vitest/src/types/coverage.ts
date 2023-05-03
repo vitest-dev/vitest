@@ -4,7 +4,7 @@ import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
 
-type TransformResult = string | Partial<ViteTransformResult> | undefined | null
+type TransformResult = string | Partial<ViteTransformResult> | undefined | null | void
 
 export interface CoverageProvider {
   name: string
