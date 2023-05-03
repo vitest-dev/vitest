@@ -356,7 +356,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
       let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
       if (actualCall)
-        methodCall += diff(callArg, actualCall, { showLegend: false })
+        methodCall += diff(actualCall, callArg, { showLegend: false })
       else
         methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -370,7 +370,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
       let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
-        methodCall += diff(callReturn.value, actualReturn, { showLegend: false })
+        methodCall += diff(actualReturn, callReturn.value, { showLegend: false })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 
