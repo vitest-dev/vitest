@@ -1,4 +1,4 @@
-import type { TransformPluginContext, TransformResult } from 'rollup'
+import type { TransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
@@ -18,7 +18,8 @@ export interface CoverageProvider {
   onFileTransform?(
     sourceCode: string,
     id: string,
-    pluginCtx: TransformPluginContext
+    // TODO: when upgrading vite, import Rollup from vite
+    pluginCtx: any
   ): TransformResult | Promise<TransformResult>
 }
 
