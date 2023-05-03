@@ -1403,6 +1403,7 @@ This config option affects truncating values in `test.each` titles and inside th
 - **Type:** `number`
 - **Default:** `0`
 - **CLI**: `--bail=<value>`
+- **Version:** Since Vitest 0.31.0
 
 Stop test execution when given number of tests have failed.
 
