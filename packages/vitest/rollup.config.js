@@ -215,7 +215,7 @@ function licensePlugin() {
                     .trim()
                     .replace(/(\r\n|\r)/gm, '\n')
                     .split('\n')
-                    .map(line => `> ${line}`)
+                    .map(line => line ? `> ${line}` : '>')
                     .join('\n')
                 }\n`
             }
