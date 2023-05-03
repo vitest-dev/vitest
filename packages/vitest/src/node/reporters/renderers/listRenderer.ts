@@ -150,8 +150,15 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     taskOutput.push(renderHookState(task, 'beforeAll', level + 1))
     taskOutput.push(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
-      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
-        taskOutput.push(renderTree(task.tasks, options, level + 1, maxRows))
+      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)) {
+        if (options.logger.ctx.config.hideSkippedTests) {
+          const filteredTasks = task.tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+          taskOutput.push(renderTree(filteredTasks, options, level + 1, maxRows))
+        }
+        else {
+          taskOutput.push(renderTree(task.tasks, options, level + 1, maxRows))
+        }
+      }
     }
     taskOutput.push(renderHookState(task, 'afterAll', level + 1))
     taskOutput.push(renderHookState(task, 'afterEach', level + 1))
@@ -175,14 +182,27 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
   const log = options.logger.logUpdate
 
   function update() {
-    log(renderTree(
-      tasks,
-      options,
-      0,
-      // log-update already limits the amount of printed rows to fit the current terminal
-      // but we can optimize performance by doing it ourselves
-      process.stdout.rows,
-    ))
+    if (options.logger.ctx.config.hideSkippedTests) {
+      const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+      log(renderTree(
+        filteredTasks,
+        options,
+        0,
+        // log-update already limits the amount of printed rows to fit the current terminal
+        // but we can optimize performance by doing it ourselves
+        process.stdout.rows,
+      ))
+    }
+    else {
+      log(renderTree(
+        tasks,
+        options,
+        0,
+        // log-update already limits the amount of printed rows to fit the current terminal
+        // but we can optimize performance by doing it ourselves
+        process.stdout.rows,
+      ))
+    }
   }
 
   return {
@@ -202,9 +222,15 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
-
-      // Note that at this point the renderTree should output all tasks
-      options.logger.log(renderTree(tasks, options))
+      if (options.logger.ctx.config.hideSkippedTests) {
+        const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+        // Note that at this point the renderTree should output all tasks
+        options.logger.log(renderTree(filteredTasks, options))
+      }
+      else {
+        // Note that at this point the renderTree should output all tasks
+        options.logger.log(renderTree(tasks, options))
+      }
       return this
     },
     clear() {

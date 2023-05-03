@@ -23,6 +23,7 @@ cli
   .option('--threads', 'Enabled threads (default: true)')
   .option('--single-thread', 'Run tests inside a single thread, requires --threads (default: false)')
   .option('--silent', 'Silent console output from tests')
+  .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
