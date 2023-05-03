@@ -17,18 +17,18 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.16",
-    "@unocss/reset": "^0.50.6",
+    "@unocss/reset": "^0.51.8",
     "@vite-pwa/vitepress": "^0.0.5",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.50.6",
+    "unocss": "^0.51.8",
     "unplugin-vue-components": "^0.24.1",
     "vite": "^4.0.0",
     "vite-plugin-pwa": "^0.14.7",
-    "vitepress": "1.0.0-alpha.65",
+    "vitepress": "1.0.0-alpha.75",
     "workbox-window": "^6.5.4"
   }
 }

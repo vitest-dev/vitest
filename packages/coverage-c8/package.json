@@ -45,7 +45,7 @@
     "vitest": ">=0.30.0 <1"
   },
   "dependencies": {
-    "@ampproject/remapping": "^2.2.0",
+    "@ampproject/remapping": "^2.2.1",
     "c8": "^7.13.0",
     "magic-string": "^0.30.0",
     "picocolors": "^1.0.0",
