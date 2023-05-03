@@ -1,6 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { relative, resolve } from 'pathe'
-import type { TransformPluginContext } from 'rollup'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
@@ -88,7 +87,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     return this.options
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: TransformPluginContext) {
+  onFileTransform(sourceCode: string, id: string, pluginCtx: any) {
     if (!this.testExclude.shouldInstrument(id))
       return
 

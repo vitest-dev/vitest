@@ -20,7 +20,7 @@ export interface CoverageProvider {
     id: string,
     // TODO: when upgrading vite, import Rollup from vite
     pluginCtx: any
-  ): TransformResult | Promise<TransformResult>
+  ): undefined | TransformResult | Promise<TransformResult | undefined>
 }
 
 export interface ReportContext {
