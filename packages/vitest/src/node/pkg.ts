@@ -1,13 +1,16 @@
+import url from 'node:url'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { EXIT_CODE_RESTART } from '../constants'
 import { isCI } from '../utils/env'
 
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+
 export async function ensurePackageInstalled(
   dependency: string,
   root: string,
 ) {
-  if (isPackageExists(dependency, { paths: [root] }))
+  if (isPackageExists(dependency, { paths: [root, __dirname] }))
     return true
 
   const promptInstall = !isCI && process.stdout.isTTY
