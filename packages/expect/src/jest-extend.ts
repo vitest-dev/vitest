@@ -1,6 +1,7 @@
 import { util } from 'chai'
 import type {
   ChaiPlugin,
+  ExpectStatic,
   MatcherState,
   MatchersObject,
   SyncExpectationResult,
@@ -17,7 +18,7 @@ import {
   subsetEquality,
 } from './jest-utils'
 
-function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expect: Vi.ExpectStatic) {
+function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expect: ExpectStatic) {
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
@@ -52,7 +53,7 @@ class JestExtendError extends Error {
   }
 }
 
-function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): ChaiPlugin {
+function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiPlugin {
   return (c, utils) => {
     Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
@@ -123,7 +124,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
 }
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
-  utils.addMethod(chai.expect, 'extend', (expect: Vi.ExpectStatic, expects: MatchersObject) => {
+  utils.addMethod(chai.expect, 'extend', (expect: ExpectStatic, expects: MatchersObject) => {
     chai.use(JestExtendPlugin(expect, expects))
   })
 }

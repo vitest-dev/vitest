@@ -3,7 +3,7 @@ import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
-import type { ChaiPlugin } from './types'
+import type { Assertion, ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
@@ -14,8 +14,8 @@ import { recordAsyncExpect } from './utils'
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const c = () => getColors()
 
-  function def(name: keyof Vi.Assertion | (keyof Vi.Assertion)[], fn: ((this: Chai.AssertionStatic & Vi.Assertion, ...args: any[]) => any)) {
-    const addMethod = (n: keyof Vi.Assertion) => {
+  function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
+    const addMethod = (n: keyof Assertion) => {
       utils.addMethod(chai.Assertion.prototype, n, fn)
       utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, fn)
     }

@@ -13,16 +13,16 @@ interface CustomMatchers<R = unknown> {
   toBeTestedPromise(): R
 }
 
+declare module '@vitest/expect' {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}
+
 declare global {
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R
     }
-  }
-
-  namespace Vi {
-    interface JestAssertion extends CustomMatchers {}
-    interface AsymmetricMatchersContaining extends CustomMatchers {}
   }
 }
 

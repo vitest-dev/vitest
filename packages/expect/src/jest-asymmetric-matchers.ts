@@ -21,7 +21,7 @@ export abstract class AsymmetricMatcher<
 
   constructor(protected sample: T, protected inverse = false) {}
 
-  protected getMatcherContext(expect?: Vi.ExpectStatic): State {
+  protected getMatcherContext(expect?: Chai.ExpectStatic): State {
     return {
       ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
