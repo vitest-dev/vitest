@@ -1,4 +1,5 @@
 import type { TransformResult } from 'vite'
+import type { CancelReason } from '@vitest/runner'
 import type { AfterSuiteRunMeta, File, ModuleGraphData, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
@@ -10,6 +11,8 @@ export interface WebSocketHandlers {
   onTaskUpdate(packs: TaskResultPack[]): void
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void
   onDone(name: string): void
+  onCancel(reason: CancelReason): void
+  getCountOfFailedTests(): number
   sendLog(log: UserConsoleLog): void
   getFiles(): File[]
   getPaths(): string[]
@@ -28,4 +31,5 @@ export interface WebSocketHandlers {
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
+  onCancel(reason: CancelReason): void
 }

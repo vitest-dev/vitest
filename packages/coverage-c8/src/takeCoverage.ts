@@ -4,6 +4,7 @@
 
 import inspector from 'node:inspector'
 import type { Profiler } from 'node:inspector'
+import { provider } from 'std-env'
 
 const session = new inspector.Session()
 
@@ -27,6 +28,9 @@ export async function takeCoverage() {
 
       resolve({ result })
     })
+
+    if (provider === 'stackblitz')
+      resolve({ result: [] })
   })
 }
 

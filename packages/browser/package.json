@@ -39,17 +39,21 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.29.4"
+    "vitest": ">=0.31.0"
   },
   "dependencies": {
-    "modern-node-polyfills": "0.1.0",
+    "modern-node-polyfills": "^0.1.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
+    "@types/estree": "^1.0.1",
     "@types/ws": "^8.5.4",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
+    "estree-walker": "^3.0.3",
+    "periscopic": "^3.1.0",
+    "rollup": "3.20.2",
     "vitest": "workspace:*"
   }
 }

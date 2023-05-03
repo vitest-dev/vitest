@@ -18,6 +18,13 @@ export interface VitestRunner {
   onCollected?(files: File[]): unknown
 
   /**
+   * Called when test runner should cancel next test runs.
+   * Runner should listen for this method and mark tests and suites as skipped in
+   * "onBeforeRunSuite" and "onBeforeRunTest" when called.
+   */
+  onCancel?(reason: CancelReason): unknown
+
+  /**
    * Called before running a single test. Doesn't have "result" yet.
    */
   onBeforeRunTest?(test: Test): unknown
@@ -86,7 +93,7 @@ export interface VitestRunner {
 When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property.
 
 ::: warning
-Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` property. You can use it to process files in `importFile` method (this is default behavior of `TestRunner`` and `BenchmarkRunner`).
+Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` property. You can use it to process files in `importFile` method (this is default behavior of `TestRunner` and `BenchmarkRunner`).
 
 `ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it.
 :::
