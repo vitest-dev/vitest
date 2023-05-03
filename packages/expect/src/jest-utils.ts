@@ -219,8 +219,11 @@ function isDomNode(obj: any): boolean {
   return (
     obj !== null
     && typeof obj === 'object'
+    && 'nodeType' in obj
     && typeof obj.nodeType === 'number'
+    && 'nodeName' in obj
     && typeof obj.nodeName === 'string'
+    && 'isEqualNode' in obj
     && typeof obj.isEqualNode === 'function'
   )
 }
