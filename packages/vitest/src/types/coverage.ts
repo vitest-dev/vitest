@@ -1,8 +1,10 @@
-import type { TransformPluginContext, TransformResult } from 'rollup'
+import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
+
+type TransformResult = string | Partial<ViteTransformResult> | undefined | null | void
 
 export interface CoverageProvider {
   name: string
@@ -18,7 +20,8 @@ export interface CoverageProvider {
   onFileTransform?(
     sourceCode: string,
     id: string,
-    pluginCtx: TransformPluginContext
+    // TODO: when upgrading vite, import Rollup from vite
+    pluginCtx: any
   ): TransformResult | Promise<TransformResult>
 }
 
@@ -188,6 +191,18 @@ export interface BaseCoverageOptions {
   statements?: number
 
   /**
+   * Watermarks for statements, lines, branches and functions.
+   *
+   * Default value is `[50,80]` for each property.
+   */
+  watermarks?: {
+    statements?: [number, number]
+    functions?: [number, number]
+    branches?: [number, number]
+    lines?: [number, number]
+  }
+
+  /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
    *
    * @default false
@@ -202,18 +217,6 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
-
-  /**
-   * Watermarks for statements, lines, branches and functions.
-   *
-   * Default value is `[50,80]` for each property.
-   */
-  watermarks?: {
-    statements?: [number, number]
-    functions?: [number, number]
-    branches?: [number, number]
-    lines?: [number, number]
-  }
 }
 
 export interface CoverageC8Options extends BaseCoverageOptions {

@@ -1,4 +1,5 @@
-import type { Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
@@ -12,6 +13,7 @@ export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
   private __vitest_executor!: VitestExecutor
+  private cancelRun = false
 
   constructor(public config: ResolvedConfig) {}
 
@@ -45,8 +47,15 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = undefined
   }
 
+  onCancel(_reason: CancelReason) {
+    this.cancelRun = true
+  }
+
   async onBeforeRunTest(test: Test) {
     const name = getNames(test).slice(1).join(' > ')
+
+    if (this.cancelRun)
+      test.mode = 'skip'
 
     if (test.mode !== 'run') {
       this.snapshotClient.skipTestSnapshots(name)
@@ -57,6 +66,11 @@ export class VitestTestRunner implements VitestRunner {
     await this.snapshotClient.setTest(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
+  }
+
+  onBeforeRunSuite(suite: Suite) {
+    if (this.cancelRun)
+      suite.mode = 'skip'
   }
 
   onBeforeTryTest(test: Test) {
@@ -90,7 +104,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   extendTestContext(context: TestContext): TestContext {
-    let _expect: Vi.ExpectStatic | undefined
+    let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
         if (!_expect)

@@ -4,7 +4,7 @@ import { fork } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
-import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest } from '../../types'
+import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
 import type { PoolProcessOptions, ProcessPool, WorkspaceSpec } from '../pool'
 import { distDir } from '../../paths'
@@ -16,9 +16,10 @@ import { createMethodsRPC } from './rpc'
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
 function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess): void {
-  createBirpc<{}, RuntimeRPC>(
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
     createMethodsRPC(project),
     {
+      eventNames: ['onCancel'],
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
@@ -29,6 +30,8 @@ function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess)
       },
     },
   )
+
+  project.ctx.onCancel(reason => rpc.onCancel(reason))
 }
 
 function stringifyRegex(input: RegExp | string): string {

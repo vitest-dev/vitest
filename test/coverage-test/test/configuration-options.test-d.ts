@@ -26,12 +26,19 @@ test('provider options, generic', () => {
     provider: 'c8',
     enabled: true,
     include: ['string'],
+    watermarks: {
+      functions: [80, 95],
+      lines: [80, 95],
+    },
   })
 
   assertType<Coverage>({
     provider: 'istanbul',
     enabled: true,
     include: ['string'],
+    watermarks: {
+      statements: [80, 95],
+    },
   })
 })
 
@@ -55,12 +62,6 @@ test('provider specific options, istanbul', () => {
   assertType<Coverage>({
     provider: 'istanbul',
     ignoreClassMethods: ['string'],
-    watermarks: {
-      statements: [80, 95],
-      functions: [80, 95],
-      branches: [80, 95],
-      lines: [80, 95],
-    },
   })
 
   assertType<Coverage>({

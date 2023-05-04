@@ -11,6 +11,7 @@ import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
+import { MocksPlugin } from './mocks'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -19,7 +20,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', getRoot())
-    return (await import('@vitest/ui')).default(options.uiBase)
+    return (await import('@vitest/ui')).default(ctx)
   }
 
   return [
@@ -242,6 +243,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     options.ui
       ? await UIPlugin()
       : null,
+    MocksPlugin(),
   ]
     .filter(notNullish)
 }

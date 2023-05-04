@@ -189,7 +189,7 @@ jobs:
           node-version: 18
 
       - name: Install
-        run: sudo pnpm i
+        run: sudo pnpm i --frozen-lockfile
 
       - name: Build
         run: sudo pnpm run build

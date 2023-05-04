@@ -1,22 +1,32 @@
 import { describe, expect, it } from 'vitest'
+
 // @ts-expect-error is not typed
 import cjs, { a, b } from '../src/cjs/module-cjs'
+
 // @ts-expect-error is not typed with imports
 import bareCjs, { a as bareA, b as bareB } from '../src/cjs/bare-cjs'
+
 // @ts-expect-error is not typed with imports
 import primitiveCjs, { a as primitiveA } from '../src/cjs/primitive-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as primitiveAll from '../src/cjs/primitive-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as arrayCjs from '../src/cjs/array-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as classCjs from '../src/cjs/class-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultCjs from '../src/cjs/nested-default-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as moduleDefaultCjs from '../src/external/default-cjs'
+
 // @ts-expect-error is not typed with imports
 import * as internalEsm from '../src/esm/internal-esm.mjs'
 import c, { d } from '../src/module-esm'

@@ -4,11 +4,13 @@ import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
+import { checkVersion } from './version'
 
 // apis
 export const suite = createSuite()
 export const test = createTest(
   function (name: string, fn?: TestFunction, options?: number | TestOptions) {
+    checkVersion()
     getCurrentSuite().test.fn.call(this, name, fn, options)
   },
 )
@@ -65,6 +67,14 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof options === 'number')
       options = { timeout: options }
 
+    // inherit repeats and retry from suite
+    if (typeof suiteOptions === 'object') {
+      options = {
+        ...suiteOptions,
+        ...options,
+      }
+    }
+
     const test: Test = {
       id: '',
       type: 'test',
@@ -73,6 +83,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       suite: undefined!,
       fails: this.fails,
       retry: options?.retry,
+      repeats: options?.repeats,
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -124,6 +135,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   function initSuite() {
+    if (typeof suiteOptions === 'number')
+      suiteOptions = { timeout: suiteOptions }
+
     suite = {
       id: '',
       type: 'suite',
@@ -132,6 +146,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       shuffle,
       tasks: [],
     }
+
     setHooks(suite, createSuiteHooks())
   }
 
@@ -169,6 +184,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
+    checkVersion()
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }

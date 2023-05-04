@@ -10,10 +10,12 @@
     "test:types": "vitest typecheck --run --reporter verbose"
   },
   "devDependencies": {
+    "@types/istanbul-lib-coverage": "^2.0.4",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
+    "istanbul-lib-coverage": "^3.2.0",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "latest",

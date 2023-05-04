@@ -14,7 +14,8 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'vitest/node',
-  'vitest',
+  'vitest/config',
+  'vite',
 ]
 
 export default () => [

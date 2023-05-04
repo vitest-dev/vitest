@@ -44,6 +44,7 @@ npm i -D @vitest/coverage-istanbul
 ## Coverage Setup
 
 To test with coverage enabled, you can pass the `--coverage` flag in CLI.
+By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 
 ```json
 {
@@ -159,3 +160,19 @@ For `c8` this does not cause any issues. You can use `c8 ignore` comments with T
 /* c8 ignore next 3 */
 if (condition) {
 ```
+
+## Other Options
+
+To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
+
+## Vitest UI
+
+Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](./ui).
+
+If you have configured coverage reporters, don't forget to add `html` reporter to the list, Vitest UI will only enable html coverage report if it is present.
+
+<img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
+<img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
+
+<img alt="html coverage in Vitest UI" img-light src="/vitest-ui-coverage-light.png">
+<img alt="html coverage in Vitest UI" img-dark src="/vitest-ui-coverage-dark.png">

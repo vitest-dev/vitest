@@ -150,6 +150,55 @@
       <div id="vitest-browser-runner-tester"></div>
       <div id="vitest-browser-runner-container"></div>
     </div>
+    <script>
+      const moduleCache = new Map()
+
+      // this method receives a module object or "import" promise that it resolves and keeps track of
+      // and returns a hijacked module object that can be used to mock module exports
+      function wrapModule(module) {
+        if (module instanceof Promise) {
+          moduleCache.set(module, { promise: module, evaluated: false })
+          return module
+            .then(m => m.__vi_inject__)
+            .finally(() => moduleCache.delete(module))
+        }
+        return module.__vi_inject__
+      }
+
+      function exportAll(exports, sourceModule) {
+        // #1120 when a module exports itself it causes
+        // call stack error
+        if (exports === sourceModule)
+          return
+
+        if (Object(sourceModule) !== sourceModule || Array.isArray(sourceModule))
+          return
+
+        for (const key in sourceModule) {
+          if (key !== 'default') {
+            try {
+              Object.defineProperty(exports, key, {
+                enumerable: true,
+                configurable: true,
+                get: () => sourceModule[key],
+              })
+            }
+            catch (_err) { }
+          }
+        }
+      }
+
+      window.__vi_export_all__ = exportAll
+
+      // TODO: allow easier rewriting of import.meta.env
+      window.__vi_import_meta__ = {
+        env: {},
+        url: location.href,
+      }
+
+      window.__vi_module_cache__ = moduleCache
+      window.__vi_wrap_module__ = wrapModule
+    </script>
     <script type="module" src="/main.ts"></script>
   </body>
 </html>

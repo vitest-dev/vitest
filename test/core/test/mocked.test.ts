@@ -1,4 +1,5 @@
 import { afterEach, assert, beforeEach, describe, expect, test, vi, vitest } from 'vitest'
+
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
 import { createColors, getDefaultColors, setupColors } from '@vitest/utils'

@@ -51,6 +51,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'rollup',
   'inspector',
   'webdriverio',
   'safaridriver',
@@ -214,7 +215,7 @@ function licensePlugin() {
                     .trim()
                     .replace(/(\r\n|\r)/gm, '\n')
                     .split('\n')
-                    .map(line => `> ${line}`)
+                    .map(line => line ? `> ${line}` : '>')
                     .join('\n')
                 }\n`
             }

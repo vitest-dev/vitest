@@ -19,6 +19,13 @@
   --vp-c-text-light-2: rgba(56 56 56 / 70%);
   /* fix contrast: lang name on gray code block */
   --vp-c-text-dark-3: rgba(180, 180, 180, 0.7);
+  --vp-code-tab-divider: var(--vp-c-divider);
+  --vp-code-copy-code-bg: rgba(125,125,125,0.1);
+  --vp-code-copy-code-hover-bg: rgba(125,125,125,0.2);
+  --vp-c-disabled-bg: rgba(125,125,125,0.2);
+  --vp-code-tab-text-color: var(--vp-c-text-2);
+  --vp-code-tab-hover-text-color: var(--vp-c-text-1);
+  --vp-code-copy-code-active-text: var(--vp-c-text-2);
 }
 
 .dark {
@@ -32,6 +39,10 @@
   --vp-c-text-dark-2: rgba(235, 235, 235, 0.60);
   /* fix lang name: check the same above (this is the default) */
   --vp-c-text-dark-3: rgba(235, 235, 235, 0.38);
+  --vp-code-tab-text-color: var(--vp-c-text-dark-2);
+  --vp-code-tab-active-text-color: var(--vp-c-text-dark-1);
+  --vp-code-tab-hover-text-color: var(--vp-c-text-dark-1);
+  --vp-code-copy-code-active-text: var(--vp-c-text-dark-2);
 }
 
 /**

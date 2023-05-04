@@ -1,4 +1,4 @@
-// eslint-disable-next-line no-restricted-imports
+import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import { parse } from 'flatted'
 import {
@@ -7,6 +7,7 @@ import {
   client,
   instantiateRunner,
   loadConfig,
+  onCancel,
 } from './utils'
 import { rpc, rpcDone } from './rpc'
 import { BrowserSnapshotEnvironment } from './snapshot'
@@ -42,7 +43,6 @@ function activateIFrame(useCurrentModule: string, left?: number) {
       requestAnimationFrame(() => targetIFrame.classList.add('show'))
     }
   }
-}
 
 function normalizePaths(config: ResolvedConfig, paths: string[]) {
   return paths
@@ -138,7 +138,7 @@ async function runTests(
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  const { channel } = await instantiateRunner()
+  const { channel, runner } = await instantiateRunner()
   if (listener) {
     channel.removeEventListener('message', listener)
     channel.addEventListener('message', listener)
@@ -152,6 +152,10 @@ async function runTests(
 
   window.removeEventListener('beforeunload', removeBrowserChannel)
   window.addEventListener('beforeunload', removeBrowserChannel)
+
+  onCancel.then((reason) => {
+    runner?.onCancel?.(reason)
+  })
 
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
@@ -196,4 +200,5 @@ async function runTests(
     currentModuleLeft = savedCurrentModuleLeft
     activateIFrame(savedCurrentModule, savedCurrentModuleLeft)
   }
+}
 }

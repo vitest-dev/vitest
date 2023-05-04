@@ -26,6 +26,7 @@ const external = [
   'pathe',
   'birpc',
   'vite',
+  'vite/types/hot',
   'node:url',
   'node:events',
 ]

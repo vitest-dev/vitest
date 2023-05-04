@@ -28,7 +28,7 @@ We believe that Cypress isn't a good option for unit testing headless code, but 
 
 ## WebdriverIO
 
-[WebdriverIO](https://webdriver.io/) is similar to Cypress a browser based alternative test runner and a complementary tool to Vitest. It can be used as end-to-end testing tool as well as for testing [web components](https://webdriver.io/docs/component-testing). It even uses components of Vitest under the hood, e.g. for [mocking and stubing](https://webdriver.io/docs/component-testing/mocks-and-spies) within component tests.
+[WebdriverIO](https://webdriver.io/) is similar to Cypress a browser based alternative test runner and a complementary tool to Vitest. It can be used as end-to-end testing tool as well as for testing [web components](https://webdriver.io/docs/component-testing). It even uses components of Vitest under the hood, e.g. for [mocking and stubbing](https://webdriver.io/docs/mocksandspies/) within component tests.
 
 WebdriverIO comes with the same advantages as Cypress allowing you to test your logic in real browser. However it uses actual [web standards](https://w3c.github.io/webdriver/) for automation which overcomes some of the tradeoffs and limitation when running tests in Cypress. Furthermore it allows you to run tests on mobile as well, giving you access to test your application in even more environments.
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-namespace */
+
 import { mount } from 'cypress/vue'
 import type { Component } from 'vue'
 import { directives, plugins } from '../../client/global-setup'

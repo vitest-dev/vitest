@@ -27,6 +27,8 @@ export interface VitestRunnerConstructor {
   new(config: VitestRunnerConfig): VitestRunner
 }
 
+export type CancelReason = 'keyboard-input' | 'test-failure' | string & {}
+
 export interface VitestRunner {
   /**
    * First thing that's getting called before actually collecting and running tests.
@@ -38,13 +40,20 @@ export interface VitestRunner {
   onCollected?(files: File[]): unknown
 
   /**
+   * Called when test runner should cancel next test runs.
+   * Runner should listen for this method and mark tests and suites as skipped in
+   * "onBeforeRunSuite" and "onBeforeRunTest" when called.
+   */
+  onCancel?(reason: CancelReason): unknown
+
+  /**
    * Called before running a single test. Doesn't have "result" yet.
    */
   onBeforeRunTest?(test: Test): unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTest?(test: Test, retryCount: number): unknown
+  onBeforeTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
   /**
    * Called after result and state are set.
    */
@@ -52,7 +61,7 @@ export interface VitestRunner {
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTest?(test: Test, retryCount: number): unknown
+  onAfterTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.

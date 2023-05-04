@@ -95,10 +95,10 @@ export default withPwa(defineConfig({
     },
 
     nav: [
-      { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/' },
-      { text: 'Config', link: '/config/' },
-      { text: 'Advanced', link: '/advanced/api' },
+      { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
+      { text: 'API', link: '/api/', activeMatch: '^/api/' },
+      { text: 'Config', link: '/config/', activeMatch: '^/config/' },
+      { text: 'Advanced', link: '/advanced/api', activeMatch: '^/advanced/' },
       {
         text: `v${version}`,
         items: [

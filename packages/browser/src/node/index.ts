@@ -5,12 +5,14 @@ import { readFile } from 'node:fs/promises'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import { injectVitestModule } from './esmInjector'
 
 const polyfills = [
   'util',
 ]
 
-export default (base = '/'): Plugin[] => {
+// don't expose type to not bundle it here
+export default (project: any, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
@@ -102,6 +104,18 @@ await __vitest_browser_runner__.runTest('${test}', '${version}');
 
         id = normalizeId(id)
         return { id: await polyfillPath(id), moduleSideEffects: false }
+      },
+    },
+    {
+      name: 'vitest:browser:esm-injector',
+      enforce: 'post',
+      transform(source, id) {
+        const hijackESM = project.config.browser.slowHijackESM ?? false
+        if (!hijackESM)
+          return
+        return injectVitestModule(source, id, this.parse, {
+          cacheDir: project.server.config.cacheDir,
+        })
       },
     },
   ]

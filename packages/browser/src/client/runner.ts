@@ -26,10 +26,20 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     }
 
     async onAfterRunTest(task: Test) {
-      await super.onAfterRunTest?.()
+      await super.onAfterRunTest?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
       })
+
+      if (this.config.bail && task.result?.state === 'fail') {
+        const previousFailures = await rpc().getCountOfFailedTests()
+        const currentFailures = 1 + previousFailures
+
+        if (currentFailures >= this.config.bail) {
+          rpc().onCancel('test-failure')
+          this.onCancel?.('test-failure')
+        }
+      }
     }
 
     async onAfterRunSuite() {
