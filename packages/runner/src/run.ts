@@ -8,6 +8,7 @@ import { collectTests } from './collect'
 import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
+import { markVersion } from './version'
 
 const now = Date.now
 
@@ -350,6 +351,8 @@ export async function runFiles(files: File[], runner: VitestRunner) {
 }
 
 export async function startTests(paths: string[], runner: VitestRunner) {
+  markVersion()
+
   await runner.onBeforeCollect?.(paths)
 
   const files = await collectTests(paths, runner)
