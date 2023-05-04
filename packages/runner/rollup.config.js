@@ -1,5 +1,6 @@
 import { builtinModules } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
+import json from '@rollup/plugin-json'
 import dts from 'rollup-plugin-dts'
 import { defineConfig } from 'rollup'
 import pkg from './package.json' assert { type: 'json' }
@@ -21,6 +22,7 @@ const plugins = [
   esbuild({
     target: 'node14',
   }),
+  json(),
 ]
 
 export default defineConfig([
