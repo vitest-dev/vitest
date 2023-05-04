@@ -42,6 +42,8 @@ export default (project: any, base = '/'): Plugin[] => {
               ).replace(
                 '</title>', ` - ${test}</title>`,
               ).replace(
+                '<script src="esm-client-injector.js"></script>', `<script src="${base}/esm-client-injector.js"></script>`.replace('//', '/'),
+              ).replace(
                 '</body>', `<script type="module">
 await __vitest_browser_runner__.runTest('${test}', '${version}');
 </script></body>`,
