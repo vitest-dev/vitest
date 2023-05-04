@@ -1,4 +1,3 @@
-import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import { parse } from 'flatted'
 import {
@@ -43,7 +42,7 @@ function activateIFrame(useCurrentModule: string, left?: number) {
       requestAnimationFrame(() => targetIFrame.classList.add('show'))
     }
   }
-
+}
 function normalizePaths(config: ResolvedConfig, paths: string[]) {
   return paths
     .map((path) => {
@@ -200,5 +199,4 @@ async function runTests(
     currentModuleLeft = savedCurrentModuleLeft
     activateIFrame(savedCurrentModule, savedCurrentModuleLeft)
   }
-}
 }
