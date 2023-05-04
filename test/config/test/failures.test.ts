@@ -43,3 +43,17 @@ test('c8 coverage provider cannot be used with browser', async () => {
 
   expect(error).toMatch('Error: @vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 })
+
+test('boolean coverage flag without dot notation, with more dot notation options', async () => {
+  const { error } = await runVitest('run', ['--coverage', '--coverage.reporter', 'text'])
+
+  expect(error).toMatch('Error: A boolean argument "--coverage" was used with dot notation arguments "--coverage.reporter".')
+  expect(error).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
+})
+
+test('boolean browser flag without dot notation, with more dot notation options', async () => {
+  const { error } = await runVitest('run', ['--browser', '--browser.name', 'chrome'])
+
+  expect(error).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
+  expect(error).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
+})

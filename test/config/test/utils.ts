@@ -6,7 +6,7 @@ export async function runVitest(mode: 'run' | 'watch', cliArguments: string[]) {
   let error = ''
 
   subprocess.stderr?.on('data', (data) => {
-    error = stripAnsi(data.toString())
+    error += stripAnsi(data.toString())
 
     // Sometimes on Windows CI execa doesn't exit properly. Force exit when stderr is caught.
     subprocess.kill()
