@@ -1,7 +1,9 @@
 // @ts-expect-error vscode is not installed
 import * as vscodeMocks from 'vscode-mocks'
+
 // @ts-expect-error vscode is not installed
 import * as vscodeFactory from 'vscode-factory'
+
 // @ts-expect-error virtual module
 import * as virtual from 'virtual-module'
 

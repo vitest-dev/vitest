@@ -1297,7 +1297,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
     toBeFoo(): R
   }
 
-  declare module '@vitest/expect' {
+  declare module 'vitest' {
     interface Assertion<T = any> extends CustomMatchers<T> {}
     interface AsymmetricMatchersContaining extends CustomMatchers {}
   }

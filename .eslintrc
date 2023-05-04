@@ -27,7 +27,7 @@
     },
     {
       // these files define vitest as peer dependency
-      "files": "packages/{coverage-*,ui,browser}/**/*.*",
+      "files": "packages/{coverage-*,ui,browser,web-worker}/**/*.*",
       "rules": {
         "no-restricted-imports": [
           "error",

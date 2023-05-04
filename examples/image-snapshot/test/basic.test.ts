@@ -2,11 +2,9 @@ import { readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import { toMatchImageSnapshot } from 'jest-image-snapshot'
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toMatchImageSnapshot(): R
-    }
+declare module 'vitest' {
+  interface Assertion<T> {
+    toMatchImageSnapshot(): T
   }
 }
 
