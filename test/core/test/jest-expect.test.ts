@@ -13,12 +13,13 @@ interface CustomMatchers<R = unknown> {
   toBeTestedPromise(): R
 }
 
-declare module '@vitest/expect' {
+declare module 'vitest' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R

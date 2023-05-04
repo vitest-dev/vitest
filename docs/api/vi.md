@@ -254,8 +254,10 @@ import { vi } from 'vitest'
   ```ts
   // increment.test.js
   import { vi } from 'vitest'
+  
   // axios is a default export from `__mocks__/axios.js`
   import axios from 'axios'
+  
   // increment is a named export from `src/__mocks__/increment.js`
   import { increment } from '../increment.js'
 
@@ -369,6 +371,7 @@ test('importing the next module imports mocked one', async () => {
 
   ```ts
   import { vi } from 'vitest'
+  
   import { data } from './data.js' // Will not get reevaluated beforeEach test
 
   beforeEach(() => {
