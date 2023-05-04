@@ -89,7 +89,7 @@ function normalizeErrorMessage(message: string) {
 
 export function processError(err: any, options: DiffOptions = {}) {
   if (!err || typeof err !== 'object')
-    return err
+    return { message: err }
   // stack is not serialized in worker communication
   // we stringify it first
   if (err.stack)
