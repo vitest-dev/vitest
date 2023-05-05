@@ -5,7 +5,7 @@ import { isWindows, stdout } from '../utils'
 import type { Vitest } from './core'
 
 const keys = [
-  ['a', 'rerun all tests'],
+  [['a, return'], 'rerun all tests'],
   ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
@@ -19,7 +19,7 @@ export function printShortcutsHelp() {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
-${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)).join('\n')}
+${keys.map(i => c.dim('  press ') + c.reset([i[0]].flat().map(c.bold).join(', ')) + c.dim(` to ${i[1]}`)).join('\n')}
 `,
   )
 }
