@@ -61,11 +61,11 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     if (name === 'u')
       return ctx.updateSnapshot()
     // rerun all tests
-    if (name === 'a')
+    if (name === 'a' || name === 'return')
       return ctx.changeNamePattern('')
     // rerun current pattern tests
-    if (name === 'return')
-      return ctx.rerunFiles(ctx.state.getFilepaths(), 'rerun')
+    if (name === 'r')
+      return ctx.rerunFiles()
     // rerun only failed tests
     if (name === 'f')
       return ctx.rerunFailed()
