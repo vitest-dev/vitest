@@ -236,7 +236,7 @@ export class ViteNodeRunner {
     const resolved = await this.options.resolveId(id, importer)
     if (!resolved) {
       const error = new Error(
-        `Cannot find module '${id}' imported from '${importer}'.`
+        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
         + '\n\nIf you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.',
       )
       Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import MySharedWorker from './src/sharedWorker?sharedworker'
+import MySharedWorker from '../src/sharedWorker?sharedworker'
 
 function sendEventMessage(worker: SharedWorker, msg: any) {
   worker.port.postMessage(msg)
@@ -50,7 +50,7 @@ it('throws an error on invalid path', async () => {
   })
   expect(event).toBeInstanceOf(ErrorEvent)
   expect(event.error).toBeInstanceOf(Error)
-  expect(event.error.message).toContain('Failed to load')
+  expect(event.error.message).toContain('Cannot find module')
 })
 
 it('doesn\'t trigger events, if closed', async () => {
