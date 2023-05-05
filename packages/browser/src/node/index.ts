@@ -29,10 +29,14 @@ export default (project: any, base = '/'): Plugin[] => {
         const prefix = `${base}/__vitest_test__/`.replace('//', '/')
         const testMatcher = new RegExp(`^${prefix}(.*)\\.html\\?browserv=(\\w+)$`)
         const testerHtmlPromise = readFile(resolve(distRoot, 'client/tester.html'), 'utf-8')
+        const esmClientInjectorPromise = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf-8')
         server.middlewares.use(async (req, res, next) => {
           const match = req.url?.match(testMatcher)
           if (match) {
-            const testerHtml = await testerHtmlPromise
+            const [testerHtml, esmClientInjector] = await Promise.all([
+              testerHtmlPromise,
+              esmClientInjectorPromise,
+            ])
             const [, test, version] = match
 
             res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -42,7 +46,9 @@ export default (project: any, base = '/'): Plugin[] => {
               ).replace(
                 '</title>', ` - ${test}</title>`,
               ).replace(
-                '<script src="esm-client-injector.js"></script>', `<script src="${base}/esm-client-injector.js"></script>`.replace('//', '/'),
+                '<script src="esm-client-injector.js"></script>', `<script>
+${esmClientInjector}
+</script>`,
               ).replace(
                 '</body>', `<script type="module">
 await __vitest_browser_runner__.runTest('${test}', '${version}');
