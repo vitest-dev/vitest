@@ -1208,7 +1208,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
       name: 'Empire',
       count: 1,
     }
-    expect(basket).toEqual({
+    expect(variety).toEqual({
       name: expect.stringContaining('Emp'),
       count: 1,
     })
@@ -1233,7 +1233,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
       name: 'Empire',
       count: 1,
     }
-    expect(basket).toEqual({
+    expect(variety).toEqual({
       name: expect.stringMatching(/re$/),
       count: 1,
     })
