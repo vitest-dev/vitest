@@ -219,7 +219,7 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string) {
-    return !isInternalRequest(id) && !isNodeBuiltin(id)
+    return !isInternalRequest(id) && !isNodeBuiltin(id) && !id.startsWith('data:')
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
@@ -234,12 +234,17 @@ export class ViteNodeRunner {
     if (!this.options.resolveId || exists)
       return [id, path]
     const resolved = await this.options.resolveId(id, importer)
-    const resolvedId = resolved
-      ? normalizeRequestId(resolved.id, this.options.base)
-      : id
-    // to be compatible with dependencies that do not resolve id
-    const fsPath = resolved ? resolvedId : path
-    return [resolvedId, fsPath]
+    if (!resolved) {
+      const error = new Error(
+        `Cannot find module '${id}' imported from '${importer}'.`
+        + '\n\nIf you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.',
+      )
+      Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id, importer }, enumerable: false })
+      throw error
+    }
+    const resolvedId = normalizeRequestId(resolved.id, this.options.base)
+    return [resolvedId, resolvedId]
   }
 
   async resolveUrl(id: string, importee?: string) {
