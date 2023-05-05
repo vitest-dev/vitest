@@ -17,14 +17,13 @@ export default defineConfig({
 })
 ```
 
-- 3. Make sure you don't have relative [aliases](/config#alias). Vite treats them as relative to the file where the import is instead of the root.
+- 3. Make sure you don't have relative [aliases](/config/#alias). Vite treats them as relative to the file where the import is instead of the root.
 
 ```diff
 import { defineConfig } from 'vitest/config'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
-  resolve: {
+  test: {
     alias: {
 -     '@/': './src/',
 +     '@/': new URL('./src/', import.meta.url).pathname,
