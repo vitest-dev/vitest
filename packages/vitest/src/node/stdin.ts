@@ -5,7 +5,7 @@ import { isWindows, stdout } from '../utils'
 import type { Vitest } from './core'
 
 const keys = [
-  [['a, return'], 'rerun all tests'],
+  [['a', 'return'], 'rerun all tests'],
   ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
