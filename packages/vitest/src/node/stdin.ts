@@ -6,6 +6,7 @@ import type { Vitest } from './core'
 
 const keys = [
   ['a', 'rerun all tests'],
+  ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
   ['p', 'filter by a filename'],
