@@ -17,6 +17,15 @@ test('quit watch mode', async () => {
   await vitest.isDone
 })
 
+test('rerun current pattern tests', async () => {
+  const vitest = await startWatchMode('-t', 'sum')
+
+  vitest.write('r')
+
+  await vitest.waitForOutput('Test name pattern: /sum/')
+  await vitest.waitForOutput('1 passed')
+})
+
 test('filter by filename', async () => {
   const vitest = await startWatchMode()
 
