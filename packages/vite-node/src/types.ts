@@ -41,7 +41,7 @@ export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
 
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
-export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null> | ViteNodeResolveId | null
 
 export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
 
