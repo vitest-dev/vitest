@@ -17,6 +17,13 @@ export default defineConfig({
 })
 ```
 
+Or rewrite your path to not be relative to root:
+
+```diff
+- import helpers from 'src/helpers'
++ import helpers from '../src/helpers'
+```
+
 - 3. Make sure you don't have relative [aliases](/config/#alias). Vite treats them as relative to the file where the import is instead of the root.
 
 ```diff
