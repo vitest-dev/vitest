@@ -4,6 +4,7 @@ import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
+export type Awaitable<T> = T | PromiseLike<T>
 
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
@@ -41,7 +42,7 @@ export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
 
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
-export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+export type ResolveIdFunction = (id: string, importer?: string) => Awaitable<ViteNodeResolveId | null | undefined | void>
 
 export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
 
