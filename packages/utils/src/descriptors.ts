@@ -94,5 +94,5 @@ export function getConcordanceTheme() {
 }
 
 export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions): string {
-  return concordanceModule.diff(expected, actual, options)
+  return concordanceModule.diff(actual, expected, options)
 }
