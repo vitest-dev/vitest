@@ -6,8 +6,8 @@ exports[`mocked function which fails on toReturnWith > just one call 1`] = `
 Received: 
     1st spy call return:
 
-  - 2
-  + 1
+  - 1
+  + 2
 
 
 Number of calls: 1
@@ -20,18 +20,18 @@ exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
 Received: 
     1st spy call return:
 
-  - 2
-  + 1
+  - 1
+  + 2
 
     2nd spy call return:
 
-  - 2
-  + 1
+  - 1
+  + 2
 
     3rd spy call return:
 
-  - 2
-  + 1
+  - 1
+  + 2
 
 
 Number of calls: 3
@@ -45,22 +45,22 @@ Received:
     1st spy call return:
 
     {
-  -   a: '4',
-  +   a: '1',
+  -   a: '1',
+  +   a: '4',
     }
 
     2nd spy call return:
 
     {
-  -   a: '4',
-  +   a: '1',
+  -   a: '1',
+  +   a: '4',
     }
 
     3rd spy call return:
 
     {
-  -   a: '4',
-  +   a: '1',
+  -   a: '1',
+  +   a: '4',
     }
 
 
