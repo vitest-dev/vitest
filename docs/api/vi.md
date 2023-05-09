@@ -149,7 +149,7 @@ import { vi } from 'vitest'
     return { mockedMethod: vi.fn() }
   })
 
-  vi.mocked('./path/to/module.js', () => {
+  vi.mock('./path/to/module.js', () => {
     return { originalMethod: mockedMethod }
   })
 
