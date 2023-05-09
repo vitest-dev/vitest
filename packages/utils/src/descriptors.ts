@@ -23,8 +23,8 @@ export function getConcordanceTheme() {
       value: c.blue,
     },
     diffGutters: {
-      actual: `  ${c.red('-')} `,
-      expected: `  ${c.green('+')} `,
+      actual: `  ${c.green('-')} `,
+      expected: `  ${c.red('+')} `,
       padding: '    ',
     },
     error: {
@@ -94,5 +94,5 @@ export function getConcordanceTheme() {
 }
 
 export function diffDescriptors(actual: unknown, expected: unknown, options: DisplayOptions): string {
-  return concordanceModule.diff(actual, expected, options)
+  return concordanceModule.diff(expected, actual, options)
 }

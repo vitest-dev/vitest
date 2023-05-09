@@ -15,8 +15,8 @@ test('displays object diff', () => {
 
         {
           a: 1,
-      -   b: 2,
-      +   b: 3,
+      -   b: 3,
+      +   b: 2,
         }"
   `)
 })
@@ -31,8 +31,8 @@ test('display one line string diff', () => {
     "  - Expected  - 1
       + Received  + 1
 
-      - 'string1'
-      + 'string2'"
+      - 'string2'
+      + 'string1'"
   `)
 })
 
@@ -43,12 +43,13 @@ test('display multiline line string diff', () => {
   setupColors(getDefaultColors())
   displayDiff(unifiedDiff(string1, string2), console as any)
   expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
-    "  - Expected  - 1
+    "  - Expected  - 2
       + Received  + 2
 
-      - \`string1
-        string2
-      - string3\`
-      + \`string2"
+      + string1
+        \`string2
+      - string2
+      - string1\`
+      + string3\`"
   `)
 })

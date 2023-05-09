@@ -5,7 +5,7 @@ describe('jest-matcher-utils', () => {
   expect.extend({
     toBeJestEqual(received: any, expected: any) {
       return {
-        message: () => this.utils.diff(received, expected),
+        message: () => this.utils.diff(expected, received),
         pass: received === expected,
       }
     },

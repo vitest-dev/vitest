@@ -46,8 +46,8 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "diff": "  - Expected  - 1
   + Received  + 1
 
-  - 2
-  + 1",
+  - 1
+  + 2",
               "expected": "1",
               "message": "expected 2 to deeply equal 1",
               "name": "AssertionError",
@@ -66,8 +66,8 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "diff": "  - Expected  - 1
   + Received  + 1
 
-  - 2
-  + 1",
+  - 1
+  + 2",
                 "expected": "1",
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
