@@ -75,6 +75,7 @@ export class JUnitReporter implements Reporter {
   private baseLog!: (text: string) => Promise<void>
   private logger!: IndentedLogger<Promise<void>>
   private _timeStart = new Date()
+  private fileFd?: fs.FileHandle
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
@@ -89,6 +90,7 @@ export class JUnitReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
 
       const fileFd = await fs.open(this.reportFile, 'w+')
+      this.fileFd = fileFd
 
       this.baseLog = async (text: string) => await fs.writeFile(fileFd, `${text}\n`)
     }
@@ -244,5 +246,7 @@ export class JUnitReporter implements Reporter {
 
     if (this.reportFile)
       this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)
+
+    await this.fileFd?.close()
   }
 }
