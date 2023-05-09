@@ -1410,3 +1410,20 @@ This config option affects truncating values in `test.each` titles and inside th
 Stop test execution when given number of tests have failed.
 
 By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occured.
+
+### modulePatterns
+
+- **Type**: `string[]`
+- **Default**: `['**/node_modules/**']`
+
+Glob pattern for file paths that should be treated as modules. Setting this option will override the default, if you wish to still search `**/node_modules/**` for packages include it along with any other options:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    modulePatterns: ['**/node_modules/**', path.resolve('../../packages/**')],
+  },
+})
+```

@@ -580,6 +580,13 @@ export interface InlineConfig {
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
+
+  /**
+   * Glob pattern for file paths that should be treated as modules.
+   *
+   * @default ['**\/node_modules\/**']
+   */
+  modulePatterns?: string[]
 }
 
 export interface TypecheckConfig {

@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
+import mm from 'micromatch'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { spyOn } from '../integrations/spy'
@@ -58,6 +59,10 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private get modulePatterns() {
+    return this.executor.options.modulePatterns
+  }
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))
@@ -83,7 +88,7 @@ export class VitestMocker {
     const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
+    const external = (!isAbsolute(fsPath) || mm.isMatch(fsPath, this.modulePatterns, { dot: true })) ? rawId : null // { dot: true } is needed to match dotfolder like .pnpm
 
     return {
       id,
