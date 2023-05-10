@@ -322,7 +322,7 @@ describe('jest mock compat layer', () => {
     expect(Fn.mock.instances[1]).toBe(instance2)
   })
 
-  test('.mockRestore() should restore initial implementation', () => {
+  it('.mockRestore() should restore initial implementation', () => {
     const testFn = vi.fn(() => true)
     expect(testFn()).toBe(true)
 
