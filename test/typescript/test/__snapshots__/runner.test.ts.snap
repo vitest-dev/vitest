@@ -86,3 +86,10 @@ TypeCheckError: Expected 1 arguments, but got 0.
        |                   ^
       5| })"
 `;
+
+exports[`should fail > typecheks with custom tsconfig 1`] = `
+"TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0."
+`;
