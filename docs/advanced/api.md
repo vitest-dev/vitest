@@ -11,7 +11,7 @@ You can start running Vitest tests using its Node API:
 ```js
 import { startVitest } from 'vitest/node'
 
-const vitest = await startVitest('test', ['tests/run-only.test.ts'])
+const vitest = await startVitest('test')
 
 await vitest?.close()
 ```
@@ -27,6 +27,12 @@ If `undefined` is returned or tests failed during the run, Vitest sets `process.
 If watch mode is not enabled, Vitest will call `close` method.
 
 If watch mode is enabled and the terminal supports TTY, Vitest will register console shortcuts.
+
+You can pass down a list of filters as a second argument. Vitest will run only tests that contain at least one of passed down strings in their filepath.
+
+The third argument is CLI arguments that will override any other test config options.
+
+You can also pass down whole Vite config as the forth argument that will override any other user options.
 
 ## createVitest
 
