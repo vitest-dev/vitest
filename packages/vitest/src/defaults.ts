@@ -94,7 +94,7 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-  modulePatterns: ['**/node_modules/**'],
+  moduleDirectories: ['node_modules'],
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

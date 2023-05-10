@@ -586,7 +586,7 @@ export interface InlineConfig {
    *
    * @default ['**\/node_modules\/**']
    */
-  modulePatterns?: string[]
+  moduleDirectories?: (string | RegExp)[]
 }
 
 export interface TypecheckConfig {
