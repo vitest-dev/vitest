@@ -65,7 +65,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     printStack(ctx, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s.line, s.column)))
+        ctx.logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
       }
     })
   }
@@ -203,7 +203,7 @@ function printStack(
   const logger = ctx.logger
 
   for (const frame of stack) {
-    const color = frame === highlight ? c.yellow : c.gray
+    const color = frame === highlight ? c.cyan : c.gray
     const path = relative(ctx.config.root, frame.file)
 
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
