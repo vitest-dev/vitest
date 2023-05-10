@@ -74,7 +74,7 @@ export function createStaticClient(): VitestClient {
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
     const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (contentType.includes('application/gzip')) {
+    if (contentType.includes('application/gzip') || contentType.includes('application/x-gzip')) {
       const compressed = new Uint8Array(await res.arrayBuffer())
       const decompressed = strFromU8(decompressSync(compressed))
       metadata = parse(decompressed) as HTMLReportMetadata
