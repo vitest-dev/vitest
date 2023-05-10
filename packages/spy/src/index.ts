@@ -324,7 +324,7 @@ export function fn<TArgs extends any[] = any[], R = any>(
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation?: (...args: TArgs) => R,
 ): Mock<TArgs, R> {
-  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: () => {} }, 'spy'))
+  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
   if (implementation)
     enhancedSpy.mockImplementation(implementation)
 
