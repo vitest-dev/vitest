@@ -96,6 +96,8 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     for (const spec of files) {
       const pool = getPoolName(spec)
+      if (!(pool in filesByPool))
+        throw new Error(`Unknown pool name "${pool}" for ${spec[1]}. Available pools: ${Object.keys(filesByPool).join(', ')}`)
       filesByPool[pool].push(spec)
     }
 
