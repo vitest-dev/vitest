@@ -28,11 +28,11 @@ If watch mode is not enabled, Vitest will call `close` method.
 
 If watch mode is enabled and the terminal supports TTY, Vitest will register console shortcuts.
 
-You can pass down a list of filters as a second argument. Vitest will run only tests that contain at least one of passed down strings in their filepath.
+You can pass down a list of filters as a second argument. Vitest will run only tests that contain at least one of the passed-down strings in their file path.
 
-The third argument is CLI arguments that will override any other test config options.
+Additionally, you can use the third argument to pass in CLI arguments, which will override any test config options.
 
-You can also pass down whole Vite config as the forth argument that will override any other user options.
+Alternatively, you can pass in the complete Vite config as the fourth argument, which will take precedence over any other user-defined options.
 
 ## createVitest
 
