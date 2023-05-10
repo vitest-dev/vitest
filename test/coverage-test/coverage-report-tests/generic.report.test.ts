@@ -94,3 +94,10 @@ test('function count is correct', async () => {
   expect(functions.total).toBe(5)
   expect(functions.covered).toBe(3)
 })
+
+test('coverage provider does not conflict with built-in reporter\'s outputFile', async () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).toContain('junit.xml')
+})

@@ -2,7 +2,7 @@
   "name": "@vitest/test-config",
   "private": true,
   "scripts": {
-    "test": "vitest run test/**"
+    "test": "vitest run"
   },
   "devDependencies": {
     "execa": "^7.0.0",

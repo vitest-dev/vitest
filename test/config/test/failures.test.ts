@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { version } from 'vitest/package.json'
 
 import { runVitest } from './utils'
 
@@ -56,4 +57,17 @@ test('boolean browser flag without dot notation, with more dot notation options'
 
   expect(error).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
   expect(error).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
+})
+
+test('version number is printed when coverage provider fails to load', async () => {
+  const { error, output } = await runVitest('run', [
+    '--coverage.enabled',
+    '--coverage.provider',
+    'custom',
+    '--coverage.customProviderModule',
+    './non-existing-module.ts',
+  ])
+
+  expect(output).toMatch(`RUN  v${version}`)
+  expect(error).toMatch('Error: Failed to load custom CoverageProviderModule from ./non-existing-module.ts')
 })

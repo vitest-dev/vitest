@@ -17,6 +17,10 @@ const configs = [
     ].filter(Boolean),
     coverage: { enabled: true },
     browser: { enabled: isBrowser, name: 'chrome', headless: true },
+
+    // Regression vitest#3330
+    reporters: ['default', 'junit'],
+    outputFile: { junit: 'coverage/junit.xml' },
   }],
 
   // Run tests for checking coverage report contents.
