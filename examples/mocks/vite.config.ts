@@ -30,7 +30,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     poolMatchGlobs: [
-      ['**/*', 'vm'],
+      ['**/*', 'experimentalVmThreads'],
     ],
     deps: {
       external: [/src\/external/],

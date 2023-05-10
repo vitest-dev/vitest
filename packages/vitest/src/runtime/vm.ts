@@ -4,6 +4,7 @@ import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import { installSourcemapsSupport } from 'vite-node/source-map'
+import type { CancelReason } from '@vitest/runner'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { startVitestExecutor } from './execute'
@@ -16,19 +17,29 @@ export async function run(ctx: WorkerContext) {
   const moduleCache = new ModuleCacheMap()
   const mockMap = new Map()
   const { config, port } = ctx
+
+  let setCancel = (_reason: CancelReason) => {}
+  const onCancel = new Promise<CancelReason>((resolve) => {
+    setCancel = resolve
+  })
+
   const rpc = createBirpc<RuntimeRPC>(
-    {},
+    {
+      onCancel: setCancel,
+    },
     {
       eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },
   )
+
   const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
     mockMap,
+    onCancel,
     environment: ctx.environment.name,
     durations: {
       environment: performance.now(),

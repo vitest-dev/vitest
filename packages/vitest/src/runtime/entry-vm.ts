@@ -20,11 +20,13 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   setupColors(createColors(isatty(1)))
 
-  const _require = createRequire(import.meta.url)
-  // always mock "required" `css` files, because we cannot process them
-  _require.extensions['.css'] = () => ({})
-  _require.extensions['.scss'] = () => ({})
-  _require.extensions['.sass'] = () => ({})
+  if (workerState.environment !== 'node') {
+    const _require = createRequire(import.meta.url)
+    // always mock "required" `css` files, because we cannot process them
+    _require.extensions['.css'] = () => ({})
+    _require.extensions['.scss'] = () => ({})
+    _require.extensions['.sass'] = () => ({})
+  }
 
   await startCoverageInsideWorker(config.coverage, executor)
 

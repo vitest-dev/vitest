@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { ContextTestEnvironment, EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
@@ -11,7 +11,7 @@ import { setupCommonEnv } from './setup.common'
 
 // this should only be used in Node
 let globalSetup = false
-export async function setupGlobalEnv(config: ResolvedConfig) {
+export async function setupGlobalEnv(config: ResolvedConfig, environment: ContextTestEnvironment) {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -30,12 +30,14 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   globalSetup = true
   setupColors(createColors(isatty(1)))
 
-  const _require = createRequire(import.meta.url)
-  // always mock "required" `css` files, because we cannot process them
-  _require.extensions['.css'] = () => ({})
-  _require.extensions['.scss'] = () => ({})
-  _require.extensions['.sass'] = () => ({})
-  _require.extensions['.less'] = () => ({})
+  if (environment.name !== 'node') {
+    const _require = createRequire(import.meta.url)
+    // always mock "required" `css` files, because we cannot process them
+    _require.extensions['.css'] = () => ({})
+    _require.extensions['.scss'] = () => ({})
+    _require.extensions['.sass'] = () => ({})
+    _require.extensions['.less'] = () => ({})
+  }
 
   installSourcemapsSupport({
     getSourceMap: source => state.moduleCache.getSourceMap(source),
