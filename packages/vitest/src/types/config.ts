@@ -308,6 +308,14 @@ export interface InlineConfig {
    */
   experimentalVmThreads?: boolean
 
+  /**
+   * Specifies the memory limit for workers before they are recycled.
+   * If you see your worker leaking memory, try to tinker this value.
+   *
+   * This only has effect on workers that run tests in VM context.
+   */
+  experimentalVmWorkerMemoryLimit?: string | number
+
   // TODO: document that "--no-isolate" has no effect on experimentalVmThreads
   // TODO: workerIdleMemoryLimit for experimentalVmThreads, so they don't leak
 
@@ -703,7 +711,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'experimentalVmWorkerMemoryLimit'> {
   mode: VitestRunMode
 
   base?: string
@@ -748,6 +756,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   typecheck: TypecheckConfig
   runner?: string
+
+  experimentalVmWorkerMemoryLimit?: number | null
 }
 
 export type ProjectConfig = Omit<

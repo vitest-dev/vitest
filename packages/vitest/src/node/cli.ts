@@ -24,6 +24,7 @@ cli
   .option('--threads', 'Enabled threads (default: true)')
   .option('--single-thread', 'Run tests inside a single thread, requires --threads (default: false)')
   .option('--experimental-vm-threads', 'Run tests in a worker pool using VM isolation (default: false)')
+  .option('--experimental-vm-worker-memory-limit', 'Set maximum allowed memory for a worker. When reached, new worker will be created instead')
   .option('--silent', 'Silent console output from tests')
   .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
