@@ -16,9 +16,6 @@ export default <Environment>({
     })
 
     return {
-      getGlobal() {
-        return win.globalThis
-      },
       getVmContext() {
         return win
       },

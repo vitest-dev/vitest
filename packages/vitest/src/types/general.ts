@@ -20,7 +20,7 @@ export interface ModuleCache {
 }
 
 export interface EnvironmentReturn {
-  teardown: (global: any) => Awaitable<void>
+  teardown(global: any): Awaitable<void>
 }
 
 export interface VmEnvironmentReturn {

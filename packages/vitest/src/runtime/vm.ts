@@ -1,4 +1,5 @@
-import { URL, pathToFileURL } from 'node:url'
+import { pathToFileURL } from 'node:url'
+import { performance } from 'node:perf_hooks'
 import { ModuleCacheMap } from 'vite-node/client'
 import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
@@ -64,17 +65,9 @@ export async function run(ctx: WorkerContext) {
   const context = vm.getVmContext()
 
   context.__vitest_worker__ = state
-  // TODO: all globals for test/core to work
-  // TODO: copy more globals
+  // this is unfortunately needed for our own dependencies
+  // we need to find a way to not rely on this by default
   context.process = process
-  context.URL ??= URL
-  context.performance ??= performance
-  context.setImmediate = setImmediate
-  context.clearImmediate = clearImmediate
-  context.setTimeout = setTimeout
-  context.clearTimeout = clearTimeout
-  context.setInterval = setInterval
-  context.clearInterval = clearInterval
   context.global = context
   context.console = createCustomConsole(state)
 
