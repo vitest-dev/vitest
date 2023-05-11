@@ -65,10 +65,6 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
-
-    resourceLimits: {
-      maxOldGenerationSizeMb: 10,
-    },
   }
 
   if (ctx.config.singleThread) {
