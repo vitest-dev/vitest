@@ -11,6 +11,7 @@ import { distDir } from '../paths'
 import { startVitestExecutor } from './execute'
 import { createCustomConsole } from './console'
 import { loadEnvironment } from './environment'
+import { createSafeRpc } from './rpc'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
@@ -46,7 +47,7 @@ export async function run(ctx: WorkerContext) {
       environment: performance.now(),
       prepare: performance.now(),
     },
-    rpc,
+    rpc: createSafeRpc(rpc),
   }
 
   installSourcemapsSupport({
@@ -67,6 +68,7 @@ export async function run(ctx: WorkerContext) {
   context.__vitest_worker__ = state
   // this is unfortunately needed for our own dependencies
   // we need to find a way to not rely on this by default
+  // because browser doesn't provide these globals
   context.process = process
   context.global = context
   context.console = createCustomConsole(state)
