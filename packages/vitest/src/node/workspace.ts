@@ -91,11 +91,11 @@ export class WorkspaceProject {
   }
 
   async globTestFiles(filters: string[] = []) {
-    const { dir, root } = this.config
+    const dir = this.config.dir || this.config.root
 
-    const testFiles = await this.globAllTestFiles(this.config, dir || root)
+    const testFiles = await this.globAllTestFiles(this.config, dir)
 
-    return this.filterFiles(testFiles, filters)
+    return this.filterFiles(testFiles, filters, dir)
   }
 
   async globAllTestFiles(config: ResolvedConfig, cwd: string) {
@@ -149,12 +149,18 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = []) {
+  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
-    if (filters.length)
-      return testFiles.filter(i => filters.some(f => i.includes(f)))
+    if (filters.length) {
+      return testFiles.filter((t) => {
+        const testFile = relative(dir, t)
+        return filters.some((f) => {
+          return testFile.includes(f) || testFile.includes(relative(dir, f))
+        })
+      })
+    }
 
     return testFiles
   }
@@ -191,9 +197,12 @@ export class WorkspaceProject {
   }
 
   async typecheck(filters: string[] = []) {
-    const { dir, root } = this.config
+    const dir = this.config.dir || this.config.root
     const { include, exclude } = this.config.typecheck
-    const testsFilesList = this.filterFiles(await this.globFiles(include, exclude, dir || root), filters)
+
+    const testFiles = await this.globFiles(include, exclude, dir)
+    const testsFilesList = this.filterFiles(testFiles, filters, dir)
+
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
