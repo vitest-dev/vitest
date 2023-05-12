@@ -112,10 +112,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
       const errorMessage = utils.flag(this, 'message')
+
       getSnapshotClient().assert({
         received: expected,
         message,
         isInline: true,
+        isInsideEach: test && (test.each || test.suite?.each),
         properties,
         inlineSnapshot,
         error,
@@ -149,11 +151,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const test = utils.flag(this, 'vitest-test')
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
+      const isInsideEach = test && (test.each || test.suite?.each)
       getSnapshotClient().assert({
         received: getErrorString(expected, promise),
         message,
         inlineSnapshot,
         isInline: true,
+        isInsideEach,
         error,
         errorMessage,
         ...getTestNames(test),

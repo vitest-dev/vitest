@@ -53,7 +53,7 @@ export function createSuiteHooks() {
 }
 
 // implementations
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, each?: boolean, suiteOptions?: number | TestOptions) {
   const tasks: (Test | TaskCustom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -79,6 +79,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       id: '',
       type: 'test',
       name,
+      each: this.each,
       mode,
       suite: undefined!,
       fails: this.fails,
@@ -143,6 +144,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       type: 'suite',
       name,
       mode,
+      each,
       shuffle,
       tasks: [],
     }
@@ -186,11 +188,11 @@ function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
     checkVersion()
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
+    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, this.each, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const suite = this.withContext()
+  suiteFn.each = function<T>(this: { withContext: (entries: Record<string, boolean | undefined>) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const suite = this.withContext({ each: true })
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
@@ -217,7 +219,7 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined>,
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
@@ -225,8 +227,8 @@ function createTest(fn: (
 )) {
   const testFn = fn as any
 
-  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const test = this.withContext()
+  testFn.each = function<T>(this: { withContext: (entries: Record<string, boolean | undefined>) => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext({ each: true })
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)

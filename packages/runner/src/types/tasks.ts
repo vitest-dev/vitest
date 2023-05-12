@@ -9,6 +9,7 @@ export interface TaskBase {
   id: string
   name: string
   mode: RunMode
+  each?: boolean
   concurrent?: boolean
   shuffle?: boolean
   suite?: Suite

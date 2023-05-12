@@ -15,6 +15,12 @@ exports[`should fails > hooks-called.test.ts > hooks-called.test.ts 1`] = `
 Error: before all"
 `;
 
+exports[`should fails > inline-snapshop-inside-each.test.ts > inline-snapshop-inside-each.test.ts 1`] = `
+"Error: InlineSnapshot cannot be used inside of test.each or describe.each
+Error: InlineSnapshot cannot be used inside of test.each or describe.each
+Error: InlineSnapshot cannot be used inside of test.each or describe.each"
+`;
+
 exports[`should fails > mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
