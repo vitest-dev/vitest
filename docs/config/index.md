@@ -1414,7 +1414,7 @@ By default Vitest will run all of your test cases even if some of them fail. Thi
 ### moduleDirectories
 
 - **Type:** `(string | RegExp)[]`
-- **Default**: `[node_modules]`
+- **Default**: `['node_modules']`
 
 A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/#root) of the project.
 

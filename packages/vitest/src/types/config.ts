@@ -582,9 +582,9 @@ export interface InlineConfig {
   bail?: number
 
   /**
-   * Glob pattern for file paths that should be treated as modules.
+   * A list of directories that should be treated as module directories.
    *
-   * @default ['**\/node_modules\/**']
+   * @default ['node_modules']
    */
   moduleDirectories?: (string | RegExp)[]
 }
