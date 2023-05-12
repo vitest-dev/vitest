@@ -20,7 +20,7 @@ export interface BrowserProviderModule {
 
 export interface BrowserConfigOptions {
   /**
-   * if running tests in the broweser should be the default
+   * if running tests in the browser should be the default
    *
    * @default false
    */

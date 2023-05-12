@@ -22,8 +22,8 @@ export interface CliOptions extends UserConfig {
  */
 export async function startVitest(
   mode: VitestRunMode,
-  cliFilters: string[],
-  options: CliOptions,
+  cliFilters: string[] = [],
+  options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
 ): Promise<Vitest | undefined> {
   process.env.TEST = 'true'

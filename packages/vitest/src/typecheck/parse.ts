@@ -1,6 +1,6 @@
 import url from 'node:url'
 import { writeFile } from 'node:fs/promises'
-import { dirname, join } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
 import type { TypecheckConfig } from '../types'
 import type { RawErrsMap, TscErrorInfo } from './types'
@@ -58,11 +58,12 @@ export async function makeTscErrorInfo(
 }
 
 export async function getTsconfig(root: string, config: TypecheckConfig) {
-  const configName = config.tsconfig?.includes('jsconfig.json')
-    ? 'jsconfig.json'
-    : undefined
+  const configName = config.tsconfig ? basename(config.tsconfig) : undefined
+  const configSearchPath = config.tsconfig
+    ? dirname(resolve(root, config.tsconfig))
+    : root
 
-  const tsconfig = getTsconfigContent(config.tsconfig || root, configName)
+  const tsconfig = getTsconfigContent(configSearchPath, configName)
 
   if (!tsconfig)
     throw new Error('no tsconfig.json found')
