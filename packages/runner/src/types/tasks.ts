@@ -170,7 +170,7 @@ export interface TestOptions {
   /**
    * How many times the test will repeat.
    *
-   * @default 5
+   * @default 1
    */
   repeats?: number
 }
@@ -211,6 +211,7 @@ export interface SuiteHooks<ExtraContext = {}> {
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
   readonly mode: RunMode
+  options?: TestOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (Suite | TaskCustom | Test | SuiteCollector<ExtraContext>)[]
