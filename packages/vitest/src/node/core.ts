@@ -15,6 +15,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
+import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -39,6 +40,7 @@ export class Vitest {
   browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
+  typechecker?: Typechecker
 
   vitenode: ViteNodeServer = undefined!
 
@@ -53,8 +55,13 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private coreWorkspace!: WorkspaceProject
+  private coreWorkspace?: WorkspaceProject
 
+  /**
+   * A list of all project specified in `vitest.workspace` file.
+   * If there is no such file, it will contain only the default project,
+   * which uses the root config file (it shares server and config with Vitest instance, unlike other projects).
+   */
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
@@ -139,7 +146,7 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
-  private async createCoreWorkspace(options: UserConfig) {
+  private async createCoreWorkspaceProject(options: UserConfig) {
     const coreWorkspace = new WorkspaceProject(this.config.root, this)
     await coreWorkspace.setServer(options, this.server, {
       runner: this.runner,
@@ -149,6 +156,10 @@ export class Vitest {
     return coreWorkspace
   }
 
+  /**
+   * This returns a workspace project that uses the root config file.
+   * It's posisble that `vitest.workspace` file doesn't include the root config file, so it ca return null.
+   */
   public getCoreWorkspaceProject(): WorkspaceProject | null {
     return this.coreWorkspace || null
   }
@@ -163,7 +174,7 @@ export class Vitest {
     })
 
     if (!workspaceConfigName)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreWorkspaceProject(options)]
 
     const workspaceConfigPath = join(configDir, workspaceConfigName)
 
@@ -213,6 +224,7 @@ export class Vitest {
       return filepath
     }))
 
+    // options inherited from CLI
     const overridesOptions = [
       'logHeapUsage',
       'allowOnly',
@@ -236,8 +248,8 @@ export class Vitest {
       if (
         this.server.config.configFile === workspacePath
       )
-        return this.createCoreWorkspace(options)
-      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
+        return this.createCoreWorkspaceProject(options)
+      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides } as any)
     })
 
     projectsOptions.forEach((options, index) => {
@@ -245,7 +257,7 @@ export class Vitest {
     })
 
     if (!projects.length)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreWorkspaceProject(options)]
 
     const resolvedProjects = await Promise.all(projects)
     const names = new Set<string>()
@@ -275,8 +287,54 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  typecheck(filters?: string[]) {
-    return Promise.all(this.projects.map(project => project.typecheck(filters)))
+  async typecheck(filters?: string[]) {
+    const testsFilesList = await this.globTypecheckTestFiles(filters)
+    const checker = new Typechecker(this, testsFilesList)
+    this.typechecker = checker
+    checker.onParseEnd(async ({ files, sourceErrors }) => {
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onTaskUpdate', checker.getTestPacks())
+      await this.report('onCollected')
+      if (!files.length) {
+        this.logger.printNoTestFound()
+      }
+      else {
+        if (hasFailed(files))
+          process.exitCode = 1
+        await this.report('onFinished', files)
+      }
+      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
+        process.exitCode = 1
+        await this.logger.printSourceTypeErrors(sourceErrors)
+      }
+      // if there are source errors, we are showing it, and then terminating process
+      if (!files.length) {
+        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
+        process.exit(exitCode)
+      }
+      if (this.config.watch) {
+        await this.report('onWatcherStart', files, [
+          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
+          ...this.state.getUnhandledErrors(),
+        ])
+      }
+    })
+    checker.onParseStart(async () => {
+      await this.report('onInit', this)
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onCollected')
+    })
+    checker.onWatcherRerun(async () => {
+      const files = testsFilesList.map(([, file]) => file)
+      await this.report('onWatcherRerun', files, 'File change detected. Triggering rerun.')
+      await checker.collectTests()
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onTaskUpdate', checker.getTestPacks())
+      await this.report('onCollected')
+    })
+    await checker.prepare()
+    await checker.collectTests()
+    await checker.start()
   }
 
   async start(filters?: string[]) {
@@ -745,6 +803,23 @@ export class Vitest {
     await Promise.all(this.projects.map(async (project) => {
       const specs = await project.globTestFiles(filters)
       specs.forEach((file) => {
+        files.push([project, file])
+        const projects = this.projectsTestFiles.get(file) || new Set()
+        projects.add(project)
+        this.projectsTestFiles.set(file, projects)
+      })
+    }))
+    return files
+  }
+
+  public async globTypecheckTestFiles(filters: string[] = []) {
+    const { dir, root } = this.config
+    const { include, exclude } = this.config.typecheck
+    const files: WorkspaceSpec[] = []
+    await Promise.all(this.projects.map(async (project) => {
+      const specs = await project.globFiles(include, exclude, dir || root)
+      const filtered = project.filterFiles(specs, filters)
+      filtered.forEach((file) => {
         files.push([project, file])
         const projects = this.projectsTestFiles.get(file) || new Set()
         projects.add(project)

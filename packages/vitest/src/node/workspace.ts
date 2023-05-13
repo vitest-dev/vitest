@@ -8,8 +8,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge, hasFailed } from '../utils'
-import { Typechecker } from '../typecheck/typechecker'
+import { deepMerge } from '../utils'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
@@ -68,7 +67,6 @@ export class WorkspaceProject {
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
   browser: ViteDevServer = undefined!
-  typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
@@ -190,57 +188,6 @@ export class WorkspaceProject {
     return this.ctx.report(name, ...args)
   }
 
-  async typecheck(filters: string[] = []) {
-    const { dir, root } = this.config
-    const { include, exclude } = this.config.typecheck
-    const testsFilesList = this.filterFiles(await this.globFiles(include, exclude, dir || root), filters)
-    const checker = new Typechecker(this, testsFilesList)
-    this.typechecker = checker
-    checker.onParseEnd(async ({ files, sourceErrors }) => {
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-      if (!files.length) {
-        this.ctx.logger.printNoTestFound()
-      }
-      else {
-        if (hasFailed(files))
-          process.exitCode = 1
-        await this.report('onFinished', files)
-      }
-      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
-        process.exitCode = 1
-        await this.ctx.logger.printSourceTypeErrors(sourceErrors)
-      }
-      // if there are source errors, we are showing it, and then terminating process
-      if (!files.length) {
-        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
-        process.exit(exitCode)
-      }
-      if (this.config.watch) {
-        await this.report('onWatcherStart', files, [
-          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
-          ...this.ctx.state.getUnhandledErrors(),
-        ])
-      }
-    })
-    checker.onParseStart(async () => {
-      await this.report('onInit', this.ctx)
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onCollected')
-    })
-    checker.onWatcherRerun(async () => {
-      await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
-      await checker.collectTests()
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-    })
-    await checker.prepare()
-    await checker.collectTests()
-    await checker.start()
-  }
-
   isBrowserEnabled() {
     return isBrowserEnabled(this.config)
   }
@@ -279,7 +226,6 @@ export class WorkspaceProject {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all([
         this.server.close(),
-        this.typechecker?.stop(),
         this.browser?.close(),
       ].filter(Boolean))
     }

@@ -730,9 +730,11 @@ export type ProjectConfig = Omit<
   | 'inspectBrk'
   | 'deps'
   | 'coverage'
+  | 'typecheck'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'registerNodeLoader'>
+  typecheck?: Omit<TypecheckConfig, 'checker' | 'allowJs' | 'ignoreSourceErrors' | 'tsconfig'>
 }
 
 export type RuntimeConfig = Pick<

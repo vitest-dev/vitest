@@ -6,8 +6,8 @@ import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping'
 import type { RawSourceMap } from '@ampproject/remapping'
 import { getTasks } from '../utils'
 import { ensurePackageInstalled } from '../node/pkg'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
-import type { WorkspaceProject } from '../node/workspace'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import type { WorkspaceSpec } from '../node'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -42,7 +42,7 @@ export class Typechecker {
   private allowJs?: boolean
   private process!: ExecaChildProcess
 
-  constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
+  constructor(protected ctx: Vitest, protected files: WorkspaceSpec[]) { }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
@@ -56,12 +56,12 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
-  protected async collectFileTests(filepath: string): Promise<FileInformation | null> {
-    return collectTests(this.ctx, filepath)
+  protected async collectFileTests([project, filepath]: WorkspaceSpec): Promise<FileInformation | null> {
+    return collectTests(project, filepath)
   }
 
   protected getFiles() {
-    return this.files.filter((filename) => {
+    return this.files.filter(([, filename]) => {
       const extension = extname(filename)
       return extension !== '.js' || this.allowJs
     })
@@ -102,7 +102,7 @@ export class Typechecker {
 
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.getFiles())
+    const testFiles = this.getFiles()
 
     if (!this._tests)
       this._tests = await this.collectTests()
@@ -110,7 +110,7 @@ export class Typechecker {
     const sourceErrors: TypeCheckError[] = []
     const files: File[] = []
 
-    testFiles.forEach((path) => {
+    testFiles.forEach(([, path]) => {
       const { file, definitions, map, parsed } = this._tests![path]
       const errors = typeErrors.get(path)
       files.push(file)
@@ -157,7 +157,7 @@ export class Typechecker {
     })
 
     typeErrors.forEach((errors, path) => {
-      if (!testFiles.has(path))
+      if (!testFiles.some(([, specFilename]) => specFilename === path))
         sourceErrors.push(...errors.map(({ error }) => error))
     })
 
