@@ -168,9 +168,11 @@ export interface TestOptions {
    */
   retry?: number
   /**
-   * How many times the test will repeat.
+   * How many times the test will run.
+   * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
    *
    * @default 1
+   *
    */
   repeats?: number
 }
