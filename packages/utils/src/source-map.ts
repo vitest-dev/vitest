@@ -23,7 +23,7 @@ function extractLocation(urlLike: string) {
     return [urlLike]
 
   const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/
-  const parts = regExp.exec(urlLike.replace(/[()]/g, ''))
+  const parts = regExp.exec(urlLike.replace(/^\(|\)$/g, ''))
   if (!parts)
     return [urlLike]
   return [parts[1], parts[2] || undefined, parts[3] || undefined]
