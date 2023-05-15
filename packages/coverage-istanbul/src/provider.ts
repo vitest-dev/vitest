@@ -1,5 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
-import { relative, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
@@ -15,8 +15,6 @@ import _TestExclude from 'test-exclude'
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
-
-type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
 interface TestExclude {
   new(opts: {
@@ -146,11 +144,15 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       || this.options.functions
       || this.options.lines
       || this.options.statements) {
-      this.checkThresholds(coverageMap, {
-        branches: this.options.branches,
-        functions: this.options.functions,
-        lines: this.options.lines,
-        statements: this.options.statements,
+      this.checkThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        perFile: this.options.perFile,
       })
     }
 
@@ -166,52 +168,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         perFile: this.options.perFile,
         configurationFile: this.ctx.server.config.configFile,
       })
-    }
-  }
-
-  checkThresholds(coverageMap: CoverageMap, thresholds: Record<Threshold, number | undefined>) {
-    // Construct list of coverage summaries where thresholds are compared against
-    const summaries = this.options.perFile
-      ? coverageMap.files()
-        .map((file: string) => ({
-          file,
-          summary: coverageMap.fileCoverageFor(file).toSummary(),
-        }))
-      : [{
-          file: null,
-          summary: coverageMap.getCoverageSummary(),
-        }]
-
-    // Check thresholds of each summary
-    for (const { summary, file } of summaries) {
-      for (const thresholdKey of ['lines', 'functions', 'statements', 'branches'] as const) {
-        const threshold = thresholds[thresholdKey]
-
-        if (threshold !== undefined) {
-          const coverage = summary.data[thresholdKey].pct
-
-          if (coverage < threshold) {
-            process.exitCode = 1
-
-            /*
-             * Generate error message based on perFile flag:
-             * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-             * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-             */
-            let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet`
-
-            if (!this.options.perFile)
-              errorMessage += ' global'
-
-            errorMessage += ` threshold (${threshold}%)`
-
-            if (this.options.perFile && file)
-              errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-
-            console.error(errorMessage)
-          }
-        }
-      }
     }
   }
 

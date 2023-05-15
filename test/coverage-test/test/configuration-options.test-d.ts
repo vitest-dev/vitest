@@ -8,6 +8,7 @@ type Coverage = NonNullable<Configuration['coverage']>
 
 test('providers, built-in', () => {
   assertType<Coverage>({ provider: 'c8' })
+  assertType<Coverage>({ provider: 'v8' })
   assertType<Coverage>({ provider: 'istanbul' })
 
   // @ts-expect-error -- String options must be known ones only
@@ -24,6 +25,16 @@ test('providers, custom', () => {
 test('provider options, generic', () => {
   assertType<Coverage>({
     provider: 'c8',
+    enabled: true,
+    include: ['string'],
+    watermarks: {
+      functions: [80, 95],
+      lines: [80, 95],
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
     enabled: true,
     include: ['string'],
     watermarks: {
@@ -58,6 +69,19 @@ test('provider specific options, c8', () => {
   })
 })
 
+test('provider specific options, v8', () => {
+  assertType<Coverage>({
+    provider: 'v8',
+    100: true,
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    // @ts-expect-error -- Istanbul-only option is not allowed
+    ignoreClassMethods: ['string'],
+  })
+})
+
 test('provider specific options, istanbul', () => {
   assertType<Coverage>({
     provider: 'istanbul',
@@ -66,8 +90,8 @@ test('provider specific options, istanbul', () => {
 
   assertType<Coverage>({
     provider: 'istanbul',
-    // @ts-expect-error -- C8-only option is not allowed
-    src: ['string'],
+    // @ts-expect-error -- V8-only option is not allowed
+    100: true,
   })
 })
 
