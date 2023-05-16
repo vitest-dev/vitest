@@ -16,7 +16,7 @@ The `c8` provider is being replaced by the [`v8`](https://v8.dev/blog/javascript
 Since Vitest v0.22.0
 :::
 
-Both `v8` and `istanbul` support are optional. By default, `c8` will be used.
+Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 
 You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
 

@@ -59,11 +59,21 @@ export async function startVitest(
   const ctx = await createVitest(mode, options, viteOverrides)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'c8'
+    const provider = ctx.config.coverage.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      if (!await ensurePackageInstalled(requiredPackages, root)) {
+      // Remove this message once support for @vitest/coverage-c8 has been removed completely
+      const defaultProviderInfo = 'Default coverage provider has changed from "c8" to "v8". '
+        + 'New package is required to be installed. '
+        + 'To use the old deprecated coverage provider use "--coverage.provider c8" option.\n'
+        + 'See https://github.com/vitest-dev/vitest/pull/3339 for more information.\n\n'
+
+      const isUsingDefaultProvider
+        = ctx.server.config.test?.coverage?.provider === undefined
+        && options.coverage?.provider === undefined
+
+      if (!await ensurePackageInstalled(requiredPackages, root, isUsingDefaultProvider ? defaultProviderInfo : undefined)) {
         process.exitCode = 1
         return ctx
       }

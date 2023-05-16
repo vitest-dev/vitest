@@ -49,13 +49,13 @@ test('inspect-brk cannot be used with threads', async () => {
 })
 
 test('c8 coverage provider cannot be used with browser', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
+  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'c8' }, browser: { enabled: true, name: 'chrome' } })
 
   expect(stderr).toMatch('Error: @vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 })
 
 test('v8 coverage provider cannot be used with browser', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'v8' }, browser: { enabled: true, name: 'chrome' } })
+  const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
   expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 })

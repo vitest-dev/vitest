@@ -687,7 +687,7 @@ If you are using coverage options with dot notation, don't forget to specify `--
 #### coverage.provider
 
 - **Type:** `'c8' | 'v8' | 'istanbul' | 'custom'`
-- **Default:** `'c8'`
+- **Default:** `'v8'`
 - **CLI:** `--coverage.provider=<provider>`
 
 Use `provider` to select the tool for coverage collection.
