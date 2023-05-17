@@ -134,7 +134,7 @@ export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.{test,spec}.{,m,c}{j,t}sx?']
+   * @default ['**\/*.{test,spec}.{,m,c}{j,t}s?(x)']
    */
   include?: string[]
 

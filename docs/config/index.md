@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{test,spec}.{,m,c}{j,t}sx?']`
+- **Default:** `['**/*.{test,spec}.{,m,c}{j,t}s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -206,7 +206,7 @@ Options used when running `vitest bench`.
 #### benchmark.include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{bench,benchmark}.{,m,c}{j,t}sx?']`
+- **Default:** `['**/*.{bench,benchmark}.{,m,c}{j,t}s?(x)']`
 
 Include globs for benchmark test files
 
@@ -1096,7 +1096,7 @@ Determine the transform method of modules
 #### transformMode.ssr
 
 - **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
+- **Default:** `[/\.([cm]?[jt]s?(x)|json)$/]`
 
 Use SSR transform pipeline for the specified files.<br>
 Vite plugins will receive `ssr: true` flag when processing those files.
