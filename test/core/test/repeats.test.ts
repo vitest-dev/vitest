@@ -48,3 +48,33 @@ describe('testing repeats with retry', () => {
     expect(retryNumbers).toStrictEqual(result)
   })
 })
+
+const nestedDescribeNumbers: number[] = []
+
+describe('testing nested describe', () => {
+  test ('test 1', () => {
+    nestedDescribeNumbers.push(1)
+  })
+
+  describe('nested 1', () => {
+    test('test 2', () => {
+      nestedDescribeNumbers.push(2)
+    })
+
+    describe('nested 2', () => {
+      test('test 3', () => {
+        nestedDescribeNumbers.push(3)
+      })
+
+      describe('nested 3', () => {
+        test('test 4', () => {
+          nestedDescribeNumbers.push(4)
+        })
+      }, 100)
+    }, { repeats: 3 })
+  })
+
+  afterAll(() => {
+    expect(nestedDescribeNumbers).toStrictEqual([1, 1, 2, 2, 3, 3, 3, 4, 4, 4])
+  })
+}, { repeats: 2 })

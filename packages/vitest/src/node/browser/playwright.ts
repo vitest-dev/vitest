@@ -2,6 +2,7 @@ import type { Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { WorkspaceProject } from '../workspace'
+import type { Awaitable } from '../../types'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = typeof playwrightBrowsers[number]
@@ -47,6 +48,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     })
 
     return this.cachedBrowser
+  }
+
+  catchError(cb: (error: Error) => Awaitable<void>) {
+    this.cachedBrowser?.on('pageerror', cb)
+    return () => {
+      this.cachedBrowser?.off('pageerror', cb)
+    }
   }
 
   async openPage(url: string) {

@@ -9,7 +9,7 @@
 
 [[redirects]]
   from = "/new"
-  to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__"
+  to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
   status = 302
 
 [[redirects]]
