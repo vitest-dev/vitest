@@ -1096,7 +1096,7 @@ Determine the transform method of modules
 #### transformMode.ssr
 
 - **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]s?(x)|json)$/]`
+- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
 
 Use SSR transform pipeline for the specified files.<br>
 Vite plugins will receive `ssr: true` flag when processing those files.
