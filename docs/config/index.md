@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{test,spec}.{,m,c}{j,t}s?(x)']`
+- **Default:** `['**/*.{test,spec}.?([cm])[jt]s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -206,7 +206,7 @@ Options used when running `vitest bench`.
 #### benchmark.include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{bench,benchmark}.{,m,c}{j,t}s?(x)']`
+- **Default:** `['**/*.{bench,benchmark}.?([cm])[jt]s?(x)']`
 
 Include globs for benchmark test files
 
@@ -702,9 +702,9 @@ List of files included in coverage as glob patterns
   '**/*.d.ts',
   'cypress/**',
   'test{,s}/**',
-  'test{,-*}.{,m,c}{j,t}s?(x)',
-  '**/*{.,-}test.{,m,c}{j,t}s?(x)',
-  '**/*{.,-}spec.{,m,c}{j,t}s?(x)',
+  'test{,-*}.?([cm])[jt]s?(x)',
+  '**/*{.,-}test.?([cm])[jt]s?(x)',
+  '**/*{.,-}spec.?([cm])[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
