@@ -168,9 +168,11 @@ export interface TestOptions {
    */
   retry?: number
   /**
-   * How many times the test will repeat.
+   * How many times the test will run.
+   * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
    *
-   * @default 5
+   * @default 1
+   *
    */
   repeats?: number
 }
@@ -211,6 +213,7 @@ export interface SuiteHooks<ExtraContext = {}> {
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
   readonly mode: RunMode
+  options?: TestOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (Suite | TaskCustom | Test | SuiteCollector<ExtraContext>)[]

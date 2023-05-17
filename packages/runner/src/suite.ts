@@ -53,7 +53,7 @@ export function createSuiteHooks() {
 }
 
 // implementations
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: TestOptions) {
   const tasks: (Test | TaskCustom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -61,7 +61,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
+  const test = createTest(function (name: string, fn = noop, options) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     if (typeof options === 'number')
@@ -70,7 +70,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     // inherit repeats and retry from suite
     if (typeof suiteOptions === 'object') {
       options = {
-        ...suiteOptions,
+        repeats: suiteOptions.repeats,
+        retry: suiteOptions.retry,
         ...options,
       }
     }
@@ -122,6 +123,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     type: 'collector',
     name,
     mode,
+    options: suiteOptions,
     test,
     tasks,
     collect,
@@ -186,6 +188,16 @@ function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
     checkVersion()
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+    const currentSuite = getCurrentSuite()
+
+    if (typeof options === 'number')
+      options = { timeout: options }
+
+    if (currentSuite && typeof currentSuite.options?.repeats === 'number') {
+      // inherit repeats from current suite
+      options = { repeats: currentSuite.options.repeats, ...options }
+    }
+
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 

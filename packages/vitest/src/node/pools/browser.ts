@@ -8,10 +8,23 @@ import type { BrowserProvider } from '../../types/browser'
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const waitForTest = (id: string) => {
+  const waitForTest = async (provider: BrowserProvider, id: string) => {
     const defer = createDefer()
     ctx.state.browserTestPromises.set(id, defer)
-    return defer
+    const off = provider.catchError((error) => {
+      if (id !== 'no-isolate') {
+        Object.defineProperty(error, 'VITEST_TEST_PATH', {
+          value: id,
+        })
+      }
+      defer.reject(error)
+    })
+    try {
+      return await defer
+    }
+    finally {
+      off()
+    }
   }
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
@@ -40,7 +53,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         url.searchParams.append('path', path)
         url.searchParams.set('id', path)
         await provider.openPage(url.toString())
-        await waitForTest(path)
+        await waitForTest(provider, path)
       }
     }
     else {
@@ -48,7 +61,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       url.searchParams.set('id', 'no-isolate')
       paths.forEach(path => url.searchParams.append('path', path))
       await provider.openPage(url.toString())
-      await waitForTest('no-isolate')
+      await waitForTest(provider, 'no-isolate')
     }
   }
 
