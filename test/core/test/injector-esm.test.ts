@@ -8,9 +8,7 @@ function parse(code: string, options: any) {
 }
 
 function injectSimpleCode(code: string) {
-  return injectVitestModule(code, '/test.js', parse, {
-    cacheDir: '/tmp',
-  })?.code
+  return injectVitestModule(code, '/test.js', parse)?.code
 }
 
 test('default import', async () => {
