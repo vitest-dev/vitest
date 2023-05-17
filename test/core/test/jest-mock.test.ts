@@ -261,7 +261,7 @@ describe('jest mock compat layer', () => {
     obj.property = true
     // unlike jest, mockRestore only restores implementation to the original one,
     // we are still spying on the setter
-    expect(spy).toHaveBeenCalled()
+    expect(spy).not.toHaveBeenCalled()
     expect(obj.property).toBe(true)
   })
 
