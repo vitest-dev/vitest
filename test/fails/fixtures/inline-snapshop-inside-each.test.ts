@@ -12,4 +12,16 @@ describe.each([1])('', () => {
   test.each([1])('', () => {
     expect('').toMatchInlineSnapshot()
   })
+
+  test('', () => {
+    expect(() => {
+      throw new Error('1')
+    }).toThrowErrorMatchingInlineSnapshot()
+  })
+
+  test.each([1])('', () => {
+    expect(() => {
+      throw new Error('1')
+    }).toThrowErrorMatchingInlineSnapshot()
+  })
 })

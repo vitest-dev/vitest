@@ -18,6 +18,8 @@ Error: before all"
 exports[`should fails > inline-snapshop-inside-each.test.ts > inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
+Error: InlineSnapshot cannot be used inside of test.each or describe.each
+Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each"
 `;
 
