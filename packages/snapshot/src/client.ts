@@ -32,7 +32,6 @@ interface AssertOptions {
   name?: string
   message?: string
   isInline?: boolean
-  isInsideEach?: boolean
   properties?: object
   inlineSnapshot?: string
   error?: Error
@@ -96,7 +95,6 @@ export class SnapshotClient {
       name = this.name,
       message,
       isInline = false,
-      isInsideEach = false,
       properties,
       inlineSnapshot,
       error,
@@ -107,9 +105,6 @@ export class SnapshotClient {
 
     if (!filepath)
       throw new Error('Snapshot cannot be used outside of test')
-
-    if (isInline && isInsideEach)
-      throw new Error('InlineSnapshot cannot be used inside of test.each or describe.each')
 
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received)
