@@ -1613,6 +1613,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/filters:
+    devDependencies:
+      vite:
+        specifier: ^4.2.1
+        version: 4.2.1(@types/node@18.16.3)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/global-setup:
     devDependencies:
       vitest:
