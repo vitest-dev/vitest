@@ -88,7 +88,7 @@ Files to include in the test run, using glob pattern.
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite?(st),jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
 
 Files to exclude from the test run, using glob pattern.
 
@@ -206,7 +206,7 @@ Options used when running `vitest bench`.
 #### benchmark.include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{bench,benchmark}.?([cm])[jt]s?(x)']`
+- **Default:** `['**/*.bench?(mark).?([cm])[jt]s?(x)']`
 
 Include globs for benchmark test files
 
@@ -698,15 +698,15 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
-  'packages/*/test{,s}/**',
+  'packages/*/test?(s)/**',
   '**/*.d.ts',
   'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.?([cm])[jt]s?(x)',
+  'test?(s)/**',
+  'test?(-*).?([cm])[jt]s?(x)',
   '**/*{.,-}test.?([cm])[jt]s?(x)',
   '**/*{.,-}spec.?([cm])[jt]s?(x)',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/{karma,rollup,webpack,vite?(st),jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 ```
