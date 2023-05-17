@@ -1,10 +1,10 @@
 import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
-export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+export const defaultInclude = ['**/*.{test,spec}.{,m,c}{j,t}sx?']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
-  include: ['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  include: ['**/*.{bench,benchmark}.{,m,c}{j,t}sx?'],
   exclude: defaultExclude,
   includeSource: [],
   reporters: ['default'],
@@ -17,9 +17,9 @@ const defaultCoverageExcludes = [
   '**/*.d.ts',
   'cypress/**',
   'test{,s}/**',
-  'test{,-*}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  '**/*{.,-}test.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  '**/*{.,-}spec.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+  'test{,-*}.{,m,c}{j,t}sx?',
+  '**/*{.,-}test.{,m,c}{j,t}sx?',
+  '**/*{.,-}spec.{,m,c}{j,t}sx?',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',

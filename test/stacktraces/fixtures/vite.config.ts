@@ -43,7 +43,7 @@ export default defineConfig({
   test: {
     threads: false,
     isolate: false,
-    include: ['**/*.{test,spec}.{imba,js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['**/*.{test,spec}.{imba,{,m,c}{j,t}sx?}'],
     setupFiles: ['./setup.js'],
   },
 })
