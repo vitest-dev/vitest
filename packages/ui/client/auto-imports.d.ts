@@ -91,7 +91,7 @@ declare global {
   const throttledWatch: typeof import('@vueuse/core')['throttledWatch']
   const toRaw: typeof import('vue')['toRaw']
   const toReactive: typeof import('@vueuse/core')['toReactive']
-  const toRef: typeof import('@vueuse/core')['toRef']
+  const toRef: typeof import('vue')['toRef']
   const toRefs: typeof import('vue')['toRefs']
   const toValue: typeof import('@vueuse/core')['toValue']
   const triggerRef: typeof import('vue')['triggerRef']
