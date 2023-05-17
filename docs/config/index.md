@@ -703,11 +703,10 @@ List of files included in coverage as glob patterns
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?([cm])[jt]s?(x)',
-  '**/*{.,-}test.?([cm])[jt]s?(x)',
-  '**/*{.,-}spec.?([cm])[jt]s?(x)',
+  '**/*{.,-}{test,spec}.?([cm])[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite?(st),jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
+  '**/.{eslint,mocha,prettier}rc.{[cm]js,yml}',
 ]
 ```
 - **Available for providers:** `'c8' | 'istanbul'`
