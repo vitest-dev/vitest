@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{test,spec}.?([cm])[jt]s?(x)']`
+- **Default:** `['**/__tests__/**/*.?([cm])[jt]s?(x)', '**/?(*.){test,spec}.?([cm])[jt]s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -1327,7 +1327,7 @@ You can also pass down a path to custom binary or command name that produces the
 #### typecheck.include
 
 - **Type**: `string[]`
-- **Default**: `['**/*.{test,spec}-d.{ts,js}']`
+- **Default**: `['**/?(*.){test,spec}-d.?([cm])[jt]s?(x)']`
 
 Glob pattern for files that should be treated as test files
 
