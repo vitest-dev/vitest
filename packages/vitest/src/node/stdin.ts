@@ -28,9 +28,15 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   let latestFilename = ''
 
   async function _keypressHandler(str: string, key: any) {
-    // ctrl-c or esc
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
+    // Cancel run and exit when ctrl-c or esc is pressed.
+    // If cancelling takes long and key is pressed multiple times, exit forcefully.
+    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) {
+      if (!ctx.isCancelling) {
+        await ctx.cancelCurrentRun('keyboard-input')
+        await ctx.runningPromise
+      }
       return ctx.exit(true)
+    }
 
     // window not support suspend
     if (!isWindows && key && key.ctrl && key.name === 'z') {
