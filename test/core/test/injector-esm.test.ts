@@ -8,9 +8,7 @@ function parse(code: string, options: any) {
 }
 
 function injectSimpleCode(code: string) {
-  return injectVitestModule(code, '/test.js', parse, {
-    cacheDir: '/tmp',
-  })?.code
+  return injectVitestModule(code, '/test.js', parse)?.code
 }
 
 test('default import', async () => {
@@ -148,6 +146,8 @@ test('export default', async () => {
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
     __vi_inject__.default = {}
+    export default { __vi_inject__: __vi_inject__.default };
+
     export { __vi_inject__ }"
   `)
 })
@@ -320,6 +320,8 @@ test('should handle default export variants', async () => {
       "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
       __vi_inject__.default = function() {}
 
+      export default { __vi_inject__: __vi_inject__.default };
+
       export { __vi_inject__ }"
     `)
   // default anonymous class
@@ -327,6 +329,8 @@ test('should handle default export variants', async () => {
     .toMatchInlineSnapshot(`
       "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
       __vi_inject__.default = class {}
+
+      export default { __vi_inject__: __vi_inject__.default };
 
       export { __vi_inject__ }"
     `)
@@ -743,6 +747,8 @@ export default (function getRandom() {
     __vi_inject__.default = (function getRandom() {
       return Math.random();
     });
+    export default { __vi_inject__: __vi_inject__.default };
+
     export { __vi_inject__ }"
   `)
 
@@ -751,6 +757,8 @@ export default (function getRandom() {
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
     __vi_inject__.default = (class A {});
+    export default { __vi_inject__: __vi_inject__.default };
+
     export { __vi_inject__ }"
   `)
 })

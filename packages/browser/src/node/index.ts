@@ -85,9 +85,7 @@ export default (project: any, base = '/'): Plugin[] => {
         const hijackESM = project.config.browser.slowHijackESM ?? false
         if (!hijackESM)
           return
-        return injectVitestModule(source, id, this.parse, {
-          cacheDir: project.server.config.cacheDir,
-        })
+        return injectVitestModule(source, id, this.parse)
       },
     },
   ]
