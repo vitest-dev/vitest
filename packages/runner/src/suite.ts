@@ -205,6 +205,8 @@ function createSuite() {
           ? suite(formatTitle(name, items, idx), () => fn(...items), options)
           : suite(formatTitle(name, items, idx), () => fn(i), options)
       })
+
+      this.withContext({ each: undefined })
     }
   }
 
@@ -242,6 +244,8 @@ function createTest(fn: (
           ? test(formatTitle(name, items, idx), () => fn(...items), options)
           : test(formatTitle(name, items, idx), () => fn(i), options)
       })
+
+      this.withContext({ each: undefined })
     }
   }
 
