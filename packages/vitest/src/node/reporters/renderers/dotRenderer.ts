@@ -33,6 +33,11 @@ function render(tasks: Task[], width: number): string {
   let currentTasks = 0
   let previousLineWidth = 0
   let output = ''
+
+  // The log-update uses various ANSI helper utilities, e.g. ansi-warp, ansi-slice,
+  // when printing. Passing it hundreds of single characters containing ANSI codes reduces
+  // performances. We can optimize it by reducing amount of ANSI codes, e.g. by coloring
+  // multiple tasks at once instead of each task separately.
   const addOutput = () => {
     const { char, color } = currentIcon
     const availableWidth = width - previousLineWidth
@@ -41,6 +46,8 @@ function render(tasks: Task[], width: number): string {
       previousLineWidth += currentTasks
     }
     else {
+      // We need to split the line otherwise it will mess up log-update's height calculation
+      // and spam the scrollback buffer with dots.
       let buf = `${char.repeat(availableWidth)}\n`
       let remaining = currentTasks - availableWidth
       buf += `${char.repeat(width)}\n`.repeat(Math.floor(remaining / width))
