@@ -139,7 +139,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         const optimizer = preOptions.deps?.experimentalOptimizer
         const [major, minor] = viteVersion.split('.').map(Number)
         const allowed = major >= 5 || (major === 4 && minor >= 3)
-        if (!allowed || !optimizer?.enabled) {
+        if (!allowed || optimizer?.enabled !== true) {
           optimizeConfig.cacheDir = undefined
           optimizeConfig.optimizeDeps = {
             // experimental in Vite >2.9.2, entries remains to help with older versions
