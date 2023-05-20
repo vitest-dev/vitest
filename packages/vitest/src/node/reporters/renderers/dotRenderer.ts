@@ -63,7 +63,10 @@ function render(tasks: Task[], width: number): string {
       currentTasks++
       continue
     }
+    // Task mode/state has changed, add previous group to output
     addOutput()
+
+    // Start tracking new group
     currentTasks = 1
     currentIcon = icon
   }
