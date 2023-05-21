@@ -48,14 +48,20 @@ function render(tasks: Task[], width: number): string {
     else {
       // We need to split the line otherwise it will mess up log-update's height calculation
       // and spam the scrollback buffer with dots.
-      let buf = `${char.repeat(availableWidth)}\n`
-      let remaining = currentTasks - availableWidth
-      buf += `${char.repeat(width)}\n`.repeat(Math.floor(remaining / width))
-      remaining %= width
 
-      if (remaining > 0) {
-        buf += char.repeat(remaining)
-        previousLineWidth = remaining
+      // Fill the current line first
+      let buf = `${char.repeat(availableWidth)}\n`
+      const remaining = currentTasks - availableWidth
+
+      // Then fill as many full rows as possible
+      const fullRows = Math.floor(remaining / width)
+      buf += `${char.repeat(width)}\n`.repeat(fullRows)
+
+      // Add remaining dots which don't make a full row
+      const partialRow = remaining % width
+      if (partialRow > 0) {
+        buf += char.repeat(partialRow)
+        previousLineWidth = partialRow
       }
       else {
         previousLineWidth = 0
