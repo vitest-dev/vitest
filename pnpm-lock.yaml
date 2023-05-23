@@ -1786,12 +1786,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      execa:
-        specifier: ^7.0.0
-        version: 7.0.0
-      strip-ansi:
-        specifier: ^7.0.1
-        version: 7.0.1
       vite:
         specifier: ^4.2.1
         version: 4.2.1(@types/node@18.16.3)
