@@ -1594,9 +1594,6 @@ importers:
 
   test/fails:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       jsdom:
         specifier: ^21.0.0
         version: 21.0.0
