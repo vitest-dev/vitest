@@ -35,6 +35,9 @@ export function unifiedDiff(actual: unknown, expected: unknown, options: DiffOpt
       counts['-']++
   })
 
+  if (counts['+'] === 0 && counts['-'] === 0)
+    return ''
+
   let legend = ''
 
   if (showLegend) {
