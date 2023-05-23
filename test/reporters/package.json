@@ -2,12 +2,12 @@
   "name": "@vitest/test-reporters",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "NO_COLOR=1 vitest run"
   },
   "devDependencies": {
-    "execa": "^6.1.0",
     "flatted": "^3.2.7",
     "pkg-reporter": "./reportPkg/",
+    "strip-ansi": "^7.0.1",
     "vitest": "workspace:*",
     "vitest-sonar-reporter": "0.3.3"
   }

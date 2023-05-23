@@ -1659,15 +1659,15 @@ importers:
 
   test/reporters:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       flatted:
         specifier: ^3.2.7
         version: 3.2.7
       pkg-reporter:
         specifier: ./reportPkg/
         version: link:reportPkg
+      strip-ansi:
+        specifier: ^7.0.1
+        version: 7.0.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
