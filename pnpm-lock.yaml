@@ -1689,9 +1689,6 @@ importers:
 
   test/setup:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
