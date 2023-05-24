@@ -79,14 +79,12 @@ describe('should fail', async () => {
     const { stderr } = await runVitestCli(
       {
         cwd: root,
-        reject: false,
         env: {
           ...process.env,
           CI: 'true',
           NO_COLOR: 'true',
         },
       },
-      'vitest',
       'typecheck',
       '--run',
       '--dir',
