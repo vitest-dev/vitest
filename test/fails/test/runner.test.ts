@@ -1,7 +1,8 @@
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
-import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
+
+import { runVitest } from '../../test-utils'
 
 describe('should fails', async () => {
   const root = resolve(__dirname, '../fixtures')
@@ -9,25 +10,10 @@ describe('should fails', async () => {
 
   for (const file of files) {
     it(file, async () => {
-      // in Windows child_process is very unstable, we skip testing it
-      if (process.platform === 'win32' && process.env.CI)
-        return
+      const { stderr } = await runVitest({ root }, [file])
 
-      let error: any
-      await execa('npx', ['vitest', 'run', file], {
-        cwd: root,
-        env: {
-          ...process.env,
-          CI: 'true',
-          NO_COLOR: 'true',
-        },
-      })
-        .catch((e) => {
-          error = e
-        })
-
-      expect(error).toBeTruthy()
-      const msg = String(error)
+      expect(stderr).toBeTruthy()
+      const msg = String(stderr)
         .split(/\n/g)
         .reverse()
         .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))

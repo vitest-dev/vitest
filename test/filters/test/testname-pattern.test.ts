@@ -1,50 +1,32 @@
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import type { File } from 'vitest'
-import { startVitest } from 'vitest/node'
+
+import { runVitest } from '../../test-utils'
 
 test('match by partial pattern', async () => {
-  const output = await runVitest('example')
+  const { stdout } = await runVitest({ root: './fixtures' }, ['example'])
 
-  expect(output).toMatchInlineSnapshot('"pass: test/example.test.ts"')
+  expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
+  expect(stdout).toMatch('Test Files  1 passed (1)')
+  expect(stdout).not.toMatch('test/filters.test.ts')
 })
 
 test('match by full test file name', async () => {
   const filename = resolve('./fixtures/test/example.test.ts')
-  const output = await runVitest(filename)
+  const { stdout } = await runVitest({ root: './fixtures' }, [filename])
 
-  expect(output).toMatchInlineSnapshot('"pass: test/example.test.ts"')
+  expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
+  expect(stdout).toMatch('Test Files  1 passed (1)')
+  expect(stdout).not.toMatch('test/filters.test.ts')
 })
 
 test('match by pattern that also matches current working directory', async () => {
   const filter = 'filters'
   expect(process.cwd()).toMatch(filter)
 
-  const output = await runVitest(filter)
-  expect(output).toMatchInlineSnapshot('"pass: test/filters.test.ts"')
+  const { stdout } = await runVitest({ root: './fixtures' }, [filter])
+
+  expect(stdout).toMatch('✓ test/filters.test.ts > this will pass')
+  expect(stdout).toMatch('Test Files  1 passed (1)')
+  expect(stdout).not.toMatch('test/example.test.ts')
 })
-
-async function runVitest(...cliArgs: string[]) {
-  let resolve: (value: string) => void
-  const promise = new Promise<string>((_resolve) => {
-    resolve = _resolve
-  })
-
-  await startVitest('test', cliArgs, {
-    root: './fixtures',
-    watch: false,
-    reporters: [{
-      onFinished(files?: File[], errors?: unknown[]) {
-        if (errors?.length)
-          resolve(`Error: ${JSON.stringify(errors, null, 2)}`)
-
-        if (files)
-          resolve(files.map(file => `${file.result?.state}: ${file.name}`).join('\n'))
-        else
-          resolve('No files')
-      },
-    }],
-  })
-
-  return promise
-}

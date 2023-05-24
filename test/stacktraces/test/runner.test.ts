@@ -1,7 +1,11 @@
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
-import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
+
+import { runVitest } from '../../test-utils'
+
+// To prevent the warnining coming up in snapshots
+process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {
   const root = resolve(__dirname, '../fixtures')
@@ -9,20 +13,7 @@ describe('stacktraces should respect sourcemaps', async () => {
 
   for (const file of files) {
     it(file, async () => {
-      // in Windows child_process is very unstable, we skip testing it
-      if (process.platform === 'win32' && process.env.CI)
-        return
-
-      const { stderr } = await execa('npx', ['vitest', 'run', file], {
-        cwd: root,
-        reject: false,
-        stdio: 'pipe',
-        env: {
-          ...process.env,
-          CI: 'true',
-          NO_COLOR: 'true',
-        },
-      })
+      const { stderr } = await runVitest({ root }, [file])
 
       expect(stderr).toBeTruthy()
       const lines = String(stderr).split(/\n/g)
@@ -39,20 +30,7 @@ describe('stacktraces should pick error frame if present', async () => {
 
   for (const file of files) {
     it(file, async () => {
-      // in Windows child_process is very unstable, we skip testing it
-      if (process.platform === 'win32' && process.env.CI)
-        return
-
-      const { stderr } = await execa('npx', ['vitest', 'run', file], {
-        cwd: root,
-        reject: false,
-        stdio: 'pipe',
-        env: {
-          ...process.env,
-          CI: 'true',
-          NO_COLOR: 'true',
-        },
-      })
+      const { stderr } = await runVitest({ root }, [file])
 
       expect(stderr).toBeTruthy()
       const lines = String(stderr).split(/\n/g)
@@ -66,21 +44,9 @@ describe('stacktraces should pick error frame if present', async () => {
 describe('stacktrace should print error frame source file correctly', async () => {
   const root = resolve(__dirname, '../fixtures')
   const testFile = resolve(root, './error-in-deps.test.js')
-  it('error-in-deps', async () => {
-    // in Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
 
-    const { stderr } = await execa('npx', ['vitest', 'run', testFile], {
-      cwd: root,
-      reject: false,
-      stdio: 'pipe',
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-    })
+  it('error-in-deps', async () => {
+    const { stderr } = await runVitest({ root }, [testFile])
 
     // expect to print framestack of foo.js
     expect(stderr).toMatchSnapshot('error-in-deps')
