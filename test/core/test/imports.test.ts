@@ -52,6 +52,12 @@ test('data with dynamic import works', async () => {
   expect(hi).toBe('hi')
 })
 
+test('dynamic import coerces to string', async () => {
+  const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
+  const { default: hi } = await import({ toString: () => dataUri } as string)
+  expect(hi).toBe('hi')
+})
+
 test('dynamic import has Module symbol', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
