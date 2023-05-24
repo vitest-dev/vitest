@@ -74,4 +74,25 @@ describe('should fail', async () => {
     expect(stderr).not.toContain('js.test-d.js')
     expect(stderr).not.toContain('test.test-d.ts')
   }, 30_000)
+
+  it('typechecks empty "include" but with tests', async () => {
+    const { stderr } = await runVitestCli(
+      {
+        cwd: root,
+        env: {
+          ...process.env,
+          CI: 'true',
+          NO_COLOR: 'true',
+        },
+      },
+      'typecheck',
+      '--run',
+      '--dir',
+      resolve(__dirname, '..', './failing'),
+      '--config',
+      resolve(__dirname, './vitest.empty.config.ts'),
+    )
+
+    expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
+  }, 30_000)
 })
