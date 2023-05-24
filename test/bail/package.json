@@ -6,7 +6,6 @@
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
-    "execa": "^7.0.0",
     "vite": "latest",
     "vitest": "workspace:*",
     "webdriverio": "latest"

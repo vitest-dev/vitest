@@ -6,7 +6,6 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "execa": "^6.1.0",
     "jsdom": "^21.0.0",
     "vitest": "workspace:*"
   }
