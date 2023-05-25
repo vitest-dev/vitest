@@ -1404,9 +1404,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      execa:
-        specifier: ^7.0.0
-        version: 7.1.1
       vite:
         specifier: ^4.2.1
         version: 4.2.1(@types/node@18.16.3)
@@ -1425,9 +1422,9 @@ importers:
 
   test/benchmark:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
 
   test/browser:
     devDependencies:
@@ -1482,12 +1479,6 @@ importers:
 
   test/config:
     devDependencies:
-      execa:
-        specifier: ^7.0.0
-        version: 7.0.0
-      strip-ansi:
-        specifier: ^7.0.1
-        version: 7.0.1
       vite:
         specifier: ^4.2.1
         version: 4.2.1(@types/node@18.16.3)
@@ -1603,9 +1594,6 @@ importers:
 
   test/fails:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       jsdom:
         specifier: ^21.0.0
         version: 21.0.0
@@ -1630,9 +1618,6 @@ importers:
 
   test/global-setup-fail:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1668,24 +1653,21 @@ importers:
 
   test/related:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
 
   test/reporters:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       flatted:
         specifier: ^3.2.7
         version: 3.2.7
       pkg-reporter:
         specifier: ./reportPkg/
         version: link:reportPkg
+      strip-ansi:
+        specifier: ^7.0.1
+        version: 7.0.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1707,18 +1689,12 @@ importers:
 
   test/setup:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
 
   test/shard:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1737,9 +1713,21 @@ importers:
 
   test/stacktraces:
     devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/test-utils:
+    devDependencies:
       execa:
-        specifier: ^6.1.0
-        version: 6.1.0
+        specifier: ^7.1.1
+        version: 7.1.1
+      strip-ansi:
+        specifier: ^7.0.1
+        version: 7.0.1
+      vite:
+        specifier: ^4.2.1
+        version: 4.2.1(@types/node@18.16.3)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1750,9 +1738,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
       typescript:
         specifier: ^4.8.4
         version: 4.8.4
@@ -1801,12 +1786,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      execa:
-        specifier: ^7.0.0
-        version: 7.0.0
-      strip-ansi:
-        specifier: ^7.0.1
-        version: 7.0.1
       vite:
         specifier: ^4.2.1
         version: 4.2.1(@types/node@18.16.3)

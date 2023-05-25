@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-fails",
+  "name": "@vitest/test-stacktraces",
   "type": "module",
   "private": true,
   "scripts": {
@@ -7,7 +7,6 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "execa": "^6.1.0",
     "vitest": "workspace:*"
   }
 }

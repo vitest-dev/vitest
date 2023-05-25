@@ -209,11 +209,18 @@ export class WorkspaceProject {
       this.ctx.state.collectFiles(checker.getTestFiles())
       await this.report('onTaskUpdate', checker.getTestPacks())
       await this.report('onCollected')
+      const failedTests = hasFailed(files)
+      const exitCode = !failedTests && checker.getExitCode()
+      if (exitCode) {
+        const error = new Error(checker.getOutput())
+        error.stack = ''
+        this.ctx.state.catchError(error, 'Typecheck Error')
+      }
       if (!files.length) {
         this.ctx.logger.printNoTestFound()
       }
       else {
-        if (hasFailed(files))
+        if (failedTests)
           process.exitCode = 1
         await this.report('onFinished', files)
       }
@@ -224,6 +231,7 @@ export class WorkspaceProject {
       // if there are source errors, we are showing it, and then terminating process
       if (!files.length) {
         const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
+        await this.close()
         process.exit(exitCode)
       }
       if (this.config.watch) {

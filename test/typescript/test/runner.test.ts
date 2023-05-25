@@ -1,30 +1,22 @@
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
-import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
+
+import { runVitest, runVitestCli } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(__dirname, '../failing')
   const files = await fg('*.test-d.*', { cwd: root })
 
   it('typecheck files', async () => {
-    const { stderr } = await execa('npx', [
-      'vitest',
-      'typecheck',
-      '--run',
-      '--dir',
-      resolve(__dirname, '..', './failing'),
-      '--config',
-      resolve(__dirname, './vitest.config.ts'),
-    ], {
-      cwd: root,
-      reject: false,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
+    const { stderr } = await runVitest({
+      root,
+      dir: './failing',
+      typecheck: {
+        allowJs: true,
+        include: ['**/*.test-d.*'],
       },
-    })
+    }, [], 'typecheck')
 
     expect(stderr).toBeTruthy()
     const lines = String(stderr).split(/\n/g)
@@ -50,23 +42,15 @@ describe('should fail', async () => {
   }, 30_000)
 
   it('typecheks with custom tsconfig', async () => {
-    const { stderr } = await execa('npx', [
-      'vitest',
+    const { stderr } = await runVitestCli(
+      { cwd: root, env: { ...process.env, CI: 'true' } },
       'typecheck',
       '--run',
       '--dir',
       resolve(__dirname, '..', './failing'),
       '--config',
       resolve(__dirname, './vitest.custom.config.ts'),
-    ], {
-      cwd: root,
-      reject: false,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-    })
+    )
 
     expect(stderr).toBeTruthy()
     const lines = String(stderr).split(/\n/g)
@@ -89,5 +73,26 @@ describe('should fail', async () => {
     expect(stderr).not.toContain('js-fail.test-d.js')
     expect(stderr).not.toContain('js.test-d.js')
     expect(stderr).not.toContain('test.test-d.ts')
+  }, 30_000)
+
+  it('typechecks empty "include" but with tests', async () => {
+    const { stderr } = await runVitestCli(
+      {
+        cwd: root,
+        env: {
+          ...process.env,
+          CI: 'true',
+          NO_COLOR: 'true',
+        },
+      },
+      'typecheck',
+      '--run',
+      '--dir',
+      resolve(__dirname, '..', './failing'),
+      '--config',
+      resolve(__dirname, './vitest.empty.config.ts'),
+    )
+
+    expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
   }, 30_000)
 })

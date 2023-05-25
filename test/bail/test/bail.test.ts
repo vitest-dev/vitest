@@ -1,34 +1,26 @@
-import { expect, test } from 'vitest'
-import { execa } from 'execa'
+import { type UserConfig, expect, test } from 'vitest'
 
-const configs: string[][] = []
-const pools = [['--threads', 'true'], ['--threads', 'false'], ['--single-thread']]
+import { runVitest } from '../../test-utils'
+
+const configs: UserConfig[] = []
+const pools: UserConfig[] = [{ threads: true }, { threads: false }, { singleThread: true }]
 
 if (process.platform !== 'win32')
-  pools.push(['--browser'])
+  pools.push({ browser: { enabled: true, name: 'chrome' } })
 
-for (const isolate of ['true', 'false']) {
-  for (const pool of pools) {
-    configs.push([
-      '--bail',
-      '1',
-      '--isolate',
-      isolate,
-      ...pool,
-    ])
-  }
+for (const isolate of [true, false]) {
+  for (const pool of pools)
+    configs.push({ isolate, ...pool })
 }
 
 for (const config of configs) {
-  test(`should bail with "${config.join(' ')}"`, async () => {
-    const { exitCode, stdout } = await execa('vitest', [
-      '--no-color',
-      '--root',
-      'fixtures',
+  test(`should bail with "${JSON.stringify(config)}"`, async () => {
+    process.env.THREADS = config?.threads ? 'true' : 'false'
+
+    const { exitCode, stdout } = await runVitest({
+      root: './fixtures',
+      bail: 1,
       ...config,
-    ], {
-      reject: false,
-      env: { THREADS: config.join(' ').includes('--threads true') ? 'true' : 'false' },
     })
 
     expect(exitCode).toBe(1)
