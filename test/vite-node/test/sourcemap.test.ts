@@ -5,7 +5,7 @@ import type { SourceMap } from 'rollup'
 import { withInlineSourcemap } from '../../../packages/vite-node/src/source-map'
 
 it('regex match', () => {
-  const regex = /(?<!['"`])\/\/# sourceMappingURL=data:application\/json[^,]+base64,(.+)(?!w)/g
+  const regex = /\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,([A-Za-z0-9+/=]+)$/gm
   expect('function foo(src) {\n  return `//# sourceMappingURL=data:application/json;base64,${src}`;\n}\nObject.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});\n'.match(regex)).null
   expect(`function foo(src) {
     return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
@@ -73,5 +73,20 @@ describe('withInlineSourcemap', () => {
     //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==`
 
     expect(withInlineSourcemap(input, options).code).include('//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==')
+  })
+  it('Check that the vite-node in real code', () => {
+    input.code = `
+import { expect, it } from 'vitest'
+
+it('should have sourcemaps', () => {
+  expect('\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9==').toBeTruthy()
+  expect("\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9==").toBeTruthy()
+  expect(\`\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9==\`).toBeTruthy()
+})
+    `
+    expect(withInlineSourcemap(input, options).code)
+      .include('\'\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9==\'')
+      .include('"\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9=="')
+      .include('`\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9==`')
   })
 })
