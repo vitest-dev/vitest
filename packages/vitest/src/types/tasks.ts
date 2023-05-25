@@ -22,4 +22,4 @@ export type {
   TestContext,
   OnTestFailedHandler,
   TaskMeta,
-} from '@vitest/runner/types'
+} from '@vitest/runner'
