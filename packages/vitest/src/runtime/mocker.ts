@@ -69,9 +69,7 @@ export class VitestMocker {
   }
 
   private isAModuleDirectory(path: string) {
-    return this.moduleDirectories.some(dir =>
-      dir instanceof RegExp ? dir.test(path) : path.includes(dir),
-    )
+    return this.moduleDirectories.some(dir => path.startsWith(dir))
   }
 
   public getSuiteFilepath(): string {

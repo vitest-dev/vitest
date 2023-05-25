@@ -1,5 +1,5 @@
 import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
@@ -138,13 +138,7 @@ export function resolveConfig(
   }
   resolved.deps.moduleDirectories ??= ['/node_modules/']
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
-    if (dir instanceof RegExp)
-      return dir
-    if (!dir.startsWith('/'))
-      dir = `/${dir}`
-    if (!dir.endsWith('/'))
-      dir += '/'
-    return dir
+    return join(viteConfig.configFile || process.cwd(), dir)
   })
 
   if (resolved.runner) {

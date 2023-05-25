@@ -118,11 +118,11 @@ interface DepsOptions {
   registerNodeLoader?: boolean
 
   /**
-   * A list of directories that should be treated as module directories.
+   * A list of directories relative to the config file that should be treated as module directories.
    *
    * @default ['node_modules']
    */
-  moduleDirectories?: (string | RegExp)[]
+  moduleDirectories?: string[]
 }
 
 export interface InlineConfig {
@@ -739,7 +739,7 @@ export type ProjectConfig = Omit<
   | 'coverage'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'registerNodeLoader'>
+  deps?: Omit<DepsOptions, 'registerNodeLoader' | 'moduleDirectories'>
 }
 
 export type RuntimeConfig = Pick<

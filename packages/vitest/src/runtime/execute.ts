@@ -13,7 +13,7 @@ import { rpc } from './rpc'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
-  moduleDirectories?: (string | RegExp)[]
+  moduleDirectories?: string[]
 }
 
 export async function createVitestExecutor(options: ExecuteOptions) {

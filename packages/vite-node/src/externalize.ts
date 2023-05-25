@@ -115,9 +115,7 @@ async function _shouldExternalize(
     return id
 
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
-  const isLibraryModule = moduleDirectories.some(dir =>
-    dir instanceof RegExp ? dir.test(id) : id.includes(dir),
-  )
+  const isLibraryModule = moduleDirectories.some(dir => id.startsWith(dir))
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? (guessCJSversion(id) || id) : id
 
