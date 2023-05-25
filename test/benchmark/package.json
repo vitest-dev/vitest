@@ -4,10 +4,9 @@
   "scripts": {
     "test": "node test.mjs",
     "bench:json": "vitest bench --reporter=json",
-    "bench": "vitest bench",
-    "coverage": "vitest run --coverage"
+    "bench": "vitest bench"
   },
   "devDependencies": {
-    "execa": "^6.1.0"
+    "vitest": "workspace:*"
   }
 }

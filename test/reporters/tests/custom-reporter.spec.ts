@@ -1,24 +1,17 @@
-import { execa } from 'execa'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 
+import TestReporter from '../src/custom-reporter'
+import { runVitest, runVitestCli } from '../../test-utils'
+
 const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
+const root = resolve(__dirname, '..')
 
 async function run(...runOptions: string[]): Promise<string> {
-  const root = resolve(__dirname, '..')
+  const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
 
-  const { stdout } = await execa('npx', ['vitest', 'run', ...runOptions], {
-    cwd: root,
-    env: {
-      ...process.env,
-      CI: 'true',
-      NO_COLOR: 'true',
-    },
-    windowsHide: false,
-  })
-
-  return stdout
+  return vitest.stdout
 }
 
 async function runWithRetry(...runOptions: string[]) {
@@ -35,15 +28,15 @@ async function runWithRetry(...runOptions: string[]) {
   }
 }
 
-describe.concurrent('custom reporters', () => {
+describe('custom reporters', () => {
   // On Windows and macOS child_process is very unstable, we skip testing it as the functionality is tested on Linux
   if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI)
     return test.skip('skip on windows')
 
   const TIMEOUT = 60_000
 
-  test('custom reporter instances defined in configuration works', async () => {
-    const stdout = await runWithRetry('--config', 'custom-reporter.vitest.config.ts')
+  test('custom reporter instances works', async () => {
+    const { stdout } = await runVitest({ root, reporters: [new TestReporter()], include: ['tests/reporters.spec.ts'] })
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
 
@@ -53,12 +46,17 @@ describe.concurrent('custom reporters', () => {
   }, TIMEOUT)
 
   test('package.json dependencies reporter instances defined in configuration works', async () => {
-    const stdout = await runWithRetry('--config', 'deps-reporter.vitest.config.ts')
+    const { stdout } = await runVitest({
+      root,
+      include: ['tests/reporters.spec.ts'],
+      reporters: ['pkg-reporter', 'vitest-sonar-reporter'],
+      outputFile: './sonar-config.xml',
+    })
     expect(stdout).includes('hello from package reporter')
   }, TIMEOUT)
 
   test('a path to a custom reporter defined in configuration works', async () => {
-    const stdout = await runWithRetry('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
+    const { stdout } = await runVitest({ root, reporters: customJSReporterPath, include: ['tests/reporters.spec.ts'] })
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
 

@@ -1,7 +1,8 @@
 import { resolve } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { execaCommandSync } from 'execa'
 import { browserErrors, isWindows, page, ports, startServerCommand, untilUpdated } from '../setup'
+
+import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures')
 const port = ports.report
@@ -9,14 +10,7 @@ const port = ports.report
 // TODO: fix flakyness on windows
 describe.skipIf(isWindows)('html report', () => {
   beforeAll(async () => {
-    execaCommandSync('npx vitest run --reporter=html --outputFile=html/index.html', {
-      cwd: root,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-    })
+    await runVitest({ root, reporters: 'html', outputFile: 'html/index.html' })
 
     const exit = await startServerCommand(
       root,

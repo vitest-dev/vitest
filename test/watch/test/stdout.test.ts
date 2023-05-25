@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { afterEach, test } from 'vitest'
 
-import { startWatchMode } from './utils'
+import { runVitestCli } from '../../test-utils'
 
 const testFile = 'fixtures/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
@@ -11,7 +11,7 @@ afterEach(() => {
 })
 
 test('console.log is visible on test re-run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli('--root', 'fixtures', '--watch')
   const testCase = `
 test('test with logging', () => {
   console.log('First')
@@ -23,8 +23,8 @@ test('test with logging', () => {
 
   writeFileSync(testFile, `${testFileContent}${testCase}`, 'utf8')
 
-  await vitest.waitForOutput('stdout | math.test.ts > test with logging')
-  await vitest.waitForOutput('First')
-  await vitest.waitForOutput('Second')
-  await vitest.waitForOutput('Third')
+  await vitest.waitForStdout('stdout | math.test.ts > test with logging')
+  await vitest.waitForStdout('First')
+  await vitest.waitForStdout('Second')
+  await vitest.waitForStdout('Third')
 })
