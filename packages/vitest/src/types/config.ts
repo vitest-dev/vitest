@@ -116,6 +116,13 @@ interface DepsOptions {
    * @default false
    */
   registerNodeLoader?: boolean
+
+  /**
+   * A list of directories that should be treated as module directories.
+   *
+   * @default ['node_modules']
+   */
+  moduleDirectories?: (string | RegExp)[]
 }
 
 export interface InlineConfig {
@@ -580,13 +587,6 @@ export interface InlineConfig {
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
-
-  /**
-   * A list of directories that should be treated as module directories.
-   *
-   * @default ['node_modules']
-   */
-  moduleDirectories?: (string | RegExp)[]
 }
 
 export interface TypecheckConfig {

@@ -59,7 +59,7 @@ export class VitestMocker {
   }
 
   private get moduleDirectories() {
-    return this.executor.options.moduleDirectories
+    return this.executor.options.moduleDirectories || []
   }
 
   private deleteCachedItem(id: string) {
@@ -70,7 +70,7 @@ export class VitestMocker {
 
   private isAModuleDirectory(path: string) {
     return this.moduleDirectories.some(dir =>
-      dir instanceof RegExp ? dir.test(path) : path.includes(`/${dir.replace(/(^\/?|\/?$)/g, '')}/`),
+      dir instanceof RegExp ? dir.test(path) : path.includes(dir),
     )
   }
 
