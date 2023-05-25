@@ -6,7 +6,7 @@ Vitest exposes experimental private API. Breaking changes might not follow semve
 
 If you are developing a custom reporter or using Vitest Node.js API, you might want to pass down some data from tests that are running in different context to your reporter or custom Vitest handler.
 
-Vitest provides `meta` property on any task (suite or test) that you can reuse between your tests and Node.js process. Beware that it is not a two-way communication, `meta` property can only be set form inside the test context. Changes inside Node.js context will not be reflected in your tests.
+We cannot use [test context](/guide/test-context) for this because it is not serializable. Instead, Vitest provides `meta` property on any task (suite or test) that you can reuse between your tests and Node.js process. Beware that it is not a two-way communication, `meta` property can only be set form inside the test context. Changes inside Node.js context will not be reflected in your tests.
 
 You can populate `meta` property on test context or inside `beforeAll`/`afterAll` hooks for suite tasks.
 
