@@ -136,7 +136,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `[]`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
@@ -190,13 +190,14 @@ TypeError: default is not a function
 
 By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
 
-
 #### deps.moduleDirectories
 
 - **Type:** `(string | RegExp)[]`
 - **Default**: `['node_modules']`
 
 A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/#root) of the project.
+
+This option will also affect if a file should be treated as a module when externalizing dependencies. By default, Vitest imports external modules with native Node.js bypassing Vite transformation step.
 
 Setting this option will _override_ the default, if you wish to still search `node_modules` for packages include it along with any other options:
 
