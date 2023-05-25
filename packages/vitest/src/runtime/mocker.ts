@@ -69,7 +69,7 @@ export class VitestMocker {
   }
 
   private isAModuleDirectory(path: string) {
-    return this.moduleDirectories.some(dir => path.startsWith(dir))
+    return this.moduleDirectories.some(dir => path.includes(dir))
   }
 
   public getSuiteFilepath(): string {

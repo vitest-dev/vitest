@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
+import { join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
 
@@ -109,19 +110,20 @@ async function _shouldExternalize(
   if (options?.cacheDir && id.includes(options.cacheDir))
     return id
 
-  if (matchExternalizePattern(id, options?.inline))
+  const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
+
+  if (matchExternalizePattern(id, moduleDirectories, options?.inline))
     return false
-  if (matchExternalizePattern(id, options?.external))
+  if (matchExternalizePattern(id, moduleDirectories, options?.external))
     return id
 
-  const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
-  const isLibraryModule = moduleDirectories.some(dir => id.startsWith(dir))
+  const isLibraryModule = moduleDirectories.some(dir => id.includes(dir))
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? (guessCJSversion(id) || id) : id
 
-  if (matchExternalizePattern(id, defaultInline))
+  if (matchExternalizePattern(id, moduleDirectories, defaultInline))
     return false
-  if (matchExternalizePattern(id, depsExternal))
+  if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
   const isDist = id.includes('/dist/')
@@ -131,14 +133,14 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(id: string, patterns?: (string | RegExp)[] | true) {
+function matchExternalizePattern(id: string, moduleDirectories: string[], patterns?: (string | RegExp)[] | true) {
   if (patterns == null)
     return false
   if (patterns === true)
     return true
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (id.includes('/node_modules/'))
+      if (moduleDirectories.some(dir => id.includes(join(dir, id))))
         return true
     }
     else {
