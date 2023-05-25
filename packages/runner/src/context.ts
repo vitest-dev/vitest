@@ -47,6 +47,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
   } as unknown as TestContext
 
   context.meta = test
+  context.task = test
 
   context.onTestFailed = (fn) => {
     test.onFailed ||= []

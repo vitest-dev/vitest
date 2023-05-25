@@ -16,9 +16,11 @@ export interface TaskBase {
   file?: File
   result?: TaskResult
   retry?: number
-  meta?: any
+  meta?: TaskMeta
   repeats?: number
 }
+
+export interface TaskMeta {}
 
 export interface TaskCustom extends TaskBase {
   type: 'custom'
@@ -40,7 +42,7 @@ export interface TaskResult {
   repeatCount?: number
 }
 
-export type TaskResultPack = [id: string, result: TaskResult | undefined]
+export type TaskResultPack = [id: string, result: TaskResult | undefined, meta: TaskMeta | undefined]
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -234,8 +236,15 @@ export interface RuntimeContext {
 export interface TestContext {
   /**
    * Metadata of the current test
+   *
+   * @deprecated Use `task` instead
    */
   meta: Readonly<Test>
+
+  /**
+   * Metadata of the current test
+   */
+  task: Readonly<Omit<Test, 'meta'>> & { meta?: TaskMeta }
 
   /**
    * Extract hooks on test failed

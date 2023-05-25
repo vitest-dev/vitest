@@ -1,6 +1,7 @@
 import { Console } from 'node:console'
 import { Writable } from 'node:stream'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
+import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
 import { type Options, execa } from 'execa'
 import stripAnsi from 'strip-ansi'
@@ -15,8 +16,9 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
 
   const { getLogs, restore } = captureLogs()
 
+  let vitest: Vitest | undefined
   try {
-    await startVitest(mode, cliFilters, {
+    vitest = await startVitest(mode, cliFilters, {
       watch: false,
       reporters: ['verbose'],
       ...config,
@@ -27,6 +29,7 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
       stderr: `${getLogs().stderr}\n${e.message}`,
       stdout: getLogs().stdout,
       exitCode: process.exitCode,
+      vitest,
     }
   }
   finally {
@@ -37,7 +40,7 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
   process.exitCode = 0
   process.exit = exit
 
-  return { ...getLogs(), exitCode }
+  return { ...getLogs(), exitCode, vitest }
 }
 
 function captureLogs() {

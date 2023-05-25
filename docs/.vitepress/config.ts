@@ -128,6 +128,10 @@ export default withPwa(defineConfig({
               text: 'Runner API',
               link: '/advanced/runner',
             },
+            {
+              text: 'Task Metadata',
+              link: '/advanced/metadata',
+            },
           ],
         },
       ],

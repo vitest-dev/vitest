@@ -21,4 +21,5 @@ export type {
   RuntimeContext,
   TestContext,
   OnTestFailedHandler,
+  TaskMeta,
 } from '@vitest/runner/types'

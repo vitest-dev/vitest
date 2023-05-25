@@ -117,9 +117,12 @@ export class StateManager {
   }
 
   updateTasks(packs: TaskResultPack[]) {
-    for (const [id, result] of packs) {
-      if (this.idMap.has(id))
-        this.idMap.get(id)!.result = result
+    for (const [id, result, meta] of packs) {
+      const task = this.idMap.get(id)
+      if (task) {
+        task.result = result
+        task.meta = meta
+      }
     }
   }
 
