@@ -38,8 +38,20 @@ export default {
 }
 ```
 
-::: warn
+::: warning
 Vitest can send several tasks at the same time if several tests finished in a short period of time.
+:::
+
+::: danger BEWARE
+Vitest uses different methods to communicate with the Node.js process.
+
+- If Vitest runs tests inside worker threads, it will send data via [message port](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort)
+- If Vitest uses child process, the data will be send as a serialized Buffer via [`process.send`](https://nodejs.org/api/process.html#processsendmessage-sendhandle-options-callback) API
+- If Vitest run tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
+
+The general rule of thumb is that you can send almost anything, except for functions, Promises, regexp (`v8.stringify` cannot serialize it, but you can send a string version and parse it in the Node.js process yourself) and other non-serializable data, but you can have cyclic references inside.
+
+Also, make sure you serialize [Error properties](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#error_types) before you set them.
 :::
 
 You can also get this information from Vitest state, when tests finished running:
