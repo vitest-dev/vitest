@@ -10,6 +10,7 @@ test('calc the duration used by junit', () => {
     name: 'suite',
     mode: 'run',
     tasks: [],
+    meta: {},
   }
   const task: Task = {
     id: '1',
@@ -19,6 +20,7 @@ test('calc the duration used by junit', () => {
     result,
     context: null as any,
     suite,
+    meta: {},
   }
   expect(getDuration(task)).toBe('0')
   result.duration = 0.12

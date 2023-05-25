@@ -149,6 +149,7 @@ export class StateManager {
       result: {
         state: 'skip',
       },
+      meta: {},
       // Cancelled files have not yet collected tests
       tasks: [],
     })))

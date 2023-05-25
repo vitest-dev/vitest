@@ -8,9 +8,9 @@ declare module 'vitest' {
 }
 
 afterAll((suite) => {
-  suite.meta = { done: true }
+  suite.meta.done = true
 })
 
 test('custom', ({ task }) => {
-  task.meta = { custom: 'some-custom-hanlder' }
+  task.meta.custom = 'some-custom-hanlder'
 })

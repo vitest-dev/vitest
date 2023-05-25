@@ -12,12 +12,11 @@ You can populate `meta` property on test context or inside `beforeAll`/`afterAll
 
 ```ts
 afterAll((suite) => {
-  suite.meta ??= {}
   suite.meta.done = true
 })
 
 test('custom', ({ task }) => {
-  task.meta = { custom: 'some-custom-hanlder' }
+  task.meta.custom = 'some-custom-hanlder'
 })
 ```
 
