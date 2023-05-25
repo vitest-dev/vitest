@@ -267,7 +267,7 @@ export class ViteNodeRunner {
     const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
-      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
+      const [id, depFsPath] = await this.resolveUrl(`${dep}`, fsPath)
       return this.dependencyRequest(id, depFsPath, callstack)
     }
 
