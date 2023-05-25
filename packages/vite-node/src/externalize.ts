@@ -114,8 +114,11 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, options?.external))
     return id
 
-  const isNodeModule = id.includes('/node_modules/')
-  const guessCJS = isNodeModule && options?.fallbackCJS
+  const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
+  const isLibraryModule = moduleDirectories.some(dir =>
+    dir instanceof RegExp ? dir.test(id) : id.includes(dir),
+  )
+  const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? (guessCJSversion(id) || id) : id
 
   if (matchExternalizePattern(id, defaultInline))
@@ -124,7 +127,7 @@ async function _shouldExternalize(
     return id
 
   const isDist = id.includes('/dist/')
-  if ((isNodeModule || isDist) && await isValidNodeImport(id))
+  if ((isLibraryModule || isDist) && await isValidNodeImport(id))
     return id
 
   return false
