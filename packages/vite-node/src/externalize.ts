@@ -126,8 +126,7 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
-  const isDist = id.includes('/dist/')
-  if ((isLibraryModule || isDist) && await isValidNodeImport(id))
+  if (isLibraryModule && await isValidNodeImport(id))
     return id
 
   return false
