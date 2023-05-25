@@ -203,8 +203,9 @@ function createSuite() {
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, this.each, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: (entries: Record<string, boolean | undefined>) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const suite = this.withContext({ each: true })
+  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const suite = this.withContext()
+    this.setContext('each', true)
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
@@ -218,7 +219,7 @@ function createSuite() {
           : suite(formatTitle(name, items, idx), () => fn(i), options)
       })
 
-      this.withContext({ each: undefined })
+      this.setContext('each', undefined)
     }
   }
 
@@ -241,8 +242,9 @@ function createTest(fn: (
 )) {
   const testFn = fn as any
 
-  testFn.each = function<T>(this: { withContext: (entries: Record<string, boolean | undefined>) => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const test = this.withContext({ each: true })
+  testFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext()
+    this.setContext('each', true)
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
@@ -257,7 +259,7 @@ function createTest(fn: (
           : test(formatTitle(name, items, idx), () => fn(i), options)
       })
 
-      this.withContext({ each: undefined })
+      this.setContext('each', undefined)
     }
   }
 

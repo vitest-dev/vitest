@@ -15,7 +15,10 @@ export function createChainable<T extends string, Args extends any[], R = any, E
       return fn.apply(context, args)
     }
     Object.assign(chain, fn)
-    chain.withContext = (entries?: Record<T, boolean | undefined>) => chain.bind(Object.assign(context, entries))
+    chain.withContext = () => chain.bind(context)
+    chain.setContext = (key: T, value: boolean | undefined) => {
+      context[key] = value
+    }
     for (const key of keys) {
       Object.defineProperty(chain, key, {
         get() {
