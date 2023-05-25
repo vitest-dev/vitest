@@ -140,7 +140,7 @@ function matchExternalizePattern(id: string, patterns?: (string | RegExp)[] | tr
     return true
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (id.includes(`/${ex.replace(/(^\/?|\/?$)/g, '')}/`))
+      if (id.includes('/node_modules/'))
         return true
     }
     else {
