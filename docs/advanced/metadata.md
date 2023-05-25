@@ -16,7 +16,7 @@ afterAll((suite) => {
 })
 
 test('custom', ({ task }) => {
-  task.meta.custom = 'some-custom-hanlder'
+  task.meta.custom = 'some-custom-handler'
 })
 ```
 
@@ -32,7 +32,7 @@ export default {
   // meta is located on every task inside "onFinished"
   onFinished(files) {
     files[0].meta.done === true
-    files[0].tasks[0].meta.custom === 'some-custom-hanlder'
+    files[0].tasks[0].meta.custom === 'some-custom-handler'
   }
 }
 ```
@@ -59,7 +59,7 @@ You can also get this information from Vitest state, when tests finished running
 const vitest = await createVitest('test')
 await vitest.start()
 vitest.state.getFiles()[0].meta.done === true
-vitest.state.getFiles()[0].tasks[0].meta.custom === 'some-custom-hanlder'
+vitest.state.getFiles()[0].tasks[0].meta.custom === 'some-custom-handler'
 ```
 
 It's also possible to extend type definitions when using TypeScript:
