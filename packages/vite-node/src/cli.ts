@@ -128,7 +128,9 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
           ? new RegExp(dep)
           : dep
       }),
-      moduleDirectories: toArray(serverOptions.deps?.moduleDirectories),
+      moduleDirectories: serverOptions.deps?.moduleDirectories
+        ? toArray(serverOptions.deps?.moduleDirectories)
+        : undefined,
     },
 
     transformMode: {
