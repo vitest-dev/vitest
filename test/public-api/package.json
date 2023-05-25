@@ -5,6 +5,7 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "@vitest/browser": "workspace:*"
   }
 }

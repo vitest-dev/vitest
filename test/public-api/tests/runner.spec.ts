@@ -1,11 +1,24 @@
-import { type File, type TaskResultPack, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
+import type { File, TaskResultPack, UserConfig } from 'vitest'
 import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
 
-it('passes down metadata', async () => {
+it.each([
+  { name: 'threads are enabled', threads: true },
+  { name: 'threads are disabled', threads: false },
+  {
+    name: 'running in the browser',
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chromium',
+      headless: true,
+    },
+  },
+] as UserConfig[])('passes down metadata when $name', async (config) => {
   const taskUpdate: TaskResultPack[] = []
   const finishedFiles: File[] = []
-  const { vitest } = await runVitest({
+  const { vitest, stdout } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures'),
     include: ['**/*.spec.ts'],
     reporters: [
@@ -19,7 +32,10 @@ it('passes down metadata', async () => {
         },
       },
     ],
+    ...config,
   })
+
+  expect(stdout).toContain('custom.spec.ts > custom')
 
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
