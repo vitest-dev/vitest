@@ -73,7 +73,7 @@ export function getRunnerOptions(): any {
     moduleCache,
     mockMap,
     interopDefault: config.deps.interopDefault ?? true,
-    moduleDirectories: config.moduleDirectories,
+    moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
   }
