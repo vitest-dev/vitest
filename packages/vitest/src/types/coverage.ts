@@ -77,6 +77,7 @@ type FieldsWithDefaultValues =
   | 'reportsDirectory'
   | 'exclude'
   | 'extension'
+  | 'reportOnFailure'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -208,6 +209,13 @@ export interface BaseCoverageOptions {
    * @default false
    */
   thresholdAutoUpdate?: boolean
+
+  /**
+   * Generate coverage report even when tests fail.
+   *
+   * @default true
+   */
+  reportOnFailure?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {

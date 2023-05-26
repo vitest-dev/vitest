@@ -778,6 +778,15 @@ The reporter has three different types:
 
 Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
+#### coverage.reportOnFailure
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.reportOnFailure`, `--coverage.reportOnFailure=false`
+
+Generate coverage report even when tests fail.
+
 #### coverage.skipFull
 
 - **Type:** `boolean`
