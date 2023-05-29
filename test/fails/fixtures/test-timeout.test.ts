@@ -16,4 +16,4 @@ suite('suite timeout simple input', () => {
   test('hi', async () => {
     await new Promise(resolve => setTimeout(resolve, 500))
   })
-}, 100)
+}, 200)

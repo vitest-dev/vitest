@@ -36,8 +36,9 @@ TypeError: failure
 TypeError: failure"
 `;
 
-exports[`should fails > test-timeout.test.ts > test-timeout.test.ts 1`] = `
-"Error: Test timed out in 100ms.
+exports[`should fail test-timeout.test.ts > test-timeout.test.ts 1`] = `
+"Error: Test timed out in 200ms.
+Error: Test timed out in 100ms.
 Error: Test timed out in 10ms."
 `;
 
