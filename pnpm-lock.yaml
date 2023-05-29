@@ -1594,6 +1594,9 @@ importers:
 
   test/fails:
     devDependencies:
+      '@vitest/coverage-istanbul':
+        specifier: workspace:*
+        version: link:../../packages/coverage-istanbul
       jsdom:
         specifier: ^21.0.0
         version: 21.0.0
