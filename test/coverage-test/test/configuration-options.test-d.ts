@@ -105,6 +105,7 @@ test('provider module', () => {
             extension: ['string'],
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
+            reportOnFailure: true,
           }
         },
         clean(_: boolean) {},

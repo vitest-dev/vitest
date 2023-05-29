@@ -62,7 +62,7 @@ export interface Mock<TArgs extends any[] = any, TReturns = any> extends SpyInst
   new (...args: TArgs): TReturns
   (...args: TArgs): TReturns
 }
-export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, Partial<TReturns>> {
+export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns extends Promise<Awaited<TReturns>> ? Promise<Partial<Awaited<TReturns>>> : Partial<TReturns>> {
   new (...args: TArgs): TReturns
   (...args: TArgs): TReturns
 }

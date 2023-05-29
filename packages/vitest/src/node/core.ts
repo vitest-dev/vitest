@@ -692,6 +692,9 @@ export class Vitest {
   }
 
   private async reportCoverage(allTestsRun: boolean) {
+    if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
+      return
+
     if (this.coverageProvider) {
       this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
       await this.coverageProvider.reportCoverage({ allTestsRun })

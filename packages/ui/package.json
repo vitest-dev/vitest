@@ -69,7 +69,7 @@
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^10.1.2",
     "ansi-to-html": "^0.7.2",
-    "birpc": "0.2.11",
+    "birpc": "0.2.12",
     "codemirror": "^5.65.13",
     "codemirror-theme-vars": "^0.1.2",
     "cypress": "^12.11.0",

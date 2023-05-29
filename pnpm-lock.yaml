@@ -1080,8 +1080,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2
       birpc:
-        specifier: 0.2.11
-        version: 0.2.11
+        specifier: 0.2.12
+        version: 0.2.12
       codemirror:
         specifier: ^5.65.13
         version: 5.65.13
@@ -1289,8 +1289,8 @@ importers:
         specifier: ^8.1.2
         version: 8.1.2
       birpc:
-        specifier: 0.2.11
-        version: 0.2.11
+        specifier: 0.2.12
+        version: 0.2.12
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -1383,8 +1383,8 @@ importers:
   packages/ws-client:
     dependencies:
       birpc:
-        specifier: 0.2.11
-        version: 0.2.11
+        specifier: 0.2.12
+        version: 0.2.12
       flatted:
         specifier: ^3.2.7
         version: 3.2.7
@@ -1594,6 +1594,9 @@ importers:
 
   test/fails:
     devDependencies:
+      '@vitest/coverage-istanbul':
+        specifier: workspace:*
+        version: link:../../packages/coverage-istanbul
       jsdom:
         specifier: ^21.0.0
         version: 21.0.0
@@ -11063,8 +11066,8 @@ packages:
     dev: true
     optional: true
 
-  /birpc@0.2.11:
-    resolution: {integrity: sha512-OcUm84SBHRsmvSQhOLZRt5Awmw8WVknVcMDMaPE8GPwYxzc4mGE0EIytkWXayPjheGvm7s/Ci1wQZGwk7YPU6A==}
+  /birpc@0.2.12:
+    resolution: {integrity: sha512-6Wz9FXuJ/FE4gDH+IGQhrYdalAvAQU1Yrtcu1UlMk3+9mMXxIRXiL+MxUcGokso42s+Fy+YoUXGLOdOs0siV3A==}
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
