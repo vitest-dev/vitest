@@ -65,6 +65,22 @@ describe('testing vi utils', () => {
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
       baz: 'baz',
     })
+
+    type FooBarAsyncFactory = () => Promise<FooBar>
+
+    const mockFactoryAsync: FooBarAsyncFactory = vi.fn()
+
+    vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
+      foo: vi.fn(),
+    })
+
+    vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
+      bar: vi.fn(),
+    })
+
+    vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
+      baz: 'baz',
+    })
   })
 
   test('can change config', () => {
