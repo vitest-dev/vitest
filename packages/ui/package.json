@@ -56,7 +56,7 @@
     "sirv": "^2.0.3"
   },
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "^8.0.2",
     "@testing-library/cypress": "^9.0.0",
     "@types/codemirror": "^5.60.7",
     "@types/d3-force": "^3.0.4",

@@ -142,7 +142,20 @@ describe('deepClone', () => {
       value: 1,
       writable: false,
     })
+    Object.defineProperty(objB, 'writableValue', {
+      configurable: false,
+      enumerable: false,
+      value: 1,
+      writable: true,
+    })
     expect(deepClone(objB).value).toEqual(objB.value)
+    expect(Object.getOwnPropertyDescriptor(deepClone(objB), 'value')?.writable).toEqual(false)
+    expect(
+      Object.getOwnPropertyDescriptor(deepClone(objB), 'writableValue')?.writable,
+    ).toEqual(true)
+    expect(
+      Object.getOwnPropertyDescriptor(deepClone(objB, { forceWritable: true }), 'value')?.writable,
+    ).toEqual(true)
     const objC = Object.create(objB)
     expect(deepClone(objC).value).toEqual(objC.value)
     const objD: any = { name: 'd', ref: null }

@@ -24,6 +24,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
       mode: 'run',
       filepath,
       tasks: [],
+      meta: Object.create(null),
       projectName: config.name,
     }
 
