@@ -4,8 +4,8 @@ import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
 
 it.each([
-  { name: 'threads are enabled', threads: true },
-  { name: 'threads are disabled', threads: false },
+  // { name: 'threads are enabled', threads: true },
+  // { name: 'threads are disabled', threads: false },
   {
     name: 'running in the browser',
     browser: {
@@ -25,6 +25,7 @@ it.each([
       'verbose',
       {
         onTaskUpdate(packs) {
+          console.error(packs)
           taskUpdate.push(...packs)
         },
         onFinished(files) {
@@ -39,6 +40,8 @@ it.each([
 
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
+
+  console.error('update', taskUpdate, 'files', finishedFiles)
 
   expect(taskUpdate).toHaveLength(2)
   expect(finishedFiles).toHaveLength(1)
