@@ -9,6 +9,14 @@ export type Awaitable<T> = T | PromiseLike<T>
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
+  /**
+   * A list of directories that are considered to hold Node.js modules
+   * Have to include "/" at the start and end of the path
+   *
+   * Vite-Node checks the whole absolute path of the import, so make sure you don't include
+   * unwanted files accidentally
+   * @default ['/node_modules/']
+   */
   moduleDirectories?: string[]
   cacheDir?: string
   /**

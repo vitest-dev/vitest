@@ -65,6 +65,11 @@ export class ViteNodeServer {
     }
     if (options.debug)
       this.debugger = new Debugger(server.config.root, options.debug!)
+
+    options.deps.moduleDirectories ??= []
+    const customModuleDirectories = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES?.split(',')
+    if (customModuleDirectories)
+      options.deps.moduleDirectories.push(...customModuleDirectories)
   }
 
   shouldExternalize(id: string) {
