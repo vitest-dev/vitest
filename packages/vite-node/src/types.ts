@@ -9,6 +9,7 @@ export type Awaitable<T> = T | PromiseLike<T>
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
+  moduleDirectories?: string[]
   cacheDir?: string
   /**
    * Try to guess the CJS version of a package when it's invalid ESM

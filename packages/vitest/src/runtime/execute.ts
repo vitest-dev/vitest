@@ -13,6 +13,7 @@ import { rpc } from './rpc'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
+  moduleDirectories?: string[]
 }
 
 export async function createVitestExecutor(options: ExecuteOptions) {
@@ -70,6 +71,7 @@ export async function startViteNode(ctx: ContextRPC) {
     moduleCache,
     mockMap,
     interopDefault: config.deps.interopDefault,
+    moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
   })
