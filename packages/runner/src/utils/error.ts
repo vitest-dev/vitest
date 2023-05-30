@@ -97,8 +97,8 @@ export function processError(err: any, options: DiffOptions = {}) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  const clonedActual = deepClone(err.actual)
-  const clonedExpected = deepClone(err.expected)
+  const clonedActual = deepClone(err.actual, { forceWritable: true })
+  const clonedExpected = deepClone(err.expected, { forceWritable: true })
 
   const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
 
