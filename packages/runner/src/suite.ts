@@ -67,11 +67,12 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof options === 'number')
       options = { timeout: options }
 
-    // inherit repeats and retry from suite
+    // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object') {
       options = {
         repeats: suiteOptions.repeats,
         retry: suiteOptions.retry,
+        timeout: suiteOptions.timeout,
         ...options,
       }
     }
