@@ -67,7 +67,9 @@ export class ViteNodeServer {
       this.debugger = new Debugger(server.config.root, options.debug!)
 
     options.deps.moduleDirectories ??= []
-    const customModuleDirectories = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES?.split(',')
+
+    const envValue = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
+    const customModuleDirectories = envValue?.split(',')
     if (customModuleDirectories)
       options.deps.moduleDirectories.push(...customModuleDirectories)
   }
