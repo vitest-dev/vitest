@@ -4,9 +4,9 @@
 Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
 :::
 
-If you are developing a custom reporter or using Vitest Node.js API, you might want to pass down some data from tests that are running in different context to your reporter or custom Vitest handler.
+If you are developing a custom reporter or using Vitest Node.js API, you might find it useful to pass data from tests that are being executed in various contexts to your reporter or custom Vitest handler.
 
-We cannot use [test context](/guide/test-context) for this because it is not serializable. Instead, Vitest provides `meta` property on any task (suite or test) that you can reuse between your tests and Node.js process. Beware that it is not a two-way communication, `meta` property can only be set form inside the test context. Changes inside Node.js context will not be reflected in your tests.
+To accomplish this, relying on the [test context](/guide/test-context) is not feasible since it cannot be serialized. However, with Vitest, you can utilize the `meta` property available on every task (suite or test) to share data between your tests and the Node.js process. It's important to note that this communication is one-way only, as the `meta` property can only be modified from within the test context. Any changes made within the Node.js context will not be visible in your tests.
 
 You can populate `meta` property on test context or inside `beforeAll`/`afterAll` hooks for suite tasks.
 
@@ -20,7 +20,7 @@ test('custom', ({ task }) => {
 })
 ```
 
-When test finishes, Vitest will send a task with result and meta via RPC to Node.js process. You can intercept it with `onTaskUpdate` reporter method:
+Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC. To intercept and process this task, you can utilize the `onTaskUpdate` method available in your reporter implementation:
 
 ```ts
 // custom-reporter.js
@@ -38,7 +38,7 @@ export default {
 ```
 
 ::: warning
-Vitest can send several tasks at the same time if several tests finished in a short period of time.
+Vitest can send several tasks at the same time if several tests are completed in a short period of time.
 :::
 
 ::: danger BEWARE
@@ -48,12 +48,12 @@ Vitest uses different methods to communicate with the Node.js process.
 - If Vitest uses child process, the data will be send as a serialized Buffer via [`process.send`](https://nodejs.org/api/process.html#processsendmessage-sendhandle-options-callback) API
 - If Vitest run tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
 
-The general rule of thumb is that you can send almost anything, except for functions, Promises, regexp (`v8.stringify` cannot serialize it, but you can send a string version and parse it in the Node.js process yourself) and other non-serializable data, but you can have cyclic references inside.
+The general rule of thumb is that you can send almost anything, except for functions, Promises, regexp (`v8.stringify` cannot serialize it, but you can send a string version and parse it in the Node.js process yourself), and other non-serializable data, but you can have cyclic references inside.
 
 Also, make sure you serialize [Error properties](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#error_types) before you set them.
 :::
 
-You can also get this information from Vitest state, when tests finished running:
+You can also get this information from Vitest state when tests finished running:
 
 ```ts
 const vitest = await createVitest('test')
