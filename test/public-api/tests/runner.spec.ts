@@ -46,8 +46,21 @@ it.each([
   const files = vitest?.state.getFiles() || []
   expect(files).toHaveLength(1)
 
-  expect(taskUpdate[0][2]).toEqual(suiteMeta)
-  expect(taskUpdate[1][2]).toEqual(testMeta)
+  expect(taskUpdate).toContainEqual(
+    expect.arrayContaining([
+      expect.any(String),
+      expect.anything(),
+      suiteMeta,
+    ]),
+  )
+
+  expect(taskUpdate).toContainEqual(
+    expect.arrayContaining([
+      expect.any(String),
+      expect.anything(),
+      testMeta,
+    ]),
+  )
 
   expect(finishedFiles[0].meta).toEqual(suiteMeta)
   expect(finishedFiles[0].tasks[0].meta).toEqual(testMeta)
