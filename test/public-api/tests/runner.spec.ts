@@ -47,19 +47,19 @@ it.each([
   expect(files).toHaveLength(1)
 
   expect(taskUpdate).toContainEqual(
-    expect.arrayContaining([
+    [
       expect.any(String),
       expect.anything(),
       suiteMeta,
-    ]),
+    ],
   )
 
   expect(taskUpdate).toContainEqual(
-    expect.arrayContaining([
+    [
       expect.any(String),
       expect.anything(),
       testMeta,
-    ]),
+    ],
   )
 
   expect(finishedFiles[0].meta).toEqual(suiteMeta)
