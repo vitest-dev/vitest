@@ -63,7 +63,7 @@ export default defineConfig({
     },
     deps: {
       external: ['tinyspy', /src\/external/],
-      moduleDirectories: ['node_modules', 'projects'],
+      moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
     alias: [
       {
