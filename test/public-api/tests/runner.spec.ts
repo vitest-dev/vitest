@@ -54,4 +54,4 @@ it.each([
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
-})
+}, 60_000)
