@@ -58,10 +58,18 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private get moduleDirectories() {
+    return this.executor.options.moduleDirectories || []
+  }
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))
       this.moduleCache.delete(mockId)
+  }
+
+  private isAModuleDirectory(path: string) {
+    return this.moduleDirectories.some(dir => path.includes(dir))
   }
 
   public getSuiteFilepath(): string {
@@ -83,7 +91,7 @@ export class VitestMocker {
     const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
+    const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
 
     return {
       id,

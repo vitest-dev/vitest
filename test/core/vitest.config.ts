@@ -35,6 +35,7 @@ export default defineConfig({
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
       { find: '$', replacement: 'src' },
+      { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
     ],
   },
   test: {
@@ -62,6 +63,7 @@ export default defineConfig({
     },
     deps: {
       external: ['tinyspy', /src\/external/],
+      moduleDirectories: ['node_modules', 'projects'],
     },
     alias: [
       {
