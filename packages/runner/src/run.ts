@@ -1,7 +1,7 @@
 import limit from 'p-limit'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
-import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from './types'
+import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
@@ -70,12 +70,12 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, TaskResult | undefined>()
+const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
 export function updateTask(task: Task, runner: VitestRunner) {
-  packs.set(task.id, task.result)
+  packs.set(task.id, [task.result, task.meta])
 
   const { clearTimeout, setTimeout } = getSafeTimers()
 
@@ -91,7 +91,14 @@ async function sendTasksUpdate(runner: VitestRunner) {
   await previousUpdate
 
   if (packs.size) {
-    const p = runner.onTaskUpdate?.(Array.from(packs))
+    const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
+      return [
+        id,
+        task[0],
+        task[1],
+      ]
+    })
+    const p = runner.onTaskUpdate?.(taskPacks)
     packs.clear()
     return p
   }

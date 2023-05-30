@@ -15,13 +15,13 @@ import { it } from 'vitest'
 
 it('should work', (ctx) => {
   // prints name of the test
-  console.log(ctx.meta.name)
+  console.log(ctx.task.name)
 })
 ```
 
 ## Built-in Test Context
 
-#### `context.meta`
+#### `context.task`
 
 A readonly object containing metadata about the test.
 

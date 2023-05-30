@@ -87,6 +87,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       fails: this.fails,
       retry: options?.retry,
       repeats: options?.repeats,
+      meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -116,6 +117,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       name,
       type: 'custom',
       mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : 'run',
+      meta: Object.create(null),
     }
     tasks.push(task)
     return task
@@ -150,6 +152,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       each,
       shuffle,
       tasks: [],
+      meta: Object.create(null),
     }
 
     setHooks(suite, createSuiteHooks())
