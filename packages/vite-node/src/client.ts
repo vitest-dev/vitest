@@ -186,15 +186,14 @@ export class ViteNodeRunner {
 
     const mod = this.moduleCache.get(fsPath)
 
-    if (!mod.importers)
-      mod.importers = new Set()
+    mod.importers ??= new Set()
     if (importee)
       mod.importers.add(importee)
 
     const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
     // check circular dependency
-    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath)) || mod.importers.has(importee)) {
+    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
       if (mod.exports)
         return mod.exports
     }
@@ -205,8 +204,11 @@ export class ViteNodeRunner {
 
     try {
       // cached module
-      if (mod.promise)
+      if (mod.promise) {
+        if (Array.from(mod.imports?.values() || []).some(i => mod.importers!.has(i)))
+          return mod.exports
         return await mod.promise
+      }
 
       const promise = this.directRequest(id, fsPath, callstack)
       Object.assign(mod, { promise, evaluated: false })
@@ -269,6 +271,10 @@ export class ViteNodeRunner {
 
     const request = async (dep: string) => {
       const [id, depFsPath] = await this.resolveUrl(`${dep}`, fsPath)
+      const depMod = this.moduleCache.getByModuleId(depFsPath)
+      ;(depMod.importers ??= new Set()).add(moduleId)
+      ;(mod.imports ??= new Set()).add(depFsPath)
+
       return this.dependencyRequest(id, depFsPath, callstack)
     }
 
