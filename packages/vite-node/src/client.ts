@@ -98,6 +98,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     delete mod.resolving
     delete mod.promise
     delete mod.exports
+    mod.importers?.clear()
     return true
   }
 
