@@ -208,8 +208,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportSummary(files: File[], errors: unknown[]) {
-    await this.printErrorsSummary(files)
-    await this.ctx.logger.printUnhandledErrors(errors)
+    await this.printErrorsSummary(files, errors)
     if (this.mode === 'benchmark')
       await this.reportBenchmarkSummary(files)
     else
@@ -263,7 +262,7 @@ export abstract class BaseReporter implements Reporter {
       logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'))
     }
     if (errors.length)
-      logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} failed`)))
+      logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)))
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
@@ -275,7 +274,7 @@ export abstract class BaseReporter implements Reporter {
     logger.log()
   }
 
-  private async printErrorsSummary(files: File[]) {
+  private async printErrorsSummary(files: File[], errors: unknown[]) {
     const logger = this.ctx.logger
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -299,6 +298,10 @@ export abstract class BaseReporter implements Reporter {
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
+    }
+    if (errors.length) {
+      await logger.printUnhandledErrors(errors)
+      logger.error()
     }
     return tests
   }
