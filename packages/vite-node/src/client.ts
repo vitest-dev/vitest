@@ -188,13 +188,16 @@ export class ViteNodeRunner {
 
     if (!mod.importers)
       mod.importers = new Set()
+
+    const isCircular = mod.importers.has(importee)
+
     if (importee)
       mod.importers.add(importee)
 
     const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
     // check circular dependency
-    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath)) || mod.importers.has(importee)) {
+    if (isCircular || callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
       if (mod.exports)
         return mod.exports
     }
