@@ -199,10 +199,9 @@ function createSuite() {
     if (typeof options === 'number')
       options = { timeout: options }
 
-    if (currentSuite && typeof currentSuite.options?.repeats === 'number') {
-      // inherit repeats from current suite
-      options = { repeats: currentSuite.options.repeats, ...options }
-    }
+    // inherit options from current suite
+    if (currentSuite?.options)
+      options = { ...currentSuite.options, ...options }
 
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, this.each, options)
   }
