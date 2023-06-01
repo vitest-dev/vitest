@@ -89,7 +89,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return mod as ModuleCache & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
-  get(fsPath: string): ModuleCache {
+  get(fsPath: string) {
     return this.getByModuleId(this.normalizePath(fsPath))
   }
 
@@ -193,7 +193,7 @@ export class ViteNodeRunner {
   async cachedRequest(id: string, fsPath: string, callstack: string[]) {
     const importee = callstack[callstack.length - 1]
 
-    const mod = this.moduleCache.getByModuleId(fsPath)
+    const mod = this.moduleCache.get(fsPath)
     const { imports, importers } = mod
 
     if (importee)
