@@ -54,6 +54,7 @@
     "./examples/**/*.*",
     "./bench/**",
     "./test/typescript/**",
-    "./test/browser/**"
+    "./test/browser/**",
+    "./test/watch/fixtures/**"
   ]
 }
