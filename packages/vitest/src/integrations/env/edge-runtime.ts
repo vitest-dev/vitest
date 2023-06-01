@@ -4,7 +4,6 @@ import { populateGlobal } from './utils'
 
 export default <Environment>({
   name: 'edge-runtime',
-  transformMode: 'ssr',
   async setup(global) {
     const { EdgeVM } = await importModule('@edge-runtime/vm') as typeof import('@edge-runtime/vm')
     const vm = new EdgeVM({

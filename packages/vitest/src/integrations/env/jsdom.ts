@@ -28,7 +28,6 @@ function catchWindowErrors(window: Window) {
 
 export default <Environment>({
   name: 'jsdom',
-  transformMode: 'web',
   async setup(global, { jsdom = {} }) {
     const {
       CookieJar,

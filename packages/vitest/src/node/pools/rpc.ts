@@ -1,5 +1,6 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types'
+import { getEnvironmentTransformMode } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 
 export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
@@ -24,10 +25,12 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id, transformMode) {
+    fetch(id, environment) {
+      const transformMode = getEnvironmentTransformMode(project.config, environment)
       return project.vitenode.fetchModule(id, transformMode)
     },
-    resolveId(id, importer, transformMode) {
+    resolveId(id, importer, environment) {
+      const transformMode = getEnvironmentTransformMode(project.config, environment)
       return project.vitenode.resolveId(id, importer, transformMode)
     },
     onPathsCollected(paths) {

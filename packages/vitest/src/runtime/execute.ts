@@ -6,9 +6,8 @@ import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/runner/utils'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
-import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment } from '../types'
+import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
 import { distDir } from '../paths'
-import { loadEnvironment } from '../integrations/env'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
 
@@ -26,9 +25,8 @@ export async function createVitestExecutor(options: ExecuteOptions) {
 }
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor) => Promise<void>
   executor: VitestExecutor
-  environment: Environment
 }
 
 export const moduleCache = new ModuleCacheMap()
@@ -63,14 +61,12 @@ export async function startViteNode(ctx: ContextRPC) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  let transformMode: 'ssr' | 'web' = 'ssr'
-
   const executor = await createVitestExecutor({
     fetchModule(id) {
-      return rpc().fetch(id, transformMode)
+      return rpc().fetch(id, ctx.environment.name)
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer, transformMode)
+      return rpc().resolveId(id, importer, ctx.environment.name)
     },
     moduleCache,
     mockMap,
@@ -80,12 +76,9 @@ export async function startViteNode(ctx: ContextRPC) {
     base: config.base,
   })
 
-  const environment = await loadEnvironment(ctx.environment.name, executor)
-  transformMode = environment.transformMode ?? 'ssr'
-
   const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
 
-  _viteNode = { run, executor, environment }
+  _viteNode = { run, executor }
 
   return _viteNode
 }

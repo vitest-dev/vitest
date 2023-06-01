@@ -6,7 +6,6 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "happy-dom": "^9.20.3",
     "vitest": "workspace:*"
   }
 }

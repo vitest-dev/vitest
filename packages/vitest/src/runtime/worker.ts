@@ -24,7 +24,7 @@ function init(ctx: WorkerContext) {
   })
 
   // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = config.environment.name
+  globalThis.__vitest_environment__ = config.environment
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {
     ctx,
@@ -62,8 +62,8 @@ export async function run(ctx: WorkerContext) {
 
   try {
     init(ctx)
-    const { run, executor, environment } = await startViteNode(ctx)
-    await run(ctx.files, ctx.config, { ...ctx.environment, environment }, executor)
+    const { run, executor } = await startViteNode(ctx)
+    await run(ctx.files, ctx.config, ctx.environment, executor)
     await rpcDone()
   }
   finally {

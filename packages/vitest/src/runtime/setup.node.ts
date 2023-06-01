@@ -2,7 +2,8 @@ import { createRequire } from 'node:module'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment } from '../types'
+import { environments } from '../integrations/env'
+import type { Environment, ResolvedConfig } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
@@ -10,6 +11,7 @@ import { RealDate } from '../integrations/mock/date'
 import { expect } from '../integrations/chai'
 import { rpc } from './rpc'
 import { setupCommonEnv } from './setup.common'
+import type { VitestExecutor } from './execute'
 
 // this should only be used in Node
 let globalSetup = false
@@ -155,17 +157,30 @@ export async function setupConsoleLogSpy() {
   })
 }
 
+async function loadEnvironment(name: string, executor: VitestExecutor) {
+  const pkg = await executor.executeId(`vitest-environment-${name}`)
+  if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
+    throw new Error(
+      `Environment "${name}" is not a valid environment. `
+    + `Package "vitest-environment-${name}" should have default export with "setup" method.`,
+    )
+  }
+  return pkg.default
+}
+
 export async function withEnv(
-  { environment, name }: ResolvedTestEnvironment,
-  options: EnvironmentOptions,
+  name: ResolvedConfig['environment'],
+  options: ResolvedConfig['environmentOptions'],
+  executor: VitestExecutor,
   fn: () => Promise<void>,
 ) {
+  const config: Environment = (environments as any)[name] || await loadEnvironment(name, executor)
   // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = name
+  globalThis.__vitest_environment__ = config.name || name
   expect.setState({
-    environment: name,
+    environment: config.name || name || 'node',
   })
-  const env = await environment.setup(globalThis, options)
+  const env = await config.setup(globalThis, options)
   try {
     await fn()
   }
