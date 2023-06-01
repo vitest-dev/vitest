@@ -74,7 +74,7 @@ interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled'> & {
+  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
     enabled: boolean
   }
   /**
