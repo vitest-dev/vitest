@@ -1,14 +1,16 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { CancelReason } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
-import type { UserConsoleLog } from './general'
+import type { Environment, UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
 import type { File, TaskResultPack } from './tasks'
 import type { AfterSuiteRunMeta } from './worker'
 
+type TransformMode = 'web' | 'ssr'
+
 export interface RuntimeRPC {
-  fetch: (id: string, environment: VitestEnvironment) => Promise<FetchResult>
-  resolveId: (id: string, importer: string | undefined, environment: VitestEnvironment) => Promise<ViteNodeResolveId | null>
+  fetch: (id: string, environment: TransformMode) => Promise<FetchResult>
+  resolveId: (id: string, importer: string | undefined, environment: TransformMode) => Promise<ViteNodeResolveId | null>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onFinished: (files: File[], errors?: unknown[]) => void
@@ -32,6 +34,12 @@ export interface RunnerRPC {
 
 export interface ContextTestEnvironment {
   name: VitestEnvironment
+  options: EnvironmentOptions | null
+}
+
+export interface ResolvedTestEnvironment extends ContextTestEnvironment {
+  name: VitestEnvironment
+  environment: Environment
   options: EnvironmentOptions | null
 }
 

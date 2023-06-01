@@ -10,7 +10,7 @@ import { rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
 function init(ctx: ChildContext) {
-  const { config } = ctx
+  const { config, environment } = ctx
 
   process.env.VITEST_WORKER_ID = '1'
   process.env.VITEST_POOL_ID = '1'
@@ -21,7 +21,7 @@ function init(ctx: ChildContext) {
   })
 
   // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = config.environment
+  globalThis.__vitest_environment__ = environment.name
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {
     ctx,
@@ -76,8 +76,8 @@ export async function run(ctx: ChildContext) {
 
   try {
     init(ctx)
-    const { run, executor } = await startViteNode(ctx)
-    await run(ctx.files, ctx.config, ctx.environment, executor)
+    const { run, executor, environment } = await startViteNode(ctx)
+    await run(ctx.files, ctx.config, { ...ctx.environment, environment }, executor)
     await rpcDone()
   }
   finally {

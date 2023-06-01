@@ -1,4 +1,4 @@
-import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
+import type { Arrayable, Nullable } from '../types'
 
 export { notNullish, getCallLastIndex } from '@vitest/utils'
 
@@ -126,12 +126,6 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
-}
-
-export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
-  if (!config.deps?.experimentalOptimizer?.enabled)
-    return undefined
-  return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
 
 // AggregateError is supported in Node.js 15.0.0+

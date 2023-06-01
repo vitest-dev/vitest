@@ -1117,42 +1117,6 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### transformMode
-
-- **Type:** `{ web?, ssr? }`
-
-Determine the transform method of modules
-
-#### transformMode.ssr
-
-- **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
-
-Use SSR transform pipeline for the specified files.<br>
-Vite plugins will receive `ssr: true` flag when processing those files.
-
-#### transformMode&#46;web
-
-- **Type:** `RegExp[]`
-- **Default:** *modules other than those specified in `transformMode.ssr`*
-
-First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
-Vite plugins will receive `ssr: false` flag when processing those files.
-
-When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    transformMode: {
-      web: [/\.[jt]sx$/],
-    },
-  },
-})
-```
-
 ### snapshotFormat<NonProjectOption />
 
 - **Type:** `PrettyFormatOptions`

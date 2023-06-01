@@ -23,6 +23,7 @@ export interface EnvironmentReturn {
 
 export interface Environment {
   name: string
+  transformMode?: 'web' | 'ssr'
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

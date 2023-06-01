@@ -1530,7 +1530,7 @@ importers:
         version: 2.3.2(vue@3.3.4)
       happy-dom:
         specifier: latest
-        version: 9.1.9
+        version: 9.20.3
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1693,6 +1693,9 @@ importers:
 
   test/resolve:
     devDependencies:
+      happy-dom:
+        specifier: ^9.20.3
+        version: 9.20.3
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -15646,6 +15649,17 @@ packages:
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
+      iconv-lite: 0.6.3
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+    dev: true
+
+  /happy-dom@9.20.3:
+    resolution: {integrity: sha512-eBsgauT435fXFvQDNcmm5QbGtYzxEzOaX35Ia+h6yP/wwa4xSWZh1CfP+mGby8Hk6Xu59mTkpyf72rUXHNxY7A==}
+    dependencies:
+      css.escape: 1.5.1
+      entities: 4.5.0
       iconv-lite: 0.6.3
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
