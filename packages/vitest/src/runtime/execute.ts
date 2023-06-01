@@ -1,13 +1,13 @@
-import { pathToFileURL } from 'node:url'
+import { createRequire } from 'node:module'
 import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalize, relative, resolve } from 'pathe'
+import { normalize, relative } from 'pathe'
 import { processError } from '@vitest/runner/utils'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
-import { distDir } from '../paths'
+import { entryPath } from '../paths'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
 
@@ -19,7 +19,10 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
 export async function createVitestExecutor(options: ExecuteOptions) {
   const runner = new VitestExecutor(options)
 
-  await runner.executeId('/@vite/env')
+  await Promise.all([
+    runner.executeId('/@vite/env'),
+    runner.mocker.initializeSpyModule(),
+  ])
 
   return runner
 }
@@ -76,7 +79,10 @@ export async function startViteNode(ctx: ContextRPC) {
     base: config.base,
   })
 
-  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+  const _require = createRequire(config.root)
+  const vitestEntry = _require.resolve(entryPath, { paths: [config.root] })
+
+  const { run } = await import(vitestEntry)
 
   _viteNode = { run, executor }
 

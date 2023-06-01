@@ -4,8 +4,8 @@ import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
-import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import { spyPath } from '../paths'
 import type { VitestExecutor } from './execute'
 
 const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
@@ -40,6 +40,7 @@ function isSpecialProp(prop: Key, parentType: string) {
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
+  private spyModule?: typeof import('@vitest/spy')
   private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
@@ -60,6 +61,10 @@ export class VitestMocker {
 
   private get moduleDirectories() {
     return this.executor.options.moduleDirectories || []
+  }
+
+  public async initializeSpyModule() {
+    this.spyModule = await this.executor.executeId(spyPath)
   }
 
   private deleteCachedItem(id: string) {
@@ -275,7 +280,10 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          const mock = spyOn(newContainer, property).mockImplementation(() => undefined)
+          const spyModule = this.spyModule
+          if (!spyModule)
+            throw new Error('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
           mock.mockRestore = () => {
             mock.mockReset()
             mock.mockImplementation(undefined!)
