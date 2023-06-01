@@ -52,7 +52,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
+  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.web?.enabled || project.config.deps?.experimentalOptimizer?.ssr?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
@@ -271,10 +271,10 @@ export class WorkspaceProject {
         ...this.config.deps,
         optimizer: {
           web: {
-            enabled: this.config.deps?.optimizer?.web?.enabled ?? false,
+            enabled: this.config.deps?.experimentalOptimizer?.web?.enabled ?? false,
           },
           ssr: {
-            enabled: this.config.deps?.optimizer?.ssr?.enabled ?? false,
+            enabled: this.config.deps?.experimentalOptimizer?.ssr?.enabled ?? false,
           },
         },
       },

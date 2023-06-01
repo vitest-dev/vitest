@@ -78,7 +78,7 @@ interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  optimizer?: {
+  experimentalOptimizer?: {
     web?: DepsOptimizationOptions
     ssr?: DepsOptimizationOptions
   }
