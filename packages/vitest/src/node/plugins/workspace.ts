@@ -1,7 +1,5 @@
-import { builtinModules } from 'node:module'
 import { dirname, relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { version as viteVersion } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
@@ -12,6 +10,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
+import { resolveOptimizerConfig } from './utils'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -118,34 +117,14 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           }
         }
 
-        const optimizeConfig: Partial<ViteConfig> = {}
-        const optimizer = testConfig.deps?.experimentalOptimizer
-        const [major, minor] = viteVersion.split('.').map(Number)
-        const allowed = major >= 5 || (major === 4 && minor >= 3)
-        if (!allowed && optimizer?.enabled === true)
-          console.warn(`Vitest: "deps.experimentalOptimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
-        if (!allowed || optimizer?.enabled !== true) {
-          optimizeConfig.cacheDir = undefined
-          optimizeConfig.optimizeDeps = {
-            // experimental in Vite >2.9.2, entries remains to help with older versions
-            disabled: true,
-            entries: [],
-          }
+        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
+        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
+
+        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
+        config.optimizeDeps = webOptimizer.optimizeDeps
+        config.ssr = {
+          optimizeDeps: ssrOptimizer.optimizeDeps,
         }
-        else {
-          const cacheDir = testConfig.cache !== false ? testConfig.cache?.dir : null
-          optimizeConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
-          optimizeConfig.optimizeDeps = {
-            ...viteConfig.optimizeDeps,
-            ...optimizer,
-            noDiscovery: true,
-            disabled: false,
-            entries: [],
-            exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
-            include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
-          }
-        }
-        Object.assign(config, optimizeConfig)
 
         return config
       },

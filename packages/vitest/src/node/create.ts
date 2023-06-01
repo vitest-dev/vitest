@@ -28,7 +28,7 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
   const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || ctx.config.deps?.experimentalOptimizer?.enabled)
+  if (ctx.config.api?.port || ctx.config.deps?.optimizer?.web?.enabled || ctx.config.deps?.optimizer?.ssr?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})

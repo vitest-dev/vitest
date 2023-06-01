@@ -70,12 +70,17 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
+  enabled: boolean
+}
+
 interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
-    enabled: boolean
+  optimizer?: {
+    web?: DepsOptimizationOptions
+    ssr?: DepsOptimizationOptions
   }
   /**
    * Externalize means that Vite will bypass the package to native Node.
@@ -84,6 +89,8 @@ interface DepsOptions {
    * And does not support HMR on reload.
    *
    * Typically, packages under `node_modules` are externalized.
+   *
+   * @deprecated Use `deps.optimizer.exclude` instead
    */
   external?: (string | RegExp)[]
   /**
@@ -92,6 +99,8 @@ interface DepsOptions {
    * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
    *
    * If `true`, every dependency will be inlined
+   *
+   * @deprecated Use `deps.optimizer.include` instead
    */
   inline?: (string | RegExp)[] | true
 
@@ -114,6 +123,8 @@ interface DepsOptions {
   /**
    * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
    * @default false
+   *
+   * @deprecated Use `deps.optimizer` instead
    */
   registerNodeLoader?: boolean
 

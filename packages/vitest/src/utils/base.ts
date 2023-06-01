@@ -129,7 +129,7 @@ export function stdout(): NodeJS.WriteStream {
 }
 
 export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
-  if (!config.deps?.experimentalOptimizer?.enabled)
+  if (!config.deps?.optimizer?.ssr?.enabled && !config.deps?.optimizer?.web?.enabled)
     return undefined
   return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
