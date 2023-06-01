@@ -70,12 +70,17 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
+  enabled: boolean
+}
+
 interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
-    enabled: boolean
+  experimentalOptimizer?: {
+    web?: DepsOptimizationOptions
+    ssr?: DepsOptimizationOptions
   }
   /**
    * Externalize means that Vite will bypass the package to native Node.
