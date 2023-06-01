@@ -139,7 +139,7 @@ function matchExternalizePattern(id: string, moduleDirectories: string[], patter
     return true
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (moduleDirectories.some(dir => id.includes(join(dir, id))))
+      if (moduleDirectories.some(dir => id.includes(join(dir, ex))))
         return true
     }
     else {
