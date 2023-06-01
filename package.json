@@ -74,7 +74,7 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^4.2.1",
+      "vite": "^4.3.9",
       "vitest": "workspace:*"
     }
   },
