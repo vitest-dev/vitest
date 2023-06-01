@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
@@ -82,7 +83,7 @@ export async function startViteNode(ctx: ContextRPC) {
   const _require = createRequire(config.root)
   const vitestEntry = _require.resolve(entryPath, { paths: [config.root] })
 
-  const { run } = await import(vitestEntry)
+  const { run } = await import(pathToFileURL(vitestEntry).href)
 
   _viteNode = { run, executor }
 
