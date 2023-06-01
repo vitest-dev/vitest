@@ -58,7 +58,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Assign partial data to the map
    */
-  update(fsPath: string, mod: Partial<ModuleCache>) {
+  update(fsPath: string, mod: ModuleCache) {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath))
       this.setByModuleId(fsPath, mod)
@@ -67,18 +67,26 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this
   }
 
-  setByModuleId(modulePath: string, mod: Partial<ModuleCache>) {
-    return super.set(modulePath, { imports: new Set(), importers: new Set(), ...mod })
+  setByModuleId(modulePath: string, mod: ModuleCache) {
+    return super.set(modulePath, mod)
   }
 
-  set(fsPath: string, mod: Partial<ModuleCache>) {
+  set(fsPath: string, mod: ModuleCache) {
     return this.setByModuleId(this.normalizePath(fsPath), mod)
   }
 
-  getByModuleId(modulePath: string): ModuleCache {
+  getByModuleId(modulePath: string) {
     if (!super.has(modulePath))
       this.setByModuleId(modulePath, {})
-    return super.get(modulePath)!
+
+    const mod = super.get(modulePath)!
+    if (!mod.imports) {
+      Object.assign(mod, {
+        imports: new Set(),
+        importers: new Set(),
+      })
+    }
+    return mod as ModuleCache & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
   get(fsPath: string): ModuleCache {
@@ -98,8 +106,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     delete mod.resolving
     delete mod.promise
     delete mod.exports
-    mod.importers.clear()
-    mod.imports.clear()
+    mod.importers?.clear()
+    mod.imports?.clear()
     return true
   }
 
@@ -130,7 +138,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
         continue
       invalidated.add(id)
       const subIds = Array.from(super.entries())
-        .filter(([,mod]) => mod.importers.has(id))
+        .filter(([,mod]) => mod.importers?.has(id))
         .map(([key]) => key)
       subIds.length && this.invalidateSubDepTree(subIds, invalidated)
       super.delete(id)
@@ -185,7 +193,7 @@ export class ViteNodeRunner {
   async cachedRequest(id: string, fsPath: string, callstack: string[]) {
     const importee = callstack[callstack.length - 1]
 
-    const mod = this.moduleCache.get(fsPath)
+    const mod = this.moduleCache.getByModuleId(fsPath)
     const { imports, importers } = mod
 
     if (importee)

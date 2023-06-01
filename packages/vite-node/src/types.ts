@@ -65,8 +65,8 @@ export interface ModuleCache {
   /**
    * Module ids that imports this module
    */
-  importers: Set<string>
-  imports: Set<string>
+  importers?: Set<string>
+  imports?: Set<string>
 }
 
 export interface ViteNodeRunnerOptions {
