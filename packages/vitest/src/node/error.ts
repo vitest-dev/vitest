@@ -169,11 +169,8 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 + c.green(`export default {
   test: {
     deps: {
-      experimentalOptimizer: {
-        enabled: true,
-        include: [
-          ${c.yellow(c.bold(`"${name}"`))}
-        ]
+      inline: [
+        ${c.yellow(c.bold(`"${name}"`))}
       }
     }
   }
