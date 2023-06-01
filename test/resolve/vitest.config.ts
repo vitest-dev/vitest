@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    transformMode: {
-      web: [/web\.test\.ts/],
-      ssr: [/ssr\.test\.ts/],
-    },
+    environmentMatchGlobs: [
+      ['**/web.test.ts', 'happy-dom'],
+      ['**/ssr.test.ts', 'node'],
+    ],
     deps: {
       external: [/pkg-/],
     },
