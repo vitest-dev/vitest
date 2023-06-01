@@ -139,6 +139,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         const optimizer = preOptions.deps?.experimentalOptimizer
         const [major, minor] = viteVersion.split('.').map(Number)
         const allowed = major >= 5 || (major === 4 && minor >= 3)
+        if (!allowed && optimizer?.enabled === true)
+          console.warn(`Vitest: "deps.experimentalOptimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
         if (!allowed || optimizer?.enabled !== true) {
           optimizeConfig.cacheDir = undefined
           optimizeConfig.optimizeDeps = {
@@ -155,6 +157,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             ...optimizer,
             noDiscovery: true,
             disabled: false,
+            entries: [],
             exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
             include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
           }

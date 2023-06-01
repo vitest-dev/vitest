@@ -113,10 +113,6 @@ Handling for dependencies resolution.
 - **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
-::: warning
-This feature is temporarily disabled since Vitest 0.30.0.
-:::
-
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
 
 For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
@@ -124,8 +120,9 @@ For `jsdom` and `happy-dom` environments, when Vitest will encounter the externa
 - Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
 - Importing UI libraries is expensive because they are not meant to run inside Node.js
 - Your `alias` configuration is now respected inside bundled packages
+- Code in your tests is running closer to how it's running in the browser
 
-You can opt-out of this behavior for certain packages with `exclude` option. You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
+Be aware that only packages in `deps.experimentalOptimizer.include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
 
 This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
 
