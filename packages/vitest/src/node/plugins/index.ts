@@ -152,14 +152,25 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         else {
           const cacheDir = preOptions.cache !== false ? preOptions.cache?.dir : null
           optimizeConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
+          const exclude = [
+            'vitest',
+            ...builtinModules,
+            ...optimizer.exclude || [],
+            ...viteConfig.optimizeDeps?.exclude || [],
+          ]
+          const include = [
+            ...optimizer.include || [],
+            ...viteConfig.optimizeDeps?.include || [],
+          ].filter((n: string) => !exclude.includes(n))
+
           optimizeConfig.optimizeDeps = {
             ...viteConfig.optimizeDeps,
             ...optimizer,
             noDiscovery: true,
             disabled: false,
             entries: [],
-            exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
-            include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
+            exclude,
+            include,
           }
         }
         Object.assign(config, optimizeConfig)
