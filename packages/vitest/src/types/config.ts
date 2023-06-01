@@ -89,8 +89,6 @@ interface DepsOptions {
    * And does not support HMR on reload.
    *
    * Typically, packages under `node_modules` are externalized.
-   *
-   * @deprecated Use `deps.optimizer.exclude` instead
    */
   external?: (string | RegExp)[]
   /**
@@ -99,8 +97,6 @@ interface DepsOptions {
    * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
    *
    * If `true`, every dependency will be inlined
-   *
-   * @deprecated Use `deps.optimizer.include` instead
    */
   inline?: (string | RegExp)[] | true
 
@@ -123,8 +119,6 @@ interface DepsOptions {
   /**
    * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
    * @default false
-   *
-   * @deprecated Use `deps.optimizer` instead
    */
   registerNodeLoader?: boolean
 
