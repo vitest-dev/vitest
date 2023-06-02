@@ -36,7 +36,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ## test
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it`
 
   `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
@@ -53,7 +53,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ### test.skip
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.skip`
 
   If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
@@ -111,7 +111,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.only
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.only`
 
   Use `test.only` to only run certain tests in a given suite. This is useful when debugging.
@@ -136,7 +136,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.concurrent
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.concurrent`
 
   `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
@@ -179,7 +179,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.todo
 
-- **Type:** `(name: string) => void`
+- **Type:** `(name: string | Function) => void`
 - **Alias:** `it.todo`
 
   Use `test.todo` to stub tests to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
@@ -191,7 +191,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.fails
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.fails`
 
   Use `test.fails` to indicate that an assertion will fail explicitly.
@@ -502,7 +502,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.skip
 
-- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
@@ -539,7 +539,7 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 ### describe.only
 
-- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.only` to only run certain suites
 
@@ -565,7 +565,7 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 ### describe.concurrent
 
-- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
 
   `describe.concurrent` in a suite marks every tests as concurrent
 
@@ -606,7 +606,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.shuffle
 
-- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
 
   Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
@@ -627,7 +627,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.todo
 
-- **Type:** `(name: string) => void`
+- **Type:** `(name: string | Function) => void`
 
   Use `describe.todo` to stub suites to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
 
@@ -638,7 +638,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
+- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]): (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
 
