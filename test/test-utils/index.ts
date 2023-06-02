@@ -115,7 +115,7 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
           return resolve()
 
         const timeout = setTimeout(() => {
-          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout}`))
+          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout}. \nStderr:\n${this.stderr}`))
         }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
