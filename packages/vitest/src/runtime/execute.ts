@@ -81,6 +81,7 @@ export async function startViteNode(ctx: ContextRPC) {
   })
 
   const environment = await loadEnvironment(ctx.environment.name, executor)
+  ctx.environment.environment = environment
   transformMode = environment.transformMode ?? 'ssr'
 
   const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)

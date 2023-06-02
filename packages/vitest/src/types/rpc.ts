@@ -34,6 +34,7 @@ export interface RunnerRPC {
 
 export interface ContextTestEnvironment {
   name: VitestEnvironment
+  environment?: Environment
   options: EnvironmentOptions | null
 }
 
