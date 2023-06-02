@@ -8,8 +8,8 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function (name: string, fn?: TestFunction, options?: number | TestOptions) {
-    getCurrentSuite().test.fn.call(this, name, fn, options)
+  function (name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+    getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
   },
 )
 
@@ -59,7 +59,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, options) {
+  const test = createTest(function (name: string | Function, fn = noop, options) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     if (typeof options === 'number')
@@ -78,7 +78,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     const test: Test = {
       id: '',
       type: 'test',
-      name,
+      name: formatName(name),
       each: this.each,
       mode,
       suite: undefined!,
@@ -189,7 +189,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 }
 
 function createSuite() {
-  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
+  function suiteFn(this: Record<string, boolean | undefined>, name: string | Function, factory?: SuiteFactory, options?: number | TestOptions) {
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     const currentSuite = getCurrentSuite()
 
@@ -200,7 +200,7 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, this.each, options)
+    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.shuffle, this.each, options)
   }
 
   suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -210,13 +210,14 @@ function createSuite() {
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
         arrayOnlyCases
-          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
-          : suite(formatTitle(name, items, idx), () => fn(i), options)
+          ? suite(formatTitle(_name, items, idx), () => fn(...items), options)
+          : suite(formatTitle(_name, items, idx), () => fn(i), options)
       })
 
       this.setContext('each', undefined)
@@ -249,14 +250,15 @@ function createTest(fn: (
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
         arrayOnlyCases
-          ? test(formatTitle(name, items, idx), () => fn(...items), options)
-          : test(formatTitle(name, items, idx), () => fn(i), options)
+          ? test(formatTitle(_name, items, idx), () => fn(...items), options)
+          : test(formatTitle(_name, items, idx), () => fn(i), options)
       })
 
       this.setContext('each', undefined)
@@ -270,6 +272,10 @@ function createTest(fn: (
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
   ) as TestAPI
+}
+
+function formatName(name: string | Function) {
+  return typeof name === 'string' ? name : name instanceof Function ? name.name : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {

@@ -1,0 +1,10 @@
+{
+  "name": "@vitest/test-describe-test-name",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}
