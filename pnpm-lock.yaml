@@ -1556,6 +1556,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/describe-test-name:
+  devDependencies:
+    vitest:
+      specifier: workspace:*
+      version: link:../../packages/vitest
+
   test/edge-runtime:
     devDependencies:
       '@edge-runtime/vm':
