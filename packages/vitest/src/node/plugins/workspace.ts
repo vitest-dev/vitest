@@ -11,6 +11,7 @@ import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
 import { resolveOptimizerConfig } from './utils'
+import { VitestResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -150,5 +151,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     CoverageTransform(project.ctx),
     GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
+    VitestResolver(project.ctx),
   ]
 }
