@@ -11,6 +11,7 @@ export interface BrowserProvider {
   getSupportedBrowsers(): readonly string[]
   initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
   openPage(url: string): Awaitable<void>
+  catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
   close(): Awaitable<void>
 }
 

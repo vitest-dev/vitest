@@ -9,15 +9,18 @@ export interface TaskBase {
   id: string
   name: string
   mode: RunMode
+  meta: TaskMeta
+  each?: boolean
   concurrent?: boolean
   shuffle?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
   retry?: number
-  meta?: any
   repeats?: number
 }
+
+export interface TaskMeta {}
 
 export interface TaskCustom extends TaskBase {
   type: 'custom'
@@ -39,7 +42,7 @@ export interface TaskResult {
   repeatCount?: number
 }
 
-export type TaskResultPack = [id: string, result: TaskResult | undefined]
+export type TaskResultPack = [id: string, result: TaskResult | undefined, meta: TaskMeta]
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -168,9 +171,11 @@ export interface TestOptions {
    */
   retry?: number
   /**
-   * How many times the test will repeat.
+   * How many times the test will run.
+   * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
    *
-   * @default 5
+   * @default 1
+   *
    */
   repeats?: number
 }
@@ -202,15 +207,16 @@ export type HookListener<T extends any[], Return = void> = (...args: T) => Await
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
 export interface SuiteHooks<ExtraContext = {}> {
-  beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
-  afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext & ExtraContext, Suite], HookCleanupCallback>[]
-  afterEach: HookListener<[TestContext & ExtraContext, Suite]>[]
+  beforeAll: HookListener<[Readonly<Suite | File>], HookCleanupCallback>[]
+  afterAll: HookListener<[Readonly<Suite | File>]>[]
+  beforeEach: HookListener<[TestContext & ExtraContext, Readonly<Suite>], HookCleanupCallback>[]
+  afterEach: HookListener<[TestContext & ExtraContext, Readonly<Suite>]>[]
 }
 
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
   readonly mode: RunMode
+  options?: TestOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (Suite | TaskCustom | Test | SuiteCollector<ExtraContext>)[]
@@ -230,8 +236,15 @@ export interface RuntimeContext {
 export interface TestContext {
   /**
    * Metadata of the current test
+   *
+   * @deprecated Use `task` instead
    */
   meta: Readonly<Test>
+
+  /**
+   * Metadata of the current test
+   */
+  task: Readonly<Test>
 
   /**
    * Extract hooks on test failed

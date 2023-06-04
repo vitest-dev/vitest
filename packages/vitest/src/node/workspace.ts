@@ -52,7 +52,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.enabled)
+  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.web?.enabled || project.config.deps?.experimentalOptimizer?.ssr?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
@@ -91,11 +91,11 @@ export class WorkspaceProject {
   }
 
   async globTestFiles(filters: string[] = []) {
-    const { dir, root } = this.config
+    const dir = this.config.dir || this.config.root
 
-    const testFiles = await this.globAllTestFiles(this.config, dir || root)
+    const testFiles = await this.globAllTestFiles(this.config, dir)
 
-    return this.filterFiles(testFiles, filters)
+    return this.filterFiles(testFiles, filters, dir)
   }
 
   async globAllTestFiles(config: ResolvedConfig, cwd: string) {
@@ -149,12 +149,18 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = []) {
+  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
-    if (filters.length)
-      return testFiles.filter(i => filters.some(f => i.includes(f)))
+    if (filters.length) {
+      return testFiles.filter((t) => {
+        const testFile = relative(dir, t)
+        return filters.some((f) => {
+          return testFile.includes(f) || testFile.includes(relative(dir, f))
+        })
+      })
+    }
 
     return testFiles
   }
@@ -191,20 +197,30 @@ export class WorkspaceProject {
   }
 
   async typecheck(filters: string[] = []) {
-    const { dir, root } = this.config
+    const dir = this.config.dir || this.config.root
     const { include, exclude } = this.config.typecheck
-    const testsFilesList = this.filterFiles(await this.globFiles(include, exclude, dir || root), filters)
+
+    const testFiles = await this.globFiles(include, exclude, dir)
+    const testsFilesList = this.filterFiles(testFiles, filters, dir)
+
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
       this.ctx.state.collectFiles(checker.getTestFiles())
       await this.report('onTaskUpdate', checker.getTestPacks())
       await this.report('onCollected')
+      const failedTests = hasFailed(files)
+      const exitCode = !failedTests && checker.getExitCode()
+      if (exitCode) {
+        const error = new Error(checker.getOutput())
+        error.stack = ''
+        this.ctx.state.catchError(error, 'Typecheck Error')
+      }
       if (!files.length) {
         this.ctx.logger.printNoTestFound()
       }
       else {
-        if (hasFailed(files))
+        if (failedTests)
           process.exitCode = 1
         await this.report('onFinished', files)
       }
@@ -215,6 +231,7 @@ export class WorkspaceProject {
       // if there are source errors, we are showing it, and then terminating process
       if (!files.length) {
         const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
+        await this.close()
         process.exit(exitCode)
       }
       if (this.config.watch) {
@@ -252,8 +269,13 @@ export class WorkspaceProject {
       reporters: [],
       deps: {
         ...this.config.deps,
-        experimentalOptimizer: {
-          enabled: this.config.deps?.experimentalOptimizer?.enabled ?? false,
+        optimizer: {
+          web: {
+            enabled: this.config.deps?.experimentalOptimizer?.web?.enabled ?? false,
+          },
+          ssr: {
+            enabled: this.config.deps?.experimentalOptimizer?.ssr?.enabled ?? false,
+          },
         },
       },
       snapshotOptions: {

@@ -1,5 +1,5 @@
 import { relative } from 'pathe'
-import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import type { File, Task, TaskResultPack, UserConsoleLog } from '../types'
 
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
@@ -30,9 +30,13 @@ export class StateManager {
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err))
-      return err.errors.forEach(error => this.catchError(error, type));
+      return err.errors.forEach(error => this.catchError(error, type))
 
-    (err as ErrorWithDiff).type = type
+    if (err === Object(err))
+      (err as Record<string, unknown>).type = type
+    else
+      err = { type, message: err }
+
     this.errorsSet.add(err)
   }
 
@@ -113,9 +117,12 @@ export class StateManager {
   }
 
   updateTasks(packs: TaskResultPack[]) {
-    for (const [id, result] of packs) {
-      if (this.idMap.has(id))
-        this.idMap.get(id)!.result = result
+    for (const [id, result, meta] of packs) {
+      const task = this.idMap.get(id)
+      if (task) {
+        task.result = result
+        task.meta = meta
+      }
     }
   }
 
@@ -142,6 +149,7 @@ export class StateManager {
       result: {
         state: 'skip',
       },
+      meta: {},
       // Cancelled files have not yet collected tests
       tasks: [],
     })))

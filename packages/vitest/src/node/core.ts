@@ -692,6 +692,9 @@ export class Vitest {
   }
 
   private async reportCoverage(allTestsRun: boolean) {
+    if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
+      return
+
     if (this.coverageProvider) {
       this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
       await this.coverageProvider.reportCoverage({ allTestsRun })
@@ -700,14 +703,15 @@ export class Vitest {
 
   async close() {
     if (!this.closingPromise) {
-      const closePromises = this.projects.map(w => w.close())
+      const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
       // close the core workspace server only once
       if (this.coreWorkspace && !this.projects.includes(this.coreWorkspace))
-        closePromises.push(this.server.close())
-      this.closingPromise = Promise.allSettled([
-        this.pool?.close(),
-        ...closePromises,
-      ].filter(Boolean)).then((results) => {
+        closePromises.push(this.server.close().then(() => this.server = undefined as any))
+
+      if (this.pool)
+        closePromises.push(this.pool.close().then(() => this.pool = undefined))
+
+      this.closingPromise = Promise.allSettled(closePromises).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)
         })
@@ -724,6 +728,20 @@ export class Vitest {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
+
+        if (!this.pool) {
+          const runningServers = [this.server, ...this.projects.map(p => p.server)].filter(Boolean).length
+
+          if (runningServers === 1)
+            console.warn('Tests closed successfully but something prevents Vite server from exiting')
+          else if (runningServers > 1)
+            console.warn(`Tests closed successfully but something prevents ${runningServers} Vite servers from exiting`)
+          else
+            console.warn('Tests closed successfully but something prevents the main process from exiting')
+
+          console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
+        }
+
         process.exit()
       })
     }, this.config.teardownTimeout).unref()

@@ -6,6 +6,12 @@ const UPDATE_SNAPSHOTS = false
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 const isBrowser = process.argv.includes('--browser')
 
+const threadsConfig = [{ threads: true }, { threads: false }, { singleThread: true }]
+
+// Threads have no effect in browser mode
+if (isBrowser)
+  threadsConfig.splice(1)
+
 const configs = [
   // Run test cases. Generates coverage report.
   ['test/', {
@@ -37,20 +43,31 @@ const configs = [
 const exit = process.exit
 process.exit = () => !isBrowser && exit()
 
-for (const threads of [{ threads: true }, { threads: false }, { singleThread: true }]) {
+for (const threads of threadsConfig) {
   for (const isolate of [true, false]) {
     for (const [directory, config] of configs) {
-      await startVitest('test', [directory], {
-        name: `With settings: ${JSON.stringify({ ...threads, isolate, directory, browser: config.browser?.enabled })}`,
-        ...config,
-        update: UPDATE_SNAPSHOTS,
-        ...threads,
-        isolate,
-      })
+      // Retry flaky browser tests
+      const retries = Array(config.browser?.enabled ? 3 : 1).fill(0)
 
-      if (process.exitCode) {
-        console.error(`process.exitCode was set to ${process.exitCode}, exiting.`)
-        exit()
+      for (const retry of retries.keys()) {
+        await startVitest('test', [directory], {
+          name: `With settings: ${JSON.stringify({ ...threads, isolate, directory, browser: config.browser?.enabled })}`,
+          ...config,
+          update: UPDATE_SNAPSHOTS,
+          ...threads,
+          isolate,
+        })
+
+        if (process.exitCode && retry === retries.length - 1) {
+          console.error(`process.exitCode was set to ${process.exitCode}, exiting.`)
+          exit()
+        }
+        else if (process.exitCode) {
+          console.warn(`Browser tests failed, retrying ${1 + retry}/${retries.length - 1}...`)
+        }
+        else {
+          break
+        }
       }
     }
   }

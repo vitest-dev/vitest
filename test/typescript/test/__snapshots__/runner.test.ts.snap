@@ -87,6 +87,17 @@ TypeCheckError: Expected 1 arguments, but got 0.
       5| })"
 `;
 
+exports[`should fail > typechecks empty "include" but with tests 1`] = `
+"Testing types with tsc and vue-tsc is an experimental feature.
+Breaking changes might not follow semver, please pin Vitest's version when using it.
+
+⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
+Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '[\\"src\\"]' and 'exclude' paths were '[\\"**/dist/**\\",\\"./dist\\"]'.
+
+
+"
+`;
+
 exports[`should fail > typecheks with custom tsconfig 1`] = `
 "TypeCheckError: Expected 1 arguments, but got 0.
 TypeCheckError: Expected 1 arguments, but got 0.

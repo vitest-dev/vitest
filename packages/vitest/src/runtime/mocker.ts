@@ -4,8 +4,8 @@ import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
-import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import { spyOn } from '../integrations/spy'
 import type { VitestExecutor } from './execute'
 
 const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
@@ -58,10 +58,18 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private get moduleDirectories() {
+    return this.executor.options.moduleDirectories || []
+  }
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))
       this.moduleCache.delete(mockId)
+  }
+
+  private isAModuleDirectory(path: string) {
+    return this.moduleDirectories.some(dir => path.includes(dir))
   }
 
   public getSuiteFilepath(): string {
@@ -83,7 +91,7 @@ export class VitestMocker {
     const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
+    const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
 
     return {
       id,
@@ -267,7 +275,12 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          spyOn(newContainer, property).mockImplementation(() => undefined)
+          const mock = spyOn(newContainer, property).mockImplementation(() => undefined)
+          mock.mockRestore = () => {
+            mock.mockReset()
+            mock.mockImplementation(undefined!)
+            return mock
+          }
           // tinyspy retains length, but jest doesn't.
           Object.defineProperty(newContainer[property], 'length', { value: 0 })
         }

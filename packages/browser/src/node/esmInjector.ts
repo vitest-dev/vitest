@@ -15,14 +15,10 @@ const skipHijack = [
   /vite\/dist\/client/,
 ]
 
-interface Options {
-  cacheDir: string
-}
-
 // this is basically copypaste from Vite SSR
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
-export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode, options: Options) {
+export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
   if (skipHijack.some(skip => id.match(skip)))
     return
 
@@ -195,10 +191,8 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
           node.start + 14 /* 'export default'.length */,
           `${viInjectedKey}.default =`,
         )
-        if (id.startsWith(options.cacheDir)) {
-          // keep export default for optimized dependencies
-          s.append(`\nexport default { ${viInjectedKey}: ${viInjectedKey}.default };\n`)
-        }
+        // keep export default for optimized dependencies
+        s.append(`\nexport default { ${viInjectedKey}: ${viInjectedKey}.default };\n`)
       }
     }
 

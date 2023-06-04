@@ -1,4 +1,4 @@
-import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResult, Test, TestContext } from './tasks'
+import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResultPack, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -86,7 +86,7 @@ export interface VitestRunner {
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?(task: [string, TaskResult | undefined][]): Promise<void>
+  onTaskUpdate?(task: TaskResultPack[]): Promise<void>
 
   /**
    * Called before running all tests in collected paths.

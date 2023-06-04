@@ -10,6 +10,8 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
+import { resolveOptimizerConfig } from './utils'
+import { VitestResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -116,6 +118,15 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           }
         }
 
+        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.web, viteConfig.optimizeDeps, testConfig)
+        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
+
+        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
+        config.optimizeDeps = webOptimizer.optimizeDeps
+        config.ssr = {
+          optimizeDeps: ssrOptimizer.optimizeDeps,
+        }
+
         return config
       },
       async configureServer(server) {
@@ -140,5 +151,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     CoverageTransform(project.ctx),
     GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
+    VitestResolver(project.ctx),
   ]
 }

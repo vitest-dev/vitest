@@ -1,5 +1,9 @@
 import type { Arrayable, Nullable } from './types'
 
+interface CloneOptions {
+  forceWritable?: boolean
+}
+
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
 }
@@ -72,20 +76,28 @@ export function getOwnProperties(obj: any) {
   return Array.from(ownProps)
 }
 
-export function deepClone<T>(val: T): T {
+const defaultCloneOptions: CloneOptions = { forceWritable: false }
+
+export function deepClone<T>(
+  val: T,
+  options: CloneOptions = defaultCloneOptions,
+): T {
   const seen = new WeakMap()
-  return clone(val, seen)
+  return clone(val, seen, options)
 }
 
-export function clone<T>(val: T, seen: WeakMap<any, any>): T {
+export function clone<T>(
+  val: T,
+  seen: WeakMap<any, any>,
+  options: CloneOptions = defaultCloneOptions,
+): T {
   let k: any, out: any
   if (seen.has(val))
     return seen.get(val)
   if (Array.isArray(val)) {
-    out = Array(k = val.length)
+    out = Array((k = val.length))
     seen.set(val, out)
-    while (k--)
-      out[k] = clone(val[k], seen)
+    while (k--) out[k] = clone(val[k], seen)
     return out as any
   }
 
@@ -110,6 +122,7 @@ export function clone<T>(val: T, seen: WeakMap<any, any>): T {
       else {
         Object.defineProperty(out, k, {
           ...descriptor,
+          writable: options.forceWritable ? true : descriptor.writable,
           value: cloned,
         })
       }

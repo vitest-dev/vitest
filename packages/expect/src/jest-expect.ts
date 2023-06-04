@@ -353,16 +353,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return `${i}th`
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
-    msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
-      if (actualCall)
-        methodCall += diff(actualCall, callArg, { showLegend: false })
-      else
-        methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
+    if (spy.mock.calls) {
+      msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+        let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+        if (actualCall)
+          methodCall += diff(actualCall, callArg, { showLegend: false })
+        else
+          methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
-      methodCall += '\n'
-      return methodCall
-    }).join('\n')}`)
+        methodCall += '\n'
+        return methodCall
+      }).join('\n')}`)
+    }
     msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }

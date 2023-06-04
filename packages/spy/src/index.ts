@@ -62,7 +62,7 @@ export interface Mock<TArgs extends any[] = any, TReturns = any> extends SpyInst
   new (...args: TArgs): TReturns
   (...args: TArgs): TReturns
 }
-export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, Partial<TReturns>> {
+export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns extends Promise<Awaited<TReturns>> ? Promise<Partial<Awaited<TReturns>>> : Partial<TReturns>> {
   new (...args: TArgs): TReturns
   (...args: TArgs): TReturns
 }
@@ -213,6 +213,13 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   let onceImplementations: ((...args: TArgs) => TReturns)[] = []
   let implementationChangedTemporarily = false
 
+  function mockCall(this: unknown, ...args: any) {
+    instances.push(this)
+    invocations.push(++callOrder)
+    const impl = implementationChangedTemporarily ? implementation! : (onceImplementations.shift() || implementation || state.getOriginal() || (() => {}))
+    return impl.apply(this, args)
+  }
+
   let name: string = (stub as any).name
 
   stub.getMockName = () => name || 'vi.fn()'
@@ -237,6 +244,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockRestore = () => {
     stub.mockReset()
+    state.restore()
     implementation = undefined
     return stub
   }
@@ -244,6 +252,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.getMockImplementation = () => implementation
   stub.mockImplementation = (fn: (...args: TArgs) => TReturns) => {
     implementation = fn
+    state.willCall(mockCall)
     return stub
   }
 
@@ -258,6 +267,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     const originalImplementation = implementation
 
     implementation = fn
+    state.willCall(mockCall)
     implementationChangedTemporarily = true
 
     const reset = () => {
@@ -305,12 +315,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     get: () => mockContext,
   })
 
-  state.willCall(function (this: unknown, ...args) {
-    instances.push(this)
-    invocations.push(++callOrder)
-    const impl = implementationChangedTemporarily ? implementation! : (onceImplementations.shift() || implementation || state.getOriginal() || (() => {}))
-    return impl.apply(this, args)
-  })
+  state.willCall(mockCall)
 
   spies.add(stub)
 

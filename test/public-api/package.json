@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-public-api",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

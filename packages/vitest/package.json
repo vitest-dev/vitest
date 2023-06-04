@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.31.0",
+  "version": "0.31.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -174,7 +174,7 @@
     "@types/micromatch": "^4.0.2",
     "@types/prompts": "^2.4.4",
     "@types/sinonjs__fake-timers": "^8.1.2",
-    "birpc": "0.2.11",
+    "birpc": "0.2.12",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
     "event-target-polyfill": "^0.0.3",

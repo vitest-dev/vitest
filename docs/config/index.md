@@ -113,10 +113,6 @@ Handling for dependencies resolution.
 - **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
-::: warning
-This feature is temporarily disabled since Vitest 0.30.0.
-:::
-
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
 
 For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
@@ -124,10 +120,11 @@ For `jsdom` and `happy-dom` environments, when Vitest will encounter the externa
 - Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
 - Importing UI libraries is expensive because they are not meant to run inside Node.js
 - Your `alias` configuration is now respected inside bundled packages
+- Code in your tests is running closer to how it's running in the browser
 
-You can opt-out of this behavior for certain packages with `exclude` option. You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
+Be aware that only packages in `deps.experimentalOptimizer.include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
 
-This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
+This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude` option in `deps.experimentalOptimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
 ::: tip
 You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer.force` option.
@@ -136,7 +133,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**', '**/dist/**']`
+- **Default:** `['**/node_modules/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
@@ -189,6 +186,29 @@ TypeError: default is not a function
 ```
 
 By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
+
+#### deps.moduleDirectories
+
+- **Type:** `string[]`
+- **Default**: `['node_modules']`
+
+A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/#root) of the project.
+
+This option will also affect if a file should be treated as a module when externalizing dependencies. By default, Vitest imports external modules with native Node.js bypassing Vite transformation step.
+
+Setting this option will _override_ the default, if you wish to still search `node_modules` for packages include it along with any other options:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    deps: {
+      moduleDirectories: ['node_modules', path.resolve('../../packages')],
+    }
+  },
+})
+```
 
 ### runner
 
@@ -777,6 +797,16 @@ The reporter has three different types:
   ```
 
 Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+
+#### coverage.reportOnFailure
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.reportOnFailure`, `--coverage.reportOnFailure=false`
+- **Version:** Since Vitest 0.31.2
+
+Generate coverage report even when tests fail.
 
 #### coverage.skipFull
 

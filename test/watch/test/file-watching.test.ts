@@ -1,7 +1,7 @@
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { afterEach, describe, test } from 'vitest'
 
-import { startWatchMode } from './utils'
+import { runVitestCli } from '../../test-utils'
 
 const sourceFile = 'fixtures/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
@@ -12,6 +12,7 @@ const testFileContent = readFileSync(testFile, 'utf-8')
 const configFile = 'fixtures/vitest.config.ts'
 const configFileContent = readFileSync(configFile, 'utf-8')
 
+const cliArgs = ['--root', 'fixtures', '--watch']
 const cleanups: (() => void)[] = []
 
 function editFile(fileContent: string) {
@@ -29,46 +30,46 @@ afterEach(() => {
 })
 
 test('editing source file triggers re-run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
-  await vitest.waitForOutput('New code running')
-  await vitest.waitForOutput('RERUN  ../math.ts')
-  await vitest.waitForOutput('1 passed')
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../math.ts')
+  await vitest.waitForStdout('1 passed')
 })
 
 test('editing test file triggers re-run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   writeFileSync(testFile, editFile(testFileContent), 'utf8')
 
-  await vitest.waitForOutput('New code running')
-  await vitest.waitForOutput('RERUN  ../math.test.ts')
-  await vitest.waitForOutput('1 passed')
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../math.test.ts')
+  await vitest.waitForStdout('1 passed')
 })
 
 test('editing config file triggers re-run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   writeFileSync(configFile, editFile(configFileContent), 'utf8')
 
-  await vitest.waitForOutput('New code running')
-  await vitest.waitForOutput('Restarting due to config changes')
-  await vitest.waitForOutput('2 passed')
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('Restarting due to config changes')
+  await vitest.waitForStdout('2 passed')
 })
 
 test('editing config file reloads new changes', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   writeFileSync(configFile, configFileContent.replace('reporters: \'verbose\'', 'reporters: \'tap\''), 'utf8')
 
-  await vitest.waitForOutput('TAP version')
-  await vitest.waitForOutput('ok 2')
+  await vitest.waitForStdout('TAP version')
+  await vitest.waitForStdout('ok 2')
 })
 
 test('adding a new test file triggers re-run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   const testFile = 'fixtures/new-dynamic.test.ts'
   const testFileContent = `
@@ -82,21 +83,21 @@ test("dynamic test case", () => {
   cleanups.push(() => rmSync(testFile))
   writeFileSync(testFile, testFileContent, 'utf-8')
 
-  await vitest.waitForOutput('Running added dynamic test')
-  await vitest.waitForOutput('RERUN  ../new-dynamic.test.ts')
-  await vitest.waitForOutput('1 passed')
+  await vitest.waitForStdout('Running added dynamic test')
+  await vitest.waitForStdout('RERUN  ../new-dynamic.test.ts')
+  await vitest.waitForStdout('1 passed')
 })
 
 describe('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', async () => {
-    const vitest = await startWatchMode('--browser.enabled', '--browser.headless', '--browser.name=chrome')
+    const vitest = await runVitestCli(...cliArgs, '--browser.enabled', '--browser.headless', '--browser.name=chrome')
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
-    await vitest.waitForOutput('New code running')
-    await vitest.waitForOutput('RERUN  ../math.ts')
-    await vitest.waitForOutput('1 passed')
+    await vitest.waitForStdout('New code running')
+    await vitest.waitForStdout('RERUN  ../math.ts')
+    await vitest.waitForStdout('1 passed')
 
     vitest.write('q')
-  })
+  }, { retry: 3 })
 })

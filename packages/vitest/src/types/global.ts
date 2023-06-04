@@ -34,6 +34,11 @@ declare module '@vitest/runner' {
     expect: ExpectStatic
   }
 
+  interface TaskMeta {
+    typecheck?: boolean
+    benchmark?: boolean
+  }
+
   interface File {
     prepareDuration?: number
     environmentLoad?: number
