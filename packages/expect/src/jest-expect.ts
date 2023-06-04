@@ -16,8 +16,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
-      utils.addMethod(chai.Assertion.prototype, n, wrapSoft(utils, fn))
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, wrapSoft(utils, fn))
+      const softWrapper = wrapSoft(utils, fn)
+      utils.addMethod(chai.Assertion.prototype, n, softWrapper)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, softWrapper)
     }
 
     if (Array.isArray(name))
