@@ -49,9 +49,8 @@ test('expect with expect.soft', () => {
 })
 
 test('expect.soft with expect.extend', () => {
-  expect.soft(1).toEqual(2)
-  // @ts-expect-error expect-extend
-  expect.soft(3).toBeDividedBy(4)
+  expect.soft(1).toEqual(2);
+  (expect.soft(3) as any).toBeDividedBy(4)
   expect(5).toEqual(6)
 })
 
