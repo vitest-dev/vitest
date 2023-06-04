@@ -78,7 +78,7 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
 
       const softWrapper = wrapSoft(utils, expectWrapper)
       utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, expectAssertionName, softWrapper)
-      utils.addMethod(c.Assertion.prototype, expectAssertionName, wrapSoft(utils, softWrapper))
+      utils.addMethod(c.Assertion.prototype, expectAssertionName, softWrapper)
 
       class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
         constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {
