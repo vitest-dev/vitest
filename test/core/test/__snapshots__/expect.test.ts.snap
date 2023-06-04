@@ -6,7 +6,7 @@ exports[`expect.soft > basic 1`] = `
  FAIL  |core| soft.test.ts > basic
 AssertionError: expected 1 to be 2 // Object.is equality
 
-  - Expected  - 1
+  - Expected  - 0
   + Received  + 1
 
   - 2
@@ -25,7 +25,7 @@ AssertionError: expected 1 to be 2 // Object.is equality
  FAIL  |core| soft.test.ts > basic
 AssertionError: expected 2 to be 3 // Object.is equality
 
-  - Expected  - 1
+  - Expected  - 0
   + Received  + 1
 
   - 3
@@ -37,191 +37,9 @@ AssertionError: expected 2 to be 3 // Object.is equality
      25|   expect.soft(2).toBe(3)
        |                  ^
      26| })
-     27|
+     27| 
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
-
-"
-`;
-
-exports[`expect.soft > expect with expect.soft 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  |core| soft.test.ts > expect with expect.soft
-AssertionError: expected 1 to deeply equal 2
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 2
-  + 1
-
- ❯ soft.test.ts:46:18
-     44|
-     45| test('expect with expect.soft', () => {
-     46|   expect.soft(1).toEqual(2)
-       |                  ^
-     47|   expect(10).toEqual(20)
-     48|   expect.soft(2).toEqual(3)
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
- FAIL  |core| soft.test.ts > expect with expect.soft
-AssertionError: expected 10 to deeply equal 20
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 20
-  + 10
-
- ❯ soft.test.ts:47:14
-     45| test('expect with expect.soft', () => {
-     46|   expect.soft(1).toEqual(2)
-     47|   expect(10).toEqual(20)
-       |              ^
-     48|   expect.soft(2).toEqual(3)
-     49| })
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
-
-"
-`;
-
-exports[`expect.soft > expect.soft and retry will failed 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  |core| soft.test.ts > expect.soft and retry will failed
-AssertionError: expected 1 to be 4 // Object.is equality
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 4
-  + 1
-
- ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
-     71| num = 0
-     72| test('expect.soft and retry will failed', () => {
-     73|   expect.soft(num += 1).toBe(4)
-       |                         ^
-     74|   expect.soft(num += 1).toBe(5)
-     75| }, {
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
-
- FAIL  |core| soft.test.ts > expect.soft and retry will failed
-AssertionError: expected 2 to be 5 // Object.is equality
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 5
-  + 2
-
- ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
-     72| test('expect.soft and retry will failed', () => {
-     73|   expect.soft(num += 1).toBe(4)
-     74|   expect.soft(num += 1).toBe(5)
-       |                         ^
-     75| }, {
-     76|   retry: 2,
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
-
- FAIL  |core| soft.test.ts > expect.soft and retry will failed
-AssertionError: expected 3 to be 4 // Object.is equality
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 4
-  + 3
-
- ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
-     71| num = 0
-     72| test('expect.soft and retry will failed', () => {
-     73|   expect.soft(num += 1).toBe(4)
-       |                         ^
-     74|   expect.soft(num += 1).toBe(5)
-     75| }, {
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
-
- FAIL  |core| soft.test.ts > expect.soft and retry will failed
-AssertionError: expected 4 to be 5 // Object.is equality
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 5
-  + 4
-
- ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
-     72| test('expect.soft and retry will failed', () => {
-     73|   expect.soft(num += 1).toBe(4)
-     74|   expect.soft(num += 1).toBe(5)
-       |                         ^
-     75| }, {
-     76|   retry: 2,
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
-
-"
-`;
-
-exports[`expect.soft > expect.soft with expect.extend 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  |core| soft.test.ts > expect.soft with expect.extend
-AssertionError: expected 1 to deeply equal 2
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 2
-  + 1
-
- ❯ soft.test.ts:52:18
-     50|
-     51| test('expect.soft with expect.extend', () => {
-     52|   expect.soft(1).toEqual(2);
-       |                  ^
-     53|   (expect.soft(3) as any).toBeDividedBy(4)
-     54|   expect(5).toEqual(6)
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
-
- FAIL  |core| soft.test.ts > expect.soft with expect.extend
-Error: expected 3 to be divisible by 4
- ❯ soft.test.ts:53:27
-     51| test('expect.soft with expect.extend', () => {
-     52|   expect.soft(1).toEqual(2);
-     53|   (expect.soft(3) as any).toBeDividedBy(4)
-       |                           ^
-     54|   expect(5).toEqual(6)
-     55| })
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
-
- FAIL  |core| soft.test.ts > expect.soft with expect.extend
-AssertionError: expected 5 to deeply equal 6
-
-  - Expected  - 1
-  + Received  + 1
-
-  - 6
-  + 5
-
- ❯ soft.test.ts:54:13
-     52|   expect.soft(1).toEqual(2);
-     53|   (expect.soft(3) as any).toBeDividedBy(4)
-     54|   expect(5).toEqual(6)
-       |             ^
-     55| })
-     56|
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
 "
 `;
@@ -232,14 +50,14 @@ exports[`expect.soft > promise 1`] = `
  FAIL  |core| soft.test.ts > promise
 AssertionError: expected 1 to be 2 // Object.is equality
 
-  - Expected  - 1
+  - Expected  - 0
   + Received  + 1
 
   - 2
   + 1
 
  ❯ soft.test.ts:29:3
-     27|
+     27| 
      28| test('promise', async () => {
      29|   await expect.soft(
        |   ^
@@ -251,7 +69,7 @@ AssertionError: expected 1 to be 2 // Object.is equality
  FAIL  |core| soft.test.ts > promise
 AssertionError: expected 2 to be 3 // Object.is equality
 
-  - Expected  - 1
+  - Expected  - 0
   + Received  + 1
 
   - 3
@@ -266,6 +84,238 @@ AssertionError: expected 2 to be 3 // Object.is equality
      38|       setTimeout(() => {
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+"
+`;
+
+exports[`expect.soft > retry will failed 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 1 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 1
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 2 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 2
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 3 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 3
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 4 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 4
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+"
+`;
+
+exports[`expect.soft > with expect 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > with expect
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:46:18
+     44| 
+     45| test('with expect', () => {
+     46|   expect.soft(1).toEqual(2)
+       |                  ^
+     47|   expect(10).toEqual(20)
+     48|   expect.soft(2).toEqual(3)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  |core| soft.test.ts > with expect
+AssertionError: expected 10 to deeply equal 20
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 20
+  + 10
+
+ ❯ soft.test.ts:47:14
+     45| test('with expect', () => {
+     46|   expect.soft(1).toEqual(2)
+     47|   expect(10).toEqual(20)
+       |              ^
+     48|   expect.soft(2).toEqual(3)
+     49| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:52:18
+     50| 
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+       |                  ^
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+Error: expected 3 to be divisible by 4
+ ❯ soft.test.ts:53:27
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+       |                           ^
+     54|   expect(5).toEqual(6)
+     55| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 5 to deeply equal 6
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 6
+  + 5
+
+ ❯ soft.test.ts:54:13
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+       |             ^
+     55| })
+     56| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+"
+`;
+
+exports[`expect.soft > with expect.extend 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:52:18
+     50| 
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+       |                  ^
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+Error: expected 3 to be divisible by 4
+ ❯ soft.test.ts:53:27
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+       |                           ^
+     54|   expect(5).toEqual(6)
+     55| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 5 to deeply equal 6
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 6
+  + 5
+
+ ❯ soft.test.ts:54:13
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+       |             ^
+     55| })
+     56| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
 "
 `;

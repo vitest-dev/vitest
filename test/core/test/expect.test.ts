@@ -20,7 +20,7 @@ describe('expect.soft', () => {
     expect(stderr).toMatchSnapshot()
   })
 
-  test('expect with expect.soft', async () => {
+  test('with expect', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to deeply equal 2')
     expect(stderr).toContain('AssertionError: expected 10 to deeply equal 20')
@@ -28,7 +28,7 @@ describe('expect.soft', () => {
     expect(stderr).toMatchSnapshot()
   })
 
-  test('expect.soft with expect.extend', async () => {
+  test('with expect.extend', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to deeply equal 2')
     expect(stderr).toContain('Error: expected 3 to be divisible by 4')
@@ -36,17 +36,17 @@ describe('expect.soft', () => {
     expect(stderr).toMatchSnapshot()
   })
 
-  test('expect.soft passed', async () => {
+  test('passed', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('1 passed')
   })
 
-  test('expect.soft and retry will passed', async () => {
+  test('retry will passed', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('1 passed')
   })
 
-  test('expect.soft and retry will failed', async () => {
+  test('retry will failed', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to be 4')
     expect(stderr).toContain('AssertionError: expected 2 to be 5')

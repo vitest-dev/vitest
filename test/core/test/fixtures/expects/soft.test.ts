@@ -42,26 +42,26 @@ test('promise', async () => {
   ).resolves.toBe(3)
 })
 
-test('expect with expect.soft', () => {
+test('with expect', () => {
   expect.soft(1).toEqual(2)
   expect(10).toEqual(20)
   expect.soft(2).toEqual(3)
 })
 
-test('expect.soft with expect.extend', () => {
+test('with expect.extend', () => {
   expect.soft(1).toEqual(2);
   (expect.soft(3) as any).toBeDividedBy(4)
   expect(5).toEqual(6)
 })
 
-test('expect.soft passed', () => {
+test('passed', () => {
   expect.soft(1).toEqual(1)
   expect(10).toEqual(10)
   expect.soft(2).toEqual(2)
 })
 
 let num = 0
-test('expect.soft and retry will passed', () => {
+test('retry will passed', () => {
   expect.soft(num += 1).toBe(3)
   expect.soft(num += 1).toBe(4)
 }, {
@@ -69,7 +69,7 @@ test('expect.soft and retry will passed', () => {
 })
 
 num = 0
-test('expect.soft and retry will failed', () => {
+test('retry will failed', () => {
   expect.soft(num += 1).toBe(4)
   expect.soft(num += 1).toBe(5)
 }, {
