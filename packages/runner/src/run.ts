@@ -192,7 +192,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         // reset state when retry test
         test.result.state = 'run'
       }
-      else {
+      else if (test.result.state === 'fail') {
         // last retry failed, mark test as failed
         failTask(test.result, [])
       }
