@@ -230,7 +230,8 @@ export type SuiteFactory<ExtraContext = {}> = (test: (name: string, fn: TestFunc
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
-  currentSuite: SuiteCollector | null
+  currentSuiteCollector: SuiteCollector | null
+  currentSuite: Suite | null
 }
 
 export interface TestContext {

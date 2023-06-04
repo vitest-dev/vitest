@@ -3,7 +3,7 @@
 import * as chai from 'chai'
 import './setup'
 import type { Test } from '@vitest/runner'
-import { getCurrentTest } from '@vitest/runner'
+import { getCurrentSuite, getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
@@ -15,16 +15,26 @@ export function createExpect(test?: Test) {
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
-    if (_test)
+    if (_test) {
       // @ts-expect-error internal
       return assert.withTest(_test) as Assertion
-    else
-      return assert
+    }
+    else { return assert }
   }) as ExpectStatic
   Object.assign(expect, chai.expect)
 
   expect.getState = () => getState<MatcherState>(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)
+
+  expect.soft = (value, message) => {
+    const assert = expect(value, message)
+    // @ts-expect-error internal
+    assert.softExpect()
+    const suite = getCurrentSuite()
+    // @ts-expect-error internal
+    assert.withSuite(suite)
+    return assert
+  }
 
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}

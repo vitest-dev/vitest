@@ -25,6 +25,10 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
 }
 
+export function hasSoftError(suite: Arrayable<Task>): boolean {
+  return toArray(suite).some(s => (s.result?.errors && s.result.errors.some(e => e.soft)) || (s.type === 'suite' && hasSoftError(s.tasks)))
+}
+
 export function getNames(task: Task) {
   const names = [task.name]
   let current: Task | undefined = task

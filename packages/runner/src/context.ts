@@ -1,22 +1,27 @@
 import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers } from '@vitest/utils'
-import type { RuntimeContext, SuiteCollector, Test, TestContext } from './types'
+import type { RuntimeContext, Suite, SuiteCollector, Test, TestContext } from './types'
 import type { VitestRunner } from './types/runner'
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
+  currentSuiteCollector: null,
   currentSuite: null,
 }
 
 export function collectTask(task: SuiteCollector) {
-  collectorContext.currentSuite?.tasks.push(task)
+  collectorContext.currentSuiteCollector?.tasks.push(task)
 }
 
-export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<void>)) {
-  const prev = collectorContext.currentSuite
+export function setCurrentSuite(suite: Suite | null) {
   collectorContext.currentSuite = suite
+}
+
+export async function runWithSuiteCollector(suiteCollector: SuiteCollector, fn: (() => Awaitable<void>)) {
+  const prev = collectorContext.currentSuiteCollector
+  collectorContext.currentSuiteCollector = suiteCollector
   await fn()
-  collectorContext.currentSuite = prev
+  collectorContext.currentSuiteCollector = prev
 }
 
 export function withTimeout<T extends((...args: any[]) => any)>(

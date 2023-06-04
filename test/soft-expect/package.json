@@ -1,0 +1,10 @@
+{
+  "name": "@vitest/test-soft-expect",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

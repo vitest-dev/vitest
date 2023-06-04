@@ -44,4 +44,5 @@ export interface ErrorWithDiff extends Error {
   type?: string
   frame?: string
   diff?: string
+  soft?: boolean
 }

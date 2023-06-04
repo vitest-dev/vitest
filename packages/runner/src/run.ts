@@ -7,8 +7,9 @@ import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
-import { hasFailed, hasTests } from './utils/tasks'
+import { hasFailed, hasSoftError, hasTests } from './utils/tasks'
 import { markVersion } from './version'
+import { setCurrentSuite } from './context'
 
 const now = Date.now
 
@@ -192,6 +193,9 @@ export async function runTest(test: Test, runner: VitestRunner) {
     }
   }
 
+  if (hasSoftError(test))
+    failTask(test.result, test.result.errors?.filter(e => e.soft))
+
   if (test.result.state === 'fail')
     await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
 
@@ -260,6 +264,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 
   updateTask(suite, runner)
 
+  setCurrentSuite(suite)
+
   let beforeAllCleanups: HookCleanupCallback[] = []
 
   if (suite.mode === 'skip') {
@@ -302,6 +308,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
@@ -317,6 +324,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
           suite.result.errors = [error]
         }
       }
+      else if (hasSoftError(suite)) {
+        // soft expect
+        suite.result.state = 'fail'
+      }
       else if (hasFailed(suite)) {
         suite.result.state = 'fail'
       }
@@ -326,6 +337,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     updateTask(suite, runner)
+
+    setCurrentSuite(null)
 
     suite.result.duration = now() - start
 

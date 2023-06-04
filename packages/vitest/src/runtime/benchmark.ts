@@ -1,5 +1,5 @@
 import type { TaskCustom } from '@vitest/runner'
-import { getCurrentSuite } from '@vitest/runner'
+import { getCurrentSuiteCollector } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
 import { noop } from '@vitest/utils'
 import type { BenchFunction, BenchOptions, BenchmarkAPI } from '../types'
@@ -21,7 +21,7 @@ export const bench = createBenchmark(
     if (!isRunningInBenchmark())
       throw new Error('`bench()` is only available in benchmark mode.')
 
-    const task = getCurrentSuite().custom.call(this, name)
+    const task = getCurrentSuiteCollector().custom.call(this, name)
     task.meta = {
       benchmark: true,
     }

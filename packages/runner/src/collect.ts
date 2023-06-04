@@ -2,7 +2,7 @@ import { relative } from 'pathe'
 import type { File } from './types'
 import type { VitestRunner } from './types/runner'
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
-import { clearCollectorContext, getDefaultSuite } from './suite'
+import { clearCollectorContext, getDefaultSuiteCollector } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './utils/error'
 import { collectorContext } from './context'
@@ -39,7 +39,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
 
       await runner.importFile(filepath, 'collect')
 
-      const defaultTasks = await getDefaultSuite().collect(file)
+      const defaultTasks = await getDefaultSuiteCollector().collect(file)
 
       setHooks(file, getHooks(defaultTasks))
 

@@ -2,7 +2,7 @@ import { format, isObject, noop, objDisplay, objectAttr } from '@vitest/utils'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
-import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
+import { collectTask, collectorContext, createTestContext, runWithSuiteCollector, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 import { checkVersion } from './version'
 
@@ -11,7 +11,7 @@ export const suite = createSuite()
 export const test = createTest(
   function (name: string, fn?: TestFunction, options?: number | TestOptions) {
     checkVersion()
-    getCurrentSuite().test.fn.call(this, name, fn, options)
+    getCurrentSuiteCollector().test.fn.call(this, name, fn, options)
   },
 )
 
@@ -20,10 +20,10 @@ export const describe = suite
 export const it = test
 
 let runner: VitestRunner
-let defaultSuite: SuiteCollector
+let defaultSuiteCollector: SuiteCollector
 
-export function getDefaultSuite() {
-  return defaultSuite
+export function getDefaultSuiteCollector() {
+  return defaultSuiteCollector
 }
 
 export function getRunner() {
@@ -31,16 +31,20 @@ export function getRunner() {
 }
 
 export function clearCollectorContext(currentRunner: VitestRunner) {
-  if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : suite('')
+  if (!defaultSuiteCollector)
+    defaultSuiteCollector = currentRunner.config.sequence.shuffle ? suite.shuffle('') : suite('')
   runner = currentRunner
   collectorContext.tasks.length = 0
-  defaultSuite.clear()
-  collectorContext.currentSuite = defaultSuite
+  defaultSuiteCollector.clear()
+  collectorContext.currentSuiteCollector = defaultSuiteCollector
 }
 
-export function getCurrentSuite<ExtraContext = {}>() {
-  return (collectorContext.currentSuite || defaultSuite) as SuiteCollector<ExtraContext>
+export function getCurrentSuiteCollector<ExtraContext = {}>() {
+  return (collectorContext.currentSuiteCollector || defaultSuiteCollector) as SuiteCollector<ExtraContext>
+}
+
+export function getCurrentSuite() {
+  return collectorContext.currentSuite
 }
 
 export function createSuiteHooks() {
@@ -167,7 +171,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   async function collect(file?: File) {
     factoryQueue.length = 0
     if (factory)
-      await runWithSuite(collector, () => factory(test))
+      await runWithSuiteCollector(collector, () => factory(test))
 
     const allChildren: Task[] = []
 
@@ -194,14 +198,14 @@ function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
     checkVersion()
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-    const currentSuite = getCurrentSuite()
+    const currentSuiteCollector = getCurrentSuiteCollector()
 
     if (typeof options === 'number')
       options = { timeout: options }
 
     // inherit options from current suite
-    if (currentSuite?.options)
-      options = { ...currentSuite.options, ...options }
+    if (currentSuiteCollector?.options)
+      options = { ...currentSuiteCollector.options, ...options }
 
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, this.each, options)
   }

@@ -1,4 +1,4 @@
-import { AssertionError } from 'chai'
+import { AssertionError, util } from 'chai'
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
@@ -13,6 +13,24 @@ import { recordAsyncExpect } from './utils'
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const c = () => getColors()
+
+  utils.overwriteMethod(chai.Assertion.prototype, 'assert', (_super: any) => {
+    return function (this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
+      try {
+        return _super.apply(this, args)
+      }
+      catch (e: any) {
+        const isSoft = utils.flag(this, 'isSoft')
+        const task = utils.flag(this, 'vitest-test') || util.flag(this, 'vitest-suite')
+
+        if (isSoft) {
+          task.result.errors ??= []
+          task.result.errors.push(Object.assign(e, { soft: true }))
+        }
+        else { throw e }
+      }
+    }
+  })
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
@@ -56,6 +74,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         _super.apply(this, args)
       }
     })
+  })
+
+  // @ts-expect-error @internal
+  def('softExpect', function () {
+    utils.flag(this, 'isSoft', true)
+    return this
+  })
+
+  // @ts-expect-error @internal
+  def('withSuite', function (suite: Suite) {
+    utils.flag(this, 'vitest-suite', suite)
+    return this
   })
 
   // @ts-expect-error @internal
