@@ -4,56 +4,42 @@ exports[`expect.soft > basic 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |core| soft.test.ts > basic
-Unknown Error: undefined
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: {
-  \\"0\\": {
-    \\"actual\\": 1,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 2,
-    \\"message\\": \\"expected 1 to be 2 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 1 to be 2 // Object.is equality
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:24:18
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"1\\": {
-    \\"actual\\": 2,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 3,
-    \\"message\\": \\"expected 2 to be 3 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 2 to be 3 // Object.is equality
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:25:18
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"length\\": 2,
-}
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:24:18
+     22| 
+     23| test('basic', () => {
+     24|   expect.soft(1).toBe(2)
+       |                  ^
+     25|   expect.soft(2).toBe(3)
+     26| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > basic
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:25:18
+     23| test('basic', () => {
+     24|   expect.soft(1).toBe(2)
+     25|   expect.soft(2).toBe(3)
+       |                  ^
+     26| })
+     27| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
 "
 `;
@@ -62,75 +48,42 @@ exports[`expect.soft > expect with expect.soft 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |core| soft.test.ts > expect with expect.soft
-Unknown Error: undefined
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: {
-  \\"0\\": [
-    {
-      \\"actual\\": 1,
-      \\"constructor\\": \\"Function<AssertionError>\\",
-      \\"expected\\": 2,
-      \\"message\\": \\"expected 1 to deeply equal 2\\",
-      \\"name\\": \\"AssertionError\\",
-      \\"operator\\": \\"strictEqual\\",
-      \\"showDiff\\": true,
-      \\"stack\\": \\"AssertionError: expected 1 to deeply equal 2
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:46:18
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-      \\"toJSON\\": \\"Function<anonymous>\\",
-      \\"toString\\": \\"Function<toString>\\",
-    },
-  ],
-  \\"1\\": {
-    \\"actual\\": \\"10\\",
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"diff\\": \\"  - Expected  - 0
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:46:18
+     44| 
+     45| test('expect with expect.soft', () => {
+     46|   expect.soft(1).toEqual(2)
+       |                  ^
+     47|   expect(10).toEqual(20)
+     48|   expect.soft(2).toEqual(3)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > expect with expect.soft
+AssertionError: expected 10 to deeply equal 20
+
+  - Expected  - 0
   + Received  + 1
 
   - 20
-  + 10\\",
-    \\"expected\\": \\"20\\",
-    \\"message\\": \\"expected 10 to deeply equal 20\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"nameStr\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 10 to deeply equal 20
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:47:14
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"stackStr\\": \\"AssertionError: expected 10 to deeply equal 20
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:47:14
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"length\\": 2,
-}
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+  + 10
+
+ ❯ soft.test.ts:47:14
+     45| test('expect with expect.soft', () => {
+     46|   expect.soft(1).toEqual(2)
+     47|   expect(10).toEqual(20)
+       |              ^
+     48|   expect.soft(2).toEqual(3)
+     49| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
 "
 `;
@@ -139,100 +92,80 @@ exports[`expect.soft > expect.soft and retry will failed 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |core| soft.test.ts > expect.soft and retry will failed
-Unknown Error: undefined
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: {
-  \\"0\\": {
-    \\"actual\\": 1,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 4,
-    \\"message\\": \\"expected 1 to be 4 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 1 to be 4 // Object.is equality
-    at __vite_ssr_import_0__.test.retry (/Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:73:25)
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"1\\": {
-    \\"actual\\": 2,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 5,
-    \\"message\\": \\"expected 2 to be 5 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 2 to be 5 // Object.is equality
-    at __vite_ssr_import_0__.test.retry (/Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:74:25)
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"2\\": {
-    \\"actual\\": 3,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 4,
-    \\"message\\": \\"expected 3 to be 4 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 3 to be 4 // Object.is equality
-    at __vite_ssr_import_0__.test.retry (/Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:73:25)
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"3\\": {
-    \\"actual\\": 4,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 5,
-    \\"message\\": \\"expected 4 to be 5 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 4 to be 5 // Object.is equality
-    at __vite_ssr_import_0__.test.retry (/Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:74:25)
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"length\\": 4,
-}
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+AssertionError: expected 1 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 1
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('expect.soft and retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft and retry will failed
+AssertionError: expected 2 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 2
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('expect.soft and retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft and retry will failed
+AssertionError: expected 3 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 3
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('expect.soft and retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft and retry will failed
+AssertionError: expected 4 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 4
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('expect.soft and retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
 "
 `;
@@ -241,94 +174,54 @@ exports[`expect.soft > expect.soft with expect.extend 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |core| soft.test.ts > expect.soft with expect.extend
-Unknown Error: undefined
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: {
-  \\"0\\": [
-    {
-      \\"actual\\": 1,
-      \\"constructor\\": \\"Function<AssertionError>\\",
-      \\"expected\\": 2,
-      \\"message\\": \\"expected 1 to deeply equal 2\\",
-      \\"name\\": \\"AssertionError\\",
-      \\"operator\\": \\"strictEqual\\",
-      \\"showDiff\\": true,
-      \\"stack\\": \\"AssertionError: expected 1 to deeply equal 2
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:52:18
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-      \\"toJSON\\": \\"Function<anonymous>\\",
-      \\"toString\\": \\"Function<toString>\\",
-    },
-    {
-      \\"actual\\": undefined,
-      \\"constructor\\": \\"Function<JestExtendError>\\",
-      \\"expected\\": undefined,
-      \\"message\\": \\"expected 3 to be divisible by 4\\",
-      \\"name\\": \\"Error\\",
-      \\"stack\\": \\"Error: expected 3 to be divisible by 4
-    at Proxy.expectWrapper (file:///Users/qing/p/github/vitest/packages/expect/dist/index.js:1340:17)
-    at Proxy.<anonymous> (file:///Users/qing/p/github/vitest/packages/expect/dist/index.js:648:17)
-    at Proxy.methodWrapper (/Users/qing/p/github/vitest/node_modules/.pnpm/chai@4.3.7/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:53:27
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)\\",
-      \\"toString\\": \\"Function<toString>\\",
-    },
-  ],
-  \\"1\\": {
-    \\"actual\\": \\"5\\",
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"diff\\": \\"  - Expected  - 0
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:52:18
+     50| 
+     51| test('expect.soft with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+       |                  ^
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft with expect.extend
+Error: expected 3 to be divisible by 4
+ ❯ soft.test.ts:53:27
+     51| test('expect.soft with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+       |                           ^
+     54|   expect(5).toEqual(6)
+     55| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft with expect.extend
+AssertionError: expected 5 to deeply equal 6
+
+  - Expected  - 0
   + Received  + 1
 
   - 6
-  + 5\\",
-    \\"expected\\": \\"6\\",
-    \\"message\\": \\"expected 5 to deeply equal 6\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"nameStr\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 5 to deeply equal 6
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:54:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"stackStr\\": \\"AssertionError: expected 5 to deeply equal 6
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:54:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:144:13
-    at file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:41:26
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:17)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"length\\": 2,
-}
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+  + 5
+
+ ❯ soft.test.ts:54:13
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+       |             ^
+     55| })
+     56| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
 "
 `;
@@ -337,56 +230,42 @@ exports[`expect.soft > promise 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |core| soft.test.ts > promise
-Unknown Error: undefined
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-Serialized Error: {
-  \\"0\\": {
-    \\"actual\\": 1,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 2,
-    \\"message\\": \\"expected 1 to be 2 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 1 to be 2 // Object.is equality
-    at file:///Users/qing/p/github/vitest/packages/expect/dist/index.js:1250:29
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:29:3
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:11)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/worker.ts:66:5)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"1\\": {
-    \\"actual\\": 2,
-    \\"constructor\\": \\"Function<AssertionError>\\",
-    \\"expected\\": 3,
-    \\"message\\": \\"expected 2 to be 3 // Object.is equality\\",
-    \\"name\\": \\"AssertionError\\",
-    \\"operator\\": \\"strictEqual\\",
-    \\"showDiff\\": true,
-    \\"stack\\": \\"AssertionError: expected 2 to be 3 // Object.is equality
-    at file:///Users/qing/p/github/vitest/packages/expect/dist/index.js:1250:29
-    at /Users/qing/p/github/vitest/test/core/test/fixtures/expects/soft.test.ts:36:3
-    at runTest (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:487:11)
-    at runSuite (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:603:15)
-    at runFiles (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:654:5)
-    at startTests (file:///Users/qing/p/github/vitest/packages/runner/dist/index.js:663:3)
-    at file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:125:7
-    at withEnv (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/setup.node.ts:185:5)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/entry.ts:111:9)
-    at run (file:///Users/qing/p/github/vitest/packages/vitest/src/runtime/worker.ts:66:5)\\",
-    \\"toJSON\\": \\"Function<anonymous>\\",
-    \\"toString\\": \\"Function<toString>\\",
-  },
-  \\"length\\": 2,
-}
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:29:3
+     27| 
+     28| test('promise', async () => {
+     29|   await expect.soft(
+       |   ^
+     30|     new Promise((resolve) => {
+     31|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > promise
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:36:3
+     34|     }),
+     35|   ).resolves.toBe(2)
+     36|   await expect.soft(
+       |   ^
+     37|     new Promise((resolve) => {
+     38|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
 "
 `;
