@@ -50,4 +50,11 @@ describe('expect.soft', () => {
     expect(stderr).toContain('AssertionError: expected 4 to be 5')
     expect(stderr).toContain('4/4')
   })
+
+  test('snapshot', async () => {
+    const { stderr } = await run({
+      testNamePattern: '',
+    })
+    expect(stderr).toMatchSnapshot()
+  })
 })

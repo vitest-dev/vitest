@@ -1,0 +1,247 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`expect.soft > snapshot 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > basic
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:24:18
+     22| 
+     23| test('basic', () => {
+     24|   expect.soft(1).toBe(2)
+       |                  ^
+     25|   expect.soft(2).toBe(3)
+     26| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  |core| soft.test.ts > basic
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:25:18
+     23| test('basic', () => {
+     24|   expect.soft(1).toBe(2)
+     25|   expect.soft(2).toBe(3)
+       |                  ^
+     26| })
+     27| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  |core| soft.test.ts > promise
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:29:3
+     27| 
+     28| test('promise', async () => {
+     29|   await expect.soft(
+       |   ^
+     30|     new Promise((resolve) => {
+     31|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  |core| soft.test.ts > promise
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:36:3
+     34|     }),
+     35|   ).resolves.toBe(2)
+     36|   await expect.soft(
+       |   ^
+     37|     new Promise((resolve) => {
+     38|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  |core| soft.test.ts > with expect
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:46:18
+     44| 
+     45| test('with expect', () => {
+     46|   expect.soft(1).toEqual(2)
+       |                  ^
+     47|   expect(10).toEqual(20)
+     48|   expect.soft(2).toEqual(3)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  |core| soft.test.ts > with expect
+AssertionError: expected 10 to deeply equal 20
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 20
+  + 10
+
+ ❯ soft.test.ts:47:14
+     45| test('with expect', () => {
+     46|   expect.soft(1).toEqual(2)
+     47|   expect(10).toEqual(20)
+       |              ^
+     48|   expect.soft(2).toEqual(3)
+     49| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:52:18
+     50| 
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+       |                  ^
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+Error: expected 3 to be divisible by 4
+ ❯ soft.test.ts:53:27
+     51| test('with expect.extend', () => {
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+       |                           ^
+     54|   expect(5).toEqual(6)
+     55| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  |core| soft.test.ts > with expect.extend
+AssertionError: expected 5 to deeply equal 6
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 6
+  + 5
+
+ ❯ soft.test.ts:54:13
+     52|   expect.soft(1).toEqual(2);
+     53|   (expect.soft(3) as any).toBeDividedBy(4)
+     54|   expect(5).toEqual(6)
+       |             ^
+     55| })
+     56| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 5 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 5
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 6 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 6
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 7 to be 4 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 4
+  + 7
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:73:25
+     71| num = 0
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+       |                         ^
+     74|   expect.soft(num += 1).toBe(5)
+     75| }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  |core| soft.test.ts > retry will failed
+AssertionError: expected 8 to be 5 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 5
+  + 8
+
+ ❯ __vite_ssr_import_0__.test.retry soft.test.ts:74:25
+     72| test('retry will failed', () => {
+     73|   expect.soft(num += 1).toBe(4)
+     74|   expect.soft(num += 1).toBe(5)
+       |                         ^
+     75| }, {
+     76|   retry: 2,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+"
+`;
