@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
-import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
+import type { ApiConfig, BaseCoverageOptions, CoverageC8Options, CoverageIstanbulOptions, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
@@ -55,6 +55,76 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   return api
 }
 
+function guardOptions(options: UserConfig) {
+  if (options.benchmark) {
+    if (options.benchmark.include)
+      options.benchmark.include = toArray(options.benchmark.include)
+
+    if (options.benchmark.exclude)
+      options.benchmark.exclude = toArray(options.benchmark.exclude)
+
+    if (options.benchmark.includeSource)
+      options.benchmark.includeSource = toArray(options.benchmark.includeSource)
+  }
+  if (options.include)
+    options.include = toArray(options.include)
+
+  if (options.exclude)
+    options.exclude = toArray(options.exclude)
+
+  if (options.deps) {
+    if (options.deps.external)
+      options.deps.external = toArray(options.deps.external)
+
+    if (options.deps.moduleDirectories)
+      options.deps.moduleDirectories = toArray(options.deps.moduleDirectories)
+  }
+  if (options.includeSource)
+    options.includeSource = toArray(options.includeSource)
+
+  if (options.environmentMatchGlobs)
+    options.environmentMatchGlobs = toArray(options.environmentMatchGlobs)
+
+  if (options.poolMatchGlobs)
+    options.poolMatchGlobs = toArray(options.poolMatchGlobs)
+
+  if (options.watchExclude)
+    options.watchExclude = toArray(options.watchExclude)
+
+  if (options.forceRerunTriggers)
+    options.forceRerunTriggers = toArray(options.forceRerunTriggers)
+
+  if (options.coverage) {
+    const coverage = options.coverage
+    if (coverage.exclude)
+      coverage.exclude = toArray(options.coverage.exclude)
+
+    if ((coverage as BaseCoverageOptions).include)
+      (coverage as BaseCoverageOptions).include = toArray((coverage as BaseCoverageOptions).include)
+
+    if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+      (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+
+    if ((coverage as CoverageC8Options).src)
+      (coverage as CoverageC8Options).src = toArray((coverage as CoverageC8Options).src)
+  }
+  if (options.transformMode) {
+    if (options.transformMode.ssr)
+      options.transformMode.ssr = toArray(options.transformMode.ssr)
+
+    if (options.transformMode.web)
+      options.transformMode.web = toArray(options.transformMode.web)
+  }
+  if (options.snapshotFormat) {
+    if (options.snapshotFormat.plugins)
+      options.snapshotFormat.plugins = toArray(options.snapshotFormat.plugins)
+  }
+  if (options.fakeTimers) {
+    if (options.fakeTimers.toFake)
+      options.fakeTimers.toFake = toArray(options.fakeTimers.toFake)
+  }
+}
+
 export function resolveConfig(
   mode: VitestRunMode,
   options: UserConfig,
@@ -78,6 +148,7 @@ export function resolveConfig(
 
     options.environment = 'happy-dom'
   }
+  guardOptions(options)
 
   const resolved = {
     ...configDefaults,
@@ -212,9 +283,7 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  const exclude = toArray(resolved.coverage.exclude || [])
-  exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
-  resolved.coverage.exclude = exclude
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
