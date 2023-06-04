@@ -156,25 +156,20 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw new Error('Test function is not found. Did you add it using `setFn`?')
           await fn()
         }
-        if (test.result.state === 'softFail') {
-          failTask(test.result, [])
+        // some async expect will be added to this array, in case user forget to await theme
+        if (test.promises) {
+          const result = await Promise.allSettled(test.promises)
+          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+          if (errors.length)
+            throw errors
         }
-        else {
-          // some async expect will be added to this array, in case user forget to await theme
-          if (test.promises) {
-            const result = await Promise.allSettled(test.promises)
-            const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
-            if (errors.length)
-              throw errors
-          }
 
-          await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-          if (!test.repeats)
-            test.result.state = 'pass'
-          else if (test.repeats && retry === retryCount)
-            test.result.state = 'pass'
-        }
+        if (!test.repeats)
+          test.result.state = 'pass'
+        else if (test.repeats && retry === retryCount)
+          test.result.state = 'pass'
       }
       catch (e) {
         failTask(test.result, e)
@@ -190,6 +185,9 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
       if (test.result.state === 'pass')
         break
+
+      // reset state when retry test
+      test.result.state = 'run'
       // update retry info
       updateTask(test, runner)
     }

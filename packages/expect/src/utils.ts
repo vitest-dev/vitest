@@ -36,7 +36,7 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
       return fn.apply(this, args)
     }
     catch (err) {
-      test.result.state = 'softFail'
+      test.result.state = 'fail'
       test.result.errors ||= []
       test.result.errors.push(err)
     }
