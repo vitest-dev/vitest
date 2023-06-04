@@ -228,10 +228,19 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
+const processedError = new WeakSet()
 function failTask(result: TaskResult, err: unknown) {
   result.state = 'fail'
   const errors = Array.isArray(err) ? err : [err]
-  result.errors = [...result.errors || [], ...errors].map(err => processError(err))
+  // errors maybe push in expect.soft, so we need to process them
+  result.errors = [...result.errors || [], ...errors].map((err) => {
+    let newError = err
+    if (!processedError.has(err)) {
+      newError = processError(err)
+      processedError.add(newError)
+    }
+    return newError
+  })
   const errorsLength = result.errors.length
   if (errorsLength > 0)
     result.error = result.errors[errorsLength - 1]

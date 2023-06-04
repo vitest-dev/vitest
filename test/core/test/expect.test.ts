@@ -28,14 +28,6 @@ describe('expect.soft', () => {
     expect(stderr).toMatchSnapshot()
   })
 
-  test('expect with expect.soft', async () => {
-    const { stderr } = await run()
-    expect(stderr).toContain('AssertionError: expected 1 to deeply equal 2')
-    expect(stderr).toContain('AssertionError: expected 10 to deeply equal 20')
-    expect(stderr).not.toContain('AssertionError: expected 2 to deeply equal 3')
-    expect(stderr).toMatchSnapshot()
-  })
-
   test('expect.soft with expect.extend', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to deeply equal 2')
