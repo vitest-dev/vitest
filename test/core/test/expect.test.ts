@@ -16,7 +16,7 @@ describe('expect.soft', () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 2 to be 3')
     expect(stderr).toContain('AssertionError: expected 1 to be 2')
-  })
+  }, 3000)
 
   test('with expect', async () => {
     const { stderr } = await run()
