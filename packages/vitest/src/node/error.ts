@@ -171,7 +171,7 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
     deps: {
       inline: [
         ${c.yellow(c.bold(`"${name}"`))}
-      ]
+      }
     }
   }
 }\n`)))

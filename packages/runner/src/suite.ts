@@ -4,13 +4,11 @@ import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuiteCollector, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
-import { checkVersion } from './version'
 
 // apis
 export const suite = createSuite()
 export const test = createTest(
   function (name: string, fn?: TestFunction, options?: number | TestOptions) {
-    checkVersion()
     getCurrentSuiteCollector().test.fn.call(this, name, fn, options)
   },
 )
@@ -196,7 +194,6 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
-    checkVersion()
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     const currentSuiteCollector = getCurrentSuiteCollector()
 

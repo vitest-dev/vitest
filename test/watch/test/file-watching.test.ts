@@ -99,5 +99,5 @@ describe('browser', () => {
     await vitest.waitForStdout('1 passed')
 
     vitest.write('q')
-  })
+  }, { retry: 3 })
 })

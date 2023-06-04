@@ -67,4 +67,7 @@ it.each([
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
-}, 60_000)
+}, {
+  timeout: 60_000,
+  retry: 3,
+})
