@@ -166,10 +166,12 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
         await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        if (!test.repeats)
-          test.result.state = 'pass'
-        else if (test.repeats && retry === retryCount)
-          test.result.state = 'pass'
+        if (test.result.state !== 'fail') {
+          if (!test.repeats)
+            test.result.state = 'pass'
+          else if (test.repeats && retry === retryCount)
+            test.result.state = 'pass'
+        }
       }
       catch (e) {
         failTask(test.result, e)
@@ -186,8 +188,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
       if (test.result.state === 'pass')
         break
 
-      // reset state when retry test
-      test.result.state = 'run'
+      if (retryCount < retry - 1) {
+        // reset state when retry test
+        test.result.state = 'run'
+      }
+      else {
+        // last retry failed, mark test as failed
+        failTask(test.result, [])
+      }
       // update retry info
       updateTask(test, runner)
     }

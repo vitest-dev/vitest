@@ -1,22 +1,20 @@
 import { expect, test } from 'vitest'
 
 expect.extend({
-  toBeSquare(received, expected) {
-    const pass = received === expected * expected
+  toBeDividedBy(received, divisor) {
+    const pass = received % divisor === 0
     if (pass) {
       return {
+        message: () =>
+          `expected ${received} not to be divisible by ${divisor}`,
         pass: true,
-        received,
-        expected,
-        message: () => `expected ${received} not to be square`,
       }
     }
     else {
       return {
+        message: () =>
+          `expected ${received} to be divisible by ${divisor}`,
         pass: false,
-        received,
-        expected,
-        message: () => `expected ${received} to be square`,
       }
     }
   },
@@ -53,12 +51,28 @@ test('expect with expect.soft', () => {
 test('expect.soft with expect.extend', () => {
   expect.soft(1).toEqual(2)
   // @ts-expect-error expect-extend
-  expect.soft(3).toBeSquare(5)
+  expect.soft(3).toBeDividedBy(4)
   expect(5).toEqual(6)
 })
 
-test('expect.soft successfully', () => {
+test('expect.soft passed', () => {
   expect.soft(1).toEqual(1)
   expect(10).toEqual(10)
   expect.soft(2).toEqual(2)
+})
+
+let num = 0
+test('expect.soft and retry will passed', () => {
+  expect.soft(num += 1).toBe(3)
+  expect.soft(num += 1).toBe(4)
+}, {
+  retry: 2,
+})
+
+num = 0
+test('expect.soft and retry will failed', () => {
+  expect.soft(num += 1).toBe(4)
+  expect.soft(num += 1).toBe(5)
+}, {
+  retry: 2,
 })
