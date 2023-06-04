@@ -212,7 +212,9 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+  const exclude = toArray(resolved.coverage.exclude || [])
+  exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+  resolved.coverage.exclude = exclude
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
