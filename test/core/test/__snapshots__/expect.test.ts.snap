@@ -1,0 +1,233 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`expect.soft > basic 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > basic
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:26:18
+     24| 
+     25| test('basic', () => {
+     26|   expect.soft(1).toBe(2)
+       |                  ^
+     27|   expect.soft(2).toBe(3)
+     28| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > basic
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:27:18
+     25| test('basic', () => {
+     26|   expect.soft(1).toBe(2)
+     27|   expect.soft(2).toBe(3)
+       |                  ^
+     28| })
+     29| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+"
+`;
+
+exports[`expect.soft > expect with expect.soft 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > expect with expect.soft
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:48:18
+     46| 
+     47| test('expect with expect.soft', () => {
+     48|   expect.soft(1).toEqual(2)
+       |                  ^
+     49|   expect(10).toEqual(20)
+     50|   expect.soft(2).toEqual(3)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > expect with expect.soft
+AssertionError: expected 10 to deeply equal 20
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 20
+  + 10
+
+ ❯ soft.test.ts:49:14
+     47| test('expect with expect.soft', () => {
+     48|   expect.soft(1).toEqual(2)
+     49|   expect(10).toEqual(20)
+       |              ^
+     50|   expect.soft(2).toEqual(3)
+     51| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+"
+`;
+
+exports[`expect.soft > expect with expect.soft 2`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > expect with expect.soft
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:48:18
+     46| 
+     47| test('expect with expect.soft', () => {
+     48|   expect.soft(1).toEqual(2)
+       |                  ^
+     49|   expect(10).toEqual(20)
+     50|   expect.soft(2).toEqual(3)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > expect with expect.soft
+AssertionError: expected 10 to deeply equal 20
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 20
+  + 10
+
+ ❯ soft.test.ts:49:14
+     47| test('expect with expect.soft', () => {
+     48|   expect.soft(1).toEqual(2)
+     49|   expect(10).toEqual(20)
+       |              ^
+     50|   expect.soft(2).toEqual(3)
+     51| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+"
+`;
+
+exports[`expect.soft > expect.soft with expect.extend 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > expect.soft with expect.extend
+AssertionError: expected 1 to deeply equal 2
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:54:18
+     52| 
+     53| test('expect.soft with expect.extend', () => {
+     54|   expect.soft(1).toEqual(2)
+       |                  ^
+     55|   // @ts-expect-error expect-extend
+     56|   expect.soft(3).toBeSquare(5)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft with expect.extend
+Error: expected 3 to be square
+ ❯ soft.test.ts:56:18
+     54|   expect.soft(1).toEqual(2)
+     55|   // @ts-expect-error expect-extend
+     56|   expect.soft(3).toBeSquare(5)
+       |                  ^
+     57|   expect(5).toEqual(6)
+     58| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |core| soft.test.ts > expect.soft with expect.extend
+AssertionError: expected 5 to deeply equal 6
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 6
+  + 5
+
+ ❯ soft.test.ts:57:13
+     55|   // @ts-expect-error expect-extend
+     56|   expect.soft(3).toBeSquare(5)
+     57|   expect(5).toEqual(6)
+       |             ^
+     58| })
+     59| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+"
+`;
+
+exports[`expect.soft > promise 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core| soft.test.ts > promise
+AssertionError: expected 1 to be 2 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 2
+  + 1
+
+ ❯ soft.test.ts:31:3
+     29| 
+     30| test('promise', async () => {
+     31|   await expect.soft(
+       |   ^
+     32|     new Promise((resolve) => {
+     33|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core| soft.test.ts > promise
+AssertionError: expected 2 to be 3 // Object.is equality
+
+  - Expected  - 0
+  + Received  + 1
+
+  - 3
+  + 2
+
+ ❯ soft.test.ts:38:3
+     36|     }),
+     37|   ).resolves.toBe(2)
+     38|   await expect.soft(
+       |   ^
+     39|     new Promise((resolve) => {
+     40|       setTimeout(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+"
+`;

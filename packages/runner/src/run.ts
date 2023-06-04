@@ -156,21 +156,25 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw new Error('Test function is not found. Did you add it using `setFn`?')
           await fn()
         }
-
-        // some async expect will be added to this array, in case user forget to await theme
-        if (test.promises) {
-          const result = await Promise.allSettled(test.promises)
-          const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
-          if (errors.length)
-            throw errors
+        if (test.result.state === 'softFail') {
+          failTask(test.result, [])
         }
+        else {
+          // some async expect will be added to this array, in case user forget to await theme
+          if (test.promises) {
+            const result = await Promise.allSettled(test.promises)
+            const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+            if (errors.length)
+              throw errors
+          }
 
-        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+          await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        if (!test.repeats)
-          test.result.state = 'pass'
-        else if (test.repeats && retry === retryCount)
-          test.result.state = 'pass'
+          if (!test.repeats)
+            test.result.state = 'pass'
+          else if (test.repeats && retry === retryCount)
+            test.result.state = 'pass'
+        }
       }
       catch (e) {
         failTask(test.result, e)
@@ -220,15 +224,11 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
 function failTask(result: TaskResult, err: unknown) {
   result.state = 'fail'
-  const errors = Array.isArray(err)
-    ? err
-    : [err]
-  for (const e of errors) {
-    const error = processError(e)
-    result.error ??= error
-    result.errors ??= []
-    result.errors.push(error)
-  }
+  const errors = Array.isArray(err) ? err : [err]
+  result.errors = [...result.errors || [], ...errors].map(err => processError(err))
+  const errorsLength = result.errors.length
+  if (errorsLength > 0)
+    result.error = result.errors[errorsLength - 1]
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {

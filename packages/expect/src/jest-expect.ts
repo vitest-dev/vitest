@@ -8,7 +8,7 @@ import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as j
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
-import { recordAsyncExpect } from './utils'
+import { recordAsyncExpect, wrapSoft } from './utils'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
@@ -16,8 +16,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
-      utils.addMethod(chai.Assertion.prototype, n, fn)
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, fn)
+      utils.addMethod(chai.Assertion.prototype, n, wrapSoft(utils, fn))
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, wrapSoft(utils, fn))
     }
 
     if (Array.isArray(name))

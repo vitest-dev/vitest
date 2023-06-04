@@ -3,7 +3,7 @@ import type { ChainableFunction } from '../utils/chain'
 import type { ErrorWithDiff } from '../utils/error'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TaskState = RunMode | 'pass' | 'fail'
+export type TaskState = RunMode | 'pass' | 'fail' | 'softFail'
 
 export interface TaskBase {
   id: string
