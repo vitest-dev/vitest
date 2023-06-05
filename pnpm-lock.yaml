@@ -1326,8 +1326,8 @@ importers:
         specifier: ^9.10.7
         version: 9.10.7
       jsdom:
-        specifier: ^21.1.2
-        version: 21.1.2
+        specifier: ^22.1.0
+        version: 22.1.0
       log-update:
         specifier: ^5.0.1
         version: 5.0.1
@@ -1606,7 +1606,7 @@ importers:
         version: link:../../packages/runner
       jsdom:
         specifier: ^21.0.0
-        version: 21.1.2
+        version: 21.0.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -14068,7 +14068,7 @@ packages:
       is-glob: 4.0.3
       minimatch: 3.1.2
       object.values: 1.1.6
-      resolve: 1.22.1
+      resolve: 1.22.2
       semver: 6.3.0
       tsconfig-paths: 3.14.1
     transitivePeerDependencies:
@@ -14135,7 +14135,7 @@ packages:
       ignore: 5.2.0
       is-core-module: 2.11.0
       minimatch: 3.1.2
-      resolve: 1.22.1
+      resolve: 1.22.2
       semver: 7.3.8
     dev: true
 
@@ -15497,7 +15497,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.1.1
-      minimatch: 9.0.1
+      minimatch: 9.0.0
       minipass: 5.0.0
       path-scurry: 1.7.0
     dev: true
@@ -15602,23 +15602,6 @@ packages:
     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
     dependencies:
       get-intrinsic: 1.2.0
-    dev: true
-
-  /got@12.6.0:
-    resolution: {integrity: sha512-WTcaQ963xV97MN3x0/CbAriXFZcXCfgxVp91I+Ze6pawQOa7SgzwSx2zIJJsX+kTajMnVs0xcFD1TxZKFqhdnQ==}
-    engines: {node: '>=14.16'}
-    dependencies:
-      '@sindresorhus/is': 5.3.0
-      '@szmarczak/http-timer': 5.0.1
-      cacheable-lookup: 7.0.0
-      cacheable-request: 10.2.8
-      decompress-response: 6.0.0
-      form-data-encoder: 2.1.4
-      get-stream: 6.0.1
-      http2-wrapper: 2.2.0
-      lowercase-keys: 3.0.0
-      p-cancelable: 3.0.0
-      responselike: 3.0.0
     dev: true
 
   /got@12.6.1:
@@ -17691,46 +17674,6 @@ packages:
       cssom: 0.5.0
       cssstyle: 2.3.0
       data-urls: 3.0.2
-      decimal.js: 10.4.2
-      domexception: 4.0.0
-      escodegen: 2.0.0
-      form-data: 4.0.0
-      html-encoding-sniffer: 3.0.0
-      http-proxy-agent: 5.0.0
-      https-proxy-agent: 5.0.1
-      is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.2
-      parse5: 7.1.1
-      saxes: 6.0.0
-      symbol-tree: 3.2.4
-      tough-cookie: 4.1.2
-      w3c-xmlserializer: 4.0.0
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
-      whatwg-url: 11.0.0
-      ws: 8.13.0
-      xml-name-validator: 4.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
-  /jsdom@21.1.2:
-    resolution: {integrity: sha512-sCpFmK2jv+1sjff4u7fzft+pUh2KSUbUrEHYHyfSIbGTIcmnjyp83qg6qLwdJ/I3LpTXx33ACxeRL7Lsyc6lGQ==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      canvas: ^2.5.0
-    peerDependenciesMeta:
-      canvas:
-        optional: true
-    dependencies:
-      abab: 2.0.6
-      acorn: 8.8.2
-      acorn-globals: 7.0.1
-      cssstyle: 3.0.0
-      data-urls: 4.0.0
       decimal.js: 10.4.3
       domexception: 4.0.0
       escodegen: 2.0.0
@@ -17741,7 +17684,6 @@ packages:
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.4
       parse5: 7.1.2
-      rrweb-cssom: 0.6.0
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 4.1.2
@@ -17749,7 +17691,7 @@ packages:
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
-      whatwg-url: 12.0.1
+      whatwg-url: 11.0.0
       ws: 8.13.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
@@ -23733,7 +23675,7 @@ packages:
       '@vueuse/core':
         optional: true
     dependencies:
-      '@antfu/utils': 0.7.2
+      '@antfu/utils': 0.7.4
       '@rollup/pluginutils': 5.0.2(rollup@3.20.2)
       local-pkg: 0.4.3
       magic-string: 0.30.0
@@ -24561,7 +24503,7 @@ packages:
       '@wdio/types': 8.8.7
       '@wdio/utils': 8.8.7
       deepmerge-ts: 5.0.0
-      got: 12.6.0
+      got: 12.6.1
       ky: 0.33.3
       ws: 8.13.0
     transitivePeerDependencies:
@@ -24591,7 +24533,7 @@ packages:
       is-plain-obj: 4.1.0
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
-      minimatch: 9.0.0
+      minimatch: 9.0.1
       puppeteer-core: 20.3.0(typescript@5.0.4)
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0

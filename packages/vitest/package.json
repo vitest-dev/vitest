@@ -185,7 +185,7 @@
     "flatted": "^3.2.7",
     "get-tsconfig": "^4.5.0",
     "happy-dom": "^9.10.7",
-    "jsdom": "^21.1.2",
+    "jsdom": "^22.1.0",
     "log-update": "^5.0.1",
     "micromatch": "^4.0.5",
     "mlly": "^1.2.0",

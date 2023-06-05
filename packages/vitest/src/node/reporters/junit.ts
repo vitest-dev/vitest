@@ -92,7 +92,12 @@ export class JUnitReporter implements Reporter {
       const fileFd = await fs.open(this.reportFile, 'w+')
       this.fileFd = fileFd
 
-      this.baseLog = async (text: string) => await fs.writeFile(fileFd, `${text}\n`)
+      this.baseLog = async (text: string) => {
+        if (!this.fileFd)
+          this.fileFd = await fs.open(this.reportFile!, 'w+')
+
+        await fs.writeFile(this.fileFd, `${text}\n`)
+      }
     }
     else {
       this.baseLog = async (text: string) => this.ctx.logger.log(text)
@@ -248,5 +253,6 @@ export class JUnitReporter implements Reporter {
       this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)
 
     await this.fileFd?.close()
+    this.fileFd = undefined
   }
 }
