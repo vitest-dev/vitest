@@ -6,9 +6,7 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/runner": "workspace:*",
-    "jsdom": "^21.0.0",
     "vitest": "workspace:*"
   }
 }

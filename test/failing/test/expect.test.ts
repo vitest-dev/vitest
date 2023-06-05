@@ -5,7 +5,7 @@ import { getCurrentTest } from '@vitest/runner'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
-  const run = (config?: UserConfig) => runVitest({ root: resolve('./fixtures/expects'), include: ['soft.test.ts'], setupFiles: [], testNamePattern: getCurrentTest()?.name, testTimeout: 4000, ...config }, ['soft'])
+  const run = (config?: UserConfig) => runVitest({ root: resolve('./fixtures'), include: ['expects/soft.test.ts'], setupFiles: [], testNamePattern: getCurrentTest()?.name, testTimeout: 4000, ...config }, ['soft'])
 
   test('basic', async () => {
     const { stderr } = await run()
