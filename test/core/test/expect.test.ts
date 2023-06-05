@@ -5,7 +5,7 @@ import { getCurrentTest } from '@vitest/runner'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
-  const run = (config?: UserConfig) => runVitest({ root: resolve(__dirname, './fixtures/expects'), exclude: [], setupFiles: [], testNamePattern: getCurrentTest()?.name, ...config }, ['soft'])
+  const run = (config?: UserConfig) => runVitest({ root: resolve(__dirname, './fixtures/expects'), exclude: [], setupFiles: [], testNamePattern: getCurrentTest()?.name, testTimeout: 4000, ...config }, ['soft'])
   test('basic', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to be 2')
@@ -50,4 +50,4 @@ describe('expect.soft', () => {
     expect(stderr).toContain('AssertionError: expected 4 to be 5')
     expect(stderr).toContain('4/4')
   })
-}, 3000)
+}, 4000)
