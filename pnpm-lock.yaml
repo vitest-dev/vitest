@@ -771,7 +771,7 @@ importers:
         version: 0.16.4(rollup@3.20.2)
       unplugin-vue-components:
         specifier: latest
-        version: 0.25.0(rollup@3.20.2)(vue@3.3.4)
+        version: 0.25.1(rollup@3.20.2)(vue@3.3.4)
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.16.3)
@@ -1260,8 +1260,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       '@edge-runtime/vm':
-        specifier: 2.1.2
-        version: 2.1.2
+        specifier: 3.0.1
+        version: 3.0.1
       '@jridgewell/trace-mapping':
         specifier: ^0.3.18
         version: 0.3.18
@@ -4944,8 +4944,8 @@ packages:
     resolution: {integrity: sha512-OO1x32aJoxgME1k77RVxVNsazs5NY/SNwYEN8ptlZ6DKUXn0eesXftDsmlypX/OU0ZeJc61/xNVUuoeyDGJDVA==}
     dev: true
 
-  /@edge-runtime/primitives@2.1.2:
-    resolution: {integrity: sha512-SR04SMDybALlhIYIi0hiuEUwIl0b7Sn+RKwQkX6hydg4+AKMzBNDFhj2nqHDD1+xkHArV9EhmJIb6iGjShwSzg==}
+  /@edge-runtime/primitives@3.0.1:
+    resolution: {integrity: sha512-l5NNDcPkKW4N6qRmB8zzpCF6uRW1S808V/zm72z7b/aWwZUYbmEPPkzyhGAW0aQxLU1pGdZ8u2gNjamdaU6RXw==}
     engines: {node: '>=14'}
     dev: true
 
@@ -4955,11 +4955,11 @@ packages:
       '@edge-runtime/primitives': 1.1.0-beta.31
     dev: true
 
-  /@edge-runtime/vm@2.1.2:
-    resolution: {integrity: sha512-j4H5S26NJhYOyjVMN8T/YJuwwslfnEX1P0j6N2Rq1FaubgNowdYunA9nlO7lg8Rgjv6dqJ2zKuM7GD1HFtNSGw==}
+  /@edge-runtime/vm@3.0.1:
+    resolution: {integrity: sha512-69twXLIcqVx0iNlc1vFqnXgka2CZi2c/QBAmMzXBk0M6mPG+ICCBh2dd+cv1K+HW2pfLuSW+EskkFXWGeCf1Vw==}
     engines: {node: '>=14'}
     dependencies:
-      '@edge-runtime/primitives': 2.1.2
+      '@edge-runtime/primitives': 3.0.1
     dev: true
 
   /@emotion/babel-plugin@11.10.2(@babel/core@7.21.4):
@@ -23660,7 +23660,7 @@ packages:
       '@vueuse/core':
         optional: true
     dependencies:
-      '@antfu/utils': 0.7.2
+      '@antfu/utils': 0.7.4
       '@rollup/pluginutils': 5.0.2(rollup@3.20.2)
       local-pkg: 0.4.3
       magic-string: 0.30.0
@@ -23729,8 +23729,8 @@ packages:
       - supports-color
     dev: true
 
-  /unplugin-vue-components@0.25.0(rollup@3.20.2)(vue@3.3.4):
-    resolution: {integrity: sha512-HxrQ4GMSS1RwVww2av3a42cABo/v5AmTRN9iARv6e/xwkrfTyHhLh84kFwXxKkXK61vxDHxaryn694mQmkiVBg==}
+  /unplugin-vue-components@0.25.1(rollup@3.20.2)(vue@3.3.4):
+    resolution: {integrity: sha512-kzS2ZHVMaGU2XEO2keYQcMjNZkanDSGDdY96uQT9EPe+wqSZwwgbFfKVJ5ti0+8rGAcKHColwKUvctBhq2LJ3A==}
     engines: {node: '>=14'}
     peerDependencies:
       '@babel/parser': ^7.15.8
