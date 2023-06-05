@@ -160,6 +160,8 @@ const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
 const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
 
+const showCodeResetButton = computed(() => testIndex !== null || isDescribeBlock !== null || selectedTest !== null)
+
 const hasBeenEdited = ref(false)
 
 function clearListeners() {
@@ -250,7 +252,7 @@ async function onSave(content: string) {
 <template>
   <div>
     <IconButton
-      v-if="testIndex !== null || isDescribeBlock !== null || selectedTest !== null"
+      v-if="showCodeResetButton"
       v-tooltip.bottom="'Reset Code'"
       title="Clear search"
       icon="i-carbon:reset"
