@@ -1,4 +1,4 @@
-export type { ErrorWithDiff, ParsedStack } from '@vitest/runner/utils'
+export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined

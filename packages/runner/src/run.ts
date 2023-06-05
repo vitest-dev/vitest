@@ -1,11 +1,10 @@
 import limit from 'p-limit'
-import { getSafeTimers, shuffle } from '@vitest/utils'
+import { getSafeTimers, processError, shuffle } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
-import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 
@@ -192,10 +191,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         // reset state when retry test
         test.result.state = 'run'
       }
-      else if (test.result.state === 'fail') {
-        // last retry failed, mark test as failed
-        failTask(test.result, [])
-      }
+
       // update retry info
       updateTask(test, runner)
     }
@@ -228,22 +224,17 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
-const processedError = new WeakSet()
 function failTask(result: TaskResult, err: unknown) {
   result.state = 'fail'
-  const errors = Array.isArray(err) ? err : [err]
-  // errors maybe push in expect.soft, so we need to process them
-  result.errors = [...result.errors || [], ...errors].map((err) => {
-    let newError = err
-    if (!processedError.has(err)) {
-      newError = processError(err)
-      processedError.add(newError)
-    }
-    return newError
-  })
-  const errorsLength = result.errors.length
-  if (errorsLength > 0)
-    result.error = result.errors[errorsLength - 1]
+  const errors = Array.isArray(err)
+    ? err
+    : [err]
+  for (const e of errors) {
+    const error = processError(e)
+    result.error ??= error
+    result.errors ??= []
+    result.errors.push(error)
+  }
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {

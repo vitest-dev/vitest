@@ -1,3 +1,4 @@
+import { processError } from '@vitest/utils'
 import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
 import type { Assertion, MatcherState } from './types'
@@ -38,7 +39,7 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
     catch (err) {
       test.result.state = 'fail'
       test.result.errors ||= []
-      test.result.errors.push(err)
+      test.result.errors.push(processError(err))
     }
   }
 }

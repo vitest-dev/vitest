@@ -3,7 +3,7 @@ import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/runner/utils'
+import type { ErrorWithDiff } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'

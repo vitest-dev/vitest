@@ -1,8 +1,30 @@
-import { deepClone, format, getOwnProperties, getType, stringify } from '@vitest/utils'
-import type { DiffOptions } from '@vitest/utils/diff'
-import { unifiedDiff } from '@vitest/utils/diff'
+import type { DiffOptions } from './diff'
+import { unifiedDiff } from './diff'
+import { format } from './display'
+import { deepClone, getOwnProperties, getType } from './helpers'
+import { stringify } from './stringify'
 
-export type { ParsedStack, ErrorWithDiff } from '@vitest/utils'
+interface ErrorOptions {
+  message?: string
+  stackTraceLimit?: number
+}
+/**
+ * Get original stacktrace without source map support the most performant way.
+ * - Create only 1 stack frame.
+ * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
+ */
+export function createSimpleStackTrace(options?: ErrorOptions) {
+  const { message = 'error', stackTraceLimit = 1 } = options || {}
+  const limit = Error.stackTraceLimit
+  const prepareStackTrace = Error.prepareStackTrace
+  Error.stackTraceLimit = stackTraceLimit
+  Error.prepareStackTrace = e => e.stack
+  const err = new Error(message)
+  const stackTrace = err.stack || ''
+  Error.prepareStackTrace = prepareStackTrace
+  Error.stackTraceLimit = limit
+  return stackTrace
+}
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'

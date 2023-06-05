@@ -1,4 +1,4 @@
-import { processError } from '@vitest/runner/utils'
+import { processError } from '@vitest/utils'
 import { expect, test } from 'vitest'
 
 test('Can correctly process error where actual and expected contains non writable properties', () => {
