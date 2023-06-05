@@ -1,5 +1,13 @@
 import { expect, test } from 'vitest'
 
+interface CustomMatchers<R = unknown> {
+  toBeDividedBy(divisor: number): R
+}
+
+declare module 'vitest' {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+}
+
 expect.extend({
   toBeDividedBy(received, divisor) {
     const pass = received % divisor === 0
@@ -49,8 +57,8 @@ test('with expect', () => {
 })
 
 test('with expect.extend', () => {
-  expect.soft(1).toEqual(2);
-  (expect.soft(3) as any).toBeDividedBy(4)
+  expect.soft(1).toEqual(2)
+  expect.soft(3).toBeDividedBy(4)
   expect(5).toEqual(6)
 })
 
