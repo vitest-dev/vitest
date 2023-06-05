@@ -5,10 +5,10 @@ import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'
 import { client } from '~/composables/client'
 import type { ErrorWithDiff, File } from '#types'
-import { selectedTest, isDescribeBlock, testIndex } from '~/composables/params'
+import { isDescribeBlock, selectedTest, testIndex } from '~/composables/params'
 
 interface SplittedCode {
-  code: string;
+  code: string
   nestedCode?: SplittedCode[]
 }
 
@@ -19,7 +19,7 @@ const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
-const splittedCode = ref<SplittedCode[]>([]);
+const splittedCode = ref<SplittedCode[]>([])
 const draft = ref(false)
 watch([() => props.file, isDescribeBlock, selectedTest, testIndex],
   async ([newFile, newIsDescribeBlock, newSelectedTest, newTestIndex]) => {
@@ -30,118 +30,122 @@ watch([() => props.file, isDescribeBlock, selectedTest, testIndex],
       return
     }
 
-    if (newFile?.filepath !== props.file.filepath || code.value === "") {
+    if (newFile?.filepath !== props.file.filepath || code.value === '') {
       code.value = await client.rpc.readFile(props.file.filepath) || ''
       serverCode.value = code.value
       draft.value = false
 
-      const splittedArray = code.value.split(/\n/g).filter(item => item !== "" && !item.includes("import"));
+      const splittedArray = code.value.split(/\n/g).filter(item => item !== '' && !item.includes('import'))
       // To track if the loop has reached the end of the test i.e, -- })
-      let isEndTestBracketsReached = false;
-      // Stores any individual test block value, it could be an it block or a describe block 
-      let testBlock = "";
+      let isEndTestBracketsReached = false
+      // Stores any individual test block value, it could be an it block or a describe block
+      let testBlock = ''
       // Stores nested it or test blocks of describe tests
-      let nestedTestBlock = "";
-      let isDescribeBlock = false;
-      let newSplittedCode: SplittedCode[] = []
+      let nestedTestBlock = ''
+      let isDescribeBlock = false
+      const newSplittedCode: SplittedCode[] = []
       let newNestedCode: { code: string }[] = []
       // Loop to store it or test or describe code blocks into individual array items
-      splittedArray.forEach(item => {
-        if (isEndTestBracketsReached && item.replaceAll(" ", "") === "})") {
-          if (isDescribeBlock && testBlock.includes("describe")) {
-            if (testBlock.substring(testBlock.length - 3) === "})\n") {
-              isDescribeBlock = false;
-              testBlock += `${item}\n`;
-              newSplittedCode.push({ code: testBlock, nestedCode: newNestedCode });
-              newNestedCode = [];
-              testBlock = "";
-              isEndTestBracketsReached = false;
-            } else {
-              testBlock += `${item}\n`;
-              nestedTestBlock += `${item}\n`;
-              newNestedCode.push({ code: nestedTestBlock });
-              nestedTestBlock = "";
+      splittedArray.forEach((item) => {
+        if (isEndTestBracketsReached && item.replaceAll(' ', '') === '})') {
+          if (isDescribeBlock && testBlock.includes('describe')) {
+            if (testBlock.substring(testBlock.length - 3) === '})\n') {
+              isDescribeBlock = false
+              testBlock += `${item}\n`
+              newSplittedCode.push({ code: testBlock, nestedCode: newNestedCode })
+              newNestedCode = []
+              testBlock = ''
+              isEndTestBracketsReached = false
             }
-          } else {
-            isEndTestBracketsReached = false;
-            testBlock += `${item}\n`;
+            else {
+              testBlock += `${item}\n`
+              nestedTestBlock += `${item}\n`
+              newNestedCode.push({ code: nestedTestBlock })
+              nestedTestBlock = ''
+            }
+          }
+          else {
+            isEndTestBracketsReached = false
+            testBlock += `${item}\n`
             newSplittedCode.push({ code: testBlock })
-            testBlock = "";
-          }
-        } else if (isEndTestBracketsReached) {
-          testBlock += `${item}\n`;
-          if (isDescribeBlock) {
-            nestedTestBlock += `${item}\n`;
-          }
-        } else if (item.replaceAll(" ", "").includes("()=>")) {
-          testBlock += `${item}\n`;
-          isEndTestBracketsReached = true;
-          if (item.includes("describe")) {
-            isDescribeBlock = true;
+            testBlock = ''
           }
         }
+        else if (isEndTestBracketsReached) {
+          testBlock += `${item}\n`
+          if (isDescribeBlock)
+            nestedTestBlock += `${item}\n`
+        }
+        else if (item.replaceAll(' ', '').includes('()=>')) {
+          testBlock += `${item}\n`
+          isEndTestBracketsReached = true
+          if (item.includes('describe'))
+            isDescribeBlock = true
+        }
       })
-      splittedCode.value = newSplittedCode;
+      splittedCode.value = newSplittedCode
     }
 
     if (newIsDescribeBlock !== null && newSelectedTest !== null && newTestIndex !== null && serverCode.value) {
-
-      const [primaryIndex, nestedIndex] = newTestIndex.split("|");
+      const [primaryIndex, nestedIndex] = newTestIndex.split('|')
       // First Method - Here we will get index and nestdIndex of items when user clicks on
       // test name and if the that indexes are present then we will show that code block.
-      if (primaryIndex && primaryIndex !== "undefined" && !isNaN(parseInt(primaryIndex))) {
-        const nestedCodeValue = splittedCode.value[parseInt(primaryIndex)].nestedCode?.[parseInt(nestedIndex)]?.code;
-        if (nestedIndex && nestedIndex !== "undefined" && !isNaN(parseInt(nestedIndex)) && nestedCodeValue) {
+      if (primaryIndex && primaryIndex !== 'undefined' && !isNaN(parseInt(primaryIndex))) {
+        const nestedCodeValue = splittedCode.value[parseInt(primaryIndex)].nestedCode?.[parseInt(nestedIndex)]?.code
+        if (nestedIndex && nestedIndex !== 'undefined' && !isNaN(parseInt(nestedIndex)) && nestedCodeValue) {
           code.value = nestedCodeValue
-        } else if (nestedIndex && nestedIndex === "undefined" && splittedCode.value[parseInt(primaryIndex)]?.code) {
+        }
+        else if (nestedIndex && nestedIndex === 'undefined' && splittedCode.value[parseInt(primaryIndex)]?.code) {
           code.value = splittedCode.value[parseInt(primaryIndex)]?.code
-        } else {
+        }
+        else {
           // Second Method (fallback) - Here, based on the test name, we will search for that test and filter the string
           // block for that test.
           // Potential issue with this fallback method is that if there are two tests with the same name, then it will
           // show the test block whose name comes first in the string.
-          const searchString = `${newIsDescribeBlock === "1" ? 'describe\\(' : '(test|it)\\('}('|")${newSelectedTest}('|"),`;
+          const searchString = `${newIsDescribeBlock === '1' ? 'describe\\(' : '(test|it)\\('}('|")${newSelectedTest}('|"),`
           const searchStringRegex = new RegExp(searchString)
-          const index = serverCode.value.search(searchStringRegex);
+          const index = serverCode.value.search(searchStringRegex)
           if (index === -1) {
-            code.value = serverCode.value;
+            code.value = serverCode.value
             return
           }
-          const firstOccurance = serverCode.value?.substring(index);
-          const lastOccuranceString = `${newIsDescribeBlock === "1" ? '})\n})' : '})'}`;
-          const lastIndex = firstOccurance.indexOf(lastOccuranceString);
+          const firstOccurance = serverCode.value?.substring(index)
+          const lastOccuranceString = `${newIsDescribeBlock === '1' ? '})\n})' : '})'}`
+          const lastIndex = firstOccurance.indexOf(lastOccuranceString)
           if (lastIndex === -1) {
-            code.value = serverCode.value;
+            code.value = serverCode.value
             return
           }
-          const result = firstOccurance.substring(0, lastIndex + lastOccuranceString.length);
-          code.value = result;
+          const result = firstOccurance.substring(0, lastIndex + lastOccuranceString.length)
+          code.value = result
         }
-      } else {
-          // Second Method (fallback) - Here, based on the test name, we will search for that test and filter the string
-          // block for that test.
-          // Potential issue with this fallback method is that if there are two tests with the same name, then it will
-          // show the test block whose name comes first in the string.
-        const searchString = `${newIsDescribeBlock === "1" ? 'describe\\(' : '(test|it)\\('}('|")${newSelectedTest}('|"),`;
-        const searchStringRegex = new RegExp(searchString)
-        const index = serverCode.value.search(searchStringRegex);
-        if (index === -1) {
-          code.value = serverCode.value;
-          return
-        }
-        const firstOccurance = serverCode.value?.substring(index);
-        const lastOccuranceString = `${newIsDescribeBlock === "1" ? '})\n})' : '})'}`;
-        const lastIndex = firstOccurance.indexOf(lastOccuranceString);
-        if (lastIndex === -1) {
-          code.value = serverCode.value;
-          return
-        }
-        const result = firstOccurance.substring(0, lastIndex + lastOccuranceString.length);
-        code.value = result;
       }
-
-    } else if (serverCode.value) {
-      code.value = serverCode.value;
+      else {
+        // Second Method (fallback) - Here, based on the test name, we will search for that test and filter the string
+        // block for that test.
+        // Potential issue with this fallback method is that if there are two tests with the same name, then it will
+        // show the test block whose name comes first in the string.
+        const searchString = `${newIsDescribeBlock === '1' ? 'describe\\(' : '(test|it)\\('}('|")${newSelectedTest}('|"),`
+        const searchStringRegex = new RegExp(searchString)
+        const index = serverCode.value.search(searchStringRegex)
+        if (index === -1) {
+          code.value = serverCode.value
+          return
+        }
+        const firstOccurance = serverCode.value?.substring(index)
+        const lastOccuranceString = `${newIsDescribeBlock === '1' ? '})\n})' : '})'}`
+        const lastIndex = firstOccurance.indexOf(lastOccuranceString)
+        if (lastIndex === -1) {
+          code.value = serverCode.value
+          return
+        }
+        const result = firstOccurance.substring(0, lastIndex + lastOccuranceString.length)
+        code.value = result
+      }
+    }
+    else if (serverCode.value) {
+      code.value = serverCode.value
     }
   },
   { immediate: true },

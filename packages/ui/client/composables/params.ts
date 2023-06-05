@@ -19,5 +19,5 @@ export const params = useUrlSearchParams<Params>('hash-params', {
 export const activeFileId = toRef(params, 'file')
 export const viewMode = toRef(params, 'view')
 export const selectedTest = toRef(params, 'testName')
-export const isDescribeBlock = toRef(params, 'isDescribeBlock');
-export const testIndex = toRef(params, "testIndex");
+export const isDescribeBlock = toRef(params, 'isDescribeBlock')
+export const testIndex = toRef(params, 'testIndex')
