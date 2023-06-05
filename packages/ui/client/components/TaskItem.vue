@@ -23,7 +23,7 @@ const duration = computed(() => {
     border-rounded
     cursor-pointer
     hover="bg-active"
-    @click="onItemClick && onItemClick(task, index, nestedIndex)"
+    @click="onItemClick?.(task, index, nestedIndex)"
   >
     <StatusIcon :task="task" mr-2 />
     <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
