@@ -1,4 +1,4 @@
-import { processError } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
 import type { Assertion, MatcherState } from './types'

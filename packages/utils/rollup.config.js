@@ -10,6 +10,7 @@ const entries = {
   index: 'src/index.ts',
   helpers: 'src/helpers.ts',
   diff: 'src/diff.ts',
+  error: 'src/error.ts',
   types: 'src/types.ts',
 }
 

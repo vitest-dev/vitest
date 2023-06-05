@@ -1,5 +1,5 @@
 import { relative } from 'pathe'
-import { processError } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import type { File } from './types'
 import type { VitestRunner } from './types/runner'
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'

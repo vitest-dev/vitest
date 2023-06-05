@@ -1,5 +1,6 @@
 import limit from 'p-limit'
-import { getSafeTimers, processError, shuffle } from '@vitest/utils'
+import { getSafeTimers, shuffle } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'

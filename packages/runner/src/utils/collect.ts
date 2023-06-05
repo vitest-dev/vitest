@@ -1,4 +1,4 @@
-import { processError } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import type { Suite, TaskBase } from '../types'
 
 /**
