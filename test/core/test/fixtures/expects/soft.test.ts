@@ -40,7 +40,7 @@ test('promise', async () => {
       })
     }),
   ).resolves.toBe(3)
-}, 3000)
+})
 
 test('with expect', () => {
   expect.soft(1).toEqual(2)
