@@ -20,6 +20,9 @@ export default (ctx: Vitest) => {
       coverageFolder && server.middlewares.use(coveragePath!, sirv(coverageFolder, {
         single: true,
         dev: true,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public,max-age=0,must-revalidate')
+        },
       }))
       const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
       server.middlewares.use(base, sirv(clientDist, {
