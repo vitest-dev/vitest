@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import type { UserConfig } from 'vitest'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, expectTypeOf, test } from 'vitest'
 import { getCurrentTest } from '@vitest/runner'
 import { runVitest } from '../../test-utils'
 
@@ -49,5 +49,12 @@ describe('expect.soft', () => {
     expect(stderr).toContain('AssertionError: expected 3 to be 4')
     expect(stderr).toContain('AssertionError: expected 4 to be 5')
     expect(stderr).toContain('4/4')
+  })
+
+  test('types', () => {
+    expectTypeOf(expect).toEqualTypeOf(expect)
+    expectTypeOf(expect.soft(7)).toEqualTypeOf(expect(7))
+    expectTypeOf(expect.soft(5)).toHaveProperty('toBe')
+    expectTypeOf(expect.soft(7)).not.toHaveProperty('toCustom')
   })
 }, 4000)
