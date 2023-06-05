@@ -6,6 +6,14 @@ import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
   const run = (config?: UserConfig) => runVitest({ root: resolve(__dirname, './fixtures/expects'), exclude: [], setupFiles: [], testNamePattern: getCurrentTest()?.name, testTimeout: 4000, ...config }, ['soft'])
+
+  test('types', () => {
+    expectTypeOf(expect).toEqualTypeOf(expect)
+    expectTypeOf(expect.soft(7)).toEqualTypeOf(expect(7))
+    expectTypeOf(expect.soft(5)).toHaveProperty('toBe')
+    expectTypeOf(expect.soft(7)).not.toHaveProperty('toCustom')
+  })
+
   test('basic', async () => {
     const { stderr } = await run()
     expect(stderr).toContain('AssertionError: expected 1 to be 2')
@@ -51,10 +59,14 @@ describe('expect.soft', () => {
     expect(stderr).toContain('4/4')
   })
 
-  test('types', () => {
-    expectTypeOf(expect).toEqualTypeOf(expect)
-    expectTypeOf(expect.soft(7)).toEqualTypeOf(expect(7))
-    expectTypeOf(expect.soft(5)).toHaveProperty('toBe')
-    expectTypeOf(expect.soft(7)).not.toHaveProperty('toCustom')
+  test('using expect.soft for test', async () => {
+    const { stderr } = await run({
+      testNamePattern: 'retry will failed',
+    })
+    expect.soft(stderr).toContain('AssertionError: expected 1 to be 4')
+    expect.soft(stderr).toContain('AssertionError: expected 2 to be 5')
+    expect.soft(stderr).toContain('AssertionError: expected 3 to be 4')
+    expect.soft(stderr).toContain('AssertionError: expected 4 to be 5')
+    expect.soft(stderr).toContain('4/4')
   })
 }, 4000)
