@@ -15,6 +15,7 @@ test('mocking several modules work', () => {
 
   mockedB()
 
-  expect(mockedA).toHaveBeenCalledTimes(2)
+  // mockedA is not called because mockedB is restored to be undefined
+  expect(mockedA).toHaveBeenCalledTimes(1)
   expect(mockedB).toHaveBeenCalledTimes(1)
 })
