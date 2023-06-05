@@ -1,5 +1,5 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { afterEach, describe, test } from 'vitest'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { afterEach, describe, expect, test } from 'vitest'
 
 import { runVitestCli } from '../../test-utils'
 
@@ -86,6 +86,35 @@ test("dynamic test case", () => {
   await vitest.waitForStdout('Running added dynamic test')
   await vitest.waitForStdout('RERUN  ../new-dynamic.test.ts')
   await vitest.waitForStdout('1 passed')
+})
+
+test('editing source file generates new test report to file system', async () => {
+  const report = 'fixtures/test-results/junit.xml'
+  if (existsSync(report))
+    rmSync(report)
+
+  // Test report should not be present before test run
+  expect(existsSync(report)).toBe(false)
+
+  const vitest = await runVitestCli(
+    ...cliArgs,
+    '--reporter', 'verbose',
+    '--reporter', 'junit',
+    '--output-file', 'test-results/junit.xml',
+  )
+
+  // Test report should be generated on initial test run
+  expect(existsSync(report)).toBe(true)
+
+  // Test report should be re-generated on second test run
+  rmSync(report)
+  expect(existsSync(report)).toBe(false)
+
+  writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
+
+  await vitest.waitForStdout('JUNIT report written')
+  await vitest.waitForStdout(report)
+  expect(existsSync(report)).toBe(true)
 })
 
 describe('browser', () => {
