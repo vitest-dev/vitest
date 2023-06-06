@@ -6,6 +6,7 @@ import { slash } from './utils'
 
 const KNOWN_ASSET_TYPES = [
   // images
+  'apng',
   'png',
   'jpe?g',
   'jfif',
