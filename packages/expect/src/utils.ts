@@ -27,9 +27,6 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
   return function (this: Chai.AssertionStatic & Assertion, ...args: any[]) {
     const test: Test = utils.flag(this, 'vitest-test')
 
-    if (!test)
-      throw new Error('expect.soft() can only be used inside a test')
-
     // @ts-expect-error local is untyped
     const state: MatcherState = test?.context._local
       ? test.context.expect.getState()
@@ -38,13 +35,17 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
     if (!state.soft)
       return fn.apply(this, args)
 
+    if (!test)
+      throw new Error('expect.soft() can only be used inside a test')
+
     try {
       return fn.apply(this, args)
     }
     catch (err) {
-      test.result!.state = 'fail'
-      test.result!.errors ||= []
-      test.result!.errors.push(processError(err))
+      test.result ||= { state: 'fail' }
+      test.result.state = 'fail'
+      test.result.errors ||= []
+      test.result.errors.push(processError(err))
     }
   }
 }
