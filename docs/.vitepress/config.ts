@@ -219,6 +219,10 @@ export default withPwa(defineConfig({
               text: 'Migration Guide',
               link: '/guide/migration',
             },
+            {
+              text: 'Common Errors',
+              link: '/guide/common-errors',
+            },
           ],
         },
         {
