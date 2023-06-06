@@ -30,7 +30,7 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
       ? test.context.expect.getState()
       : getState((globalThis as any)[GLOBAL_EXPECT])
 
-    if (!state.soft)
+    if (!test || !state.soft)
       return fn.apply(this, args)
 
     try {
