@@ -296,7 +296,7 @@ export class VitestMocker {
           const mock = spyOn(newContainer, property).mockImplementation(() => undefined)
           mock.mockRestore = () => {
             mock.mockReset()
-            mock.mockImplementation(undefined!)
+            mock.mockImplementation(() => undefined)
             return mock
           }
           // tinyspy retains length, but jest doesn't.
