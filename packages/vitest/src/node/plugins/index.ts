@@ -14,7 +14,6 @@ import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
-import { CommonPluginsHandler } from './commonPluginsHandler'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -179,7 +178,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : null,
     MocksPlugin(),
     VitestResolver(ctx),
-    CommonPluginsHandler(),
   ]
     .filter(notNullish)
 }

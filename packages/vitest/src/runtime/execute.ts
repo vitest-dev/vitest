@@ -63,7 +63,7 @@ export async function startViteNode(ctx: ContextRPC) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  let transformMode: 'ssr' | 'web' = 'ssr'
+  let transformMode: 'ssr' | 'web' = ctx.environment.transformMode ?? 'ssr'
 
   const executor = await createVitestExecutor({
     fetchModule(id) {
@@ -82,7 +82,7 @@ export async function startViteNode(ctx: ContextRPC) {
 
   const environment = await loadEnvironment(ctx.environment.name, executor)
   ctx.environment.environment = environment
-  transformMode = environment.transformMode ?? 'ssr'
+  transformMode = ctx.environment.transformMode ?? environment.transformMode ?? 'ssr'
 
   const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
 

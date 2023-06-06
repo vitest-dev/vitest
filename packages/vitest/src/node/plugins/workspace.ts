@@ -12,7 +12,6 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
-import { CommonPluginsHandler } from './commonPluginsHandler'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -124,6 +123,5 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
     VitestResolver(project.ctx),
-    CommonPluginsHandler(),
   ]
 }
