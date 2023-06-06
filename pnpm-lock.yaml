@@ -970,9 +970,9 @@ importers:
         specifier: ^4.3.7
         version: 4.3.7
     devDependencies:
-      '@vitest/expect':
+      '@vitest/runner':
         specifier: workspace:*
-        version: 'link:'
+        version: link:../runner
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
