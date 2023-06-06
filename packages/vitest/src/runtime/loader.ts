@@ -44,14 +44,14 @@ export const resolve: Resolver = async (url, context, next) => {
   const { parentURL } = context
   const state = getWorkerState()
   const resolver = state?.rpc.resolveId
-  const environment = state?.ctx.environment.environment
+  const environment = state?.ctx.environment
 
   if (!parentURL || isNodeBuiltin(url) || !resolver || !environment)
     return next(url, context, next)
 
   const id = normalizeModuleId(url)
   const importer = normalizeModuleId(parentURL)
-  const resolved = await resolver(id, importer, environment.transformMode ?? 'ssr')
+  const resolved = await resolver(id, importer, environment.transformMode ?? environment.environment?.transformMode ?? 'ssr')
 
   let result: ResolveResult
   let filepath: string
