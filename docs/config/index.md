@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+- **Default:** `['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -226,7 +226,7 @@ Options used when running `vitest bench`.
 #### benchmark.include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+- **Default:** `['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)']`
 
 Include globs for benchmark test files
 
@@ -718,16 +718,15 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
-  'packages/*/test{,s}/**',
+  'packages/*/test?(s)/**',
   '**/*.d.ts',
   'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
+  'test?(s)/**',
+  'test?(-*).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
+  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 ```
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -1358,7 +1357,7 @@ You can also pass down a path to custom binary or command name that produces the
 #### typecheck.include
 
 - **Type**: `string[]`
-- **Default**: `['**/*.{test,spec}-d.{ts,js}']`
+- **Default**: `['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)']`
 
 Glob pattern for files that should be treated as test files
 

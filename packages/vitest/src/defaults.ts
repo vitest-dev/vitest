@@ -1,10 +1,10 @@
 import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
-export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+export const defaultInclude = ['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
-  include: ['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
   reporters: ['default'],
@@ -13,16 +13,15 @@ export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outpu
 const defaultCoverageExcludes = [
   'coverage/**',
   'dist/**',
-  'packages/*/test{,s}/**',
+  'packages/*/test?(s)/**',
   '**/*.d.ts',
   'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
+  'test?(s)/**',
+  'test?(-*).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
+  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
@@ -91,7 +90,7 @@ const config = {
   dangerouslyIgnoreUnhandledErrors: false,
   typecheck: {
     checker: 'tsc' as const,
-    include: ['**/*.{test,spec}-d.{ts,js}'],
+    include: ['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)'],
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
