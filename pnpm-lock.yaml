@@ -970,6 +970,9 @@ importers:
         specifier: ^4.3.7
         version: 4.3.7
     devDependencies:
+      '@vitest/expect':
+        specifier: workspace:*
+        version: 'link:'
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -15491,7 +15494,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.1.1
-      minimatch: 9.0.0
+      minimatch: 9.0.1
       minipass: 5.0.0
       path-scurry: 1.7.0
     dev: true

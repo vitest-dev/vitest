@@ -39,6 +39,7 @@
     "chai": "^4.3.7"
   },
   "devDependencies": {
+    "@vitest/expect": "workspace:*",
     "picocolors": "^1.0.0"
   }
 }
