@@ -2,7 +2,8 @@ import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import type { Vitest, VitestRunMode } from '../types'
+import { toArray } from '../utils'
+import type { BaseCoverageOptions, CoverageC8Options, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -147,6 +148,20 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
   else
     delete argv.dir
 
+  if (argv.coverage) {
+    const coverage = argv.coverage
+    if (coverage.exclude)
+      coverage.exclude = toArray(coverage.exclude)
+
+    if ((coverage as BaseCoverageOptions).include)
+      (coverage as BaseCoverageOptions).include = toArray((coverage as BaseCoverageOptions).include)
+
+    if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+      (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+
+    if ((coverage as CoverageC8Options).src)
+      (coverage as CoverageC8Options).src = toArray((coverage as CoverageC8Options).src)
+  }
   return argv
 }
 
