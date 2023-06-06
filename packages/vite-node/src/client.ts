@@ -58,10 +58,10 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Assign partial data to the map
    */
-  update(fsPath: string, mod: Partial<ModuleCache>) {
+  update(fsPath: string, mod: ModuleCache) {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath))
-      super.set(fsPath, mod)
+      this.setByModuleId(fsPath, mod)
     else
       Object.assign(super.get(fsPath) as ModuleCache, mod)
     return this
@@ -75,13 +75,21 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this.setByModuleId(this.normalizePath(fsPath), mod)
   }
 
-  getByModuleId(modulePath: string): ModuleCache {
+  getByModuleId(modulePath: string) {
     if (!super.has(modulePath))
-      super.set(modulePath, {})
-    return super.get(modulePath)!
+      this.setByModuleId(modulePath, {})
+
+    const mod = super.get(modulePath)!
+    if (!mod.imports) {
+      Object.assign(mod, {
+        imports: new Set(),
+        importers: new Set(),
+      })
+    }
+    return mod as ModuleCache & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
-  get(fsPath: string): ModuleCache {
+  get(fsPath: string) {
     return this.getByModuleId(this.normalizePath(fsPath))
   }
 
@@ -99,6 +107,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     delete mod.promise
     delete mod.exports
     mod.importers?.clear()
+    mod.imports?.clear()
     return true
   }
 
@@ -185,16 +194,15 @@ export class ViteNodeRunner {
     const importee = callstack[callstack.length - 1]
 
     const mod = this.moduleCache.get(fsPath)
+    const { imports, importers } = mod
 
-    if (!mod.importers)
-      mod.importers = new Set()
     if (importee)
-      mod.importers.add(importee)
+      importers.add(importee)
 
     const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
     // check circular dependency
-    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
+    if (callstack.includes(fsPath) || Array.from(imports.values()).some(i => importers.has(i))) {
       if (mod.exports)
         return mod.exports
     }
@@ -269,6 +277,10 @@ export class ViteNodeRunner {
 
     const request = async (dep: string) => {
       const [id, depFsPath] = await this.resolveUrl(`${dep}`, fsPath)
+      const depMod = this.moduleCache.getByModuleId(depFsPath)
+      depMod.importers.add(moduleId)
+      mod.imports.add(depFsPath)
+
       return this.dependencyRequest(id, depFsPath, callstack)
     }
 
