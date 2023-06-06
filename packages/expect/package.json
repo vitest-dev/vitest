@@ -39,6 +39,7 @@
     "chai": "^4.3.7"
   },
   "devDependencies": {
+    "@vitest/runner": "workspace:*",
     "picocolors": "^1.0.0"
   }
 }

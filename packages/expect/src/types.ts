@@ -79,6 +79,7 @@ export interface MatcherState {
     iterableEquality: Tester
     subsetEquality: Tester
   }
+  soft?: boolean
 }
 
 export interface SyncExpectationResult {
@@ -100,7 +101,7 @@ export type MatchersObject<T extends MatcherState = MatcherState> = Record<strin
 
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
-
+  soft<T>(actual: T, message?: string): Assertion<T>
   extend(expects: MatchersObject): void
   assertions(expected: number): void
   hasAssertions(): void

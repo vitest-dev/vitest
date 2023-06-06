@@ -8,6 +8,8 @@ exports[`should fail empty.test.ts > empty.test.ts 1`] = `"Error: No test suite 
 
 exports[`should fail expect.test.ts > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
 
+exports[`should fail expect-soft.test.ts > expect-soft.test.ts 1`] = `"Error: expect.soft() can only be used inside a test"`;
+
 exports[`should fail hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
 exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `

@@ -24,6 +24,10 @@
       "types": "./dist/diff.d.ts",
       "import": "./dist/diff.js"
     },
+    "./error": {
+      "types": "./dist/error.d.ts",
+      "import": "./dist/error.js"
+    },
     "./helpers": {
       "types": "./dist/helpers.d.ts",
       "import": "./dist/helpers.js"

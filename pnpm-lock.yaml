@@ -970,6 +970,9 @@ importers:
         specifier: ^4.3.7
         version: 4.3.7
     devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../runner
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -1592,6 +1595,15 @@ importers:
         specifier: 2.4.0
         version: 2.4.0
     devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/failing:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../packages/runner
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -15482,7 +15494,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.1.1
-      minimatch: 9.0.0
+      minimatch: 9.0.1
       minipass: 5.0.0
       path-scurry: 1.7.0
     dev: true
@@ -17659,7 +17671,7 @@ packages:
       cssom: 0.5.0
       cssstyle: 2.3.0
       data-urls: 3.0.2
-      decimal.js: 10.4.2
+      decimal.js: 10.4.3
       domexception: 4.0.0
       escodegen: 2.0.0
       form-data: 4.0.0
@@ -17667,8 +17679,8 @@ packages:
       http-proxy-agent: 5.0.0
       https-proxy-agent: 5.0.1
       is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.2
-      parse5: 7.1.1
+      nwsapi: 2.2.4
+      parse5: 7.1.2
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 4.1.2

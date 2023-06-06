@@ -3,12 +3,13 @@ import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
+import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
-import { recordAsyncExpect } from './utils'
+import { recordAsyncExpect, wrapSoft } from './utils'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
@@ -16,8 +17,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
-      utils.addMethod(chai.Assertion.prototype, n, fn)
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, fn)
+      const softWrapper = wrapSoft(utils, fn)
+      utils.addMethod(chai.Assertion.prototype, n, softWrapper)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, softWrapper)
     }
 
     if (Array.isArray(name))
@@ -636,7 +638,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', new Error('resolves'))
-    const test = utils.flag(this, 'vitest-test')
+    const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
     if (typeof obj?.then !== 'function')
@@ -671,7 +673,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
     utils.flag(this, 'error', new Error('rejects'))
-    const test = utils.flag(this, 'vitest-test')
+    const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
