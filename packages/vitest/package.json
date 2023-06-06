@@ -83,7 +83,6 @@
   },
   "files": [
     "dist",
-    "setup",
     "bin",
     "*.d.ts",
     "*.d.cts",
