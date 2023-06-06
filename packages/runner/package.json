@@ -1,7 +1,7 @@
 {
   "name": "@vitest/runner",
   "type": "module",
-  "version": "0.31.4",
+  "version": "0.32.0",
   "description": "Vitest test runner",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
