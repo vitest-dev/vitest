@@ -51,6 +51,9 @@ importers:
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:packages/coverage-istanbul
+      '@vitest/coverage-v8':
+        specifier: workspace:*
+        version: link:packages/coverage-v8
       '@vitest/ui':
         specifier: workspace:*
         version: link:packages/ui
@@ -958,6 +961,64 @@ importers:
         specifier: workspace:*
         version: link:../vitest
 
+  packages/coverage-v8:
+    dependencies:
+      '@ampproject/remapping':
+        specifier: ^2.2.1
+        version: 2.2.1
+      '@bcoe/v8-coverage':
+        specifier: ^0.2.3
+        version: 0.2.3
+      istanbul-lib-coverage:
+        specifier: ^3.2.0
+        version: 3.2.0
+      istanbul-lib-report:
+        specifier: ^3.0.0
+        version: 3.0.0
+      istanbul-lib-source-maps:
+        specifier: ^4.0.1
+        version: 4.0.1
+      istanbul-reports:
+        specifier: ^3.1.5
+        version: 3.1.5
+      magic-string:
+        specifier: ^0.30.0
+        version: 0.30.0
+      picocolors:
+        specifier: ^1.0.0
+        version: 1.0.0
+      std-env:
+        specifier: ^3.3.2
+        version: 3.3.2
+      test-exclude:
+        specifier: ^6.0.0
+        version: 6.0.0
+      v8-to-istanbul:
+        specifier: ^9.1.0
+        version: 9.1.0
+    devDependencies:
+      '@types/istanbul-lib-coverage':
+        specifier: ^2.0.4
+        version: 2.0.4
+      '@types/istanbul-lib-report':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@types/istanbul-lib-source-maps':
+        specifier: ^4.0.1
+        version: 4.0.1
+      '@types/istanbul-reports':
+        specifier: ^3.0.1
+        version: 3.0.1
+      pathe:
+        specifier: ^1.1.0
+        version: 1.1.0
+      vite-node:
+        specifier: workspace:*
+        version: link:../vite-node
+      vitest:
+        specifier: workspace:*
+        version: link:../vitest
+
   packages/expect:
     dependencies:
       '@vitest/spy':
@@ -1528,6 +1589,15 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
+      '@vitest/coverage-c8':
+        specifier: workspace:*
+        version: link:../../packages/coverage-c8
+      '@vitest/coverage-istanbul':
+        specifier: workspace:*
+        version: link:../../packages/coverage-istanbul
+      '@vitest/coverage-v8':
+        specifier: workspace:*
+        version: link:../../packages/coverage-v8
       '@vue/test-utils':
         specifier: latest
         version: 2.3.2(vue@3.3.4)
@@ -11363,7 +11433,7 @@ packages:
       istanbul-reports: 3.1.5
       rimraf: 3.0.2
       test-exclude: 6.0.0
-      v8-to-istanbul: 9.0.1
+      v8-to-istanbul: 9.1.0
       yargs: 16.2.0
       yargs-parser: 20.2.9
     dev: true
@@ -11382,7 +11452,7 @@ packages:
       istanbul-reports: 3.1.5
       rimraf: 3.0.2
       test-exclude: 6.0.0
-      v8-to-istanbul: 9.0.1
+      v8-to-istanbul: 9.1.0
       yargs: 16.2.0
       yargs-parser: 20.2.9
 
@@ -23949,8 +24019,8 @@ packages:
       source-map: 0.7.4
     dev: true
 
-  /v8-to-istanbul@9.0.1:
-    resolution: {integrity: sha512-74Y4LqY74kLE6IFyIjPtkSTWzUZmj8tdHT9Ii/26dvQ6K9Dl2NbEfj0XgU2sHCtKgt5VupqhlO/5aWuqS+IY1w==}
+  /v8-to-istanbul@9.1.0:
+    resolution: {integrity: sha512-6z3GW9x8G1gd+JIIgQQQxXuiJtCXeAjp6RaPEPLv62mH3iPHPxV6W3robxtCzNErRo6ZwTmzWhsbNvjyEBKzKA==}
     engines: {node: '>=10.12.0'}
     dependencies:
       '@jridgewell/trace-mapping': 0.3.18

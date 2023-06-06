@@ -46,6 +46,7 @@
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-c8": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
+    "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^9.1.0",
     "esbuild": "^0.17.18",

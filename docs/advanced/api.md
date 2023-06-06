@@ -19,7 +19,7 @@ await vitest?.close()
 `startVitest` function returns `Vitest` instance if tests can be started. It returns `undefined`, if one of the following occurs:
 
 - Vitest didn't find "vite" package (usually installed with Vitest)
-- If coverage is enabled and run mode is "test", but the coverage package is not installed (`@vitest/coverage-c8` or `@vitest/coverage-istanbul`)
+- If coverage is enabled and run mode is "test", but the coverage package is not installed (`@vitest/coverage-v8` or `@vitest/coverage-istanbul`)
 - If the environment package is not installed (`jsdom`/`happy-dom`/`@edge-runtime/vm`)
 
 If `undefined` is returned or tests failed during the run, Vitest sets `process.exitCode` to `1`.

@@ -143,7 +143,7 @@ Learn more at [Mocking](/guide/mocking).
 
 ## Coverage
 
-Vitest supports Native code coverage via [`c8`](https://github.com/bcoe/c8) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
+Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-code-coverage) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
 
 ```json
 {

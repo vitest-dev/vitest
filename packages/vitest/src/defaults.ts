@@ -26,7 +26,7 @@ const defaultCoverageExcludes = [
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
-  provider: 'c8',
+  provider: 'v8',
   enabled: false,
   clean: true,
   cleanOnRerun: true,

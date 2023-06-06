@@ -32,7 +32,7 @@ const configs = [
   // Run tests for checking coverage report contents.
   ['coverage-report-tests', {
     include: [
-      ['c8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
+      ['c8', 'v8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
       `./coverage-report-tests/${provider}.report.test.ts`,
     ].filter(Boolean),
     coverage: { enabled: false, clean: false },
