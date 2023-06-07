@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -232,10 +232,6 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
-    // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
-    // should be checked before normalization, because it removes this prefix
-    if (importer && id.startsWith(VALID_ID_PREFIX))
-      importer = undefined
     id = normalizeRequestId(id, this.options.base)
     if (!this.shouldResolveId(id))
       return [id, id]
@@ -282,6 +278,16 @@ export class ViteNodeRunner {
     const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
+      const id = normalizeRequestId(dep, this.options.base)
+      const { path: depFsPath } = toFilePath(id, this.root)
+      const depMod = this.moduleCache.getByModuleId(depFsPath)
+      depMod.importers.add(moduleId)
+      mod.imports.add(depFsPath)
+
+      return this.dependencyRequest(id, depFsPath, callstack)
+    }
+
+    const dynamicRequest = async (dep: string) => {
       const [id, depFsPath] = await this.resolveUrl(`${dep}`, fsPath)
       const depMod = this.moduleCache.getByModuleId(depFsPath)
       depMod.importers.add(moduleId)
@@ -386,7 +392,7 @@ export class ViteNodeRunner {
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
-      __vite_ssr_dynamic_import__: request,
+      __vite_ssr_dynamic_import__: dynamicRequest,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: meta,
