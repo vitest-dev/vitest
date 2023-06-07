@@ -32,7 +32,7 @@ export default defineConfig({
     deps: {
       external: [/src\/external/],
       interopDefault: true,
-      moduleDirectories: ['node_modules', 'projects'],
+      moduleDirectories: ['node_modules', 'mocks/projects'],
     },
   },
 })

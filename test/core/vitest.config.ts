@@ -66,7 +66,7 @@ export default defineConfig({
     deps: {
       external: ['tinyspy', /src\/external/],
       inline: ['inline-lib'],
-      moduleDirectories: ['node_modules', 'projects', 'packages'],
+      moduleDirectories: ['node_modules', 'core/projects', 'packages/vitest', 'packages/runner', 'packages/utils'],
     },
     alias: [
       {
