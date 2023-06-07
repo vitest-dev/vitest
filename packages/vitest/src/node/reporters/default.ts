@@ -24,8 +24,13 @@ export class DefaultReporter extends BaseReporter {
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       this.rendererOptions.mode = this.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
+
+      let rendererOptions = this.rendererOptions
+      if (files.length === 1 && !rendererOptions.renderSucceed)
+        rendererOptions = { ...rendererOptions, renderSucceed: true }
+
       if (!this.renderer)
-        this.renderer = createListRenderer(files, this.rendererOptions).start()
+        this.renderer = createListRenderer(files, rendererOptions).start()
       else
         this.renderer.update(files)
     }
