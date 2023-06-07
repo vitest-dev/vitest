@@ -27,6 +27,36 @@ type Awaitable<T> = T | PromiseLike<T>
 `expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
 :::
 
+## soft
+
+- **Type:** `ExpectStatic & (actual: any) => Assertions`
+
+  `expect.soft` is the same as `expect` but does not terminate test execution when the assertion fails. It will be marked as a test failure. Until the test ends, all errors will be output.
+
+  ```ts
+  import { expect } from 'vitest'
+
+  test('expect.soft test', () => {
+    expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
+    expect.soft(1 + 2).toBe(4) // mark the test as fail and continue
+  })
+  // At the end of the test, the above errors will be output.
+  ```
+  
+  it can also be used with `expect`. if `expect` assertion fails, the test will be terminate and all errors will be output.
+
+  ```ts
+  import { expect } from 'vitest'
+
+  test('expect.soft test', () => {
+    expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
+    expect(1 + 2).toBe(3) // failed and terminate the test, all previous errors will be output
+    expect.soft(1 + 2).toBe(4) // do not run
+  })
+  ```
+  
+  > **Note:** `expect.soft` only supported run inside the [test](/api/#test) function.
+
 ## not
 
   Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
