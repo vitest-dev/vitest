@@ -8,6 +8,11 @@ export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
 
+  onPathsCollected(paths: string[] = []) {
+    if (paths.length === 1)
+      this.rendererOptions.renderSucceed = true
+  }
+
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
     this.ctx.logger.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
@@ -24,13 +29,8 @@ export class DefaultReporter extends BaseReporter {
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       this.rendererOptions.mode = this.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
-
-      let rendererOptions = this.rendererOptions
-      if (files.length === 1 && !rendererOptions.renderSucceed)
-        rendererOptions = { ...rendererOptions, renderSucceed: true }
-
       if (!this.renderer)
-        this.renderer = createListRenderer(files, rendererOptions).start()
+        this.renderer = createListRenderer(files, this.rendererOptions).start()
       else
         this.renderer.update(files)
     }
