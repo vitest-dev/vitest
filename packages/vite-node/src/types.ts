@@ -43,7 +43,6 @@ export interface RawSourceMap extends StartOfSourceMap {
 
 export interface FetchResult {
   code?: string
-  url?: string
   externalize?: string
   map?: EncodedSourceMap | null
 }
