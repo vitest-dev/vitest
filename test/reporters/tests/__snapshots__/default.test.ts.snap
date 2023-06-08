@@ -2,45 +2,22 @@
 
 exports[`default reporter > normal 1`] = `
 "
- ❯ default/b1.test.ts (13)
-   ✓ b1 passed (6)
-   ❯ b1 failed (7)
-     ✓ a1 test
-     ✓ a2 test
-     ✓ a3 test
-     × b failed test
-     ✓ nested b (3)
+ · default/b1.test.ts (13)
  · default/b2.test.ts (13)
  ❯ default/b1.test.ts (13)
    ✓ b1 passed (6)
    ❯ b1 failed (7)
-     ✓ a1 test
-     ✓ a2 test
-     ✓ a3 test
+     ✓ b1 test
+     ✓ b2 test
+     ✓ b3 test
      × b failed test
      ✓ nested b (3)
  ❯ default/b2.test.ts (13)
    ✓ b2 passed (6)
    ❯ b2 failed (7)
-     ✓ a1 test
-     ✓ a2 test
-     ✓ a3 test
-     × b failed test
-     ✓ nested b (3)
- ❯ default/b1.test.ts (13)
-   ✓ b1 passed (6)
-   ❯ b1 failed (7)
-     ✓ a1 test
-     ✓ a2 test
-     ✓ a3 test
-     × b failed test
-     ✓ nested b (3)
- ❯ default/b2.test.ts (13)
-   ✓ b2 passed (6)
-   ❯ b2 failed (7)
-     ✓ a1 test
-     ✓ a2 test
-     ✓ a3 test
+     ✓ b1 test
+     ✓ b2 test
+     ✓ b3 test
      × b failed test
      ✓ nested b (3)
 

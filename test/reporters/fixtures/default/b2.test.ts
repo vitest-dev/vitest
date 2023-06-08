@@ -12,7 +12,7 @@ describe('b2 passed', () => {
 })
 
 describe('b2 failed', () => {
-  test.each([1, 2, 3])('a%d test', (d) => {
+  test.each([1, 2, 3])('b%d test', (d) => {
     expect(d).toBe(d)
   })
   test('b failed test', () => {
