@@ -5,10 +5,8 @@ import { runVitest } from '../../test-utils'
 const root = resolve(__dirname, '../fixtures')
 const run = async (fileFilter: string[]) => await runVitest({ root, reporters: 'default', config: false }, fileFilter)
 
-describe('default reporter', async () => {
-  process.stdin.isTTY = true
+describe.skipIf(process.env.CI)('default reporter', async () => {
   process.stdout.isTTY = true
-
   test('normal', async () => {
     const { stdout } = await run(['b1.test.ts', 'b2.test.ts'])
     expect(stdout).contain('✓ b2 test')
