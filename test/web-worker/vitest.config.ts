@@ -12,7 +12,7 @@ export default defineConfig({
       ],
     },
     onConsoleLog(log) {
-      if (log.includes('Failed to load url'))
+      if (log.includes('Cannot find module'))
         return false
     },
   },
