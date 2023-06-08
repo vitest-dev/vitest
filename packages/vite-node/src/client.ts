@@ -233,18 +233,19 @@ export class ViteNodeRunner {
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     const dep = normalizeRequestId(id, this.options.base)
-    if (id.startsWith(VALID_ID_PREFIX) || !this.shouldResolveId(dep))
+    if (id.startsWith(VALID_ID_PREFIX))
       return [dep, dep]
-    if (!this.options.resolveId || dep[0] === '/' || dep.startsWith('./') || dep.startsWith('../')) {
-      const fsPath = toFilePath(dep, this.root)
-      return [dep, fsPath]
-    }
+    if (!this.shouldResolveId(dep))
+      return [dep, dep]
+    const { path, exists } = toFilePath(dep, this.root)
+    if (!this.options.resolveId || exists)
+      return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
     if (!resolved) {
       const error = new Error(
-        `Cannot find module '${dep}'${importer ? ` imported from '${importer}'` : ''}.`
+        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
         + '\n\n- If you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+        + '\n - Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
       )
       Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
       Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
@@ -279,19 +280,12 @@ export class ViteNodeRunner {
     const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
-      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
+      const [id, depFsPath] = await this.resolveUrl(String(dep), fsPath)
       const depMod = this.moduleCache.getByModuleId(depFsPath)
       depMod.importers.add(moduleId)
       mod.imports.add(depFsPath)
 
       return this.dependencyRequest(id, depFsPath, callstack)
-    }
-
-    const dynamicRequest = (dep: string) => {
-      dep = String(dep)
-      if (dep.startsWith('../') || dep.startsWith('./'))
-        dep = resolve(dirname(fsPath), dep)
-      return request(dep)
     }
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
@@ -390,7 +384,7 @@ export class ViteNodeRunner {
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
-      __vite_ssr_dynamic_import__: dynamicRequest,
+      __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: meta,
