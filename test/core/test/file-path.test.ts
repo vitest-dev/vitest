@@ -84,7 +84,7 @@ describe('toFilePath', () => {
       const expected = 'C:/path/to/project/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
@@ -96,7 +96,7 @@ describe('toFilePath', () => {
       const expected = 'C:/path/to/project/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
@@ -112,7 +112,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
@@ -126,7 +126,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
@@ -140,7 +140,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
@@ -154,7 +154,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
@@ -168,7 +168,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
@@ -181,7 +181,7 @@ describe('toFilePath', () => {
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
       const existsSpy = vi.mocked(existsSync).mockReturnValue(false)
-      const { path: filePath } = toFilePath(id, root)
+      const filePath = toFilePath(id, root)
       processSpy.mockRestore()
       existsSpy.mockRestore()
 
