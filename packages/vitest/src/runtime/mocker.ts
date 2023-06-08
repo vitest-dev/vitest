@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
-import { isNodeBuiltin } from 'vite-node/utils'
+import { isNodeBuiltin, normalizeRequestId } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
@@ -87,23 +87,19 @@ export class VitestMocker {
     }
   }
 
+  private async resolveId(rawId: string, importer: string) {
+    const dep = normalizeRequestId(rawId, this.executor.options.base)
+    if (!this.executor.shouldResolveId(dep, importer))
+      return [dep, dep]
+    const resolved = await this.executor.options.resolveId!(dep, importer)
+    if (!resolved)
+      return [dep, dep]
+    const resolvedId = normalizeRequestId(resolved.id, this.executor.options.base)
+    return [resolvedId, resolvedId]
+  }
+
   private async resolvePath(rawId: string, importer: string) {
-    let id: string
-    let fsPath: string
-    try {
-      [id, fsPath] = await this.executor.originalResolveUrl(rawId, importer)
-    }
-    catch (error: any) {
-      // it's allowed to mock unresolved modules
-      if (error.code === 'ERR_MODULE_NOT_FOUND') {
-        const { id: unresolvedId } = error[Symbol.for('vitest.error.not_found.data')]
-        id = unresolvedId
-        fsPath = unresolvedId
-      }
-      else {
-        throw error
-      }
-    }
+    const [id, fsPath] = await this.resolveId(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
     const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
