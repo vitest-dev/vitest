@@ -233,9 +233,7 @@ export class ViteNodeRunner {
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     const dep = normalizeRequestId(id, this.options.base)
-    if (id.startsWith(VALID_ID_PREFIX))
-      return [dep, dep]
-    if (!this.shouldResolveId(dep))
+    if (id.startsWith(VALID_ID_PREFIX) || !this.shouldResolveId(dep))
       return [dep, dep]
     const { path, exists } = toFilePath(dep, this.root)
     if (!this.options.resolveId || exists)
