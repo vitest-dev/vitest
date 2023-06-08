@@ -23,7 +23,6 @@ describe('test aliased paths', () => {
   })
 
   it.runIf(isWindows)('paths on windows', () => {
-    // TODO: TETS IN REAL VITE APPLICATION HOW THIS WORKS - MAYBE WE CANT EVEN DO THIS
     const paths = getAbsoluteAliasedPaths()
     expect(paths.url).toMatch(/\/aliased-mod.ts$/)
     expect(paths.__filename).toMatch(/\\aliased-mod.ts$/)

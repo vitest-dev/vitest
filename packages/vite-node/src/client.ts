@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -239,19 +239,16 @@ export class ViteNodeRunner {
     if (!this.options.resolveId || exists)
       return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
-    // don't throw on virtual modules:
-    // - some virtual modules are aliases that still need to be resolved to the file path because they are relative
-    // - some virtual modules are already resolved and they don't need to be resolved again
-    if (!resolved && !id.startsWith(VALID_ID_PREFIX)) {
-      const error = new Error(
-        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
-        + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
-      )
-      Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
-      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
-      throw error
-    }
+    // if (!resolved) {
+    //   const error = new Error(
+    //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+    //     + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
+    //     + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+    //   )
+    //   Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+    //   Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
+    //   throw error
+    // }
     const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
     return [resolvedId, resolvedId]
   }
