@@ -66,7 +66,7 @@ it('worker with invalid url throws an error', async () => {
   })
   expect(event).toBeInstanceOf(ErrorEvent)
   expect(event.error).toBeInstanceOf(Error)
-  expect(event.error.message).toContain('Cannot find module')
+  expect(event.error.message).toContain('Failed to load url')
 })
 
 it('self injected into worker and its deps should be equal', async () => {
