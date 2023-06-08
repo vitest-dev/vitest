@@ -233,13 +233,16 @@ export class ViteNodeRunner {
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     const dep = normalizeRequestId(id, this.options.base)
-    if (id.startsWith(VALID_ID_PREFIX) || !this.shouldResolveId(dep))
+    if (!this.shouldResolveId(dep))
       return [dep, dep]
     const { path, exists } = toFilePath(dep, this.root)
     if (!this.options.resolveId || exists)
       return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
-    if (!resolved) {
+    // don't throw on virtual modules:
+    // - some virtual modules are aliases that still need to be resolved to the file path because they are relative
+    // - some virtual modules are already resolved and they don't need to be resolved again
+    if (!resolved && !id.startsWith(VALID_ID_PREFIX)) {
       const error = new Error(
         `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
         + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
@@ -249,7 +252,7 @@ export class ViteNodeRunner {
       Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
       throw error
     }
-    const resolvedId = normalizeRequestId(resolved.id, this.options.base)
+    const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
     return [resolvedId, resolvedId]
   }
 

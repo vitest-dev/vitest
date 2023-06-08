@@ -18,7 +18,7 @@ export function normalizeRequestId(id: string, base?: string): string {
 
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
+    .replace(/^\/@id\//, '/')
     .replace(/^__vite-browser-external:/, '')
     .replace(/^file:/, '')
     .replace(/^\/+/, '/') // remove duplicate leading slashes
