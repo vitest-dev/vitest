@@ -235,7 +235,7 @@ export class ViteNodeRunner {
     const dep = normalizeRequestId(id, this.options.base)
     if (id.startsWith(VALID_ID_PREFIX) || !this.shouldResolveId(dep))
       return [dep, dep]
-    if (!this.options.resolveId || dep[0] === '.' || dep[0] === '/') {
+    if (!this.options.resolveId || dep[0] === '/' || dep.startsWith('./') || dep.startsWith('../')) {
       const fsPath = toFilePath(dep, this.root)
       return [dep, fsPath]
     }
@@ -278,13 +278,20 @@ export class ViteNodeRunner {
 
     const mod = this.moduleCache.getByModuleId(moduleId)
 
-    const request = async (dep: unknown) => {
-      const [id, depFsPath] = await this.resolveUrl(String(dep), fsPath)
+    const request = async (dep: string) => {
+      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
       const depMod = this.moduleCache.getByModuleId(depFsPath)
       depMod.importers.add(moduleId)
       mod.imports.add(depFsPath)
 
       return this.dependencyRequest(id, depFsPath, callstack)
+    }
+
+    const dynamicRequest = (dep: string) => {
+      dep = String(dep)
+      if (dep.startsWith('../') || dep.startsWith('./'))
+        dep = resolve(dirname(fsPath), dep)
+      return request(dep)
     }
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
@@ -383,7 +390,7 @@ export class ViteNodeRunner {
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
-      __vite_ssr_dynamic_import__: request,
+      __vite_ssr_dynamic_import__: dynamicRequest,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: meta,
