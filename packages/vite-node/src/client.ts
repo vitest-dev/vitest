@@ -232,23 +232,22 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
-    if (id.startsWith(VALID_ID_PREFIX))
-      return [id, id]
-    id = normalizeRequestId(id, this.options.base)
-    if (!this.shouldResolveId(id))
-      return [id, id]
-    const { path, exists } = toFilePath(id, this.root)
-    if (!this.options.resolveId || exists)
-      return [id, path]
-    const resolved = await this.options.resolveId(id, importer)
+    const dep = normalizeRequestId(id, this.options.base)
+    if (id.startsWith(VALID_ID_PREFIX) || !this.shouldResolveId(dep))
+      return [dep, dep]
+    if (!this.options.resolveId || dep[0] === '.' || dep[0] === '/') {
+      const fsPath = toFilePath(dep, this.root)
+      return [dep, fsPath]
+    }
+    const resolved = await this.options.resolveId(dep, importer)
     if (!resolved) {
       const error = new Error(
-        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+        `Cannot find module '${dep}'${importer ? ` imported from '${importer}'` : ''}.`
         + '\n\n- If you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-        + '\n - Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
       )
       Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
-      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id, importer }, enumerable: false })
+      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
       throw error
     }
     const resolvedId = normalizeRequestId(resolved.id, this.options.base)

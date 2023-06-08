@@ -167,7 +167,7 @@ export class ViteNodeServer {
       clearTimeout(timeout)
     }
 
-    const { path: filePath } = toFilePath(id, this.server.config.root)
+    const filePath = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
