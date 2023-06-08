@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -232,6 +232,11 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
+    // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
+    // should be checked before normalization, because it removes this prefix
+    // TODO: this is a hack, we should find a better way to handle this
+    if (importer && id.startsWith(VALID_ID_PREFIX))
+      importer = undefined
     const dep = normalizeRequestId(id, this.options.base)
     if (!this.shouldResolveId(dep))
       return [dep, dep]
@@ -239,6 +244,7 @@ export class ViteNodeRunner {
     if (!this.options.resolveId || exists)
       return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
+    // TODO: we need to better handle module resolution when different urls point to the same module
     // if (!resolved) {
     //   const error = new Error(
     //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
