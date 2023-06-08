@@ -245,7 +245,7 @@ export class ViteNodeRunner {
       const error = new Error(
         `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
         + '\n\n- If you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-        + '\n - Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
       )
       Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
       Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
