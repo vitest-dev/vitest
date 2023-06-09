@@ -8,7 +8,6 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
-    "execa": "^6.1.0",
     "typescript": "^4.8.4",
     "vue-tsc": "^0.40.13"
   }

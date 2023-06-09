@@ -1,16 +1,20 @@
-import type { File, TaskResult, Test } from '@vitest/runner'
+import type { File, TaskResultPack, Test } from '@vitest/runner'
 import { rpc } from './rpc'
 import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
-  browserHashMap: Map<string, string>
+  browserHashMap: Map<string, [test: boolean, timstamp: string]>
 }
 
-export function createBrowserRunner(original: any) {
+interface CoverageHandler {
+  takeCoverage: () => Promise<unknown>
+}
+
+export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
-    hashMap = new Map<string, string>()
+    hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -19,30 +23,47 @@ export function createBrowserRunner(original: any) {
     }
 
     async onAfterRunTest(task: Test) {
-      await super.onAfterRunTest?.()
+      await super.onAfterRunTest?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
       })
+
+      if (this.config.bail && task.result?.state === 'fail') {
+        const previousFailures = await rpc().getCountOfFailedTests()
+        const currentFailures = 1 + previousFailures
+
+        if (currentFailures >= this.config.bail) {
+          rpc().onCancel('test-failure')
+          this.onCancel?.('test-failure')
+        }
+      }
+    }
+
+    async onAfterRunSuite() {
+      await super.onAfterRunSuite?.()
+      const coverage = await coverageModule?.takeCoverage?.()
+      await rpc().onAfterSuiteRun({ coverage })
     }
 
     onCollected(files: File[]): unknown {
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
+    onTaskUpdate(task: TaskResultPack[]): Promise<void> {
       return rpc().onTaskUpdate(task)
     }
 
     async importFile(filepath: string) {
-      const match = filepath.match(/^(\w:\/)/)
-      let hash = this.hashMap.get(filepath)
-      if (!hash) {
+      let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
+      if (hash === '') {
         hash = Date.now().toString()
-        this.hashMap.set(filepath, hash)
+        this.hashMap.set(filepath, [false, hash])
       }
-      const importpath = match
-        ? `/@fs/${filepath.slice(match[1].length)}?v=${hash}`
-        : `${filepath}?v=${hash}`
+
+      // on Windows we need the unit to resolve the test file
+      const importpath = /^\w:/.test(filepath)
+        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
       await import(importpath)
     }
   }

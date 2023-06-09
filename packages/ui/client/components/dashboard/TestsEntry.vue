@@ -6,10 +6,10 @@ const pass = computed(() => testsSuccess.value.length)
 const failed = computed(() => testsFailed.value.length)
 const skipped = computed(() => testsSkipped.value.length)
 const todo = computed(() => testsTodo.value.length)
-const pending = computed(() => {
-  const t = unref(total)
-  return t - failed.value - pass.value
-})
+// const pending = computed(() => {
+//   const t = unref(total)
+//   return t - failed.value - pass.value
+// })
 </script>
 
 <template>

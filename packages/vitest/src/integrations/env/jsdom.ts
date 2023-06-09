@@ -55,7 +55,7 @@ export default <Environment>({
         resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
         runScripts,
         url,
-        virtualConsole: console && global.console ? new VirtualConsole().sendTo(global.console) : undefined,
+        virtualConsole: (console && global.console) ? new VirtualConsole().sendTo(global.console) : undefined,
         cookieJar: cookieJar ? new CookieJar() : undefined,
         includeNodeLocations,
         contentType,

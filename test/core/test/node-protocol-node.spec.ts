@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+// eslint-disable-next-line unicorn/prefer-node-protocol
 import packageUrl from 'url'
 import nodeUrl from 'node:url'
 import { expect, it } from 'vitest'

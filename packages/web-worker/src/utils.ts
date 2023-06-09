@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-imports */
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
@@ -38,7 +37,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
       + 'or update to Node 17+.',
     )
     return new MessageEvent('message', {
-      data: ponyfillStructuredClone(data, { lossy: true }),
+      data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
     })
   }
@@ -74,6 +73,7 @@ export function getRunnerOptions(): any {
     moduleCache,
     mockMap,
     interopDefault: config.deps.interopDefault ?? true,
+    moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
   }

@@ -6,10 +6,13 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
       "id": 0,
+      "meta": {},
       "mode": "run",
       "name": "json-fail.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {
@@ -34,6 +37,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "type": "stdout",
             },
           ],
+          "meta": {},
           "mode": "run",
           "name": "should fail",
           "result": {
@@ -41,6 +45,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "error": {
               "actual": "2",
               "constructor": "Function<AssertionError>",
+              "diff": "  - Expected  - 1
+  + Received  + 1
+
+  - 1
+  + 2",
               "expected": "1",
               "message": "expected 2 to deeply equal 1",
               "name": "AssertionError",
@@ -56,6 +65,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               {
                 "actual": "2",
                 "constructor": "Function<AssertionError>",
+                "diff": "  - Expected  - 1
+  + Received  + 1
+
+  - 1
+  + 2",
                 "expected": "1",
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
@@ -72,6 +86,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "afterEach": "pass",
               "beforeEach": "pass",
             },
+            "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "fail",
@@ -79,6 +94,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
           "suite": {
             "file": [Circular],
             "id": "",
+            "meta": {},
             "mode": "run",
             "name": "",
             "tasks": [
@@ -115,10 +131,13 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
       "id": 0,
+      "meta": {},
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {
@@ -133,6 +152,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "file": [Circular],
           "id": 0,
+          "meta": {},
           "mode": "run",
           "name": "2 + 3 = 5",
           "result": {
@@ -141,6 +161,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
               "afterEach": "pass",
               "beforeEach": "pass",
             },
+            "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "pass",
@@ -148,6 +169,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "suite": {
             "file": [Circular],
             "id": "",
+            "meta": {},
             "mode": "run",
             "name": "",
             "tasks": [
@@ -155,6 +177,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
               {
                 "file": [Circular],
                 "id": "1111755131_1",
+                "meta": {},
                 "mode": "skip",
                 "name": "3 + 3 = 6",
                 "suite": [Circular],
@@ -168,17 +191,20 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "file": [Circular],
           "id": "1111755131_1",
+          "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
           "suite": {
             "file": [Circular],
             "id": "",
+            "meta": {},
             "mode": "run",
             "name": "",
             "tasks": [
               {
                 "file": [Circular],
                 "id": 0,
+                "meta": {},
                 "mode": "run",
                 "name": "2 + 3 = 5",
                 "result": {
@@ -187,6 +213,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
                     "afterEach": "pass",
                     "beforeEach": "pass",
                   },
+                  "repeatCount": 0,
                   "retryCount": 0,
                   "startTime": 0,
                   "state": "pass",

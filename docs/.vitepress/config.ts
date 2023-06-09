@@ -95,10 +95,10 @@ export default withPwa(defineConfig({
     },
 
     nav: [
-      { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/' },
-      { text: 'Config', link: '/config/' },
-      { text: 'Advanced', link: '/advanced/api' },
+      { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
+      { text: 'API', link: '/api/', activeMatch: '^/api/' },
+      { text: 'Config', link: '/config/', activeMatch: '^/config/' },
+      { text: 'Advanced', link: '/advanced/api', activeMatch: '^/advanced/' },
       {
         text: `v${version}`,
         items: [
@@ -128,6 +128,10 @@ export default withPwa(defineConfig({
               text: 'Runner API',
               link: '/advanced/runner',
             },
+            {
+              text: 'Task Metadata',
+              link: '/advanced/metadata',
+            },
           ],
         },
       ],
@@ -146,6 +150,10 @@ export default withPwa(defineConfig({
             {
               text: 'Features',
               link: '/guide/features',
+            },
+            {
+              text: 'Workspace',
+              link: '/guide/workspace',
             },
             {
               text: 'CLI',
@@ -210,6 +218,10 @@ export default withPwa(defineConfig({
             {
               text: 'Migration Guide',
               link: '/guide/migration',
+            },
+            {
+              text: 'Common Errors',
+              link: '/guide/common-errors',
             },
           ],
         },

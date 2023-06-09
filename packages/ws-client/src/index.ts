@@ -1,8 +1,10 @@
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
+import type { CancelReason } from '@vitest/runner'
 import { StateManager } from '../../vitest/src/node/state'
 
 export * from '../../vitest/src/utils/tasks'
@@ -65,6 +67,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     },
     onFinished(files) {
       handlers.onFinished?.(files)
+    },
+    onCancel(reason: CancelReason) {
+      handlers.onCancel?.(reason)
     },
   }
 

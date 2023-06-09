@@ -14,7 +14,7 @@ export class TableReporter extends BaseReporter {
     const files = this.ctx.state.getFiles(this.watchFilters)
     createTableRenderer(files, this.rendererOptions).stop()
     this.ctx.logger.log()
-    await super.reportSummary(files)
+    await super.reportSummary(files, this.ctx.state.getUnhandledErrors())
     super.onWatcherStart()
   }
 

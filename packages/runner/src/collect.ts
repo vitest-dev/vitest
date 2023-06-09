@@ -1,10 +1,10 @@
 import { relative } from 'pathe'
+import { processError } from '@vitest/utils/error'
 import type { File } from './types'
 import type { VitestRunner } from './types/runner'
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
 import { clearCollectorContext, getDefaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
-import { processError } from './utils/error'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
@@ -18,12 +18,13 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
   for (const filepath of paths) {
     const path = relative(config.root, filepath)
     const file: File = {
-      id: generateHash(path),
+      id: generateHash(`${path}${config.name || ''}`),
       name: path,
       type: 'suite',
       mode: 'run',
       filepath,
       tasks: [],
+      meta: Object.create(null),
       projectName: config.name,
     }
 

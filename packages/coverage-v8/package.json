@@ -1,0 +1,69 @@
+{
+  "name": "@vitest/coverage-v8",
+  "type": "module",
+  "version": "0.32.0",
+  "description": "V8 coverage provider for Vitest",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/coverage-v8#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/coverage-v8"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "vite",
+    "vitest",
+    "test",
+    "coverage",
+    "v8"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "vitest": ">=0.32.0 <1"
+  },
+  "dependencies": {
+    "@ampproject/remapping": "^2.2.1",
+    "@bcoe/v8-coverage": "^0.2.3",
+    "istanbul-lib-coverage": "^3.2.0",
+    "istanbul-lib-report": "^3.0.0",
+    "istanbul-lib-source-maps": "^4.0.1",
+    "istanbul-reports": "^3.1.5",
+    "magic-string": "^0.30.0",
+    "picocolors": "^1.0.0",
+    "std-env": "^3.3.2",
+    "test-exclude": "^6.0.0",
+    "v8-to-istanbul": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@types/istanbul-lib-report": "^3.0.0",
+    "@types/istanbul-lib-source-maps": "^4.0.1",
+    "@types/istanbul-reports": "^3.0.1",
+    "pathe": "^1.1.0",
+    "vite-node": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

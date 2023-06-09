@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks'
+import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
@@ -13,6 +13,7 @@ const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
+const WAIT_FOR_CHANGE_CANCELLED = `\n${c.bold(c.inverse(c.red(' CANCELLED ')))}${c.red(' Test run cancelled. Watching for file changes...')}`
 
 const LAST_RUN_LOG_TIMEOUT = 1_500
 
@@ -49,11 +50,11 @@ export abstract class BaseReporter implements Reporter {
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
-    await this.reportSummary(files)
+
+    await this.reportSummary(files, errors)
     if (errors.length) {
       if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
         process.exitCode = 1
-      await this.ctx.logger.printUnhandledErrors(errors)
     }
   }
 
@@ -80,7 +81,11 @@ export abstract class BaseReporter implements Reporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
-        logger.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+        let title = ` ${getStateSymbol(task)} `
+        if (task.projectName)
+          title += formatProjectName(task.projectName)
+        title += `${task.name} ${suffix}`
+        logger.log(title)
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
@@ -98,8 +103,12 @@ export abstract class BaseReporter implements Reporter {
 
     const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
+    const cancelled = this.ctx.isCancelling
+
     if (failed)
       this.ctx.logger.log(WAIT_FOR_CHANGE_FAIL)
+    else if (cancelled)
+      this.ctx.logger.log(WAIT_FOR_CHANGE_CANCELLED)
     else
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
@@ -156,7 +165,7 @@ export abstract class BaseReporter implements Reporter {
     const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
-    const TESTNAME_PATTERN = this.ctx.config.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.config.testNamePattern))}\n` : ''
+    const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.configOverride.testNamePattern))}\n` : ''
 
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
@@ -198,15 +207,15 @@ export abstract class BaseReporter implements Reporter {
     )))
   }
 
-  async reportSummary(files: File[]) {
-    await this.printErrorsSummary(files)
+  async reportSummary(files: File[], errors: unknown[]) {
+    await this.printErrorsSummary(files, errors)
     if (this.mode === 'benchmark')
       await this.reportBenchmarkSummary(files)
     else
-      await this.reportTestSummary(files)
+      await this.reportTestSummary(files, errors)
   }
 
-  async reportTestSummary(files: File[]) {
+  async reportTestSummary(files: File[], errors: unknown[]) {
     const tests = getTests(files)
     const logger = this.ctx.logger
 
@@ -214,7 +223,11 @@ export abstract class BaseReporter implements Reporter {
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
-    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
+    const transformTime = this.ctx.projects
+      .flatMap(w => Array.from(w.vitenode.fetchCache.values()).map(i => i.duration || 0))
+      .reduce((a, b) => a + b, 0)
+    const environmentTime = files.reduce((acc, file) => acc + Math.max(0, file.environmentLoad || 0), 0)
+    const prepareTime = files.reduce((acc, file) => acc + Math.max(0, file.prepareDuration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
@@ -248,18 +261,20 @@ export abstract class BaseReporter implements Reporter {
       const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
       logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'))
     }
+    if (errors.length)
+      logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)))
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
     else if (this.mode === 'typecheck')
       logger.log(padTitle('Duration'), time(executionTime))
     else
-      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)})`))
 
     logger.log()
   }
 
-  private async printErrorsSummary(files: File[]) {
+  private async printErrorsSummary(files: File[], errors: unknown[]) {
     const logger = this.ctx.logger
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -283,6 +298,10 @@ export abstract class BaseReporter implements Reporter {
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
+    }
+    if (errors.length) {
+      await logger.printUnhandledErrors(errors)
+      logger.error()
     }
     return tests
   }

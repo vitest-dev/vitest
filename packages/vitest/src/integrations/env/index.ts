@@ -19,7 +19,7 @@ export const envPackageNames: Record<Exclude<keyof typeof environments, 'node'>,
   'edge-runtime': '@edge-runtime/vm',
 }
 
-export const getEnvPackageName = (env: VitestEnvironment) => {
+export function getEnvPackageName(env: VitestEnvironment) {
   if (env === 'node')
     return null
   if (env in envPackageNames)

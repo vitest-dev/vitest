@@ -8,8 +8,8 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function (name: string, fn?: TestFunction, options?: number | TestOptions) {
-    getCurrentSuite().test.fn.call(this, name, fn, options)
+  function (name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+    getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
   },
 )
 
@@ -51,7 +51,7 @@ export function createSuiteHooks() {
 }
 
 // implementations
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, each?: boolean, suiteOptions?: TestOptions) {
   const tasks: (Test | TaskCustom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -59,20 +59,33 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
+  const test = createTest(function (name: string | Function, fn = noop, options) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     if (typeof options === 'number')
       options = { timeout: options }
 
+    // inherit repeats, retry, timeout from suite
+    if (typeof suiteOptions === 'object') {
+      options = {
+        repeats: suiteOptions.repeats,
+        retry: suiteOptions.retry,
+        timeout: suiteOptions.timeout,
+        ...options,
+      }
+    }
+
     const test: Test = {
       id: '',
       type: 'test',
-      name,
+      name: formatName(name),
+      each: this.each,
       mode,
       suite: undefined!,
       fails: this.fails,
       retry: options?.retry,
+      repeats: options?.repeats,
+      meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -102,6 +115,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       name,
       type: 'custom',
       mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : 'run',
+      meta: Object.create(null),
     }
     tasks.push(task)
     return task
@@ -111,6 +125,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     type: 'collector',
     name,
     mode,
+    options: suiteOptions,
     test,
     tasks,
     collect,
@@ -124,14 +139,20 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   function initSuite() {
+    if (typeof suiteOptions === 'number')
+      suiteOptions = { timeout: suiteOptions }
+
     suite = {
       id: '',
       type: 'suite',
       name,
       mode,
+      each,
       shuffle,
       tasks: [],
+      meta: Object.create(null),
     }
+
     setHooks(suite, createSuiteHooks())
   }
 
@@ -168,25 +189,38 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 }
 
 function createSuite() {
-  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
+  function suiteFn(this: Record<string, boolean | undefined>, name: string | Function, factory?: SuiteFactory, options?: number | TestOptions) {
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
+    const currentSuite = getCurrentSuite()
+
+    if (typeof options === 'number')
+      options = { timeout: options }
+
+    // inherit options from current suite
+    if (currentSuite?.options)
+      options = { ...currentSuite.options, ...options }
+
+    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.shuffle, this.each, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const suite = this.withContext()
+    this.setContext('each', true)
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
         arrayOnlyCases
-          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
-          : suite(formatTitle(name, items, idx), () => fn(i), options)
+          ? suite(formatTitle(_name, items, idx), () => fn(...items), options)
+          : suite(formatTitle(_name, items, idx), () => fn(i), options)
       })
+
+      this.setContext('each', undefined)
     }
   }
 
@@ -201,7 +235,7 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined>,
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
@@ -209,21 +243,25 @@ function createTest(fn: (
 )) {
   const testFn = fn as any
 
-  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+  testFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
+    this.setContext('each', true)
 
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
         arrayOnlyCases
-          ? test(formatTitle(name, items, idx), () => fn(...items), options)
-          : test(formatTitle(name, items, idx), () => fn(i), options)
+          ? test(formatTitle(_name, items, idx), () => fn(...items), options)
+          : test(formatTitle(_name, items, idx), () => fn(i), options)
       })
+
+      this.setContext('each', undefined)
     }
   }
 
@@ -234,6 +272,10 @@ function createTest(fn: (
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
   ) as TestAPI
+}
+
+function formatName(name: string | Function) {
+  return typeof name === 'string' ? name : name instanceof Function ? name.name : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
@@ -248,7 +290,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_.]+)/g,
-      (_, key) => objDisplay(objectAttr(items[0], key)) as unknown as string,
+      (_, key) => objDisplay(objectAttr(items[0], key), runner?.config?.chaiConfig) as unknown as string,
     // https://github.com/chaijs/chai/pull/1490
     )
   }

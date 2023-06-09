@@ -1,6 +1,6 @@
 // adapted from https://github.com/evanw/node-source-map-support/blob/master/source-map-support.js
 // we need this because "--enable-source-maps" flag doesn't support VM
-// we make a custom implementatin because we don't need some feature from source-map-support,
+// we make a custom implementatin because we don't need some features from source-map-support,
 // like polyfilled Buffer, browser support, etc.
 
 import path from 'node:path'
@@ -213,8 +213,7 @@ function mapEvalOrigin(origin: string): string {
       line: +match[3],
       column: +match[4] - 1,
     })
-    return `eval at ${match[1]} (${position.source}:${
-      position.line}:${position.column + 1})`
+    return `eval at ${match[1]} (${position.source}:${position.line}:${position.column + 1})`
   }
 
   // Parse nested eval() calls using recursion
@@ -372,7 +371,7 @@ function wrapCallSite(frame: CallSite, state: State) {
       return state.nextPosition.name || originalFunctionName()
     }
     frame.getFileName = function () {
-      return position.source
+      return position.source ?? undefined
     }
     frame.getLineNumber = function () {
       return position.line

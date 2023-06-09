@@ -1,19 +1,14 @@
+import { existsSync, rmSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { execa } from 'execa'
+import { startVitest } from 'vitest/node'
 
-let error
-await execa('npx', ['vitest', 'bench', 'base.bench', 'mode.bench', 'only.bench'], {
-  env: {
-    ...process.env,
-    CI: 'true',
-    NO_COLOR: 'true',
-  },
-})
-  .catch((e) => {
-    error = e
-  })
+if (existsSync('./bench.json'))
+  rmSync('./bench.json')
 
-if (error) {
+try {
+  await startVitest('benchmark', ['base.bench', 'mode.bench', 'only.bench'])
+}
+catch (error) {
   console.error(error)
   process.exit(1)
 }

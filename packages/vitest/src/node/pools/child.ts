@@ -4,21 +4,22 @@ import { fork } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
-import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC } from '../../types'
-import type { Vitest } from '../core'
+import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
-import type { PoolProcessOptions, ProcessPool } from '../pool'
+import type { PoolProcessOptions, ProcessPool, WorkspaceSpec } from '../pool'
 import { distDir } from '../../paths'
 import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
-function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess): void {
-  createBirpc<{}, RuntimeRPC>(
-    createMethodsRPC(ctx),
+function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess): void {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
+    createMethodsRPC(project),
     {
+      eventNames: ['onCancel'],
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
@@ -29,6 +30,8 @@ function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess): void {
       },
     },
   )
+
+  project.ctx.onCancel(reason => rpc.onCancel(reason))
 }
 
 function stringifyRegex(input: RegExp | string): string {
@@ -37,7 +40,7 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-function getTestConfig(ctx: Vitest): ResolvedConfig {
+function getTestConfig(ctx: WorkspaceProject): ResolvedConfig {
   const config = ctx.getSerializableConfig()
   // v8 serialize does not support regex
   return <ResolvedConfig>{
@@ -51,7 +54,13 @@ function getTestConfig(ctx: Vitest): ResolvedConfig {
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const children = new Set<ChildProcess>()
 
-  function runFiles(config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+  const Sequencer = ctx.config.sequence.sequencer
+  const sequencer = new Sequencer(ctx)
+
+  function runFiles(project: WorkspaceProject, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    const config = getTestConfig(project)
+    ctx.state.clearFiles(project, files)
+
     const data: ChildContext = {
       command: 'start',
       config,
@@ -65,7 +74,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       env,
     })
     children.add(child)
-    setupChildProcessChannel(ctx, child)
+    setupChildProcessChannel(project, child)
 
     return new Promise<void>((resolve, reject) => {
       child.send(data, (err) => {
@@ -83,11 +92,15 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     })
   }
 
-  async function runWithFiles(files: string[], invalidates: string[] = []): Promise<void> {
-    ctx.state.clearFiles(files)
-    const config = getTestConfig(ctx)
+  async function runTests(specs: WorkspaceSpec[], invalidates: string[] = []): Promise<void> {
+    const { shard } = ctx.config
 
-    const filesByEnv = await groupFilesByEnv(files, config)
+    if (shard)
+      specs = await sequencer.shard(specs)
+
+    specs = await sequencer.sort(specs)
+
+    const filesByEnv = await groupFilesByEnv(specs)
     const envs = envsOrder.concat(
       Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
     )
@@ -99,21 +112,21 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       if (!files?.length)
         continue
 
-      const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+      const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
 
       for (const option in filesByOptions) {
         const files = filesByOptions[option]
 
         if (files?.length) {
           const filenames = files.map(f => f.file)
-          await runFiles(config, filenames, files[0].environment, invalidates)
+          await runFiles(files[0].project, filenames, files[0].environment, invalidates)
         }
       }
     }
   }
 
   return {
-    runTests: runWithFiles,
+    runTests,
     async close() {
       children.forEach((child) => {
         if (!child.killed)

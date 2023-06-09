@@ -1,5 +1,5 @@
 import { basename, dirname, join, resolve } from 'pathe'
-import { defineConfig } from 'vitest/config'
+import { defaultExclude, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
@@ -35,10 +35,13 @@ export default defineConfig({
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
       { find: '$', replacement: 'src' },
+      { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
+      { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
     ],
   },
   test: {
     name: 'core',
+    exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [
@@ -62,6 +65,8 @@ export default defineConfig({
     },
     deps: {
       external: ['tinyspy', /src\/external/],
+      inline: ['inline-lib'],
+      moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
     alias: [
       {

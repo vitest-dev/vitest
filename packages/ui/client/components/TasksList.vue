@@ -25,7 +25,7 @@ const search = ref('')
 const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
 
-const matchTasks = (tasks: Task[], search: string): boolean => {
+function matchTasks(tasks: Task[], search: string): boolean {
   let result = false
 
   for (let i = 0; i < tasks.length; i++) {
@@ -65,7 +65,7 @@ const running = computed(() => filtered.value.filter(task =>
 ))
 const throttledRunning = useThrottle(running, 250)
 
-const clearSearch = (focus: boolean) => {
+function clearSearch(focus: boolean) {
   search.value = ''
   focus && searchBox.value?.focus()
 }

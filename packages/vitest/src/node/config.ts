@@ -4,7 +4,7 @@ import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
@@ -84,7 +84,11 @@ export function resolveConfig(
     ...options,
     root: viteConfig.root,
     mode,
-  } as ResolvedConfig
+  } as any as ResolvedConfig
+
+  resolved.inspect = Boolean(resolved.inspect)
+  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  resolved.singleThread = Boolean(resolved.singleThread)
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -113,6 +117,12 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.provider === 'c8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
+    throw new Error('@vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
+  if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
+    throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
@@ -129,6 +139,14 @@ export function resolveConfig(
       resolved.deps.inline.push(...extraInlineDeps)
     }
   }
+  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
+    if (!dir.startsWith('/'))
+      dir = `/${dir}`
+    if (!dir.endsWith('/'))
+      dir += '/'
+    return normalize(dir)
+  })
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
@@ -148,12 +166,14 @@ export function resolveConfig(
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: isCI && !UPDATE_SNAPSHOT
+    updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
+    // resolved inside the worker
+    snapshotEnvironment: null as any,
   }
 
   if (options.resolveSnapshotPath)
@@ -209,9 +229,16 @@ export function resolveConfig(
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   if (mode !== 'benchmark') {
-    // @ts-expect-error from CLI
-    const reporters = resolved.reporter ?? resolved.reporters
-    resolved.reporters = Array.from(new Set(toArray(reporters))).filter(Boolean)
+    // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
+    // it is passed down as "vitest --reporter ../reporter.js"
+    const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
+      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+      if (/^\.\.?\//.test(reporter))
+        return resolve(process.cwd(), reporter)
+      return reporter
+    })
+    const reporters = cliReporters.length ? cliReporters : resolved.reporters
+    resolved.reporters = Array.from(new Set(toArray(reporters as 'json'[]))).filter(Boolean)
   }
 
   if (!resolved.reporters.length)
@@ -253,12 +280,21 @@ export function resolveConfig(
     resolved.exclude = resolved.typecheck.exclude
   }
 
+  resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  resolved.browser.slowHijackESM ??= true
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
-    port: 63315,
+    port: defaultBrowserPort,
   }
 
   return resolved
+}
+
+export function isBrowserEnabled(config: ResolvedConfig) {
+  if (config.browser?.enabled)
+    return true
+
+  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
 }

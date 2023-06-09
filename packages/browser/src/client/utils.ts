@@ -1,4 +1,5 @@
-export const importId = (id: string) => {
+export function importId(id: string) {
   const name = `/@id/${id}`
-  return import(name)
+  // @ts-expect-error mocking vitest apis
+  return __vi_wrap_module__(import(name))
 }

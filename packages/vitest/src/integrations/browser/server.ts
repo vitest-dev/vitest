@@ -1,14 +1,16 @@
 import { createServer } from 'vite'
 import { resolve } from 'pathe'
 import { findUp } from 'find-up'
-import { configFiles } from '../../constants'
-import type { Vitest } from '../../node'
+import { configFiles, defaultBrowserPort } from '../../constants'
 import type { UserConfig } from '../../types/config'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
+import { CoverageTransform } from '../../node/plugins/coverageTransform'
+import type { WorkspaceProject } from '../../node/workspace'
+import { MocksPlugin } from '../../node/plugins/mocks'
 
-export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
-  const root = ctx.config.root
+export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
+  const root = project.config.root
 
   await ensurePackageInstalled('@vitest/browser', root)
 
@@ -20,7 +22,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
 
   const server = await createServer({
     logLevel: 'error',
-    mode: ctx.config.mode,
+    mode: project.config.mode,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
@@ -30,37 +32,35 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
       },
     },
     plugins: [
-      (await import('@vitest/browser')).default('/'),
+      (await import('@vitest/browser')).default(project, '/'),
+      CoverageTransform(project.ctx),
       {
         enforce: 'post',
         name: 'vitest:browser:config',
         async config(config) {
           const server = resolveApiServerConfig(config.test?.browser || {}) || {
-            port: 63315,
+            port: defaultBrowserPort,
           }
 
           config.server = server
+          config.server.fs ??= {}
+          config.server.fs.strict = false
 
-          config.optimizeDeps ??= {}
-          config.optimizeDeps.entries ??= []
-
-          const root = config.root || process.cwd()
-          const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
-          entries.push(...ctx.config.setupFiles)
-
-          if (typeof config.optimizeDeps.entries === 'string')
-            config.optimizeDeps.entries = [config.optimizeDeps.entries]
-
-          config.optimizeDeps.entries.push(...entries)
+          return {
+            resolve: {
+              alias: config.test?.alias,
+            },
+          }
         },
       },
+      MocksPlugin(),
     ],
   })
 
   await server.listen()
   await server.watcher.close()
 
-  ;(await import('../../api/setup')).setup(ctx, server)
+  ;(await import('../../api/setup')).setup(project, server)
 
   return server
 }

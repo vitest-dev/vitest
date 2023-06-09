@@ -1,4 +1,4 @@
-import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResult, Test, TestContext } from './tasks'
+import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResultPack, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -13,6 +13,9 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
+  chaiConfig?: {
+    truncateThreshold?: number
+  }
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
@@ -21,8 +24,10 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new (config: VitestRunnerConfig): VitestRunner
+  new(config: VitestRunnerConfig): VitestRunner
 }
+
+export type CancelReason = 'keyboard-input' | 'test-failure' | string & {}
 
 export interface VitestRunner {
   /**
@@ -35,13 +40,20 @@ export interface VitestRunner {
   onCollected?(files: File[]): unknown
 
   /**
+   * Called when test runner should cancel next test runs.
+   * Runner should listen for this method and mark tests and suites as skipped in
+   * "onBeforeRunSuite" and "onBeforeRunTest" when called.
+   */
+  onCancel?(reason: CancelReason): unknown
+
+  /**
    * Called before running a single test. Doesn't have "result" yet.
    */
   onBeforeRunTest?(test: Test): unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTest?(test: Test, retryCount: number): unknown
+  onBeforeTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
   /**
    * Called after result and state are set.
    */
@@ -49,7 +61,7 @@ export interface VitestRunner {
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTest?(test: Test, retryCount: number): unknown
+  onAfterTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -74,7 +86,7 @@ export interface VitestRunner {
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?(task: [string, TaskResult | undefined][]): Promise<void>
+  onTaskUpdate?(task: TaskResultPack[]): Promise<void>
 
   /**
    * Called before running all tests in collected paths.

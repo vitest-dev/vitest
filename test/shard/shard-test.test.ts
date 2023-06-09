@@ -1,13 +1,13 @@
-import { expect, test } from 'vitest'
+import { type UserConfig, expect, test } from 'vitest'
 import { basename } from 'pathe'
-import { execa } from 'execa'
 
-const runVitest = async (args: string[]) => {
-  const { stdout } = await execa('vitest', ['--run', '--dir', './test', ...args])
-  return stdout
+import * as testUtils from '../test-utils'
+
+function runVitest(config: UserConfig) {
+  return testUtils.runVitest({ ...config, dir: './test' })
 }
 
-const parsePaths = (stdout: string) => {
+function parsePaths(stdout: string) {
   return Array.from(new Set(stdout
     .split('\n')
     .filter(line => line && line.includes('.test.js'))
@@ -16,7 +16,7 @@ const parsePaths = (stdout: string) => {
 }
 
 test('--shard=1/1', async () => {
-  const stdout = await runVitest(['--shard=1/1'])
+  const { stdout } = await runVitest({ shard: '1/1' })
 
   const paths = parsePaths(stdout)
 
@@ -24,7 +24,7 @@ test('--shard=1/1', async () => {
 })
 
 test('--shard=1/2', async () => {
-  const stdout = await runVitest(['--shard=1/2'])
+  const { stdout } = await runVitest({ shard: '1/2' })
 
   const paths = parsePaths(stdout)
 
@@ -32,7 +32,7 @@ test('--shard=1/2', async () => {
 })
 
 test('--shard=2/2', async () => {
-  const stdout = await runVitest(['--shard=2/2'])
+  const { stdout } = await runVitest({ shard: '2/2' })
 
   const paths = parsePaths(stdout)
 
@@ -40,7 +40,7 @@ test('--shard=2/2', async () => {
 })
 
 test('--shard=4/4', async () => {
-  const stdout = await runVitest(['--shard=4/4'])
+  const { stdout } = await runVitest({ shard: '4/4' })
 
   const paths = parsePaths(stdout)
 

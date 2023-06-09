@@ -1,8 +1,10 @@
-import type { TransformPluginContext, TransformResult } from 'rollup'
+import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
+
+type TransformResult = string | Partial<ViteTransformResult> | undefined | null | void
 
 export interface CoverageProvider {
   name: string
@@ -18,7 +20,8 @@ export interface CoverageProvider {
   onFileTransform?(
     sourceCode: string,
     id: string,
-    pluginCtx: TransformPluginContext
+    // TODO: when upgrading vite, import Rollup from vite
+    pluginCtx: any
   ): TransformResult | Promise<TransformResult>
 }
 
@@ -58,13 +61,14 @@ type CoverageReporterWithOptions<ReporterName extends CoverageReporter = Coverag
        : [ReporterName, Partial<ReportOptions[ReporterName]>]
      : never
 
-type Provider = 'c8' | 'istanbul' | 'custom' | undefined
+type Provider = 'c8' | 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
   T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
     T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
-      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
-          ({ provider?: T } & (CoverageC8Options))
+      T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
+        T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+            ({ provider?: T } & (CoverageC8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -74,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'reportsDirectory'
   | 'exclude'
   | 'extension'
+  | 'reportOnFailure'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -188,22 +193,6 @@ export interface BaseCoverageOptions {
   statements?: number
 
   /**
-   * Update threshold values automatically when current coverage is higher than earlier thresholds
-   *
-   * @default false
-   */
-  thresholdAutoUpdate?: boolean
-}
-
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {
-  /**
-   * Set to array of class method names to ignore for coverage
-   *
-   * @default []
-   */
-  ignoreClassMethods?: string[]
-
-  /**
    * Watermarks for statements, lines, branches and functions.
    *
    * Default value is `[50,80]` for each property.
@@ -214,6 +203,29 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
     branches?: [number, number]
     lines?: [number, number]
   }
+
+  /**
+   * Update threshold values automatically when current coverage is higher than earlier thresholds
+   *
+   * @default false
+   */
+  thresholdAutoUpdate?: boolean
+
+  /**
+   * Generate coverage report even when tests fail.
+   *
+   * @default true
+   */
+  reportOnFailure?: boolean
+}
+
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {
+  /**
+   * Set to array of class method names to ignore for coverage
+   *
+   * @default []
+   */
+  ignoreClassMethods?: string[]
 }
 
 export interface CoverageC8Options extends BaseCoverageOptions {
@@ -238,6 +250,15 @@ export interface CoverageC8Options extends BaseCoverageOptions {
   */
   src?: string[]
 
+  /**
+   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
+   *
+   * @default false
+   */
+  100?: boolean
+}
+
+export interface CoverageV8Options extends BaseCoverageOptions {
   /**
    * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
    *

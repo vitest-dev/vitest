@@ -2,7 +2,8 @@ import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import type { Vitest, VitestRunMode } from '../types'
+import { toArray } from '../utils'
+import type { BaseCoverageOptions, CoverageC8Options, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -23,12 +24,9 @@ cli
   .option('--threads', 'Enabled threads (default: true)')
   .option('--single-thread', 'Run tests inside a single thread, requires --threads (default: false)')
   .option('--silent', 'Silent console output from tests')
+  .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')
-  .option('--outputDiffMaxSize <length>', 'Object diff output max size (default: 10000)')
-  .option('--outputDiffMaxLines <length>', 'Max lines in diff output window (default: 50)')
-  .option('--outputTruncateLength <length>', 'Diff output line length (default: 80)')
-  .option('--outputDiffLines <lines>', 'Number of lines in single diff (default: 15)')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
   .option('--run', 'Disable watch mode')
@@ -49,6 +47,7 @@ cli
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
   .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
+  .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .help()
 
 cli
@@ -79,7 +78,33 @@ cli
   .command('[...filters]')
   .action((filters, options) => start('test', filters, options))
 
-cli.parse()
+try {
+  cli.parse()
+}
+catch (originalError) {
+  // CAC may fail to parse arguments when boolean flags and dot notation are mixed
+  // e.g. "--coverage --coverage.reporter text" will fail, when "--coverage.enabled --coverage.reporter text" will pass
+  const fullArguments = cli.rawArgs.join(' ')
+  const conflictingArgs: { arg: string; dotArgs: string[] }[] = []
+
+  for (const arg of cli.rawArgs) {
+    if (arg.startsWith('--') && !arg.includes('.') && fullArguments.includes(`${arg}.`)) {
+      const dotArgs = cli.rawArgs.filter(rawArg => rawArg.startsWith(arg) && rawArg.includes('.'))
+      conflictingArgs.push({ arg, dotArgs })
+    }
+  }
+
+  if (conflictingArgs.length === 0)
+    throw originalError
+
+  const error = conflictingArgs
+    .map(({ arg, dotArgs }) =>
+      `A boolean argument "${arg}" was used with dot notation arguments "${dotArgs.join(' ')}".`
+      + `\nPlease specify the "${arg}" argument with dot notation as well: "${arg}.enabled"`)
+    .join('\n')
+
+  throw new Error(error)
+}
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
   argv.related = relatedFiles
@@ -123,6 +148,20 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
   else
     delete argv.dir
 
+  if (argv.coverage) {
+    const coverage = argv.coverage
+    if (coverage.exclude)
+      coverage.exclude = toArray(coverage.exclude)
+
+    if ((coverage as BaseCoverageOptions).include)
+      (coverage as BaseCoverageOptions).include = toArray((coverage as BaseCoverageOptions).include)
+
+    if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+      (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+
+    if ((coverage as CoverageC8Options).src)
+      (coverage as CoverageC8Options).src = toArray((coverage as CoverageC8Options).src)
+  }
   return argv
 }
 

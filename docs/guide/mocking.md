@@ -23,7 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
-const purchase = () => {
+function purchase() {
   const currentHour = new Date().getHours()
   const [open, close] = businessHours
 
@@ -79,7 +79,9 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 ```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const getLatest = (index = messages.items.length - 1) => messages.items[index]
+function getLatest(index = messages.items.length - 1) {
+  return messages.items[index]
+}
 
 const messages = {
   items: [
@@ -171,14 +173,14 @@ The following principles apply
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
-import { failure, success } from './handlers'
+import { failure, success } from './handlers.js'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
 
 // get todos
-export const getTodos = async (event, context) => {
+export async function getTodos(event, context) {
   const client = new Client({
     // ...clientOptions
   })
@@ -214,7 +216,7 @@ vi.mock('pg', () => {
   return { Client }
 })
 
-vi.mock('./handlers', () => {
+vi.mock('./handlers.js', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
@@ -322,7 +324,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+When we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout, we can speed up our tests by using "fake" timers that mock calls to `setTimeout` and `setInterval`.
 
 See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
 
@@ -331,11 +333,11 @@ See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const executeAfterTwoHours = (func) => {
+function executeAfterTwoHours(func) {
   setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
 }
 
-const executeEveryMinute = (func) => {
+function executeEveryMinute(func) {
   setInterval(func, 1000 * 60) // 1 minute
 }
 
@@ -385,13 +387,14 @@ vi.spyOn(instance, 'method')
 ```
 
 - Mock exported variables
-```ts
-// some-path.ts
+```js
+// some-path.js
 export const getter = 'variable'
 ```
 ```ts
 // some-path.test.ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
@@ -399,12 +402,13 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 
 Example with `vi.mock`:
 ```ts
-// ./some-path.ts
+// ./some-path.js
 export function method() {}
 ```
 ```ts
-import { method } from './some-path.ts'
-vi.mock('./some-path.ts', () => ({
+import { method } from './some-path.js'
+
+vi.mock('./some-path.js', () => ({
   method: vi.fn()
 }))
 ```
@@ -415,7 +419,8 @@ Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `
 
 Example with `vi.spyOn`:
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
@@ -427,8 +432,9 @@ Example with `vi.mock` and prototype:
 export class SomeClass {}
 ```
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
   return { SomeClass }
@@ -438,8 +444,9 @@ vi.mock('some-path', () => {
 
 Example with `vi.mock` and return value:
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn(() => ({
     someMethod: vi.fn()
   }))
@@ -451,7 +458,8 @@ vi.mock('some-path', () => {
 Example with `vi.spyOn`:
 
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
   // whatever suites you from first two examples
 })
@@ -470,15 +478,17 @@ export function useObject() {
 
 ```ts
 // useObject.js
-import { useObject } from 'some-path'
+import { useObject } from './some-path.js'
+
 const obj = useObject()
 obj.method()
 ```
 
 ```ts
 // useObject.test.js
-import { useObject } from 'some-path'
-vi.mock('some-path', () => {
+import { useObject } from './some-path.js'
+
+vi.mock('./some-path.js', () => {
   let _cache
   const useObject = () => {
     if (!_cache) {
@@ -501,9 +511,10 @@ expect(obj.method).toHaveBeenCalled()
 - Mock part of a module
 
 ```ts
-import { mocked, original } from 'some-path'
-vi.mock('some-path', async () => {
-  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+import { mocked, original } from './some-path.js'
+
+vi.mock('./some-path.js', async () => {
+  const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
   return {
     ...mod,
     mocked: vi.fn()

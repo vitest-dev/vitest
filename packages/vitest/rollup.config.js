@@ -1,5 +1,6 @@
-import fs from 'fs'
-import { builtinModules } from 'module'
+import fs from 'node:fs'
+import { builtinModules } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
@@ -11,7 +12,7 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const entries = [
   'src/index.ts',
@@ -50,17 +51,24 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'rollup',
   'inspector',
   'webdriverio',
   'safaridriver',
+  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
   'vite-node/utils',
   '@vitest/utils/diff',
+  '@vitest/utils/error',
   '@vitest/runner/utils',
   '@vitest/runner/types',
+  '@vitest/snapshot/environment',
+  '@vitest/snapshot/manager',
 ]
+
+const dir = dirname(fileURLToPath(import.meta.url))
 
 const plugins = [
   nodeResolve({
@@ -80,7 +88,7 @@ export default ({ watch }) => defineConfig([
       dir: 'dist',
       format: 'esm',
       chunkFileNames: (chunkInfo) => {
-        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
+        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.moduleIds).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
           id = normalize(id)
           const parts = Array.from(
@@ -136,7 +144,7 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(
-        resolve(__dirname, '../../LICENSE'),
+        resolve(dir, '../../LICENSE'),
       )
       function sortLicenses(licenses) {
         let withParenthesis = []
@@ -154,7 +162,7 @@ function licensePlugin() {
       }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
-        .filter(({ name }) => !name.startsWith('@vitest/'))
+        .filter(({ name }) => !name?.startsWith('@vitest/'))
         .sort(({ name: nameA }, { name: nameB }) =>
           nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )
@@ -208,7 +216,7 @@ function licensePlugin() {
                     .trim()
                     .replace(/(\r\n|\r)/gm, '\n')
                     .split('\n')
-                    .map(line => `> ${line}`)
+                    .map(line => line ? `> ${line}` : '>')
                     .join('\n')
                 }\n`
             }

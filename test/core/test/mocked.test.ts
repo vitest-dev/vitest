@@ -1,6 +1,8 @@
-import { assert, describe, expect, test, vi, vitest } from 'vitest'
+import { afterEach, assert, beforeEach, describe, expect, test, vi, vitest } from 'vitest'
+
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
+import { createColors, getDefaultColors, setupColors } from '@vitest/utils'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
@@ -135,6 +137,13 @@ test('async functions should be mocked', () => {
 })
 
 describe('mocked function which fails on toReturnWith', () => {
+  beforeEach(() => {
+    setupColors(getDefaultColors())
+  })
+  afterEach(() => {
+    setupColors(createColors(true))
+  })
+
   test('zero call', () => {
     const mock = vi.fn(() => 1)
     expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()

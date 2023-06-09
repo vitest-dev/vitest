@@ -24,3 +24,10 @@ export type {
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+
+export type {
+  ExpectStatic,
+  AsymmetricMatchersContaining,
+  JestAssertion,
+  Assertion,
+} from '@vitest/expect'

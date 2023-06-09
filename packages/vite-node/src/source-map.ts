@@ -1,4 +1,5 @@
 import type { TransformResult } from 'vite'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import { install } from './source-map-handler'
 
@@ -13,15 +14,34 @@ const VITE_NODE_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-node'
 const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8`
 const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(`//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`)
 
-export function withInlineSourcemap(result: TransformResult) {
+export function withInlineSourcemap(result: TransformResult, options: {
+  root: string // project root path of this resource
+  filepath: string
+}) {
   const map = result.map
   let code = result.code
 
   if (!map || code.includes(VITE_NODE_SOURCEMAPPING_SOURCE))
     return result
 
+  map.sources = map.sources?.map((source) => {
+    if (!source)
+      return source
+    // sometimes files here are absolute,
+    // but they are considered absolute to the server url, not the file system
+    // this is a bug in Vite
+    // all files should be either absolute to the file system or relative to the source map file
+    if (isAbsolute(source)) {
+      const actualPath = (!source.startsWith(options.root) && source.startsWith('/'))
+        ? resolve(options.root, source.slice(1))
+        : source
+      return relative(dirname(options.filepath), actualPath)
+    }
+    return source
+  })
+
   // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
-  const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,(.+)`, 'g')
+  const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,([A-Za-z0-9+/=]+)$`, 'gm')
   while (OTHER_SOURCE_MAP_REGEXP.test(code))
     code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
 

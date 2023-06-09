@@ -14,7 +14,7 @@ import { SWRConfig } from 'swr'
 
 export const cache = new Map()
 
-const ThemeModeProvider = ({ children }: any) => {
+function ThemeModeProvider({ children }: any) {
   return <ThemeProvider theme={{}}>{children}</ThemeProvider>
 }
 
@@ -30,7 +30,7 @@ interface ProvidersProps extends ProviderOptions {
   swrCache: Cache<any>
 }
 
-const Providers = ({ children, history, route, swrCache }: ProvidersProps) => {
+function Providers({ children, history, route, swrCache }: ProvidersProps) {
   let Wrapper = (
     <Suspense fallback={null}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -66,10 +66,8 @@ const Providers = ({ children, history, route, swrCache }: ProvidersProps) => {
   return Wrapper
 }
 
-const renderWithProviders = (
-  ui: React.ReactElement,
-  options: ProviderOptions = {},
-) => {
+function renderWithProviders(ui: React.ReactElement,
+  options: ProviderOptions = {}) {
   const { initialEntries = [], route, ...rest } = options
   const history = createMemoryHistory({ initialEntries })
   const swrCache = new Map(cache)

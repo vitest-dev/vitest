@@ -1,5 +1,5 @@
 import type { MessagePort } from 'node:worker_threads'
-import type { Test } from '@vitest/runner'
+import type { CancelReason, Test } from '@vitest/runner'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
@@ -24,6 +24,11 @@ export interface WorkerGlobalState {
   current?: Test
   filepath?: string
   environmentTeardownRun?: boolean
+  onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  durations: {
+    environment: number
+    prepare: number
+  }
 }

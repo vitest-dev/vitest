@@ -52,6 +52,12 @@ test('data with dynamic import works', async () => {
   expect(hi).toBe('hi')
 })
 
+test('dynamic import coerces to string', async () => {
+  const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
+  const { default: hi } = await import({ toString: () => dataUri } as string)
+  expect(hi).toBe('hi')
+})
+
 test('dynamic import has Module symbol', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
@@ -68,9 +74,9 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  await expect(imported).rejects.toThrowError(/Failed to load/)
+  await expect(imported).rejects.toThrowError(/Cannot find module '\.\/some-unknown-path'/)
   // @ts-expect-error path does not exist
-  await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load/)
+  await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Cannot find module/)
 })
 
 test('can import @vite/client', async () => {

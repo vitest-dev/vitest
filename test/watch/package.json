@@ -5,9 +5,9 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "execa": "^7.0.0",
-    "strip-ansi": "^7.0.1",
+    "@vitest/browser": "workspace:*",
     "vite": "latest",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "webdriverio": "latest"
   }
 }

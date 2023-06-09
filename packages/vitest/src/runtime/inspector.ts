@@ -1,6 +1,9 @@
-import inspector from 'node:inspector'
+import { createRequire } from 'node:module'
 
 import type { ResolvedConfig } from '../types'
+
+const __require = createRequire(import.meta.url)
+let inspector: typeof import('node:inspector')
 
 /**
  * Enables debugging inside `worker_threads` and `child_process`.
@@ -10,6 +13,7 @@ export function setupInspect(config: ResolvedConfig) {
   const isEnabled = config.inspect || config.inspectBrk
 
   if (isEnabled) {
+    inspector = __require('node:inspector')
     // Inspector may be open already if "isolate: false" is used
     const isOpen = inspector.url() !== undefined
 
@@ -25,7 +29,7 @@ export function setupInspect(config: ResolvedConfig) {
   const keepOpen = config.watch && !config.isolate && config.singleThread
 
   return function cleanup() {
-    if (isEnabled && !keepOpen)
+    if (isEnabled && !keepOpen && inspector)
       inspector.close()
   }
 }

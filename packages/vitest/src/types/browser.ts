@@ -1,12 +1,18 @@
 import type { Awaitable } from '@vitest/utils'
-import type { Vitest } from '../node'
-import type { ProcessPool } from '../node/pool'
+import type { WorkspaceProject } from '../node/workspace'
 import type { ApiConfig } from './config'
 
+export interface BrowserProviderOptions {
+  browser: string
+}
+
 export interface BrowserProvider {
-  initialize(ctx: Vitest): Awaitable<void>
-  createPool(): ProcessPool
-  testFinished?(testId: string): Awaitable<void>
+  name: string
+  getSupportedBrowsers(): readonly string[]
+  initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
+  openPage(url: string): Awaitable<void>
+  catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
+  close(): Awaitable<void>
 }
 
 export interface BrowserProviderModule {
@@ -15,7 +21,7 @@ export interface BrowserProviderModule {
 
 export interface BrowserConfigOptions {
   /**
-   * if running tests in the broweser should be the default
+   * if running tests in the browser should be the default
    *
    * @default false
    */
@@ -23,17 +29,15 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   *
-   * @default tries to find the first available browser
    */
-  name?: 'firefox' | 'chrome' | 'edge' | 'safari'
+  name: string
 
   /**
    * browser provider
    *
-   * @default 'webdriver'
+   * @default 'webdriverio'
    */
-  provider?: string
+  provider?: 'webdriverio' | 'playwright' | (string & {})
 
   /**
    * enable headless mode
@@ -48,6 +52,15 @@ export interface BrowserConfigOptions {
    * The default port is 63315.
    */
   api?: ApiConfig | number
+
+  /**
+   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
+   * Enabled by default when running in browser.
+   *
+   * @default true
+   * @experimental
+   */
+  slowHijackESM?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

@@ -65,6 +65,13 @@ export class ViteNodeServer {
     }
     if (options.debug)
       this.debugger = new Debugger(server.config.root, options.debug!)
+
+    options.deps.moduleDirectories ??= []
+
+    const envValue = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
+    const customModuleDirectories = envValue?.split(',')
+    if (customModuleDirectories)
+      options.deps.moduleDirectories.push(...customModuleDirectories)
   }
 
   shouldExternalize(id: string) {
@@ -119,11 +126,11 @@ export class ViteNodeServer {
     return this.fetchPromiseMap.get(id)!
   }
 
-  async transformRequest(id: string) {
+  async transformRequest(id: string, filepath = id) {
     // reuse transform for concurrent requests
     if (!this.transformPromiseMap.has(id)) {
       this.transformPromiseMap.set(id,
-        this._transformRequest(id)
+        this._transformRequest(id, filepath)
           .finally(() => {
             this.transformPromiseMap.delete(id)
           }),
@@ -177,7 +184,7 @@ export class ViteNodeServer {
     }
     else {
       const start = performance.now()
-      const r = await this._transformRequest(id, transformMode)
+      const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
       result = { code: r?.code, map: r?.map as any }
     }
@@ -191,11 +198,15 @@ export class ViteNodeServer {
     return result
   }
 
-  protected async processTransformResult(result: TransformResult) {
-    return withInlineSourcemap(result)
+  protected async processTransformResult(filepath: string, result: TransformResult) {
+    const mod = this.server.moduleGraph.getModuleById(filepath)
+    return withInlineSourcemap(result, {
+      filepath: mod?.file || filepath,
+      root: this.server.config.root,
+    })
   }
 
-  private async _transformRequest(id: string, customTransformMode?: 'web' | 'ssr') {
+  private async _transformRequest(id: string, filepath: string, customTransformMode?: 'web' | 'ssr') {
     debugRequest(id)
 
     let result: TransformResult | null = null
@@ -221,7 +232,7 @@ export class ViteNodeServer {
 
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
-      result = await this.processTransformResult(result)
+      result = await this.processTransformResult(filepath, result)
 
     if (this.options.debug?.dumpModules)
       await this.debugger?.dumpFile(id, result)

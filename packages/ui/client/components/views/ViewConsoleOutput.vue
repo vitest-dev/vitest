@@ -20,7 +20,7 @@ const formattedLogs = computed(() => {
 
 function getTaskName(id?: string) {
   const task = id && client.state.idMap.get(id)
-  return task ? getNames(task).slice(1).join(' > ') : '-' || '-'
+  return (task ? getNames(task).slice(1).join(' > ') : '-') || '-'
 }
 </script>
 

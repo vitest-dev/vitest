@@ -2,9 +2,12 @@
  * Test cases shared by both coverage providers
 */
 
-import fs from 'fs'
+import fs from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import libCoverage from 'istanbul-lib-coverage'
+
+import { readCoverageJson } from './utils'
 
 test('html report', async () => {
   const coveragePath = resolve('./coverage/src')
@@ -79,4 +82,22 @@ test('thresholdAutoUpdate updates thresholds', async () => {
   // Update thresholds back to fixed values
   const updatedConfig = configContents.replace(/(branches|functions|lines|statements): ([\d|\.])+/g, '$1: 1.01')
   fs.writeFileSync(configFilename, updatedConfig)
+})
+
+test('function count is correct', async () => {
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/function-count.ts')
+
+  const { functions } = fileCoverage.toSummary()
+
+  expect(functions.total).toBe(5)
+  expect(functions.covered).toBe(3)
+})
+
+test('coverage provider does not conflict with built-in reporter\'s outputFile', async () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).toContain('junit.xml')
 })

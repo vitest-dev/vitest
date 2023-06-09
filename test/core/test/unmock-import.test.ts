@@ -20,7 +20,7 @@ test('first import', async () => {
   expect(data.state).toBe('STOPPED')
 })
 
-test('second import should had been re-mock', async () => {
+test('second import should have been re-mocked', async () => {
   // @ts-expect-error I know this
   const { data } = await import('/data')
   expect(data.state).toBe('STARTED')

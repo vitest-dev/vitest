@@ -16,6 +16,7 @@ exports[`custom json report 1`] = `
     "<process-cwd>/src/Defined.vue",
     "<process-cwd>/src/Hello.vue",
     "<process-cwd>/src/another-setup.ts",
+    "<process-cwd>/src/function-count.ts",
     "<process-cwd>/src/implicitElse.ts",
     "<process-cwd>/src/importEnv.ts",
     "<process-cwd>/src/index.mts",

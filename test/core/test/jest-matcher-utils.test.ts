@@ -1,3 +1,4 @@
+import { getDefaultColors, setupColors } from '@vitest/utils'
 import { describe, expect, it } from 'vitest'
 
 describe('jest-matcher-utils', () => {
@@ -11,9 +12,11 @@ describe('jest-matcher-utils', () => {
   })
 
   it('diff', () => {
+    setupColors(getDefaultColors())
+
     expect(() => {
       // @ts-expect-error "toBeJestEqual" is a custom matcher we just created
       expect('a').toBeJestEqual('b')
-    }).toThrowError(/Expected.*"b".*Received.*"a"/ms)
+    }).toThrowError(/- 'b'.*\+ 'a'/ms)
   })
 })

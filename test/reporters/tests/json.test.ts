@@ -1,22 +1,13 @@
 import { resolve } from 'pathe'
-import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
+
+import { runVitest } from '../../test-utils'
 
 describe('json reporter', async () => {
   const root = resolve(__dirname, '../fixtures')
 
-  const skip = (process.platform === 'win32' || process.platform === 'darwin') && process.env.CI
-
-  it.skipIf(skip)('generates correct report', async () => {
-    const { stdout } = await execa('npx', ['vitest', 'run', 'json-fail', '--reporter=json'], {
-      cwd: root,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-      stdio: 'pipe',
-    }).catch(e => e)
+  it('generates correct report', async () => {
+    const { stdout } = await runVitest({ reporters: 'json', root }, ['json-fail'])
 
     const data = JSON.parse(stdout)
 
@@ -28,20 +19,12 @@ describe('json reporter', async () => {
     expect(result).toMatchSnapshot()
   }, 40000)
 
-  it.skipIf(skip).each([
+  it.each([
     ['passed', 'all-passing-or-skipped'],
     ['passed', 'all-skipped'],
     ['failed', 'some-failing'],
   ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
-    const { stdout } = await execa('npx', ['vitest', 'run', file, '--reporter=json'], {
-      cwd: root,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-      stdio: 'pipe',
-    }).catch(e => e)
+    const { stdout } = await runVitest({ reporters: 'json', root }, [file])
 
     const data = JSON.parse(stdout)
 

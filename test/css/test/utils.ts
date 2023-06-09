@@ -1,6 +1,6 @@
 import { afterEach, beforeEach } from 'vitest'
 
-const removeStyles = () => {
+function removeStyles() {
   document.head.querySelectorAll('style').forEach(style => style.remove())
 }
 export function useRemoveStyles() {

@@ -2,6 +2,9 @@
   "extends": "@antfu",
   "rules": {
     "no-only-tests/no-only-tests": "off",
+    // prefer global Buffer to not initialize the whole module
+    "n/prefer-global/buffer": "off",
+    "@typescript-eslint/no-invalid-this": "off",
     "no-restricted-imports": [
       "error",
       {
@@ -18,6 +21,18 @@
           "error",
           {
             "paths": ["vitest", "path"]
+          }
+        ]
+      }
+    },
+    {
+      // these files define vitest as peer dependency
+      "files": "packages/{coverage-*,ui,browser,web-worker}/**/*.*",
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["path"]
           }
         ]
       }

@@ -1,13 +1,16 @@
-import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import { relative } from 'pathe'
+import type { File, Task, TaskResultPack, UserConsoleLog } from '../types'
+
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
+import type { WorkspaceProject } from './workspace'
 
 interface CollectingPromise {
   promise: Promise<void>
   resolve: () => void
 }
 
-export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill => {
+export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
     return true
 
@@ -16,9 +19,10 @@ export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill =>
 
 // Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
-  filesMap = new Map<string, File>()
+  filesMap = new Map<string, File[]>()
   pathsSet: Set<string> = new Set()
   collectingPromise: CollectingPromise | undefined = undefined
+  browserTestPromises = new Map<string, { resolve: (v: unknown) => void; reject: (v: unknown) => void }>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
@@ -26,9 +30,13 @@ export class StateManager {
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err))
-      return err.errors.forEach(error => this.catchError(error, type));
+      return err.errors.forEach(error => this.catchError(error, type))
 
-    (err as ErrorWithDiff).type = type
+    if (err === Object(err))
+      (err as Record<string, unknown>).type = type
+    else
+      err = { type, message: err }
+
     this.errorsSet.add(err)
   }
 
@@ -54,8 +62,8 @@ export class StateManager {
 
   getFiles(keys?: string[]): File[] {
     if (keys)
-      return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
-    return Array.from(this.filesMap.values())
+      return keys.map(key => this.filesMap.get(key)!).filter(Boolean).flat()
+    return Array.from(this.filesMap.values()).flat()
   }
 
   getFilepaths(): string[] {
@@ -76,14 +84,24 @@ export class StateManager {
 
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
-      this.filesMap.set(file.filepath, file)
+      const existing = (this.filesMap.get(file.filepath) || [])
+      const otherProject = existing.filter(i => i.projectName !== file.projectName)
+      otherProject.push(file)
+      this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
     })
   }
 
-  clearFiles(paths: string[] = []) {
+  clearFiles(project: WorkspaceProject, paths: string[] = []) {
     paths.forEach((path) => {
-      this.filesMap.delete(path)
+      const files = this.filesMap.get(path)
+      if (!files)
+        return
+      const filtered = files.filter(file => file.projectName !== project.config.name)
+      if (!filtered.length)
+        this.filesMap.delete(path)
+      else
+        this.filesMap.set(path, filtered)
     })
   }
 
@@ -99,9 +117,12 @@ export class StateManager {
   }
 
   updateTasks(packs: TaskResultPack[]) {
-    for (const [id, result] of packs) {
-      if (this.idMap.has(id))
-        this.idMap.get(id)!.result = result
+    for (const [id, result, meta] of packs) {
+      const task = this.idMap.get(id)
+      if (task) {
+        task.result = result
+        task.meta = meta
+      }
     }
   }
 
@@ -112,5 +133,25 @@ export class StateManager {
         task.logs = []
       task.logs.push(log)
     }
+  }
+
+  getCountOfFailedTests() {
+    return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
+  }
+
+  cancelFiles(files: string[], root: string) {
+    this.collectFiles(files.map(filepath => ({
+      filepath,
+      name: relative(root, filepath),
+      id: filepath,
+      mode: 'skip',
+      type: 'suite',
+      result: {
+        state: 'skip',
+      },
+      meta: {},
+      // Cancelled files have not yet collected tests
+      tasks: [],
+    })))
   }
 }

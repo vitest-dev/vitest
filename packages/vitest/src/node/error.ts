@@ -1,9 +1,8 @@
 /* eslint-disable prefer-template */
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
@@ -43,12 +42,12 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   if (!ctx.config)
     return printErrorMessage(e, ctx.logger)
 
-  const stacks = parseErrorStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack ? [] : undefined)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      ctx.server.moduleGraph.getModuleById(stack.file)
+      ctx.getModuleProjects(stack.file).length
       && existsSync(stack.file),
     )
 
@@ -58,6 +57,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     printErrorType(type, ctx)
   printErrorMessage(e, ctx.logger)
 
+  // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
+  if (e.diff)
+    displayDiff(e.diff, ctx.logger.console)
+
   // if the error provide the frame
   if (e.frame) {
     ctx.logger.error(c.yellow(e.frame))
@@ -66,7 +69,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     printStack(ctx, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s.line, s.column)))
+        ctx.logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
       }
     })
   }
@@ -94,18 +97,6 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
-
-  // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
-  if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
-      outputTruncateLength: ctx.config.outputTruncateLength,
-      outputDiffLines: ctx.config.outputDiffLines,
-      outputDiffMaxLines: ctx.config.outputDiffMaxLines,
-      colorDim: c.dim,
-      colorError: c.red,
-      colorSuccess: c.green,
-    })
-  }
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -120,6 +111,7 @@ const skipErrorProperties = new Set([
   'stackStr',
   'type',
   'showDiff',
+  'diff',
   'actual',
   'expected',
   'VITEST_TEST_NAME',
@@ -158,7 +150,14 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   else
     name = name.split('/')[0]
 
-  ctx.logger.error(c.yellow(
+  if (name)
+    printModuleWarningForPackage(ctx.logger, path, name)
+  else
+    printModuleWarningForSourceCode(ctx.logger, path)
+}
+
+function printModuleWarningForPackage(logger: Logger, path: string, name: string) {
+  logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
@@ -172,20 +171,21 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
     deps: {
       inline: [
         ${c.yellow(c.bold(`"${name}"`))}
-      ]
+      }
     }
   }
 }\n`)))
 }
 
-export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
-  const diff = unifiedDiff(actual, expected, options)
-  const dim = options.colorDim || ((str: string) => str)
-  const black = options.colorDim ? c.black : (str: string) => str
-  if (diff)
-    console.error(diff + '\n')
-  else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
-    console.error(dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + black('--outputDiffMaxSize') + dim(' option.\n'))
+function printModuleWarningForSourceCode(logger: Logger, path: string) {
+  logger.error(c.yellow(
+    `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
++ 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
+  ))
+}
+
+export function displayDiff(diff: string, console: Console) {
+  console.error(`\n${diff}\n`)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
@@ -209,10 +209,10 @@ function printStack(
   const logger = ctx.logger
 
   for (const frame of stack) {
-    const color = frame === highlight ? c.yellow : c.gray
+    const color = frame === highlight ? c.cyan : c.gray
     const path = relative(ctx.config.root, frame.file)
 
-    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
+    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`].filter(Boolean).join(' ')}`))
     onStack?.(frame)
   }
   if (stack.length)

@@ -3,20 +3,23 @@ import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
-import type { ChaiPlugin } from './types'
+import type { Test } from '@vitest/runner'
+import type { Assertion, ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
+import { recordAsyncExpect, wrapSoft } from './utils'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const c = () => getColors()
 
-  function def(name: keyof Vi.Assertion | (keyof Vi.Assertion)[], fn: ((this: Chai.AssertionStatic & Vi.Assertion, ...args: any[]) => any)) {
-    const addMethod = (n: keyof Vi.Assertion) => {
-      utils.addMethod(chai.Assertion.prototype, n, fn)
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, fn)
+  function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
+    const addMethod = (n: keyof Assertion) => {
+      const softWrapper = wrapSoft(utils, fn)
+      utils.addMethod(chai.Assertion.prototype, n, softWrapper)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, softWrapper)
     }
 
     if (Array.isArray(name))
@@ -352,16 +355,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return `${i}th`
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
-    msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
-      if (actualCall)
-        methodCall += diff(callArg, actualCall, { showLegend: false })
-      else
-        methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
+    if (spy.mock.calls) {
+      msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+        let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+        if (actualCall)
+          methodCall += diff(actualCall, callArg, { showLegend: false })
+        else
+          methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
-      methodCall += '\n'
-      return methodCall
-    }).join('\n')}`)
+        methodCall += '\n'
+        return methodCall
+      }).join('\n')}`)
+    }
     msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
@@ -369,7 +374,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
       let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
-        methodCall += diff(callReturn.value, actualReturn, { showLegend: false })
+        methodCall += diff(actualReturn, callReturn.value, { showLegend: false })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -466,7 +471,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const lastCall = spy.mock.calls[spy.calls.length - 1]
+    const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
     this.assert(
       jestEquals(lastCall, args, [iterableEquality]),
@@ -596,7 +601,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const { value: lastResult } = spy.mock.results[spy.returns.length - 1]
+    const { value: lastResult } = spy.mock.results[spy.mock.results.length - 1]
     const pass = jestEquals(lastResult, value)
     this.assert(
       pass,
@@ -633,6 +638,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', new Error('resolves'))
+    const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
     if (typeof obj?.then !== 'function')
@@ -646,7 +652,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return result instanceof chai.Assertion ? proxy : result
 
         return async (...args: any[]) => {
-          return obj.then(
+          const promise = obj.then(
             (value: any) => {
               utils.flag(this, 'object', value)
               return result.call(this, ...args)
@@ -655,6 +661,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               throw new Error(`promise rejected "${String(err)}" instead of resolving`)
             },
           )
+
+          return recordAsyncExpect(test, promise)
         }
       },
     })
@@ -665,6 +673,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
     utils.flag(this, 'error', new Error('rejects'))
+    const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
@@ -679,7 +688,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return result instanceof chai.Assertion ? proxy : result
 
         return async (...args: any[]) => {
-          return wrapper.then(
+          const promise = wrapper.then(
             (value: any) => {
               throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
             },
@@ -688,6 +697,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
           )
+
+          return recordAsyncExpect(test, promise)
         }
       },
     })

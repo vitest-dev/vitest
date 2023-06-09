@@ -1,10 +1,22 @@
 import type { Arrayable, Nullable } from './types'
 
+interface CloneOptions {
+  forceWritable?: boolean
+}
+
+export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
+  return v != null
+}
+
 export function assertTypes(value: unknown, name: string, types: string[]): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
   if (!pass)
     throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
+}
+
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
 export function slash(path: string) {
@@ -64,20 +76,28 @@ export function getOwnProperties(obj: any) {
   return Array.from(ownProps)
 }
 
-export function deepClone<T>(val: T): T {
+const defaultCloneOptions: CloneOptions = { forceWritable: false }
+
+export function deepClone<T>(
+  val: T,
+  options: CloneOptions = defaultCloneOptions,
+): T {
   const seen = new WeakMap()
-  return clone(val, seen)
+  return clone(val, seen, options)
 }
 
-export function clone<T>(val: T, seen: WeakMap<any, any>): T {
+export function clone<T>(
+  val: T,
+  seen: WeakMap<any, any>,
+  options: CloneOptions = defaultCloneOptions,
+): T {
   let k: any, out: any
   if (seen.has(val))
     return seen.get(val)
   if (Array.isArray(val)) {
-    out = Array(k = val.length)
+    out = Array((k = val.length))
     seen.set(val, out)
-    while (k--)
-      out[k] = clone(val[k], seen)
+    while (k--) out[k] = clone(val[k], seen)
     return out as any
   }
 
@@ -102,6 +122,7 @@ export function clone<T>(val: T, seen: WeakMap<any, any>): T {
       else {
         Object.defineProperty(out, k, {
           ...descriptor,
+          writable: options.forceWritable ? true : descriptor.writable,
           value: cloned,
         })
       }
@@ -143,4 +164,46 @@ export function createDefer<T>(): DeferPromise<T> {
   p.resolve = resolve!
   p.reject = reject!
   return p
+}
+
+/**
+ * If code starts with a function call, will return its last index, respecting arguments.
+ * This will return 25 - last ending character of toMatch ")"
+ * Also works with callbacks
+ * ```
+ * toMatch({ test: '123' });
+ * toBeAliased('123')
+ * ```
+ */
+export function getCallLastIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
 }

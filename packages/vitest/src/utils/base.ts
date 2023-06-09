@@ -1,5 +1,7 @@
 import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
 
+export { notNullish, getCallLastIndex } from '@vitest/utils'
+
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
 }
@@ -47,15 +49,11 @@ export function getAllMockableProperties(obj: any, isModule: boolean) {
   return Array.from(allProps.values())
 }
 
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
-}
-
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export const noop = () => { }
+export function noop() { }
 
 export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
@@ -77,12 +75,12 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   return [array]
 }
 
-export const toString = (v: any) => Object.prototype.toString.call(v)
-export const isPlainObject = (val: any): val is object =>
-  // `Object.create(null).constructor` is `undefined`
-  // `{}.constructor.name` is `Object`
-  // `new (class A{})().constructor.name` is `A`
-  toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+export function toString(v: any) {
+  return Object.prototype.toString.call(v)
+}
+export function isPlainObject(val: any): val is object {
+  return toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+}
 
 export function isObject(item: unknown): boolean {
   return item != null && typeof item === 'object' && !Array.isArray(item)
@@ -131,7 +129,17 @@ export function stdout(): NodeJS.WriteStream {
 }
 
 export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
-  if (!config.deps?.experimentalOptimizer?.enabled)
+  if (!config.deps?.experimentalOptimizer?.ssr?.enabled && !config.deps?.experimentalOptimizer?.web?.enabled)
     return undefined
-  return environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
+  return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
+
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
+  }
+}
+export { AggregateErrorPonyfill as AggregateError }
