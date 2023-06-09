@@ -39,6 +39,7 @@ export function deleteDefineConfig(viteConfig: ViteConfig) {
     delete viteConfig.define['import.meta.vitest']
     delete viteConfig.define['process.env']
     delete viteConfig.define.process
+    delete viteConfig.define.global
   }
   for (const key in viteConfig.define) {
     const val = viteConfig.define[key]
