@@ -1,12 +1,25 @@
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
+import { DefaultReporter } from '../../../packages/vitest/src/node/reporters/default'
+
+class MockDefaultReporter extends DefaultReporter {
+  isTTY = true
+}
 
 const root = resolve(__dirname, '../fixtures')
-const run = async (fileFilter: string[]) => await runVitest({ root, reporters: 'default', config: false }, fileFilter)
+async function run(fileFilter: string[]) {
+  return await runVitest({
+    deps: {
+      inline: ['std-env'],
+    },
+    root,
+    reporters: new MockDefaultReporter(),
+    config: false,
+  }, fileFilter)
+}
 
-describe.skipIf(process.env.CI)('default reporter', async () => {
-  process.stdout.isTTY = true
+describe('default reporter', async () => {
   test('normal', async () => {
     const { stdout } = await run(['b1.test.ts', 'b2.test.ts'])
     expect(stdout).contain('✓ b2 test')
