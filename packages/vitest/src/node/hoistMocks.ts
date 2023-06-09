@@ -1,5 +1,5 @@
 import MagicString from 'magic-string'
-import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+import type { CallExpression, Identifier, ImportDeclaration, ImportNamespaceSpecifier, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
 import type { AcornNode } from 'rollup'
 
@@ -24,11 +24,6 @@ function isIdentifier(node: any): node is Positioned<Identifier> {
 }
 
 function transformImportSpecifiers(node: ImportDeclaration) {
-  const specifiers = node.specifiers
-
-  if (specifiers.length === 1 && specifiers[0].type === 'ImportNamespaceSpecifier')
-    return specifiers[0].local.name
-
   const dynamicImports = node.specifiers.map((specifier) => {
     if (specifier.type === 'ImportDefaultSpecifier')
       return `default: ${specifier.local.name}`
@@ -86,12 +81,25 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
   const transformImportDeclaration = (node: ImportDeclaration) => {
     const source = node.source.value as string
 
+    const namespace = node.specifiers.find(specifier => specifier.type === 'ImportNamespaceSpecifier') as ImportNamespaceSpecifier | undefined
+
+    let code = ''
+    if (namespace)
+      code += `const ${namespace.local.name} = await import('${source}')\n`
+
     // if we don't hijack ESM and process this file, then we definetly have mocks,
     // so we need to transform imports into dynamic ones, so "vi.mock" can be executed before
     const specifiers = transformImportSpecifiers(node)
-    const code = specifiers
-      ? `const ${specifiers} = await import('${source}')\n`
-      : `await import('${source}')\n`
+
+    if (specifiers) {
+      if (namespace)
+        code += `const ${specifiers} = ${namespace.local.name}\n`
+      else
+        code += `const ${specifiers} = await import('${source}')\n`
+    }
+    else if (!namespace) {
+      code += `await import('${source}')\n`
+    }
     return code
   }
 

@@ -58,3 +58,16 @@ test('always hoists all imports but they are under mocks', () => {
     const { someValue2 } = await import('./path2.js')"
   `)
 })
+
+test('correctly mocks namespaced', () => {
+  expect(hoistSimpleCode(`
+  import { vi } from 'vitest'
+  import add, * as AddModule from '../src/add'
+  vi.mock('../src/add', () => {})
+  `)).toMatchInlineSnapshot(`
+    "const { vi } = await import('vitest')
+    vi.mock('../src/add', () => {})
+    const AddModule = await import('../src/add')
+    const { default: add } = AddModule"
+  `)
+})
