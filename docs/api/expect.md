@@ -43,7 +43,7 @@ type Awaitable<T> = T | PromiseLike<T>
   // At the end of the test, the above errors will be output.
   ```
   
-  it can also be used with `expect`. if `expect` assertion fails, the test will be terminate and all errors will be output.
+  it can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
 
   ```ts
   import { expect } from 'vitest'
