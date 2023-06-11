@@ -54,7 +54,7 @@ export function createExpect(test?: Test) {
   }
 
   expect.unreachable = (message?: string) => {
-    chai.assert.fail(`expected ${message ? `"${message}"` : ''} not to be reached`)
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
   }
 
   function assertions(expected: number) {
