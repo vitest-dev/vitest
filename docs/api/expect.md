@@ -31,7 +31,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `ExpectStatic & (actual: any) => Assertions`
 
-  `expect.soft` is the same as `expect` but does not terminate test execution when the assertion fails. It will be marked as a test failure. Until the test ends, all errors will be output.
+`expect.soft` functions similarly to `expect`, but instead of terminating the test execution upon a failed assertion, it continues running and marks the failure as a test failure. All errors encountered during the test will be displayed until the test is completed.
 
   ```ts
   import { expect } from 'vitest'
