@@ -55,7 +55,9 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
   
-  > **Note:** `expect.soft` only supported run inside the [test](/api/#test) function.
+::: warning
+`expect.soft` only supported run inside the [test](/api/#test) function.
+:::
 
 ## not
 
