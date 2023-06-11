@@ -238,7 +238,7 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: Fixtures },
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: Fixtures<Record<string, any>> },
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions

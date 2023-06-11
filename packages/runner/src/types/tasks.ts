@@ -186,7 +186,7 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
   extend<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>
 }
 
-export type Fixtures<T extends Record<string, any> = {}> = {
+export type Fixtures<T extends Record<string, any>> = {
   [K in keyof T]: T[K] | ((use: (fixture: T[K]) => Promise<void>) => Promise<void>)
 }
 
