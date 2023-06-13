@@ -6,7 +6,6 @@ import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
-import { registerConsoleShortcuts } from './stdin'
 
 export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest(mode)
@@ -33,11 +32,6 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
-
-  if (process.stdin.isTTY && ctx.config.watch)
-    registerConsoleShortcuts(ctx)
-  else
-    process.on('SIGINT', () => ctx.cancelCurrentRun('keyboard-input'))
 
   return ctx
 }

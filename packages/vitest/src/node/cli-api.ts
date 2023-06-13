@@ -6,6 +6,7 @@ import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../types'
 import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
+import { registerConsoleShortcuts } from './stdin'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -85,6 +86,11 @@ export async function startVitest(
     process.exitCode = 1
     return ctx
   }
+
+  if (process.stdin.isTTY && ctx.config.watch)
+    registerConsoleShortcuts(ctx)
+  else
+    process.on('SIGINT', () => ctx.cancelCurrentRun('keyboard-input'))
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
