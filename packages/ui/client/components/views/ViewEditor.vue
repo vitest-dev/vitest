@@ -9,6 +9,7 @@ import type { ErrorWithDiff, File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')

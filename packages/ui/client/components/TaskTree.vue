@@ -12,12 +12,8 @@ withDefaults(defineProps<{
   indent: 0,
   nested: false,
 })
-</script>
 
-<script lang="ts">
-export default {
-  inheritAttrs: false,
-}
+defineOptions({ inheritAttrs: false })
 </script>
 
 <template>

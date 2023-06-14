@@ -3,17 +3,18 @@ import type CodeMirror from 'codemirror'
 import { useCodeMirror } from '../composables/codemirror'
 
 const props = defineProps<{
-  modelValue: string
   mode?: string
   readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
-  (event: 'update:modelValue', value: string): void
   (event: 'save', content: string): void
 }>()
 
+const modelValue = defineModel<string>()
+
 const attrs = useAttrs()
+
 const modeMap: Record<string, any> = {
   // html: 'htmlmixed',
   // vue: 'htmlmixed',
@@ -29,14 +30,13 @@ const modeMap: Record<string, any> = {
 }
 
 const el = ref<HTMLTextAreaElement>()
-const input = useVModel(props, 'modelValue', emit, { passive: true })
 
 const cm = shallowRef<CodeMirror.EditorFromTextArea>()
 
 defineExpose({ cm })
 
 onMounted(async () => {
-  cm.value = useCodeMirror(el, input, {
+  cm.value = useCodeMirror(el, modelValue as unknown as Ref<string>, {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,

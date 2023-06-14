@@ -21,6 +21,8 @@ const emit = defineEmits<{
   (event: 'run', files?: File[]): void
 }>()
 
+defineOptions({ inheritAttrs: false })
+
 const search = ref('')
 const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
@@ -72,12 +74,6 @@ function clearSearch(focus: boolean) {
 const disableClearSearch = computed(() => {
   return search.value === ''
 })
-</script>
-
-<script lang="ts">
-export default {
-  inheritAttrs: false,
-}
 </script>
 
 <template>
