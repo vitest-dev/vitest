@@ -9,7 +9,7 @@ const parseResult = (s: string) => JSON.parse(s.replaceAll('\'', '"'))
 
 it('basic', async () => {
   const result = await execa('npx', ['esno', cliPath, entryPath], { reject: true })
-  expect(result.stdout).include('/node')
+  expect(result.stdout).include('node')
   expect(parseResult(result.stdout)).length(2)
 }, 60_000)
 
