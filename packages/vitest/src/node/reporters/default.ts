@@ -7,10 +7,18 @@ import { createListRenderer } from './renderers/listRenderer'
 export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
+  private renderSucceedDefault? = false
+
+  constructor() {
+    super()
+    this.renderSucceedDefault = this.rendererOptions.renderSucceed
+  }
 
   onPathsCollected(paths: string[] = []) {
-    if (paths.length === 1)
-      this.rendererOptions.renderSucceed = true
+    if (this.isTTY) {
+      if (!this.renderSucceedDefault)
+        this.rendererOptions.renderSucceed = paths.length <= 1
+    }
   }
 
   async onTestRemoved(trigger?: string) {
