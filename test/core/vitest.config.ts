@@ -19,6 +19,8 @@ export default defineConfig({
     },
   ],
   define: {
+    'process': {},
+    'global': {},
     'import.meta.env.TEST_NAME': '"hello world"',
     'process.env.HELLO_PROCESS': '"hello process"',
     // can reassign

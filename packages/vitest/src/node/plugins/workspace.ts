@@ -10,7 +10,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
-import { resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
@@ -26,37 +26,8 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
       options() {
         this.meta.watchMode = false
       },
-      // TODO: refactor so we don't have the same code here and in plugins/index.ts
       config(viteConfig) {
-        if (viteConfig.define) {
-          delete viteConfig.define['import.meta.vitest']
-          delete viteConfig.define['process.env']
-        }
-
-        const env: Record<string, any> = {}
-
-        for (const key in viteConfig.define) {
-          const val = viteConfig.define[key]
-          let replacement: any
-          try {
-            replacement = typeof val === 'string' ? JSON.parse(val) : val
-          }
-          catch {
-            // probably means it contains reference to some variable,
-            // like this: "__VAR__": "process.env.VAR"
-            continue
-          }
-          if (key.startsWith('import.meta.env.')) {
-            const envKey = key.slice('import.meta.env.'.length)
-            env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (key.startsWith('process.env.')) {
-            const envKey = key.slice('process.env.'.length)
-            env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-        }
+        const env: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
 
