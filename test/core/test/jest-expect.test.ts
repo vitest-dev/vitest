@@ -720,6 +720,25 @@ describe('async expect', () => {
       expect(value).toBe(1)
     })
   })
+
+  it('handle thenable objects', async () => {
+    await expect({ then: (resolve: any) => resolve(0) }).resolves.toBe(0)
+    await expect({ then: (_: any, reject: any) => reject(0) }).rejects.toBe(0)
+
+    try {
+      await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
+    }
+    catch (error) {
+      expect(error).toEqual(new Error('promise resolved "0" instead of rejecting'))
+    }
+
+    try {
+      await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
+    }
+    catch (error) {
+      expect(error).toEqual(new Error('promise rejected "0" instead of resolving'))
+    }
+  })
 })
 
 it('compatible with jest', () => {

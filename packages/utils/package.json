@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -23,6 +23,10 @@
     "./diff": {
       "types": "./dist/diff.d.ts",
       "import": "./dist/diff.js"
+    },
+    "./error": {
+      "types": "./dist/error.d.ts",
+      "import": "./dist/error.js"
     },
     "./helpers": {
       "types": "./dist/helpers.d.ts",

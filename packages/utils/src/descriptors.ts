@@ -23,8 +23,8 @@ export function getConcordanceTheme() {
       value: c.blue,
     },
     diffGutters: {
-      actual: `  ${c.red('-')} `,
-      expected: `  ${c.green('+')} `,
+      actual: `  ${c.green('-')} `,
+      expected: `  ${c.red('+')} `,
       padding: '    ',
     },
     error: {

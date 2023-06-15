@@ -1,4 +1,4 @@
-import type { File, TaskResult, Test } from '@vitest/runner'
+import type { File, TaskResultPack, Test } from '@vitest/runner'
 import { rpc } from './rpc'
 import type { ResolvedConfig } from '#types'
 
@@ -52,7 +52,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
+    onTaskUpdate(task: TaskResultPack[]): Promise<void> {
       return rpc().onTaskUpdate(task)
     }
 

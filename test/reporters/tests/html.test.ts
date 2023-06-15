@@ -1,27 +1,21 @@
 import fs from 'node:fs'
 import zlib from 'node:zlib'
 import { resolve } from 'pathe'
-import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 import { parse } from 'flatted'
+import stripAnsi from 'strip-ansi'
 
-const skip = (process.platform === 'win32' || process.platform === 'darwin') && process.env.CI
+import { runVitest } from '../../test-utils'
 
-describe.skipIf(skip)('html reporter', async () => {
+describe('html reporter', async () => {
   const vitestRoot = resolve(__dirname, '../../..')
   const root = resolve(__dirname, '../fixtures')
 
   it('resolves to "passing" status for test file "all-passing-or-skipped"', async () => {
     const [expected, testFile, basePath] = ['passing', 'all-passing-or-skipped', 'html/all-passing-or-skipped']
-    await execa('npx', ['vitest', 'run', testFile, '--reporter=html', `--outputFile=${basePath}/index.html`], {
-      cwd: root,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-      stdio: 'inherit',
-    }).catch(e => e)
+
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+
     const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
@@ -47,15 +41,9 @@ describe.skipIf(skip)('html reporter', async () => {
 
   it('resolves to "failing" status for test file "json-fail"', async () => {
     const [expected, testFile, basePath] = ['failing', 'json-fail', 'html/fail']
-    await execa('npx', ['vitest', 'run', testFile, '--reporter=html', `--outputFile=${basePath}/index.html`], {
-      cwd: root,
-      env: {
-        ...process.env,
-        CI: 'true',
-        NO_COLOR: 'true',
-      },
-      stdio: 'inherit',
-    }).catch(e => e)
+
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+
     const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
@@ -83,7 +71,7 @@ describe.skipIf(skip)('html reporter', async () => {
     expect(task.logs).toHaveLength(1)
     task.logs[0].taskId = 0
     task.logs[0].time = 0
-    expect(resultJson).toMatchSnapshot(`tests are ${expected}`)
+    expect(resultJson).toMatchSnapshot(`tests are ${stripAnsi(expected)}`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
 })

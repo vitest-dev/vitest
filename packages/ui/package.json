@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -56,7 +56,7 @@
     "sirv": "^2.0.3"
   },
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "^8.0.2",
     "@testing-library/cypress": "^9.0.0",
     "@types/codemirror": "^5.60.7",
     "@types/d3-force": "^3.0.4",
@@ -69,7 +69,7 @@
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^10.1.2",
     "ansi-to-html": "^0.7.2",
-    "birpc": "0.2.11",
+    "birpc": "0.2.12",
     "codemirror": "^5.65.13",
     "codemirror-theme-vars": "^0.1.2",
     "cypress": "^12.11.0",

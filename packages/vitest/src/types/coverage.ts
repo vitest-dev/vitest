@@ -61,13 +61,14 @@ type CoverageReporterWithOptions<ReporterName extends CoverageReporter = Coverag
        : [ReporterName, Partial<ReportOptions[ReporterName]>]
      : never
 
-type Provider = 'c8' | 'istanbul' | 'custom' | undefined
+type Provider = 'c8' | 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
   T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
     T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
-      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
-          ({ provider?: T } & (CoverageC8Options))
+      T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
+        T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+            ({ provider?: T } & (CoverageC8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -77,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'reportsDirectory'
   | 'exclude'
   | 'extension'
+  | 'reportOnFailure'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -208,6 +210,13 @@ export interface BaseCoverageOptions {
    * @default false
    */
   thresholdAutoUpdate?: boolean
+
+  /**
+   * Generate coverage report even when tests fail.
+   *
+   * @default true
+   */
+  reportOnFailure?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -241,6 +250,15 @@ export interface CoverageC8Options extends BaseCoverageOptions {
   */
   src?: string[]
 
+  /**
+   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
+   *
+   * @default false
+   */
+  100?: boolean
+}
+
+export interface CoverageV8Options extends BaseCoverageOptions {
   /**
    * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
    *

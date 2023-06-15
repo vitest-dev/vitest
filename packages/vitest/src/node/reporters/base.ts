@@ -51,11 +51,10 @@ export abstract class BaseReporter implements Reporter {
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
 
-    await this.reportSummary(files)
+    await this.reportSummary(files, errors)
     if (errors.length) {
       if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
         process.exitCode = 1
-      await this.ctx.logger.printUnhandledErrors(errors)
     }
   }
 
@@ -208,15 +207,15 @@ export abstract class BaseReporter implements Reporter {
     )))
   }
 
-  async reportSummary(files: File[]) {
-    await this.printErrorsSummary(files)
+  async reportSummary(files: File[], errors: unknown[]) {
+    await this.printErrorsSummary(files, errors)
     if (this.mode === 'benchmark')
       await this.reportBenchmarkSummary(files)
     else
-      await this.reportTestSummary(files)
+      await this.reportTestSummary(files, errors)
   }
 
-  async reportTestSummary(files: File[]) {
+  async reportTestSummary(files: File[], errors: unknown[]) {
     const tests = getTests(files)
     const logger = this.ctx.logger
 
@@ -262,6 +261,8 @@ export abstract class BaseReporter implements Reporter {
       const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
       logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'))
     }
+    if (errors.length)
+      logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)))
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
@@ -273,7 +274,7 @@ export abstract class BaseReporter implements Reporter {
     logger.log()
   }
 
-  private async printErrorsSummary(files: File[]) {
+  private async printErrorsSummary(files: File[], errors: unknown[]) {
     const logger = this.ctx.logger
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -297,6 +298,10 @@ export abstract class BaseReporter implements Reporter {
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
+    }
+    if (errors.length) {
+      await logger.printUnhandledErrors(errors)
+      logger.error()
     }
     return tests
   }

@@ -4,7 +4,11 @@ title: Coverage | Guide
 
 # Coverage
 
-Vitest supports Native code coverage via [`c8`](https://github.com/bcoe/c8) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
+Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-code-coverage) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
+
+:::info
+The `c8` provider is being replaced by the [`v8`](https://v8.dev/blog/javascript-code-coverage) provider. It will be deprecated in the next major version.
+:::
 
 ## Coverage Providers
 
@@ -12,9 +16,9 @@ Vitest supports Native code coverage via [`c8`](https://github.com/bcoe/c8) and 
 Since Vitest v0.22.0
 :::
 
-Both `c8` and `istanbul` support are optional. By default, `c8` will be used.
+Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 
-You can select the coverage tool by setting `test.coverage.provider` to either `c8` or `istanbul`:
+You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
 
 ```ts
 // vite.config.ts
@@ -23,7 +27,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     coverage: {
-      provider: 'istanbul' // or 'c8'
+      provider: 'istanbul' // or 'v8'
     },
   },
 })
@@ -34,8 +38,8 @@ When you start the Vitest process, it will prompt you to install the correspondi
 Or if you prefer to install them manually:
 
 ```bash
-# For c8
-npm i -D @vitest/coverage-c8
+# For v8
+npm i -D @vitest/coverage-v8
 
 # For istanbul
 npm i -D @vitest/coverage-istanbul
@@ -138,7 +142,7 @@ export default defineConfig({
 
 Both coverage providers have their own ways how to ignore code from coverage reports:
 
-- [`c8`](https://github.com/bcoe/c8#ignoring-uncovered-lines-functions-and-blocks)
+- [`v8`](https://github.com/istanbuljs/v8-to-istanbul#ignoring-uncovered-lines)
 - [`ìstanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
 
 When using TypeScript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
@@ -153,7 +157,7 @@ Beware that these ignore hints may now be included in final production build as 
 if (condition) {
 ```
 
-For `c8` this does not cause any issues. You can use `c8 ignore` comments with Typescript as usual:
+For `v8` this does not cause any issues. You can use `c8 ignore` comments with Typescript as usual:
 
 <!-- eslint-skip -->
 ```ts

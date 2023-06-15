@@ -54,6 +54,15 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
       branches: config['100'] ? 100 : config.branches,
       statements: config['100'] ? 100 : config.statements,
     }
+
+    const banner = ' DEPRECATION '
+    this.ctx.logger.log(
+      c.bgYellow(c.black((banner))),
+      c.yellow('@vitest/coverage-c8 is being replaced by @vitest/coverage-v8.'),
+      c.yellow(`\n${' '.repeat(banner.length)} See`),
+      c.blue(c.underline('https://github.com/vitest-dev/vitest/pull/3339')),
+      c.yellow('for more information.'),
+    )
   }
 
   resolveOptions() {

@@ -37,10 +37,11 @@ export class Typechecker {
     sourceErrors: [],
   }
 
+  private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
-  private process!: ExecaChildProcess
+  private process?: ExecaChildProcess
 
   constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
 
@@ -221,6 +222,14 @@ export class Typechecker {
     this.allowJs = typecheck.allowJs || config.allowJs || false
   }
 
+  public getExitCode() {
+    return this.process?.exitCode != null && this.process.exitCode
+  }
+
+  public getOutput() {
+    return this._output
+  }
+
   public async start() {
     if (!this.tempConfigPath)
       throw new Error('tsconfig was not initialized')
@@ -233,7 +242,7 @@ export class Typechecker {
       args.push('--watch')
     if (typecheck.allowJs)
       args.push('--allowJs', '--checkJs')
-    let output = ''
+    this._output = ''
     const child = execa(typecheck.checker, args, {
       cwd: root,
       stdout: 'pipe',
@@ -243,28 +252,28 @@ export class Typechecker {
     await this._onParseStart?.()
     let rerunTriggered = false
     child.stdout?.on('data', (chunk) => {
-      output += chunk
+      this._output += chunk
       if (!watch)
         return
-      if (output.includes('File change detected') && !rerunTriggered) {
+      if (this._output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
         this._result.sourceErrors = []
         this._result.files = []
         this._tests = null // test structure might've changed
         rerunTriggered = true
       }
-      if (/Found \w+ errors*. Watching for/.test(output)) {
+      if (/Found \w+ errors*. Watching for/.test(this._output)) {
         rerunTriggered = false
-        this.prepareResults(output).then((result) => {
+        this.prepareResults(this._output).then((result) => {
           this._result = result
           this._onParseEnd?.(result)
         })
-        output = ''
+        this._output = ''
       }
     })
     if (!watch) {
       await child
-      this._result = await this.prepareResults(output)
+      this._result = await this.prepareResults(this._output)
       await this._onParseEnd?.(this._result)
     }
   }
@@ -281,6 +290,6 @@ export class Typechecker {
     return Object.values(this._tests || {})
       .map(({ file }) => getTasks(file))
       .flat()
-      .map(i => [i.id, undefined] as TaskResultPack)
+      .map<TaskResultPack>(i => [i.id, undefined, { typecheck: true }])
   }
 }

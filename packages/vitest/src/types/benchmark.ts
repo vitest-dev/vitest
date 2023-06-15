@@ -9,7 +9,7 @@ export interface BenchmarkUserOptions {
   /**
    * Include globs for benchmark test files
    *
-   * @default ['**\/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+   * @default ['**\/*.{bench,benchmark}.?(c|m)[jt]s?(x)']
    */
   include?: string[]
 

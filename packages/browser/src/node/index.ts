@@ -87,9 +87,11 @@ await __vitest_browser_runner__.runTest('${test}', '${version}');
               '@vitest/utils',
             ],
             include: [
-              '@vitest/utils > concordance',
-              '@vitest/utils > loupe',
-              '@vitest/utils > pretty-format',
+              'vitest > concordance',
+              'vitest > loupe',
+              'vitest > pretty-format',
+              'vitest > pretty-format > ansi-styles',
+              'vitest > pretty-format > ansi-regex',
               'vitest > chai',
             ],
           },
@@ -121,9 +123,7 @@ await __vitest_browser_runner__.runTest('${test}', '${version}');
         const hijackESM = project.config.browser.slowHijackESM ?? false
         if (!hijackESM)
           return
-        return injectVitestModule(source, id, this.parse, {
-          cacheDir: project.server.config.cacheDir,
-        })
+        return injectVitestModule(source, id, this.parse)
       },
     },
   ]

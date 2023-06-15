@@ -128,6 +128,10 @@ export default withPwa(defineConfig({
               text: 'Runner API',
               link: '/advanced/runner',
             },
+            {
+              text: 'Task Metadata',
+              link: '/advanced/metadata',
+            },
           ],
         },
       ],
@@ -214,6 +218,10 @@ export default withPwa(defineConfig({
             {
               text: 'Migration Guide',
               link: '/guide/migration',
+            },
+            {
+              text: 'Common Errors',
+              link: '/guide/common-errors',
             },
           ],
         },

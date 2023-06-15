@@ -70,12 +70,17 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
+  enabled: boolean
+}
+
 interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled'> & {
-    enabled: boolean
+  experimentalOptimizer?: {
+    web?: DepsOptimizationOptions
+    ssr?: DepsOptimizationOptions
   }
   /**
    * Externalize means that Vite will bypass the package to native Node.
@@ -116,6 +121,13 @@ interface DepsOptions {
    * @default false
    */
   registerNodeLoader?: boolean
+
+  /**
+   * A list of directories relative to the config file that should be treated as module directories.
+   *
+   * @default ['node_modules']
+   */
+  moduleDirectories?: string[]
 }
 
 export interface InlineConfig {
@@ -134,7 +146,7 @@ export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+   * @default ['**\/*.{test,spec}.?(c|m)[jt]s?(x)']
    */
   include?: string[]
 
@@ -732,7 +744,7 @@ export type ProjectConfig = Omit<
   | 'coverage'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'registerNodeLoader'>
+  deps?: Omit<DepsOptions, 'registerNodeLoader' | 'moduleDirectories'>
 }
 
 export type RuntimeConfig = Pick<

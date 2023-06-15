@@ -1,8 +1,9 @@
 import { rmSync, writeFileSync } from 'node:fs'
 import { afterEach, expect, test } from 'vitest'
 
-import { startWatchMode } from './utils'
+import { runVitestCli } from '../../test-utils'
 
+const cliArgs = ['--root', 'fixtures', '--watch']
 const cleanups: (() => void)[] = []
 
 afterEach(() => {
@@ -10,41 +11,50 @@ afterEach(() => {
 })
 
 test('quit watch mode', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   vitest.write('q')
 
   await vitest.isDone
 })
 
+test('rerun current pattern tests', async () => {
+  const vitest = await runVitestCli(...cliArgs, '-t', 'sum')
+
+  vitest.write('r')
+
+  await vitest.waitForStdout('Test name pattern: /sum/')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('filter by filename', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   vitest.write('p')
 
-  await vitest.waitForOutput('Input filename pattern')
+  await vitest.waitForStdout('Input filename pattern')
 
   vitest.write('math\n')
 
-  await vitest.waitForOutput('Filename pattern: math')
-  await vitest.waitForOutput('1 passed')
+  await vitest.waitForStdout('Filename pattern: math')
+  await vitest.waitForStdout('1 passed')
 })
 
 test('filter by test name', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   vitest.write('t')
 
-  await vitest.waitForOutput('Input test name pattern')
+  await vitest.waitForStdout('Input test name pattern')
 
   vitest.write('sum\n')
 
-  await vitest.waitForOutput('Test name pattern: /sum/')
-  await vitest.waitForOutput('1 passed')
+  await vitest.waitForStdout('Test name pattern: /sum/')
+  await vitest.waitForStdout('1 passed')
 })
 
 test('cancel test run', async () => {
-  const vitest = await startWatchMode()
+  const vitest = await runVitestCli(...cliArgs)
 
   const testPath = 'fixtures/cancel.test.ts'
   const testCase = `// Dynamic test case
@@ -69,13 +79,13 @@ test('2 - test that is cancelled', async () => {
   writeFileSync(testPath, testCase, 'utf8')
 
   // Test case is running, cancel it
-  await vitest.waitForOutput('[cancel-test]: test')
+  await vitest.waitForStdout('[cancel-test]: test')
   vitest.write('c')
 
   // Test hooks should still be called
-  await vitest.waitForOutput('CANCELLED')
-  await vitest.waitForOutput('[cancel-test]: afterAll')
-  await vitest.waitForOutput('[cancel-test]: afterEach')
+  await vitest.waitForStdout('CANCELLED')
+  await vitest.waitForStdout('[cancel-test]: afterAll')
+  await vitest.waitForStdout('[cancel-test]: afterEach')
 
-  expect(vitest.output).not.include('[cancel-test]: should not run')
+  expect(vitest.stdout).not.include('[cancel-test]: should not run')
 })

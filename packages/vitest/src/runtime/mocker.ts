@@ -4,8 +4,8 @@ import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
-import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import { spyOn } from '../integrations/spy'
 import type { VitestExecutor } from './execute'
 
 const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
@@ -39,7 +39,7 @@ function isSpecialProp(prop: Key, parentType: string) {
 }
 
 export class VitestMocker {
-  private static pendingIds: PendingSuiteMock[] = []
+  public static pendingIds: PendingSuiteMock[] = []
   private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
@@ -58,10 +58,18 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private get moduleDirectories() {
+    return this.executor.options.moduleDirectories || []
+  }
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))
       this.moduleCache.delete(mockId)
+  }
+
+  private isAModuleDirectory(path: string) {
+    return this.moduleDirectories.some(dir => path.includes(dir))
   }
 
   public getSuiteFilepath(): string {
@@ -80,10 +88,25 @@ export class VitestMocker {
   }
 
   private async resolvePath(rawId: string, importer: string) {
-    const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
+    let id: string
+    let fsPath: string
+    try {
+      [id, fsPath] = await this.executor.originalResolveUrl(rawId, importer)
+    }
+    catch (error: any) {
+      // it's allowed to mock unresolved modules
+      if (error.code === 'ERR_MODULE_NOT_FOUND') {
+        const { id: unresolvedId } = error[Symbol.for('vitest.error.not_found.data')]
+        id = unresolvedId
+        fsPath = unresolvedId
+      }
+      else {
+        throw error
+      }
+    }
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = (!isAbsolute(fsPath) || fsPath.includes('/node_modules/')) ? rawId : null
+    const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
 
     return {
       id,
@@ -92,7 +115,10 @@ export class VitestMocker {
     }
   }
 
-  private async resolveMocks() {
+  public async resolveMocks() {
+    if (!VitestMocker.pendingIds.length)
+      return
+
     await Promise.all(VitestMocker.pendingIds.map(async (mock) => {
       const { fsPath, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
@@ -267,7 +293,12 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          spyOn(newContainer, property).mockImplementation(() => undefined)
+          const mock = spyOn(newContainer, property).mockImplementation(() => undefined)
+          mock.mockRestore = () => {
+            mock.mockReset()
+            mock.mockImplementation(() => undefined)
+            return mock
+          }
           // tinyspy retains length, but jest doesn't.
           Object.defineProperty(newContainer[property], 'length', { value: 0 })
         }
@@ -340,9 +371,6 @@ export class VitestMocker {
   }
 
   public async requestWithMock(url: string, callstack: string[]) {
-    if (VitestMocker.pendingIds.length)
-      await this.resolveMocks()
-
     const id = this.normalizePath(url)
     const mock = this.getDependencyMock(id)
 

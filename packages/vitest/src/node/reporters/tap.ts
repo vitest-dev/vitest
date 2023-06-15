@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/runner/utils'
+import type { ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'

@@ -1,4 +1,5 @@
 import type { Browser } from 'webdriverio'
+import type { Awaitable } from '@vitest/utils'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { WorkspaceProject } from '../workspace'
@@ -72,6 +73,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   async openPage(url: string) {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
+  }
+
+  // TODO
+  catchError(_cb: (error: Error) => Awaitable<void>) {
+    return () => {}
   }
 
   async close() {

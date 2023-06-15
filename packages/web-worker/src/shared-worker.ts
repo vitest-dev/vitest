@@ -110,7 +110,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
         debug('initialize shared worker %s', this._vw_name)
 
-        runner.executeFile(fsPath).then(() => {
+        return runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
           runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
           this._vw_workerTarget.dispatchEvent(
@@ -119,17 +119,17 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
             }),
           )
           debug('shared worker %s successfully initialized', this._vw_name)
-        }).catch((e) => {
-          debug('shared worker %s failed to initialize: %o', this._vw_name, e)
-          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-          const error = new EventConstructor('error', {
-            error: e,
-            message: e.message,
-          })
-          this.dispatchEvent(error)
-          this.onerror?.(error)
-          console.error(e)
         })
+      }).catch((e) => {
+        debug('shared worker %s failed to initialize: %o', this._vw_name, e)
+        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+        const error = new EventConstructor('error', {
+          error: e,
+          message: e.message,
+        })
+        this.dispatchEvent(error)
+        this.onerror?.(error)
+        console.error(e)
       })
     }
   }

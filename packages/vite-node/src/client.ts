@@ -58,10 +58,10 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Assign partial data to the map
    */
-  update(fsPath: string, mod: Partial<ModuleCache>) {
+  update(fsPath: string, mod: ModuleCache) {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath))
-      super.set(fsPath, mod)
+      this.setByModuleId(fsPath, mod)
     else
       Object.assign(super.get(fsPath) as ModuleCache, mod)
     return this
@@ -75,13 +75,21 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this.setByModuleId(this.normalizePath(fsPath), mod)
   }
 
-  getByModuleId(modulePath: string): ModuleCache {
+  getByModuleId(modulePath: string) {
     if (!super.has(modulePath))
-      super.set(modulePath, {})
-    return super.get(modulePath)!
+      this.setByModuleId(modulePath, {})
+
+    const mod = super.get(modulePath)!
+    if (!mod.imports) {
+      Object.assign(mod, {
+        imports: new Set(),
+        importers: new Set(),
+      })
+    }
+    return mod as ModuleCache & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
-  get(fsPath: string): ModuleCache {
+  get(fsPath: string) {
     return this.getByModuleId(this.normalizePath(fsPath))
   }
 
@@ -98,6 +106,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     delete mod.resolving
     delete mod.promise
     delete mod.exports
+    mod.importers?.clear()
+    mod.imports?.clear()
     return true
   }
 
@@ -184,16 +194,15 @@ export class ViteNodeRunner {
     const importee = callstack[callstack.length - 1]
 
     const mod = this.moduleCache.get(fsPath)
+    const { imports, importers } = mod
 
-    if (!mod.importers)
-      mod.importers = new Set()
     if (importee)
-      mod.importers.add(importee)
+      importers.add(importee)
 
     const getStack = () => `stack:\n${[...callstack, fsPath].reverse().map(p => `  - ${p}`).join('\n')}`
 
     // check circular dependency
-    if (callstack.includes(fsPath) || callstack.some(c => this.moduleCache.get(c).importers?.has(fsPath))) {
+    if (callstack.includes(fsPath) || Array.from(imports.values()).some(i => importers.has(i))) {
       if (mod.exports)
         return mod.exports
     }
@@ -219,27 +228,35 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string) {
-    return !isInternalRequest(id) && !isNodeBuiltin(id)
+    return !isInternalRequest(id) && !isNodeBuiltin(id) && !id.startsWith('data:')
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
     // should be checked before normalization, because it removes this prefix
+    // TODO: this is a hack, we should find a better way to handle this
     if (importer && id.startsWith(VALID_ID_PREFIX))
       importer = undefined
-    id = normalizeRequestId(id, this.options.base)
-    if (!this.shouldResolveId(id))
-      return [id, id]
-    const { path, exists } = toFilePath(id, this.root)
+    const dep = normalizeRequestId(id, this.options.base)
+    if (!this.shouldResolveId(dep))
+      return [dep, dep]
+    const { path, exists } = toFilePath(dep, this.root)
     if (!this.options.resolveId || exists)
-      return [id, path]
-    const resolved = await this.options.resolveId(id, importer)
-    const resolvedId = resolved
-      ? normalizeRequestId(resolved.id, this.options.base)
-      : id
-    // to be compatible with dependencies that do not resolve id
-    const fsPath = resolved ? resolvedId : path
-    return [resolvedId, fsPath]
+      return [dep, path]
+    const resolved = await this.options.resolveId(dep, importer)
+    // TODO: we need to better handle module resolution when different urls point to the same module
+    // if (!resolved) {
+    //   const error = new Error(
+    //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+    //     + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
+    //     + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+    //   )
+    //   Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+    //   Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
+    //   throw error
+    // }
+    const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
+    return [resolvedId, resolvedId]
   }
 
   async resolveUrl(id: string, importee?: string) {
@@ -267,7 +284,11 @@ export class ViteNodeRunner {
     const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
-      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
+      const [id, depFsPath] = await this.resolveUrl(String(dep), fsPath)
+      const depMod = this.moduleCache.getByModuleId(depFsPath)
+      depMod.importers.add(moduleId)
+      mod.imports.add(depFsPath)
+
       return this.dependencyRequest(id, depFsPath, callstack)
     }
 
@@ -309,7 +330,7 @@ export class ViteNodeRunner {
       set: (_, p, value) => {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
-        if (p === 'default' && this.shouldInterop(modulePath, { default: value })) {
+        if (p === 'default' && this.shouldInterop(modulePath, { default: value }) && cjsExports !== value) {
           exportAll(cjsExports, value)
           exports.default = value
           return true

@@ -12,6 +12,7 @@ export interface BrowserProvider {
   initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
   isOpen(): boolean
   openPage(url: string): Awaitable<void>
+  catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
   close(): Awaitable<void>
 }
 
@@ -21,7 +22,7 @@ export interface BrowserProviderModule {
 
 export interface BrowserConfigOptions {
   /**
-   * if running tests in the broweser should be the default
+   * if running tests in the browser should be the default
    *
    * @default false
    */
