@@ -234,26 +234,28 @@ export class ViteNodeRunner {
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
     // should be checked before normalization, because it removes this prefix
+    // TODO: this is a hack, we should find a better way to handle this
     if (importer && id.startsWith(VALID_ID_PREFIX))
       importer = undefined
-    id = normalizeRequestId(id, this.options.base)
-    if (!this.shouldResolveId(id))
-      return [id, id]
-    const { path, exists } = toFilePath(id, this.root)
+    const dep = normalizeRequestId(id, this.options.base)
+    if (!this.shouldResolveId(dep))
+      return [dep, dep]
+    const { path, exists } = toFilePath(dep, this.root)
     if (!this.options.resolveId || exists)
-      return [id, path]
-    const resolved = await this.options.resolveId(id, importer)
-    if (!resolved) {
-      const error = new Error(
-        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
-        + '\n\n- If you rely on tsconfig.json to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-        + '\n - Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
-      )
-      Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
-      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id, importer }, enumerable: false })
-      throw error
-    }
-    const resolvedId = normalizeRequestId(resolved.id, this.options.base)
+      return [dep, path]
+    const resolved = await this.options.resolveId(dep, importer)
+    // TODO: we need to better handle module resolution when different urls point to the same module
+    // if (!resolved) {
+    //   const error = new Error(
+    //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+    //     + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
+    //     + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+    //   )
+    //   Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+    //   Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
+    //   throw error
+    // }
+    const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
     return [resolvedId, resolvedId]
   }
 
@@ -282,7 +284,7 @@ export class ViteNodeRunner {
     const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
-      const [id, depFsPath] = await this.resolveUrl(`${dep}`, fsPath)
+      const [id, depFsPath] = await this.resolveUrl(String(dep), fsPath)
       const depMod = this.moduleCache.getByModuleId(depFsPath)
       depMod.importers.add(moduleId)
       mod.imports.add(depFsPath)
