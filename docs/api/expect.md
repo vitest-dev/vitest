@@ -34,7 +34,7 @@ type Awaitable<T> = T | PromiseLike<T>
 `expect.soft` functions similarly to `expect`, but instead of terminating the test execution upon a failed assertion, it continues running and marks the failure as a test failure. All errors encountered during the test will be displayed until the test is completed.
 
   ```ts
-  import { expect } from 'vitest'
+  import { expect, test } from 'vitest'
 
   test('expect.soft test', () => {
     expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
@@ -43,10 +43,10 @@ type Awaitable<T> = T | PromiseLike<T>
   // At the end of the test, the above errors will be output.
   ```
   
-  it can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
+  It can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
 
   ```ts
-  import { expect } from 'vitest'
+  import { expect, test } from 'vitest'
 
   test('expect.soft test', () => {
     expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
@@ -56,7 +56,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```
   
 ::: warning
-`expect.soft` only supported run inside the [test](/api/#test) function.
+`expect.soft` can only be used inside the [`test`](/api/#test) function.
 :::
 
 ## not
