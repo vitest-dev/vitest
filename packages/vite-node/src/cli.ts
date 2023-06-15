@@ -51,7 +51,6 @@ export interface CliOptions {
 }
 
 async function run(files: string[], options: CliOptions = {}) {
-  // console.log('run', files, options)
   if (options.script) {
     files = [files[0]]
     options = {}
