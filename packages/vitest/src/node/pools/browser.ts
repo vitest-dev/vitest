@@ -32,6 +32,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
 
+    // eslint-disable-next-line unused-imports/no-unused-vars
     let isCancelled = false
     project.ctx.onCancel(() => {
       isCancelled = true
@@ -43,6 +44,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
     const paths = files.map(file => relative(project.config.root, file))
 
+    // TODO@browser: review this
     // const isolate = project.config.isolate
     /* if (isolate) {
       for (const path of paths) {

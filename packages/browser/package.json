@@ -51,8 +51,8 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "flatted": "^3.2.7",
     "estree-walker": "^3.0.3",
+    "flatted": "^3.2.7",
     "periscopic": "^3.1.0",
     "rollup": "3.20.2",
     "vitest": "workspace:*"

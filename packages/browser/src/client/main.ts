@@ -63,6 +63,7 @@ ws.addEventListener('message', async (data) => {
   // tests done with examples/vue folder
   // TODO: review what's happening here, just move the guard to allow load config
   if (event === 'run'/* && paths?.length */) {
+    // eslint-disable-next-line no-console
     console.log(paths)
     const config: ResolvedConfig = await loadConfig()
 
@@ -70,6 +71,7 @@ ws.addEventListener('message', async (data) => {
       return
 
     const waitingPaths = normalizePaths(config, paths)
+    // eslint-disable-next-line no-console
     console.log(paths, waitingPaths)
     await runTests(paths, config!, async (e) => {
       if (e.data.type === 'hide') {
@@ -78,19 +80,23 @@ ws.addEventListener('message', async (data) => {
       }
 
       if (e.data.type === 'done') {
+        // eslint-disable-next-line no-console
         console.log('done', e.data.filename, e.data.version)
         const filename = e.data.filename
         if (!filename)
           return
 
+        // eslint-disable-next-line no-console
         console.log('done received', filename)
         const idx = waitingPaths.indexOf(filename)
         if (idx === -1)
           return
 
+        // eslint-disable-next-line no-console
         console.log('done1', filename, waitingPaths)
         waitingPaths.splice(idx, 1)
 
+        // eslint-disable-next-line no-console
         console.log('done2', filename, waitingPaths)
         if (!waitingPaths.length) {
           await rpcDone()
