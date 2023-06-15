@@ -184,8 +184,9 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   ))
 }
 
-export function displayDiff(diff: string, console: Console) {
-  console.error(`\n${diff}\n`)
+export function displayDiff(diff: string | null, console: Console) {
+  if (diff)
+    console.error(`\n${diff}\n`)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {

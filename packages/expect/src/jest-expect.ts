@@ -356,10 +356,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
     if (spy.mock.calls) {
-      msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-        let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+      msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
+        let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
         if (actualCall)
-          methodCall += diff(actualCall, callArg, { showLegend: false })
+          methodCall += diff(actualCall, callArg, { omitAnnotationLines: true })
         else
           methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -371,10 +371,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return msg
   }
   const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
-    msg += c().gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
-      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
+    msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
+      let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
-        methodCall += diff(actualReturn, callReturn.value, { showLegend: false })
+        methodCall += diff(actualReturn, callReturn.value, { omitAnnotationLines: true })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 

@@ -9,7 +9,7 @@ import pkg from './package.json' assert { type: 'json' }
 const entries = {
   index: 'src/index.ts',
   helpers: 'src/helpers.ts',
-  diff: 'src/diff.ts',
+  diff: 'src/diff/index.ts',
   error: 'src/error.ts',
   types: 'src/types.ts',
 }
