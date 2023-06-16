@@ -269,7 +269,7 @@ function createTest(fn: (
 }
 
 function formatName(name: string | Function) {
-  return typeof name === 'string' ? name : name instanceof Function ? name.name : String(name)
+  return typeof name === 'string' ? name : name instanceof Function ? (name.name || '<anonymous>') : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
