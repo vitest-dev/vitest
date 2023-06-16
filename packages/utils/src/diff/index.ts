@@ -62,7 +62,7 @@ const FALLBACK_FORMAT_OPTIONS = {
 
 export function diff(a: any, b: any, options?: DiffOptions): string | null {
   if (Object.is(a, b))
-    return getCommonMessage(NO_DIFF_MESSAGE, options)
+    return ''
 
   const aType = getType(a)
   let expectedType = aType
@@ -82,8 +82,15 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
     omitDifference = expectedType === 'string'
   }
 
-  if (expectedType !== getType(b))
-    return ''
+  if (expectedType !== getType(b)) {
+    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator } = normalizeDiffOptions(options)
+    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
+    const aDisplay = prettyFormat(a, formatOptions)
+    const bDisplay = prettyFormat(b, formatOptions)
+    const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
+    const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
+    return `${aDiff}\n\n${bDiff}`
+  }
 
   if (omitDifference)
     return null
@@ -111,7 +118,7 @@ function comparePrimitive(
   const aFormat = prettyFormat(a, FORMAT_OPTIONS)
   const bFormat = prettyFormat(b, FORMAT_OPTIONS)
   return aFormat === bFormat
-    ? getCommonMessage(NO_DIFF_MESSAGE, options)
+    ? ''
     : diffLinesUnified(aFormat.split('\n'), bFormat.split('\n'), options)
 }
 

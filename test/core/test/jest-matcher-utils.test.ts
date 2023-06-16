@@ -17,6 +17,6 @@ describe('jest-matcher-utils', () => {
     expect(() => {
       // @ts-expect-error "toBeJestEqual" is a custom matcher we just created
       expect('a').toBeJestEqual('b')
-    }).toThrowError(/- 'b'.*\+ 'a'/ms)
+    }).toThrowError(/- b.*\+ a/ms)
   })
 })
