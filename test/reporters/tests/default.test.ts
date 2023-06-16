@@ -31,7 +31,6 @@ describe('default reporter', async () => {
 
   test('rerun should undo', async () => {
     const vitest = await run([], true, '-t', 'passed')
-    await vitest.waitForStdout('help')
 
     // one file
     vitest.write('p')
