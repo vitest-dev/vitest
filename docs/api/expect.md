@@ -1158,6 +1158,8 @@ If the value in the error message is too truncated, you can increase [chaiConfig
     }
     catch (err: any) {
       expect(err.message).toBe('Oops')
+      expect(err).toBeInstanceOf(Error)
+      expect(err.stack).toContain('throwError')
     }
   })
   ```
