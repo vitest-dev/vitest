@@ -30,6 +30,7 @@ export const config: UserConfig = {
     Vue({
       script: {
         defineModel: true,
+        propsDestructure: true,
       },
     }),
     Unocss({

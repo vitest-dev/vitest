@@ -22,12 +22,14 @@ function updateSnapshot() {
   return client.rpc.updateSnapshot()
 }
 
+const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
+
 function onItemClick(task: Task) {
   activeFileId.value = task.id
   currentModule.value = findById(task.id)
   showDashboard(false)
 }
-const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
+
 async function onRunAll(files?: File[]) {
   if (coverageEnabled.value) {
     disableCoverage.value = true

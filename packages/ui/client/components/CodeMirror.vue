@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
-import { useCodeMirror } from '../composables/codemirror'
 
-const props = defineProps<{
+const { mode, readOnly } = defineProps<{
   mode?: string
   readOnly?: boolean
 }>()
@@ -37,10 +36,9 @@ defineExpose({ cm })
 
 onMounted(async () => {
   cm.value = useCodeMirror(el, modelValue as unknown as Ref<string>, {
-    ...props,
     ...attrs,
-    mode: modeMap[props.mode || ''] || props.mode,
-    readOnly: props.readOnly ? true : undefined,
+    mode: modeMap[mode || ''] || mode,
+    readOnly: readOnly ? true : undefined,
     extraKeys: {
       'Cmd-S': function (cm) {
         emit('save', cm.getValue())

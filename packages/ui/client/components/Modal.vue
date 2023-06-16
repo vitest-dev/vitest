@@ -1,14 +1,12 @@
 <script setup lang='ts'>
-const props = withDefaults(defineProps<{
+const { direction = 'bottom' } = defineProps<{
   direction?: string
-}>(), {
-  direction: 'bottom',
-})
+}>()
 
 const modelValue = defineModel<boolean>({ default: false })
 
 const positionClass = computed(() => {
-  switch (props.direction) {
+  switch (direction) {
     case 'bottom':
       return 'bottom-0 left-0 right-0 border-t'
     case 'top':
@@ -23,7 +21,7 @@ const positionClass = computed(() => {
 })
 
 const transform = computed(() => {
-  switch (props.direction) {
+  switch (direction) {
     case 'bottom':
       return 'translateY(100%)'
     case 'top':
