@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -47,7 +47,7 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "concordance": "^5.0.4",
+    "diff-sequences": "^29.4.3",
     "loupe": "^2.3.6",
     "pretty-format": "^27.5.1"
   }

@@ -171,7 +171,7 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
     deps: {
       inline: [
         ${c.yellow(c.bold(`"${name}"`))}
-      }
+      ]
     }
   }
 }\n`)))
@@ -184,13 +184,20 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   ))
 }
 
-export function displayDiff(diff: string, console: Console) {
-  console.error(`\n${diff}\n`)
+export function displayDiff(diff: string | null, console: Console) {
+  if (diff)
+    console.error(`\n${diff}\n`)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  if (error.message.length > 5000) {
+    // Protect against infinite stack trace in picocolors
+    logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
+  }
+  else {
+    logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  }
 }
 
 function printStack(

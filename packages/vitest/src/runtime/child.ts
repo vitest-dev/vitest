@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
