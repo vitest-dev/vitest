@@ -1140,26 +1140,41 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 
 - **Type:** `(message?: string) => never`
 
-  This method is used to assert that a line should never be reached.
+  This method is used to asserting that a line should never be reached.
 
-  For example, if you want to test a function that should throw an error, we can add this assertion after the function call.
+  For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
 
   ```ts
   import { expect, test } from 'vitest'
 
-  function throwError() {
-    throw new Error('Oops')
+  async function build(dir: string) {
+    if (dir.includes('no-src'))
+      throw new Error(`${dir}/src does not exist`)
   }
 
-  test('throwError throws an error with a message', () => {
+  const errorDirs = [
+    'no-src-folder',
+    // ...
+  ]
+
+  test.each(errorDirs)('build fails with "%s"', async (dir) => {
     try {
-      throwError()
-      expect.unreachable('I will not run')
+      await build(dir)
+      expect.unreachable('Should not pass build')
     }
     catch (err: any) {
-      expect(err.message).toBe('Oops')
       expect(err).toBeInstanceOf(Error)
-      expect(err.stack).toContain('throwError')
+      expect(err.stack).toContain('build')
+
+      switch (dir) {
+        case 'no-src-folder':
+          expect(err.message).toBe(`${dir}/src does not exist`)
+          break
+        default:
+          // to exhaust all error tests
+          expect.unreachable('All error test must be handled')
+          break
+      }
     }
   })
   ```
