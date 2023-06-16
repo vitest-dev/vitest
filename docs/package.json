@@ -1,7 +1,7 @@
 {
   "name": "docs",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
     "build": "nr prefetch && vitepress build",
