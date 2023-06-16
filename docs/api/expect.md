@@ -1147,13 +1147,13 @@ If the value in the error message is too truncated, you can increase [chaiConfig
   ```ts
   import { expect, test } from 'vitest'
 
-  function throwError(msg: string) {
-    throw new Error(msg)
+  function throwError() {
+    throw new Error('Oops')
   }
 
-  test('throwError throws an error with message', () => {
+  test('throwError throws an error with a message', () => {
     try {
-      throwError('Oops')
+      throwError()
       expect.unreachable('I will not run')
     }
     catch (err: any) {
