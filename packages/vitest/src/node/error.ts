@@ -190,7 +190,13 @@ export function displayDiff(diff: string, console: Console) {
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  if (error.message.length > 5000) {
+    // Protect against infinite stack trace in picocolors
+    logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
+  }
+  else {
+    logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  }
 }
 
 function printStack(

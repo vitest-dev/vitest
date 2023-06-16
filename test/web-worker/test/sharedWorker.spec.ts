@@ -50,7 +50,7 @@ it('throws an error on invalid path', async () => {
   })
   expect(event).toBeInstanceOf(ErrorEvent)
   expect(event.error).toBeInstanceOf(Error)
-  expect(event.error.message).toContain('Cannot find module')
+  expect(event.error.message).toContain('Failed to load')
 })
 
 it('doesn\'t trigger events, if closed', async () => {
