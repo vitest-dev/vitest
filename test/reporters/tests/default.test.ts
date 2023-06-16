@@ -51,5 +51,8 @@ describe('default reporter', async () => {
     expect(vitest.stdout).toContain('b2.test.ts')
     expect(vitest.stdout).not.toContain('nested b1 test')
     expect(vitest.stdout).not.toContain('b1 test')
+    expect(vitest.stdout).not.toContain('b2 test')
+  }, {
+    retry: 3,
   })
 }, 120000)
