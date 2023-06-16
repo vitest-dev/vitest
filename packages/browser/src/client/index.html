@@ -33,10 +33,11 @@
         if (module instanceof Promise) {
           moduleCache.set(module, { promise: module, evaluated: false })
           return module
-            .then(m => m.__vi_inject__)
+            // TODO: add a test
+            .then(m => '__vi_inject__' in m ? m.__vi_inject__ : m)
             .finally(() => moduleCache.delete(module))
         }
-        return module.__vi_inject__
+        return '__vi_inject__' in module ? module.__vi_inject__ : module
       }
 
       function exportAll(exports, sourceModule) {
