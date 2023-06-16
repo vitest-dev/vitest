@@ -42,7 +42,7 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   // At the end of the test, the above errors will be output.
   ```
-  
+
   It can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
 
   ```ts
@@ -54,7 +54,7 @@ type Awaitable<T> = T | PromiseLike<T>
     expect.soft(1 + 2).toBe(4) // do not run
   })
   ```
-  
+
 ::: warning
 `expect.soft` can only be used inside the [`test`](/api/#test) function.
 :::
@@ -1133,6 +1133,32 @@ If the value in the error message is too truncated, you can increase [chaiConfig
     // if not awaited, test will fail
     // if you don't have expect.hasAssertions(), test will pass
     await select(3)
+  })
+  ```
+
+## expect.unreachable
+
+- **Type:** `(message?: string) => never`
+
+  This method is used to assert that a line should never be reached.
+
+  For example, if you want to test a function that should throw an error, we can add this assertion after the function call.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  function throwError(msg: string) {
+    throw new Error(msg)
+  }
+
+  test('throwError throws an error with message', () => {
+    try {
+      throwError('Oops')
+      expect.unreachable('I will not run')
+    }
+    catch (err: any) {
+      expect(err.message).toBe('Oops')
+    }
   })
   ```
 
