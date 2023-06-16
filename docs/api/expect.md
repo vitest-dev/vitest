@@ -1147,7 +1147,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
   ```ts
   import { expect, test } from 'vitest'
 
-  async function build(dir: string) {
+  async function build(dir) {
     if (dir.includes('no-src'))
       throw new Error(`${dir}/src does not exist`)
   }
