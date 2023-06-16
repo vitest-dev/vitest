@@ -1,7 +1,9 @@
 import {
   getSafeTimers,
 } from '@vitest/utils'
+import type { BirpcReturn } from 'birpc'
 import { getWorkerState } from '../utils/global'
+import type { RuntimeRPC } from '#types'
 
 const { get } = Reflect
 const safeRandom = Math.random
@@ -48,7 +50,7 @@ export async function rpcDone() {
   return Promise.all(awaitable)
 }
 
-export function rpc() {
+export function rpc(): BirpcReturn<RuntimeRPC> {
   const { rpc } = getWorkerState()
   return new Proxy(rpc, {
     get(target, p, handler) {

@@ -39,7 +39,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
 }
 
-export const fakeTimersDefaults = {
+export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
   toFake: [
@@ -51,9 +51,9 @@ export const fakeTimersDefaults = {
     'clearImmediate',
     'Date',
   ],
-} as NonNullable<UserConfig['fakeTimers']>
+}
 
-const config = {
+const config: UserConfig = {
   allowOnly: !isCI,
   watch: !isCI,
   globals: false,
@@ -96,4 +96,4 @@ const config = {
   slowTestThreshold: 300,
 }
 
-export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
+export const configDefaults = Object.freeze(config as Required<UserConfig>)

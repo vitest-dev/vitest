@@ -5,6 +5,7 @@ import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = defineProps<{
   tasks: Task[]
   indent?: number
