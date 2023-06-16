@@ -45,11 +45,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "error": {
               "actual": "2",
               "constructor": "Function<AssertionError>",
-              "diff": "  - Expected  - 1
-  + Received  + 1
+              "diff": "- Expected
++ Received
 
-  - 1
-  + 2",
+- 2
++ 1",
               "expected": "1",
               "message": "expected 2 to deeply equal 1",
               "name": "AssertionError",
@@ -65,11 +65,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               {
                 "actual": "2",
                 "constructor": "Function<AssertionError>",
-                "diff": "  - Expected  - 1
-  + Received  + 1
+                "diff": "- Expected
++ Received
 
-  - 1
-  + 2",
+- 2
++ 1",
                 "expected": "1",
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
