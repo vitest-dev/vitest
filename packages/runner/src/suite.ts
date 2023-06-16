@@ -265,7 +265,7 @@ function createTest(fn: (
   testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
-  testFn.extend = function<T extends Record<string, any>>(fixtures: Fixtures<T>) {
+  testFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
     const _context = context
       ? { ...context, fixtures: { ...context.fixtures, ...fixtures } }
       : { fixtures }
