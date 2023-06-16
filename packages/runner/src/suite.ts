@@ -67,14 +67,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       options = { timeout: options }
 
     // inherit repeats, retry, timeout from suite
-    if (typeof suiteOptions === 'object') {
-      options = {
-        repeats: suiteOptions.repeats,
-        retry: suiteOptions.retry,
-        timeout: suiteOptions.timeout,
-        ...options,
-      }
-    }
+    if (typeof suiteOptions === 'object')
+      options = Object.assign({}, suiteOptions, options)
 
     const test: Test = {
       id: '',
@@ -289,7 +283,7 @@ function createTest(fn: (
 }
 
 function formatName(name: string | Function) {
-  return typeof name === 'string' ? name : name instanceof Function ? name.name : String(name)
+  return typeof name === 'string' ? name : name instanceof Function ? (name.name || '<anonymous>') : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {

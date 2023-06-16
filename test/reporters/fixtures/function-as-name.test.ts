@@ -15,6 +15,18 @@ describe(Bar, () => {
   })
 })
 
+describe(() => {}, () => {
+  test(foo, () => {
+    expect(0).toBe(0)
+  })
+})
+
+describe(foo, () => {
+  test(() => {}, () => {
+    expect(0).toBe(0)
+  })
+})
+
 describe.each([1])(foo, () => {
   test.each([1])(foo, () => {
     expect(0).toBe(0)
