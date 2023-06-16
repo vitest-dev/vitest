@@ -37,6 +37,7 @@ describe('default reporter', async () => {
     vitest.write('p')
     await vitest.waitForStdout('Input filename pattern')
     vitest.write('a\n')
+    await vitest.waitForStdout('Filename pattern: a')
     await vitest.waitForStdout('Waiting for file changes')
     expect(vitest.stdout).contain('✓ a1 test')
     expect(vitest.stdout).contain('✓ nested a3 test')
@@ -46,13 +47,12 @@ describe('default reporter', async () => {
     await vitest.waitForStdout('Input filename pattern')
     vitest.write('b\n')
     await vitest.waitForStdout('Waiting for file changes')
+    await vitest.waitForStdout('Filename pattern: b')
     expect(vitest.stdout).toContain('RERUN')
     expect(vitest.stdout).toContain('b1.test.ts')
     expect(vitest.stdout).toContain('b2.test.ts')
     expect(vitest.stdout).not.toContain('nested b1 test')
     expect(vitest.stdout).not.toContain('b1 test')
     expect(vitest.stdout).not.toContain('b2 test')
-  }, {
-    retry: 3,
   })
 }, 120000)
