@@ -17,6 +17,8 @@ export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
 
 export type Tester = (a: any, b: any) => boolean | undefined
 
+export type { DiffOptions } from '@vitest/utils/diff'
+
 export interface MatcherHintOptions {
   comment?: string
   expectedColor?: Formatter
@@ -26,29 +28,6 @@ export interface MatcherHintOptions {
   receivedColor?: Formatter
   secondArgument?: string
   secondArgumentColor?: Formatter
-}
-
-export interface DiffOptions {
-  aAnnotation?: string
-  aColor?: Formatter
-  aIndicator?: string
-  bAnnotation?: string
-  bColor?: Formatter
-  bIndicator?: string
-  changeColor?: Formatter
-  changeLineTrailingSpaceColor?: Formatter
-  commonColor?: Formatter
-  commonIndicator?: string
-  commonLineTrailingSpaceColor?: Formatter
-  contextLines?: number
-  emptyFirstOrLastLinePlaceholder?: string
-  expand?: boolean
-  includeChangeCounts?: boolean
-  omitAnnotationLines?: boolean
-  patchColor?: Formatter
-  // pretty-format type
-  compareKeys?: any
-  showLegend?: boolean
 }
 
 export interface MatcherState {
