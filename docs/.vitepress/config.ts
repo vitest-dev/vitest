@@ -21,7 +21,6 @@ export default withPwa(defineConfig({
   lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
-  srcExclude: ['README.md', 'CONTRIBUTING.md'],
   locales: {
     root: {
       label: 'English',
