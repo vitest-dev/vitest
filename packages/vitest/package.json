@@ -146,7 +146,6 @@
     "acorn-walk": "^8.2.0",
     "cac": "^6.7.14",
     "chai": "^4.3.7",
-    "concordance": "^5.0.4",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.3",
     "magic-string": "^0.30.0",
