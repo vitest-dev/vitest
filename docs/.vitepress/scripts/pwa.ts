@@ -55,6 +55,10 @@ export const pwa: PwaOptions = {
       type: 'image/png',
       label: `Screenshot of ${vitestName}`,
     }],
+    handle_links: 'preferred',
+    launch_handler: {
+      client_mode: ['navigate-existing', 'auto'],
+    },
     edge_side_panel: {
       preferred_width: 480,
     },
