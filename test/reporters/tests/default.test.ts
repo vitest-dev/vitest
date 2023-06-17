@@ -47,6 +47,28 @@ describe('default reporter', async () => {
     vitest.write('b\n')
     await vitest.waitForStdout('Waiting for file changes')
     await vitest.waitForStdout('Filename pattern: b')
+    expect(
+      vitest.stdout
+        .replace(/Start\sat.+\n?/, '')
+        .replace(/Duration.+\n?/, ''),
+    ).toMatchInlineSnapshot(`
+      "? Input filename pattern › b✔ Input filename pattern … b
+
+       RERUN  ../../change filename pattern
+              Filename pattern: b
+              Test name pattern: /passed/
+
+       ✓ b1.test.ts (13)
+       ✓ b2.test.ts (13)
+
+       Test Files  2 passed (2)
+            Tests  12 passed | 14 skipped (26)
+            
+
+       PASS  Waiting for file changes...
+             press h to show help, press q to quit
+      "
+    `)
     expect(vitest.stdout).toContain('RERUN')
     expect(vitest.stdout).toContain('b1.test.ts')
     expect(vitest.stdout).toContain('b2.test.ts')
