@@ -49,6 +49,11 @@ interface SequenceOptions {
    */
   shuffle?: boolean
   /**
+   * Should tests run in parallel.
+   * @default false
+   */
+  concurrent?: boolean
+  /**
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
    * - 'list' will run all setup files in the order they are defined in the config file
@@ -703,6 +708,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
     shuffle?: boolean
+    concurrent?: boolean
     seed: number
   }
 

@@ -1308,6 +1308,14 @@ If you want tests to run randomly, you can enable it with this option, or CLI ar
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 
+#### sequence.concurrent
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
+
+If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
+
 #### sequence.seed<NonProjectOption />
 
 - **Type**: `number`
