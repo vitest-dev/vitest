@@ -78,7 +78,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-      retry: options?.retry,
+      retry: options?.retry ?? runner.config.retry,
       repeats: options?.repeats,
       meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
