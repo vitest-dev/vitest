@@ -1,7 +1,6 @@
-import type { DiffOptions } from './diff'
-import { unifiedDiff } from './diff'
+import { diff } from './diff'
 import { format } from './display'
-import { deepClone, getOwnProperties, getType } from './helpers'
+import { getOwnProperties, getType } from './helpers'
 import { stringify } from './stringify'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
@@ -87,7 +86,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__vite_ssr_import_\d+__\./g, '')
 }
 
-export function processError(err: any, options: DiffOptions = {}) {
+export function processError(err: any) {
   if (!err || typeof err !== 'object')
     return { message: err }
   // stack is not serialized in worker communication
@@ -97,13 +96,8 @@ export function processError(err: any, options: DiffOptions = {}) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  const clonedActual = deepClone(err.actual, { forceWritable: true })
-  const clonedExpected = deepClone(err.expected, { forceWritable: true })
-
-  const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
-
   if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined))
-    err.diff = unifiedDiff(replacedActual, replacedExpected, options)
+    err.diff = diff(err.actual, err.expected)
 
   if (typeof err.expected !== 'string')
     err.expected = stringify(err.expected, 10)

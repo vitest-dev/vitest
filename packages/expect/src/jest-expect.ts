@@ -186,6 +186,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       'expected #{this} to be truthy',
       'expected #{this} to not be truthy',
       obj,
+      false,
     )
   })
   def('toBeFalsy', function () {
@@ -195,6 +196,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       'expected #{this} to be falsy',
       'expected #{this} to not be falsy',
       obj,
+      false,
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
@@ -207,6 +209,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected ${actual} to be not greater than ${expected}`,
       actual,
       expected,
+      false,
     )
   })
   def('toBeGreaterThanOrEqual', function (expected: number | bigint) {
@@ -219,6 +222,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected ${actual} to be not greater than or equal to ${expected}`,
       actual,
       expected,
+      false,
     )
   })
   def('toBeLessThan', function (expected: number | bigint) {
@@ -231,6 +235,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected ${actual} to be not less than ${expected}`,
       actual,
       expected,
+      false,
     )
   })
   def('toBeLessThanOrEqual', function (expected: number | bigint) {
@@ -243,6 +248,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected ${actual} to be not less than or equal to ${expected}`,
       actual,
       expected,
+      false,
     )
   })
   def('toBeNaN', function () {
@@ -328,6 +334,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected #{this} to not be close to #{exp}, received difference is ${receivedDiff}, but expected ${expectedDiff}`,
       received,
       expected,
+      false,
     )
   })
 
@@ -356,10 +363,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
     if (spy.mock.calls) {
-      msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-        let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+      msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
+        let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
         if (actualCall)
-          methodCall += diff(actualCall, callArg, { showLegend: false })
+          methodCall += diff(actualCall, callArg, { omitAnnotationLines: true })
         else
           methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -371,10 +378,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return msg
   }
   const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
-    msg += c().gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
-      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
+    msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
+      let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
-        methodCall += diff(actualReturn, callReturn.value, { showLegend: false })
+        methodCall += diff(actualReturn, callReturn.value, { omitAnnotationLines: true })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -394,6 +401,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected "${spyName}" to not be called #{exp} times`,
       number,
       callCount,
+      false,
     )
   })
   def('toHaveBeenCalledOnce', function () {
@@ -406,6 +414,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected "${spyName}" to not be called once`,
       1,
       callCount,
+      false,
     )
   })
   def(['toHaveBeenCalled', 'toBeCalled'], function () {
@@ -525,6 +534,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected error not to be instance of ${name}`,
         expected,
         thrown,
+        false,
       )
     }
 
@@ -546,6 +556,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         'expected error not to match asymmetric matcher',
         matcher.toString(),
         thrown,
+        false,
       )
     }
 
@@ -561,6 +572,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected "${spyName}" to not be successfully called`,
       calledAndNotThrew,
       !calledAndNotThrew,
+      false,
     )
   })
   def(['toHaveReturnedTimes', 'toReturnTimes'], function (times: number) {
@@ -573,6 +585,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       `expected "${spyName}" to not be successfully called ${times} times`,
       `expected number of returns: ${times}`,
       `received number of returns: ${successfulReturns}`,
+      false,
     )
   })
   def(['toHaveReturnedWith', 'toReturnWith'], function (value: any) {
