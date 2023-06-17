@@ -19,6 +19,7 @@ export interface VitestRunnerConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
+  retry: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

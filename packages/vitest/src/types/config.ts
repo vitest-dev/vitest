@@ -313,7 +313,11 @@ export interface InlineConfig {
    * @default 1000
    */
   teardownTimeout?: number
-
+  /**
+   * Number of retries
+   * @default 1
+   */
+  retry?: number
   /**
    * Silent mode
    *
