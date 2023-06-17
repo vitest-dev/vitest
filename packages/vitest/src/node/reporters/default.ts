@@ -7,16 +7,14 @@ import { createListRenderer } from './renderers/listRenderer'
 export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
-  private renderSucceedDefault? = false
-
-  constructor() {
-    super()
-    this.renderSucceedDefault = this.rendererOptions.renderSucceed
-  }
+  private renderSucceedDefault?: boolean
 
   onPathsCollected(paths: string[] = []) {
     if (this.isTTY) {
-      if (!this.renderSucceedDefault)
+      if (this.renderSucceedDefault === undefined)
+        this.renderSucceedDefault = !!this.rendererOptions.renderSucceed
+
+      if (this.renderSucceedDefault !== true)
         this.rendererOptions.renderSucceed = paths.length <= 1
     }
   }
