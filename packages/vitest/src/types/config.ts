@@ -597,6 +597,13 @@ export interface InlineConfig {
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
+
+  /**
+   * Retry the test specific number of times if it fails.
+   *
+   * @default 1
+  */
+  retry?: number
 }
 
 export interface TypecheckConfig {
