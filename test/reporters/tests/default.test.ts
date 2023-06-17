@@ -47,6 +47,12 @@ describe('default reporter', async () => {
     vitest.write('b\n')
     await vitest.waitForStdout('Waiting for file changes')
     await vitest.waitForStdout('Filename pattern: b')
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, 1000)
+    })
+
     expect(
       vitest.stdout
         .replace(/Start\sat.+\n?/, '')
@@ -63,7 +69,7 @@ describe('default reporter', async () => {
 
        Test Files  2 passed (2)
             Tests  12 passed | 14 skipped (26)
-            
+
 
        PASS  Waiting for file changes...
              press h to show help, press q to quit
