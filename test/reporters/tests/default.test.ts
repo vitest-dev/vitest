@@ -48,6 +48,7 @@ describe('default reporter', async () => {
     await vitest.waitForStdout('Filename pattern: b')
     await vitest.waitForStdout('✓ b1.test.ts (13)')
     await vitest.waitForStdout('✓ b2.test.ts (13)')
+    await vitest.waitForStdout('PASS  Waiting for file changes...')
     expect(vitest.stdout).toContain('RERUN')
     expect(vitest.stdout).toContain('b1.test.ts')
     expect(vitest.stdout).toContain('b2.test.ts')
