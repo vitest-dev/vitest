@@ -44,7 +44,6 @@
     "@types/node": "^18.16.19",
     "@types/ws": "^8.5.5",
     "@vitest/browser": "workspace:*",
-    "@vitest/coverage-c8": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",

@@ -34,8 +34,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  // default extensions used by c8, plus '.vue' and '.svelte'
-  // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
 }
 

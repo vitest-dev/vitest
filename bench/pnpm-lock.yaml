@@ -109,34 +109,6 @@ importers:
         specifier: workspace:*
         version: link:../vitest
 
-  ../packages/coverage-c8:
-    dependencies:
-      '@ampproject/remapping':
-        specifier: ^2.2.1
-        version: 2.2.1
-      c8:
-        specifier: ^7.14.0
-        version: 7.14.0
-      magic-string:
-        specifier: ^0.30.1
-        version: 0.30.1
-      picocolors:
-        specifier: ^1.0.0
-        version: 1.0.0
-      std-env:
-        specifier: ^3.3.3
-        version: 3.3.3
-    devDependencies:
-      pathe:
-        specifier: ^1.1.1
-        version: 1.1.1
-      vite-node:
-        specifier: workspace:*
-        version: link:../vite-node
-      vitest:
-        specifier: workspace:*
-        version: link:../vitest
-
   ../packages/coverage-istanbul:
     dependencies:
       istanbul-lib-coverage:
@@ -6000,25 +5972,6 @@ packages:
       ieee754: 1.2.1
     dev: true
 
-  /c8@7.14.0:
-    resolution: {integrity: sha512-i04rtkkcNcCf7zsQcSv/T9EbUn4RXQ6mropeMcjFOsQXQ0iGLAr/xT6TImQg4+U9hmNpN9XdvPkjUL1IzbgxJw==}
-    engines: {node: '>=10.12.0'}
-    hasBin: true
-    dependencies:
-      '@bcoe/v8-coverage': 0.2.3
-      '@istanbuljs/schema': 0.1.3
-      find-up: 5.0.0
-      foreground-child: 2.0.0
-      istanbul-lib-coverage: 3.2.0
-      istanbul-lib-report: 3.0.0
-      istanbul-reports: 3.1.5
-      rimraf: 3.0.2
-      test-exclude: 6.0.0
-      v8-to-istanbul: 9.1.0
-      yargs: 16.2.0
-      yargs-parser: 20.2.9
-    dev: false
-
   /cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
@@ -7639,14 +7592,6 @@ packages:
     dependencies:
       is-callable: 1.2.4
     dev: true
-
-  /foreground-child@2.0.0:
-    resolution: {integrity: sha512-dCIq9FpEcyQyXKCkyzmlPTFNgrCzPudOe+mhvJU5zAtlBnGVy2yKxtfsxK2tQBThwq225jcvBjpw1Gr40uzZCA==}
-    engines: {node: '>=8.0.0'}
-    dependencies:
-      cross-spawn: 7.0.3
-      signal-exit: 3.0.7
-    dev: false
 
   /foreground-child@3.1.1:
     resolution: {integrity: sha512-TMKDUnIte6bfb5nWv7V/caI169OHgvwjb7V4WkeUvbQQdjr5rWKqHFiKWb/fcOwB+CzBT+qbWjvj+DVwRskpIg==}
