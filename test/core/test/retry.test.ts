@@ -64,17 +64,3 @@ describe.each([
     expect(flag3).toBe(false)
   })
 }, { retry: 2 })
-
-describe('global retry', () => {
-  let count6 = 0
-  let count7 = 0
-  it('test should inherit options from the global config if missing', () => {
-    count6 += 1
-    expect(count6).toBe(3)
-  })
-
-  it('test should not inherit options from the global config if exists', () => {
-    count7 += 1
-    expect(count7).toBe(5)
-  }, { retry: 5 })
-})

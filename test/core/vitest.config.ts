@@ -46,7 +46,6 @@ export default defineConfig({
     exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: 2000,
-    retry: 3,
     setupFiles: [
       './test/setup.ts',
     ],
