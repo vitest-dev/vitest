@@ -31,7 +31,7 @@ export function getRunner() {
 
 export function clearCollectorContext(currentRunner: VitestRunner) {
   if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : suite('')
+    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
   runner = currentRunner
   collectorContext.tasks.length = 0
   defaultSuite.clear()
@@ -83,7 +83,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
 
-    if (this.concurrent || concurrent)
+    if (this.concurrent || concurrent || runner.config.sequence.concurrent)
       test.concurrent = true
     if (shuffle)
       test.shuffle = true
