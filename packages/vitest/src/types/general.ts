@@ -22,7 +22,7 @@ export interface EnvironmentReturn {
 }
 
 export interface VmEnvironmentReturn {
-  getVmContext(): Record<string, unknown>
+  getVmContext(): { [key: string]: any }
   teardown(): Awaitable<void>
 }
 
