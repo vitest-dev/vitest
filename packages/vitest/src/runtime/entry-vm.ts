@@ -1,5 +1,6 @@
 import { isatty } from 'node:tty'
 import { createRequire } from 'node:module'
+import { performance } from 'node:perf_hooks'
 import { startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
 import { setupChaiConfig } from '../integrations/chai/config'
@@ -20,12 +21,14 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   setupColors(createColors(isatty(1)))
 
+  // TODO: look at environment.transformMode when #3491 is merged
   if (workerState.environment !== 'node') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = () => ({})
     _require.extensions['.scss'] = () => ({})
     _require.extensions['.sass'] = () => ({})
+    _require.extensions['.less'] = () => ({})
   }
 
   await startCoverageInsideWorker(config.coverage, executor)

@@ -85,11 +85,13 @@ const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
 const _require = createRequire(import.meta.url)
 
+// TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private context: vm.Context
 
   private requireCache = _require.cache
   private moduleCache = new Map<string, VMModule>()
+  private extensions: Record<string, (m: NodeModule, filename: string) => string> = Object.create(null)
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
 
@@ -97,6 +99,18 @@ export class ExternalModulesExecutor {
     this.context = context
     for (const file in this.requireCache)
       delete this.requireCache[file]
+
+    this.extensions['.js'] = this.requireJs
+    this.extensions['.json'] = this.requireJson
+  }
+
+  private requireJs = (m: NodeModule, filename: string) => {
+    return readFileSync(filename, 'utf-8')
+  }
+
+  private requireJson = (m: NodeModule, filename: string) => {
+    const code = readFileSync(filename, 'utf-8')
+    return `module.exports = ${code}`
   }
 
   importModuleDynamically = async (specifier: string, referencer: VMModule) => {
@@ -149,20 +163,29 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  private createCommonJSNodeModule(filename: string) {
+  private createRequire = (filename: string) => {
     const _require = createRequire(filename)
-    // TODO: doesn't respect "extensions"
-    const require: NodeRequire = (id: string) => {
+    const require = ((id: string) => {
       const filename = _require.resolve(id)
-      if (isNodeBuiltin(filename))
+      const ext = extname(filename)
+      if (ext === '.node' || isNodeBuiltin(filename))
         return _require(filename)
-      const code = readFileSync(filename, 'utf-8')
-      return this.evaluateCommonJSModule(filename, code)
-    }
+      const module = this.createCommonJSNodeModule(filename)
+      return this.evaluateCommonJSModule(module, filename)
+    }) as NodeRequire
     require.resolve = _require.resolve
-    require.extensions = _require.extensions
+    Object.defineProperty(require, 'extensions', {
+      get: () => this.extensions,
+      writable: true,
+      configurable: true,
+    })
     require.main = _require.main
     require.cache = this.requireCache
+    return require
+  }
+
+  private createCommonJSNodeModule(filename: string) {
+    const require = this.createRequire(filename)
     const __dirname = dirname(filename)
     // dirty non-spec implementation - doesn't support children, parent, etc
     const module: NodeModule = {
@@ -177,37 +200,21 @@ export class ExternalModulesExecutor {
       path: __dirname,
       paths: [],
     }
+    this.requireCache[filename] = module
     return module
   }
 
-  private evaluateJsonCommonJSModule(filename: string, code: string): Record<string, unknown> {
-    const module = this.createCommonJSNodeModule(filename)
-    this.requireCache[filename] = module
-    module.exports = JSON.parse(code)
-    module.loaded = true
-    return module.exports
-  }
-
-  private evaluateCssCommonJSModule(filename: string): Record<string, unknown> {
-    const module = this.createCommonJSNodeModule(filename)
-    this.requireCache[filename] = module
-    module.loaded = true
-    return module.exports
-  }
-
   // very naive implementation for Node.js require
-  private evaluateCommonJSModule(filename: string, code: string): Record<string, unknown> {
+  private evaluateCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
     const cached = this.requireCache[filename]
     if (cached)
       return cached.exports
 
     const extension = extname(filename)
+    const loader = this.extensions[extension] || this.extensions['.js']
+    const result = loader(module, filename)
 
-    if (extension === '.json')
-      return this.evaluateJsonCommonJSModule(filename, code)
-    // TODO: should respect "extensions"
-    if (extension === '.css' || extension === '.scss' || extension === '.sass')
-      return this.evaluateCssCommonJSModule(filename)
+    const code = typeof result === 'string' ? result : ''
 
     const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${code}\n})`
     const script = new vm.Script(cjsModule, {
@@ -218,11 +225,14 @@ export class ExternalModulesExecutor {
     script.identifier = filename
     const fn = script.runInContext(this.context)
     const __dirname = dirname(filename)
-    const module = this.createCommonJSNodeModule(filename)
     this.requireCache[filename] = module
-    fn(module.exports, module.require, module, filename, __dirname)
-    module.loaded = true
-    return module.exports
+    try {
+      fn(module.exports, module.require, module, filename, __dirname)
+      return module.exports
+    }
+    finally {
+      module.loaded = true
+    }
   }
 
   async createEsmModule(fileUrl: string, code: string) {
@@ -237,6 +247,7 @@ export class ExternalModulesExecutor {
         importModuleDynamically: this.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
+          // TODO: improve Node.js support with #2854
           // meta.resolve = (specifier: string, importer?: string) =>
           //   this.resolveAsync(specifier, importer ?? mod.identifier)
         },
@@ -246,9 +257,11 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  // TODO: return custom "createRequire" function for "node:module"
   private requireCoreModule(identifier: string) {
-    return _require(identifier)
+    const moduleExports = _require(identifier)
+    if (identifier === 'node:module' || identifier === 'module')
+      return { ...moduleExports, createRequire: this.createRequire }
+    return moduleExports
   }
 
   private getIdentifierCode(code: string) {
@@ -270,9 +283,10 @@ export class ExternalModulesExecutor {
     const inlineCode = this.getIdentifierCode(identifier)
     const code = inlineCode || await readFile(pathUrl, 'utf-8')
 
-    // TODO: very dirty check for cjs, it should actually check filepath
+    // TODO: very dirty check for cjs, it should actually check filepath and package.json, improve in #2854
     if (!inlineCode && (extension === '.cjs' || !hasESMSyntax(code))) {
-      const exports = this.evaluateCommonJSModule(pathUrl, code)
+      const module = this.createCommonJSNodeModule(pathUrl)
+      const exports = this.evaluateCommonJSModule(module, pathUrl)
       return this.wrapSynteticModule(fileUrl, 'cjs', exports)
     }
 
