@@ -1313,6 +1313,7 @@ Vitest usually uses cache to sort tests, so long running tests start earlier - t
 - **Type**: `boolean`
 - **Default**: `false`
 - **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
+- **Version**: Since Vitest 0.32.2
 
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
