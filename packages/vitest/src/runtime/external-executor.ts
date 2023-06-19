@@ -112,17 +112,17 @@ export class ExternalModulesExecutor {
     return `module.exports = ${code}`
   }
 
-  importModuleDynamically = async (specifier: string, referencer: VMModule) => {
+  public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
     const module = await this.resolveModule(specifier, referencer)
     return this.evaluateModule(module)
   }
 
-  resolveModule = async (specifier: string, referencer: VMModule) => {
+  private resolveModule = async (specifier: string, referencer: VMModule) => {
     const identifier = await this.resolveAsync(specifier, referencer.identifier)
     return await this.createModule(identifier)
   }
 
-  async resolveAsync(specifier: string, parent: string) {
+  private async resolveAsync(specifier: string, parent: string) {
     return resolveModule(specifier, parent)
   }
 
@@ -146,7 +146,7 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  async evaluateModule<T extends VMModule>(m: T): Promise<T> {
+  private async evaluateModule<T extends VMModule>(m: T): Promise<T> {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
@@ -233,7 +233,7 @@ export class ExternalModulesExecutor {
     }
   }
 
-  async createEsmModule(fileUrl: string, code: string) {
+  private async createEsmModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
@@ -275,7 +275,7 @@ export class ExternalModulesExecutor {
       return code.match(/data:text\/javascript;.*,(.*)/)?.[1]
   }
 
-  async createModule(identifier: string): Promise<VMModule> {
+  private async createModule(identifier: string): Promise<VMModule> {
     const extension = extname(identifier)
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
