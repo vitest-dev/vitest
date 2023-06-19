@@ -1458,6 +1458,6 @@ By default Vitest will run all of your test cases even if some of them fail. Thi
 - **Type:** `number`
 - **Default:** `1`
 - **CLI:** `--retry=<value>`
-- **Version:** Since Vitest 0.32.2
+- **Version:** Since Vitest 0.32.3
 
 Retry the test specific number of times if it fails.
