@@ -1,7 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage } from '@vitest/expect'
+import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { processError } from '@vitest/utils/error'
+import { getDefaultColors } from '@vitest/utils'
 
 class TestError extends Error {}
 
@@ -751,6 +753,19 @@ it('compatible with jest', () => {
   expect(matchers).toHaveProperty('someObject')
   expect(matchers).toHaveProperty('toBe')
   expect(state.assertionCalls).toBe(2)
+})
+
+it('correctly prints diff', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(err)
+    expect(error.diff).toContain('-   "a": 2')
+    expect(error.diff).toContain('+   "a": 1')
+  }
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

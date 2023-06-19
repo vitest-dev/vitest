@@ -22,7 +22,7 @@
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.1",
     "https-localhost": "^4.7.1",
     "unocss": "^0.51.8",
     "unplugin-vue-components": "^0.24.1",
