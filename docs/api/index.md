@@ -51,6 +51,36 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+### test.extend
+
+- **Type:** `<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>`
+- **Alias:** `it.extend`
+
+  Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context.html#test-extend) for more information.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  const todos = []
+  const archive = []
+
+  const myTest = test.extend({
+    todos: async (use) => {
+      todos.push(1, 2, 3)
+      await use(todos)
+      todos.length = 0
+    },
+    archive
+  })
+
+  myTest('add item', ({ todos }) => {
+    expect(todos.length).toBe(3)
+
+    todos.push(4)
+    expect(todos.length).toBe(4)
+  })
+  ```
+
 ### test.skip
 
 - **Type:** `(name: string | Function, fn: TestFunction, timeout?: number | TestOptions) => void`

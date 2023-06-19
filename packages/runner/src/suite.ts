@@ -1,9 +1,10 @@
 import { format, isObject, noop, objDisplay, objectAttr } from '@vitest/utils'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
+import type { File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
+import { withFixtures } from './fixture'
 
 // apis
 export const suite = createSuite()
@@ -95,7 +96,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     })
 
     setFn(test, withTimeout(
-      () => fn(context),
+      this.fixtures
+        ? withFixtures(fn, this.fixtures, context)
+        : () => fn(context),
       options?.timeout ?? runner.config.testTimeout,
     ))
 
@@ -229,12 +232,12 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: Fixtures<Record<string, any>> },
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
   ) => void
-)) {
+), context?: Record<string, any>) {
   const testFn = fn as any
 
   testFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -262,9 +265,20 @@ function createTest(fn: (
   testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
+  testFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
+    const _context = context
+      ? { ...context, fixtures: { ...context.fixtures, ...fixtures } }
+      : { fixtures }
+
+    return createTest(function fn(name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+      getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
+    }, _context)
+  }
+
   return createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
+    context,
   ) as TestAPI
 }
 
