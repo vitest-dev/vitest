@@ -42,7 +42,7 @@ function isSpecialProp(prop: Key, parentType: string) {
 }
 
 export class VitestMocker {
-  private static pendingIds: PendingSuiteMock[] = []
+  static pendingIds: PendingSuiteMock[] = []
   private spyModule?: typeof import('@vitest/spy')
   private resolveCache = new Map<string, Record<string, string>>()
 
