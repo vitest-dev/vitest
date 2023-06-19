@@ -1,5 +1,3 @@
-import type { Context } from 'node:vm'
-
 export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
@@ -24,7 +22,7 @@ export interface EnvironmentReturn {
 }
 
 export interface VmEnvironmentReturn {
-  getVmContext(): Context
+  getVmContext(): Record<string, unknown>
   teardown(): Awaitable<void>
 }
 

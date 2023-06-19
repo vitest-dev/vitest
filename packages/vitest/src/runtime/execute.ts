@@ -218,6 +218,9 @@ export class VitestExecutor extends ViteNodeRunner {
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
 
+    if (this.options.context && this.externalModules)
+      context.require = this.externalModules.createRequire(context.__filename)
+
     return context
   }
 }

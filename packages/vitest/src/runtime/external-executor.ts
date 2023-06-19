@@ -89,7 +89,7 @@ const _require = createRequire(import.meta.url)
 export class ExternalModulesExecutor {
   private context: vm.Context
 
-  private requireCache = _require.cache
+  private requireCache: Record<string, NodeModule> = Object.create(null)
   private moduleCache = new Map<string, VMModule>()
   private extensions: Record<string, (m: NodeModule, filename: string) => string> = Object.create(null)
 
@@ -97,8 +97,7 @@ export class ExternalModulesExecutor {
 
   constructor(context: vm.Context) {
     this.context = context
-    for (const file in this.requireCache)
-      delete this.requireCache[file]
+    this.requireCache = Object.create(null)
 
     this.extensions['.js'] = this.requireJs
     this.extensions['.json'] = this.requireJson
@@ -163,20 +162,20 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  private createRequire = (filename: string) => {
+  public createRequire = (filename: string) => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const filename = _require.resolve(id)
       const ext = extname(filename)
       if (ext === '.node' || isNodeBuiltin(filename))
-        return _require(filename)
+        return this.requireCoreModule(filename)
       const module = this.createCommonJSNodeModule(filename)
       return this.evaluateCommonJSModule(module, filename)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
       get: () => this.extensions,
-      writable: true,
+      set: () => {},
       configurable: true,
     })
     require.main = _require.main
@@ -200,7 +199,6 @@ export class ExternalModulesExecutor {
       path: __dirname,
       paths: [],
     }
-    this.requireCache[filename] = module
     return module
   }
 
@@ -258,9 +256,17 @@ export class ExternalModulesExecutor {
   }
 
   private requireCoreModule(identifier: string) {
+    const normalized = identifier.replace(/^node:/, '')
+    if (this.requireCache[normalized])
+      return this.requireCache[normalized].exports
     const moduleExports = _require(identifier)
-    if (identifier === 'node:module' || identifier === 'module')
-      return { ...moduleExports, createRequire: this.createRequire }
+    if (identifier === 'node:module' || identifier === 'module') {
+      const exports = { ...moduleExports, createRequire: this.createRequire }
+      const cached = _require.cache[normalized]!
+      this.requireCache[normalized] = { ...cached, exports }
+      return exports
+    }
+    this.requireCache[normalized] = _require.cache[normalized]!
     return moduleExports
   }
 
