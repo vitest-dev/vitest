@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+
 /**
  * @vitest-environment jsdom
  * @vitest-environment-options { "url": "https://example.com/" }

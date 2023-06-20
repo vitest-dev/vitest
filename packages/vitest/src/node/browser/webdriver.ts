@@ -1,4 +1,3 @@
-import type { Browser } from 'webdriverio'
 import type { Awaitable } from '@vitest/utils'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
@@ -14,7 +13,7 @@ export interface WebdriverProviderOptions extends BrowserProviderOptions {
 export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio'
 
-  private cachedBrowser: Browser | null = null
+  private cachedBrowser: WebdriverIO.Browser | null = null
   private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
   private ctx!: WorkspaceProject

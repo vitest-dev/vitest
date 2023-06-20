@@ -60,6 +60,12 @@ const FALLBACK_FORMAT_OPTIONS = {
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)
 
+/**
+ * @param a Expected value
+ * @param b Received value
+ * @param options Diff options
+ * @returns
+ */
 export function diff(a: any, b: any, options?: DiffOptions): string | null {
   if (Object.is(a, b))
     return ''
