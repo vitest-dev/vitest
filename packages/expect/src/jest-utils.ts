@@ -123,11 +123,14 @@ function eq(
         // both are `new Primitive()`s
         return Object.is(a.valueOf(), b.valueOf())
       }
-    case '[object Date]':
+    case '[object Date]': {
+      const numA = +a
+      const numB = +b
       // Coerce dates to numeric primitive values. Dates are compared by their
       // millisecond representations. Note that invalid dates with millisecond representations
       // of `NaN` are equivalent.
-      return (Number.isNaN(a) && Number.isNaN(b)) || (+a === +b)
+      return (numA === numB) || (Number.isNaN(numA) && Number.isNaN(numB))
+    }
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
