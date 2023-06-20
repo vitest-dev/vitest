@@ -127,7 +127,7 @@ function eq(
       // Coerce dates to numeric primitive values. Dates are compared by their
       // millisecond representations. Note that invalid dates with millisecond representations
       // of `NaN` are equivalent.
-      return (isNaN(a) && isNaN(b)) || (+a === +b)
+      return (Number.isNaN(a) && Number.isNaN(b)) || (+a === +b)
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
