@@ -24,6 +24,8 @@ await test('tests are actually running', async () => {
   assert.ok(browserResultJson.testResults.length === 8, 'Not all the tests have been run')
   assert.ok(passedTests.length === 7, 'Some tests failed')
   assert.ok(failedTests.length === 1, 'Some tests have passed but should fail')
+
+  assert.doesNotMatch(stderr, /Unhandled Error/, 'doesn\'t have any unhandled errors')
 })
 
 await test('correctly prints error', () => {
