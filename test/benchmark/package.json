@@ -2,7 +2,7 @@
   "name": "@vitest/benchmark",
   "private": true,
   "scripts": {
-    "test": "node test.mjs",
+    "test": "node --test specs/ && echo '1'",
     "bench:json": "vitest bench --reporter=json",
     "bench": "vitest bench"
   },

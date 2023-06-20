@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as diffSequences from 'diff-sequences'
+import * as diff from 'diff-sequences'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 
 function diffStrings(a: string, b: string): Array<Diff> {
@@ -32,7 +32,9 @@ function diffStrings(a: string, b: string): Array<Diff> {
   }
 
   // @ts-expect-error wrong bundling
-  diffSequences.default.default(a.length, b.length, isCommon, foundSubsequence)
+  const diffSequences = diff.default.default || diff.default
+
+  diffSequences(a.length, b.length, isCommon, foundSubsequence)
 
   // After the last common subsequence, push remaining change items.
   if (aIndex !== a.length)
