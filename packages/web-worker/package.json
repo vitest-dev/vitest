@@ -47,8 +47,8 @@
     "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
+    "@types/debug": "^4.1.8",
     "@types/ungap__structured-clone": "^0.3.0",
-    "@ungap/structured-clone": "^1.1.0"
+    "@ungap/structured-clone": "^1.2.0"
   }
 }

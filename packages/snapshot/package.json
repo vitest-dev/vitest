@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "magic-string": "^0.30.0",
-    "pathe": "^1.1.0",
+    "pathe": "^1.1.1",
     "pretty-format": "^27.5.1"
   },
   "devDependencies": {

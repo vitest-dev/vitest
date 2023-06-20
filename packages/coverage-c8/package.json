@@ -46,13 +46,13 @@
   },
   "dependencies": {
     "@ampproject/remapping": "^2.2.1",
-    "c8": "^7.13.0",
+    "c8": "^7.14.0",
     "magic-string": "^0.30.0",
     "picocolors": "^1.0.0",
-    "std-env": "^3.3.2"
+    "std-env": "^3.3.3"
   },
   "devDependencies": {
-    "pathe": "^1.1.0",
+    "pathe": "^1.1.1",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
