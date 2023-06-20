@@ -25,9 +25,9 @@ await test('benchmarks are actually running', async () => {
   assert.ok(resultJson.testResults.timeout, 'timeout is in results')
   assert.ok(resultJson.testResults.a0, 'a0 is in results')
   assert.ok(resultJson.testResults.c1, 'c1 is in results')
-  assert.ok(resultJson.testResults.a2, 'c1 is in results')
-  assert.ok(resultJson.testResults.b3, 'c1 is in results')
-  assert.ok(resultJson.testResults.b4, 'c1 is in results')
+  assert.ok(resultJson.testResults.a2, 'a2 is in results')
+  assert.ok(resultJson.testResults.b3, 'b3 is in results')
+  assert.ok(resultJson.testResults.b4, 'b4 is in results')
 })
 
 await test('doesn\'t have skipped tests', () => {
