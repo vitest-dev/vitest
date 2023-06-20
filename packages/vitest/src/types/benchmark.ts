@@ -42,7 +42,6 @@ export interface BenchmarkUserOptions {
 export interface Benchmark extends TaskCustom {
   meta: {
     benchmark: true
-    task?: BenchTask
     result?: BenchTaskResult
   }
 }
