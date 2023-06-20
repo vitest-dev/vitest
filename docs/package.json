@@ -1,5 +1,6 @@
 {
   "name": "docs",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
@@ -8,7 +9,8 @@
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
     "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
-    "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
+    "prefetch": "esno .vitepress/scripts/fetch-avatars.ts",
+    "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
     "@vueuse/core": "^10.2.0",
@@ -18,6 +20,7 @@
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.18",
     "@unocss/reset": "^0.53.1",
+    "@vite-pwa/assets-generator": "^0.0.3",
     "@vite-pwa/vitepress": "^0.2.0",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
@@ -30,5 +33,12 @@
     "vite-plugin-pwa": "^0.16.4",
     "vitepress": "1.0.0-beta.3",
     "workbox-window": "^7.0.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@algolia/client-search"
+      ]
+    }
   }
 }
