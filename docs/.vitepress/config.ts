@@ -24,9 +24,9 @@ export default withPwa(defineConfig({
   locales: {
     root: {
       label: 'English',
-      lang: 'en',
+      lang: 'en-US',
     },
-    en: {
+    zh: {
       label: '简体中文',
       lang: 'zh',
       link: 'https://cn.vitest.dev/',
@@ -34,8 +34,8 @@ export default withPwa(defineConfig({
   },
   head: [
     ['meta', { name: 'theme-color', content: '#729b1a' }],
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
-    ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
     ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
     ['meta', { property: 'og:title', content: vitestName }],
@@ -66,20 +66,17 @@ export default withPwa(defineConfig({
       text: 'Suggest changes to this page',
     },
 
-    algolia: {
-      appId: 'ZTF29HGJ69',
-      apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
-      indexName: 'vitest',
-      // searchParameters: {
-      //   facetFilters: ['tags:en'],
-      // },
-    },
-
-    localeLinks: {
-      text: 'English',
-      items: [
-        { text: '简体中文', link: 'https://cn.vitest.dev' },
-      ],
+    search: {
+      provider: 'local',
+      /* provider: 'algolia',
+      options: {
+        appId: 'ZTF29HGJ69',
+        apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
+        indexName: 'vitest',
+        // searchParameters: {
+        //   facetFilters: ['tags:en'],
+        // },
+      }, */
     },
 
     socialLinks: [

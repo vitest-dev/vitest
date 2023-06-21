@@ -184,7 +184,9 @@ export function diffLinesRaw(aLines: Array<string>,
   }
 
   // @ts-expect-error wrong bundling
-  diff.default.default(aLength, bLength, isCommon, foundSubsequence)
+  const diffSequences = diff.default.default || diff.default
+
+  diffSequences(aLength, bLength, isCommon, foundSubsequence)
 
   // After the last common subsequence, push remaining change items.
   for (; aIndex !== aLength; aIndex += 1)

@@ -13,7 +13,7 @@ export const skipped = c.dim(c.gray(F_DOWN))
 
 export function getCols(delta = 0) {
   let length = process.stdout?.columns
-  if (!length || isNaN(length))
+  if (!length || Number.isNaN(length))
     length = 30
   return Math.max(length + delta, 0)
 }

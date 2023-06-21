@@ -18,18 +18,17 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 <CourseLink href="https://vueschool.io/lessons/how-to-install-vitest?friend=vueuse">Learn how to install by Video</CourseLink>
 
-With npm
-```bash
-npm install -D vitest
-```
-or with yarn
-```bash
-yarn add -D vitest
-```
-or with pnpm
-```bash
-pnpm add -D vitest
-```
+::: code-group
+  ```bash [npm]
+  npm install -D vitest
+  ```
+  ```bash [yarn]
+  yarn add -D vitest
+  ```
+  ```bash [pnpm]
+  pnpm add -D vitest
+  ```
+:::
 
 :::tip
 Vitest requires Vite >=v3.0.0 and Node >=v14.18

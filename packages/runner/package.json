@@ -44,8 +44,7 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "concordance": "^5.0.4",
     "p-limit": "^4.0.0",
-    "pathe": "^1.1.0"
+    "pathe": "^1.1.1"
   }
 }
