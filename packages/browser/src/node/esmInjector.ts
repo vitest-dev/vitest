@@ -241,7 +241,7 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
           s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
         }
       }
-      else {
+      else if (parent.type !== 'ClassExpression') {
         s.update(id.start, id.end, binding)
       }
     },
