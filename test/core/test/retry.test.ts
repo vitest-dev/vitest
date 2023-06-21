@@ -4,13 +4,13 @@ let count1 = 0
 it('retry test', () => {
   count1 += 1
   expect(count1).toBe(3)
-}, { retry: 3 })
+}, { retry: 2 })
 
 let count2 = 0
 it.fails('retry test fails', () => {
   count2 += 1
   expect(count2).toBe(3)
-}, { retry: 2 })
+}, { retry: 1 })
 
 let count3 = 0
 it('retry test fails', () => {

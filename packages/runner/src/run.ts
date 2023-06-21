@@ -132,12 +132,12 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   setCurrentTest(test)
 
-  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
+  const repeats = test.repeats
 
-  for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
-    const retry = test.retry || 1
+  for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    const retry = test.retry
 
-    for (let retryCount = 0; retryCount < retry; retryCount++) {
+    for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
         await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
@@ -188,7 +188,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       if (test.result.state === 'pass')
         break
 
-      if (retryCount < retry - 1) {
+      if (retryCount < retry) {
         // reset state when retry test
         test.result.state = 'run'
       }
