@@ -77,6 +77,11 @@
     "overrides": {
       "vite": "^4.3.9",
       "vitest": "workspace:*"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@algolia/client-search"
+      ]
     }
   },
   "simple-git-hooks": {

@@ -33,12 +33,5 @@
     "vite-plugin-pwa": "^0.16.4",
     "vitepress": "1.0.0-beta.3",
     "workbox-window": "^7.0.0"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@algolia/client-search"
-      ]
-    }
   }
 }
