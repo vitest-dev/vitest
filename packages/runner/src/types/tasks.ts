@@ -15,8 +15,8 @@ export interface TaskBase {
   suite?: Suite
   file?: File
   result?: TaskResult
-  retry: number
-  repeats: number
+  retry?: number
+  repeats?: number
 }
 
 export interface TaskMeta {}
