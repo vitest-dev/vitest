@@ -132,11 +132,9 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   setCurrentTest(test)
 
-  const repeats = test.repeats
+  const { repeats, retry } = test
 
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry
-
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
