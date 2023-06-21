@@ -29,7 +29,17 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
     return id
   }
-  await get(ctx.server.moduleGraph.getModuleById(id))
+
+  const workspaceProject = ctx.projects.find(project => project.path === id.substring(0, id.lastIndexOf('/') + 1))
+  const workspaceModules = workspaceProject?.ctx.getModuleProjects(id)
+  let workspaceMod: ModuleNode | undefined
+  if (workspaceModules && workspaceModules.length === 1) {
+    const { server, browser } = workspaceModules[0]
+    const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
+    workspaceMod = mod
+  }
+
+  await get(ctx.server.moduleGraph.getModuleById(id) || workspaceMod)
   return {
     graph,
     externalized: Array.from(externalized),
