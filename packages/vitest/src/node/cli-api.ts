@@ -87,10 +87,8 @@ export async function startVitest(
     return ctx
   }
 
-  if (process.stdin.isTTY && ctx.config.watch)
+  if (process.stdin.isTTY)
     registerConsoleShortcuts(ctx)
-  else
-    process.on('SIGINT', () => ctx.cancelCurrentRun('keyboard-input'))
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
