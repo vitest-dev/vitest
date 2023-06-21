@@ -1,3 +1,4 @@
+import { getCurrentTest } from '@vitest/runner'
 import { afterAll, describe, expect, test } from 'vitest'
 
 const testNumbers: number[] = []
@@ -39,15 +40,21 @@ afterAll(() => {
 const retryNumbers: number[] = []
 
 describe('testing repeats with retry', () => {
-  const result = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  test.fails('test 1', () => {
-    retryNumbers.push(1)
-    expect(1).toBe(2)
-  }, { repeats: 4, retry: 1 })
+  describe('normal test', () => {
+    const result = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    test.fails('test 1', () => {
+      retryNumbers.push(1)
+      expect(1).toBe(2)
+    }, { repeats: 4, retry: 1 })
 
-  afterAll(() => {
-    expect(retryNumbers).toStrictEqual(result)
+    afterAll(() => {
+      expect(retryNumbers).toStrictEqual(result)
+    })
   })
+
+  test('should not reset retry count', () => {
+    expect(getCurrentTest()!.result?.retryCount).toBe(3)
+  }, { repeats: 2, retry: 1 })
 })
 
 const nestedDescribeNumbers: number[] = []
