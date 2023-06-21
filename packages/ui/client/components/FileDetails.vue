@@ -31,6 +31,7 @@ function open() {
 function changeViewMode(view: Params['view']) {
   if (view === 'graph')
     hasGraphBeenDisplayed.value = true
+
   viewMode.value = view
 }
 const consoleCount = computed(() => {
@@ -98,7 +99,7 @@ function onDraft(value: boolean) {
     </div>
 
     <div flex flex-col flex-1 overflow="hidden">
-      <div v-show="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
+      <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
         <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" data-testid="graph" />
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" data-testid="editor" @draft="onDraft" />
