@@ -140,7 +140,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
       try {
         await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
@@ -189,6 +188,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       if (retryCount < retry) {
         // reset state when retry test
         test.result.state = 'run'
+        test.result.retryCount = (test.result.retryCount ?? 0) + 1
       }
 
       // update retry info
