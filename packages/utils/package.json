@@ -49,6 +49,6 @@
   "dependencies": {
     "diff-sequences": "^29.4.3",
     "loupe": "^2.3.6",
-    "pretty-format": "^27.5.1"
+    "pretty-format": "^29.5.0"
   }
 }

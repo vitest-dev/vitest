@@ -41,6 +41,6 @@
     "@testing-library/react",
     "@testing-library/user-event",
     // user can install any version
-    "vite",
+    "vite"
   ]
 }
