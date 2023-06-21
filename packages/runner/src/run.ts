@@ -127,6 +127,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
   test.result = {
     state: 'run',
     startTime: start,
+    retryCount: 0,
   }
   updateTask(test, runner)
 
