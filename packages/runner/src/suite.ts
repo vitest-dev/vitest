@@ -1,9 +1,10 @@
 import { format, isObject, noop, objDisplay, objectAttr } from '@vitest/utils'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
+import type { File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
+import { withFixtures } from './fixture'
 
 // apis
 export const suite = createSuite()
@@ -30,7 +31,7 @@ export function getRunner() {
 
 export function clearCollectorContext(currentRunner: VitestRunner) {
   if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : suite('')
+    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
   runner = currentRunner
   collectorContext.tasks.length = 0
   defaultSuite.clear()
@@ -66,14 +67,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       options = { timeout: options }
 
     // inherit repeats, retry, timeout from suite
-    if (typeof suiteOptions === 'object') {
-      options = {
-        repeats: suiteOptions.repeats,
-        retry: suiteOptions.retry,
-        timeout: suiteOptions.timeout,
-        ...options,
-      }
-    }
+    if (typeof suiteOptions === 'object')
+      options = Object.assign({}, suiteOptions, options)
 
     const test: Test = {
       id: '',
@@ -88,7 +83,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
 
-    if (this.concurrent || concurrent)
+    if (this.concurrent || concurrent || runner.config.sequence.concurrent)
       test.concurrent = true
     if (shuffle)
       test.shuffle = true
@@ -101,7 +96,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     })
 
     setFn(test, withTimeout(
-      () => fn(context),
+      this.fixtures
+        ? withFixtures(fn, this.fixtures, context)
+        : () => fn(context),
       options?.timeout ?? runner.config.testTimeout,
     ))
 
@@ -235,12 +232,12 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: Fixtures<Record<string, any>> },
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
   ) => void
-)) {
+), context?: Record<string, any>) {
   const testFn = fn as any
 
   testFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -268,14 +265,25 @@ function createTest(fn: (
   testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
+  testFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
+    const _context = context
+      ? { ...context, fixtures: { ...context.fixtures, ...fixtures } }
+      : { fixtures }
+
+    return createTest(function fn(name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+      getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
+    }, _context)
+  }
+
   return createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
+    context,
   ) as TestAPI
 }
 
 function formatName(name: string | Function) {
-  return typeof name === 'string' ? name : name instanceof Function ? name.name : String(name)
+  return typeof name === 'string' ? name : name instanceof Function ? (name.name || '<anonymous>') : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {

@@ -11,16 +11,26 @@ const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.nam
     CI: 'true',
     NO_COLOR: 'true',
   },
+  reject: false,
 })
 
 await test('tests are actually running', async () => {
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)
 
-  assert.ok(browserResultJson.testResults.length === 7, 'Not all the tests have been run')
+  const passedTests = browserResultJson.testResults.filter(result => result.status === 'passed')
+  const failedTests = browserResultJson.testResults.filter(result => result.status === 'failed')
 
-  for (const result of browserResultJson.testResults)
-    assert.ok(result.status === 'passed', `${result.name} has failed`)
+  assert.ok(browserResultJson.testResults.length === 8, 'Not all the tests have been run')
+  assert.ok(passedTests.length === 7, 'Some tests failed')
+  assert.ok(failedTests.length === 1, 'Some tests have passed but should fail')
+
+  assert.doesNotMatch(stderr, /Unhandled Error/, 'doesn\'t have any unhandled errors')
+})
+
+await test('correctly prints error', () => {
+  assert.match(stderr, /expected 1 to be 2/, 'prints failing error')
+  assert.match(stderr, /- 2\s+\+ 1/, 'prints failing diff')
 })
 
 await test('logs are redirected to stdout', async () => {

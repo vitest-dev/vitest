@@ -53,6 +53,10 @@ export function createExpect(test?: Test) {
     return assert
   }
 
+  expect.unreachable = (message?: string) => {
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
+  }
+
   function assertions(expected: number) {
     const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)
     if (Error.captureStackTrace)

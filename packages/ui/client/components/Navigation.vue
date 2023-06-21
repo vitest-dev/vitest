@@ -32,7 +32,7 @@ async function onRunAll(files?: File[]) {
   if (coverageEnabled.value) {
     disableCoverage.value = true
     await nextTick()
-    if (coverageEnabled.value) {
+    if (coverageVisible.value) {
       showDashboard(true)
       await nextTick()
     }
@@ -94,7 +94,7 @@ async function onRunAll(files?: File[]) {
           v-tooltip.bottom="filteredTests ? (filteredTests.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
           :disabled="filteredTests?.length === 0"
           icon="i-carbon:play"
-          @click="runAll(filteredTests)"
+          @click="onRunAll(filteredTests)"
         />
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"

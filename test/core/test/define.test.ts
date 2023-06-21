@@ -27,6 +27,11 @@ afterAll(() => {
   process.env.MODE = MODE
 })
 
+test('automatically remove process and global', () => {
+  expect(Object.keys(process).length > 1).toBe(true)
+  expect(Object.keys(globalThis).length > 1).toBe(true)
+})
+
 test('process.env.HELLO_PROCESS is defined on "defined" but exists on process.env', () => {
   expect('HELLO_PROCESS' in process.env).toBe(true)
   expect(process.env.HELLO_PROCESS).toBe('hello process')

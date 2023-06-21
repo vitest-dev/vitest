@@ -36,6 +36,19 @@
           }
         ]
       }
+    },
+    {
+      "files": ["docs/**", "packages/web-worker/**", "test/web-worker/**"],
+      "rules": {
+        "no-restricted-globals": "off"
+      }
+    },
+    {
+      "files": ["packages/vite-node/**"],
+      "rules": {
+        // false positive on "exports" variable
+        "antfu/no-cjs-exports": "off"
+      }
     }
   ]
 }
