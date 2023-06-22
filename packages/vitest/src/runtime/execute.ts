@@ -66,7 +66,7 @@ export interface ContextExecutorOptions {
 export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecutorOptions) {
   const { config } = ctx
 
-  const rpc = () => getWorkerState().rpc
+  const rpc = () => getWorkerState()?.rpc || options.state.rpc
 
   const processExit = process.exit
 

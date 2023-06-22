@@ -34,7 +34,7 @@ export function stringToBytes(
     return input
 
   if (typeof input === 'string') {
-    if (isNaN(Number.parseFloat(input.slice(-1)))) {
+    if (Number.isNaN(Number.parseFloat(input.slice(-1)))) {
       let [, numericString, trailingChars]
         = input.match(/(.*?)([^0-9.-]+)$/i) || []
 
