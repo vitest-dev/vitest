@@ -19,5 +19,5 @@ describe(
       })
     })
   },
-  { retry: 10 },
+  { retry: 9 },
 )
