@@ -4,14 +4,12 @@ import {
 import { getWorkerState } from '../utils/global'
 
 const { get } = Reflect
-const safeRandom = Math.random
 
 function withSafeTimers(fn: () => void) {
   const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
-  const currentRandom = globalThis.Math.random
   const currentNextTick = globalThis.process.nextTick
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
@@ -19,7 +17,6 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.Math.random = safeRandom
     globalThis.process.nextTick = nextTick
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
@@ -30,7 +27,6 @@ function withSafeTimers(fn: () => void) {
   finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
-    globalThis.Math.random = currentRandom
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
     nextTick(() => {
