@@ -9,6 +9,7 @@ import type { MockMap } from '../types/mocker'
 import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { loadEnvironment } from '../integrations/env'
+import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 import { ExternalModulesExecutor } from './external-executor'
 
@@ -65,7 +66,7 @@ export interface ContextExecutorOptions {
 export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecutorOptions) {
   const { config } = ctx
 
-  const rpc = () => options.state.rpc
+  const rpc = () => getWorkerState().rpc
 
   const processExit = process.exit
 
@@ -103,10 +104,10 @@ export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecu
     },
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault,
-    moduleDirectories: config.deps.moduleDirectories,
-    root: config.root,
-    base: config.base,
+    get interopDefault() { return config.deps.interopDefault },
+    get moduleDirectories() { return config.deps.moduleDirectories },
+    get root() { return config.root },
+    get base() { return config.base },
     ...options,
   })
 }
