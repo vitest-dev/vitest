@@ -64,11 +64,14 @@ export default <Environment>({
         ...restOptions,
       },
     )
+    const clearWindowErrors = catchWindowErrors(dom.window as any)
+
     return {
       getVmContext() {
         return dom.getInternalVMContext()
       },
       teardown() {
+        clearWindowErrors()
         dom.window.close()
       },
     }
