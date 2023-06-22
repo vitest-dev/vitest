@@ -24,7 +24,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
-  workerState.environment = environment.name
+  workerState.environment = environment.environment
 
   workerState.durations.environment = performance.now()
 

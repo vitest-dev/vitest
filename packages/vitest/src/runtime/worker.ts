@@ -4,11 +4,12 @@ import { workerId as poolId } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { getWorkerState } from '../utils/global'
+import { loadEnvironment } from '../integrations/env'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
 import { createSafeRpc, rpcDone } from './rpc'
 
-function init(ctx: WorkerContext) {
+async function init(ctx: WorkerContext) {
   // @ts-expect-error untyped global
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
@@ -34,13 +35,17 @@ function init(ctx: WorkerContext) {
     },
   )
 
-  const state = {
+  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+  if (ctx.environment.transformMode)
+    environment.transformMode = ctx.environment.transformMode
+
+  const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
     mockMap,
     onCancel,
-    environment: ctx.environment.name,
+    environment,
     durations: {
       environment: 0,
       prepare: performance.now(),
@@ -59,16 +64,16 @@ function init(ctx: WorkerContext) {
   }
   ctx.files.forEach(i => moduleCache.delete(i))
 
-  return state as WorkerGlobalState
+  return state
 }
 
 export async function run(ctx: WorkerContext) {
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
-    const state = init(ctx)
-    const { run, executor } = await startViteNode(ctx, { state })
-    await run(ctx.files, ctx.config, ctx.environment, executor)
+    const state = await init(ctx)
+    const { run, executor } = await startViteNode({ state })
+    await run(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
     await rpcDone()
   }
   finally {

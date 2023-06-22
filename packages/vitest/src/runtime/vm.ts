@@ -8,9 +8,9 @@ import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { CancelReason } from '@vitest/runner'
 import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
+import { loadEnvironment } from '../integrations/env'
 import { startVitestExecutor } from './execute'
 import { createCustomConsole } from './console'
-import { loadEnvironment } from './environment'
 import { createSafeRpc } from './rpc'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
@@ -36,13 +36,22 @@ export async function run(ctx: WorkerContext) {
     },
   )
 
+  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+
+  if (!environment.setupVM) {
+    throw new TypeError(
+    `Environment "${ctx.environment.name}" is not a valid environment. `
+  + `Package "vitest-environment-${name}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
+    )
+  }
+
   const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
     mockMap,
     onCancel,
-    environment: ctx.environment.name,
+    environment,
     durations: {
       environment: performance.now(),
       prepare: performance.now(),
@@ -53,8 +62,6 @@ export async function run(ctx: WorkerContext) {
   installSourcemapsSupport({
     getSourceMap: source => moduleCache.getSourceMap(source),
   })
-
-  const environment = await loadEnvironment(ctx.environment.name, 'setupVM')
 
   const vm = await environment.setupVM!(ctx.environment.options || {})
 
@@ -81,7 +88,7 @@ export async function run(ctx: WorkerContext) {
   }
   ctx.files.forEach(i => moduleCache.delete(i))
 
-  const executor = await startVitestExecutor(ctx, {
+  const executor = await startVitestExecutor({
     context,
     moduleCache,
     mockMap,

@@ -82,7 +82,7 @@ export async function run(ctx: ChildContext) {
 
   try {
     const state = init(ctx)
-    const { run, executor } = await startViteNode(ctx, {
+    const { run, executor } = await startViteNode({
       state,
     })
     await run(ctx.files, ctx.config, ctx.environment, executor)

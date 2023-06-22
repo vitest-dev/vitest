@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { ContextTestEnvironment, EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
@@ -11,7 +11,7 @@ import { setupCommonEnv } from './setup.common'
 
 // this should only be used in Node
 let globalSetup = false
-export async function setupGlobalEnv(config: ResolvedConfig, environment: ContextTestEnvironment) {
+export async function setupGlobalEnv(config: ResolvedConfig, { environment }: ResolvedTestEnvironment) {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -30,7 +30,7 @@ export async function setupGlobalEnv(config: ResolvedConfig, environment: Contex
   globalSetup = true
   setupColors(createColors(isatty(1)))
 
-  if (environment.name !== 'node') {
+  if (environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = () => ({})
@@ -53,14 +53,14 @@ export async function setupConsoleLogSpy(state: WorkerGlobalState) {
 }
 
 export async function withEnv(
-  { environment, name }: ResolvedTestEnvironment,
+  { environment }: ResolvedTestEnvironment,
   options: EnvironmentOptions,
   fn: () => Promise<void>,
 ) {
   // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = name
+  globalThis.__vitest_environment__ = environment.name
   expect.setState({
-    environment: name,
+    environment: environment.name,
   })
   const env = await environment.setup(globalThis, options)
   try {

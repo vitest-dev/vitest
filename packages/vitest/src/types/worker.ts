@@ -3,8 +3,9 @@ import type { CancelReason, Test } from '@vitest/runner'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
-import type { ResolvedConfig, VitestEnvironment } from './config'
+import type { ResolvedConfig } from './config'
 import type { ContextRPC, RuntimeRPC } from './rpc'
+import type { Environment } from './general'
 
 export interface WorkerContext extends ContextRPC {
   workerId: number
@@ -25,7 +26,7 @@ export interface WorkerGlobalState {
   rpc: WorkerRPC
   current?: Test
   filepath?: string
-  environment: VitestEnvironment
+  environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap

@@ -6,9 +6,8 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
-import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
-import { loadEnvironment } from '../integrations/env'
 import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 import { ExternalModulesExecutor } from './external-executor'
@@ -34,24 +33,20 @@ export async function createVitestExecutor(options: ExecuteOptions) {
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
   executor: VitestExecutor
-  environment: Environment
 }
 
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 
-export async function startViteNode(ctx: ContextRPC, options: ContextExecutorOptions) {
+export async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode)
     return _viteNode
 
-  const executor = await startVitestExecutor(ctx, options)
-
-  const environment = await loadEnvironment(ctx.environment.name, executor)
-  ctx.environment.environment = environment
+  const executor = await startVitestExecutor(options)
 
   const { run } = await import(entryUrl)
 
-  _viteNode = { run, executor, environment }
+  _viteNode = { run, executor }
 
   return _viteNode
 }
@@ -63,10 +58,9 @@ export interface ContextExecutorOptions {
   state: WorkerGlobalState
 }
 
-export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecutorOptions) {
-  const { config } = ctx
-
-  const rpc = () => getWorkerState()?.rpc || options.state.rpc
+export async function startVitestExecutor(options: ContextExecutorOptions) {
+  const state = () => getWorkerState() || options.state
+  const rpc = () => state().rpc
 
   const processExit = process.exit
 
@@ -82,7 +76,7 @@ export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecu
     if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
       if (worker.filepath)
-        error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+        error.VITEST_TEST_PATH = relative(state().config.root, worker.filepath)
       error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
     rpc().onUnhandledError(error, type)
@@ -92,7 +86,7 @@ export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecu
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
   const getTransformMode = () => {
-    return ctx.environment.transformMode ?? ctx.environment.environment?.transformMode ?? 'ssr'
+    return state().environment.transformMode ?? 'ssr'
   }
 
   return await createVitestExecutor({
@@ -104,10 +98,10 @@ export async function startVitestExecutor(ctx: ContextRPC, options: ContextExecu
     },
     moduleCache,
     mockMap,
-    get interopDefault() { return config.deps.interopDefault },
-    get moduleDirectories() { return config.deps.moduleDirectories },
-    get root() { return config.root },
-    get base() { return config.base },
+    get interopDefault() { return state().config.deps.interopDefault },
+    get moduleDirectories() { return state().config.deps.moduleDirectories },
+    get root() { return state().config.root },
+    get base() { return state().config.base },
     ...options,
   })
 }
@@ -140,7 +134,7 @@ export class VitestExecutor extends ViteNodeRunner {
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
     if (isInternalRequest(id) || id.startsWith('data:'))
       return false
-    const environment = this.options.state.environment
+    const environment = this.options.state.environment.name
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
     return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')

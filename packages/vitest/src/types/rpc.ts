@@ -39,8 +39,7 @@ export interface ContextTestEnvironment {
   options: EnvironmentOptions | null
 }
 
-export interface ResolvedTestEnvironment extends ContextTestEnvironment {
-  name: VitestEnvironment
+export interface ResolvedTestEnvironment {
   environment: Environment
   options: EnvironmentOptions | null
 }
