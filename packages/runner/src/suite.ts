@@ -4,7 +4,8 @@ import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
-import { withFixtures } from './fixture'
+import type { FixtureItem } from './fixture'
+import { mergeContextFixtures, withFixtures } from './fixture'
 
 // apis
 export const suite = createSuite()
@@ -232,7 +233,7 @@ function createSuite() {
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: Fixtures<Record<string, any>> },
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: FixtureItem[] },
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
@@ -266,20 +267,22 @@ function createTest(fn: (
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   testFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
-    const _context = context
-      ? { ...context, fixtures: { ...context.fixtures, ...fixtures } }
-      : { fixtures }
+    const _context = mergeContextFixtures(fixtures, context)
 
     return createTest(function fn(name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
       getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
     }, _context)
   }
 
-  return createChainable(
+  const _test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
-    context,
   ) as TestAPI
+
+  if (context)
+    (_test as any).mergeContext(context)
+
+  return _test
 }
 
 function formatName(name: string | Function) {
