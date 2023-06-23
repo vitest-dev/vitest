@@ -100,7 +100,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (level === 0 && task.type === 'suite' && task.projectName)
       prefix += formatProjectName(task.projectName)
 
-    if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
+    if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 0)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
     if (task.type === 'suite' && !task.meta?.typecheck) {
@@ -111,7 +111,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.mode === 'skip' || task.mode === 'todo')
       suffix += ` ${c.dim(c.gray('[skipped]'))}`
 
-    if (task.type === 'test' && task.result?.repeatCount && task.result.repeatCount > 1)
+    if (task.type === 'test' && task.result?.repeatCount && task.result.repeatCount > 0)
       suffix += c.yellow(` (repeat x${task.result.repeatCount})`)
 
     if (task.result?.duration != null) {
