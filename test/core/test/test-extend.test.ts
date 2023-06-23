@@ -21,11 +21,17 @@ const doneFn = vi.fn().mockImplementation(async (use) => {
   doneList.length = 0
 })
 
+interface Fixtures {
+  todoList: number[]
+  doneList: number[]
+  archiveList: number[]
+}
+
 const myTest = test
-  .extend<{ todoList: number[] }>({
+  .extend<Pick<Fixtures, 'todoList'>>({
     todoList: todoFn,
   })
-  .extend<{ doneList: number[]; archiveList: number[] }>({
+  .extend<Pick<Fixtures, 'doneList' | 'archiveList'>>({
     doneList: doneFn,
     archiveList,
   })
@@ -54,12 +60,14 @@ describe('test.extend()', () => {
     archiveList.push(todoList.shift()!)
     expect(todoList).toEqual([])
     expect(archiveList).toEqual([3])
+
+    archiveList.pop()
   })
 
   myTest('should called cleanup functions', ({ todoList, doneList, archiveList }) => {
     expect(todoList).toEqual([1, 2, 3])
     expect(doneList).toEqual([])
-    expect(archiveList).toEqual([3])
+    expect(archiveList).toEqual([])
   })
 
   describe('smartly init fixtures', () => {
@@ -124,7 +132,7 @@ describe('test.extend()', () => {
 
       expect(todoList).toEqual([1, 2, 3])
       expect(rest.doneList).toEqual([])
-      expect(rest.archiveList).toEqual([3])
+      expect(rest.archiveList).toEqual([])
     })
 
     myTest('should init all fixtures', (context) => {
@@ -137,7 +145,7 @@ describe('test.extend()', () => {
 
       expect(context.todoList).toEqual([1, 2, 3])
       expect(context.doneList).toEqual([])
-      expect(context.archiveList).toEqual([3])
+      expect(context.archiveList).toEqual([])
     })
   })
 })
