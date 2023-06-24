@@ -10,9 +10,20 @@ describe('Simple working test', () => {
     expect(p?.innerHTML).toMatch(/Hello Vite \+ React!/i)
   })
 
-  it('should increment count on click', async () => {
+  it('should focus', async () => {
     await createContainer('root2', <App />)
+    expect(document.activeElement).toBe(document.body)
     const button: HTMLButtonElement | null = document.querySelector('#root2 button')
+    expect(button).toBeDefined()
+    expect(typeof button?.focus).toBe('function')
+    button?.focus()
+    await nextTick()
+    expect(document.activeElement).toBe(button)
+  })
+
+  it('should increment count on click', async () => {
+    await createContainer('root3', <App />)
+    const button: HTMLButtonElement | null = document.querySelector('#root3 button')
     expect(button).toBeDefined()
     expect(typeof button?.click).toBe('function')
     button?.click()
@@ -21,9 +32,9 @@ describe('Simple working test', () => {
   })
 
   it('uses flexbox in app header', async () => {
-    await createContainer('root3', <App />)
+    await createContainer('root4', <App />)
     await nextTick()
-    const element = document.querySelector('#root3 header')
+    const element = document.querySelector('#root4 header')
     expect(element).toBeDefined()
     expect(element?.className).toEqual('App-header')
     expect(getComputedStyle(element!).display).toEqual('flex')
