@@ -166,15 +166,14 @@ export interface TestOptions {
    * Times to retry the test if fails. Useful for making flaky tests more stable.
    * When retries is up, the last test error will be thrown.
    *
-   * @default 1
+   * @default 0
    */
   retry?: number
   /**
    * How many times the test will run.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
    *
-   * @default 1
-   *
+   * @default 0
    */
   repeats?: number
 }
@@ -183,6 +182,11 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
   each: TestEachFunction
   skipIf(condition: any): ChainableTestAPI<ExtraContext>
   runIf(condition: any): ChainableTestAPI<ExtraContext>
+  extend<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>
+}
+
+export type Fixtures<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] | ((use: (fixture: T[K]) => Promise<void>) => Promise<void>)
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<

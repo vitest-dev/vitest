@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ErrorWithDiff } from '#types'
-import { unifiedDiff } from '~/composables/diff'
 import { openInEditor, shouldOpenInEditor } from '~/composables/error'
 
 const props = defineProps<{
@@ -20,7 +19,7 @@ const isDiffShowable = computed(() => {
 })
 
 function diff() {
-  return unifiedDiff(props.error.actual, props.error.expected)
+  return props.error.diff
 }
 </script>
 

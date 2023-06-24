@@ -13,7 +13,7 @@ const keys = [
   ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
-const cancelKeys = ['space', 'c', ...keys.map(key => key[0]).flat()]
+const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
 export function printShortcutsHelp() {
   stdout().write(

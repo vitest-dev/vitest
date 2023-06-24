@@ -87,7 +87,7 @@ await __vitest_browser_runner__.runTest('${test}', '${version}');
               '@vitest/utils',
             ],
             include: [
-              'vitest > concordance',
+              'vitest > diff-sequences',
               'vitest > loupe',
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',

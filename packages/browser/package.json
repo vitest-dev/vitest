@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.32.0",
+  "version": "0.32.2",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@types/estree": "^1.0.1",
-    "@types/ws": "^8.5.4",
+    "@types/ws": "^8.5.5",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",

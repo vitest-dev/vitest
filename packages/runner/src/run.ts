@@ -127,22 +127,20 @@ export async function runTest(test: Test, runner: VitestRunner) {
   test.result = {
     state: 'run',
     startTime: start,
+    retryCount: 0,
   }
   updateTask(test, runner)
 
   setCurrentTest(test)
 
-  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
-
-  for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
-    const retry = test.retry || 1
-
-    for (let retryCount = 0; retryCount < retry; retryCount++) {
+  const repeats = test.repeats ?? 0
+  for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    const retry = test.retry ?? 0
+    for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
         await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
@@ -188,9 +186,10 @@ export async function runTest(test: Test, runner: VitestRunner) {
       if (test.result.state === 'pass')
         break
 
-      if (retryCount < retry - 1) {
+      if (retryCount < retry) {
         // reset state when retry test
         test.result.state = 'run'
+        test.result.retryCount = (test.result.retryCount ?? 0) + 1
       }
 
       // update retry info

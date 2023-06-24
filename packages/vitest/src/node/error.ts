@@ -171,7 +171,7 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
     deps: {
       inline: [
         ${c.yellow(c.bold(`"${name}"`))}
-      }
+      ]
     }
   }
 }\n`)))
@@ -184,8 +184,9 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   ))
 }
 
-export function displayDiff(diff: string, console: Console) {
-  console.error(`\n${diff}\n`)
+export function displayDiff(diff: string | null, console: Console) {
+  if (diff)
+    console.error(`\n${diff}\n`)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {

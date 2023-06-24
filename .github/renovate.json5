@@ -40,21 +40,7 @@
     // wait for ecosystem to upgrade to React v18
     "@testing-library/react",
     "@testing-library/user-event",
-    // TODO: migrate
-    "pretty-format",
-    // TODO: vite-plugin-pwa issue
-    "esno",
     // user can install any version
-    "vite",
-    // TODO: wait for Vite 4 to upgrade Rollup
-    "rollup",
-    "@rollup/plugin-alias",
-    "@rollup/plugin-commonjs",
-    "@rollup/plugin-json",
-    "@rollup/plugin-node-resolve",
-    "rollup-plugin-dts",
-    "rollup-plugin-esbuild",
-    "rollup-plugin-license",
-    "source-map"
+    "vite"
   ]
 }

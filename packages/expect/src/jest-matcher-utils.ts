@@ -1,7 +1,7 @@
 import { getColors, stringify } from '@vitest/utils'
-import { unifiedDiff } from '@vitest/utils/diff'
-import type { DiffOptions, MatcherHintOptions } from './types'
+import type { MatcherHintOptions } from './types'
 
+export { diff } from '@vitest/utils/diff'
 export { stringify }
 
 export function getMatcherUtils() {
@@ -100,11 +100,4 @@ export function getMatcherUtils() {
     printReceived,
     printExpected,
   }
-}
-
-// TODO: do something with options
-export function diff(a: any, b: any, options?: DiffOptions) {
-  return unifiedDiff(b, a, {
-    showLegend: options?.showLegend,
-  })
 }
