@@ -15,6 +15,10 @@ test('mount component', async () => {
 
   const button = document.querySelector('button')
   expect(button).toBeDefined()
+  expect(document.activeElement).toBe(document.body)
+  button?.focus()
+  await nextTick()
+  expect(document.activeElement).toBe(button)
   button?.click()
   await nextTick()
 
