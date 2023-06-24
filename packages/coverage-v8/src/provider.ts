@@ -110,7 +110,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }
 
     const converted = await Promise.all(scriptCoverages.map(async ({ url, functions }) => {
-      const sources = await this.getSources(url)
+      const sources = await this.getSources(url, functions)
 
       // If no source map was found from vite-node we can assume this file was not run in the wrapper
       const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
@@ -204,7 +204,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }))
   }
 
-  private async getSources(url: string): Promise<{
+  private async getSources(url: string, functions: Profiler.FunctionCoverage[] = []): Promise<{
     source: string
     originalSource?: string
     sourceMap?: { sourcemap: EncodedSourceMap }
@@ -217,7 +217,12 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     const map = transformResult?.map
     const code = transformResult?.code
-    const sourcesContent = map?.sourcesContent?.[0] || await fs.readFile(filePath, 'utf-8')
+    const sourcesContent = map?.sourcesContent?.[0] || await fs.readFile(filePath, 'utf-8').catch(() => {
+      // If file does not exist construct a dummy source for it.
+      // These can be files that were generated dynamically during the test run and were removed after it.
+      const length = findLongestFunctionLength(functions)
+      return '.'.repeat(length)
+    })
 
     // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
     if (!map)
@@ -260,4 +265,15 @@ function removeViteHelpersFromSourceMaps(source: string | undefined, map: Encode
   )
 
   return combinedMap as EncodedSourceMap
+}
+
+/**
+ * Find the function with highest `endOffset` to determine the length of the file
+ */
+function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
+  return functions.reduce((previous, current) => {
+    const maxEndOffset = current.ranges.reduce((endOffset, range) => Math.max(endOffset, range.endOffset), 0)
+
+    return Math.max(previous, maxEndOffset)
+  }, 0)
 }
