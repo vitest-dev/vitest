@@ -601,7 +601,7 @@ export interface InlineConfig {
   /**
    * Retry the test specific number of times if it fails.
    *
-   * @default 1
+   * @default 0
   */
   retry?: number
 }

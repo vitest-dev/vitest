@@ -48,7 +48,7 @@ cli
   .option('--inspect-brk', 'Enable Node.js inspector with break')
   .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
-  .option('--retry <number>', 'Retry the test specific number of times if it fails.', { default: 1 })
+  .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .help()
 
 cli

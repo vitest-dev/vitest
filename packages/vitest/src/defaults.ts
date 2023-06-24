@@ -94,7 +94,6 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-  retry: 1,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
