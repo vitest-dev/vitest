@@ -1,17 +1,15 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import AsAsync from '../components/AsAsync.vue'
 
 test('mount component', async () => {
   expect(AsAsync).toBeTruthy()
 
-  const wrapper = mount(AsAsync, { attachTo: document.body })
+  const wrapper = mount(AsAsync)
 
   await wrapper.find('button').trigger('click')
 
-  // await flushPromises() // start loading, so vitest started loading
-  // await vi.dynamicImportSettled()
-
-  await new Promise(resolve => setTimeout(resolve, 200))
+  await flushPromises() // start loading, so vitest started loading
+  await vi.dynamicImportSettled()
 
   expect(wrapper.html()).toContain('1 x 2 = 2')
 })
