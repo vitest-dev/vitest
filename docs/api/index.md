@@ -17,12 +17,16 @@ interface TestOptions {
   timeout?: number
   /**
    * Will retry the test specific number of times if it fails
+   *
+   * @default 0
    */
   retry?: number
   /**
    * Will repeat the same test several times even if it fails each time
    * If you have "retry" option and it fails, it will use every retry in each cycle
    * Useful for debugging random failings
+   *
+   * @default 0
    */
   repeats?: number
 }
