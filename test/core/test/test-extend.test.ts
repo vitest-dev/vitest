@@ -2,37 +2,38 @@
 /* eslint-disable prefer-rest-params */
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
-const todoList: number[] = [1, 2, 3]
-const doneList: number[] = []
-const archiveList: number[] = []
-
-const todoFn = vi.fn().mockImplementation(async (use) => {
-  await use(todoList)
-  // cleanup
-  todoFn.mockClear()
-  todoList.length = 0
-  todoList.push(1, 2, 3)
-})
-
-const doneFn = vi.fn().mockImplementation(async (use) => {
-  await use(doneList)
-  // cleanup
-  doneFn.mockClear()
-  doneList.length = 0
-})
-
 interface Fixtures {
   todoList: number[]
   doneList: number[]
   archiveList: number[]
 }
 
+const todoList: number[] = [1, 2, 3]
+const doneList: number[] = []
+const archiveList: number[] = []
+
+const todoFn = vi.fn()
+const doneFn = vi.fn()
+
 const myTest = test
   .extend<Pick<Fixtures, 'todoList'>>({
-    todoList: todoFn,
+    todoList: async (use) => {
+      todoFn()
+      await use(todoList)
+      // cleanup
+      todoFn.mockClear()
+      todoList.length = 0
+      todoList.push(1, 2, 3)
+    },
   })
   .extend<Pick<Fixtures, 'doneList' | 'archiveList'>>({
-    doneList: doneFn,
+    doneList: async (use) => {
+      doneFn()
+      await use(doneList)
+      // cleanup
+      doneFn.mockClear()
+      doneList.length = 0
+    },
     archiveList,
   })
 

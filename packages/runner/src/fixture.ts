@@ -1,48 +1,57 @@
-import type { Fixtures, Test } from './types'
+import type { TestContext } from './types'
 
 export interface FixtureItem {
   prop: string
   value: any
-  hasDeps: boolean
-  index: number
-  end: number
+  /**
+   * Indicates whether the fixture is a function
+   */
+  isFn: boolean
+  /**
+   * Fixture function may depend on other fixtures,
+   * e.g. `async (use, { a, b }) => await use(a + b)`.
+   * This array contains the available dependencies of the fixture function.
+   */
+  availableDeps: FixtureItem[]
 }
 
-export function mergeContextFixtures(fixtures: Fixtures<Record<string, any>>, context: Record<string, any> = {}) {
+export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
   const fixtureArray: FixtureItem[] = Object.entries(fixtures)
-    .map(([prop, value], index, { length }) => {
+    .map(([prop, value]) => {
+      const isFn = typeof value === 'function'
+      if (isFn)
+        validateFixtureFn(value)
+
       return {
         prop,
         value,
-        index,
-        end: length,
-        hasDeps: typeof value === 'function' && value.length >= 2,
+        isFn,
+        availableDeps: [],
       }
     })
 
-  if (Array.isArray(context.fixtures)) {
-    fixtureArray.forEach((fixture) => {
-      fixture.index += context.fixtures.length
-      fixture.end += context.fixtures.length
-    })
-
+  if (Array.isArray(context.fixtures))
     context.fixtures = context.fixtures.concat(fixtureArray)
-  }
-  else {
+  else
     context.fixtures = fixtureArray
-  }
+
+  fixtureArray.forEach((fixture) => {
+    if (fixture.isFn)
+      fixture.availableDeps = context.fixtures!.filter(item => item !== fixture)
+  })
 
   return context
 }
 
-export function withFixtures(fn: Function, fixtures: FixtureItem[], context: Test<Record<string, any>>['context']) {
+export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
+  validateTestFn(fn)
   const props = getTestFnDepProps(fn, fixtures.map(({ prop }) => prop))
 
   if (props.length === 0)
     return () => fn(context)
 
   const filteredFixtures = fixtures.filter(({ prop }) => props.includes(prop))
-  const pendingFixtures = resolveFixtureDeps(filteredFixtures, fixtures)
+  const pendingFixtures = resolveFixtureDeps(filteredFixtures)
 
   let cursor = 0
 
@@ -63,78 +72,63 @@ export function withFixtures(fn: Function, fixtures: FixtureItem[], context: Tes
   return () => next()
 }
 
-function resolveFixtureDeps(initialFixtures: FixtureItem[], fixtures: FixtureItem[]) {
+function resolveFixtureDeps(fixtures: FixtureItem[]) {
   const pendingFixtures: FixtureItem[] = []
 
-  function resolveDeps(fixture: FixtureItem, temp: Set<FixtureItem>) {
-    if (!fixture.hasDeps) {
+  function resolveDeps(fixture: FixtureItem, depSet: Set<FixtureItem>) {
+    if (!fixture.isFn) {
       pendingFixtures.push(fixture)
       return
     }
 
-    // fixture function may depend on other fixtures
-    const { index, value: fn, end } = fixture
+    const { value: fn, availableDeps } = fixture
+    const props = getFixtureFnDepProps(fn, availableDeps.map(({ prop }) => prop))
 
-    const potentialDeps = fixtures
-      .slice(0, end)
-      .filter(dep => dep.index !== index)
-
-    const props = getFixtureFnDepProps(fn, potentialDeps.map(({ prop }) => prop))
-
-    const deps = potentialDeps.filter(({ prop }) => props.includes(prop))
+    const deps = availableDeps.filter(({ prop }) => props.includes(prop))
     deps.forEach((dep) => {
       if (!pendingFixtures.includes(dep)) {
-        if (dep.hasDeps) {
-          if (temp.has(dep))
+        if (dep.isFn) {
+          if (depSet.has(dep))
             throw new Error('circular fixture dependency')
-          temp.add(dep)
+          depSet.add(dep)
         }
 
-        resolveDeps(dep, temp)
+        resolveDeps(dep, depSet)
       }
     })
 
     pendingFixtures.push(fixture)
   }
 
-  initialFixtures.forEach(fixture => resolveDeps(fixture, new Set([fixture])))
+  fixtures.forEach(fixture => resolveDeps(fixture, new Set([fixture])))
 
   return pendingFixtures
 }
 
-function getFixtureFnDepProps(fn: Function, allProps: string[]) {
-  if (fn.length !== 2)
-    throw new Error('fixture function should have two arguments, the fist one is the use function that should be called with fixture value, and the second is other fixtures that should be used with destructured expression. For example, `async ({ a, b }, use) => { await use(a + b) }`')
-
-  const args = fn.toString().match(/[^(]*\(([^)]*)/)![1]
-  const target = args.slice(args.indexOf(',') + 1).trim()
-
-  return filterDestructuredProps(target, allProps, { enableRestParams: false, errorPrefix: `invalid fixture function\n\n${fn}\n\n` })
+function getFixtureFnDepProps(fn: Function, props: string[]) {
+  if (fn.length === 1)
+    return []
+  const args = getFnArgumentsStr(fn)
+  const secondArg = args.slice(args.indexOf(',') + 1).trim()
+  return filterPropsByObjectDestructuring(secondArg, props)
 }
 
-function getTestFnDepProps(fn: Function, allProps: string[]) {
+function getTestFnDepProps(fn: Function, props: string[]) {
   if (!fn.length)
     return []
-  if (fn.length > 1)
-    throw new Error('extended test function should have only one argument')
 
-  const arg = fn.toString().match(/[^(]*\(([^)]*)/)![1]
-  if (arg[0] !== '{' && arg.at(-1) !== '}')
-    return allProps
+  const arg = getFnArgumentsStr(fn).trim()
+  if (!arg.startsWith('{'))
+    return props
 
-  return filterDestructuredProps(arg, allProps, { enableRestParams: true, errorPrefix: `invalid extended test function\n\n${fn}\n\n` })
+  return filterPropsByObjectDestructuring(arg, props)
 }
 
-function filterDestructuredProps(arg: string, props: string[], options: { enableRestParams: boolean; errorPrefix?: string }) {
-  if (!props.length)
-    return []
-  if (arg.length < 2 || arg[0] !== '{' || arg.at(-1) !== '}')
-    throw new Error(`${options.errorPrefix}invalid destructured expression`)
+function filterPropsByObjectDestructuring(argStr: string, props: string[]) {
+  if (!argStr.startsWith('{') || !argStr.endsWith('}'))
+    throw new Error('Invalid object destructuring pattern')
 
-  if (arg.indexOf('{') !== arg.lastIndexOf('{'))
-    throw new Error(`${options.errorPrefix}nested destructured expression is not supported`)
-
-  const usedProps = arg.slice(1, -1).split(',')
+  const usedProps = argStr.slice(1, -1).split(',')
   const filteredProps = []
 
   for (const prop of usedProps) {
@@ -145,8 +139,6 @@ function filterDestructuredProps(arg: string, props: string[], options: { enable
 
     if (_prop.startsWith('...')) {
       // { a, b, ...rest }
-      if (!options.enableRestParams)
-        throw new Error(`${options.errorPrefix}rest param is not supported`)
       return props
     }
 
@@ -159,4 +151,34 @@ function filterDestructuredProps(arg: string, props: string[], options: { enable
   }
 
   return filteredProps
+}
+
+function getFnArgumentsStr(fn: Function) {
+  if (!fn.length)
+    return ''
+  return fn.toString().match(/[^(]*\(([^)]*)/)![1]
+}
+
+function validateFixtureFn(fn: Function) {
+  if (fn.length < 1 || fn.length > 2)
+    throw new Error('invalid fixture function, should follow below rules:\n- have at least one argument, at most two arguments\n- the first argument is the "use" function, which must be invoked with fixture value\n- the second argument should use the object destructuring pattern to access other fixtures\n\nFor instance,\nasync (use) => { await use(0) }\nasync (use, { a, b }) => { await use(a + b) }')
+
+  if (fn.length === 2) {
+    const args = getFnArgumentsStr(fn)
+    if (args.includes('...'))
+      throw new Error('rest param is not supported')
+
+    const second = args.slice(args.indexOf(',') + 1).trim()
+
+    if (second.length < 2 || !second.startsWith('{') || !second.endsWith('}'))
+      throw new Error('the second argument should use the object destructuring pattern')
+
+    if (second.indexOf('{') !== second.lastIndexOf('{'))
+      throw new Error('nested object destructuring pattern is not supported')
+  }
+}
+
+function validateTestFn(fn: Function) {
+  if (fn.length > 1)
+    throw new Error('extended test function should have only one argument')
 }
