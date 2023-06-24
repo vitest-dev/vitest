@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 overrides:
   vite: ^4.3.9
   vitest: workspace:*
@@ -327,7 +331,7 @@ importers:
         version: 20.3.1
       '@types/react':
         specifier: latest
-        version: 18.2.14
+        version: 18.2.13
       '@vitejs/plugin-react':
         specifier: latest
         version: 4.0.1(vite@4.3.9)
@@ -394,7 +398,7 @@ importers:
         version: link:../../packages/ui
       happy-dom:
         specifier: latest
-        version: 9.10.8
+        version: 9.20.3
       jsdom:
         specifier: latest
         version: 22.1.0
@@ -782,10 +786,10 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^2.0.0
-        version: 2.0.0(svelte@3.58.0)(vite@4.3.9)
+        version: 2.0.0(svelte@3.59.1)(vite@4.3.9)
       '@testing-library/svelte':
         specifier: ^3.2.2
-        version: 3.2.2(svelte@3.58.0)
+        version: 3.2.2(svelte@3.59.1)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -794,7 +798,7 @@ importers:
         version: 22.1.0
       svelte:
         specifier: latest
-        version: 3.58.0
+        version: 3.59.1
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.16.18)
@@ -852,10 +856,10 @@ importers:
         version: 22.1.0
       unplugin-auto-import:
         specifier: latest
-        version: 0.15.3(rollup@3.20.2)
+        version: 0.16.4(@vueuse/core@10.2.0)(rollup@3.20.2)
       unplugin-vue-components:
         specifier: latest
-        version: 0.22.7(vue@3.3.4)
+        version: 0.25.1(rollup@3.20.2)(vue@3.3.4)
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.16.18)
@@ -1580,7 +1584,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 8.10.0(typescript@5.1.3)
+        version: 8.11.2(typescript@5.1.3)
 
   test/base:
     devDependencies:
@@ -1703,7 +1707,7 @@ importers:
         version: 2.3.2(vue@3.3.4)
       happy-dom:
         specifier: latest
-        version: 9.10.8
+        version: 9.20.3
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1718,7 +1722,7 @@ importers:
         version: 3.3.4
       webdriverio:
         specifier: latest
-        version: 8.10.0(typescript@5.1.3)
+        version: 8.11.2(typescript@5.1.3)
 
   test/css:
     devDependencies:
@@ -1998,7 +2002,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 8.10.0(typescript@5.1.3)
+        version: 8.11.2(typescript@5.1.3)
 
   test/web-worker:
     devDependencies:
@@ -2288,10 +2292,6 @@ packages:
   /@antfu/ni@0.21.4:
     resolution: {integrity: sha512-O0Uv9LbLDSoEg26fnMDdDRiPwFJnQSoD4WnrflDwKCJm8Cx/0mV4cGxwBLXan5mGIrpK4Dd7vizf4rQm0QCEAA==}
     hasBin: true
-    dev: true
-
-  /@antfu/utils@0.5.2:
-    resolution: {integrity: sha512-CQkeV+oJxUazwjlHD0/3ZD08QWKuGQkhnrKo3e6ly5pd48VUpXbb77q0xMU4+vc2CkJnDS02Eq/M9ugyX20XZA==}
     dev: true
 
   /@antfu/utils@0.7.4:
@@ -6735,29 +6735,6 @@ packages:
     resolution: {integrity: sha512-50/17A98tWUfQ176raKiOGXuYpLyyVMkxxG6oylzL3BPOlA6ADGdK7EYunSa4I064xerltq9TGXs8HmOk5E+vw==}
     dev: false
 
-  /@puppeteer/browsers@0.5.0(typescript@5.1.3):
-    resolution: {integrity: sha512-Uw6oB7VvmPRLE4iKsjuOh8zgDabhNX67dzo8U/BB0f9527qx+4eeUs+korU98OhG5C4ubg7ufBgVi63XYwS6TQ==}
-    engines: {node: '>=14.1.0'}
-    hasBin: true
-    peerDependencies:
-      typescript: '>= 4.7.4'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
-      extract-zip: 2.0.1(supports-color@8.1.1)
-      https-proxy-agent: 5.0.1
-      progress: 2.0.3
-      proxy-from-env: 1.1.0
-      tar-fs: 2.1.1
-      typescript: 5.1.3
-      unbzip2-stream: 1.4.3
-      yargs: 17.7.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@puppeteer/browsers@1.3.0(typescript@5.1.3):
     resolution: {integrity: sha512-an3QdbNPkuU6qpxpbssxAbjRLJcF+eP4L8UqIY3+6n0sbaVxw5pz7PiCLy9g32XEZuoamUlV5ZQPnA6FxvkIHA==}
     engines: {node: '>=16.0.0'}
@@ -8413,7 +8390,7 @@ packages:
       - supports-color
     dev: true
 
-  /@sveltejs/vite-plugin-svelte@2.0.0(svelte@3.58.0)(vite@4.3.9):
+  /@sveltejs/vite-plugin-svelte@2.0.0(svelte@3.59.1)(vite@4.3.9):
     resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -8424,8 +8401,8 @@ packages:
       deepmerge: 4.2.2
       kleur: 4.1.5
       magic-string: 0.27.0
-      svelte: 3.58.0
-      svelte-hmr: 0.15.1(svelte@3.58.0)
+      svelte: 3.59.1
+      svelte-hmr: 0.15.1(svelte@3.59.1)
       vite: 4.3.9(@types/node@18.16.18)
       vitefu: 0.2.3(vite@4.3.9)
     transitivePeerDependencies:
@@ -8569,14 +8546,14 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: true
 
-  /@testing-library/svelte@3.2.2(svelte@3.58.0):
+  /@testing-library/svelte@3.2.2(svelte@3.59.1):
     resolution: {integrity: sha512-IKwZgqbekC3LpoRhSwhd0JswRGxKdAGkf39UiDXTywK61YyLXbCYoR831e/UUC6EeNW4hiHPY+2WuovxOgI5sw==}
     engines: {node: '>= 10'}
     peerDependencies:
       svelte: 3.x
     dependencies:
       '@testing-library/dom': 8.17.1
-      svelte: 3.58.0
+      svelte: 3.59.1
     dev: true
 
   /@testing-library/user-event@13.5.0(@testing-library/dom@8.17.1):
@@ -9021,6 +8998,14 @@ packages:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
       csstype: 3.1.0
+    dev: true
+
+  /@types/react@18.2.13:
+    resolution: {integrity: sha512-vJ+zElvi/Zn9cVXB5slX2xL8PZodPCwPRDpittQdw43JR2AJ5k3vKdgJJyneV/cYgIbLQUwXa9JVDvUZXGba+Q==}
+    dependencies:
+      '@types/prop-types': 15.7.5
+      '@types/scheduler': 0.16.2
+      csstype: 3.1.2
     dev: true
 
   /@types/react@18.2.14:
@@ -10097,20 +10082,6 @@ packages:
       vue-demi: 0.14.0(vue@3.2.39)
     dev: false
 
-  /@wdio/config@8.10.0:
-    resolution: {integrity: sha512-OcmyMcQ6tky3RR9jZE5SKxjD93YiRMo4BEE9Ogw252ly3L94mgmACOnLVGo0FcMJFz/3oaRbC2+V8k7jc93Pow==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@wdio/logger': 8.6.6
-      '@wdio/types': 8.10.0
-      '@wdio/utils': 8.10.0
-      decamelize: 6.0.0
-      deepmerge-ts: 5.0.0
-      glob: 10.2.7
-      import-meta-resolve: 3.0.0
-      read-pkg-up: 9.1.0
-    dev: true
-
   /@wdio/config@8.11.0:
     resolution: {integrity: sha512-nBQXsXbPCjddtI/3rAK5yFs3eD3f0T3lZMivweTkLLR7GKBxGjiFoBjXtfqUrHJYa+2uwfXrwxo6y+dA6fVbuw==}
     engines: {node: ^16.13 || >=18}
@@ -10135,22 +10106,8 @@ packages:
       strip-ansi: 7.1.0
     dev: true
 
-  /@wdio/logger@8.6.6:
-    resolution: {integrity: sha512-MS+Y5yqFGx2zVXMOfuBQAVdFsP4DuYz+/hM552xwiDWjGg6EZHoccqUYgH3J5zpu3JFpYV3R/a5jExFiGGck6g==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      chalk: 5.2.0
-      loglevel: 1.8.1
-      loglevel-plugin-prefix: 0.8.4
-      strip-ansi: 6.0.1
-    dev: true
-
   /@wdio/protocols@8.11.0:
     resolution: {integrity: sha512-eXTMYt/XoaX53H/Q2qmsn1uWthIC5aSTGtX9YyXD/AkagG2hXeX3lLmzNWBaSIvKR+vWXRYbg3Y/7IvL2s25Wg==}
-    dev: true
-
-  /@wdio/protocols@8.8.1:
-    resolution: {integrity: sha512-nDaycUcm/ATLxcjim0fJyRiezXyyj4ZCq+Xf0S2Cubc0k7+DceFBt7KIMsernNVh2pelzFHEEwxh4DLaqQ71Wg==}
     dev: true
 
   /@wdio/repl@8.10.1:
@@ -10160,35 +10117,11 @@ packages:
       '@types/node': 20.3.1
     dev: true
 
-  /@wdio/repl@8.6.6:
-    resolution: {integrity: sha512-vyJzqHJ5yOmfVyk5WWo6pRsJ2xhgWl3DVIBdDNR0wKrtFcm/g1jnB+pNf6Eb7NhCDh3oGul25bmhAwWDoxcFYA==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@types/node': 18.16.18
-    dev: true
-
-  /@wdio/types@8.10.0:
-    resolution: {integrity: sha512-NozAgHOy7nuoXc47dAxy+52bPOQnaIVb7nEIZA2D/3x9QadGSX4ofydhyXcEH8UDtHfIAdN/xjj96ljhvg+BAw==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@types/node': 18.16.18
-    dev: true
-
   /@wdio/types@8.10.4:
     resolution: {integrity: sha512-aLJ1QQW+hhALeRK3bvMLjIrlUVyhOs3Od+91pR4Z4pLwyeNG1bJZCJRD5bAJK/mm7CnFa0NsdixPS9jJxZcRrw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.3.1
-    dev: true
-
-  /@wdio/utils@8.10.0:
-    resolution: {integrity: sha512-lUidzrcMQl7mOAkcHxydsZWsg81PuGWNwf3yR+CTdEZZVTWi/ZY8rZGaZljhM2TCqBJAdtVfiWalRlJincv4Cw==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@wdio/logger': 8.6.6
-      '@wdio/types': 8.10.0
-      import-meta-resolve: 3.0.0
-      p-iteration: 1.1.8
     dev: true
 
   /@wdio/utils@8.11.0:
@@ -12172,15 +12105,6 @@ packages:
     engines: {node: '>=6.0'}
     dev: true
 
-  /chromium-bidi@0.4.7(devtools-protocol@0.0.1107588):
-    resolution: {integrity: sha512-6+mJuFXwTMU6I3vYLs6IL8A1DyQTPjCfIL971X0aMPVGRbGnNfl6i6Cl0NMbxi2bRYLGESt9T2ZIMRM5PAEcIQ==}
-    peerDependencies:
-      devtools-protocol: '*'
-    dependencies:
-      devtools-protocol: 0.0.1107588
-      mitt: 3.0.0
-    dev: true
-
   /chromium-bidi@0.4.9(devtools-protocol@0.0.1120988):
     resolution: {integrity: sha512-u3DC6XwgLCA9QJ5ak1voPslCmacQdulZNCPsI3qNXxSnEcZS7DFIbww+5RM2bznMEje7cc0oydavRLRvOIZtHw==}
     peerDependencies:
@@ -13439,16 +13363,8 @@ packages:
     resolution: {integrity: sha512-KqFl6pOgOW+Y6wJgu80rHpo2/3H07vr8ntR9rkkFIRETewbf5GaYYcakYfiKz89K+sLsuPkQIZaXDMjUObZwWg==}
     dev: true
 
-  /devtools-protocol@0.0.1107588:
-    resolution: {integrity: sha512-yIR+pG9x65Xko7bErCUSQaDLrO/P1p3JUzEk7JCU4DowPcGHkTGUGQapcfcLc4qj0UaALwZ+cr0riFgiqpixcg==}
-    dev: true
-
   /devtools-protocol@0.0.1120988:
     resolution: {integrity: sha512-39fCpE3Z78IaIPChJsP6Lhmkbf4dWXOmzLk/KFTdRkNk/0JymRIfUynDVRndV9HoDz8PyalK1UH21ST/ivwW5Q==}
-    dev: true
-
-  /devtools-protocol@0.0.1138159:
-    resolution: {integrity: sha512-IVXe1ZEQJWkMkeg10hRoZu3luP054z8USOpBIyorCTTABKVg0gBGt4rmwjGmThMEKaTb4nEmjVJkZ3/YxU0whA==}
     dev: true
 
   /devtools-protocol@0.0.1152884:
@@ -13457,32 +13373,6 @@ packages:
 
   /devtools-protocol@0.0.981744:
     resolution: {integrity: sha512-0cuGS8+jhR67Fy7qG3i3Pc7Aw494sb9yG9QgpG97SFVWwolgYjlhJg7n+UaHxOQT30d1TYu/EYe9k01ivLErIg==}
-    dev: true
-
-  /devtools@8.10.0(typescript@5.1.3):
-    resolution: {integrity: sha512-3MDQbvu2FzOhQuJ8KVcScxxEScohELPf5YCi7Md1GITdgKBWNcBaTsCDMIp6TEyqxIFJOcKwEEgNuKdciUVwWw==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@types/node': 18.16.18
-      '@wdio/config': 8.10.0
-      '@wdio/logger': 8.6.6
-      '@wdio/protocols': 8.8.1
-      '@wdio/types': 8.10.0
-      '@wdio/utils': 8.10.0
-      chrome-launcher: 0.15.1
-      edge-paths: 3.0.5
-      import-meta-resolve: 3.0.0
-      puppeteer-core: 19.11.1(typescript@5.1.3)
-      query-selector-shadow-dom: 1.0.1
-      ua-parser-js: 1.0.34
-      uuid: 9.0.0
-      which: 3.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - typescript
-      - utf-8-validate
     dev: true
 
   /devtools@8.11.0(typescript@5.1.3):
@@ -16206,17 +16096,6 @@ packages:
       wordwrap: 1.0.0
     optionalDependencies:
       uglify-js: 3.17.0
-    dev: true
-
-  /happy-dom@9.10.8:
-    resolution: {integrity: sha512-zcRFDygyTxigkglFyFA/Gim1H36bIdYdWkI28kC1bLG5Kk/Ad8MnVzT+XzaUhMRAhd7SfZrizCQueS8mjf6tDw==}
-    dependencies:
-      css.escape: 1.5.1
-      he: 1.2.0
-      iconv-lite: 0.6.3
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
     dev: true
 
   /happy-dom@9.20.3:
@@ -21102,34 +20981,6 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /puppeteer-core@19.11.1(typescript@5.1.3):
-    resolution: {integrity: sha512-qcuC2Uf0Fwdj9wNtaTZ2OvYRraXpAK+puwwVW8ofOhOgLPZyz1c68tsorfIZyCUOpyBisjr+xByu7BMbEYMepA==}
-    engines: {node: '>=14.14.0'}
-    peerDependencies:
-      typescript: '>= 4.7.4'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@puppeteer/browsers': 0.5.0(typescript@5.1.3)
-      chromium-bidi: 0.4.7(devtools-protocol@0.0.1107588)
-      cross-fetch: 3.1.5
-      debug: 4.3.4(supports-color@8.1.1)
-      devtools-protocol: 0.0.1107588
-      extract-zip: 2.0.1(supports-color@8.1.1)
-      https-proxy-agent: 5.0.1
-      proxy-from-env: 1.1.0
-      tar-fs: 2.1.1
-      typescript: 5.1.3
-      unbzip2-stream: 1.4.3
-      ws: 8.13.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /puppeteer-core@20.3.0(typescript@5.1.3):
     resolution: {integrity: sha512-264pBrIui5bO6NJeOcbJrLa0OCwmA4+WK00JMrLIKTfRiqe2gx8KWTzLsjyw/bizErp3TKS7vt/I0i5fTC+mAw==}
     engines: {node: '>=16.0.0'}
@@ -23417,15 +23268,6 @@ packages:
       - sugarss
     dev: true
 
-  /svelte-hmr@0.15.1(svelte@3.58.0):
-    resolution: {integrity: sha512-BiKB4RZ8YSwRKCNVdNxK/GfY+r4Kjgp9jCLEy0DuqAKfmQtpL38cQK3afdpjw4sqSs4PLi3jIPJIFp259NkZtA==}
-    engines: {node: ^12.20 || ^14.13.1 || >= 16}
-    peerDependencies:
-      svelte: '>=3.19.0'
-    dependencies:
-      svelte: 3.58.0
-    dev: true
-
   /svelte-hmr@0.15.1(svelte@3.59.1):
     resolution: {integrity: sha512-BiKB4RZ8YSwRKCNVdNxK/GfY+r4Kjgp9jCLEy0DuqAKfmQtpL38cQK3afdpjw4sqSs4PLi3jIPJIFp259NkZtA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
@@ -23480,11 +23322,6 @@ packages:
       strip-indent: 3.0.0
       svelte: 3.59.1
       typescript: 5.1.3
-    dev: true
-
-  /svelte@3.58.0:
-    resolution: {integrity: sha512-brIBNNB76mXFmU/Kerm4wFnkskBbluBDCjx/8TcpYRb298Yh2dztS2kQ6bhtjMcvUhd5ynClfwpz5h2gnzdQ1A==}
-    engines: {node: '>= 8'}
     dev: true
 
   /svelte@3.59.1:
@@ -24478,29 +24315,6 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /unplugin-auto-import@0.15.3(rollup@3.20.2):
-    resolution: {integrity: sha512-RLT8SqbPn4bT7yBshZId0uPSofKWnwr66RyDaxWaFb/+f7OTDOWAsVNz+hOQLBWSjvbekr2xZY9ccS8TDHJbCQ==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@nuxt/kit': ^3.2.2
-      '@vueuse/core': '*'
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      '@vueuse/core':
-        optional: true
-    dependencies:
-      '@antfu/utils': 0.7.4
-      '@rollup/pluginutils': 5.0.2(rollup@3.20.2)
-      local-pkg: 0.4.3
-      magic-string: 0.30.0
-      minimatch: 9.0.1
-      unimport: 3.0.7(rollup@3.20.2)
-      unplugin: 1.3.1
-    transitivePeerDependencies:
-      - rollup
-    dev: true
-
   /unplugin-auto-import@0.16.4(@vueuse/core@10.2.0)(rollup@3.20.2):
     resolution: {integrity: sha512-xdgBa9NAS3JG8HjkAZHSbGSMlrjKpaWKXGUzaF6RzEtr980RCl1t0Zsu0skUInNYrEQfqaHc7aGWPv41DLTK/w==}
     engines: {node: '>=14'}
@@ -24523,31 +24337,6 @@ packages:
       unplugin: 1.3.1
     transitivePeerDependencies:
       - rollup
-    dev: true
-
-  /unplugin-vue-components@0.22.7(vue@3.3.4):
-    resolution: {integrity: sha512-MJEAKJF9bRykTRvJ4WXF0FNMAyt1PX3iwpu2NN+li35sAKjQv6sC1col5aZDLiwDZDo2AGwxNkzLJFKaun9qHw==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@babel/parser': ^7.15.8
-      vue: 2 || 3
-    peerDependenciesMeta:
-      '@babel/parser':
-        optional: true
-    dependencies:
-      '@antfu/utils': 0.5.2
-      '@rollup/pluginutils': 4.2.1
-      chokidar: 3.5.3
-      debug: 4.3.4(supports-color@8.1.1)
-      fast-glob: 3.2.12
-      local-pkg: 0.4.3
-      magic-string: 0.26.7
-      minimatch: 5.1.1
-      resolve: 1.22.2
-      unplugin: 0.9.6
-      vue: 3.3.4
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /unplugin-vue-components@0.25.1(rollup@2.79.1)(vue@3.3.4):
@@ -24606,15 +24395,6 @@ packages:
     transitivePeerDependencies:
       - rollup
       - supports-color
-    dev: true
-
-  /unplugin@0.9.6:
-    resolution: {integrity: sha512-YYLtfoNiie/lxswy1GOsKXgnLJTE27la/PeCGznSItk+8METYZErO+zzV9KQ/hXhPwzIJsfJ4s0m1Rl7ZCWZ4Q==}
-    dependencies:
-      acorn: 8.9.0
-      chokidar: 3.5.3
-      webpack-sources: 3.2.3
-      webpack-virtual-modules: 0.4.6
     dev: true
 
   /unplugin@1.3.1:
@@ -25314,26 +25094,6 @@ packages:
     resolution: {integrity: sha512-wYxSGajtmoP4WxfejAPIr4l0fVh+jeMXZb08wNc0tMg6xsfZXj3cECqIK0G7ZAqUq0PP8WlMDtaOGVBTAWztNw==}
     dev: true
 
-  /webdriver@8.10.0:
-    resolution: {integrity: sha512-4M7ClcZZU4xNtIZOP+erOMvsSM/ItTr1Sp77pfmcza9SoY7Fzr1ejoPZPIR6/1KVd0TPEvJ8005WbBSn8e+hZQ==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@types/node': 18.16.18
-      '@types/ws': 8.5.5
-      '@wdio/config': 8.10.0
-      '@wdio/logger': 8.6.6
-      '@wdio/protocols': 8.8.1
-      '@wdio/types': 8.10.0
-      '@wdio/utils': 8.10.0
-      deepmerge-ts: 5.0.0
-      got: 12.6.1
-      ky: 0.33.3
-      ws: 8.13.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    dev: true
-
   /webdriver@8.11.1:
     resolution: {integrity: sha512-hSpUZYzUA65t4DDtKujCHUX6hpFTUleb7lWMcf5xjPz8sxWrK9R8NIw7pXt/GU6PVS331nGAaYkzoXrqz2VB8w==}
     engines: {node: ^16.13 || >=18}
@@ -25351,43 +25111,6 @@ packages:
       ws: 8.13.0
     transitivePeerDependencies:
       - bufferutil
-      - utf-8-validate
-    dev: true
-
-  /webdriverio@8.10.0(typescript@5.1.3):
-    resolution: {integrity: sha512-cV2DXoXYcnDwTaAK+38d7SzWbCkogU/bgL9hY2Rrmkn8xsNlSMB4TAi3JWJcygZSm6vWylxGZJElIcpgKba3Xg==}
-    engines: {node: ^16.13 || >=18}
-    dependencies:
-      '@types/node': 18.16.18
-      '@wdio/config': 8.10.0
-      '@wdio/logger': 8.6.6
-      '@wdio/protocols': 8.8.1
-      '@wdio/repl': 8.6.6
-      '@wdio/types': 8.10.0
-      '@wdio/utils': 8.10.0
-      archiver: 5.3.1
-      aria-query: 5.0.2
-      css-shorthand-properties: 1.1.1
-      css-value: 0.0.1
-      devtools: 8.10.0(typescript@5.1.3)
-      devtools-protocol: 0.0.1138159
-      grapheme-splitter: 1.0.4
-      import-meta-resolve: 3.0.0
-      is-plain-obj: 4.1.0
-      lodash.clonedeep: 4.5.0
-      lodash.zip: 4.2.0
-      minimatch: 9.0.1
-      puppeteer-core: 19.11.1(typescript@5.1.3)
-      query-selector-shadow-dom: 1.0.1
-      resq: 1.11.0
-      rgb2hex: 0.2.5
-      serialize-error: 8.1.0
-      webdriver: 8.10.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - typescript
       - utf-8-validate
     dev: true
 
@@ -25507,10 +25230,6 @@ packages:
       debug: 3.2.7(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
-    dev: true
-
-  /webpack-virtual-modules@0.4.6:
-    resolution: {integrity: sha512-5tyDlKLqPfMqjT3Q9TAqf2YqjwmnUleZwzJi1A5qXnlBCdj2AtOJ6wAWdglTIDOPgOiOrXeBeFcsQ8+aGQ6QbA==}
     dev: true
 
   /webpack-virtual-modules@0.5.0:
