@@ -56,73 +56,18 @@ function normalizePaths(config: ResolvedConfig, paths: string[]) {
     })
 }
 
+let listenToRun = false
+
 ws.addEventListener('message', async (data) => {
+  if (!listenToRun)
+    return
+
   const { event, paths } = parse(data.data)
-  // we receive N run events in a row, some with paths, last one always with empty paths
-  // running Node 16/17 we receive 2 run events, with Node 18 we receive 3 run events
-  // tests done with examples/vue folder
-  // TODO: review what's happening here, just move the guard to allow load config
-  if (event === 'run'/* && paths?.length */) {
-    // eslint-disable-next-line no-console
-    console.log(paths)
-    const config: ResolvedConfig = await loadConfig()
-
-    if (!paths?.length)
-      return
-
-    const waitingPaths = normalizePaths(config, paths)
-    // eslint-disable-next-line no-console
-    console.log(paths, waitingPaths)
-    await runTests(paths, config!, async (e) => {
-      if (e.data.type === 'hide') {
-        hideIFrames()
-        return
-      }
-
-      if (e.data.type === 'done') {
-        // eslint-disable-next-line no-console
-        console.log('done', e.data.filename, e.data.version)
-        const filename = e.data.filename
-        if (!filename)
-          return
-
-        // eslint-disable-next-line no-console
-        console.log('done received', filename)
-        const idx = waitingPaths.indexOf(filename)
-        if (idx === -1)
-          return
-
-        // eslint-disable-next-line no-console
-        console.log('done1', filename, waitingPaths)
-        waitingPaths.splice(idx, 1)
-
-        // eslint-disable-next-line no-console
-        console.log('done2', filename, waitingPaths)
-        if (!waitingPaths.length) {
-          await rpcDone()
-          await rpc().onDone('no-isolate')
-        }
-        return
-      }
-
-      if (e.data.type === 'navigate') {
-        if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
-          hideIFrames()
-
-        currentModule = e.data.filename
-        if (!currentModule)
-          return
-
-        currentModuleLeft = e.data.position
-        activateIFrame(currentModule, currentModuleLeft)
-      }
-    })
-  }
+  if (event === 'run' && paths?.length)
+    await handleRunTests(paths)
 })
 
 ws.addEventListener('open', async () => {
-  await client.rpc.initializeBrowser()
-
   await assignVitestGlobals()
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
@@ -132,6 +77,13 @@ ws.addEventListener('open', async () => {
     if (e.key === 'vueuse-color-scheme')
       document.documentElement.classList.toggle('dark', e.newValue === 'dark')
   })
+
+  const paths = await client.rpc.getPaths()
+
+  // resolve Vitest browser promise
+  await client.rpc.initializeBrowser()
+
+  await handleRunTests(paths)
 })
 
 async function runTests(
@@ -205,4 +157,48 @@ async function runTests(
     currentModuleLeft = savedCurrentModuleLeft
     activateIFrame(savedCurrentModule, savedCurrentModuleLeft)
   }
+}
+
+async function handleRunTests(paths: string[]) {
+  const config = await loadConfig()
+
+  const waitingPaths = normalizePaths(config, paths)
+
+  await runTests(paths, config!, async (e) => {
+    if (e.data.type === 'hide') {
+      hideIFrames()
+      return
+    }
+
+    if (e.data.type === 'done') {
+      const filename = e.data.filename
+      if (!filename)
+        return
+
+      const idx = waitingPaths.indexOf(filename)
+      if (idx === -1)
+        return
+
+      waitingPaths.splice(idx, 1)
+
+      if (!waitingPaths.length) {
+        await rpcDone()
+        await rpc().onDone('no-isolate')
+        listenToRun = true
+      }
+      return
+    }
+
+    if (e.data.type === 'navigate') {
+      if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
+        hideIFrames()
+
+      currentModule = e.data.filename
+      if (!currentModule)
+        return
+
+      currentModuleLeft = e.data.position
+      activateIFrame(currentModule, currentModuleLeft)
+    }
+  })
 }

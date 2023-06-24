@@ -34,13 +34,13 @@ export async function loadConfig() {
   let retries = 5
   do {
     try {
-      await new Promise(resolve => setTimeout(resolve, 150))
       config = await client.rpc.getConfig()
       return config
     }
     catch (_) {
       // just ignore
     }
+    await new Promise(resolve => setTimeout(resolve, 150))
   }
   while (--retries > 0)
 
