@@ -42,8 +42,8 @@ async function runTest(filename: string, version: string) {
     await startTests([filename], runner)
   }
   finally {
-    // TODO: remove version once logs removed from main.ts module
-    channel.postMessage({ type: 'done', filename, version })
+    // notify browser ui that the test is done
+    channel.postMessage({ type: 'done', filename })
   }
 }
 
