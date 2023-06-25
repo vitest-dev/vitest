@@ -57,6 +57,7 @@ export default (project: any, base = '/'): Plugin[] => {
               'vitest > pretty-format > ansi-styles',
               'vitest > pretty-format > ansi-regex',
               'vitest > chai',
+              'pretty-format',
             ],
           },
         }
