@@ -55,7 +55,9 @@ export interface BrowserConfigOptions {
   api?: ApiConfig | number
 
   /**
-   * When running on browser, enable this flag to show the result.
+   * When running on browser, enable this flag if your tests include some UI.
+   *
+   * The test's UI will be available in the `Browser UI` tab.
    *
    * @default false
    */
