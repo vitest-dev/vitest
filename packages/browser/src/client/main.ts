@@ -182,9 +182,14 @@ async function handleRunTests(paths: string[]) {
       waitingPaths.splice(idx, 1)
 
       if (!waitingPaths.length) {
-        await rpcDone()
-        await rpc().onDone('no-isolate')
-        listenToRun = true
+        // once we run all tests on initial run, we can start listening to run events from the ui
+        try {
+          await rpcDone()
+          await rpc().onDone('no-isolate')
+        }
+        finally {
+          listenToRun = true
+        }
       }
       return
     }
