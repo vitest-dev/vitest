@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "test:stackblitz": "BROWSER_PROVIDER=none vitest"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.0",
@@ -17,7 +17,7 @@
     "vite": "latest",
     "vitest": "latest"
   },
-  "stackblitz": {
-    "startCommand": "npm run test:ui"
+  "xstackblitz": {
+    "startCommand": "npm run test:stackblitz"
   }
 }

@@ -15,7 +15,7 @@ export default defineConfig({
       enableUI: !isCI,
       headless: isCI,
       name: 'chrome',
-      provider: process.env.BROSER_PROVIDER || 'webdriverio',
+      provider: process.env.BROWSER_PROVIDER || 'webdriverio',
     },
   },
 })

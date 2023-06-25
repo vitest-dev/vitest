@@ -7,7 +7,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "test": "vitest",
-    "test:stackblitz": "BROWSER_PROVIDE=none vitest"
+    "test:stackblitz": "BROWSER_PROVIDER=none vitest"
   },
   "dependencies": {
     "react": "^18.2.0",

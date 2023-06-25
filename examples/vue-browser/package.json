@@ -4,7 +4,7 @@
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "test:stackblitz": "BROWSER_PROVIDE=none vitest"
+    "test:stackblitz": "BROWSER_PROVIDER=none vitest"
   },
   "dependencies": {
     "vue": "latest"
