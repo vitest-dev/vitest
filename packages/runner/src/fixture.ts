@@ -3,30 +3,26 @@ import type { TestContext } from './types'
 export interface FixtureItem {
   prop: string
   value: any
+  index: number
   /**
    * Indicates whether the fixture is a function
    */
   isFn: boolean
   /**
-   * Fixture function may depend on other fixtures,
-   * e.g. `async (use, { a, b }) => await use(a + b)`.
-   * This array contains the available dependencies of the fixture function.
+   * The dependencies(fixtures) of current fixture function.
    */
-  availableDeps: FixtureItem[]
+  deps?: FixtureItem[]
 }
 
 export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
   const fixtureArray: FixtureItem[] = Object.entries(fixtures)
-    .map(([prop, value]) => {
+    .map(([prop, value], index) => {
       const isFn = typeof value === 'function'
-      if (isFn)
-        validateFixtureFn(value)
-
       return {
         prop,
         value,
+        index,
         isFn,
-        availableDeps: [],
       }
     })
 
@@ -35,30 +31,67 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   else
     context.fixtures = fixtureArray
 
+  // Update dependencies of fixture functions
   fixtureArray.forEach((fixture) => {
-    if (fixture.isFn)
-      fixture.availableDeps = context.fixtures!.filter(item => item !== fixture)
+    if (fixture.isFn) {
+      const { args, restParams } = parseFnArgs(fixture.value)
+
+      if (args.length <= 1 && !restParams) {
+        // async () => {}
+        // async (use) => {}
+        return
+      }
+
+      // exclude self
+      let deps = context.fixtures!.filter(item => item.index !== fixture.index)
+      if (args.length >= 2 && isObjectDestructuring(args[1])) {
+        const { props, restParams } = getDestructuredProps(args[1])
+        if (!restParams) {
+          // async (use, { a, b }) => {}
+          deps = deps.filter(item => props.includes(item.prop))
+        }
+      }
+
+      // async (...rest) => {}
+      // async (use, ...rest) => {}
+      // async (use, context) => {}
+      // async (use, { a, b, ...rest }) => {}
+      fixture.deps = deps
+    }
   })
 
   return context
 }
 
 export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
-  validateTestFn(fn)
-  const props = getTestFnDepProps(fn, fixtures.map(({ prop }) => prop))
-
-  if (props.length === 0)
+  const { args, restParams } = parseFnArgs(fn)
+  if ((!args.length && !restParams)) {
+    // test('', () => {})
     return () => fn(context)
+  }
 
-  const filteredFixtures = fixtures.filter(({ prop }) => props.includes(prop))
-  const pendingFixtures = resolveFixtureDeps(filteredFixtures)
+  // test('', (context) => {})
+  // test('', ({ a, b, ...rest }) => {})
+  let filteredFixtures = fixtures
 
+  if (isObjectDestructuring(args[0])) {
+    const { props, restParams } = getDestructuredProps(args[0])
+    if (!props.length && !restParams) {
+      // test('', ({ }) => {})
+      return () => fn(context)
+    }
+    if (!restParams && props.length) {
+      // test('', ({ a, b }) => {})
+      filteredFixtures = fixtures.filter(item => props.includes(item.prop))
+    }
+  }
+
+  const pendingFixtures = resolveDeps(filteredFixtures)
   let cursor = 0
 
   async function use(fixtureValue: any) {
     const { prop } = pendingFixtures[cursor++]
     context[prop] = fixtureValue
-
     if (cursor < pendingFixtures.length)
       await next()
     else await fn(context)
@@ -72,113 +105,135 @@ export function withFixtures(fn: Function, fixtures: FixtureItem[], context: Tes
   return () => next()
 }
 
-function resolveFixtureDeps(fixtures: FixtureItem[]) {
-  const pendingFixtures: FixtureItem[] = []
-
-  function resolveDeps(fixture: FixtureItem, depSet: Set<FixtureItem>) {
-    if (!fixture.isFn) {
+function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {
+  fixtures.forEach((fixture) => {
+    if (pendingFixtures.includes(fixture))
+      return
+    if (!fixture.isFn || !fixture.deps) {
       pendingFixtures.push(fixture)
       return
     }
+    if (depSet.has(fixture))
+      throw new Error('circular fixture dependency')
 
-    const { value: fn, availableDeps } = fixture
-    const props = getFixtureFnDepProps(fn, availableDeps.map(({ prop }) => prop))
+    depSet.add(fixture)
 
-    const deps = availableDeps.filter(({ prop }) => props.includes(prop))
-    deps.forEach((dep) => {
-      if (!pendingFixtures.includes(dep)) {
-        if (dep.isFn) {
-          if (depSet.has(dep))
-            throw new Error('circular fixture dependency')
-          depSet.add(dep)
-        }
-
-        resolveDeps(dep, depSet)
-      }
-    })
+    resolveDeps(fixture.deps, depSet, pendingFixtures)
 
     pendingFixtures.push(fixture)
-  }
-
-  fixtures.forEach(fixture => resolveDeps(fixture, new Set([fixture])))
+    depSet.clear()
+  })
 
   return pendingFixtures
 }
 
-function getFixtureFnDepProps(fn: Function, props: string[]) {
-  if (fn.length === 1)
-    return []
-  const args = getFnArgumentsStr(fn)
-  const secondArg = args.slice(args.indexOf(',') + 1).trim()
-  return filterPropsByObjectDestructuring(secondArg, props)
-}
+/**
+ * To smartly initialize fixtures based on usage, we need to know whether a fixture will be consumed in test function(or in another fixture function) or not, so this function was implemented to get the arguments of both the test function and the fixture function.
+ *
+ * e.g. `async (use, { a, b }, ...rest) => {}` => `{ args: ['use', '{a,b}'], restParams: true }`
+ *
+ */
+function parseFnArgs(fn: Function) {
+  let str = fn.toString()
+  str = str.slice(str.indexOf('(') + 1)
+  str = str.replace(/\s|\'.*\'|\".*\"|\`.*\`|\(.*\)/g, '')
+  const parentheses = ['(']
+  const curlyBrackets = []
+  const brackets = []
+  const args: string[] = []
+  let arg = ''
+  let i = 0
 
-function getTestFnDepProps(fn: Function, props: string[]) {
-  if (!fn.length)
-    return []
+  function addArg(a: string) {
+    args.push(a)
+    arg = ''
+  }
 
-  const arg = getFnArgumentsStr(fn).trim()
-  if (!arg.startsWith('{'))
-    return props
-
-  return filterPropsByObjectDestructuring(arg, props)
-}
-
-function filterPropsByObjectDestructuring(argStr: string, props: string[]) {
-  if (!argStr.startsWith('{') || !argStr.endsWith('}'))
-    throw new Error('Invalid object destructuring pattern')
-
-  const usedProps = argStr.slice(1, -1).split(',')
-  const filteredProps = []
-
-  for (const prop of usedProps) {
-    if (!prop)
-      continue
-
-    let _prop = prop.trim()
-
-    if (_prop.startsWith('...')) {
-      // { a, b, ...rest }
-      return props
+  while (i < str.length) {
+    const s = str[i++]
+    switch (s) {
+      case '(':
+        parentheses.push(s)
+        break
+      case ')':
+        parentheses.pop()
+        if (!parentheses.length) {
+          addArg(arg)
+          break
+        }
+        break
+      case '{':
+        curlyBrackets.push(s)
+        break
+      case '}':
+        curlyBrackets.pop()
+        break
+      case '[':
+        brackets.push(s)
+        break
+      case ']':
+        brackets.pop()
+        break
+      case ',':
+        if (!curlyBrackets.length && !brackets.length) {
+          addArg(arg)
+          continue
+        }
+        break
     }
+    arg += s
+  }
+  const restParams = args.length > 0 && args.at(-1)?.startsWith('...')
+  const _args = restParams ? args.slice(0, -1) : args
+  return { args: _args.filter(Boolean), restParams }
+}
 
-    const colonIndex = _prop.indexOf(':')
-    if (colonIndex > 0)
-      _prop = _prop.slice(0, colonIndex).trim()
+function isObjectDestructuring(str: string) {
+  return str.startsWith('{') && str.endsWith('}')
+}
 
-    if (props.includes(_prop))
-      filteredProps.push(_prop)
+/**
+ * `'{ a, b: { c }, ...rest }'` => `{ props: ['a', 'b'], restParams: true }`
+ */
+function getDestructuredProps(str: string) {
+  str = str.replace(/\s/g, '')
+  const curlyBrackets = ['{']
+  const props: string[] = []
+  let prop = ''
+  let i = 1
+
+  function pushProp(p: string) {
+    p = p.trim()
+    p.length > 0 && props.push(p)
+    prop = ''
   }
 
-  return filteredProps
-}
-
-function getFnArgumentsStr(fn: Function) {
-  if (!fn.length)
-    return ''
-  return fn.toString().match(/[^(]*\(([^)]*)/)![1]
-}
-
-function validateFixtureFn(fn: Function) {
-  if (fn.length < 1 || fn.length > 2)
-    throw new Error('invalid fixture function, should follow below rules:\n- have at least one argument, at most two arguments\n- the first argument is the "use" function, which must be invoked with fixture value\n- the second argument should use the object destructuring pattern to access other fixtures\n\nFor instance,\nasync (use) => { await use(0) }\nasync (use, { a, b }) => { await use(a + b) }')
-
-  if (fn.length === 2) {
-    const args = getFnArgumentsStr(fn)
-    if (args.includes('...'))
-      throw new Error('rest param is not supported')
-
-    const second = args.slice(args.indexOf(',') + 1).trim()
-
-    if (second.length < 2 || !second.startsWith('{') || !second.endsWith('}'))
-      throw new Error('the second argument should use the object destructuring pattern')
-
-    if (second.indexOf('{') !== second.lastIndexOf('{'))
-      throw new Error('nested object destructuring pattern is not supported')
+  while (i < str.length) {
+    const s = str[i++]
+    if (s === '{')
+      curlyBrackets.push(s)
+    if (s === '}') {
+      if (curlyBrackets.length === 1) {
+        pushProp(prop)
+        break
+      }
+      else { curlyBrackets.pop() }
+    }
+    if (s === ',' && curlyBrackets.length === 1) {
+      pushProp(prop)
+      continue
+    }
+    prop += s
   }
-}
 
-function validateTestFn(fn: Function) {
-  if (fn.length > 1)
-    throw new Error('extended test function should have only one argument')
+  const restParams = props.length > 0 && props.at(-1)?.startsWith('...')
+  const _props = restParams ? props.slice(0, -1) : props
+  return {
+    props: _props.map((p) => {
+      if (/\:|\=/.test(p))
+        return p.replace(/\:.*|\=.*/g, '')
+      return p
+    }),
+    restParams,
+  }
 }
