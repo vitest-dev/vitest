@@ -1,4 +1,5 @@
 import { tick } from 'svelte'
+import { expect } from 'vitest'
 import Hello from '../components/Hello.svelte'
 
 let host: HTMLElement
@@ -8,6 +9,7 @@ test('mount component', async () => {
   host.setAttribute('id', 'host')
   document.body.appendChild(host)
   const instance = new Hello({ target: host, props: { count: 4 } })
+  expect(document.activeElement).toBe(document.body)
   expect(instance).toBeTruthy()
   expect(host.innerHTML).toContain('4 x 2 = 8')
   expect(host.innerHTML).toMatchSnapshot()
@@ -18,6 +20,9 @@ test('mount component', async () => {
   btn.click()
   await tick()
   expect(host.innerHTML).toContain('4 x 4 = 16')
+  btn.focus()
+  await tick()
+  expect(document.activeElement).toBe(btn)
 })
 
 /*
