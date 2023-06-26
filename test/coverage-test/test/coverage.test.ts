@@ -2,6 +2,11 @@ import { expect, test } from 'vitest'
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
 import { second } from '../src/function-count'
+import { runDynamicFileCJS, runDynamicFileESM } from '../src/dynamic-files'
+
+// Browser mode crashes with dynamic files. Enable this when browser mode works.
+// To keep istanbul report consistent between browser and node, skip dynamic tests when istanbul is used.
+const skipDynamicFiles = process.env.COVERAGE_PROVIDER === 'istanbul' || !process.env.COVERAGE_PROVIDER
 
 const { pythagoras } = await (() => {
   if ('__vitest_browser__' in globalThis)
@@ -26,4 +31,12 @@ test('import meta env', () => {
 
 test('cover function counts', () => {
   expect(second()).toBe(2)
+})
+
+test.skipIf(skipDynamicFiles)('run dynamic ESM file', async () => {
+  await runDynamicFileESM()
+})
+
+test.skipIf(skipDynamicFiles)('run dynamic CJS file', async () => {
+  await runDynamicFileCJS()
 })
