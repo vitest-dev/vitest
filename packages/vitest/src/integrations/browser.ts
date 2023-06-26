@@ -1,6 +1,8 @@
+import { NoneBrowserProvider } from '../node/browser/none'
 import { PlaywrightBrowserProvider } from '../node/browser/playwright'
 import { WebdriverBrowserProvider } from '../node/browser/webdriver'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
+import { StackBlitzBrowserProvider } from '../node/browser/stackblitz'
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: BrowserProviderModule }>
@@ -14,6 +16,12 @@ export async function getBrowserProvider(options: ResolvedBrowserOptions, loader
 
     case 'playwright':
       return PlaywrightBrowserProvider
+
+    case 'stackblitz':
+      return StackBlitzBrowserProvider
+
+    case 'none':
+      return NoneBrowserProvider
 
     default:
       break

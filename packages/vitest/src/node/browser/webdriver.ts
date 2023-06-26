@@ -18,6 +18,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private browser!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
+  requiresBrowser() {
+    return true
+  }
+
   getSupportedBrowsers() {
     return webdriverBrowsers
   }

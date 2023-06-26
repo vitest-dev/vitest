@@ -8,6 +8,7 @@ import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
 import { MocksPlugin } from '../../node/plugins/mocks'
+import type { BrowserConfigOptions } from '../../types/browser'
 
 export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
   const root = project.config.root
@@ -38,13 +39,17 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
         enforce: 'post',
         name: 'vitest:browser:config',
         async config(config) {
-          const server = resolveApiServerConfig(config.test?.browser || {}) || {
+          const browser: Pick<BrowserConfigOptions, 'api' | 'enabled' | 'provider'> = config.test?.browser ?? {}
+          const server = resolveApiServerConfig(browser) || {
             port: defaultBrowserPort,
           }
 
           config.server = server
           config.server.fs ??= {}
           config.server.fs.strict = false
+
+          if (browser.enabled === true && browser.provider === 'none')
+            config.server.open = true
 
           return {
             resolve: {

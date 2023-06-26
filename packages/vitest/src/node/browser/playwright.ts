@@ -18,6 +18,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browser!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
+  requiresBrowser() {
+    return true
+  }
+
   getSupportedBrowsers() {
     return playwrightBrowsers
   }

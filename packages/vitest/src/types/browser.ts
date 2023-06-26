@@ -8,6 +8,7 @@ export interface BrowserProviderOptions {
 
 export interface BrowserProvider {
   name: string
+  requiresBrowser(): boolean
   getSupportedBrowsers(): readonly string[]
   initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
   openPage(url: string): Awaitable<void>
@@ -37,7 +38,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'webdriverio'
    */
-  provider?: 'webdriverio' | 'playwright' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'stackblitz' | 'none' | (string & {})
 
   /**
    * enable headless mode
