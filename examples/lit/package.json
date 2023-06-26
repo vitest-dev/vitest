@@ -9,7 +9,8 @@
     "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:browser": "IN_BROWSER_PROVIDER=true BROWSER_PROVIDER=webdriverio vitest"
   },
   "dependencies": {
     "lit": "^2.2.5"
@@ -17,6 +18,7 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "jsdom": "latest",
+    "std-env": "^3.3.2",
     "vite": "latest",
     "vitest": "latest"
   },

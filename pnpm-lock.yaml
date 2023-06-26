@@ -270,6 +270,9 @@ importers:
       jsdom:
         specifier: latest
         version: 22.1.0
+      std-env:
+        specifier: ^3.3.2
+        version: 3.3.3
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.16.18)
