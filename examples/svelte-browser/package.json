@@ -12,7 +12,6 @@
     "@testing-library/svelte": "^3.2.2",
     "@vitest/browser": "latest",
     "@vitest/ui": "latest",
-    "jsdom": "latest",
     "std-env": "^3.3.2",
     "svelte": "latest",
     "vite": "latest",

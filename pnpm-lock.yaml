@@ -696,9 +696,6 @@ importers:
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
-      jsdom:
-        specifier: latest
-        version: 22.1.0
       std-env:
         specifier: ^3.3.2
         version: 3.3.2
@@ -845,9 +842,6 @@ importers:
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
-      jsdom:
-        specifier: latest
-        version: 22.1.0
       std-env:
         specifier: ^3.3.2
         version: 3.3.3
@@ -956,9 +950,6 @@ importers:
       '@vitest/browser':
         specifier: latest
         version: link:../../packages/browser
-      jsdom:
-        specifier: latest
-        version: 22.1.0
       std-env:
         specifier: ^3.3.2
         version: 3.3.2

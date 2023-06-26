@@ -12,7 +12,6 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "latest",
-    "jsdom": "latest",
     "std-env": "^3.3.2",
     "vite": "latest",
     "vitest": "latest"
