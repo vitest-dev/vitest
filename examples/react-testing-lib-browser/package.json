@@ -21,6 +21,7 @@
     "@types/react-dom": "^18.0.8",
     "@vitejs/plugin-react": "^2.2.0",
     "@vitest/coverage-c8": "^0.24.5",
+    "@vitest/browser": "latest",
     "@vitest/ui": "latest",
     "jsdom": "latest",
     "std-env": "^3.3.2",

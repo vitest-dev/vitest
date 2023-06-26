@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/example-lit",
+  "name": "@vitest/example-lit-browser",
   "private": true,
   "files": [
     "dist",
@@ -8,15 +8,15 @@
   "scripts": {
     "coverage": "vitest run --coverage",
     "dev": "vite",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test": "vitest"
   },
   "dependencies": {
     "lit": "^2.2.5"
   },
   "devDependencies": {
+    "@vitest/browser": "latest",
     "@vitest/ui": "latest",
-    "jsdom": "latest",
+    "std-env": "^3.3.2",
     "vite": "latest",
     "vitest": "latest"
   },

@@ -270,6 +270,25 @@ importers:
       jsdom:
         specifier: latest
         version: 22.1.0
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.16.18)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  examples/lit-browser:
+    dependencies:
+      lit:
+        specifier: ^2.2.5
+        version: 2.3.1
+    devDependencies:
+      '@vitest/browser':
+        specifier: latest
+        version: link:../../packages/browser
+      '@vitest/ui':
+        specifier: latest
+        version: link:../../packages/ui
       std-env:
         specifier: ^3.3.2
         version: 3.3.3
@@ -668,6 +687,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^2.2.0
         version: 2.2.0(vite@4.3.9)
+      '@vitest/browser':
+        specifier: latest
+        version: link:../../packages/browser
       '@vitest/coverage-c8':
         specifier: ^0.24.5
         version: 0.24.5
@@ -817,6 +839,9 @@ importers:
       '@testing-library/svelte':
         specifier: ^3.2.2
         version: 3.2.2(svelte@3.59.1)
+      '@vitest/browser':
+        specifier: latest
+        version: link:../../packages/browser
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -928,6 +953,9 @@ importers:
       '@vitejs/plugin-vue':
         specifier: latest
         version: 4.2.3(vite@4.3.9)(vue@3.3.4)
+      '@vitest/browser':
+        specifier: latest
+        version: link:../../packages/browser
       jsdom:
         specifier: latest
         version: 22.1.0
