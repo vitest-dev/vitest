@@ -34,14 +34,16 @@ export interface BrowserConfigOptions {
   name: string
 
   /**
-   * browser provider
+   * Browser provider
+   *
+   * When running in StackBlitz, Vitest will use the `none` provider (configured provider will be ignored).
    *
    * @default 'webdriverio'
    */
   provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
 
   /**
-   * enable headless mode
+   * Enable headless mode
    *
    * @default process.env.CI
    */
