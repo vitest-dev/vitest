@@ -19,8 +19,8 @@ importers:
         specifier: ^0.21.4
         version: 0.21.4
       '@rollup/plugin-alias':
-        specifier: ^4.0.2
-        version: 4.0.2(rollup@3.20.2)
+        specifier: ^5.0.0
+        version: 5.0.0(rollup@3.20.2)
       '@rollup/plugin-commonjs':
         specifier: ^23.0.2
         version: 23.0.2(rollup@3.20.2)
@@ -6689,8 +6689,8 @@ packages:
       - supports-color
     dev: true
 
-  /@rollup/plugin-alias@4.0.2(rollup@3.20.2):
-    resolution: {integrity: sha512-1hv7dBOZZwo3SEupxn4UA2N0EDThqSSS+wI1St1TNTBtOZvUchyIClyHcnDcjjrReTPZ47Faedrhblv4n+T5UQ==}
+  /@rollup/plugin-alias@5.0.0(rollup@3.20.2):
+    resolution: {integrity: sha512-l9hY5chSCjuFRPsnRm16twWBiSApl2uYFLsepQYwtBuAxNMQ/1dJqADld40P0Jkqm65GRTLy/AC6hnpVebtLsA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0||^3.0.0
