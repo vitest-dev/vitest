@@ -36,7 +36,7 @@ Vitest provides two diffident ways to help you extend the test context.
 ### `test.extend`
 
 ::: warning
-This API is available since Vitest 0.33.3.
+This API is available since Vitest 0.32.3.
 :::
 
 Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you can use this method to define your own `test` API with custom fixtures and reuse it anywhere.
