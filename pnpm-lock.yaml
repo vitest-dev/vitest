@@ -22,8 +22,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(rollup@3.20.2)
       '@rollup/plugin-commonjs':
-        specifier: ^23.0.2
-        version: 23.0.2(rollup@3.20.2)
+        specifier: ^25.0.2
+        version: 25.0.2(rollup@3.20.2)
       '@rollup/plugin-json':
         specifier: ^6.0.0
         version: 6.0.0(rollup@3.20.2)
@@ -6719,8 +6719,8 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-commonjs@23.0.2(rollup@3.20.2):
-    resolution: {integrity: sha512-e9ThuiRf93YlVxc4qNIurvv+Hp9dnD+4PjOqQs5vAYfcZ3+AXSrcdzXnVjWxcGQOa6KGJFcRZyUI3ktWLavFjg==}
+  /@rollup/plugin-commonjs@25.0.2(rollup@3.20.2):
+    resolution: {integrity: sha512-NGTwaJxIO0klMs+WSFFtBP7b9TdTJ3K76HZkewT8/+yHzMiUGVQgaPtLQxNVYIgT5F7lxkEyVID+yS3K7bhCow==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0
@@ -6733,7 +6733,7 @@ packages:
       estree-walker: 2.0.2
       glob: 8.0.3
       is-reference: 1.2.1
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       rollup: 3.20.2
     dev: true
 
