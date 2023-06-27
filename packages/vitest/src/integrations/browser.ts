@@ -1,24 +1,22 @@
+import { provider } from 'std-env'
 import { NoneBrowserProvider } from '../node/browser/none'
 import { PlaywrightBrowserProvider } from '../node/browser/playwright'
 import { WebdriverBrowserProvider } from '../node/browser/webdriver'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
-import { StackBlitzBrowserProvider } from '../node/browser/stackblitz'
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: BrowserProviderModule }>
 }
 
 export async function getBrowserProvider(options: ResolvedBrowserOptions, loader: Loader): Promise<BrowserProviderModule> {
+  const stackblitz = provider === 'stackblitz'
   switch (options.provider) {
     case undefined:
     case 'webdriverio':
-      return WebdriverBrowserProvider
+      return stackblitz ? NoneBrowserProvider : WebdriverBrowserProvider
 
     case 'playwright':
-      return PlaywrightBrowserProvider
-
-    case 'stackblitz':
-      return StackBlitzBrowserProvider
+      return stackblitz ? NoneBrowserProvider : PlaywrightBrowserProvider
 
     case 'none':
       return NoneBrowserProvider
