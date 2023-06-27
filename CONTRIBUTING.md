@@ -58,6 +58,12 @@ You may wish to test your locally-modified copy of Vitest against another packag
 
 And re-run `pnpm install` to link the package.
 
+Add a `.npmrc` file with following line next to the `package.json`:
+
+```sh
+VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
+```
+
 ## Pull Request Guidelines
 
 - Checkout a topic branch from a base branch, e.g. `main`, and merge back against that branch.
