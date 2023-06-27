@@ -5,6 +5,7 @@ const UPDATE_SNAPSHOTS = false
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 const isBrowser = process.argv.includes('--browser')
+process.env.COVERAGE_PROVIDER = provider
 
 const threadsConfig = [{ threads: true }, { threads: false }, { singleThread: true }]
 
