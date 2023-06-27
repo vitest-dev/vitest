@@ -5,7 +5,7 @@ export default defineConfig({
     exclude: ['node_modules', 'fixtures', 'dist'],
     testTimeout: 100000,
     chaiConfig: {
-      truncateThreshold: 9999,
+      truncateThreshold: 0,
     },
   },
 })
