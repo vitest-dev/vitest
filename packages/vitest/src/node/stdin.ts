@@ -32,6 +32,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // If cancelling takes long and key is pressed multiple times, exit forcefully.
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) {
       if (!ctx.isCancelling) {
+        ctx.logger.logUpdate.clear()
+        ctx.logger.log(c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'))
+        process.exitCode = 130
+
         await ctx.cancelCurrentRun('keyboard-input')
         await ctx.runningPromise
       }
@@ -44,6 +48,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       process.kill(process.pid, 'SIGTSTP')
       return
     }
+
+    // Other keys are for watch mode only
+    if (!ctx.config.watch)
+      return
 
     const name = key?.name
 
