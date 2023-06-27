@@ -1,16 +1,13 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
-// once #3671 fixed, we can remove this hack
-const LitElementClass = LitElement
-
 /**
  * An example button.
  *
  * @slot - This button has a slot
  */
 @customElement('my-button')
-export class MyButton extends LitElementClass {
+export class MyButton extends LitElement {
   static styles = css`
     :host {
       display: block;
