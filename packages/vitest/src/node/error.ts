@@ -17,13 +17,14 @@ import type { WorkspaceProject } from './workspace'
 
 interface PrintErrorOptions {
   type?: string
+  logger: Logger
   fullStack?: boolean
   showCodeFrame?: boolean
 }
 
-export async function printError(error: unknown, project: WorkspaceProject, options: PrintErrorOptions = {}) {
+export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions) {
   const { showCodeFrame = true, fullStack = false, type } = options
-  const logger = project.ctx.logger
+  const logger = options.logger
   let e = error as ErrorWithDiff
 
   if (isPrimitive(e)) {
@@ -42,7 +43,7 @@ export async function printError(error: unknown, project: WorkspaceProject, opti
   }
 
   // Error may have occured even before the configuration was resolved
-  if (!project.config)
+  if (!project)
     return printErrorMessage(e, logger)
 
   const parserOptions: StackTraceParserOptions = {
@@ -103,7 +104,7 @@ export async function printError(error: unknown, project: WorkspaceProject, opti
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    await printError(e.cause, project, { fullStack, showCodeFrame: false })
+    await printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)

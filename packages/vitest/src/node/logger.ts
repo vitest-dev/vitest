@@ -82,6 +82,7 @@ export class Logger {
       fullStack,
       type,
       showCodeFrame: true,
+      logger: this,
     })
   }
 
