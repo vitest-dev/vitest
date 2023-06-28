@@ -2,9 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.spec.ts'],
-    chaiConfig: {
-      truncateThreshold: 0,
-    },
+    include: ['*.test.ts'],
+    retry: 3,
   },
 })

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: ['test/*.test.ts'],
     chaiConfig: {
-      truncateThreshold: 9999,
+      truncateThreshold: 0,
     },
   },
 })

@@ -79,7 +79,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-      retry: options?.retry,
+      retry: options?.retry ?? runner.config.retry,
       repeats: options?.repeats,
       meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
@@ -301,7 +301,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_.]+)/g,
-      (_, key) => objDisplay(objectAttr(items[0], key), runner?.config?.chaiConfig) as unknown as string,
+      (_, key) => objDisplay(objectAttr(items[0], key), { truncate: runner?.config?.chaiConfig?.truncateThreshold }) as unknown as string,
     // https://github.com/chaijs/chai/pull/1490
     )
   }
