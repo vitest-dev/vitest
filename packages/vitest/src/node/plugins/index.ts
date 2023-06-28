@@ -63,9 +63,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
-          define: {
-            'import.meta.url': '__vite_ssr_import_meta__.url',
-          },
           esbuild: {
             sourcemap: 'external',
 

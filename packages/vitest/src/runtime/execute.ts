@@ -12,6 +12,8 @@ import { loadEnvironment } from '../integrations/env'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
 
+const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
+
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
   moduleDirectories?: string[]
@@ -84,7 +86,7 @@ export async function startViteNode(ctx: ContextRPC) {
   ctx.environment.environment = environment
   transformMode = ctx.environment.transformMode ?? environment.transformMode ?? 'ssr'
 
-  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+  const { run } = await import(entryUrl)
 
   _viteNode = { run, executor, environment }
 
