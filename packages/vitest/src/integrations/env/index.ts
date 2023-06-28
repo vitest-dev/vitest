@@ -41,7 +41,7 @@ export async function loadEnvironment(name: VitestEnvironment, executor: VitestE
   if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
     throw new Error(
       `Environment "${name}" is not a valid environment. `
-    + `Package "vitest-environment-${name}" should have default export with "setup" method.`,
+    + `Path "${packageId}" should export default object with a "setup" method.`,
     )
   }
   return pkg.default
