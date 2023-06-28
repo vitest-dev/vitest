@@ -397,7 +397,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const callCount = spy.mock.calls.length
     return this.assert(
       callCount === number,
-      `expected "${spyName}" to be called #{exp} times`,
+      `expected "${spyName}" to be called #{exp} times, but got ${callCount} times`,
       `expected "${spyName}" to not be called #{exp} times`,
       number,
       callCount,
@@ -410,7 +410,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const callCount = spy.mock.calls.length
     return this.assert(
       callCount === 1,
-      `expected "${spyName}" to be called once`,
+      `expected "${spyName}" to be called once, but got ${callCount} times`,
       `expected "${spyName}" to not be called once`,
       1,
       callCount,
@@ -420,14 +420,15 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenCalled', 'toBeCalled'], function () {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const called = spy.mock.calls.length > 0
+    const callCount = spy.mock.calls.length
+    const called = callCount > 0
     const isNot = utils.flag(this, 'negate') as boolean
     let msg = utils.getMessage(
       this,
       [
         called,
         `expected "${spyName}" to be called at least once`,
-        `expected "${spyName}" to not be called at all`,
+        `expected "${spyName}" to not be called at all, but actually been called ${callCount} times`,
         true,
         called,
       ],
