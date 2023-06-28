@@ -7,7 +7,7 @@ import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
@@ -63,6 +63,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
+          define: {
+            'import.meta.url': '__vite_ssr_import_meta__.url',
+          },
           esbuild: {
             sourcemap: 'external',
 
@@ -169,7 +172,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
