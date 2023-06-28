@@ -18,13 +18,13 @@ interface LoupeOptions {
   truncate?: number
 }
 
-const formatRegExp = /%[sdj%]/g
+const formatRegExp = /%[sdjifoOcj%]/g
 
 export function format(...args: unknown[]) {
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++)
-      objects.push(inspect(args[i]))
+      objects.push(inspect(args[i], { depth: 0, colors: false, compact: 3 }))
     return objects.join(' ')
   }
 
@@ -62,13 +62,26 @@ export function format(...args: unknown[]) {
       case '%f': return Number.parseFloat(String(args[i++])).toString()
       case '%o': return inspect(args[i++], { showHidden: true, showProxy: true })
       case '%O': return inspect(args[i++])
-      case '%c': return ''
+      case '%c': {
+        i++
+        return ''
+      }
       case '%j':
         try {
           return JSON.stringify(args[i++])
         }
-        catch (_) {
-          return '[Circular]'
+        catch (err: any) {
+          const m = err.message
+          if (
+            // chromium
+            m.includes('circular structure')
+            // safari
+            || m.includes('cyclic structures')
+            // firefox
+            || m.includes('cyclic object')
+          )
+            return '[Circular]'
+          throw err
         }
       default:
         return x
