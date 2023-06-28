@@ -1809,6 +1809,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/run:
+    devDependencies:
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.16.18)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/run-once:
     devDependencies:
       vitest:

@@ -140,4 +140,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   }
 
   on()
+
+  return function cleanup() {
+    off()
+  }
 }
