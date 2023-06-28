@@ -71,7 +71,15 @@ export function format(...args: unknown[]) {
           return JSON.stringify(args[i++])
         }
         catch (err: any) {
-          if (err.message.includes('circular structure'))
+          const m = err.message
+          if (
+            // chromium
+            m.includes('circular structure')
+            // safari
+            || m.includes('cyclic structures')
+            // firefox
+            || m.includes('cyclic object')
+          )
             return '[Circular]'
           throw err
         }
