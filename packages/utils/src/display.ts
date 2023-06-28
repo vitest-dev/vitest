@@ -100,7 +100,7 @@ export function format(...args: unknown[]) {
 
 export function inspect(obj: unknown, options: LoupeOptions = {}) {
   if (options.truncate === 0)
-    options.truncate = Infinity
+    options.truncate = Number.POSITIVE_INFINITY
   return loupe(obj, options)
 }
 
