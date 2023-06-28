@@ -125,14 +125,17 @@ export class JUnitReporter implements Reporter {
     await this.logger.log(`</${name}>`)
   }
 
-  async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
+  async writeErrorDetails(task: Task, error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
     const errorDetails = `${errorName}: ${error.message}`
 
     // Be sure to escape any XML in the error Details
     await this.baseLog(escapeXML(errorDetails))
 
-    const stack = parseErrorStacktrace(error)
+    const project = this.ctx.getProjectByTaskId(task.id)
+    const stack = parseErrorStacktrace(error, {
+      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    })
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {
@@ -185,7 +188,7 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              await this.writeErrorDetails(error)
+              await this.writeErrorDetails(task, error)
             })
           }
         }

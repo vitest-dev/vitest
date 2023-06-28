@@ -12,6 +12,7 @@ export default defineConfig({
     minify: false,
     outDir: '../../dist/client',
     emptyOutDir: false,
+    assetsDir: '__vitest_browser__',
   },
   plugins: [
     {

@@ -7,6 +7,7 @@ import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type { ViteDevServer } from 'vite'
+import type { StackTraceParserOptions } from '@vitest/utils'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
@@ -158,13 +159,19 @@ class WebSocketReporter implements Reporter {
     if (this.clients.size === 0)
       return
 
-    packs.forEach(([, result]) => {
+    packs.forEach(([taskId, result]) => {
+      const project = this.ctx.getProjectByTaskId(taskId)
+
+      const parserOptions: StackTraceParserOptions = {
+        getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+      }
+
       // TODO remove after "error" deprecation is removed
       if (result?.error && !isPrimitive(result.error))
-        result.error.stacks = parseErrorStacktrace(result.error)
+        result.error.stacks = parseErrorStacktrace(result.error, parserOptions)
       result?.errors?.forEach((error) => {
         if (!isPrimitive(error))
-          error.stacks = parseErrorStacktrace(error)
+          error.stacks = parseErrorStacktrace(error, parserOptions)
       })
     })
 

@@ -6,7 +6,7 @@
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
     "test:webdriverio": "PROVIDER=webdriverio node --test specs/",
     "test:playwright": "PROVIDER=playwright node --test specs/",
-    "coverage": "vitest --coverage.enabled --coverage.provider=istanbul"
+    "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",

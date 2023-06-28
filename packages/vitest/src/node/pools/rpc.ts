@@ -6,7 +6,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
   return {
     async onWorkerExit(error, code) {
-      await ctx.logger.printError(error, false, 'Unexpected Exit')
+      await ctx.logger.printError(error, { type: 'Unexpected Exit' })
       process.exit(code || 1)
     },
     snapshotSaved(snapshot) {
