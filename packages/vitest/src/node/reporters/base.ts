@@ -359,8 +359,7 @@ export abstract class BaseReporter implements Reporter {
 
         this.ctx.logger.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`)
       }
-      const projectName = (tasks[0] as File)?.projectName || tasks[0].file?.projectName
-      const project = this.ctx.projects.find(i => i.getName() === projectName)
+      const project = this.ctx.getProjectByTaskId(tasks[0].id)
       await this.ctx.logger.printError(error, { project })
       errorDivider()
       await Promise.resolve()

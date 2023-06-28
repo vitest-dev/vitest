@@ -32,6 +32,10 @@
       "types": "./dist/helpers.d.ts",
       "import": "./dist/helpers.js"
     },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "import": "./dist/source-map.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

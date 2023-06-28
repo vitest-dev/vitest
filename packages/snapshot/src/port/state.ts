@@ -6,7 +6,7 @@
  */
 
 import type { ParsedStack } from '@vitest/utils'
-import { parseErrorStacktrace } from '@vitest/utils'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { SnapshotData, SnapshotEnvironment, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
