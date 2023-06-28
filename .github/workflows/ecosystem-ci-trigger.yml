@@ -65,7 +65,7 @@ jobs:
         with:
           app_id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
           private_key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
-          repository: "${{ github.repository_owner }}/vitest-ecosystem-ci"
+          repository: '${{ github.repository_owner }}/vitest-ecosystem-ci'
       - uses: actions/github-script@v6
         id: trigger
         env:
