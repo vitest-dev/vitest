@@ -49,7 +49,7 @@ function extractLocation(urlLike: string) {
 export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   let line = raw.trim()
 
-  if (!SAFARI_NATIVE_CODE_REGEXP.test(line))
+  if (SAFARI_NATIVE_CODE_REGEXP.test(line))
     return null
 
   if (line.includes(' > eval'))
