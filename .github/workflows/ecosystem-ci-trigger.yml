@@ -81,7 +81,7 @@ jobs:
 
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
-              repo: 'vite-ecosystem-ci',
+              repo: 'vitest-ecosystem-ci',
               workflow_id: 'ecosystem-ci-from-pr.yml',
               ref: 'main',
               inputs: {
