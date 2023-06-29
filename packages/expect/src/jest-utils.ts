@@ -478,11 +478,16 @@ export function typeEquality(a: any, b: any): boolean | undefined {
 
 export function arrayBufferEquality(a: unknown,
   b: unknown): boolean | undefined {
-  if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
-    return undefined
+  let dataViewA = a as DataView
+  let dataViewB = b as DataView
 
-  const dataViewA = new DataView(a)
-  const dataViewB = new DataView(b)
+  if (!(a instanceof DataView && b instanceof DataView)) {
+    if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
+      return undefined
+
+    dataViewA = new DataView(a)
+    dataViewB = new DataView(b)
+  }
 
   // Buffers are not equal when they do not have the same byte length
   if (dataViewA.byteLength !== dataViewB.byteLength)
