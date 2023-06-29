@@ -6,7 +6,7 @@ import { runDynamicFileCJS, runDynamicFileESM } from '../src/dynamic-files'
 
 // Browser mode crashes with dynamic files. Enable this when browser mode works.
 // To keep istanbul report consistent between browser and node, skip dynamic tests when istanbul is used.
-const skipDynamicFiles = process.env.COVERAGE_PROVIDER === 'istanbul' || !process.env.COVERAGE_PROVIDER
+const skipDynamicFiles = globalThis.process?.env.COVERAGE_PROVIDER === 'istanbul' || !globalThis.process?.env.COVERAGE_PROVIDER
 
 const { pythagoras } = await (() => {
   if ('__vitest_browser__' in globalThis)
