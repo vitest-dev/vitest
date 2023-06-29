@@ -115,6 +115,7 @@ const LIVING_KEYS = [
   'StorageEvent',
   'ProgressEvent',
   'PageTransitionEvent',
+  'SubmitEvent',
   'UIEvent',
   'FocusEvent',
   'InputEvent',
