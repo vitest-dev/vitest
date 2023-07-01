@@ -44,8 +44,11 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
+  if (!fixtures.length)
+    return () => fn(context)
+
   const usedProps = getUsedProps(fn)
-  if (!fixtures.length || !usedProps.length)
+  if (!usedProps.length)
     return () => fn(context)
 
   const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
