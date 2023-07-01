@@ -13,13 +13,13 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "^10.2.0",
+    "@vueuse/core": "^10.2.1",
     "jiti": "^1.18.2",
     "vue": "latest"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.18",
-    "@unocss/reset": "^0.53.1",
+    "@unocss/reset": "^0.53.4",
     "@vite-pwa/assets-generator": "^0.0.3",
     "@vite-pwa/vitepress": "^0.2.0",
     "@vitejs/plugin-vue": "latest",
@@ -27,7 +27,7 @@
     "fast-glob": "^3.2.12",
     "fs-extra": "^11.1.1",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.53.1",
+    "unocss": "^0.53.4",
     "unplugin-vue-components": "^0.25.1",
     "vite": "^4.0.0",
     "vite-plugin-pwa": "^0.16.4",

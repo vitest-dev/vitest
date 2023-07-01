@@ -64,6 +64,7 @@ for (const threads of threadsConfig) {
           exit()
         }
         else if (process.exitCode) {
+          process.exitCode = null
           console.warn(`Browser tests failed, retrying ${1 + retry}/${retries.length - 1}...`)
         }
         else {
