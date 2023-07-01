@@ -70,7 +70,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   const archive = []
 
   const myTest = test.extend({
-    todos: async (use) => {
+    todos: async ({ task }, use) => {
       todos.push(1, 2, 3)
       await use(todos)
       todos.length = 0
