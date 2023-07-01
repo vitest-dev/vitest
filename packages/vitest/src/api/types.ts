@@ -19,7 +19,7 @@ export interface WebSocketHandlers {
   getConfig(): ResolvedConfig
   resolveSnapshotPath(testPath: string): string
   resolveSnapshotRawPath(testPath: string, rawPath: string): string
-  getModuleGraph(id: string): Promise<ModuleGraphData>
+  getModuleGraph(id: string, workspaceName?: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
   readFile(id: string): Promise<string | null>
   writeFile(id: string, content: string, ensureDir?: boolean): Promise<void>
