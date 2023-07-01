@@ -10,7 +10,7 @@ interface Fixtures {
 const fnB = vi.fn()
 const myTest = test.extend<Pick<Fixtures, 'a' | 'b'>>({
   a: 1,
-  b: async (use, { a }) => {
+  b: async ({ a }, use) => {
     fnB()
     await use (a * 2) // 2
     fnB.mockClear()
@@ -23,32 +23,32 @@ const fnC = vi.fn()
 const fnD = vi.fn()
 const myTest2 = myTest.extend<Pick<Fixtures, 'c' | 'd'> & { a: string; b: string }>({
   // override origin a
-  a: async (use, { a: originA }) => {
+  a: async ({ a: originA }, use) => {
     expectTypeOf(originA).toEqualTypeOf<number>()
     fnA()
     await use(String(originA)) // '1'
     fnA.mockClear()
   },
-  b: async (use, { a }) => {
+  b: async ({ a }, use) => {
     expectTypeOf(a).toEqualTypeOf<string>()
     fnB2()
     await use(String(Number(a) * 2)) // '2'
     fnB2.mockClear()
   },
-  c: async (use, { a, b }) => {
+  c: async ({ a, b }, use) => {
     expectTypeOf(b).toEqualTypeOf<string>()
     fnC()
     await use(Number(a) + Number(b)) // 3
     fnC.mockClear()
   },
-  d: async (use, { a, b, c }) => {
+  d: async ({ a, b, c }, use) => {
     fnD()
     await use(Number(a) + Number(b) + c) // 6
     fnD.mockClear()
   },
 })
 
-describe('test.extend()', () => {
+describe('fixture initialization', () => {
   describe('fixture override', () => {
     myTest('origin a and b', ({ a, b }) => {
       expect(a).toBe(1)

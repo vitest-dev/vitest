@@ -1,5 +1,5 @@
-/* eslint-disable no-empty-pattern */
 /* eslint-disable prefer-rest-params */
+/* eslint-disable no-empty-pattern */
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
@@ -17,7 +17,7 @@ const doneFn = vi.fn()
 
 const myTest = test
   .extend<Pick<Fixtures, 'todoList'>>({
-    todoList: async (use) => {
+    todoList: async ({}, use) => {
       todoFn()
       await use(todoList)
       // cleanup
@@ -27,7 +27,7 @@ const myTest = test
     },
   })
   .extend<Pick<Fixtures, 'doneList' | 'archiveList'>>({
-    doneList: async (use) => {
+    doneList: async ({}, use) => {
       doneFn()
       await use(doneList)
       // cleanup
@@ -123,30 +123,31 @@ describe('test.extend()', () => {
       expect(arguments[0].archiveList).toBeUndefined()
     })
 
-    myTest('should init all fixtures', ({ todoList, ...rest }) => {
-      expect(todoFn).toBeCalledTimes(1)
+    myTest('should only init doneList and archiveList', function ({ doneList, archiveList }) {
       expect(doneFn).toBeCalledTimes(1)
 
-      expectTypeOf(todoList).toEqualTypeOf<number[]>()
-      expectTypeOf(rest.doneList).toEqualTypeOf<number[]>()
-      expectTypeOf(rest.archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(doneList).toEqualTypeOf<number[]>()
+      expectTypeOf(archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(arguments[0].todoList).not.toEqualTypeOf<number[]>()
 
-      expect(todoList).toEqual([1, 2, 3])
-      expect(rest.doneList).toEqual([])
-      expect(rest.archiveList).toEqual([])
+      expect(doneList).toEqual([])
+      expect(archiveList).toEqual([])
+      expect(arguments[0].todoList).toBeUndefined()
     })
+  })
 
-    myTest('should init all fixtures', (context) => {
+  describe('test function', () => {
+    myTest('prop alias', ({ todoList: todos, doneList: done, archiveList: archive }) => {
       expect(todoFn).toBeCalledTimes(1)
       expect(doneFn).toBeCalledTimes(1)
 
-      expectTypeOf(context.todoList).toEqualTypeOf<number[]>()
-      expectTypeOf(context.doneList).toEqualTypeOf<number[]>()
-      expectTypeOf(context.archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(todos).toEqualTypeOf<number[]>()
+      expectTypeOf(done).toEqualTypeOf<number[]>()
+      expectTypeOf(archive).toEqualTypeOf<number[]>()
 
-      expect(context.todoList).toEqual([1, 2, 3])
-      expect(context.doneList).toEqual([])
-      expect(context.archiveList).toEqual([])
+      expect(todos).toEqual([1, 2, 3])
+      expect(done).toEqual([])
+      expect(archive).toEqual([])
     })
   })
 })
