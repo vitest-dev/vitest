@@ -344,7 +344,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ## bench
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 `bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
 
@@ -411,7 +411,7 @@ Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under t
 
 ### bench.skip
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 You can use `bench.skip` syntax to skip running certain benchmarks.
 
@@ -428,7 +428,7 @@ You can use `bench.skip` syntax to skip running certain benchmarks.
 
 ### bench.only
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
 
@@ -445,7 +445,7 @@ Use `bench.only` to only run certain benchmarks in a given suite. This is useful
 
 ### bench.todo
 
-- **Type:** `(name: string) => void`
+- **Type:** `(name: string | Function) => void`
 
 Use `bench.todo` to stub benchmarks to be implemented later.
 
