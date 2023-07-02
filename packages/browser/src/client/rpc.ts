@@ -10,16 +10,19 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
-  const currentNextTick = globalThis.process.nextTick
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
+
+  const currentNextTick = globalThis.process?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.process.nextTick = nextTick
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
+
+    if (globalThis.process)
+      globalThis.process.nextTick = nextTick
 
     const result = fn()
     return result
@@ -29,9 +32,12 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
     globalThis.clearTimeout = currentClearTimeout
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
-    nextTick(() => {
-      globalThis.process.nextTick = currentNextTick
-    })
+
+    if (globalThis.process) {
+      nextTick(() => {
+        globalThis.process.nextTick = currentNextTick
+      })
+    }
   }
 }
 

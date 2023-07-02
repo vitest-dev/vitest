@@ -5,7 +5,7 @@ export default defineConfig({
     reporters: 'verbose',
     include: ['test/**/*.test.*'],
     chaiConfig: {
-      truncateThreshold: 9999,
+      truncateThreshold: 0,
     },
 
     // For Windows CI mostly

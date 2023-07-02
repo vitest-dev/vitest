@@ -24,7 +24,7 @@ export function withTimeout<T extends((...args: any[]) => any)>(
   timeout: number,
   isHook = false,
 ): T {
-  if (timeout <= 0 || timeout === Infinity)
+  if (timeout <= 0 || timeout === Number.POSITIVE_INFINITY)
     return fn
 
   const { setTimeout, clearTimeout } = getSafeTimers()
