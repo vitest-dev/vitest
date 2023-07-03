@@ -90,7 +90,7 @@ const config = {
   dangerouslyIgnoreUnhandledErrors: false,
   typecheck: {
     checker: 'tsc' as const,
-    include: ['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)'],
+    include: ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
