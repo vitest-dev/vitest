@@ -39,7 +39,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.31.0"
+    "vitest": ">=0.32.3"
   },
   "dependencies": {
     "modern-node-polyfills": "^0.1.3",
