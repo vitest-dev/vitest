@@ -122,6 +122,8 @@ jobs:
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-firefox@v1
       - uses: browser-actions/setup-edge@v1
+        with:
+          edge-version: beta
 
       - name: Install
         run: pnpm i
