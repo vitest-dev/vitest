@@ -123,24 +123,26 @@ export function resolveConfig(
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
-  resolved.deps = resolved.deps || {}
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
+
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
-  if (resolved.deps.inline !== true) {
+  if (resolved.server.deps.inline !== true) {
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr
-
-    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
-      resolved.deps.inline = true
+    if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
+      resolved.server.deps.inline = true
     }
     else {
-      resolved.deps.inline ??= []
-      resolved.deps.inline.push(...extraInlineDeps)
+      resolved.server.deps.inline ??= []
+      resolved.server.deps.inline.push(...extraInlineDeps)
     }
   }
-  resolved.deps.moduleDirectories ??= ['/node_modules/']
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
+
+  resolved.server.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.server.deps.moduleDirectories = resolved.server.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
       dir = `/${dir}`
     if (!dir.endsWith('/'))
@@ -152,6 +154,8 @@ export function resolveConfig(
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
       ?? resolve(resolved.root, resolved.runner)
   }
+
+  resolved.deps ??= {}
 
   // disable loader for Yarn PnP until Node implements chain loader
   // https://github.com/nodejs/node/pull/43772

@@ -65,10 +65,12 @@ export default defineConfig({
     sequence: {
       seed: 101,
     },
-    deps: {
-      external: ['tinyspy', /src\/external/],
-      inline: ['inline-lib'],
-      moduleDirectories: ['node_modules', 'projects', 'packages'],
+    server: {
+      deps: {
+        external: ['tinyspy', /src\/external/],
+        inline: ['inline-lib'],
+        moduleDirectories: ['node_modules', 'projects', 'packages'],
+      },
     },
     alias: [
       {

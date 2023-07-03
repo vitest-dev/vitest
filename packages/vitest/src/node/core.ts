@@ -89,7 +89,7 @@ export class Vitest {
     if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
-    this.vitenode = new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config.server)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
