@@ -509,7 +509,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (isPrimitive(sourceModule) || Array.isArray(sourceModule))
+  if (isPrimitive(sourceModule) || Array.isArray(sourceModule) || sourceModule instanceof Promise)
     return
 
   for (const key in sourceModule) {
