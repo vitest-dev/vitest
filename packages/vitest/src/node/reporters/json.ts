@@ -184,7 +184,7 @@ export class JsonReporter implements Reporter {
       return
 
     const stack = parseErrorStacktrace(error)
-    const frame = stack[stack.length - 1]
+    const frame = stack[0]
     if (!frame)
       return
 
