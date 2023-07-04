@@ -147,9 +147,29 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)
-        const promises = Object.values(filesByEnv).flat()
-        const results = await Promise.allSettled(promises
-          .map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates)))
+        const files = Object.values(filesByEnv).flat()
+        const results: PromiseSettledResult<void>[] = []
+
+        if (ctx.config.isolate) {
+          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
+            runFiles(project, getConfig(project), [file], environment, invalidates))))
+        }
+        else {
+          // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
+          // Tasks are still running parallel but environments are isolated between tasks.
+          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
+
+          for (const group of Object.values(grouped)) {
+            // Push all files to pool's queue
+            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
+              runFiles(project, getConfig(project), [file], environment, invalidates))))
+
+            // Once all tasks are running or finished, recycle worker for isolation.
+            // On-going workers will run in the previous environment.
+            await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
+            await pool.recycleWorkers()
+          }
+        }
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
@@ -162,7 +182,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
           Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
         )
 
-        // always run environments isolated between each other
         for (const env of envs) {
           const files = filesByEnv[env]
 
@@ -171,12 +190,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
 
-          const promises = Object.values(filesByOptions).map(async (files) => {
+          for (const files of Object.values(filesByOptions)) {
+            // Always run environments isolated between each other
+            await pool.recycleWorkers()
+
             const filenames = files.map(f => f.file)
             await runFiles(files[0].project, getConfig(files[0].project), filenames, files[0].environment, invalidates)
-          })
-
-          await Promise.all(promises)
+          }
         }
       }
     }
