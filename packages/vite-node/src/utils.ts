@@ -50,7 +50,31 @@ export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
+const prefixedBuiltins = new Set([
+  'node:test',
+])
+
+const builtins = new Set([
+  ...builtinModules,
+  'assert/strict',
+  'diagnostics_channel',
+  'dns/promises',
+  'fs/promises',
+  'path/posix',
+  'path/win32',
+  'readline/promises',
+  'stream/consumers',
+  'stream/promises',
+  'stream/web',
+  'timers/promises',
+  'util/types',
+  'wasi',
+])
+
 export function normalizeModuleId(id: string) {
+  // unique id that is not available as "test"
+  if (prefixedBuiltins.has(id))
+    return id
   return id
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
@@ -91,25 +115,10 @@ export function toFilePath(id: string, root: string): { path: string; exists: bo
   }
 }
 
-const builtins = new Set([
-  ...builtinModules,
-  'assert/strict',
-  'diagnostics_channel',
-  'dns/promises',
-  'fs/promises',
-  'path/posix',
-  'path/win32',
-  'readline/promises',
-  'stream/consumers',
-  'stream/promises',
-  'stream/web',
-  'timers/promises',
-  'util/types',
-  'wasi',
-])
-
 const NODE_BUILTIN_NAMESPACE = 'node:'
 export function isNodeBuiltin(id: string): boolean {
+  if (prefixedBuiltins.has(id))
+    return true
   return builtins.has(
     id.startsWith(NODE_BUILTIN_NAMESPACE)
       ? id.slice(NODE_BUILTIN_NAMESPACE.length)
