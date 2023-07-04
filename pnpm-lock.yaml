@@ -1335,8 +1335,8 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       tinypool:
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.7.13)
@@ -1682,6 +1682,18 @@ importers:
 
   test/env-glob:
     devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/env-mixed:
+    devDependencies:
+      happy-dom:
+        specifier: latest
+        version: 9.20.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.16.19)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -23640,8 +23652,8 @@ packages:
     resolution: {integrity: sha512-kRwSG8Zx4tjF9ZiyH4bhaebu+EDz1BOx9hOigYHlUW4xxI/wKIUQUqo018UlU4ar6ATPBsaMrdbKZ+tmPdohFA==}
     dev: false
 
-  /tinypool@0.6.0:
-    resolution: {integrity: sha512-FdswUUo5SxRizcBc6b1GSuLpLjisa8N8qMyYoP3rl+bym+QauhtJP5bvZY1ytt8krKGmMLYIRl36HBZfeAoqhQ==}
+  /tinypool@0.7.0:
+    resolution: {integrity: sha512-zSYNUlYSMhJ6Zdou4cJwo/p7w5nmAH17GRfU/ui3ctvjXFErXXkruT4MWW6poDeXgCaIBlGLrfU6TbTXxyGMww==}
     engines: {node: '>=14.0.0'}
     dev: false
 
