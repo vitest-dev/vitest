@@ -83,7 +83,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 - **Type:** `string[]`
 - **Default:** `['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']`
 
-Files to include in the test run, using glob pattern.
+Files to include in the test run, using glob patterns. By default it looks for files in any folders named `__tests__` with the extensions `.js`,`.mjs`, `.cjs`, `.ts`, `.mts`, `.cts`, `.jsx`, and `.jsx` . It also includes files ending with `.test` or `.spec` along with files just named `test` or `spec` (before a valid extension). These patterns are compatible with Jest's default patterns, but with additional extensions.
 
 ### exclude
 
@@ -1372,14 +1372,15 @@ You can also pass down a path to custom binary or command name that produces the
 - **Type**: `string[]`
 - **Default**: `['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)']`
 
-Glob pattern for files that should be treated as test files
+Files to include in typechecking test runs, using glob patterns. By default all tests inside files ending with `test-d` along with files just named `test-d` are considered type tests. 
+
 
 #### typecheck.exclude
 
 - **Type**: `string[]`
 - **Default**: `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
-Glob pattern for files that should not be treated as test files
+Files to exclude typechecking test runs, using glob patterns.
 
 #### typecheck.allowJs
 
