@@ -16,7 +16,7 @@ globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () =>
 globalThis.global = globalThis
 
 let currentModule: string | undefined
-let currentModuleLeft: number | undefined
+let currentModuleLeftPosition: number | undefined
 const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
@@ -29,7 +29,7 @@ function hideIFrames() {
     targetIFrame.classList.remove('show')
 
   currentModule = undefined
-  currentModuleLeft = undefined
+  currentModuleLeftPosition = undefined
 }
 
 function activateIFrame(useCurrentModule: string, left?: number) {
@@ -151,11 +151,11 @@ async function runTests(
 
   if (currentModule) {
     const savedCurrentModule = currentModule
-    const savedCurrentModuleLeft = currentModuleLeft
+    const savedCurrentModuleLeftPosition = currentModuleLeftPosition
     hideIFrames()
     currentModule = savedCurrentModule
-    currentModuleLeft = savedCurrentModuleLeft
-    activateIFrame(savedCurrentModule, savedCurrentModuleLeft)
+    currentModuleLeftPosition = savedCurrentModuleLeftPosition
+    activateIFrame(savedCurrentModule, savedCurrentModuleLeftPosition)
   }
 }
 
@@ -202,8 +202,8 @@ async function handleRunTests(paths: string[]) {
       if (!currentModule)
         return
 
-      currentModuleLeft = e.data.position
-      activateIFrame(currentModule, currentModuleLeft)
+      currentModuleLeftPosition = e.data.position
+      activateIFrame(currentModule, currentModuleLeftPosition)
     }
   })
 }
