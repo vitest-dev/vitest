@@ -11,10 +11,6 @@ import {
 import { rpc, rpcDone } from './rpc'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
-// @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
-globalThis.global = globalThis
-
 let currentModule: string | undefined
 let currentModuleLeftPosition: number | undefined
 const browserIFrames = new Map<string, HTMLIFrameElement>()

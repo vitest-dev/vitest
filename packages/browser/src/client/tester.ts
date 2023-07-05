@@ -3,10 +3,6 @@ import { setupConsoleLogSpy } from './logger'
 import { assignVitestGlobals, browserHashMap, importId, instantiateRunner, loadConfig } from './utils'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
-// @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
-globalThis.global = globalThis
-
 async function runTest(filename: string, version: string) {
   const config = await loadConfig()
   await assignVitestGlobals()
