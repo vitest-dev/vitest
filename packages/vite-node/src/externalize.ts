@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs'
-import { isNodeBuiltin, isValidNodeImport } from 'mlly'
+import { isValidNodeImport } from 'mlly'
 import { join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
-import { slash } from './utils'
+import { isNodeBuiltin, slash } from './utils'
 
 const KNOWN_ASSET_TYPES = [
   // images
