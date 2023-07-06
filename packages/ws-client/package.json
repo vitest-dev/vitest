@@ -45,6 +45,6 @@
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*",
-    "rollup": "^2.79.1"
+    "rollup": "^3.26.2"
   }
 }
