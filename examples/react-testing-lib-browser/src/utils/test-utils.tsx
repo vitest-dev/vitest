@@ -1,3 +1,4 @@
+import 'react'
 import { createRoot } from 'react-dom/client'
 import type { ReactNode } from 'react'
 
@@ -13,6 +14,6 @@ export async function createContainer(id: string, node: ReactNode) {
   return root
 }
 
-export async function nextTick() {
-  await new Promise(resolve => setTimeout(resolve, 0))
+export function nextTick() {
+  return new Promise<void>(resolve => setTimeout(resolve, 0))
 }

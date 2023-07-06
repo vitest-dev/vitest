@@ -7,9 +7,11 @@ import { isCI } from 'std-env'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react({
-    fastRefresh: false,
-  })],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+    }),
+  ],
   test: {
     globals: true,
     setupFiles: './src/test/setup.ts',
