@@ -1,4 +1,3 @@
-import 'react'
 import { createRoot } from 'react-dom/client'
 import type { ReactNode } from 'react'
 
