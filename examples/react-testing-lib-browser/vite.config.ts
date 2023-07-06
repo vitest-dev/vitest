@@ -8,9 +8,7 @@ import { isCI } from 'std-env'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      jsxRuntime: 'automatic',
-    }),
+    react(),
   ],
   test: {
     globals: true,
