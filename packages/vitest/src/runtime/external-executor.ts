@@ -87,6 +87,8 @@ const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
 const _require = createRequire(import.meta.url)
 
+const nativeResolve = import.meta.resolve
+
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private context: vm.Context
@@ -247,9 +249,11 @@ export class ExternalModulesExecutor {
         importModuleDynamically: this.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
-          // TODO: improve Node.js support with #2854
-          // meta.resolve = (specifier: string, importer?: string) =>
-          //   this.resolveAsync(specifier, importer ?? mod.identifier)
+          if (nativeResolve) {
+            meta.resolve = (specifier: string, importer?: string) => {
+              return nativeResolve(specifier, importer ?? mod.identifier)
+            }
+          }
         },
       },
     )
