@@ -1,4 +1,4 @@
-import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
+import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']
@@ -39,7 +39,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
 }
 
-export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
+export const fakeTimersDefaults = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
   toFake: [
@@ -51,9 +51,9 @@ export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
     'clearImmediate',
     'Date',
   ],
-}
+} satisfies NonNullable<UserConfig['fakeTimers']>
 
-const config: UserConfig = {
+const config = {
   allowOnly: !isCI,
   watch: !isCI,
   globals: false,
@@ -84,7 +84,7 @@ const config: UserConfig = {
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults,
+  coverage: coverageConfigDefaults as CoverageV8Options,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
@@ -96,4 +96,4 @@ const config: UserConfig = {
   slowTestThreshold: 300,
 }
 
-export const configDefaults = Object.freeze(config as Required<UserConfig>)
+export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

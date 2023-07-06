@@ -3,7 +3,7 @@ import {
 } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
 import { getWorkerState } from '../utils/global'
-import type { RuntimeRPC } from '#types'
+import type { RuntimeRPC } from '../types/rpc'
 
 const { get } = Reflect
 const safeRandom = Math.random
