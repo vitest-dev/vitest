@@ -191,7 +191,7 @@ export function displayDiff(diff: string | null, console: Console) {
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  if (!(error instanceof Error)) {
+  if (!error.message) {
     logger.error(error)
     return
   }
