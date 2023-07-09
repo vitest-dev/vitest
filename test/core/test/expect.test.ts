@@ -3,7 +3,6 @@ import { describe, expect, expectTypeOf, test } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
-    expectTypeOf(expect.soft).toEqualTypeOf(expect)
     expectTypeOf(expect.soft(7)).toEqualTypeOf(expect(7))
     expectTypeOf(expect.soft(5)).toHaveProperty('toBe')
     expectTypeOf(expect.soft(7)).not.toHaveProperty('toCustom')

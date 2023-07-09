@@ -1,7 +1,7 @@
 {
   "name": "@vitest/snapshot",
   "type": "module",
-  "version": "0.32.2",
+  "version": "0.33.0",
   "description": "Vitest snapshot manager",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -43,9 +43,9 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "magic-string": "^0.30.0",
-    "pathe": "^1.1.0",
-    "pretty-format": "^27.5.1"
+    "magic-string": "^0.30.1",
+    "pathe": "^1.1.1",
+    "pretty-format": "^29.5.0"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.1",

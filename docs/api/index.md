@@ -17,12 +17,16 @@ interface TestOptions {
   timeout?: number
   /**
    * Will retry the test specific number of times if it fails
+   *
+   * @default 0
    */
   retry?: number
   /**
    * Will repeat the same test several times even if it fails each time
    * If you have "retry" option and it fails, it will use every retry in each cycle
    * Useful for debugging random failings
+   *
+   * @default 0
    */
   repeats?: number
 }
@@ -55,6 +59,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 - **Type:** `<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>`
 - **Alias:** `it.extend`
+- **Version:** Vitest 0.32.3
 
   Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context.html#test-extend) for more information.
 
@@ -65,7 +70,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   const archive = []
 
   const myTest = test.extend({
-    todos: async (use) => {
+    todos: async ({ task }, use) => {
       todos.push(1, 2, 3)
       await use(todos)
       todos.length = 0
@@ -339,7 +344,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ## bench
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 `bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
 
@@ -406,7 +411,7 @@ Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under t
 
 ### bench.skip
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 You can use `bench.skip` syntax to skip running certain benchmarks.
 
@@ -423,7 +428,7 @@ You can use `bench.skip` syntax to skip running certain benchmarks.
 
 ### bench.only
 
-- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
 Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
 
@@ -440,7 +445,7 @@ Use `bench.only` to only run certain benchmarks in a given suite. This is useful
 
 ### bench.todo
 
-- **Type:** `(name: string) => void`
+- **Type:** `(name: string | Function) => void`
 
 Use `bench.todo` to stub benchmarks to be implemented later.
 

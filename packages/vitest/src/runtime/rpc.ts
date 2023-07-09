@@ -6,25 +6,25 @@ import { getWorkerState } from '../utils/global'
 import type { RuntimeRPC } from '../types/rpc'
 
 const { get } = Reflect
-const safeRandom = Math.random
 
 function withSafeTimers(fn: () => void) {
   const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
-  const currentRandom = globalThis.Math.random
-  const currentNextTick = globalThis.process.nextTick
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
+
+  const currentNextTick = globalThis.process?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.Math.random = safeRandom
-    globalThis.process.nextTick = nextTick
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
+
+    if (globalThis.process)
+      globalThis.process.nextTick = nextTick
 
     const result = fn()
     return result
@@ -32,12 +32,14 @@ function withSafeTimers(fn: () => void) {
   finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
-    globalThis.Math.random = currentRandom
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
-    nextTick(() => {
-      globalThis.process.nextTick = currentNextTick
-    })
+
+    if (globalThis.process) {
+      nextTick(() => {
+        globalThis.process.nextTick = currentNextTick
+      })
+    }
   }
 }
 

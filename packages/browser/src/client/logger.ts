@@ -4,7 +4,7 @@ import { importId } from './utils'
 const { Date, console } = globalThis
 
 export async function setupConsoleLogSpy() {
-  const { stringify, format, utilInspect } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const { stringify, format, inspect } = await importId('vitest/utils') as typeof import('vitest/utils')
   const { log, info, error, dir, dirxml, trace, time, timeEnd, timeLog, warn, debug, count, countReset } = console
   const formatInput = (input: unknown) => {
     if (input instanceof Node)
@@ -42,7 +42,7 @@ export async function setupConsoleLogSpy() {
   console.warn = stderr(warn)
 
   console.dir = (item, options) => {
-    sendLog('stdout', utilInspect(item, options))
+    sendLog('stdout', inspect(item, options))
     return dir(item, options)
   }
 
