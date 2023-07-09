@@ -5,7 +5,9 @@ import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
-// eslint-disable-next-line unused-imports/no-unused-vars
+defineOptions({ inheritAttrs: false })
+
+// eslint-disable-next-line unused-imports/no-unused-vars,vue/define-macros-order
 const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = defineProps<{
   tasks: Task[]
   indent?: number
@@ -17,8 +19,6 @@ const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = 
 const emit = defineEmits<{
   (event: 'run', files?: File[]): void
 }>()
-
-defineOptions({ inheritAttrs: false })
 
 const search = ref<string>('')
 const searchBox = ref<HTMLInputElement | undefined>()

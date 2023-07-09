@@ -2,18 +2,16 @@
 import type { Task } from '#types'
 import { caseInsensitiveMatch } from '~/utils/task'
 
-withDefaults(defineProps<{
+defineOptions({ inheritAttrs: false })
+
+// eslint-disable-next-line vue/define-macros-order
+const { task, indent = 0, nested = false, search, onItemClick } = defineProps<{
   task: Task
   indent?: number
   nested?: boolean
   search?: string
   onItemClick?: (task: Task) => void
-}>(), {
-  indent: 0,
-  nested: false,
-})
-
-defineOptions({ inheritAttrs: false })
+}>()
 </script>
 
 <template>
