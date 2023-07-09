@@ -4,7 +4,6 @@ import { caseInsensitiveMatch } from '~/utils/task'
 
 defineOptions({ inheritAttrs: false })
 
-// eslint-disable-next-line vue/define-macros-order
 const { task, indent = 0, nested = false, search, onItemClick } = defineProps<{
   task: Task
   indent?: number

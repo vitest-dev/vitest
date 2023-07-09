@@ -7,7 +7,7 @@ import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
 defineOptions({ inheritAttrs: false })
 
-// eslint-disable-next-line unused-imports/no-unused-vars,vue/define-macros-order
+// eslint-disable-next-line unused-imports/no-unused-vars
 const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = defineProps<{
   tasks: Task[]
   indent?: number
