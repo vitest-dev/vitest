@@ -1,7 +1,7 @@
 import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
-export const defaultInclude = ['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']
+export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
@@ -90,7 +90,7 @@ const config = {
   dangerouslyIgnoreUnhandledErrors: false,
   typecheck: {
     checker: 'tsc' as const,
-    include: ['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)'],
+    include: ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,

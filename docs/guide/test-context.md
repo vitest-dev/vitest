@@ -51,7 +51,7 @@ const todos = []
 const archive = []
 
 export const myTest = test.extend({
-  todos: async (use) => {
+  todos: async ({ task }, use) => {
     // setup the fixture before each test function
     todos.push(1, 2, 3)
 
@@ -105,7 +105,7 @@ Vitest runner will smartly initialize your fixtures and inject them into the tes
 ```ts
 import { test } from 'vitest'
 
-async function todosFn(use) {
+async function todosFn({ task }, use) {
   await use([1, 2, 3])
 }
 
@@ -115,14 +115,16 @@ const myTest = test.extend({
 })
 
 // todosFn will not run
-myTest('', () => {}) // no fixture is available
-myTets('', ({ archive }) => {}) // only archive is available
+myTest('', () => {})
+myTets('', ({ archive }) => {})
 
 // todosFn will run
-myTest('', ({ todos }) => {}) // only todos is available
-myTest('', (context) => {}) // both are available
-myTest('', ({ archive, ...rest }) => {}) // both are available
+myTest('', ({ todos }) => {})
 ```
+
+::: warning
+When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
+:::
 
 #### TypeScript
 

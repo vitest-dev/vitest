@@ -9,7 +9,6 @@ export type ChainableFunction<T extends string, Args extends any[], R = any, E =
 export function createChainable<T extends string, Args extends any[], R = any, E = {}>(
   keys: T[],
   fn: (this: Record<T, any>, ...args: Args) => R,
-  initialContext?: Record<T, any>,
 ): ChainableFunction<T, Args, R, E> {
   function create(context: Record<T, any>) {
     const chain = function (this: any, ...args: Args) {
@@ -19,6 +18,9 @@ export function createChainable<T extends string, Args extends any[], R = any, E
     chain.withContext = () => chain.bind(context)
     chain.setContext = (key: T, value: any) => {
       context[key] = value
+    }
+    chain.mergeContext = (ctx: Record<T, any>) => {
+      Object.assign(context, ctx)
     }
     for (const key of keys) {
       Object.defineProperty(chain, key, {
@@ -30,7 +32,7 @@ export function createChainable<T extends string, Args extends any[], R = any, E
     return chain
   }
 
-  const chain = create(initialContext || {} as any) as any
+  const chain = create({} as any) as any
   chain.fn = fn
   return chain
 }

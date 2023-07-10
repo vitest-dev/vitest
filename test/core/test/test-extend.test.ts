@@ -1,32 +1,39 @@
-/* eslint-disable no-empty-pattern */
 /* eslint-disable prefer-rest-params */
+/* eslint-disable no-empty-pattern */
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+
+interface Fixtures {
+  todoList: number[]
+  doneList: number[]
+  archiveList: number[]
+}
 
 const todoList: number[] = [1, 2, 3]
 const doneList: number[] = []
 const archiveList: number[] = []
 
-const todoFn = vi.fn().mockImplementation(async (use) => {
-  await use(todoList)
-  // cleanup
-  todoFn.mockClear()
-  todoList.length = 0
-  todoList.push(1, 2, 3)
-})
-
-const doneFn = vi.fn().mockImplementation(async (use) => {
-  await use(doneList)
-  // cleanup
-  doneFn.mockClear()
-  doneList.length = 0
-})
+const todoFn = vi.fn()
+const doneFn = vi.fn()
 
 const myTest = test
-  .extend<{ todoList: number[] }>({
-    todoList: todoFn,
+  .extend<Pick<Fixtures, 'todoList'>>({
+    todoList: async ({}, use) => {
+      todoFn()
+      await use(todoList)
+      // cleanup
+      todoFn.mockClear()
+      todoList.length = 0
+      todoList.push(1, 2, 3)
+    },
   })
-  .extend<{ doneList: number[]; archiveList: number[] }>({
-    doneList: doneFn,
+  .extend<Pick<Fixtures, 'doneList' | 'archiveList'>>({
+    doneList: async ({}, use) => {
+      doneFn()
+      await use(doneList)
+      // cleanup
+      doneFn.mockClear()
+      doneList.length = 0
+    },
     archiveList,
   })
 
@@ -54,12 +61,14 @@ describe('test.extend()', () => {
     archiveList.push(todoList.shift()!)
     expect(todoList).toEqual([])
     expect(archiveList).toEqual([3])
+
+    archiveList.pop()
   })
 
   myTest('should called cleanup functions', ({ todoList, doneList, archiveList }) => {
     expect(todoList).toEqual([1, 2, 3])
     expect(doneList).toEqual([])
-    expect(archiveList).toEqual([3])
+    expect(archiveList).toEqual([])
   })
 
   describe('smartly init fixtures', () => {
@@ -114,30 +123,31 @@ describe('test.extend()', () => {
       expect(arguments[0].archiveList).toBeUndefined()
     })
 
-    myTest('should init all fixtures', ({ todoList, ...rest }) => {
-      expect(todoFn).toBeCalledTimes(1)
+    myTest('should only init doneList and archiveList', function ({ doneList, archiveList }) {
       expect(doneFn).toBeCalledTimes(1)
 
-      expectTypeOf(todoList).toEqualTypeOf<number[]>()
-      expectTypeOf(rest.doneList).toEqualTypeOf<number[]>()
-      expectTypeOf(rest.archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(doneList).toEqualTypeOf<number[]>()
+      expectTypeOf(archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(arguments[0].todoList).not.toEqualTypeOf<number[]>()
 
-      expect(todoList).toEqual([1, 2, 3])
-      expect(rest.doneList).toEqual([])
-      expect(rest.archiveList).toEqual([3])
+      expect(doneList).toEqual([])
+      expect(archiveList).toEqual([])
+      expect(arguments[0].todoList).toBeUndefined()
     })
+  })
 
-    myTest('should init all fixtures', (context) => {
+  describe('test function', () => {
+    myTest('prop alias', ({ todoList: todos, doneList: done, archiveList: archive }) => {
       expect(todoFn).toBeCalledTimes(1)
       expect(doneFn).toBeCalledTimes(1)
 
-      expectTypeOf(context.todoList).toEqualTypeOf<number[]>()
-      expectTypeOf(context.doneList).toEqualTypeOf<number[]>()
-      expectTypeOf(context.archiveList).toEqualTypeOf<number[]>()
+      expectTypeOf(todos).toEqualTypeOf<number[]>()
+      expectTypeOf(done).toEqualTypeOf<number[]>()
+      expectTypeOf(archive).toEqualTypeOf<number[]>()
 
-      expect(context.todoList).toEqual([1, 2, 3])
-      expect(context.doneList).toEqual([])
-      expect(context.archiveList).toEqual([3])
+      expect(todos).toEqual([1, 2, 3])
+      expect(done).toEqual([])
+      expect(archive).toEqual([])
     })
   })
 })

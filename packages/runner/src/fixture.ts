@@ -1,66 +1,141 @@
-import type { Fixtures, Test } from './types'
+import type { TestContext } from './types'
 
-export function withFixtures(fn: Function, fixtures: Fixtures<Record<string, any>>, context: Test<Record<string, any>>['context']) {
-  const props = getUsedFixtureProps(fn, Object.keys(fixtures))
+export interface FixtureItem {
+  prop: string
+  value: any
+  index: number
+  /**
+   * Indicates whether the fixture is a function
+   */
+  isFn: boolean
+  /**
+   * The dependencies(fixtures) of current fixture function.
+   */
+  deps?: FixtureItem[]
+}
 
-  if (props.length === 0)
+export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
+  const fixtureArray: FixtureItem[] = Object.entries(fixtures)
+    .map(([prop, value], index) => {
+      const isFn = typeof value === 'function'
+      return {
+        prop,
+        value,
+        index,
+        isFn,
+      }
+    })
+
+  if (Array.isArray(context.fixtures))
+    context.fixtures = context.fixtures.concat(fixtureArray)
+  else
+    context.fixtures = fixtureArray
+
+  // Update dependencies of fixture functions
+  fixtureArray.forEach((fixture) => {
+    if (fixture.isFn) {
+      const usedProps = getUsedProps(fixture.value)
+      if (usedProps.length)
+        fixture.deps = context.fixtures!.filter(({ index, prop }) => index !== fixture.index && usedProps.includes(prop))
+    }
+  })
+
+  return context
+}
+
+export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
+  if (!fixtures.length)
     return () => fn(context)
 
+  const usedProps = getUsedProps(fn)
+  if (!usedProps.length)
+    return () => fn(context)
+
+  const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
+  const pendingFixtures = resolveDeps(usedFixtures)
   let cursor = 0
 
   async function use(fixtureValue: any) {
-    context[props[cursor++]] = fixtureValue
-
-    if (cursor < props.length)
+    const { prop } = pendingFixtures[cursor++]
+    context[prop] = fixtureValue
+    if (cursor < pendingFixtures.length)
       await next()
     else await fn(context)
   }
 
   async function next() {
-    const fixtureValue = fixtures[props[cursor]]
-    typeof fixtureValue === 'function'
-      ? await fixtureValue(use)
-      : await use(fixtureValue)
+    const { value } = pendingFixtures[cursor]
+    typeof value === 'function' ? await value(context, use) : await use(value)
   }
 
   return () => next()
 }
 
-function getUsedFixtureProps(fn: Function, fixtureProps: string[]) {
-  if (!fixtureProps.length || !fn.length)
+function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {
+  fixtures.forEach((fixture) => {
+    if (pendingFixtures.includes(fixture))
+      return
+    if (!fixture.isFn || !fixture.deps) {
+      pendingFixtures.push(fixture)
+      return
+    }
+    if (depSet.has(fixture))
+      throw new Error('circular fixture dependency')
+
+    depSet.add(fixture)
+    resolveDeps(fixture.deps, depSet, pendingFixtures)
+    pendingFixtures.push(fixture)
+    depSet.clear()
+  })
+
+  return pendingFixtures
+}
+
+function getUsedProps(fn: Function) {
+  const match = fn.toString().match(/[^(]*\(([^)]*)/)
+  if (!match)
     return []
 
-  const paramsStr = fn.toString().match(/[^(]*\(([^)]*)/)![1]
+  const args = splitByComma(match[1])
+  if (!args.length)
+    return []
 
-  if (paramsStr[0] === '{' && paramsStr.at(-1) === '}') {
-    // ({...}) => {}
-    const props = paramsStr.slice(1, -1).split(',')
-    const filteredProps = []
+  const first = args[0]
+  if (!(first.startsWith('{') && first.endsWith('}')))
+    throw new Error('the first argument must use object destructuring pattern')
 
-    for (const prop of props) {
-      if (!prop)
-        continue
+  const _first = first.slice(1, -1).replace(/\s/g, '')
+  const props = splitByComma(_first).map((prop) => {
+    return prop.replace(/\:.*|\=.*/g, '')
+  })
 
-      let _prop = prop.trim()
+  const last = props.at(-1)
+  if (last && last.startsWith('...'))
+    throw new Error('Rest parameters are not supported')
 
-      if (_prop.startsWith('...')) {
-        // ({ a, b, ...rest }) => {}
-        return fixtureProps
-      }
+  return props
+}
 
-      const colonIndex = _prop.indexOf(':')
-      if (colonIndex > 0)
-        _prop = _prop.slice(0, colonIndex).trim()
-
-      if (fixtureProps.includes(_prop))
-        filteredProps.push(_prop)
+function splitByComma(s: string) {
+  const result = []
+  const stack = []
+  let start = 0
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '{' || s[i] === '[') {
+      stack.push(s[i] === '{' ? '}' : ']')
     }
-
-    // ({}) => {}
-    // ({ a, b, c}) => {}
-    return filteredProps
+    else if (s[i] === stack[stack.length - 1]) {
+      stack.pop()
+    }
+    else if (!stack.length && s[i] === ',') {
+      const token = s.substring(start, i).trim()
+      if (token)
+        result.push(token)
+      start = i + 1
+    }
   }
-
-  // (ctx) => {}
-  return fixtureProps
+  const lastToken = s.substring(start).trim()
+  if (lastToken)
+    result.push(lastToken)
+  return result
 }
