@@ -49,10 +49,6 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
-    // TODO: remove this when PR is done
-    poolMatchGlobs: [
-      ['**/*', 'experimentalVmThreads'],
-    ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

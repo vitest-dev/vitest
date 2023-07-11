@@ -2,10 +2,10 @@ import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
-export default <Environment>({
+export default ({
   name: 'happy-dom',
   transformMode: 'web',
-  async setupVm() {
+  async setupVM() {
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new Window()
 
@@ -40,4 +40,4 @@ export default <Environment>({
       },
     }
   },
-})
+}) satisfies Environment

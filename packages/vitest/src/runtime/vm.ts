@@ -39,9 +39,11 @@ export async function run(ctx: WorkerContext) {
   const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
 
   if (!environment.setupVM) {
+    const envName = ctx.environment.name
+    const packageId = envName[0] === '.' ? envName : `vitest-environment-${envName}`
     throw new TypeError(
     `Environment "${ctx.environment.name}" is not a valid environment. `
-  + `Package "vitest-environment-${name}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
+  + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
     )
   }
 
