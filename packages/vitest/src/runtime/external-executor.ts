@@ -6,7 +6,6 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { resolve as resolveModule } from 'import-meta-resolve'
 import { extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
 import type { RuntimeRPC } from '../types'
@@ -91,7 +90,7 @@ interface PrivateNodeModule extends NodeModule {
 
 const _require = createRequire(import.meta.url)
 
-const nativeResolve = import.meta.resolve
+const nativeResolve = import.meta.resolve!
 
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
@@ -223,7 +222,7 @@ export class ExternalModulesExecutor {
   }
 
   private async resolveAsync(specifier: string, parent: string) {
-    return resolveModule(specifier, parent)
+    return nativeResolve(specifier, parent)
   }
 
   private async wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {
@@ -312,10 +311,8 @@ export class ExternalModulesExecutor {
         importModuleDynamically: this.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
-          if (nativeResolve) {
-            meta.resolve = (specifier: string, importer?: string) => {
-              return nativeResolve(specifier, importer ?? mod.identifier)
-            }
+          meta.resolve = (specifier: string, importer?: string) => {
+            return nativeResolve(specifier, importer ?? mod.identifier)
           }
         },
       },

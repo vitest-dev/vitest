@@ -58,6 +58,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
 
     env,
     execArgv: [
+      '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
       '--require',
       suppressLoaderWarningsPath,
