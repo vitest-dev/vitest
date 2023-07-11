@@ -8,6 +8,7 @@ import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrat
 import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils/global'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
+import * as VitestIndex from '../index'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup.common'
@@ -16,6 +17,11 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
   const workerState = getWorkerState()
 
   await setupCommonEnv(config)
+
+  Object.defineProperty(globalThis, '__vitest_index__', {
+    value: VitestIndex,
+    enumerable: false,
+  })
 
   config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(workerState.rpc)
 

@@ -256,8 +256,9 @@ export class VitestExecutor extends ViteNodeRunner {
 
     // support `import.meta.vitest` for test entry
     if (workerState.filepath && normalize(workerState.filepath) === normalize(context.__filename)) {
+      const globalNamespace = this.options.context || globalThis
       // @ts-expect-error injected untyped global
-      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
+      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalNamespace.__vitest_index__ })
     }
 
     if (this.options.context && this.externalModules)
