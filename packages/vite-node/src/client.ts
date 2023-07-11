@@ -282,7 +282,6 @@ export class ViteNodeRunner {
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
-
     let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
@@ -294,6 +293,8 @@ export class ViteNodeRunner {
 
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
+
+    const { Object, Reflect, Symbol } = this.getContextPrimitives()
 
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
@@ -397,6 +398,10 @@ export class ViteNodeRunner {
     await this.runModule(context, transformed)
 
     return exports
+  }
+
+  protected getContextPrimitives() {
+    return { Object, Reflect, Symbol }
   }
 
   protected async runModule(context: Record<string, any>, transformed: string) {

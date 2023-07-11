@@ -131,6 +131,12 @@ export class VitestExecutor extends ViteNodeRunner {
   public mocker: VitestMocker
   public externalModules?: ExternalModulesExecutor
 
+  private primitives: {
+    Object: typeof Object
+    Reflect: typeof Reflect
+    Symbol: typeof Symbol
+  }
+
   constructor(public options: ExecuteOptions) {
     super(options)
 
@@ -147,6 +153,11 @@ export class VitestExecutor extends ViteNodeRunner {
         '/@vite/client': clientStub,
         '@vite/client': clientStub,
       }
+      this.primitives = {
+        Object,
+        Reflect,
+        Symbol,
+      }
     }
     else {
       this.externalModules = new ExternalModulesExecutor(options.context, options.findNearestPackageData || (() => Promise.resolve({})))
@@ -155,7 +166,12 @@ export class VitestExecutor extends ViteNodeRunner {
         '/@vite/client': clientStub,
         '@vite/client': clientStub,
       }
+      this.primitives = vm.runInContext('({ Object, Reflect, Symbol })', options.context)
     }
+  }
+
+  protected getContextPrimitives() {
+    return this.primitives
   }
 
   get state() {

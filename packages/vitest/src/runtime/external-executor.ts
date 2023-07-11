@@ -102,6 +102,9 @@ export class ExternalModulesExecutor {
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
 
   private Module: typeof _Module
+  private primitives: {
+    Object: typeof Object
+  }
 
   constructor(private context: vm.Context, private findNearestPackageData: RuntimeRPC['findNearestPackageData']) {
     this.context = context
@@ -110,7 +113,7 @@ export class ExternalModulesExecutor {
     const executor = this
 
     this.Module = class Module {
-      exports = {}
+      exports: any
       isPreloading = false
       require: NodeRequire
       id: string
@@ -119,11 +122,10 @@ export class ExternalModulesExecutor {
       parent: null | Module | undefined
       children: Module[] = []
       path: string
-      paths: string[]
+      paths: string[] = []
 
       constructor(id: string, parent?: Module) {
-        this.exports = {}
-        this.isPreloading = false
+        this.exports = executor.primitives.Object.create(Object.prototype)
         this.require = Module.createRequire(id)
         // in our case the path should always be resolved already
         this.path = dirname(id)
@@ -131,8 +133,6 @@ export class ExternalModulesExecutor {
         this.filename = id
         this.loaded = false
         this.parent = parent
-        this.children = []
-        this.paths = []
       }
 
       _compile(code: string, filename: string) {
@@ -199,6 +199,8 @@ export class ExternalModulesExecutor {
 
     this.extensions['.js'] = this.requireJs
     this.extensions['.json'] = this.requireJson
+
+    this.primitives = vm.runInContext('({ Object })', context)
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
@@ -226,6 +228,7 @@ export class ExternalModulesExecutor {
   }
 
   private async wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {
+    // TODO: technically module should be parsed to find static exports, implement for #2854
     const moduleKeys = Object.keys(exports)
     if (format !== 'esm' && !moduleKeys.includes('default'))
       moduleKeys.push('default')
