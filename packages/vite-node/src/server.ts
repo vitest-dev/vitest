@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks'
-import { existsSync } from 'node:fs'
-import { join, normalize, relative, resolve } from 'pathe'
-import type { TransformResult, ViteDevServer } from 'vite'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { type PackageCache, type PackageData, type TransformResult, type ViteDevServer, createFilter } from 'vite'
 import createDebug from 'debug'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
@@ -27,6 +27,7 @@ export class ViteNodeServer {
   }>()
 
   externalizeCache = new Map<string, Promise<string | false>>()
+  packageCache = new Map<string, PackageCache>()
 
   debugger?: Debugger
 
@@ -150,6 +151,40 @@ export class ViteNodeServer {
     return this.transformPromiseMap.get(id)!
   }
 
+  findNearestPackageData(basedir: string) {
+    const config = this.server.config
+    // @ts-expect-error not typed
+    const packageCache = config.packageCache || this.packageCache
+    const originalBasedir = basedir
+    while (basedir) {
+      if (packageCache) {
+        const cached = getFnpdCache(packageCache, basedir, originalBasedir)
+        if (cached)
+          return cached
+      }
+
+      const pkgPath = join(basedir, 'package.json')
+      try {
+        if (statSync(pkgPath, { throwIfNoEntry: false })?.isFile()) {
+          const pkgData = loadPackageData(pkgPath)
+
+          if (packageCache)
+            setFnpdCache(packageCache, pkgData, basedir, originalBasedir)
+
+          return pkgData
+        }
+      }
+      catch {}
+
+      const nextBasedir = dirname(basedir)
+      if (nextBasedir === basedir)
+        break
+      basedir = nextBasedir
+    }
+
+    return null
+  }
+
   getTransformMode(id: string) {
     const withoutQuery = id.split('?')[0]
 
@@ -249,5 +284,106 @@ export class ViteNodeServer {
       await this.debugger?.dumpFile(id, result)
 
     return result
+  }
+}
+
+export function loadPackageData(pkgPath: string): PackageData {
+  const data = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  const pkgDir = dirname(pkgPath)
+  const { sideEffects } = data
+  let hasSideEffects: (id: string) => boolean
+  if (typeof sideEffects === 'boolean') {
+    hasSideEffects = () => sideEffects
+  }
+  else if (Array.isArray(sideEffects)) {
+    const finalPackageSideEffects = sideEffects.map((sideEffect) => {
+      /*
+       * The array accepts simple glob patterns to the relevant files... Patterns like *.css, which do not include a /, will be treated like **\/*.css.
+       * https://webpack.js.org/guides/tree-shaking/
+       * https://github.com/vitejs/vite/pull/11807
+       */
+      if (sideEffect.includes('/'))
+        return sideEffect
+
+      return `**/${sideEffect}`
+    })
+
+    hasSideEffects = createFilter(finalPackageSideEffects, null, {
+      resolve: pkgDir,
+    })
+  }
+  else {
+    hasSideEffects = () => true
+  }
+
+  const pkg: PackageData = {
+    dir: pkgDir,
+    data,
+    hasSideEffects,
+    webResolvedImports: {},
+    nodeResolvedImports: {},
+    setResolvedCache(key: string, entry: string, targetWeb: boolean) {
+      if (targetWeb)
+        pkg.webResolvedImports[key] = entry
+      else
+        pkg.nodeResolvedImports[key] = entry
+    },
+    getResolvedCache(key: string, targetWeb: boolean) {
+      if (targetWeb)
+        return pkg.webResolvedImports[key]
+
+      else
+        return pkg.nodeResolvedImports[key]
+    },
+  }
+
+  return pkg
+}
+
+function getFnpdCache(
+  packageCache: PackageCache,
+  basedir: string,
+  originalBasedir: string,
+) {
+  const cacheKey = getFnpdCacheKey(basedir)
+  const pkgData = packageCache.get(cacheKey)
+  if (pkgData) {
+    traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+      packageCache.set(getFnpdCacheKey(dir), pkgData)
+    })
+    return pkgData
+  }
+}
+
+function setFnpdCache(
+  packageCache: PackageCache,
+  pkgData: PackageData,
+  basedir: string,
+  originalBasedir: string,
+) {
+  packageCache.set(getFnpdCacheKey(basedir), pkgData)
+  traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+    packageCache.set(getFnpdCacheKey(dir), pkgData)
+  })
+}
+
+// package cache key for `findNearestPackageData`
+function getFnpdCacheKey(basedir: string) {
+  return `fnpd_${basedir}`
+}
+
+/**
+ * Traverse between `longerDir` (inclusive) and `shorterDir` (exclusive) and call `cb` for each dir.
+ * @param longerDir Longer dir path, e.g. `/User/foo/bar/baz`
+ * @param shorterDir Shorter dir path, e.g. `/User/foo`
+ */
+function traverseBetweenDirs(
+  longerDir: string,
+  shorterDir: string,
+  cb: (dir: string) => void,
+) {
+  while (longerDir !== shorterDir) {
+    cb(longerDir)
+    longerDir = dirname(longerDir)
   }
 }

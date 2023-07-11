@@ -6,7 +6,7 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
-import type { ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { ResolvedConfig, ResolvedTestEnvironment, RuntimeRPC, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
@@ -18,6 +18,7 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
   moduleDirectories?: string[]
   context?: vm.Context
+  findNearestPackageData?: RuntimeRPC['findNearestPackageData']
   state: WorkerGlobalState
 }
 
@@ -55,6 +56,7 @@ export interface ContextExecutorOptions {
   mockMap?: MockMap
   moduleCache?: ModuleCacheMap
   context?: vm.Context
+  findNearestPackageData?: RuntimeRPC['findNearestPackageData']
   state: WorkerGlobalState
 }
 
@@ -96,6 +98,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
+    findNearestPackageData(file) {
+      return rpc().findNearestPackageData(file)
+    },
     moduleCache,
     mockMap,
     get interopDefault() { return state().config.deps.interopDefault },
@@ -123,7 +128,7 @@ export class VitestExecutor extends ViteNodeRunner {
       })
     }
     else {
-      this.externalModules = new ExternalModulesExecutor(options.context)
+      this.externalModules = new ExternalModulesExecutor(options.context, options.findNearestPackageData || (() => Promise.resolve({})))
     }
   }
 

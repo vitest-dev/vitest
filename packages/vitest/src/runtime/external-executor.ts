@@ -7,9 +7,9 @@ import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve as resolveModule } from 'import-meta-resolve'
-import { hasESMSyntax } from 'mlly'
 import { extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
+import type { RuntimeRPC } from '../types'
 
 // need to copy paste types for vm
 // because they require latest @types/node which we don't bundle
@@ -91,15 +91,13 @@ const nativeResolve = import.meta.resolve
 
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
-  private context: vm.Context
-
   private requireCache: Record<string, NodeModule> = Object.create(null)
   private moduleCache = new Map<string, VMModule>()
   private extensions: Record<string, (m: NodeModule, filename: string) => string> = Object.create(null)
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
 
-  constructor(context: vm.Context) {
+  constructor(private context: vm.Context, private findNearestPackageData: RuntimeRPC['findNearestPackageData']) {
     this.context = context
     this.requireCache = Object.create(null)
 
@@ -292,17 +290,26 @@ export class ExternalModulesExecutor {
     const isFileUrl = identifier.startsWith('file://')
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
     const pathUrl = isFileUrl ? fileURLToPath(identifier) : identifier
-    const inlineCode = this.getIdentifierCode(identifier)
-    const code = inlineCode || await readFile(pathUrl, 'utf-8')
 
-    // TODO: very dirty check for cjs, it should actually check filepath and package.json, improve in #2854
-    if (!inlineCode && (extension === '.cjs' || !hasESMSyntax(code))) {
+    if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.evaluateCommonJSModule(module, pathUrl)
       return this.wrapSynteticModule(fileUrl, 'cjs', exports)
     }
 
-    return await this.createEsmModule(fileUrl, code)
+    const inlineCode = this.getIdentifierCode(identifier)
+
+    if (inlineCode || extension === '.mjs')
+      return await this.createEsmModule(fileUrl, inlineCode || await readFile(pathUrl, 'utf8'))
+
+    const pkgData = await this.findNearestPackageData(pathUrl)
+
+    if (pkgData.type === 'module')
+      return await this.createEsmModule(fileUrl, await readFile(pathUrl, 'utf8'))
+
+    const module = this.createCommonJSNodeModule(pathUrl)
+    const exports = this.evaluateCommonJSModule(module, pathUrl)
+    return this.wrapSynteticModule(fileUrl, 'cjs', exports)
   }
 
   async import(identifier: string) {

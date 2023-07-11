@@ -61,5 +61,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     getCountOfFailedTests() {
       return ctx.state.getCountOfFailedTests()
     },
+    async findNearestPackageData(file) {
+      const pkgData = project.vitenode.findNearestPackageData(file)
+      return pkgData?.data || {}
+    },
   }
 }
