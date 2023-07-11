@@ -1120,41 +1120,28 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### transformMode
+### testTransformMode
 
-- **Type:** `{ web?, ssr? }`
+ - **Type:** `{ web?, ssr? }`
+ - **Version:** Since Vitest 0.32.0
 
-Determine the transform method of modules
+ Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
-#### transformMode.ssr
+ #### testTransformMode.ssr
 
-- **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-Use SSR transform pipeline for the specified files.<br>
-Vite plugins will receive `ssr: true` flag when processing those files.
+ Use SSR transform pipeline for all modules inside specified tests.<br>
+ Vite plugins will receive `ssr: true` flag when processing those files.
 
-#### transformMode&#46;web
+ #### testTransformMode&#46;web
 
-- **Type:** `RegExp[]`
-- **Default:** *modules other than those specified in `transformMode.ssr`*
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
-Vite plugins will receive `ssr: false` flag when processing those files.
-
-When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    transformMode: {
-      web: [/\.[jt]sx$/],
-    },
-  },
-})
-```
+ First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
+ Vite plugins will receive `ssr: false` flag when processing those files.
 
 ### snapshotFormat<NonProjectOption />
 

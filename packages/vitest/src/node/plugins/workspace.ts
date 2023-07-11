@@ -7,7 +7,7 @@ import type { WorkspaceProject } from '../workspace'
 import type { UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
@@ -117,7 +117,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     GlobalSetupPlugin(project, project.ctx.logger),

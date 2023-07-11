@@ -565,8 +565,8 @@ importers:
         specifier: ^17.0.17
         version: 17.0.17
       '@vitejs/plugin-react':
-        specifier: ^1.3.2
-        version: 1.3.2
+        specifier: ^4.0.1
+        version: 4.0.3(vite@4.3.9)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -663,8 +663,8 @@ importers:
         specifier: ^17.0.17
         version: 17.0.17
       '@vitejs/plugin-react':
-        specifier: ^1.3.2
-        version: 1.3.2
+        specifier: ^4.0.1
+        version: 4.0.3(vite@4.3.9)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -1820,6 +1820,9 @@ importers:
 
   test/resolve:
     devDependencies:
+      happy-dom:
+        specifier: ^9.20.3
+        version: 9.20.3
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4286,16 +4289,6 @@ packages:
       '@babel/plugin-transform-react-jsx': 7.19.0(@babel/core@7.22.5)
     dev: true
 
-  /@babel/plugin-transform-react-jsx-self@7.18.6(@babel/core@7.18.13):
-    resolution: {integrity: sha512-A0LQGx4+4Jv7u/tWzoJF7alZwnBDQd6cGLh9P+Ttk4dpiL+J5p7NSNv/9tlEFFJDq3kjxOavWmbm6t0Gk+A3Ig==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
   /@babel/plugin-transform-react-jsx-self@7.22.5(@babel/core@7.22.5):
     resolution: {integrity: sha512-nTh2ogNUtxbiSbxaT4Ds6aXnXEipHweN9YRgOX/oNXdf0cCrGn/+2LozFa3lnPV5D90MkjhgckCPBrsoSc1a7g==}
     engines: {node: '>=6.9.0'}
@@ -4303,16 +4296,6 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.22.5
-      '@babel/helper-plugin-utils': 7.22.5
-    dev: true
-
-  /@babel/plugin-transform-react-jsx-source@7.18.6(@babel/core@7.18.13):
-    resolution: {integrity: sha512-utZmlASneDfdaMh0m/WausbjUjEdGrQJz0vFK93d7wD3xf5wBtX219+q6IlCNZeguIcxS2f/CvLZrlLSvSHQXw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.18.13
       '@babel/helper-plugin-utils': 7.22.5
     dev: true
 
@@ -4326,17 +4309,17 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
     dev: true
 
-  /@babel/plugin-transform-react-jsx@7.18.10(@babel/core@7.18.13):
+  /@babel/plugin-transform-react-jsx@7.18.10(@babel/core@7.22.5):
     resolution: {integrity: sha512-gCy7Iikrpu3IZjYZolFE4M1Sm+nrh1/6za2Ewj77Z+XirT4TsbJcvOFOyF+fRPwU6AKKK136CZxx6L8AbSFG6A==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
-      '@babel/core': 7.18.13
+      '@babel/core': 7.22.5
       '@babel/helper-annotate-as-pure': 7.18.6
       '@babel/helper-module-imports': 7.22.5
       '@babel/helper-plugin-utils': 7.22.5
-      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.18.13)
+      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.22.5)
       '@babel/types': 7.22.5
     dev: true
 
@@ -9525,14 +9508,14 @@ packages:
     resolution: {integrity: sha512-aurBNmMo0kz1O4qRoY+FM4epSA39y3ShWGuqfLRA/3z0oEJAdtoSfgA3aO98/PCCHAqMaduLxIxErWrVKIFzXA==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@babel/core': 7.18.13
-      '@babel/plugin-transform-react-jsx': 7.18.10(@babel/core@7.18.13)
-      '@babel/plugin-transform-react-jsx-development': 7.18.6(@babel/core@7.18.13)
-      '@babel/plugin-transform-react-jsx-self': 7.18.6(@babel/core@7.18.13)
-      '@babel/plugin-transform-react-jsx-source': 7.18.6(@babel/core@7.18.13)
+      '@babel/core': 7.22.5
+      '@babel/plugin-transform-react-jsx': 7.18.10(@babel/core@7.22.5)
+      '@babel/plugin-transform-react-jsx-development': 7.18.6(@babel/core@7.22.5)
+      '@babel/plugin-transform-react-jsx-self': 7.22.5(@babel/core@7.22.5)
+      '@babel/plugin-transform-react-jsx-source': 7.22.5(@babel/core@7.22.5)
       '@rollup/pluginutils': 4.2.1
       react-refresh: 0.13.0
-      resolve: 1.22.1
+      resolve: 1.22.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -21780,15 +21763,6 @@ packages:
   /resolve.exports@1.1.1:
     resolution: {integrity: sha512-/NtpHNDN7jWhAaQ9BvBUYZ6YTXsRBgfqWFWP7BZBaoMJO/I3G5OFzvTuWNlZC3aPjins1F+TNrLKsGbH4rfsRQ==}
     engines: {node: '>=10'}
-    dev: true
-
-  /resolve@1.22.1:
-    resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
-    hasBin: true
-    dependencies:
-      is-core-module: 2.12.1
-      path-parse: 1.0.7
-      supports-preserve-symlinks-flag: 1.0.0
     dev: true
 
   /resolve@1.22.2:

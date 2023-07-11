@@ -4,6 +4,7 @@ import { populateGlobal } from './utils'
 
 export default <Environment>({
   name: 'happy-dom',
+  transformMode: 'web',
   async setup(global) {
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour

@@ -6,10 +6,13 @@ import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
-import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
+import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { distDir } from '../paths'
+import { loadEnvironment } from '../integrations/env'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
+
+const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
@@ -25,8 +28,9 @@ export async function createVitestExecutor(options: ExecuteOptions) {
 }
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
   executor: VitestExecutor
+  environment: Environment
 }
 
 export const moduleCache = new ModuleCacheMap()
@@ -61,12 +65,14 @@ export async function startViteNode(ctx: ContextRPC) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
+  let transformMode: 'ssr' | 'web' = ctx.environment.transformMode ?? 'ssr'
+
   const executor = await createVitestExecutor({
     fetchModule(id) {
-      return rpc().fetch(id, ctx.environment.name)
+      return rpc().fetch(id, transformMode)
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer, ctx.environment.name)
+      return rpc().resolveId(id, importer, transformMode)
     },
     moduleCache,
     mockMap,
@@ -76,9 +82,13 @@ export async function startViteNode(ctx: ContextRPC) {
     base: config.base,
   })
 
-  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+  const environment = await loadEnvironment(ctx.environment.name, executor)
+  ctx.environment.environment = environment
+  transformMode = ctx.environment.transformMode ?? environment.transformMode ?? 'ssr'
 
-  _viteNode = { run, executor }
+  const { run } = await import(entryUrl)
+
+  _viteNode = { run, executor, environment }
 
   return _viteNode
 }

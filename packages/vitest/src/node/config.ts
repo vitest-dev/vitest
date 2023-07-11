@@ -289,6 +289,8 @@ export function resolveConfig(
     port: defaultBrowserPort,
   }
 
+  resolved.testTransformMode ??= {}
+
   return resolved
 }
 
