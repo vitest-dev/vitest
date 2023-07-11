@@ -66,6 +66,9 @@ export default <Environment>({
     )
     const clearWindowErrors = catchWindowErrors(dom.window as any)
 
+    // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
+    dom.window.Buffer = Buffer
+
     return {
       getVmContext() {
         return dom.getInternalVMContext()

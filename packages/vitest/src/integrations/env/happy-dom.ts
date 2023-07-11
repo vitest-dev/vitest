@@ -15,6 +15,9 @@ export default <Environment>({
       configurable: true,
     })
 
+    // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
+    win.Buffer = Buffer
+
     return {
       getVmContext() {
         return win
