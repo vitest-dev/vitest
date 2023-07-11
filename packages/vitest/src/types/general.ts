@@ -28,7 +28,7 @@ export interface VmEnvironmentReturn {
 
 export interface Environment {
   name: string
-  transformMode?: 'web' | 'ssr'
+  transformMode: 'web' | 'ssr'
   setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }

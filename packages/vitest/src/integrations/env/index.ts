@@ -42,11 +42,18 @@ export async function loadEnvironment(name: VitestEnvironment, root: string): Pr
     ? resolve(root, name)
     : resolveModule(`vitest-environment-${name}`, { paths: [root] }) ?? resolve(root, name)
   const pkg = await import(pathToFileURL(normalize(packageId)).href)
-  if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
-    throw new Error(
+  if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
+    throw new TypeError(
       `Environment "${name}" is not a valid environment. `
-    + `Path "${packageId}" should export default object with a "setup" method.`,
+    + `Path "${packageId}" should export default object with a "setup" or/and "setupVM" method.`,
     )
   }
-  return pkg.default
+  const environment = pkg.default
+  if (!environment.transformMode) {
+    throw new TypeError(
+      `Environment "${name}" is not a valid environment. `
+    + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
+    )
+  }
+  return environment
 }

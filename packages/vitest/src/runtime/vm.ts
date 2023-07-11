@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url'
 import { performance } from 'node:perf_hooks'
+import { isContext } from 'node:vm'
 import { ModuleCacheMap } from 'vite-node/client'
 import { workerId as poolId } from 'tinypool'
 import { createBirpc } from 'birpc'
@@ -72,7 +73,13 @@ export async function run(ctx: WorkerContext) {
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  if (!vm.getVmContext)
+    throw new TypeError(`Environment ${ctx.environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
+
   const context = vm.getVmContext()
+
+  if (!isContext(context))
+    throw new TypeError(`Environment ${ctx.environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
 
   context.__vitest_worker__ = state
   // this is unfortunately needed for our own dependencies
@@ -105,7 +112,7 @@ export async function run(ctx: WorkerContext) {
     await run(ctx.files, ctx.config, executor)
   }
   finally {
-    await vm.teardown()
+    await vm.teardown?.()
     state.environmentTeardownRun = true
   }
 }
