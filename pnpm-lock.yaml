@@ -566,7 +566,7 @@ importers:
         version: 17.0.17
       '@vitejs/plugin-react':
         specifier: ^4.0.1
-        version: 4.0.1(vite@4.3.9)
+        version: 4.0.3(vite@4.3.9)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -664,7 +664,7 @@ importers:
         version: 17.0.17
       '@vitejs/plugin-react':
         specifier: ^4.0.1
-        version: 4.0.1(vite@4.3.9)
+        version: 4.0.3(vite@4.3.9)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -21763,15 +21763,6 @@ packages:
   /resolve.exports@1.1.1:
     resolution: {integrity: sha512-/NtpHNDN7jWhAaQ9BvBUYZ6YTXsRBgfqWFWP7BZBaoMJO/I3G5OFzvTuWNlZC3aPjins1F+TNrLKsGbH4rfsRQ==}
     engines: {node: '>=10'}
-    dev: true
-
-  /resolve@1.22.1:
-    resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
-    hasBin: true
-    dependencies:
-      is-core-module: 2.12.1
-      path-parse: 1.0.7
-      supports-preserve-symlinks-flag: 1.0.0
     dev: true
 
   /resolve@1.22.2:
