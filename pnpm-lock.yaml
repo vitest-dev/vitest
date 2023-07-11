@@ -736,8 +736,8 @@ importers:
         specifier: latest
         version: 2.4.2(svelte@4.0.5)(vite@4.3.9)
       '@testing-library/svelte':
-        specifier: latest
-        version: 3.2.2(svelte@4.0.5)
+        specifier: ^4.0.3
+        version: 4.0.3(svelte@4.0.5)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -8500,13 +8500,13 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: true
 
-  /@testing-library/svelte@3.2.2(svelte@4.0.5):
-    resolution: {integrity: sha512-IKwZgqbekC3LpoRhSwhd0JswRGxKdAGkf39UiDXTywK61YyLXbCYoR831e/UUC6EeNW4hiHPY+2WuovxOgI5sw==}
+  /@testing-library/svelte@4.0.3(svelte@4.0.5):
+    resolution: {integrity: sha512-GldAnyGEOn5gMwME+hLVQrnfuKZFB+it5YOMnRBHX+nqeHMsSa18HeqkdvGqtqLpvn81xV7R7EYFb500ngUfXA==}
     engines: {node: '>= 10'}
     peerDependencies:
-      svelte: 3.x
+      svelte: ^3 || ^4
     dependencies:
-      '@testing-library/dom': 8.19.0
+      '@testing-library/dom': 9.3.1
       svelte: 4.0.5
     dev: true
 
