@@ -23,7 +23,7 @@
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
     "test:ci": "CI=true pnpm -r --stream --filter !test-fails --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly",
-    "test:ci:vm-threads": "CI=true pnpm -r --stream --filter !test-fails --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly --experimental-vm-threads",
+    "test:ci:vm-threads": "CI=true pnpm -r --stream --filter !test-fails --filter !test-single-thread --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly --experimental-vm-threads",
     "test:ci:single-thread": "CI=true pnpm -r --stream --filter !test-fails --filter !test-coverage --filter !test-watch --filter !test-bail --filter !test-esm --filter !test-browser run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
