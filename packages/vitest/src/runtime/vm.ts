@@ -72,6 +72,7 @@ export async function run(ctx: WorkerContext) {
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
+  process.env.VITEST_VM_POOL = '1'
 
   if (!vm.getVmContext)
     throw new TypeError(`Environment ${ctx.environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
