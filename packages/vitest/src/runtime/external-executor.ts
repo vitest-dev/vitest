@@ -6,7 +6,7 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { extname } from 'pathe'
+import { basename, extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
 import type { RuntimeRPC } from '../types'
 
@@ -261,6 +261,23 @@ export class ExternalModulesExecutor {
     return m
   }
 
+  private findLongestRegisteredExtension(filename: string) {
+    const name = basename(filename)
+    let currentExtension
+    let index
+    let startIndex = 0
+    // eslint-disable-next-line no-cond-assign
+    while ((index = name.indexOf('.', startIndex)) !== -1) {
+      startIndex = index + 1
+      if (index === 0)
+        continue // Skip dotfiles like .gitignore
+      currentExtension = (name.slice(index))
+      if (this.extensions[currentExtension])
+        return currentExtension
+    }
+    return '.js'
+  }
+
   public createRequire = (filename: string) => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
@@ -292,7 +309,7 @@ export class ExternalModulesExecutor {
     if (cached)
       return cached.exports
 
-    const extension = extname(filename)
+    const extension = this.findLongestRegisteredExtension(filename)
     const loader = this.extensions[extension] || this.extensions['.js']
     loader(module, filename)
 
