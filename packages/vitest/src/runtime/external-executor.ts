@@ -164,7 +164,6 @@ export class ExternalModulesExecutor {
 
       static builtinModules = _Module.builtinModules
       static wrap = _Module.wrap
-      static isBuiltin = _Module.isBuiltin
       static findSourceMap = _Module.findSourceMap
       static SourceMap = _Module.SourceMap
       static syncBuiltinESMExports = _Module.syncBuiltinESMExports
@@ -192,6 +191,9 @@ export class ExternalModulesExecutor {
       static _resolveLookupPaths = _Module._resolveLookupPaths
       // @ts-expect-error not typed
       static globalPaths = _Module.globalPaths
+      // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+      // @ts-ignore not typed in lower versions
+      static isBuiltin = _Module.isBuiltin
 
       static Module = Module
     }
