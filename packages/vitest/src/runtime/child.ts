@@ -6,12 +6,13 @@ import type { CancelReason } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
+import { loadEnvironment } from '../integrations/env'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
-function init(ctx: ChildContext) {
-  const { config, environment } = ctx
+async function init(ctx: ChildContext) {
+  const { config } = ctx
 
   process.env.VITEST_WORKER_ID = '1'
   process.env.VITEST_POOL_ID = '1'
@@ -36,13 +37,17 @@ function init(ctx: ChildContext) {
     },
   )
 
-  const state = {
+  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+  if (ctx.environment.transformMode)
+    environment.transformMode = ctx.environment.transformMode
+
+  const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
     mockMap,
     onCancel,
-    environment: config.environment,
+    environment,
     durations: {
       environment: 0,
       prepare: performance.now(),
@@ -61,7 +66,7 @@ function init(ctx: ChildContext) {
   }
   ctx.files.forEach(i => moduleCache.delete(i))
 
-  return state as unknown as WorkerGlobalState
+  return state
 }
 
 function parsePossibleRegexp(str: string | RegExp) {
@@ -81,11 +86,11 @@ export async function run(ctx: ChildContext) {
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
-    const state = init(ctx)
+    const state = await init(ctx)
     const { run, executor } = await startViteNode({
       state,
     })
-    await run(ctx.files, ctx.config, ctx.environment, executor)
+    await run(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
     await rpcDone()
   }
   finally {

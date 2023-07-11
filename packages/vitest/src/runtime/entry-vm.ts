@@ -21,8 +21,7 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   setupColors(createColors(isatty(1)))
 
-  // TODO: look at environment.transformMode when #3491 is merged
-  if (workerState.environment !== 'node') {
+  if (workerState.environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = () => ({})

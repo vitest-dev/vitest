@@ -7,5 +7,5 @@ export function getWorkerState(): WorkerGlobalState {
 
 export function getCurrentEnvironment(): string {
   const state = getWorkerState()
-  return state?.environment
+  return state?.environment.name
 }

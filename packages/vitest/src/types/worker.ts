@@ -21,7 +21,7 @@ export interface AfterSuiteRunMeta {
 export type WorkerRPC = BirpcReturn<RuntimeRPC>
 
 export interface WorkerGlobalState {
-  ctx: WorkerContext
+  ctx: ContextRPC
   config: ResolvedConfig
   rpc: WorkerRPC
   current?: Test
