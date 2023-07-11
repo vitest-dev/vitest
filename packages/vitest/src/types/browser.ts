@@ -2,14 +2,23 @@ import type { Awaitable } from '@vitest/utils'
 import type { WorkspaceProject } from '../node/workspace'
 import type { ApiConfig } from './config'
 
+export interface ProviderSpecificOptions {
+  webdriverio?: unknown
+  playwright?: unknown
+}
+
 export interface BrowserProviderOptions {
   browser: string
+  options?: ProviderSpecificOptions
 }
 
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
-  initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
+  initialize(
+    ctx: WorkspaceProject,
+    options: BrowserProviderOptions
+  ): Awaitable<void>
   openPage(url: string): Awaitable<void>
   catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
   close(): Awaitable<void>
@@ -61,6 +70,12 @@ export interface BrowserConfigOptions {
    * @experimental
    */
   slowHijackESM?: boolean
+
+  /**
+   * Custom provider/capabilities options passed on for the specific provider.
+   *
+   */
+  options?: ProviderSpecificOptions | {}
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

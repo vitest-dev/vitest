@@ -1,5 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
+import type { BrowserProvider, BrowserProviderOptions, ProviderSpecificOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { WorkspaceProject } from '../workspace'
 
@@ -8,6 +8,7 @@ export type WebdriverBrowser = typeof webdriverBrowsers[number]
 
 export interface WebdriverProviderOptions extends BrowserProviderOptions {
   browser: WebdriverBrowser
+  options: ProviderSpecificOptions
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
@@ -16,15 +17,17 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private cachedBrowser: WebdriverIO.Browser | null = null
   private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
+  private options!: unknown
   private ctx!: WorkspaceProject
 
   getSupportedBrowsers() {
     return webdriverBrowsers
   }
 
-  async initialize(ctx: WorkspaceProject, { browser }: WebdriverProviderOptions) {
+  async initialize(ctx: WorkspaceProject, { browser, options }: WebdriverProviderOptions) {
     this.ctx = ctx
     this.browser = browser
+    this.options = options?.webdriverio
 
     const root = this.ctx.config.root
 
@@ -57,8 +60,9 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.cachedBrowser = await remote({
       logLevel: 'error',
       capabilities: {
+        ...(this.options || undefined),
         'browserName': this.browser,
-        'wdio:devtoolsOptions': { headless: options.headless },
+        'wdio:devtoolsOptions': { ...(this.options && (this.options as any)['wdio:devtoolsOptions']), headless: options.headless },
       },
     })
 

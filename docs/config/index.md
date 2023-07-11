@@ -1035,7 +1035,7 @@ Path to a provider that will be used when running browser tests. Vitest provides
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
-  initialize(ctx: Vitest, options: { browser: string }): Awaitable<void>
+  initialize(ctx: Vitest, options: { browser: string; options?: ProviderSpecificOptions }): Awaitable<void>
   openPage(url: string): Awaitable<void>
   close(): Awaitable<void>
 }

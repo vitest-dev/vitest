@@ -108,7 +108,50 @@ npx vitest --browser.name=chrome --browser.headless
 
 In this case, Vitest will run in headless mode using the Chrome browser.
 
+## Custom Provider Options
+
+You may pass provider-specific options, such as [WebdriverIO custom capabilities](https://webdriver.io/docs/capabilities#custom-capabilities) like:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      headless: true,
+      name: 'webdriverio',
+      options: {
+        webdriverio: {
+          'goog:chromeOptions': {
+            args: ['disable-gpu'],
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+or in case of [Playwright-specific options](https://playwright.dev/docs/api/class-browsertype#browser-type-launch):
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      headless: true,
+      name: 'playwright',
+      options: {
+        playwright: {
+          args: ['disable-gpu'], // chromium
+        },
+      },
+    },
+  },
+})
+```
+
 ## Limitations
+
 ### Thread Blocking Dialogs
 
 When using Vitest Browser, it's important to note that thread blocking dialogs like `alert` or `confirm` cannot be used natively. This is because they block the web page, which means Vitest cannot continue communicating with the page, causing the execution to hang.

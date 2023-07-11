@@ -285,6 +285,7 @@ export function resolveConfig(
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
+  resolved.browser.options ??= {}
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= true
 

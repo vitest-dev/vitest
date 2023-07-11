@@ -1,5 +1,5 @@
 import type { Page } from 'playwright'
-import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
+import type { BrowserProvider, BrowserProviderOptions, ProviderSpecificOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { WorkspaceProject } from '../workspace'
 import type { Awaitable } from '../../types'
@@ -9,6 +9,7 @@ export type PlaywrightBrowser = typeof playwrightBrowsers[number]
 
 export interface PlaywrightProviderOptions extends BrowserProviderOptions {
   browser: PlaywrightBrowser
+  options: ProviderSpecificOptions
 }
 
 export class PlaywrightBrowserProvider implements BrowserProvider {
@@ -16,15 +17,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private cachedBrowser: Page | null = null
   private browser!: PlaywrightBrowser
+  private options!: unknown
   private ctx!: WorkspaceProject
 
   getSupportedBrowsers() {
     return playwrightBrowsers
   }
 
-  async initialize(ctx: WorkspaceProject, { browser }: PlaywrightProviderOptions) {
+  async initialize(ctx: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
     this.ctx = ctx
     this.browser = browser
+    this.options = options?.playwright
 
     const root = this.ctx.config.root
 
@@ -40,7 +43,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const playwright = await import('playwright')
 
-    const playwrightInstance = await playwright[this.browser].launch({ headless: options.headless })
+    const playwrightInstance = await playwright[this.browser].launch({ ...(this.options || undefined), headless: options.headless })
     this.cachedBrowser = await playwrightInstance.newPage()
 
     this.cachedBrowser.on('close', () => {
