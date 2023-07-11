@@ -214,7 +214,7 @@ export interface BaseCoverageOptions {
   /**
    * Generate coverage report even when tests fail.
    *
-   * @default true
+   * @default false
    */
   reportOnFailure?: boolean
 }

@@ -34,13 +34,12 @@ it('should report coverage when "coverag.reportOnFailure: true" and tests fail',
   expect(stdout).toMatch('Coverage report from istanbul')
 })
 
-it('should not report coverage when "coverag.reportOnFailure: false" and tests fail', async () => {
+it('should not report coverage when "coverag.reportOnFailure" has default value and tests fail', async () => {
   const { stdout } = await runVitest({
     root,
     coverage: {
       enabled: true,
       provider: 'istanbul',
-      reportOnFailure: false,
       reporter: ['text'],
     },
   }, [files[0]])

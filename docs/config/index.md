@@ -804,7 +804,7 @@ Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vit
 #### coverage.reportOnFailure
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false` (since Vitest `0.34.0`)
 - **Available for providers:** `'c8' | 'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportOnFailure`, `--coverage.reportOnFailure=false`
 - **Version:** Since Vitest 0.31.2
