@@ -22,7 +22,7 @@ const nodeGlobals = new Map(
 
       if (!descriptor) {
         throw new Error(
-          `No property descriptor for ${nodeGlobalsKey}, this is a bug in Jest.`,
+          `No property descriptor for ${nodeGlobalsKey}, this is a bug in Vitest.`,
         )
       }
 

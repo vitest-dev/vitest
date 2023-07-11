@@ -7,7 +7,7 @@ export default <Environment>({
   transformMode: 'web',
   async setupVM() {
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
-    const win = new Window()
+    const win = new Window() as any
 
     win.global = win.window
     Object.defineProperty(win.document, 'defaultView', {
@@ -17,6 +17,11 @@ export default <Environment>({
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     win.Buffer = Buffer
+    win.Uint8Array = Uint8Array
+
+    // inject structuredClone if it exists
+    if (typeof structuredClone !== 'undefined' && !win.structuredClone)
+      win.structuredClone = structuredClone
 
     return {
       getVmContext() {

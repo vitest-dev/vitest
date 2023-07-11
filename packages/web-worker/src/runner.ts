@@ -1,4 +1,4 @@
-import { VitestExecutor } from 'vitest/node'
+import { VitestExecutor } from 'vitest/execute'
 
 export class InlineWorkerRunner extends VitestExecutor {
   constructor(options: any, private context: any) {

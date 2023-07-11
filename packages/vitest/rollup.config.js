@@ -32,6 +32,7 @@ const entries = [
   'src/integrations/spy.ts',
   'src/coverage.ts',
   'src/public/utils.ts',
+  'src/public/execute.ts',
 ]
 
 const dtsEntries = {

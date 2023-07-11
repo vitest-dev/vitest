@@ -284,12 +284,12 @@ export class ExternalModulesExecutor {
   public createRequire = (filename: string) => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
-      const filename = _require.resolve(id)
-      const ext = extname(filename)
-      if (ext === '.node' || isNodeBuiltin(filename))
-        return this.requireCoreModule(filename)
-      const module = this.createCommonJSNodeModule(filename)
-      return this.loadCommonJSModule(module, filename)
+      const resolved = _require.resolve(id)
+      const ext = extname(resolved)
+      if (ext === '.node' || isNodeBuiltin(resolved))
+        return this.requireCoreModule(resolved)
+      const module = this.createCommonJSNodeModule(resolved)
+      return this.loadCommonJSModule(module, resolved)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
