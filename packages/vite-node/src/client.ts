@@ -17,7 +17,7 @@ const debugNative = createDebug('vite-node:client:native')
 
 const clientStub = {
   injectQuery: (id: string) => id,
-  createHotContext() {
+  createHotContext: () => {
     return {
       accept: () => {},
       prune: () => {},
@@ -28,33 +28,11 @@ const clientStub = {
       send: () => {},
     }
   },
-  updateStyle(id: string, css: string) {
-    if (typeof document === 'undefined')
-      return
-
-    const element = document.querySelector(`[data-vite-dev-id="${id}"]`)
-    if (element) {
-      element.textContent = css
-      return
-    }
-
-    const head = document.querySelector('head')
-    const style = document.createElement('style')
-    style.setAttribute('type', 'text/css')
-    style.setAttribute('data-vite-dev-id', id)
-    style.textContent = css
-    head?.appendChild(style)
-  },
-  removeStyle(id: string) {
-    if (typeof document === 'undefined')
-      return
-    const sheet = document.querySelector(`[data-vite-dev-id="${id}"]`)
-    if (sheet)
-      document.head.removeChild(sheet)
-  },
+  updateStyle: () => {},
+  removeStyle: () => {},
 }
 
-export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
+export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }

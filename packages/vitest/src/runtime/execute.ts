@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
+import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
@@ -111,6 +111,22 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   })
 }
 
+function updateStyle(id: string, css: string) {
+  if (typeof document === 'undefined')
+    return
+
+  const element = document.getElementById(id)
+  if (element)
+    element.remove()
+
+  const head = document.querySelector('head')
+  const style = document.createElement('style')
+  style.setAttribute('type', 'text/css')
+  style.id = id
+  style.innerHTML = css
+  head?.appendChild(style)
+}
+
 export class VitestExecutor extends ViteNodeRunner {
   public mocker: VitestMocker
   public externalModules?: ExternalModulesExecutor
@@ -126,9 +142,19 @@ export class VitestExecutor extends ViteNodeRunner {
         writable: true,
         configurable: true,
       })
+      const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle }
+      this.options.requestStubs = {
+        '/@vite/client': clientStub,
+        '@vite/client': clientStub,
+      }
     }
     else {
       this.externalModules = new ExternalModulesExecutor(options.context, options.findNearestPackageData || (() => Promise.resolve({})))
+      const clientStub = vm.runInContext(`(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()} })`, options.context)(DEFAULT_REQUEST_STUBS['@vite/client'])
+      this.options.requestStubs = {
+        '/@vite/client': clientStub,
+        '@vite/client': clientStub,
+      }
     }
   }
 
