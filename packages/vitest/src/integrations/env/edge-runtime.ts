@@ -1,9 +1,8 @@
-import type vm from 'node:vm'
 import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
-export default ({
+export default <Environment>({
   name: 'edge-runtime',
   transformMode: 'ssr',
   async setupVM() {
@@ -17,7 +16,7 @@ export default ({
     })
     return {
       getVmContext() {
-        return vm.context as vm.Context
+        return vm.context
       },
       teardown() {
         // TODO
@@ -41,4 +40,4 @@ export default ({
       },
     }
   },
-}) satisfies Environment
+})

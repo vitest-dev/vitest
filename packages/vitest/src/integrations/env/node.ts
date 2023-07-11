@@ -30,7 +30,7 @@ const nodeGlobals = new Map(
     }),
 )
 
-export default ({
+export default <Environment>({
   name: 'node',
   transformMode: 'ssr',
   // this is largely copied from jest's node environment
@@ -120,4 +120,4 @@ export default ({
       },
     }
   },
-}) satisfies Environment
+})

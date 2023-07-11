@@ -2,7 +2,7 @@ import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
-export default ({
+export default <Environment>({
   name: 'happy-dom',
   transformMode: 'web',
   async setupVM() {
@@ -40,4 +40,4 @@ export default ({
       },
     }
   },
-}) satisfies Environment
+})

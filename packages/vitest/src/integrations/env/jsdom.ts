@@ -26,7 +26,7 @@ function catchWindowErrors(window: Window) {
   }
 }
 
-export default ({
+export default <Environment>({
   name: 'jsdom',
   transformMode: 'web',
   async setupVM({ jsdom = {} }) {
@@ -125,4 +125,4 @@ export default ({
       },
     }
   },
-}) satisfies Environment
+})
