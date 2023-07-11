@@ -3,7 +3,7 @@
 import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
-import { createRequire } from 'node:module'
+import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve as resolveModule } from 'import-meta-resolve'
@@ -85,6 +85,10 @@ declare class VMSourceTextModule extends VMModule {
 const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
+interface PrivateNodeModule extends NodeModule {
+  _compile(code: string, filename: string): void
+}
+
 const _require = createRequire(import.meta.url)
 
 const nativeResolve = import.meta.resolve
@@ -92,26 +96,118 @@ const nativeResolve = import.meta.resolve
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private requireCache: Record<string, NodeModule> = Object.create(null)
+  private builtinCache: Record<string, NodeModule> = Object.create(null)
   private moduleCache = new Map<string, VMModule>()
-  private extensions: Record<string, (m: NodeModule, filename: string) => string> = Object.create(null)
+  private extensions: Record<string, (m: NodeModule, filename: string) => unknown> = Object.create(null)
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
 
+  private Module: typeof _Module
+
   constructor(private context: vm.Context, private findNearestPackageData: RuntimeRPC['findNearestPackageData']) {
     this.context = context
-    this.requireCache = Object.create(null)
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const executor = this
+
+    this.Module = class Module {
+      exports = {}
+      isPreloading = false
+      require: NodeRequire
+      id: string
+      filename: string
+      loaded: boolean
+      parent: null | Module | undefined
+      children: Module[] = []
+      path: string
+      paths: string[]
+
+      constructor(id: string, parent?: Module) {
+        this.exports = {}
+        this.isPreloading = false
+        this.require = Module.createRequire(id)
+        // in our case the path should always be resolved already
+        this.path = dirname(id)
+        this.id = id
+        this.filename = id
+        this.loaded = false
+        this.parent = parent
+        this.children = []
+        this.paths = []
+      }
+
+      _compile(code: string, filename: string) {
+        const cjsModule = _Module.wrap(code)
+        const script = new vm.Script(cjsModule, {
+          filename,
+          importModuleDynamically: executor.importModuleDynamically,
+        } as any)
+        // @ts-expect-error mark script with current identifier
+        script.identifier = filename
+        const fn = script.runInContext(context)
+        const __dirname = dirname(filename)
+        executor.requireCache[filename] = this
+        try {
+          fn(this.exports, this.require, this, filename, __dirname)
+          return this.exports
+        }
+        finally {
+          this.loaded = true
+        }
+      }
+
+      // exposed for external use, Node.js does the opposite
+      static _load = (request: string, parent: Module | undefined, _isMain: boolean) => {
+        const require = Module.createRequire(parent?.filename ?? request)
+        return require(request)
+      }
+
+      static builtinModules = _Module.builtinModules
+      static wrap = _Module.wrap
+      static isBuiltin = _Module.isBuiltin
+      static findSourceMap = _Module.findSourceMap
+      static SourceMap = _Module.SourceMap
+      static syncBuiltinESMExports = _Module.syncBuiltinESMExports
+
+      static _cache = executor.moduleCache
+      static _extensions = executor.extensions
+
+      static createRequire = (filename: string) => {
+        return executor.createRequire(filename)
+      }
+
+      static runMain = () => {
+        throw new Error('[vitest] "runMain" is not implemented.')
+      }
+
+      // @ts-expect-error not typed
+      static _resolveFilename = _Module._resolveFilename
+      // @ts-expect-error not typed
+      static _findPath = _Module._findPath
+      // @ts-expect-error not typed
+      static _initPaths = _Module._initPaths
+      // @ts-expect-error not typed
+      static _preloadModules = _Module._preloadModules
+      // @ts-expect-error not typed
+      static _resolveLookupPaths = _Module._resolveLookupPaths
+      // @ts-expect-error not typed
+      static globalPaths = _Module.globalPaths
+
+      static Module = Module
+    }
 
     this.extensions['.js'] = this.requireJs
     this.extensions['.json'] = this.requireJson
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
-    return readFileSync(filename, 'utf-8')
+    const content = readFileSync(filename, 'utf-8')
+    ;(m as PrivateNodeModule)._compile(content, filename)
   }
 
   private requireJson = (m: NodeModule, filename: string) => {
     const code = readFileSync(filename, 'utf-8')
-    return `module.exports = ${code}`
+    m.exports = JSON.parse(code)
   }
 
   public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
@@ -172,7 +268,7 @@ export class ExternalModulesExecutor {
       if (ext === '.node' || isNodeBuiltin(filename))
         return this.requireCoreModule(filename)
       const module = this.createCommonJSNodeModule(filename)
-      return this.evaluateCommonJSModule(module, filename)
+      return this.loadCommonJSModule(module, filename)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
@@ -186,53 +282,20 @@ export class ExternalModulesExecutor {
   }
 
   private createCommonJSNodeModule(filename: string) {
-    const require = this.createRequire(filename)
-    const __dirname = dirname(filename)
-    // dirty non-spec implementation - doesn't support children, parent, etc
-    const module: NodeModule = {
-      exports: {},
-      isPreloading: false,
-      require,
-      id: filename,
-      filename,
-      loaded: false,
-      parent: null,
-      children: [],
-      path: __dirname,
-      paths: [],
-    }
-    return module
+    return new this.Module(filename)
   }
 
   // very naive implementation for Node.js require
-  private evaluateCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
+  private loadCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
     const cached = this.requireCache[filename]
     if (cached)
       return cached.exports
 
     const extension = extname(filename)
     const loader = this.extensions[extension] || this.extensions['.js']
-    const result = loader(module, filename)
+    loader(module, filename)
 
-    const code = typeof result === 'string' ? result : ''
-
-    const cjsModule = `(function (exports, require, module, __filename, __dirname) { ${code}\n})`
-    const script = new vm.Script(cjsModule, {
-      filename,
-      importModuleDynamically: this.importModuleDynamically,
-    } as any)
-    // @ts-expect-error mark script with current identifier
-    script.identifier = filename
-    const fn = script.runInContext(this.context)
-    const __dirname = dirname(filename)
-    this.requireCache[filename] = module
-    try {
-      fn(module.exports, module.require, module, filename, __dirname)
-      return module.exports
-    }
-    finally {
-      module.loaded = true
-    }
+    return module.exports
   }
 
   private async createEsmModule(fileUrl: string, code: string) {
@@ -261,16 +324,16 @@ export class ExternalModulesExecutor {
 
   private requireCoreModule(identifier: string) {
     const normalized = identifier.replace(/^node:/, '')
-    if (this.requireCache[normalized])
-      return this.requireCache[normalized].exports
+    if (this.builtinCache[normalized])
+      return this.builtinCache[normalized].exports
     const moduleExports = _require(identifier)
     if (identifier === 'node:module' || identifier === 'module') {
-      const exports = { ...moduleExports, createRequire: this.createRequire }
-      const cached = _require.cache[normalized]!
-      this.requireCache[normalized] = { ...cached, exports }
-      return exports
+      const module = new this.Module('/module.js') // path should not matter
+      module.exports = this.Module
+      this.builtinCache[normalized] = module
+      return module.exports
     }
-    this.requireCache[normalized] = _require.cache[normalized]!
+    this.builtinCache[normalized] = _require.cache[normalized]!
     return moduleExports
   }
 
@@ -293,7 +356,7 @@ export class ExternalModulesExecutor {
 
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
-      const exports = this.evaluateCommonJSModule(module, pathUrl)
+      const exports = this.loadCommonJSModule(module, pathUrl)
       return this.wrapSynteticModule(fileUrl, 'cjs', exports)
     }
 
@@ -308,7 +371,7 @@ export class ExternalModulesExecutor {
       return await this.createEsmModule(fileUrl, await readFile(pathUrl, 'utf8'))
 
     const module = this.createCommonJSNodeModule(pathUrl)
-    const exports = this.evaluateCommonJSModule(module, pathUrl)
+    const exports = this.loadCommonJSModule(module, pathUrl)
     return this.wrapSynteticModule(fileUrl, 'cjs', exports)
   }
 
