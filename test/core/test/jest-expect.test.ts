@@ -466,6 +466,25 @@ describe('.toStrictEqual()', () => {
       Uint8Array.from([9, 3]).buffer,
     )
   })
+
+  it('does not pass for DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).not.toStrictEqual(
+      new DataView(Uint8Array.from([3, 2, 1]).buffer),
+    )
+
+    expect(new DataView(Uint16Array.from([1, 2]).buffer)).not.toStrictEqual(
+      new DataView(Uint16Array.from([2, 1]).buffer),
+    )
+  })
+
+  it('passes for matching DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([1, 2, 3]).buffer),
+    )
+    expect(new DataView(Uint8Array.from([]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([]).buffer),
+    )
+  })
 })
 
 describe('toBeTypeOf()', () => {
