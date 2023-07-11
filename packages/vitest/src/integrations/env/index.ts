@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url'
-import { resolve } from 'pathe'
+import { normalize, resolve } from 'pathe'
+import { resolveModule } from 'local-pkg'
 import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
 import type { Environment } from '../../types'
 import node from './node'
@@ -37,8 +38,10 @@ export function getEnvPackageName(env: VitestEnvironment) {
 export async function loadEnvironment(name: VitestEnvironment, root: string): Promise<Environment> {
   if (isBuiltinEnvironment(name))
     return environments[name]
-  const packageId = (name[0] === '.' || name[0] === '/') ? resolve(root, name) : `vitest-environment-${name}`
-  const pkg = await import(pathToFileURL(packageId).href)
+  const packageId = name[0] === '.' || name[0] === '/'
+    ? resolve(root, name)
+    : resolveModule(`vitest-environment-${name}`, { paths: [root] }) ?? resolve(root, name)
+  const pkg = await import(pathToFileURL(normalize(packageId)).href)
   if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
     throw new Error(
       `Environment "${name}" is not a valid environment. `

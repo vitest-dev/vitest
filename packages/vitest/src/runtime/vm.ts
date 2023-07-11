@@ -65,7 +65,7 @@ export async function run(ctx: WorkerContext) {
     getSourceMap: source => moduleCache.getSourceMap(source),
   })
 
-  const vm = await environment.setupVM!(ctx.environment.options || {})
+  const vm = await environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {})
 
   state.durations.environment = performance.now() - state.durations.environment
 
