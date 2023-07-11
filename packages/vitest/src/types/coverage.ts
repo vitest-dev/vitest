@@ -61,14 +61,13 @@ type CoverageReporterWithOptions<ReporterName extends CoverageReporter = Coverag
        : [ReporterName, Partial<ReportOptions[ReporterName]>]
      : never
 
-type Provider = 'c8' | 'v8' | 'istanbul' | 'custom' | undefined
+type Provider = 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
   T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
-    T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
-      T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
-        T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
-            ({ provider?: T } & (CoverageC8Options))
+    T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
+      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+          ({ provider?: T } & (CoverageV8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -226,36 +225,6 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
-}
-
-export interface CoverageC8Options extends BaseCoverageOptions {
-  /**
-   * Allow files from outside of your cwd.
-   *
-   * @default false
-   */
-  allowExternal?: boolean
-
-  /**
-   * Exclude coverage under `/node_modules/`
-   *
-   * @default true
-   */
-  excludeNodeModules?: boolean
-
-  /**
-   * Specifies the directories that are used when `--all` is enabled.
-   *
-   * @default cwd
-  */
-  src?: string[]
-
-  /**
-   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
-   *
-   * @default false
-   */
-  100?: boolean
 }
 
 export interface CoverageV8Options extends BaseCoverageOptions {

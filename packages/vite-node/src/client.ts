@@ -384,7 +384,7 @@ export class ViteNodeRunner {
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
-    // adjust `offset` variable in packages/coverage-c8/src/provider.ts#86 if you do change this
+    // adjust `WRAPPER_LENGTH` variable in packages/coverage-v8/src/provider.ts if you do change this
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,

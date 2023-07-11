@@ -45,9 +45,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:packages/browser
-      '@vitest/coverage-c8':
-        specifier: workspace:*
-        version: link:packages/coverage-c8
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:packages/coverage-istanbul
@@ -619,9 +616,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: latest
         version: 4.0.3(vite@4.3.9)
-      '@vitest/coverage-c8':
-        specifier: ^0.24.5
-        version: 0.24.5
+      '@vitest/coverage-v8':
+        specifier: latest
+        version: link:../../packages/coverage-v8
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -925,34 +922,6 @@ importers:
       rollup:
         specifier: ^3.26.0
         version: 3.26.0
-      vitest:
-        specifier: workspace:*
-        version: link:../vitest
-
-  packages/coverage-c8:
-    dependencies:
-      '@ampproject/remapping':
-        specifier: ^2.2.1
-        version: 2.2.1
-      c8:
-        specifier: ^7.14.0
-        version: 7.14.0
-      magic-string:
-        specifier: ^0.30.1
-        version: 0.30.1
-      picocolors:
-        specifier: ^1.0.0
-        version: 1.0.0
-      std-env:
-        specifier: ^3.3.3
-        version: 3.3.3
-    devDependencies:
-      pathe:
-        specifier: ^1.1.1
-        version: 1.1.1
-      vite-node:
-        specifier: workspace:*
-        version: link:../vite-node
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -1622,9 +1591,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      '@vitest/coverage-c8':
-        specifier: workspace:*
-        version: link:../../packages/coverage-c8
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:../../packages/coverage-istanbul
@@ -9573,13 +9539,6 @@ packages:
       vue: 3.3.4
     dev: true
 
-  /@vitest/coverage-c8@0.24.5:
-    resolution: {integrity: sha512-955yK/SdSBZPYrSXgXB0F+0JnOX5EY9kSL7ywJ4rNajmkFUhwLjuKm13Xb6YKSyIY/g5WvbBnyowqfNRxBJ3ww==}
-    dependencies:
-      c8: 7.12.0
-      vitest: link:packages/vitest
-    dev: true
-
   /@volar/code-gen@0.40.13:
     resolution: {integrity: sha512-4gShBWuMce868OVvgyA1cU5WxHbjfEme18Tw6uVMfweZCF5fB2KECG0iPrA9D54vHk3FeHarODNwgIaaFfUBlA==}
     dependencies:
@@ -11651,25 +11610,6 @@ packages:
       - supports-color
     dev: true
 
-  /c8@7.12.0:
-    resolution: {integrity: sha512-CtgQrHOkyxr5koX1wEUmN/5cfDa2ckbHRA4Gy5LAL0zaCFtVWJS5++n+w4/sr2GWGerBxgTjpKeDclk/Qk6W/A==}
-    engines: {node: '>=10.12.0'}
-    hasBin: true
-    dependencies:
-      '@bcoe/v8-coverage': 0.2.3
-      '@istanbuljs/schema': 0.1.3
-      find-up: 5.0.0
-      foreground-child: 2.0.0
-      istanbul-lib-coverage: 3.2.0
-      istanbul-lib-report: 3.0.0
-      istanbul-reports: 3.1.5
-      rimraf: 3.0.2
-      test-exclude: 6.0.0
-      v8-to-istanbul: 9.1.0
-      yargs: 16.2.0
-      yargs-parser: 20.2.9
-    dev: true
-
   /c8@7.14.0:
     resolution: {integrity: sha512-i04rtkkcNcCf7zsQcSv/T9EbUn4RXQ6mropeMcjFOsQXQ0iGLAr/xT6TImQg4+U9hmNpN9XdvPkjUL1IzbgxJw==}
     engines: {node: '>=10.12.0'}
@@ -11687,6 +11627,7 @@ packages:
       v8-to-istanbul: 9.1.0
       yargs: 16.2.0
       yargs-parser: 20.2.9
+    dev: true
 
   /cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}

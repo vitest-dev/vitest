@@ -7,7 +7,6 @@ type Configuration = NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>
 type Coverage = NonNullable<Configuration['coverage']>
 
 test('providers, built-in', () => {
-  assertType<Coverage>({ provider: 'c8' })
   assertType<Coverage>({ provider: 'v8' })
   assertType<Coverage>({ provider: 'istanbul' })
 
@@ -23,16 +22,6 @@ test('providers, custom', () => {
 })
 
 test('provider options, generic', () => {
-  assertType<Coverage>({
-    provider: 'c8',
-    enabled: true,
-    include: ['string'],
-    watermarks: {
-      functions: [80, 95],
-      lines: [80, 95],
-    },
-  })
-
   assertType<Coverage>({
     provider: 'v8',
     enabled: true,
@@ -50,22 +39,6 @@ test('provider options, generic', () => {
     watermarks: {
       statements: [80, 95],
     },
-  })
-})
-
-test('provider specific options, c8', () => {
-  assertType<Coverage>({
-    provider: 'c8',
-    src: ['string'],
-    100: true,
-    excludeNodeModules: false,
-    allowExternal: true,
-  })
-
-  assertType<Coverage>({
-    provider: 'c8',
-    // @ts-expect-error -- Istanbul-only option is not allowed
-    ignoreClassMethods: ['string'],
   })
 })
 

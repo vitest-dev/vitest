@@ -20,7 +20,7 @@
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",
     "@vitejs/plugin-react": "latest",
-    "@vitest/coverage-c8": "^0.24.5",
+    "@vitest/coverage-v8": "latest",
     "@vitest/ui": "latest",
     "jsdom": "latest",
     "typescript": "^4.8.4",
