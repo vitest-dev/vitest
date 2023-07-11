@@ -3,14 +3,14 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import type { ResolvedConfig, Vitest } from 'vitest'
+import type { Vitest } from 'vitest'
 
 export default (ctx: Vitest) => {
   return <Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     configureServer(server) {
-      const uiOptions: ResolvedConfig = ctx.config
+      const uiOptions = ctx.config
       const base = uiOptions.uiBase
       const coverageFolder = resolveCoverageFolder(ctx)
       const coveragePath = coverageFolder ? `/${basename(coverageFolder)}/` : undefined
@@ -34,7 +34,7 @@ export default (ctx: Vitest) => {
 }
 
 function resolveCoverageFolder(ctx: Vitest) {
-  const options: ResolvedConfig = ctx.config
+  const options = ctx.config
   const enabled = options.api?.port
     && options.coverage?.enabled
     && options.coverage.reporter.some((reporter) => {

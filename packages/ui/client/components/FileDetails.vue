@@ -37,6 +37,7 @@ function changeViewMode(view: Params['view']) {
 const consoleCount = computed(() => {
   return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0
 })
+
 function onDraft(value: boolean) {
   draft.value = value
 }

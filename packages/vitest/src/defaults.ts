@@ -1,4 +1,4 @@
-import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
+import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
@@ -51,7 +51,7 @@ export const fakeTimersDefaults = {
     'clearImmediate',
     'Date',
   ],
-} as NonNullable<UserConfig['fakeTimers']>
+} satisfies NonNullable<UserConfig['fakeTimers']>
 
 const config = {
   allowOnly: !isCI,
@@ -84,7 +84,7 @@ const config = {
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults,
+  coverage: coverageConfigDefaults as CoverageV8Options,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
