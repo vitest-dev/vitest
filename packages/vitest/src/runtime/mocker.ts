@@ -59,7 +59,7 @@ export class VitestMocker {
   ) {
     const context = this.executor.options.context
     if (context)
-      this.primitives = vm.runInContext('({ Object, Symbol, Error, Function, RegExp, Array, Map })', context)
+      this.primitives = vm.runInContext('({ Object, Error, Function, RegExp, Symbol, Array, Map })', context)
     else
       this.primitives = { Object, Error, Function, RegExp, Symbol: globalThis.Symbol, Array, Map }
 

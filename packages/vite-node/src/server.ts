@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
 import { join, normalize, relative, resolve } from 'pathe'
-import { type PackageCache, type TransformResult, type ViteDevServer } from 'vite'
+import { type TransformResult, type ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
@@ -27,7 +27,6 @@ export class ViteNodeServer {
   }>()
 
   externalizeCache = new Map<string, Promise<string | false>>()
-  packageCache = new Map<string, PackageCache>()
 
   debugger?: Debugger
 

@@ -29,9 +29,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    poolMatchGlobs: [
-      ['**/*', 'experimentalVmThreads'],
-    ],
     deps: {
       external: [/src\/external/],
       interopDefault: true,

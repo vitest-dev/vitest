@@ -1,4 +1,3 @@
-import type { Context } from 'node:vm'
 import type { ViteHotContext } from 'vite/types/hot'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
@@ -77,11 +76,9 @@ export interface ViteNodeRunnerOptions {
   createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
-  externalCache?: ModuleCacheMap
   interopDefault?: boolean
   requestStubs?: Record<string, any>
   debug?: boolean
-  context?: Context
 }
 
 export interface ViteNodeResolveId {

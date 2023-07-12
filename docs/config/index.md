@@ -547,7 +547,7 @@ By providing an object instead of a string you can define individual outputs whe
 
 - **Type:** `boolean`
 - **CLI:** `--experimentalVmThreads`, `--experimental-vm-threads`
-- **Version:** Since Vitets 0.34.0
+- **Version:** Since Vitest 0.34.0
 
 Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a worker pool.
 
@@ -578,7 +578,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 - **Type:** `string | number`
 - **CLI:** `--experimentalVmWorkerMemoryLimit`, `--experimental-vm-worker-memory-limit`
 - **Default:** `1 / CPU Cores`
-- **Version:** Since Vitets 0.34.0
+- **Version:** Since Vitest 0.34.0
 
 Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on default.
 

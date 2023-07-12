@@ -73,7 +73,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   }
 
   function catchError(err: unknown, type: string) {
-    const worker = options.state
+    const worker = state()
     const error = processError(err)
     if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
@@ -176,16 +176,16 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   get state() {
-    return this.options.state
+    return getWorkerState() || this.options.state
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
     if (isInternalRequest(id) || id.startsWith('data:'))
       return false
-    const environment = this.options.state.environment.name
+    const transformMode = this.state.environment?.transformMode ?? 'ssr'
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
-    return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
+    return transformMode === 'ssr' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
   async originalResolveUrl(id: string, importer?: string) {
@@ -253,10 +253,8 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   prepareContext(context: Record<string, any>) {
-    const workerState = this.state
-
     // support `import.meta.vitest` for test entry
-    if (workerState.filepath && normalize(workerState.filepath) === normalize(context.__filename)) {
+    if (this.state.filepath && normalize(this.state.filepath) === normalize(context.__filename)) {
       const globalNamespace = this.options.context || globalThis
       // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalNamespace.__vitest_index__ })
