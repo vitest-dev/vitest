@@ -4,11 +4,10 @@ import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
-import { readFileSync } from 'node:fs'
+import { readFileSync, statSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { basename, extname } from 'pathe'
-import { isNodeBuiltin } from 'vite-node/utils'
-import type { RuntimeRPC } from '../types'
+import { basename, extname, join } from 'pathe'
+import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 
 // need to copy paste types for vm
 // because they require latest @types/node which we don't bundle
@@ -92,6 +91,11 @@ const _require = createRequire(import.meta.url)
 
 const nativeResolve = import.meta.resolve!
 
+interface ExternalModulesExecutorOptions {
+  context: vm.Context
+  packageCache: Map<string, any>
+}
+
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private requireCache: Record<string, NodeModule> = Object.create(null)
@@ -100,18 +104,20 @@ export class ExternalModulesExecutor {
   private extensions: Record<string, (m: NodeModule, filename: string) => unknown> = Object.create(null)
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
+  private context: vm.Context
 
   private Module: typeof _Module
   private primitives: {
     Object: typeof Object
   }
 
-  constructor(private context: vm.Context, private findNearestPackageData: RuntimeRPC['findNearestPackageData']) {
-    this.context = context
+  constructor(private options: ExternalModulesExecutorOptions) {
+    this.context = options.context
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const executor = this
 
+    // primitive implementation, some fields are not filled yet, like "paths" - #2854
     this.Module = class Module {
       exports: any
       isPreloading = false
@@ -143,7 +149,7 @@ export class ExternalModulesExecutor {
         } as any)
         // @ts-expect-error mark script with current identifier
         script.identifier = filename
-        const fn = script.runInContext(context)
+        const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
         executor.requireCache[filename] = this
         try {
@@ -200,7 +206,7 @@ export class ExternalModulesExecutor {
     this.extensions['.js'] = this.requireJs
     this.extensions['.json'] = this.requireJson
 
-    this.primitives = vm.runInContext('({ Object })', context)
+    this.primitives = vm.runInContext('({ Object })', this.context)
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
@@ -225,6 +231,36 @@ export class ExternalModulesExecutor {
 
   private async resolveAsync(specifier: string, parent: string) {
     return nativeResolve(specifier, parent)
+  }
+
+  private async findNearestPackageData(basedir: string) {
+    const originalBasedir = basedir
+    const packageCache = this.options.packageCache
+    while (basedir) {
+      const cached = getCachedData(packageCache, basedir, originalBasedir)
+      if (cached)
+        return cached
+
+      const pkgPath = join(basedir, 'package.json')
+      try {
+        if (statSync(pkgPath, { throwIfNoEntry: false })?.isFile()) {
+          const pkgData = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+
+          if (packageCache)
+            setCacheData(packageCache, pkgData, basedir, originalBasedir)
+
+          return pkgData
+        }
+      }
+      catch {}
+
+      const nextBasedir = dirname(basedir)
+      if (nextBasedir === basedir)
+        break
+      basedir = nextBasedir
+    }
+
+    return null
   }
 
   private async wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {

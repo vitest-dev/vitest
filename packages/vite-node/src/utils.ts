@@ -1,7 +1,7 @@
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { builtinModules } from 'node:module'
 import { existsSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -152,4 +152,50 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
     return array
 
   return [array]
+}
+
+export function getCachedData<T>(
+  cache: Map<string, T>,
+  basedir: string,
+  originalBasedir: string,
+) {
+  const pkgData = cache.get(getFnpdCacheKey(basedir))
+  if (pkgData) {
+    traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+      cache.set(getFnpdCacheKey(dir), pkgData)
+    })
+    return pkgData
+  }
+}
+
+export function setCacheData<T>(
+  cache: Map<string, T>,
+  data: T,
+  basedir: string,
+  originalBasedir: string,
+) {
+  cache.set(getFnpdCacheKey(basedir), data)
+  traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+    cache.set(getFnpdCacheKey(dir), data)
+  })
+}
+
+function getFnpdCacheKey(basedir: string) {
+  return `fnpd_${basedir}`
+}
+
+/**
+ * Traverse between `longerDir` (inclusive) and `shorterDir` (exclusive) and call `cb` for each dir.
+ * @param longerDir Longer dir path, e.g. `/User/foo/bar/baz`
+ * @param shorterDir Shorter dir path, e.g. `/User/foo`
+ */
+function traverseBetweenDirs(
+  longerDir: string,
+  shorterDir: string,
+  cb: (dir: string) => void,
+) {
+  while (longerDir !== shorterDir) {
+    cb(longerDir)
+    longerDir = dirname(longerDir)
+  }
 }

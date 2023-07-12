@@ -23,7 +23,6 @@ export interface RuntimeRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
-  findNearestPackageData: (file: string) => Promise<Record<string, unknown>>
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string

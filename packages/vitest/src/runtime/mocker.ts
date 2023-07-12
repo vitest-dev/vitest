@@ -4,14 +4,11 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
-import type { GlobalConstructors } from '../utils/base'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
 const spyModulePath = resolve(distDir, 'spy.js')
-
-const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
 
 class RefTracker {
   private idMap = new Map<any, number>()
@@ -45,10 +42,31 @@ export class VitestMocker {
   static pendingIds: PendingSuiteMock[] = []
   private spyModule?: typeof import('@vitest/spy')
   private resolveCache = new Map<string, Record<string, string>>()
+  private primitives: {
+    Object: typeof Object
+    Function: typeof Function
+    RegExp: typeof RegExp
+    Array: typeof Array
+    Map: typeof Map
+    Error: typeof Error
+    Symbol: typeof Symbol
+  }
+
+  private filterPublicKeys: (symbol | string)[]
 
   constructor(
     public executor: VitestExecutor,
-  ) {}
+  ) {
+    const context = this.executor.options.context
+    if (context)
+      this.primitives = vm.runInContext('({ Object, Symbol, Error, Function, RegExp, Array, Map })', context)
+    else
+      this.primitives = { Object, Error, Function, RegExp, Symbol: globalThis.Symbol, Array, Map }
+
+    const Symbol = this.primitives.Symbol
+
+    this.filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
+  }
 
   private get root() {
     return this.executor.options.root
@@ -84,23 +102,9 @@ export class VitestMocker {
     return this.executor.state.filepath || 'global'
   }
 
-  private getErrorConstructor(): typeof Error {
-    const context = this.executor.options.context
-    if (!context)
-      return Error
-    return vm.runInContext('Error', context)
-  }
-
   private createError(message: string) {
-    const Error = this.getErrorConstructor()
+    const Error = this.primitives.Error
     return new Error(message)
-  }
-
-  private getFinalConstructors(): GlobalConstructors {
-    const context = this.executor.options.context
-    if (!context)
-      return { Object, Function, RegExp, Array, Map }
-    return vm.runInContext('({ Object, Function, RegExp, Array, Map })', context)
   }
 
   public getMocks() {
@@ -190,7 +194,7 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          if (filterPublicKeys.includes(prop))
+          if (this.filterPublicKeys.includes(prop))
             return undefined
           const c = getColors()
           throw this.createError(
@@ -261,7 +265,6 @@ export class VitestMocker {
   public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
-    const constructors = this.getFinalConstructors()
 
     const define = (container: Record<Key, any>, key: Key, value: any) => {
       try {
@@ -276,7 +279,7 @@ export class VitestMocker {
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule, constructors)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule, this.primitives)) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule && descriptor.get) {
           try {

@@ -6,7 +6,7 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
-import type { ResolvedConfig, ResolvedTestEnvironment, RuntimeRPC, WorkerGlobalState } from '../types'
+import type { ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
@@ -16,9 +16,9 @@ const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
+  packageCache: Map<string, string>
   moduleDirectories?: string[]
   context?: vm.Context
-  findNearestPackageData?: RuntimeRPC['findNearestPackageData']
   state: WorkerGlobalState
 }
 
@@ -36,6 +36,7 @@ let _viteNode: {
   executor: VitestExecutor
 }
 
+export const packageCache = new Map<string, any>()
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 
@@ -56,7 +57,6 @@ export interface ContextExecutorOptions {
   mockMap?: MockMap
   moduleCache?: ModuleCacheMap
   context?: vm.Context
-  findNearestPackageData?: RuntimeRPC['findNearestPackageData']
   state: WorkerGlobalState
 }
 
@@ -98,9 +98,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
-    findNearestPackageData(file) {
-      return rpc().findNearestPackageData(file)
-    },
+    packageCache,
     moduleCache,
     mockMap,
     get interopDefault() { return state().config.deps.interopDefault },
@@ -160,7 +158,10 @@ export class VitestExecutor extends ViteNodeRunner {
       }
     }
     else {
-      this.externalModules = new ExternalModulesExecutor(options.context, options.findNearestPackageData || (() => Promise.resolve({})))
+      this.externalModules = new ExternalModulesExecutor({
+        context: options.context,
+        packageCache: options.packageCache,
+      })
       const clientStub = vm.runInContext(`(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()} })`, options.context)(DEFAULT_REQUEST_STUBS['@vite/client'])
       this.options.requestStubs = {
         '/@vite/client': clientStub,

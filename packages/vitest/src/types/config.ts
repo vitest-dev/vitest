@@ -316,9 +316,6 @@ export interface InlineConfig {
    */
   experimentalVmWorkerMemoryLimit?: string | number
 
-  // TODO: document that "--no-isolate" has no effect on experimentalVmThreads
-  // TODO: workerIdleMemoryLimit for experimentalVmThreads, so they don't leak
-
   /**
    * Enable multi-threading
    *
