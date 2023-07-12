@@ -87,7 +87,6 @@
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.18",
     "@types/debug": "^4.1.8",
-    "import-meta-resolve": "^2.2.2",
     "rollup": "^2.79.1"
   }
 }

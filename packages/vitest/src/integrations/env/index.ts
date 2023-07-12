@@ -49,7 +49,7 @@ export async function loadEnvironment(name: VitestEnvironment, root: string): Pr
     )
   }
   const environment = pkg.default
-  if (!environment.transformMode) {
+  if (environment.transformMode !== 'web' && environment.transformMode !== 'ssr') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
     + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
