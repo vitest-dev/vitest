@@ -1,7 +1,7 @@
-import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
+import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
-export const defaultInclude = ['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']
+export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
@@ -32,10 +32,8 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   cleanOnRerun: true,
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
-  reportOnFailure: true,
+  reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  // default extensions used by c8, plus '.vue' and '.svelte'
-  // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
 }
 
@@ -51,7 +49,7 @@ export const fakeTimersDefaults = {
     'clearImmediate',
     'Date',
   ],
-} as NonNullable<UserConfig['fakeTimers']>
+} satisfies NonNullable<UserConfig['fakeTimers']>
 
 const config = {
   allowOnly: !isCI,
@@ -84,13 +82,13 @@ const config = {
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults,
+  coverage: coverageConfigDefaults as CoverageV8Options,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
   typecheck: {
     checker: 'tsc' as const,
-    include: ['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)'],
+    include: ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,

@@ -3,6 +3,13 @@ import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { dynamicRelativeImport } from '../src/relative-import'
 
+// @ts-expect-error module is not typed
+import promiseExport from '../src/cjs/promise-export'
+
+test('promise export works correctly', async () => {
+  await expect(promiseExport).resolves.toEqual({ value: 42 })
+})
+
 test('dynamic relative import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 

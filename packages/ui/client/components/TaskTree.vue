@@ -2,22 +2,15 @@
 import type { Task } from '#types'
 import { caseInsensitiveMatch } from '~/utils/task'
 
-withDefaults(defineProps<{
+defineOptions({ inheritAttrs: false })
+
+const { task, indent = 0, nested = false, search, onItemClick } = defineProps<{
   task: Task
   indent?: number
   nested?: boolean
   search?: string
   onItemClick?: (task: Task) => void
-}>(), {
-  indent: 0,
-  nested: false,
-})
-</script>
-
-<script lang="ts">
-export default {
-  inheritAttrs: false,
-}
+}>()
 </script>
 
 <template>

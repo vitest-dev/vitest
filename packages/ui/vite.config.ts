@@ -27,7 +27,12 @@ export const config: UserConfig = {
     __BASE_PATH__: '"/__vitest__/"',
   },
   plugins: [
-    Vue(),
+    Vue({
+      script: {
+        defineModel: true,
+        propsDestructure: true,
+      },
+    }),
     Unocss({
       presets: [
         presetUno(),
@@ -55,11 +60,15 @@ export const config: UserConfig = {
     }),
     AutoImport({
       dts: resolve(__dirname, './client/auto-imports.d.ts'),
+      dirs: [
+        './client/composables',
+      ],
       imports: [
         'vue',
         'vue-router',
         '@vueuse/core',
       ],
+      injectAtEnd: true,
     }),
     {
       name: 'debug-html-report',

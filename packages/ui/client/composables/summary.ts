@@ -52,9 +52,11 @@ function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
     return array
   return [array]
 }
+
 function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {
   return (s.type === 'test' || s.type === 'benchmark' || s.type === 'typecheck')
 }
+
 function getTests(suite: Arrayable<Task>): (Test | Benchmark | TypeCheck)[] {
   return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
 }

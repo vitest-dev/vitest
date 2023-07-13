@@ -6,10 +6,6 @@ title: Coverage | Guide
 
 Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-code-coverage) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
 
-:::info
-The `c8` provider is being replaced by the [`v8`](https://v8.dev/blog/javascript-code-coverage) provider. It will be deprecated in the next major version.
-:::
-
 ## Coverage Providers
 
 :::tip

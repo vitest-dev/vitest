@@ -3,7 +3,7 @@ import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
 import { toArray } from '../utils'
-import type { BaseCoverageOptions, CoverageC8Options, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
+import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -159,9 +159,6 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 
     if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
       (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
-
-    if ((coverage as CoverageC8Options).src)
-      (coverage as CoverageC8Options).src = toArray((coverage as CoverageC8Options).src)
   }
   return argv
 }

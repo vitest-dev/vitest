@@ -7,7 +7,7 @@ import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
@@ -169,7 +169,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
