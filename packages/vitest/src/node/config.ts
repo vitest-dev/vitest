@@ -124,8 +124,32 @@ export function resolveConfig(
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
+  resolved.deps ??= {}
+  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
+    if (!dir.startsWith('/'))
+      dir = `/${dir}`
+    if (!dir.endsWith('/'))
+      dir += '/'
+    return normalize(dir)
+  })
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
+
+  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
+  deprecatedDepsOptions.forEach((option) => {
+    if (resolved.deps[option] !== undefined) {
+      console.warn(
+        c.yellow(
+         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated, use "server.deps.${option}" instead`,
+        ),
+      )
+
+      if (resolved.server.deps![option] === undefined)
+        resolved.server.deps![option] = resolved.deps[option] as any
+    }
+  })
 
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
@@ -142,21 +166,13 @@ export function resolveConfig(
     }
   }
 
-  resolved.server.deps.moduleDirectories ??= ['/node_modules/']
-  resolved.server.deps.moduleDirectories = resolved.server.deps.moduleDirectories.map((dir) => {
-    if (!dir.startsWith('/'))
-      dir = `/${dir}`
-    if (!dir.endsWith('/'))
-      dir += '/'
-    return normalize(dir)
-  })
+  resolved.server.deps.moduleDirectories ??= []
+  resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
       ?? resolve(resolved.root, resolved.runner)
   }
-
-  resolved.deps ??= {}
 
   // disable loader for Yarn PnP until Node implements chain loader
   // https://github.com/nodejs/node/pull/43772

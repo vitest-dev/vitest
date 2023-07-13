@@ -157,7 +157,6 @@ interface DepsOptions {
    *
    * @default ['node_modules']
    *
-   * @deprecated Use `server.deps.moduleDirectories` instead
    */
   moduleDirectories?: string[]
 }
