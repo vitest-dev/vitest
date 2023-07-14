@@ -39,8 +39,7 @@ export class ViteNodeServer {
     const ssrOptions = server.config.ssr
 
     options.deps ??= {}
-
-    options.deps.cacheDir = relative(server.config.root, server.config.cacheDir)
+    options.deps.cacheDir = relative(server.config.root, options.deps.cacheDir || server.config.cacheDir)
 
     if (ssrOptions) {
       // we don't externalize ssr, because it has different semantics in Vite
