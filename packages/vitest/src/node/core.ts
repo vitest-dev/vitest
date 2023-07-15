@@ -537,7 +537,8 @@ export class Vitest {
         // A file that does not match the current filename pattern was changed
         if (files.length === 0)
           return
-      } else {
+      }
+      else {
         files = [...new Set(files.concat(failedTest))]
       }
 
