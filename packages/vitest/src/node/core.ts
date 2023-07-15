@@ -528,14 +528,17 @@ export class Vitest {
 
       this.snapshot.clear()
       let files = Array.from(this.changedTests)
-
+      const failedTest = this.state.getFailedFilepaths()
       if (this.filenamePattern) {
         const filteredFiles = await this.globTestFiles([this.filenamePattern])
         files = files.filter(file => filteredFiles.some(f => f[1] === file))
-
+        if (failedTest.length)
+          files = [...new Set(files.concat(failedTest))]
         // A file that does not match the current filename pattern was changed
         if (files.length === 0)
           return
+      } else {
+        files = [...new Set(files.concat(failedTest))]
       }
 
       this.changedTests.clear()
