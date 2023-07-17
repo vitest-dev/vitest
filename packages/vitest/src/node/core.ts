@@ -540,9 +540,8 @@ export class Vitest {
           return
       }
       else {
-        if (failedTest.length && this.isFailedModel) {
+        if (failedTest.length && this.isFailedModel)
           files = [...new Set(files.concat(failedTest))]
-        }
       }
 
       this.changedTests.clear()
