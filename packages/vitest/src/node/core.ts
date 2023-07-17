@@ -39,6 +39,7 @@ export class Vitest {
   browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
+  isFailedModel = false
 
   vitenode: ViteNodeServer = undefined!
 
@@ -532,14 +533,16 @@ export class Vitest {
       if (this.filenamePattern) {
         const filteredFiles = await this.globTestFiles([this.filenamePattern])
         files = files.filter(file => filteredFiles.some(f => f[1] === file))
-        if (failedTest.length)
+        if (failedTest.length && this.isFailedModel)
           files = [...new Set(files.concat(failedTest))]
         // A file that does not match the current filename pattern was changed
         if (files.length === 0)
           return
       }
       else {
-        files = [...new Set(files.concat(failedTest))]
+        if (failedTest.length && this.isFailedModel) {
+          files = [...new Set(files.concat(failedTest))]
+        }
       }
 
       this.changedTests.clear()
