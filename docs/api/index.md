@@ -639,6 +639,24 @@ When running concurrent tests, Snapshots and Assertions must use `expect` from t
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
 
+### describe.sequential
+
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+
+  `describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequential within `describe.concurrent` or with the `--sequence.concurrent` command option.
+
+  ```ts
+  describe.concurrent('suite', () => {
+    test('concurrent test 1', async () => { /* ... */ })
+    test('concurrent test 2', async () => { /* ... */ })
+
+    describe.sequential('', () => {
+      test('sequential test 1', async () => { /* ... */ })
+      test('sequential test 2', async () => { /* ... */ })
+    })
+  })
+  ```
+
 ### describe.shuffle
 
 - **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
