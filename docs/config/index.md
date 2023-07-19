@@ -556,7 +556,7 @@ This makes tests run faster, but the VM module is unstable when running [ESM cod
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
 
-- Globals from native modules (`fs`, `path`, etc) are different from the globals in your test environment. It means that error thrown by any of the native modules will be different from the one you are using in your code:
+- The globals within native modules, such as (`fs`, `path`, etc), differ from the globals present in your test environment. As a result, any error thrown by these native modules will reference a different Error constructor compared to the one used in your code:
 
 ```ts
 try {
