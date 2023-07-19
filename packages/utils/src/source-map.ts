@@ -44,6 +44,10 @@ function extractLocation(urlLike: string) {
     const urlObj = new URL(url)
     url = urlObj.pathname
   }
+  if (url.startsWith('/@fs/')) {
+    url
+       = url.slice(typeof process !== 'undefined' && process.platform === 'win32' ? 5 : 4)
+  }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
 

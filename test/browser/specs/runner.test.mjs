@@ -65,7 +65,8 @@ await test('logs are redirected to stderr', async () => {
 })
 
 await test('stack trace points to correct file in every browser', () => {
-  assert.match(stderr, /test\/failing.test.ts:4:12/, 'prints stack trace')
+  // dependeing on the browser it references either `.toBe()` or `expect()`
+  assert.match(stderr, /test\/failing.test.ts:4:(12|17)/, 'prints stack trace')
 })
 
 await test('popup apis should log a warning', () => {
