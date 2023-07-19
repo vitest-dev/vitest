@@ -9,12 +9,6 @@ export default <Environment>({
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new Window() as any
 
-    win.global = win.window
-    Object.defineProperty(win.document, 'defaultView', {
-      value: win.window,
-      configurable: true,
-    })
-
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     win.Buffer = Buffer
     win.Uint8Array = Uint8Array
