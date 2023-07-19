@@ -551,7 +551,7 @@ By providing an object instead of a string you can define individual outputs whe
 
 Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a worker pool.
 
-This makes tests run faster, but VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`experimentalVmWorkerMemoryLimit`](#experimentalvmworkermemorylimit) value.
+This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`experimentalVmWorkerMemoryLimit`](#experimentalvmworkermemorylimit) value.
 
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
@@ -567,7 +567,7 @@ catch (err) {
 }
 ```
 
-- Importing ES modules caches them indefinetly which introduces memory leak if you have a lot of contexts (or tests). There is no API in Node.js that clears that cache.
+- Importing ES modules cache them indefinitely which introduces memory leaks if you have a lot of contexts (or tests). There is no API in Node.js that clears that cache.
 - Accessing globals [takes longer](https://github.com/nodejs/node/issues/31658) in a sandbox environment.
 
 Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
@@ -580,7 +580,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 - **Default:** `1 / CPU Cores`
 - **Version:** Since Vitest 0.34.0
 
-Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on default.
+Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default.
 
 This option only affects workers that run tests in [VM context](#experimentalvmthreads).
 
