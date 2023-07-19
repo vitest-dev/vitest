@@ -26,6 +26,7 @@ const stackIgnorePatterns = [
   '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
+  '/deps/chai.js',
   /__vitest_browser__/,
 ]
 
