@@ -19,7 +19,7 @@ export default <Environment>({
         return vm.context
       },
       teardown() {
-        // TODO
+        // nothing to teardown
       },
     }
   },
