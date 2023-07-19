@@ -39,7 +39,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.32.3"
+    "vitest": ">=0.34.0"
   },
   "dependencies": {
     "estree-walker": "^3.0.3",

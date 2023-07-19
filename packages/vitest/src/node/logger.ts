@@ -7,6 +7,13 @@ import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
 import { printError } from './error'
+import type { WorkspaceProject } from './workspace'
+
+interface ErrorOptions {
+  type?: string
+  fullStack?: boolean
+  project?: WorkspaceProject
+}
 
 export class Logger {
   outputStream = process.stdout
@@ -68,11 +75,14 @@ export class Logger {
     this.console.log(`\u001B[1;1H\u001B[J${log}`)
   }
 
-  printError(err: unknown, fullStack = false, type?: string) {
-    return printError(err, this.ctx, {
+  printError(err: unknown, options: ErrorOptions = {}) {
+    const { fullStack = false, type } = options
+    const project = options.project ?? this.ctx.getCoreWorkspaceProject() ?? this.ctx.projects[0]
+    return printError(err, project, {
       fullStack,
       type,
       showCodeFrame: true,
+      logger: this,
     })
   }
 
@@ -137,7 +147,7 @@ export class Logger {
     this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
     this.log(errorMessage)
     await Promise.all(errors.map(async (err) => {
-      await this.printError(err, true, (err as ErrorWithDiff).type || 'Unhandled Error')
+      await this.printError(err, { fullStack: true, type: (err as ErrorWithDiff).type || 'Unhandled Error' })
     }))
     this.log(c.red(divider()))
   }
@@ -149,7 +159,7 @@ export class Logger {
     this.log(c.red(divider(c.bold(c.inverse(' Source Errors ')))))
     this.log(errorMessage)
     await Promise.all(errors.map(async (err) => {
-      await this.printError(err, true)
+      await this.printError(err, { fullStack: true })
     }))
     this.log(c.red(divider()))
   }

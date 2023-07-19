@@ -98,7 +98,7 @@ export async function startVitest(
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.logger.printError(e, true, 'Unhandled Error')
+    await ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')
     return ctx
   }

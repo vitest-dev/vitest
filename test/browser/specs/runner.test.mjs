@@ -14,13 +14,16 @@ const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.nam
   reject: false,
 })
 
+const browserResult = await readFile('./browser.json', 'utf-8')
+const browserResultJson = JSON.parse(browserResult)
+
+const getPassed = results => results.filter(result => result.status === 'passed')
+const getFailed = results => results.filter(result => result.status === 'failed')
+
+const passedTests = getPassed(browserResultJson.testResults)
+const failedTests = getFailed(browserResultJson.testResults)
+
 await test('tests are actually running', async () => {
-  const browserResult = await readFile('./browser.json', 'utf-8')
-  const browserResultJson = JSON.parse(browserResult)
-
-  const passedTests = browserResultJson.testResults.filter(result => result.status === 'passed')
-  const failedTests = browserResultJson.testResults.filter(result => result.status === 'failed')
-
   assert.ok(browserResultJson.testResults.length === 8, 'Not all the tests have been run')
   assert.ok(passedTests.length === 7, 'Some tests failed')
   assert.ok(failedTests.length === 1, 'Some tests have passed but should fail')
@@ -59,6 +62,11 @@ await test('logs are redirected to stderr', async () => {
   assert.match(stderr, /hello from console.warn/, 'prints console.info')
   assert.match(stderr, /Timer "invalid timeLog" does not exist/, 'prints errored timeLog')
   assert.match(stderr, /Timer "invalid timeEnd" does not exist/, 'prints errored timeEnd')
+})
+
+await test('stack trace points to correct file in every browser', () => {
+  // dependeing on the browser it references either `.toBe()` or `expect()`
+  assert.match(stderr, /test\/failing.test.ts:4:(12|17)/, 'prints stack trace')
 })
 
 await test('popup apis should log a warning', () => {

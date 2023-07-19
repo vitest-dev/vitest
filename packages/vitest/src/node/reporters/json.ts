@@ -183,7 +183,10 @@ export class JsonReporter implements Reporter {
     if (!error)
       return
 
-    const stack = parseErrorStacktrace(error)
+    const project = this.ctx.getProjectByTaskId(test.id)
+    const stack = parseErrorStacktrace(error, {
+      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    })
     const frame = stack[0]
     if (!frame)
       return
