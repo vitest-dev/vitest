@@ -1,7 +1,7 @@
 import type { ModuleNode } from 'vite'
 import type { ModuleGraphData, Vitest } from '../types'
 
-export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGraphData> {
+export async function getModuleGraph(ctx: Vitest, id: string, workspaceName?: string): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
   const inlined = new Set<string>()
@@ -29,7 +29,18 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
     return id
   }
-  await get(ctx.server.moduleGraph.getModuleById(id))
+
+  const workspaceProject = ctx.projects.find(project => project.getName() === workspaceName)
+  const workspaceModules = workspaceProject?.ctx.getModuleProjects(id)
+  const selectedModule = workspaceModules?.find(module => module.getName() === workspaceName)
+  let workspaceMod: ModuleNode | undefined
+  if (selectedModule) {
+    const { server, browser } = selectedModule
+    const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
+    workspaceMod = mod
+  }
+
+  await get(ctx.server.moduleGraph.getModuleById(id) || workspaceMod)
   return {
     graph,
     externalized: Array.from(externalized),

@@ -9,3 +9,17 @@ export function caseInsensitiveMatch(target: string, str2: string) {
     return false
   return target.toLowerCase().includes(str2.toLowerCase())
 }
+
+export function getProjectNameColor(name: string | undefined) {
+  if (!name)
+    return ''
+  const index = name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+  const colors = [
+    '#0000FF', // blue
+    '#FFFF00', // yellow
+    '#00FFFF', // cyan
+    '#00FF00', // green
+    '#FF00FF', // magenta
+  ]
+  return colors[index % colors.length]
+}
