@@ -14,13 +14,13 @@ function relative(p: string) {
   return p
 }
 
+const filter = computed(() => createAnsiToHtmlFilter(isDark.value))
+
 const isDiffShowable = computed(() => {
   return props.error?.expected && props.error?.actual
 })
 
-function diff() {
-  return props.error.diff
-}
+const diff = computed(() => props.error.diff ? filter.value.toHtml(props.error.diff) : undefined)
 </script>
 
 <template>
@@ -37,9 +37,10 @@ function diff() {
         @click.passive="openInEditor(stack.file, stack.line, stack.column)"
       />
     </div>
-    <pre v-if="isDiffShowable">
-      {{ `\n${diff()}` }}
-    </pre>
+    <template v-if="isDiffShowable">
+      <br>
+      <pre v-html="diff" />
+    </template>
   </div>
 </template>
 
