@@ -137,12 +137,12 @@ export function resolveConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
-  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
+  const deprecatedDepsOptions = ['inline', 'external'] as const
   deprecatedDepsOptions.forEach((option) => {
     if (resolved.deps[option] !== undefined) {
       console.warn(
         c.yellow(
-         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "optimizer.web.${options == 'external' ? 'exclude' : 'include'}"`,
+         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.web.${option === 'external' ? 'exclude' : 'include'}"`,
         ),
       )
 

@@ -114,7 +114,7 @@ interface DepsOptions {
    *
    * Typically, packages under `node_modules` are externalized.
    *
-   * @deprecated Use `server.deps.external` instead
+   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.web.exclude`.
    */
   external?: (string | RegExp)[]
   /**
@@ -124,7 +124,7 @@ interface DepsOptions {
    *
    * If `true`, every dependency will be inlined
    *
-   * @deprecated Use `server.deps.inline` instead
+   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.web.include`.
    */
   inline?: (string | RegExp)[] | true
 
@@ -142,7 +142,6 @@ interface DepsOptions {
    *
    * @default false
    *
-   * @deprecated Use `server.deps.fallbackCJS` instead
    */
   fallbackCJS?: boolean
 

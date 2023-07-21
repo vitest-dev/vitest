@@ -195,7 +195,7 @@ Directory to save cache files.
 
 ### deps
 
-- **Type:** `{ experimentalOptimizer?, registerNodeLoader?, ... }`
+- **Type:** `{ experimentalOptimizer?, fallbackCJS?, ... }`
 
 Handling for dependencies resolution.
 
@@ -221,6 +221,15 @@ This options also inherits your `optimizeDeps` configuration (for web Vitest wil
 ::: tip
 You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer?.[mode].force` option.
 :::
+
+#### deps.fallbackCJS
+
+- **Type** `boolean`
+- **Default:** `false`
+
+When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
+
+This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
 #### deps.registerNodeLoader<NonProjectOption />
 
