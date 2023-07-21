@@ -88,7 +88,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |

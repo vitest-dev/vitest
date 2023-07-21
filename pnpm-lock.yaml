@@ -1206,6 +1206,10 @@ importers:
       pretty-format:
         specifier: ^29.5.0
         version: 29.5.0
+    devDependencies:
+      '@jridgewell/trace-mapping':
+        specifier: ^0.3.18
+        version: 0.3.18
 
   packages/vite-node:
     dependencies:
@@ -1328,9 +1332,6 @@ importers:
       '@edge-runtime/vm':
         specifier: 3.0.3
         version: 3.0.3
-      '@jridgewell/trace-mapping':
-        specifier: ^0.3.18
-        version: 0.3.18
       '@sinonjs/fake-timers':
         specifier: ^11.0.0
         version: 11.0.0

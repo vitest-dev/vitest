@@ -199,7 +199,7 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
-  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
+  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
   [name: string | Function, factory?: SuiteFactory<ExtraContext>, options?: number | TestOptions],
   SuiteCollector<ExtraContext>,
   {

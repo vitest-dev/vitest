@@ -335,7 +335,14 @@ export abstract class BaseReporter implements Reporter {
     for (const task of tasks) {
       // merge identical errors
       task.result?.errors?.forEach((error) => {
-        const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
+        const errorItem = error?.stackStr && errorsQueue.find((i) => {
+          const hasStr = i[0]?.stackStr === error.stackStr
+          if (!hasStr)
+            return false
+          const currentProjectName = (task as File)?.projectName || task.file?.projectName
+          const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName
+          return projectName === currentProjectName
+        })
         if (errorItem)
           errorItem[1].push(task)
         else
@@ -352,7 +359,8 @@ export abstract class BaseReporter implements Reporter {
 
         this.ctx.logger.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`)
       }
-      await this.ctx.logger.printError(error)
+      const project = this.ctx.getProjectByTaskId(tasks[0].id)
+      await this.ctx.logger.printError(error, { project })
       errorDivider()
       await Promise.resolve()
     }
@@ -361,7 +369,7 @@ export abstract class BaseReporter implements Reporter {
   registerUnhandledRejection() {
     process.on('unhandledRejection', async (err) => {
       process.exitCode = 1
-      await this.ctx.logger.printError(err, true, 'Unhandled Rejection')
+      await this.ctx.logger.printError(err, { fullStack: true, type: 'Unhandled Rejection' })
       this.ctx.logger.error('\n\n')
       process.exit(1)
     })

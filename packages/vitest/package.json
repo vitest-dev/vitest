@@ -163,7 +163,6 @@
     "@ampproject/remapping": "^2.2.1",
     "@antfu/install-pkg": "^0.1.1",
     "@edge-runtime/vm": "3.0.3",
-    "@jridgewell/trace-mapping": "^0.3.18",
     "@sinonjs/fake-timers": "^11.0.0",
     "@types/diff": "^5.0.3",
     "@types/estree": "^1.0.1",
