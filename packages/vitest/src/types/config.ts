@@ -142,6 +142,8 @@ interface DepsOptions {
    *
    * @default false
    *
+   * @deprecated Use `server.deps.fallbackCJS` instead.
+   *
    */
   fallbackCJS?: boolean
 
