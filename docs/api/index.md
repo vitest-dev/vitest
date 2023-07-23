@@ -559,7 +559,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   In some cases, you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
 
   ```ts
-  import { assert, test } from 'vitest'
+  import { describe, test } from 'vitest'
 
   const isDev = process.env.NODE_ENV === 'development'
 
