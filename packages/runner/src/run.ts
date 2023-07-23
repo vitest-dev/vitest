@@ -314,7 +314,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     if (suite.mode === 'run') {
-      if (!hasTests(suite)) {
+      if (!hasTests(suite) && !runner.config.passWithNoTests) {
         suite.result.state = 'fail'
         if (!suite.result.error) {
           const error = processError(new Error(`No test found in suite ${suite.name}`))

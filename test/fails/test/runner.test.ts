@@ -6,6 +6,8 @@ import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures')
 const files = await fg('**/*.test.ts', { cwd: root, dot: true })
+const emptyTestFile = await fg('**/empty.test.ts', { cwd: root, dot: true })
+const emptySuiteTestFile = await fg('**/empty-suite.test.ts', { cwd: root, dot: true })
 
 it.each(files)('should fail %s', async (file) => {
   const { stderr } = await runVitest({ root }, [file])
@@ -19,6 +21,15 @@ it.each(files)('should fail %s', async (file) => {
     ).join('\n')
   expect(msg).toMatchSnapshot(file)
 }, 30_000)
+
+it.each(emptyTestFile.concat(emptySuiteTestFile))('should pass %s when passWithNoTests enabled', async (file) => {
+  const { stdout, stderr, exitCode } = await runVitest({
+    root,
+    passWithNoTests: true,
+  }, [file])
+
+  expect(exitCode).toBe(0)
+})
 
 it('should report coverage when "coverag.reportOnFailure: true" and tests fail', async () => {
   const { stdout } = await runVitest({
