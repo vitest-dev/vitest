@@ -1565,6 +1565,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
+      '@vitest/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5819,7 +5822,7 @@ packages:
     resolution: {integrity: sha512-P8S3z/L1LcV4Qem9AoCfVAaTFGySEMzFEY4CHZLkfRj0Fv9LiR+AwjDgrDrzyI93U2L2mg9JHsbTJ52mF8suNw==}
     dependencies:
       '@antfu/install-pkg': 0.1.1
-      '@antfu/utils': 0.7.5
+      '@antfu/utils': 0.7.4
       '@iconify/types': 2.0.0
       debug: 4.3.4(supports-color@8.1.1)
       kolorist: 1.8.0
@@ -8740,7 +8743,7 @@ packages:
     resolution: {integrity: sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==}
     dependencies:
       '@types/jsonfile': 6.1.1
-      '@types/node': 20.4.2
+      '@types/node': 18.16.19
     dev: true
 
   /@types/fs-extra@9.0.13:
@@ -9130,7 +9133,7 @@ packages:
   /@types/ws@8.5.5:
     resolution: {integrity: sha512-lwhs8hktwxSjf9UaZ9tG5M03PGogvFaH8gUgLNbN9HKIg0dvv6q+gkSuJ8HN4/VbyxkuLzCjlN7GquQ0gUJfIg==}
     dependencies:
-      '@types/node': 20.4.2
+      '@types/node': 18.16.19
     dev: true
 
   /@types/yargs-parser@21.0.0:
@@ -9258,7 +9261,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.5.4
+      semver: 7.5.2
       tsutils: 3.21.0(typescript@5.1.6)
       typescript: 5.1.6
     transitivePeerDependencies:
@@ -9279,7 +9282,7 @@ packages:
       '@typescript-eslint/typescript-estree': 5.60.0(typescript@5.1.6)
       eslint: 8.44.0
       eslint-scope: 5.1.1
-      semver: 7.5.4
+      semver: 7.5.2
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -11650,7 +11653,7 @@ packages:
   /builtins@5.0.1:
     resolution: {integrity: sha512-qwVpFEHNfhYJIzNRBvd2C1kyo6jz3ZSMPyyuR47OPdiKWlbYnZNyDWuyR175qDnAJLiCo5fBBqPb3RiXgWlkOQ==}
     dependencies:
-      semver: 7.5.4
+      semver: 7.5.2
     dev: true
 
   /bumpp@9.1.1:
@@ -15936,7 +15939,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.1.1
-      minimatch: 9.0.3
+      minimatch: 9.0.1
       minipass: 5.0.0
       path-scurry: 1.7.0
     dev: true
@@ -19612,7 +19615,7 @@ packages:
     resolution: {integrity: sha512-iwXuFrMAcFVi/ZoZiqq8BzAdsLw9kxDfTC0HMyjXfSL/6CSDAGD5UmR7azrAgWV1zKYq7dUUMj4owusBWKLsiQ==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.5.4
+      semver: 7.5.2
     dev: true
 
   /node-addon-api@6.1.0:
@@ -24165,7 +24168,7 @@ packages:
   /unconfig@0.3.9:
     resolution: {integrity: sha512-8yhetFd48M641mxrkWA+C/lZU4N0rCOdlo3dFsyFPnBHBjMJfjT/3eAZBRT2RxCRqeBMAKBVgikejdS6yeBjMw==}
     dependencies:
-      '@antfu/utils': 0.7.5
+      '@antfu/utils': 0.7.4
       defu: 6.1.2
       jiti: 1.18.2
     dev: true
@@ -25153,7 +25156,7 @@ packages:
       espree: 9.5.2
       esquery: 1.5.0
       lodash: 4.17.21
-      semver: 7.5.4
+      semver: 7.5.2
     transitivePeerDependencies:
       - supports-color
     dev: true
