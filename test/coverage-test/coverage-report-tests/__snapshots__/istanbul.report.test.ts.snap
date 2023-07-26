@@ -1342,6 +1342,89 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/multi-suite.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+      "1": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 8,
+            "line": 2,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 4,
+          },
+          "start": {
+            "column": 21,
+            "line": 2,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 8,
+            "line": 6,
+          },
+          "start": {
+            "column": 2,
+            "line": 6,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 8,
+          },
+          "start": {
+            "column": 21,
+            "line": 6,
+          },
+        },
+        "name": "(anonymous_1)",
+      },
+    },
+    "path": "<process-cwd>/src/multi-suite.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 3,
+        },
+        "start": {
+          "column": 4,
+          "line": 3,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 7,
+        },
+        "start": {
+          "column": 4,
+          "line": 7,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/untested-file.ts": {
     "b": {
       "0": [

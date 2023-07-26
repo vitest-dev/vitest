@@ -22,6 +22,7 @@ exports[`custom json report 1`] = `
     "<process-cwd>/src/implicitElse.ts",
     "<process-cwd>/src/importEnv.ts",
     "<process-cwd>/src/index.mts",
+    "<process-cwd>/src/multi-suite.ts",
     "<process-cwd>/src/utils.ts",
   ],
 }
