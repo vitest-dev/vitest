@@ -7,12 +7,12 @@ import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
@@ -50,43 +50,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         )
         testConfig.api = resolveApiServerConfig(testConfig)
 
-        if (viteConfig.define) {
-          delete viteConfig.define['import.meta.vitest']
-          delete viteConfig.define['process.env']
-        }
-
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = {}
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        for (const key in viteConfig.define) {
-          const val = viteConfig.define[key]
-          let replacement: any
-          try {
-            replacement = typeof val === 'string' ? JSON.parse(val) : val
-          }
-          catch {
-            // probably means it contains reference to some variable,
-            // like this: "__VAR__": "process.env.VAR"
-            continue
-          }
-          if (key.startsWith('import.meta.env.')) {
-            const envKey = key.slice('import.meta.env.'.length)
-            process.env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (key.startsWith('process.env.')) {
-            const envKey = key.slice('process.env.'.length)
-            process.env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (!key.includes('.')) {
-            defines[key] = replacement
-            delete viteConfig.define[key]
-          }
-        }
-
-        (options as ResolvedConfig).defines = defines
+        ;(options as ResolvedConfig).defines = defines
 
         let open: string | boolean | undefined
 
@@ -192,7 +160,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          await ctx.logger.printError(err, true)
+          await ctx.logger.printError(err, { fullStack: true })
           process.exit(1)
         }
 
@@ -201,7 +169,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),

@@ -1,11 +1,11 @@
 import limit from 'p-limit'
 import { getSafeTimers, shuffle } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
-import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 
@@ -127,22 +127,20 @@ export async function runTest(test: Test, runner: VitestRunner) {
   test.result = {
     state: 'run',
     startTime: start,
+    retryCount: 0,
   }
   updateTask(test, runner)
 
   setCurrentTest(test)
 
-  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
-
-  for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
-    const retry = test.retry || 1
-
-    for (let retryCount = 0; retryCount < retry; retryCount++) {
+  const repeats = test.repeats ?? 0
+  for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    const retry = test.retry ?? 0
+    for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
         await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
@@ -156,7 +154,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw new Error('Test function is not found. Did you add it using `setFn`?')
           await fn()
         }
-
         // some async expect will be added to this array, in case user forget to await theme
         if (test.promises) {
           const result = await Promise.allSettled(test.promises)
@@ -167,10 +164,12 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
         await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        if (!test.repeats)
-          test.result.state = 'pass'
-        else if (test.repeats && retry === retryCount)
-          test.result.state = 'pass'
+        if (test.result.state !== 'fail') {
+          if (!test.repeats)
+            test.result.state = 'pass'
+          else if (test.repeats && retry === retryCount)
+            test.result.state = 'pass'
+        }
       }
       catch (e) {
         failTask(test.result, e)
@@ -186,6 +185,13 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
       if (test.result.state === 'pass')
         break
+
+      if (retryCount < retry) {
+        // reset state when retry test
+        test.result.state = 'run'
+        test.result.retryCount = (test.result.retryCount ?? 0) + 1
+      }
+
       // update retry info
       updateTask(test, runner)
     }

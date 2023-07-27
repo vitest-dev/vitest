@@ -11,5 +11,5 @@ describe.only('description.only retry', () => {
   it('test should not inherit options from the description block if exists', () => {
     count5 += 1
     expect(count5).toBe(5)
-  }, { retry: 5 })
-}, { retry: 2 })
+  }, { retry: 4 })
+}, { retry: 1 })

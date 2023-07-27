@@ -67,7 +67,7 @@ export class WorkspaceProject {
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
-  browser: ViteDevServer = undefined!
+  browser?: ViteDevServer
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
@@ -84,6 +84,20 @@ export class WorkspaceProject {
 
   isCore() {
     return this.ctx.getCoreWorkspaceProject() === this
+  }
+
+  getModuleById(id: string) {
+    return this.server.moduleGraph.getModuleById(id)
+      || this.browser?.moduleGraph.getModuleById(id)
+  }
+
+  getSourceMapModuleById(id: string) {
+    const mod = this.server.moduleGraph.getModuleById(id)
+    return mod?.ssrTransformResult?.map || mod?.transformResult?.map
+  }
+
+  getBrowserSourceMapModuleById(id: string) {
+    return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {

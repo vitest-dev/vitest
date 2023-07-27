@@ -3,7 +3,9 @@ import type { Task } from '#types'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { isDescribeBlock, selectedTest, testIndex, viewMode } from '~/composables/params'
 
-withDefaults(defineProps<{
+defineOptions({ inheritAttrs: false })
+
+const { task, indent = 0, index, nested = false, nestedIndex, search, onItemClick } = defineProps<{
   task: Task
   index: number
   nestedIndex?: number
@@ -11,10 +13,7 @@ withDefaults(defineProps<{
   nested?: boolean
   search?: string
   onItemClick?: (task: Task) => void
-}>(), {
-  indent: 0,
-  nested: false,
-})
+}>()
 
 function handleItemClick(task: Task, index: number, nestedIndex?: number) {
   testIndex.value = `${index}|${nestedIndex}`
@@ -31,12 +30,6 @@ function handleItemClick(task: Task, index: number, nestedIndex?: number) {
   selectedTest.value = taskName
   if (viewMode.value !== 'editor')
     viewMode.value = 'editor'
-}
-</script>
-
-<script lang="ts">
-export default {
-  inheritAttrs: false,
 }
 </script>
 

@@ -5,6 +5,7 @@ const UPDATE_SNAPSHOTS = false
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 const isBrowser = process.argv.includes('--browser')
+process.env.COVERAGE_PROVIDER = provider
 
 const threadsConfig = [{ threads: true }, { threads: false }, { singleThread: true }]
 
@@ -32,7 +33,7 @@ const configs = [
   // Run tests for checking coverage report contents.
   ['coverage-report-tests', {
     include: [
-      ['c8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
+      ['v8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
       `./coverage-report-tests/${provider}.report.test.ts`,
     ].filter(Boolean),
     coverage: { enabled: false, clean: false },
@@ -63,6 +64,7 @@ for (const threads of threadsConfig) {
           exit()
         }
         else if (process.exitCode) {
+          process.exitCode = null
           console.warn(`Browser tests failed, retrying ${1 + retry}/${retries.length - 1}...`)
         }
         else {

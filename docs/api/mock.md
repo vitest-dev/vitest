@@ -269,7 +269,7 @@ This is an array containing all values, that were `returned` from the function. 
 - `'return'` - function returned without throwing.
 - `'throw'` - function threw a value.
 
-The `value` property contains returned value or thrown error.
+The `value` property contains the returned value or thrown error. If the function returned a promise, when it resolves the `value` property will become the value the promise resolved to.
 
 ```js
 const fn = vi.fn()

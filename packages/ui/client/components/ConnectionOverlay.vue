@@ -15,7 +15,6 @@ import { client, isConnected, isConnecting } from '~/composables/client'
     >
       <div
         h-full
-
         flex="~ col gap-2"
         items-center justify-center
         :class="isConnecting ? 'animate-pulse' : ''"

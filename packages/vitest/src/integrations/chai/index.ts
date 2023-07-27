@@ -12,7 +12,7 @@ import { getCurrentEnvironment, getFullName } from '../../utils'
 export function createExpect(test?: Test) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1 }, expect)
+    setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test)
@@ -44,6 +44,18 @@ export function createExpect(test?: Test) {
 
   // @ts-expect-error untyped
   expect.extend = matchers => chai.expect.extend(expect, matchers)
+
+  expect.soft = (...args) => {
+    const assert = expect(...args)
+    expect.setState({
+      soft: true,
+    })
+    return assert
+  }
+
+  expect.unreachable = (message?: string) => {
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
+  }
 
   function assertions(expected: number) {
     const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)

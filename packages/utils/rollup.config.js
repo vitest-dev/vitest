@@ -7,10 +7,12 @@ import json from '@rollup/plugin-json'
 import pkg from './package.json' assert { type: 'json' }
 
 const entries = {
-  index: 'src/index.ts',
-  helpers: 'src/helpers.ts',
-  diff: 'src/diff.ts',
-  types: 'src/types.ts',
+  'index': 'src/index.ts',
+  'helpers': 'src/helpers.ts',
+  'diff': 'src/diff/index.ts',
+  'error': 'src/error.ts',
+  'source-map': 'src/source-map.ts',
+  'types': 'src/types.ts',
 }
 
 const external = [

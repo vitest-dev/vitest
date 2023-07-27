@@ -24,6 +24,8 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   } as BenchmarkResult
 }
 
+const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
+
 async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
   const { Task, Bench } = await importTinybench()
   const start = performance.now()
@@ -67,12 +69,13 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
       benchmarkMap[id] = benchmark
 
       const task = new Task(benchmarkInstance, id, benchmarkFn)
-      benchmark.meta.task = task
+      benchmarkTasks.set(benchmark, task)
       updateTask(benchmark)
     })
 
     benchmarkGroup.forEach((benchmark) => {
-      benchmark.meta.task!.addEventListener('complete', (e) => {
+      const task = benchmarkTasks.get(benchmark)!
+      task.addEventListener('complete', (e) => {
         const task = e.task
         const _benchmark = benchmarkMap[task.name || '']
         if (_benchmark) {
@@ -82,7 +85,7 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
           updateTask(_benchmark)
         }
       })
-      benchmark.meta.task!.addEventListener('error', (e) => {
+      task.addEventListener('error', (e) => {
         const task = e.task
         const _benchmark = benchmarkMap[task.name || '']
         defer.reject(_benchmark ? task.result!.error : e)
@@ -91,10 +94,11 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
 
     const tasks: BenchTask[] = []
     for (const benchmark of benchmarkGroup) {
-      await benchmark.meta.task!.warmup()
+      const task = benchmarkTasks.get(benchmark)!
+      await task.warmup()
       const { setTimeout } = getSafeTimers()
       tasks.push(await new Promise<BenchTask>(resolve => setTimeout(async () => {
-        resolve(await benchmark.meta.task!.run())
+        resolve(await task.run())
       })))
     }
 

@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/runner/utils'
+import type { ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -68,11 +68,15 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
+        const project = this.ctx.getProjectByTaskId(task.id)
+
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = parseErrorStacktrace(error)
+            const stacks = parseErrorStacktrace(error, {
+              getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+            })
             const stack = stacks[0]
 
             this.logger.log('---')

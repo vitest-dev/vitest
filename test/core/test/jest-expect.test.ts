@@ -1,7 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage } from '@vitest/expect'
+import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { processError } from '@vitest/utils/error'
+import { getDefaultColors } from '@vitest/utils'
 
 class TestError extends Error {}
 
@@ -464,6 +466,25 @@ describe('.toStrictEqual()', () => {
       Uint8Array.from([9, 3]).buffer,
     )
   })
+
+  it('does not pass for DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).not.toStrictEqual(
+      new DataView(Uint8Array.from([3, 2, 1]).buffer),
+    )
+
+    expect(new DataView(Uint16Array.from([1, 2]).buffer)).not.toStrictEqual(
+      new DataView(Uint16Array.from([2, 1]).buffer),
+    )
+  })
+
+  it('passes for matching DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([1, 2, 3]).buffer),
+    )
+    expect(new DataView(Uint8Array.from([]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([]).buffer),
+    )
+  })
 })
 
 describe('toBeTypeOf()', () => {
@@ -471,11 +492,11 @@ describe('toBeTypeOf()', () => {
     [1n, 'bigint'],
     [true, 'boolean'],
     [false, 'boolean'],
-    [() => {}, 'function'],
-    [function () {}, 'function'],
+    [(() => {}) as () => void, 'function'],
+    [function () {} as () => void, 'function'],
     [1, 'number'],
-    [Infinity, 'number'],
-    [NaN, 'number'],
+    [Number.POSITIVE_INFINITY, 'number'],
+    [Number.NaN, 'number'],
     [0, 'number'],
     [{}, 'object'],
     [[], 'object'],
@@ -751,6 +772,19 @@ it('compatible with jest', () => {
   expect(matchers).toHaveProperty('someObject')
   expect(matchers).toHaveProperty('toBe')
   expect(state.assertionCalls).toBe(2)
+})
+
+it('correctly prints diff', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(err)
+    expect(error.diff).toContain('-   "a": 2')
+    expect(error.diff).toContain('+   "a": 1')
+  }
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

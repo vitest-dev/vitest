@@ -3,14 +3,14 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import type { ResolvedConfig, Vitest } from 'vitest'
+import type { Vitest } from 'vitest'
 
 export default (ctx: Vitest) => {
   return <Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     configureServer(server) {
-      const uiOptions: ResolvedConfig = ctx.config
+      const uiOptions = ctx.config
       const base = uiOptions.uiBase
       const coverageFolder = resolveCoverageFolder(ctx)
       const coveragePath = coverageFolder ? `/${basename(coverageFolder)}/` : undefined
@@ -20,6 +20,9 @@ export default (ctx: Vitest) => {
       coverageFolder && server.middlewares.use(coveragePath!, sirv(coverageFolder, {
         single: true,
         dev: true,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public,max-age=0,must-revalidate')
+        },
       }))
       const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
       server.middlewares.use(base, sirv(clientDist, {
@@ -31,7 +34,7 @@ export default (ctx: Vitest) => {
 }
 
 function resolveCoverageFolder(ctx: Vitest) {
-  const options: ResolvedConfig = ctx.config
+  const options = ctx.config
   const enabled = options.api?.port
     && options.coverage?.enabled
     && options.coverage.reporter.some((reporter) => {

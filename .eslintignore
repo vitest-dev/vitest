@@ -9,3 +9,4 @@ coverage
 !.vitepress
 docs/.vitepress/cache/deps/*.*
 test/core/src/self
+test/workspaces/results.json

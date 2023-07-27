@@ -61,14 +61,14 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
 }
 
 export function getRunnerOptions(): any {
-  const { config, ctx, rpc, mockMap, moduleCache } = getWorkerState()
+  const { config, rpc, mockMap, moduleCache } = getWorkerState()
 
   return {
     fetchModule(id: string) {
-      return rpc.fetch(id, ctx.environment.name)
+      return rpc.fetch(id, 'web')
     },
     resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, ctx.environment.name)
+      return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
     mockMap,

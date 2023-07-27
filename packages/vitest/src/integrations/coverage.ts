@@ -5,7 +5,7 @@ interface Loader {
 }
 
 export const CoverageProviderMap: Record<string, string> = {
-  c8: '@vitest/coverage-c8',
+  v8: '@vitest/coverage-v8',
   istanbul: '@vitest/coverage-istanbul',
 }
 
@@ -15,7 +15,7 @@ async function resolveCoverageProviderModule(options: CoverageOptions | undefine
 
   const provider = options.provider
 
-  if (provider === 'c8' || provider === 'istanbul') {
+  if (provider === 'v8' || provider === 'istanbul') {
     const { default: coverageModule } = await loader.executeId(CoverageProviderMap[provider])
 
     if (!coverageModule)

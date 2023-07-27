@@ -9,6 +9,7 @@ export interface VitestRunnerConfig {
   allowOnly?: boolean
   sequence: {
     shuffle?: boolean
+    concurrent?: boolean
     seed: number
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
@@ -19,6 +20,7 @@ export interface VitestRunnerConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
+  retry: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

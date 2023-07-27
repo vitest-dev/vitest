@@ -56,8 +56,8 @@ test('automock properly restores mock', async () => {
     log.warn()
   }).not.toThrow()
 
-  expect(moduleWithSymbol[methodSymbol]()).toBe('hello')
-  expect(moduleWithSymbol.warn()).toBe('hello')
+  expect(moduleWithSymbol[methodSymbol]()).toBe(undefined)
+  expect(moduleWithSymbol.warn()).toBe(undefined)
 
   expect(log.warn).toHaveProperty('mockImplementation')
 })

@@ -123,11 +123,14 @@ function eq(
         // both are `new Primitive()`s
         return Object.is(a.valueOf(), b.valueOf())
       }
-    case '[object Date]':
+    case '[object Date]': {
+      const numA = +a
+      const numB = +b
       // Coerce dates to numeric primitive values. Dates are compared by their
       // millisecond representations. Note that invalid dates with millisecond representations
       // of `NaN` are equivalent.
-      return (isNaN(a) && isNaN(b)) || (+a === +b)
+      return (numA === numB) || (Number.isNaN(numA) && Number.isNaN(numB))
+    }
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
@@ -475,11 +478,16 @@ export function typeEquality(a: any, b: any): boolean | undefined {
 
 export function arrayBufferEquality(a: unknown,
   b: unknown): boolean | undefined {
-  if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
-    return undefined
+  let dataViewA = a as DataView
+  let dataViewB = b as DataView
 
-  const dataViewA = new DataView(a)
-  const dataViewB = new DataView(b)
+  if (!(a instanceof DataView && b instanceof DataView)) {
+    if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
+      return undefined
+
+    dataViewA = new DataView(a)
+    dataViewB = new DataView(b)
+  }
 
   // Buffers are not equal when they do not have the same byte length
   if (dataViewA.byteLength !== dataViewB.byteLength)

@@ -3,13 +3,16 @@ import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
-import { processError } from '@vitest/runner/utils'
+import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
-import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
+import type { ContextRPC, Environment, ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { distDir } from '../paths'
+import { loadEnvironment } from '../integrations/env'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
+
+const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
@@ -25,8 +28,9 @@ export async function createVitestExecutor(options: ExecuteOptions) {
 }
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
   executor: VitestExecutor
+  environment: Environment
 }
 
 export const moduleCache = new ModuleCacheMap()
@@ -61,12 +65,14 @@ export async function startViteNode(ctx: ContextRPC) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
+  let transformMode: 'ssr' | 'web' = ctx.environment.transformMode ?? 'ssr'
+
   const executor = await createVitestExecutor({
     fetchModule(id) {
-      return rpc().fetch(id, ctx.environment.name)
+      return rpc().fetch(id, transformMode)
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer, ctx.environment.name)
+      return rpc().resolveId(id, importer, transformMode)
     },
     moduleCache,
     mockMap,
@@ -76,9 +82,13 @@ export async function startViteNode(ctx: ContextRPC) {
     base: config.base,
   })
 
-  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+  const environment = await loadEnvironment(ctx.environment.name, executor)
+  ctx.environment.environment = environment
+  transformMode = ctx.environment.transformMode ?? environment.transformMode ?? 'ssr'
 
-  _viteNode = { run, executor }
+  const { run } = await import(entryUrl)
+
+  _viteNode = { run, executor, environment }
 
   return _viteNode
 }
@@ -99,7 +109,7 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
-    if (isInternalRequest(id))
+    if (isInternalRequest(id) || id.startsWith('data:'))
       return false
     const environment = getCurrentEnvironment()
     // do not try and resolve node builtins in Node
@@ -107,10 +117,29 @@ export class VitestExecutor extends ViteNodeRunner {
     return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
+  async originalResolveUrl(id: string, importer?: string) {
+    return super.resolveUrl(id, importer)
+  }
+
   async resolveUrl(id: string, importer?: string) {
+    if (VitestMocker.pendingIds.length)
+      await this.mocker.resolveMocks()
+
     if (importer && importer.startsWith('mock:'))
       importer = importer.slice(5)
-    return super.resolveUrl(id, importer)
+    try {
+      return await super.resolveUrl(id, importer)
+    }
+    catch (error: any) {
+      if (error.code === 'ERR_MODULE_NOT_FOUND') {
+        const { id } = error[Symbol.for('vitest.error.not_found.data')]
+        const path = this.mocker.normalizePath(id)
+        const mock = this.mocker.getDependencyMock(path)
+        if (mock !== undefined)
+          return [id, id] as [string, string]
+      }
+      throw error
+    }
   }
 
   async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {

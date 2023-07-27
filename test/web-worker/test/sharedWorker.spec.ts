@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import MySharedWorker from './src/sharedWorker?sharedworker'
+import MySharedWorker from '../src/sharedWorker?sharedworker'
 
 function sendEventMessage(worker: SharedWorker, msg: any) {
   worker.port.postMessage(msg)

@@ -1,18 +1,12 @@
 <script setup lang='ts'>
-const props = withDefaults(defineProps<{
-  modelValue?: boolean
+const { direction = 'bottom' } = defineProps<{
   direction?: string
-}>(), {
-  modelValue: false,
-  direction: 'bottom',
-})
-
-defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
 }>()
 
+const modelValue = defineModel<boolean>({ default: false })
+
 const positionClass = computed(() => {
-  switch (props.direction) {
+  switch (direction) {
     case 'bottom':
       return 'bottom-0 left-0 right-0 border-t'
     case 'top':
@@ -27,7 +21,7 @@ const positionClass = computed(() => {
 })
 
 const transform = computed(() => {
-  switch (props.direction) {
+  switch (direction) {
     case 'bottom':
       return 'translateY(100%)'
     case 'top':
@@ -40,6 +34,8 @@ const transform = computed(() => {
       return ''
   }
 })
+
+const closeModal = () => modelValue.value = false
 </script>
 
 <template>
@@ -50,7 +46,7 @@ const transform = computed(() => {
     <div
       class="bg-base inset-0 absolute transition-opacity duration-500 ease-out"
       :class="modelValue ? 'opacity-50' : 'opacity-0'"
-      @click="$emit('update:modelValue', false)"
+      @click="closeModal"
     />
     <div
       class="bg-base border-base absolute transition-all duration-200 ease-out scrolls"

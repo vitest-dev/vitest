@@ -76,7 +76,7 @@ test('thresholdAutoUpdate updates thresholds', async () => {
     const coverage = match?.groups?.coverage || '0'
 
     // Configuration has fixed value of 1.01 set for each threshold
-    expect(parseInt(coverage)).toBeGreaterThan(1.01)
+    expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
   }
 
   // Update thresholds back to fixed values

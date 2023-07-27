@@ -112,7 +112,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       if (!files?.length)
         continue
 
-      const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
+      const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options) + environment.transformMode)
 
       for (const option in filesByOptions) {
         const files = filesByOptions[option]

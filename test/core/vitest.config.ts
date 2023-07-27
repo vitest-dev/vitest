@@ -1,5 +1,5 @@
 import { basename, dirname, join, resolve } from 'pathe'
-import { defineConfig } from 'vitest/config'
+import { defaultExclude, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
@@ -19,6 +19,8 @@ export default defineConfig({
     },
   ],
   define: {
+    'process': {},
+    'global': {},
     'import.meta.env.TEST_NAME': '"hello world"',
     'process.env.HELLO_PROCESS': '"hello process"',
     // can reassign
@@ -41,6 +43,7 @@ export default defineConfig({
   },
   test: {
     name: 'core',
+    exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [

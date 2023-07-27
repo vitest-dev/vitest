@@ -15,6 +15,7 @@ interface SplittedCode {
 const props = defineProps<{
   file?: File
 }>()
+
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
@@ -90,13 +91,13 @@ watch([() => props.file, isDescribeBlock, selectedTest, testIndex],
       const [primaryIndex, nestedIndex] = newTestIndex.split('|')
       // First Method - Here we will get index and nestdIndex of items when user clicks on
       // test name and if the that indexes are present then we will show that code block.
-      if (primaryIndex && primaryIndex !== 'undefined' && !isNaN(parseInt(primaryIndex))) {
-        const nestedCodeValue = splittedCode.value[parseInt(primaryIndex)].nestedCode?.[parseInt(nestedIndex)]?.code
-        if (nestedIndex && nestedIndex !== 'undefined' && !isNaN(parseInt(nestedIndex)) && nestedCodeValue) {
+      if (primaryIndex && primaryIndex !== 'undefined' && !Number.isNaN(Number.parseInt(primaryIndex))) {
+        const nestedCodeValue = splittedCode.value[Number.parseInt(primaryIndex)].nestedCode?.[Number.parseInt(nestedIndex)]?.code
+        if (nestedIndex && nestedIndex !== 'undefined' && !Number.isNaN(Number.parseInt(nestedIndex)) && nestedCodeValue) {
           code.value = nestedCodeValue
         }
-        else if (nestedIndex && nestedIndex === 'undefined' && splittedCode.value[parseInt(primaryIndex)]?.code) {
-          code.value = splittedCode.value[parseInt(primaryIndex)]?.code
+        else if (nestedIndex && nestedIndex === 'undefined' && splittedCode.value[Number.parseInt(primaryIndex)]?.code) {
+          code.value = splittedCode.value[Number.parseInt(primaryIndex)]?.code
         }
         else {
           // Second Method (fallback) - Here, based on the test name, we will search for that test and filter the string
@@ -150,6 +151,7 @@ watch([() => props.file, isDescribeBlock, selectedTest, testIndex],
   },
   { immediate: true },
 )
+
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 

@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks'
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import { resolve } from 'pathe'
-import type { ContextTestEnvironment, ResolvedConfig } from '../types'
+import type { ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { distDir } from '../paths'
@@ -89,7 +89,7 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 }
 
 // browser shouldn't call this!
-export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
+export async function run(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
   await setupGlobalEnv(config)
@@ -104,11 +104,11 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
   // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = environment
+  globalThis.__vitest_environment__ = environment.name
 
   workerState.durations.environment = performance.now()
 
-  await withEnv(environment.name, environment.options || config.environmentOptions || {}, executor, async () => {
+  await withEnv(environment, environment.options || config.environmentOptions || {}, async () => {
     workerState.durations.environment = performance.now() - workerState.durations.environment
 
     for (const file of files) {

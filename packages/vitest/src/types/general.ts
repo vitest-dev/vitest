@@ -1,4 +1,4 @@
-export type { ErrorWithDiff, ParsedStack } from '@vitest/runner/utils'
+export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
@@ -23,6 +23,7 @@ export interface EnvironmentReturn {
 
 export interface Environment {
   name: string
+  transformMode?: 'web' | 'ssr'
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

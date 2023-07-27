@@ -1,5 +1,5 @@
+import { processError } from '@vitest/utils/error'
 import type { Suite, TaskBase } from '../types'
-import { processError } from './error'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.

@@ -4,25 +4,25 @@ import type {
 import type { VitestClient } from '@vitest/ws-client'
 
 const { get } = Reflect
-const safeRandom = Math.random
 
 function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
   const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
-  const currentRandom = globalThis.Math.random
-  const currentNextTick = globalThis.process.nextTick
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
+
+  const currentNextTick = globalThis.process?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.Math.random = safeRandom
-    globalThis.process.nextTick = nextTick
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
+
+    if (globalThis.process)
+      globalThis.process.nextTick = nextTick
 
     const result = fn()
     return result
@@ -30,12 +30,14 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
   finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
-    globalThis.Math.random = currentRandom
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
-    nextTick(() => {
-      globalThis.process.nextTick = currentNextTick
-    })
+
+    if (globalThis.process) {
+      nextTick(() => {
+        globalThis.process.nextTick = currentNextTick
+      })
+    }
   }
 }
 
