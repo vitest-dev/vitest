@@ -20,6 +20,7 @@ export type UserProjectConfigExport = UserWorkspaceConfig | Promise<UserWorkspac
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
 export function defineConfig(config: Promise<ViteUserConfig>): Promise<ViteUserConfig>
+export function defineConfig(config: UserConfigFnObject): UserConfigFnObject
 export function defineConfig(config: UserConfigExport): UserConfigExport
 export function defineConfig(config: UserConfigExport): UserConfigExport {
   return config
