@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getProjectNameColor } from '../utils/task'
+import { isDark } from '../composables/dark'
 import type { Task } from '#types'
 
 const props = defineProps<{
@@ -25,7 +26,7 @@ const duration = computed(() => {
     <StatusIcon :task="task" mr-2 />
     <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
       <span text-sm truncate font-light>
-        <span v-if="task.type === 'suite' && task.projectName" :style="{ color: getProjectNameColor(task.projectName) }">|{{ task.projectName }}|  </span>
+        <span v-if="task.type === 'suite' && task.projectName" :style="{ color: getProjectNameColor(task.projectName, isDark) }">|{{ task.projectName }}|  </span>
         {{ task.name }}
       </span>
       <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
