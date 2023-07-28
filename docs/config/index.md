@@ -133,9 +133,12 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**']`
+- **Default:** `[/\/node_modules\//]`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+
+When using strings they need to be paths inside your [`deps.moduleDirectories`](/config/#deps-moduledirectories). For example `external: ['module/folder']` with the default `moduleDirectories` option will externalize `node_modules/module/folder`.
+Regular expressions on the other hand are matched against the whole path.
 
 #### deps.inline
 
@@ -483,7 +486,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
+  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
   - `'json'` -  give a simple JSON summary
   - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
@@ -720,6 +723,9 @@ List of files included in coverage as glob patterns
   'dist/**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
+  '**/virtual:*',
+  '**/__x00__*',
+  '**/\x00*',
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
