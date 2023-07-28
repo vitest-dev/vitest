@@ -107,6 +107,7 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
   const mod = maps.hotModulesMap.get(path)
 
   if (!mod) {
+    console.error('cannot find', path, 'in', Array.from(maps.hotModulesMap.keys()))
     // In a code-splitting project,
     // it is common that the hot-updating module is not loaded yet.
     // https://github.com/vitejs/vite/issues/721
