@@ -84,6 +84,9 @@ async function run(files: string[], options: CliOptions = {}) {
     configFile: options.config,
     root: options.root,
     mode: options.mode,
+    server: {
+      hmr: !!options.watch,
+    },
     plugins: [
       options.watch && viteNodeHmrPlugin(),
     ],
