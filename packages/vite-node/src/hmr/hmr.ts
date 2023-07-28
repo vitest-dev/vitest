@@ -9,6 +9,10 @@ import type { HotContext } from '../types'
 import { normalizeModuleId } from '../utils'
 import type { HMREmitter } from './emitter'
 
+export type ModuleNamespace = Record<string, any> & {
+  [Symbol.toStringTag]: 'Module'
+}
+
 const debugHmr = createDebug('vite-node:hmr')
 
 export type InferCustomEventPayload<T extends string> =
@@ -22,7 +26,7 @@ export interface HotModule {
 export interface HotCallback {
   // the dependencies must be fetchable paths
   deps: string[]
-  fn: (modules: object[]) => void
+  fn: (modules: (ModuleNamespace | undefined)[]) => void
 }
 
 interface CacheData {
@@ -117,48 +121,29 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
     return
   }
 
-  const moduleMap = new Map()
   const isSelfUpdate = path === acceptedPath
+  let fetchedModule: ModuleNamespace | undefined
 
-  // make sure we only import each dep once
-  const modulesToUpdate = new Set<string>()
-  if (isSelfUpdate) {
-    // self update - only update self
-    modulesToUpdate.add(path)
-  }
-  else {
-    // dep update
-    for (const { deps } of mod.callbacks) {
-      deps.forEach((dep) => {
-        if (acceptedPath === dep)
-          modulesToUpdate.add(dep)
-      })
+  // determine the qualified callbacks before we re-import the modules
+  const qualifiedCallbacks = mod.callbacks.filter(({ deps }) =>
+    deps.includes(acceptedPath),
+  )
+
+  if (isSelfUpdate || qualifiedCallbacks.length > 0) {
+    const disposer = maps.disposeMap.get(acceptedPath)
+    if (disposer)
+      await disposer(maps.dataMap.get(acceptedPath))
+    try {
+      [fetchedModule] = await reload(runner, [acceptedPath])
+    }
+    catch (e: any) {
+      warnFailedFetch(e, acceptedPath)
     }
   }
 
-  // determine the qualified callbacks before we re-import the modules
-  const qualifiedCallbacks = mod.callbacks.filter(({ deps }) => {
-    return deps.some(dep => modulesToUpdate.has(dep))
-  })
-
-  await Promise.all(
-    Array.from(modulesToUpdate).map(async (dep) => {
-      const disposer = maps.disposeMap.get(dep)
-      if (disposer)
-        await disposer(maps.dataMap.get(dep))
-      try {
-        const newMod = await reload(runner, [dep])
-        moduleMap.set(dep, newMod)
-      }
-      catch (e: any) {
-        warnFailedFetch(e, dep)
-      }
-    }),
-  )
-
   return () => {
     for (const { deps, fn } of qualifiedCallbacks)
-      fn(deps.map(dep => moduleMap.get(dep)))
+      fn(deps.map(dep => (dep === acceptedPath ? fetchedModule : undefined)))
 
     const loggedPath = isSelfUpdate ? path : `${acceptedPath} via ${path}`
     console.log(`${c.cyan('[vite-node]')} hot updated: ${loggedPath}`)
@@ -268,10 +253,10 @@ export function createHotContext(
       }
       else if (typeof deps === 'string') {
         // explicit deps
-        acceptDeps([normalizeModuleId(deps)], ([mod]) => callback && callback(mod))
+        acceptDeps([deps], ([mod]) => callback && callback(mod))
       }
       else if (Array.isArray(deps)) {
-        acceptDeps(deps.map(normalizeModuleId), callback)
+        acceptDeps(deps, callback)
       }
       else {
         throw new TypeError('invalid hot.accept() usage.')
