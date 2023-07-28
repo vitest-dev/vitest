@@ -115,6 +115,7 @@ const LIVING_KEYS = [
   'StorageEvent',
   'ProgressEvent',
   'PageTransitionEvent',
+  'SubmitEvent',
   'UIEvent',
   'FocusEvent',
   'InputEvent',
@@ -163,6 +164,8 @@ const LIVING_KEYS = [
   'AbortController',
   'AbortSignal',
   'ArrayBuffer',
+  'DOMRectReadOnly',
+  'DOMRect',
 
   // not specified in docs, but is available
   'Image',

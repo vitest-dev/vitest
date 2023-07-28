@@ -51,7 +51,8 @@ export default (project: any, base = '/'): Plugin[] => {
               '@vitest/utils',
             ],
             include: [
-              'vitest > concordance',
+              'vitest > @vitest/utils > pretty-format',
+              'vitest > diff-sequences',
               'vitest > loupe',
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',

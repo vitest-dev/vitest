@@ -6,7 +6,7 @@
  */
 
 import type { ParsedStack } from '@vitest/utils'
-import { parseErrorStacktrace } from '@vitest/utils'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { SnapshotData, SnapshotEnvironment, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -128,7 +128,7 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), [])
+      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), { ignoreStackEntries: [] })
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(

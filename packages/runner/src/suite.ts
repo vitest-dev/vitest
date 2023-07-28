@@ -1,9 +1,11 @@
 import { format, isObject, noop, objDisplay, objectAttr } from '@vitest/utils'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
+import type { File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
+import type { FixtureItem } from './fixture'
+import { mergeContextFixtures, withFixtures } from './fixture'
 
 // apis
 export const suite = createSuite()
@@ -30,7 +32,7 @@ export function getRunner() {
 
 export function clearCollectorContext(currentRunner: VitestRunner) {
   if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : suite('')
+    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
   runner = currentRunner
   collectorContext.tasks.length = 0
   defaultSuite.clear()
@@ -51,7 +53,7 @@ export function createSuiteHooks() {
 }
 
 // implementations
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, each?: boolean, suiteOptions?: TestOptions) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, sequential?: boolean, shuffle?: boolean, each?: boolean, suiteOptions?: TestOptions) {
   const tasks: (Test | TaskCustom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -77,12 +79,12 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-      retry: options?.retry,
+      retry: options?.retry ?? runner.config.retry,
       repeats: options?.repeats,
       meta: Object.create(null),
     } as Omit<Test, 'context'> as Test
 
-    if (this.concurrent || concurrent)
+    if (this.concurrent || (!sequential && (concurrent || runner.config.sequence.concurrent)))
       test.concurrent = true
     if (shuffle)
       test.shuffle = true
@@ -95,7 +97,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     })
 
     setFn(test, withTimeout(
-      () => fn(context),
+      this.fixtures
+        ? withFixtures(fn, this.fixtures, context)
+        : () => fn(context),
       options?.timeout ?? runner.config.testTimeout,
     ))
 
@@ -194,7 +198,7 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.shuffle, this.each, options)
+    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.sequence, this.shuffle, this.each, options)
   }
 
   suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -222,19 +226,19 @@ function createSuite() {
   suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
-    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
+    ['concurrent', 'sequential', 'shuffle', 'skip', 'only', 'todo'],
     suiteFn,
   ) as unknown as SuiteAPI
 }
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined>,
+    this: Record<'concurrent' | 'sequential' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: FixtureItem[] },
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
   ) => void
-)) {
+), context?: Record<string, any>) {
   const testFn = fn as any
 
   testFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -262,10 +266,23 @@ function createTest(fn: (
   testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
-  return createChainable(
+  testFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
+    const _context = mergeContextFixtures(fixtures, context)
+
+    return createTest(function fn(name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+      getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
+    }, _context)
+  }
+
+  const _test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     testFn,
   ) as TestAPI
+
+  if (context)
+    (_test as any).mergeContext(context)
+
+  return _test
 }
 
 function formatName(name: string | Function) {
@@ -284,7 +301,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_.]+)/g,
-      (_, key) => objDisplay(objectAttr(items[0], key), runner?.config?.chaiConfig) as unknown as string,
+      (_, key) => objDisplay(objectAttr(items[0], key), { truncate: runner?.config?.chaiConfig?.truncateThreshold }) as unknown as string,
     // https://github.com/chaijs/chai/pull/1490
     )
   }

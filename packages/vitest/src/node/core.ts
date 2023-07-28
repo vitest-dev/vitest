@@ -8,7 +8,7 @@ import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { CancelReason } from '@vitest/runner'
+import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
@@ -151,6 +151,14 @@ export class Vitest {
 
   public getCoreWorkspaceProject(): WorkspaceProject | null {
     return this.coreWorkspace || null
+  }
+
+  public getProjectByTaskId(taskId: string): WorkspaceProject {
+    const task = this.state.idMap.get(taskId)
+    const projectName = (task as File).projectName || task?.file?.projectName
+    return this.projects.find(p => p.getName() === projectName)
+      || this.getCoreWorkspaceProject()
+      || this.projects[0]
   }
 
   private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
@@ -557,9 +565,8 @@ export class Vitest {
 
   public getModuleProjects(id: string) {
     return this.projects.filter((project) => {
-      return project.server.moduleGraph.getModuleById(id)
-        || project.browser?.moduleGraph.getModuleById(id)
-        || project.browser?.moduleGraph.getModulesByFile(id)?.size
+      return project.getModuleById(id)
+      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
   }
 
@@ -637,7 +644,7 @@ export class Vitest {
 
     if (mm.isMatch(id, this.config.forceRerunTriggers)) {
       this.state.getFilepaths().forEach(file => this.changedTests.add(file))
-      return []
+      return [id]
     }
 
     const projects = this.getModuleProjects(id)

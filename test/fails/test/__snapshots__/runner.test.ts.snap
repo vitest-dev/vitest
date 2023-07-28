@@ -10,6 +10,8 @@ exports[`should fail expect.test.ts > expect.test.ts 1`] = `"AssertionError: exp
 
 exports[`should fail expect-soft.test.ts > expect-soft.test.ts 1`] = `"Error: expect.soft() can only be used inside a test"`;
 
+exports[`should fail expect-unreachable.test.ts > expect-unreachable.test.ts 1`] = `"AssertionError: expected \\"hi\\" not to be reached"`;
+
 exports[`should fail hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
 exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `
@@ -37,6 +39,20 @@ TypeError: failure
 TypeError: failure
 TypeError: failure"
 `;
+
+exports[`should fail test-extend/circular-dependency.test.ts > test-extend/circular-dependency.test.ts 1`] = `"Error: circular fixture dependency"`;
+
+exports[`should fail test-extend/fixture-rest-params.test.ts > test-extend/fixture-rest-params.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
+
+exports[`should fail test-extend/fixture-rest-props.test.ts > test-extend/fixture-rest-props.test.ts 1`] = `"Error: Rest parameters are not supported"`;
+
+exports[`should fail test-extend/fixture-without-destructuring.test.ts > test-extend/fixture-without-destructuring.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
+
+exports[`should fail test-extend/test-rest-params.test.ts > test-extend/test-rest-params.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
+
+exports[`should fail test-extend/test-rest-props.test.ts > test-extend/test-rest-props.test.ts 1`] = `"Error: Rest parameters are not supported"`;
+
+exports[`should fail test-extend/test-without-destructuring.test.ts > test-extend/test-without-destructuring.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
 
 exports[`should fail test-timeout.test.ts > test-timeout.test.ts 1`] = `
 "Error: Test timed out in 200ms.

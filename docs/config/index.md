@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/__tests__/**/*.?(c|m)[jt]s?(x)', '**/?(*.){test,spec}.?(c|m)[jt]s?(x)']`
+- **Default:** `['**/*.{test,spec}.?(c|m)[jt]s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -133,9 +133,12 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**']`
+- **Default:** `[/\/node_modules\//]`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+
+When using strings they need to be paths inside your [`deps.moduleDirectories`](/config/#deps-moduledirectories). For example `external: ['module/folder']` with the default `moduleDirectories` option will externalize `node_modules/module/folder`.
+Regular expressions on the other hand are matched against the whole path.
 
 #### deps.inline
 
@@ -483,7 +486,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
+  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
   - `'json'` -  give a simple JSON summary
   - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
@@ -667,10 +670,6 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 You can use [`v8`](https://v8.dev/blog/javascript-code-coverage), [`istanbul`](https://istanbul.js.org/) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
-::: info
-The `c8` provider is being replaced by the `v8` provider. It will be deprecated in the next major version.
-:::
-
 You can provide coverage options to CLI with dot notation:
 
 ```sh
@@ -683,7 +682,7 @@ If you are using coverage options with dot notation, don't forget to specify `--
 
 #### coverage.provider
 
-- **Type:** `'c8' | 'v8' | 'istanbul' | 'custom'`
+- **Type:** `'v8' | 'istanbul' | 'custom'`
 - **Default:** `'v8'`
 - **CLI:** `--coverage.provider=<provider>`
 
@@ -693,7 +692,7 @@ Use `provider` to select the tool for coverage collection.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
 Enables coverage collection. Can be overridden using `--coverage` CLI option.
@@ -702,7 +701,7 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 - **Type:** `string[]`
 - **Default:** `['**']`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.include=<path>`, `--coverage.include=<path1> --coverage.include=<path2>`
 
 List of files included in coverage as glob patterns
@@ -711,7 +710,7 @@ List of files included in coverage as glob patterns
 
 - **Type:** `string | string[]`
 - **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
 #### coverage.exclude
@@ -724,6 +723,9 @@ List of files included in coverage as glob patterns
   'dist/**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
+  '**/virtual:*',
+  '**/__x00__*',
+  '**/\x00*',
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
@@ -733,7 +735,7 @@ List of files included in coverage as glob patterns
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 ```
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
@@ -742,7 +744,7 @@ List of files excluded from coverage as glob patterns.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 
 Whether to include all files, including the untested ones into report.
@@ -751,7 +753,7 @@ Whether to include all files, including the untested ones into report.
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.clean`, `--coverage.clean=false`
 
 Clean coverage results before running tests
@@ -760,7 +762,7 @@ Clean coverage results before running tests
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
 Clean coverage report on watch rerun
@@ -769,7 +771,7 @@ Clean coverage report on watch rerun
 
 - **Type:** `string`
 - **Default:** `'./coverage'`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
@@ -778,7 +780,7 @@ Directory to write coverage report to.
 
 - **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
 Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
@@ -804,8 +806,8 @@ Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vit
 #### coverage.reportOnFailure
 
 - **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Default:** `false` (since Vitest `0.34.0`)
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportOnFailure`, `--coverage.reportOnFailure=false`
 - **Version:** Since Vitest 0.31.2
 
@@ -815,7 +817,7 @@ Generate coverage report even when tests fail.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.skipFull`, `--coverage.skipFull=false`
 
 Do not show files with 100% statement, branch, and function coverage.
@@ -824,7 +826,7 @@ Do not show files with 100% statement, branch, and function coverage.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.perFile`, `--coverage.perFile=false`
 
 Check thresholds per file.
@@ -834,7 +836,7 @@ See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholdAutoUpdate=<boolean>`
 
 Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
@@ -843,7 +845,7 @@ This option helps to maintain thresholds when coverage is improved.
 #### coverage.lines
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.lines=<number>`
 
 Threshold for lines.
@@ -852,7 +854,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.functions
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.functions=<number>`
 
 Threshold for functions.
@@ -861,7 +863,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.branches
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.branches=<number>`
 
 Threshold for branches.
@@ -870,44 +872,17 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.statements
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.statements=<number>`
 
 Threshold for statements.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### coverage.allowExternal
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
-
-Allow files from outside of your cwd.
-
-#### coverage.excludeNodeModules
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.excludeNodeModules`, `--coverage.excludeNodeModules=false`
-
-Exclude coverage under `/node_modules/`.
-
-#### coverage.src
-
-- **Type:** `string[]`
-- **Default:** `process.cwd()`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.src=<path>`
-
-Specifies the directories that are used when `--all` is enabled.
-
 #### coverage.100
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'v8'`
+- **Available for providers:** `'v8'`
 - **CLI:** `--coverage.100`, `--coverage.100=false`
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
@@ -946,7 +921,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 }
 ```
 
-- **Available for providers:** `'c8' | 'v8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
@@ -1120,41 +1095,28 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### transformMode
+### testTransformMode
 
-- **Type:** `{ web?, ssr? }`
+ - **Type:** `{ web?, ssr? }`
+ - **Version:** Since Vitest 0.34.0
 
-Determine the transform method of modules
+ Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
-#### transformMode.ssr
+ #### testTransformMode.ssr
 
-- **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-Use SSR transform pipeline for the specified files.<br>
-Vite plugins will receive `ssr: true` flag when processing those files.
+ Use SSR transform pipeline for all modules inside specified tests.<br>
+ Vite plugins will receive `ssr: true` flag when processing those files.
 
-#### transformMode&#46;web
+ #### testTransformMode&#46;web
 
-- **Type:** `RegExp[]`
-- **Default:** *modules other than those specified in `transformMode.ssr`*
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
-Vite plugins will receive `ssr: false` flag when processing those files.
-
-When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    transformMode: {
-      web: [/\.[jt]sx$/],
-    },
-  },
-})
-```
+ First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
+ Vite plugins will receive `ssr: false` flag when processing those files.
 
 ### snapshotFormat<NonProjectOption />
 
@@ -1308,6 +1270,15 @@ If you want tests to run randomly, you can enable it with this option, or CLI ar
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 
+#### sequence.concurrent
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
+- **Version**: Since Vitest 0.32.2
+
+If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
+
 #### sequence.seed<NonProjectOption />
 
 - **Type**: `number`
@@ -1361,7 +1332,7 @@ You can also pass down a path to custom binary or command name that produces the
 #### typecheck.include
 
 - **Type**: `string[]`
-- **Default**: `['**/?(*.){test,spec}-d.?(c|m)[jt]s?(x)']`
+- **Default**: `['**/*.{test,spec}-d.?(c|m)[jt]s?(x)']`
 
 Glob pattern for files that should be treated as test files
 
@@ -1443,3 +1414,12 @@ This config option affects truncating values in `test.each` titles and inside th
 Stop test execution when given number of tests have failed.
 
 By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occured.
+
+### retry
+
+- **Type:** `number`
+- **Default:** `0`
+- **CLI:** `--retry=<value>`
+- **Version:** Since Vitest 0.32.3
+
+Retry the test specific number of times if it fails.

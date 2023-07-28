@@ -9,11 +9,13 @@ import type { ErrorWithDiff, File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
+
 watch(() => props.file,
   async () => {
     if (!props.file || !props.file?.filepath) {
@@ -28,6 +30,7 @@ watch(() => props.file,
   },
   { immediate: true },
 )
+
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 

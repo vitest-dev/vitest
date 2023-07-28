@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -32,6 +32,10 @@
       "types": "./dist/helpers.d.ts",
       "import": "./dist/helpers.js"
     },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "import": "./dist/source-map.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -47,8 +51,11 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "concordance": "^5.0.4",
+    "diff-sequences": "^29.4.3",
     "loupe": "^2.3.6",
-    "pretty-format": "^27.5.1"
+    "pretty-format": "^29.5.0"
+  },
+  "devDependencies": {
+    "@jridgewell/trace-mapping": "^0.3.18"
   }
 }

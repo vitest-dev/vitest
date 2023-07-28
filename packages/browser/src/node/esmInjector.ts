@@ -241,7 +241,10 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
           s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
         }
       }
-      else {
+      else if (
+        // don't transform class name identifier
+        !(parent.type === 'ClassExpression' && id === parent.id)
+      ) {
         s.update(id.start, id.end, binding)
       }
     },

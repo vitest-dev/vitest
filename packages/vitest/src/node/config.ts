@@ -98,13 +98,13 @@ export function resolveConfig(
       throw new Error('You cannot use --shard option with enabled watch')
 
     const [indexString, countString] = options.shard.split('/')
-    const index = Math.abs(parseInt(indexString, 10))
-    const count = Math.abs(parseInt(countString, 10))
+    const index = Math.abs(Number.parseInt(indexString, 10))
+    const count = Math.abs(Number.parseInt(countString, 10))
 
-    if (isNaN(count) || count <= 0)
+    if (Number.isNaN(count) || count <= 0)
       throw new Error('--shard <count> must be a positive number')
 
-    if (isNaN(index) || index <= 0 || index > count)
+    if (Number.isNaN(index) || index <= 0 || index > count)
       throw new Error('--shard <index> must be a positive number less then <count>')
 
     resolved.shard = { index, count }
@@ -117,8 +117,9 @@ export function resolveConfig(
     }
   }
 
-  if (resolved.coverage.provider === 'c8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
-    throw new Error('@vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+  // @ts-expect-error -- check for removed API option
+  if (resolved.coverage.provider === 'c8')
+    throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
@@ -139,7 +140,7 @@ export function resolveConfig(
       resolved.deps.inline.push(...extraInlineDeps)
     }
   }
-  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
       dir = `/${dir}`
@@ -147,6 +148,8 @@ export function resolveConfig(
       dir += '/'
     return normalize(dir)
   })
+  if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
+    resolved.deps.moduleDirectories.push('/node_modules/')
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
@@ -180,10 +183,10 @@ export function resolveConfig(
     delete (resolved as UserConfig).resolveSnapshotPath
 
   if (process.env.VITEST_MAX_THREADS)
-    resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)
+    resolved.maxThreads = Number.parseInt(process.env.VITEST_MAX_THREADS)
 
   if (process.env.VITEST_MIN_THREADS)
-    resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
+    resolved.minThreads = Number.parseInt(process.env.VITEST_MIN_THREADS)
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -288,6 +291,8 @@ export function resolveConfig(
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
   }
+
+  resolved.testTransformMode ??= {}
 
   return resolved
 }

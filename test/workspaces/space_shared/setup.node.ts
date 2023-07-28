@@ -1,1 +1,1 @@
-Object.defineProperty(global, 'testValue', { value: 'node' })
+Object.defineProperty(globalThis, 'testValue', { value: 'node' })

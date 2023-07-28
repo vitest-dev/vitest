@@ -77,7 +77,7 @@ MockDate.toString = function () {
 
 export function mockDate(date: string | number | Date): void {
   const dateObj = new RealDate(date.valueOf())
-  if (isNaN(dateObj.getTime()))
+  if (Number.isNaN(dateObj.getTime()))
     throw new TypeError(`mockdate: The time set is an invalid date: ${date}`)
 
   // @ts-expect-error global

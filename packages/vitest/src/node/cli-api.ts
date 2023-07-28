@@ -63,17 +63,7 @@ export async function startVitest(
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      // Remove this message once support for @vitest/coverage-c8 has been removed completely
-      const defaultProviderInfo = 'Default coverage provider has changed from "c8" to "v8". '
-        + 'New package is required to be installed. '
-        + 'To use the old deprecated coverage provider use "--coverage.provider c8" option.\n'
-        + 'See https://github.com/vitest-dev/vitest/pull/3339 for more information.\n\n'
-
-      const isUsingDefaultProvider
-        = ctx.server.config.test?.coverage?.provider === undefined
-        && options.coverage?.provider === undefined
-
-      if (!await ensurePackageInstalled(requiredPackages, root, isUsingDefaultProvider ? defaultProviderInfo : undefined)) {
+      if (!await ensurePackageInstalled(requiredPackages, root)) {
         process.exitCode = 1
         return ctx
       }
@@ -87,10 +77,9 @@ export async function startVitest(
     return ctx
   }
 
-  if (process.stdin.isTTY && ctx.config.watch)
-    registerConsoleShortcuts(ctx)
-  else
-    process.on('SIGINT', () => ctx.cancelCurrentRun('keyboard-input'))
+  let stdinCleanup
+  if (process.stdin.isTTY)
+    stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
@@ -109,7 +98,7 @@ export async function startVitest(
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.logger.printError(e, true, 'Unhandled Error')
+    await ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')
     return ctx
   }
@@ -117,6 +106,7 @@ export async function startVitest(
   if (ctx.shouldKeepServer())
     return ctx
 
+  stdinCleanup?.()
   await ctx.close()
   return ctx
 }

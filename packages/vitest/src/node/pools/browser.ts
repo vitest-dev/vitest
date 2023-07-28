@@ -38,7 +38,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const provider = project.browserProvider!
     providers.add(provider)
 
-    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
+    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser!.config.server.port}`
     const paths = files.map(file => relative(project.config.root, file))
 
     const isolate = project.config.isolate

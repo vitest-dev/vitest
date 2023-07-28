@@ -3,7 +3,7 @@ import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
 import { toArray } from '../utils'
-import type { BaseCoverageOptions, CoverageC8Options, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
+import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -41,13 +41,14 @@ cli
   .option('--dangerouslyIgnoreUnhandledErrors', 'Ignore any unhandled errors that occur')
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
-  .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
+  .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order, use --sequence.concurrent to run tests in parallel)')
   .option('--segfaultRetry <times>', 'Return tests on segment fault (default: 0)', { default: 0 })
   .option('--no-color', 'Removes colors from the console output')
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
   .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
+  .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .help()
 
 cli
@@ -158,9 +159,6 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 
     if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
       (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
-
-    if ((coverage as CoverageC8Options).src)
-      (coverage as CoverageC8Options).src = toArray((coverage as CoverageC8Options).src)
   }
   return argv
 }

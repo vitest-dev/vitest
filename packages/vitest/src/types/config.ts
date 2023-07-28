@@ -49,6 +49,11 @@ interface SequenceOptions {
    */
   shuffle?: boolean
   /**
+   * Should tests run in parallel.
+   * @default false
+   */
+  concurrent?: boolean
+  /**
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
    * - 'list' will run all setup files in the order they are defined in the config file
@@ -72,6 +77,24 @@ interface SequenceOptions {
 
 export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
   enabled: boolean
+}
+
+export interface TransformModePatterns {
+  /**
+   * Use SSR transform pipeline for all modules inside specified tests.
+   * Vite plugins will receive `ssr: true` flag when processing those files.
+   *
+   * @default tests with node or edge environment
+   */
+  ssr?: string[]
+  /**
+   * First do a normal transform pipeline (targeting browser),
+   * then then do a SSR rewrite to run the code in Node.
+   * Vite plugins will receive `ssr: false` flag when processing those files.
+   *
+   * @default tests with jsdom or happy-dom environment
+   */
+  web?: string[]
 }
 
 interface DepsOptions {
@@ -444,25 +467,9 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method of modules
+   * Determine the transform method for all modules inported inside a test that matches the glob pattern.
    */
-  transformMode?: {
-    /**
-     * Use SSR transform pipeline for the specified files.
-     * Vite plugins will receive `ssr: true` flag when processing those files.
-     *
-     * @default [/\.([cm]?[jt]sx?|json)$/]
-     */
-    ssr?: RegExp[]
-    /**
-     * First do a normal transform pipeline (targeting browser),
-     * then then do a SSR rewrite to run the code in Node.
-     * Vite plugins will receive `ssr: false` flag when processing those files.
-     *
-     * @default other than `ssr`
-     */
-    web?: RegExp[]
-  }
+  testTransformMode?: TransformModePatterns
 
   /**
    * Format options for snapshot testing.
@@ -592,6 +599,13 @@ export interface InlineConfig {
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
+
+  /**
+   * Retry the test specific number of times if it fails.
+   *
+   * @default 0
+  */
+  retry?: number
 }
 
 export interface TypecheckConfig {
@@ -703,6 +717,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
     shuffle?: boolean
+    concurrent?: boolean
     seed: number
   }
 
