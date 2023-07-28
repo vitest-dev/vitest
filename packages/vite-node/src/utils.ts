@@ -6,6 +6,15 @@ import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
 
+const drive = isWindows ? process.cwd()[0] : null
+const driveOpposite = drive
+  ? (drive === drive.toUpperCase()
+      ? drive.toLowerCase()
+      : drive.toUpperCase())
+  : null
+const driveRegexp = drive ? new RegExp(`${drive}(\:[\\/])`) : null
+const driveOppositeRegext = driveOpposite ? new RegExp(`${driveOpposite}(\:[\\/])`) : null
+
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
@@ -15,6 +24,10 @@ export const VALID_ID_PREFIX = '/@id/'
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`
+
+  // keep drive the same as in process cwd
+  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id))
+    id = id.replace(driveOppositeRegext, `${drive}$1`)
 
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
