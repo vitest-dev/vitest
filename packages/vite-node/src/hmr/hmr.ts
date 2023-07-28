@@ -82,16 +82,16 @@ export async function reload(runner: ViteNodeRunner, files: string[]) {
   return Promise.all(files.map(file => runner.executeId(file)))
 }
 
-function notifyListeners<T extends string>(
+async function notifyListeners<T extends string>(
   runner: ViteNodeRunner,
   event: T,
   data: InferCustomEventPayload<T>,
-): void
-function notifyListeners(runner: ViteNodeRunner, event: string, data: any): void {
+): Promise<void>
+async function notifyListeners(runner: ViteNodeRunner, event: string, data: any): Promise<void> {
   const maps = getCache(runner)
   const cbs = maps.customListenersMap.get(event)
   if (cbs)
-    cbs.forEach(cb => cb(data))
+    await Promise.all(cbs.map(cb => cb(data)))
 }
 
 async function queueUpdate(runner: ViteNodeRunner, p: Promise<(() => void) | undefined>) {
@@ -168,28 +168,27 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       sendMessageBuffer(runner, emitter)
       break
     case 'update':
-      notifyListeners(runner, 'vite:beforeUpdate', payload)
-      if (maps.isFirstUpdate) {
-        reload(runner, files)
-        maps.isFirstUpdate = true
-      }
-      payload.updates.forEach((update) => {
-        if (update.type === 'js-update') {
-          queueUpdate(runner, fetchUpdate(runner, update))
-        }
-        else {
-          // css-update
-          console.error(`${c.cyan('[vite-node]')} no support css hmr.}`)
-        }
-      })
+      await notifyListeners(runner, 'vite:beforeUpdate', payload)
+      await Promise.all(payload.updates.map((update) => {
+        if (update.type === 'js-update')
+          return queueUpdate(runner, fetchUpdate(runner, update))
+
+        // css-update
+        console.error(`${c.cyan('[vite-node]')} no support css hmr.}`)
+        return null
+      }))
+      await notifyListeners(runner, 'vite:afterUpdate', payload)
       break
     case 'full-reload':
-      notifyListeners(runner, 'vite:beforeFullReload', payload)
+      await notifyListeners(runner, 'vite:beforeFullReload', payload)
       maps.customListenersMap.delete('vite:beforeFullReload')
-      reload(runner, files)
+      await reload(runner, files)
+      break
+    case 'custom':
+      await notifyListeners(runner, payload.event, payload.data)
       break
     case 'prune':
-      notifyListeners(runner, 'vite:beforePrune', payload)
+      await notifyListeners(runner, 'vite:beforePrune', payload)
       payload.paths.forEach((path) => {
         const fn = maps.pruneMap.get(path)
         if (fn)
@@ -197,7 +196,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       })
       break
     case 'error': {
-      notifyListeners(runner, 'vite:error', payload)
+      await notifyListeners(runner, 'vite:error', payload)
       const err = payload.err
       console.error(`${c.cyan('[vite-node]')} Internal Server Error\n${err.message}\n${err.stack}`)
       break
