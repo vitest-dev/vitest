@@ -6,7 +6,7 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { basename, extname, join } from 'pathe'
+import { basename, extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 
 // need to copy paste types for vm
@@ -420,7 +420,7 @@ export class ExternalModulesExecutor {
     if (inlineCode || extension === '.mjs')
       return await this.createEsmModule(fileUrl, inlineCode || await readFile(pathUrl, 'utf8'))
 
-    const pkgData = await this.findNearestPackageData(pathUrl)
+    const pkgData = await this.findNearestPackageData(normalize(pathUrl))
 
     if (pkgData.type === 'module')
       return await this.createEsmModule(fileUrl, await readFile(pathUrl, 'utf8'))
