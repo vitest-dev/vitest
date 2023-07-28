@@ -133,9 +133,12 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**']`
+- **Default:** `[/\/node_modules\//]`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+
+When using strings they need to be paths inside your [`deps.moduleDirectories`](/config/#deps-moduledirectories). For example `external: ['module/folder']` with the default `moduleDirectories` option will externalize `node_modules/module/folder`.
+Regular expressions on the other hand are matched against the whole path.
 
 #### deps.inline
 
