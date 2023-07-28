@@ -32,16 +32,25 @@ const clientStub = {
     if (typeof document === 'undefined')
       return
 
-    const element = document.getElementById(id)
-    if (element)
-      element.remove()
+    const element = document.querySelector(`[data-vite-dev-id="${id}"]`)
+    if (element) {
+      element.textContent = css
+      return
+    }
 
     const head = document.querySelector('head')
     const style = document.createElement('style')
     style.setAttribute('type', 'text/css')
-    style.id = id
-    style.innerHTML = css
+    style.setAttribute('data-vite-dev-id', id)
+    style.textContent = css
     head?.appendChild(style)
+  },
+  removeStyle(id: string) {
+    if (typeof document === 'undefined')
+      return
+    const sheet = document.querySelector(`[data-vite-dev-id="${id}"]`)
+    if (sheet)
+      document.head.removeChild(sheet)
   },
 }
 
