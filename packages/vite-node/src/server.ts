@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
 import { join, normalize, relative, resolve } from 'pathe'
-import { type TransformResult, type ViteDevServer } from 'vite'
+import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'

@@ -560,14 +560,14 @@ Running code in a sandbox has some advantages (faster tests), but also comes wit
 
 ```ts
 try {
-  fs.writeFile('/doesnt exist')
+  fs.writeFileSync('/doesnt exist')
 }
 catch (err) {
   console.log(err instanceof Error) // false
 }
 ```
 
-- Importing ES modules cache them indefinitely which introduces memory leaks if you have a lot of contexts (or tests). There is no API in Node.js that clears that cache.
+- Importing ES modules caches them indefinitely which introduces memory leaks if you have a lot of contexts (test files). There is no API in Node.js that clears that cache.
 - Accessing globals [takes longer](https://github.com/nodejs/node/issues/31658) in a sandbox environment.
 
 Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
