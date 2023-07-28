@@ -6,6 +6,7 @@ import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
+import { normalizeModuleId } from '../utils'
 import type { HMREmitter } from './emitter'
 
 const debugHmr = createDebug('vite-node:hmr')
@@ -103,11 +104,13 @@ async function queueUpdate(runner: ViteNodeRunner, p: Promise<(() => void) | und
 }
 
 async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Update) {
+  path = normalizeModuleId(path)
+  acceptedPath = normalizeModuleId(acceptedPath)
+
   const maps = getCache(runner)
   const mod = maps.hotModulesMap.get(path)
 
   if (!mod) {
-    console.error('cannot find', path, 'in', Array.from(maps.hotModulesMap.keys()))
     // In a code-splitting project,
     // it is common that the hot-updating module is not loaded yet.
     // https://github.com/vitejs/vite/issues/721
@@ -265,10 +268,10 @@ export function createHotContext(
       }
       else if (typeof deps === 'string') {
         // explicit deps
-        acceptDeps([deps], ([mod]) => callback && callback(mod))
+        acceptDeps([normalizeModuleId(deps)], ([mod]) => callback && callback(mod))
       }
       else if (Array.isArray(deps)) {
-        acceptDeps(deps, callback)
+        acceptDeps(deps.map(normalizeModuleId), callback)
       }
       else {
         throw new TypeError('invalid hot.accept() usage.')
