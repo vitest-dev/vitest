@@ -1859,6 +1859,9 @@ importers:
       vite-node:
         specifier: workspace:*
         version: link:../../packages/vite-node
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
 
   test/typescript:
     dependencies:
