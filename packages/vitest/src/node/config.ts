@@ -140,14 +140,8 @@ export function resolveConfig(
       resolved.deps.inline.push(...extraInlineDeps)
     }
   }
+
   resolved.deps.moduleDirectories ??= ['/node_modules/']
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
-    if (!dir.startsWith('/'))
-      dir = `/${dir}`
-    if (!dir.endsWith('/'))
-      dir += '/'
-    return normalize(dir)
-  })
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
