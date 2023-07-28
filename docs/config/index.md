@@ -563,7 +563,7 @@ try {
   fs.writeFile('/doesnt exist')
 }
 catch (err) {
-  consoel.log(err instanceof Error) // false
+  console.log(err instanceof Error) // false
 }
 ```
 
