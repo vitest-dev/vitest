@@ -168,7 +168,7 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        classname: filename,
+        classname: process.env.VITEST_JUNIT_CLASSNAME ?? filename,
         name: task.name,
         time: getDuration(task),
       }, async () => {
