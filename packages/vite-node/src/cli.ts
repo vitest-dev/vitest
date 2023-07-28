@@ -66,12 +66,12 @@ async function run(files: string[], options: CliOptions = {}) {
     process.exit(0)
   }
   if (options.help) {
-    cli.outputHelp()
+    cli.version(version).outputHelp()
     process.exit(0)
   }
   if (!files.length) {
     console.error(c.red('No files specified.'))
-    cli.outputHelp()
+    cli.version(version).outputHelp()
     process.exit(1)
   }
 
