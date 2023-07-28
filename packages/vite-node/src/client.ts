@@ -372,7 +372,7 @@ export class ViteNodeRunner {
       Object.defineProperty(meta, 'hot', {
         enumerable: true,
         get: () => {
-          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          hotContext ||= this.options.createHotContext?.(this, __filename)
           return hotContext
         },
         set: (value) => {
