@@ -12,8 +12,8 @@ const driveOpposite = drive
       ? drive.toLowerCase()
       : drive.toUpperCase())
   : null
-const driveRegexp = drive ? new RegExp(`${drive}(\:[\\/])`) : null
-const driveOppositeRegext = driveOpposite ? new RegExp(`${driveOpposite}(\:[\\/])`) : null
+const driveRegexp = drive ? new RegExp(`(?:^|/@fs/)${drive}(\:[\\/])`) : null
+const driveOppositeRegext = driveOpposite ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`) : null
 
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
