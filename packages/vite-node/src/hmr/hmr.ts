@@ -6,7 +6,7 @@ import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
-import { normalizeModuleId } from '../utils'
+import { normalizeRequestId } from '../utils'
 import type { HMREmitter } from './emitter'
 
 export type ModuleNamespace = Record<string, any> & {
@@ -108,8 +108,8 @@ async function queueUpdate(runner: ViteNodeRunner, p: Promise<(() => void) | und
 }
 
 async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Update) {
-  path = normalizeModuleId(path)
-  acceptedPath = normalizeModuleId(acceptedPath)
+  path = normalizeRequestId(path)
+  acceptedPath = normalizeRequestId(acceptedPath)
 
   const maps = getCache(runner)
   const mod = maps.hotModulesMap.get(path)
