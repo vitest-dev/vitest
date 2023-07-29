@@ -111,12 +111,15 @@ export async function runCli(command: string, _options?: Options | string, ...ar
       subprocess.stdin!.write(text)
     },
     waitForStdout(expected: string) {
+      const error = new Error('Timeout error')
+      Error.captureStackTrace(error, this.waitForStdout)
       return new Promise<void>((resolve, reject) => {
         if (this.stdout.includes(expected))
           return resolve()
 
         const timeout = setTimeout(() => {
-          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout} \nStderr:\n${this.stderr}`))
+          error.message = `Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout} \nStderr:\n${this.stderr}`
+          reject(error)
         }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
@@ -132,12 +135,15 @@ export async function runCli(command: string, _options?: Options | string, ...ar
       })
     },
     waitForStderr(expected: string) {
+      const error = new Error('Timeout')
+      Error.captureStackTrace(error, this.waitForStderr)
       return new Promise<void>((resolve, reject) => {
         if (this.stderr.includes(expected))
           return resolve()
 
         const timeout = setTimeout(() => {
-          reject(new Error(`Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}\nStdout:\n${this.stdout}`))
+          error.message = `Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}\nStdout:\n${this.stdout}`
+          reject(error)
         }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
