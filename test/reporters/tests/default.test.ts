@@ -32,6 +32,8 @@ describe('default reporter', async () => {
   test('rerun should undo', async () => {
     const vitest = await run([], true, '-t', 'passed')
 
+    vitest.resetOutput()
+
     // one file
     vitest.write('p')
     await vitest.waitForStdout('Input filename pattern')

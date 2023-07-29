@@ -73,6 +73,8 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
 
+  testFilesList: string[] = []
+
   constructor(
     public path: string | number,
     public ctx: Vitest,
@@ -132,7 +134,13 @@ export class WorkspaceProject {
       }))
     }
 
+    this.testFilesList = testFiles
+
     return testFiles
+  }
+
+  isTestFile(id: string) {
+    return this.testFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {

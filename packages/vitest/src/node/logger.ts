@@ -98,10 +98,15 @@ export class Logger {
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
-    if (config.passWithNoTests)
-      this.log(`No ${config.mode} files found, exiting with code 0\n`)
-    else
-      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else {
+      if (config.passWithNoTests)
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      else
+        this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    }
   }
 
   printBanner() {

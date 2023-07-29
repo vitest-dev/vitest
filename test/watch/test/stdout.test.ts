@@ -12,6 +12,7 @@ afterEach(() => {
 
 test('console.log is visible on test re-run', async () => {
   const vitest = await runVitestCli('--root', 'fixtures', '--watch')
+  vitest.resetOutput()
   const testCase = `
 test('test with logging', () => {
   console.log('First')

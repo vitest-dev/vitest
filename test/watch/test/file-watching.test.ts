@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { afterEach, describe, expect, test } from 'vitest'
 
-import { runVitestCli } from '../../test-utils'
+import * as testUtils from '../../test-utils'
 
 const sourceFile = 'fixtures/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
@@ -17,6 +17,13 @@ const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
 
 const cliArgs = ['--root', 'fixtures', '--watch']
 const cleanups: (() => void)[] = []
+
+async function runVitestCli(...args: string[]) {
+  const vitest = await testUtils.runVitestCli(...args)
+  if (args.includes('--watch'))
+    vitest.resetOutput()
+  return vitest
+}
 
 function editFile(fileContent: string) {
   return `// Modified by file-watching.test.ts

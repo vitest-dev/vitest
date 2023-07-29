@@ -306,19 +306,28 @@ export class Vitest {
       await this.globTestFiles(filters),
     )
 
+    // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      const exitCode = this.config.passWithNoTests ? 0 : 1
-
       await this.reportCoverage(true)
+
       this.logger.printNoTestFound(filters)
 
-      process.exit(exitCode)
+      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+        const exitCode = this.config.passWithNoTests ? 0 : 1
+        process.exit(exitCode)
+      }
     }
 
-    // populate once, update cache on watch
-    await this.cache.stats.populateStats(this.config.root, files)
+    // all subsequent runs will treat this as a fresh run
+    this.config.changed = false
+    this.config.related = undefined
 
-    await this.runFiles(files)
+    if (files.length) {
+      // populate once, update cache on watch
+      await this.cache.stats.populateStats(this.config.root, files)
+
+      await this.runFiles(files)
+    }
 
     await this.reportCoverage(true)
 
@@ -326,15 +335,16 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
-  private async getTestDependencies(filepath: WorkspaceSpec) {
-    const deps = new Set<string>()
-
+  private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
-      const transformed = await project.vitenode.transformRequest(filepath)
+      if (deps.has(filepath))
+        return
+      const mod = project.server.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed)
         return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-      for (const dep of dependencies) {
+      await Promise.all(dependencies.map(async (dep) => {
         const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
@@ -342,7 +352,7 @@ export class Vitest {
 
           await addImports([project, fsPath])
         }
-      }
+      }))
     }
 
     await addImports(filepath)
@@ -653,7 +663,8 @@ export class Vitest {
 
     const files: string[] = []
 
-    for (const { server, browser } of projects) {
+    for (const project of projects) {
+      const { server, browser } = project
       const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
       if (!mod) {
         // files with `?v=` query from the browser
@@ -675,7 +686,8 @@ export class Vitest {
 
       this.invalidates.add(id)
 
-      if (this.state.filesMap.has(id)) {
+      // one of test files that we already run, or one of test files that we can run
+      if (this.state.filesMap.has(id) || project.isTestFile(id)) {
         this.changedTests.add(id)
         files.push(id)
         continue
