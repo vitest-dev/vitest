@@ -45,7 +45,8 @@
       "types": "./dist/source-map.d.ts",
       "require": "./dist/source-map.cjs",
       "import": "./dist/source-map.mjs"
-    }
+    },
+    "./*": "./*"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",

@@ -37,6 +37,12 @@ export function viteNodeHmrPlugin(): Plugin {
         _send(payload)
         emitter.emit('message', payload)
       }
+      if (process.env.VITE_NODE_WATCHER_DEBUG) {
+        server.watcher.on('ready', () => {
+          // eslint-disable-next-line no-console
+          console.log('[vie-node] watcher is ready')
+        })
+      }
     },
   }
 }

@@ -1,5 +1,6 @@
 import { Console } from 'node:console'
 import { Writable } from 'node:stream'
+import fs from 'node:fs'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
@@ -86,7 +87,7 @@ function captureLogs() {
   }
 }
 
-export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+export async function runCli(command: string, _options?: Options | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -94,7 +95,7 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
     options = undefined
   }
 
-  const subprocess = execa('vitest', args, options as Options)
+  const subprocess = execa(command, args, options as Options)
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
@@ -115,7 +116,7 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
           return resolve()
 
         const timeout = setTimeout(() => {
-          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout}. \nStderr:\n${this.stderr}`))
+          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout} \nStderr:\n${this.stderr}`))
         }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
@@ -136,7 +137,7 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
           return resolve()
 
         const timeout = setTimeout(() => {
-          reject(new Error(`Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}`))
+          reject(new Error(`Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}\nStdout:\n${this.stdout}`))
         }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
@@ -177,6 +178,14 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
     await vitest.isDone
   })
 
+  if (command !== 'vitest') {
+    if (!args.includes('--watch'))
+      await vitest.isDone
+    else
+      await vitest.waitForStdout('[vie-node] watcher is ready')
+    return vitest
+  }
+
   if (args.includes('--watch')) { // Wait for initial test run to complete
     await vitest.waitForStdout('Waiting for file changes')
     vitest.resetOutput()
@@ -186,4 +195,27 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
   }
 
   return vitest
+}
+
+export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+  return runCli('vitest', _options, ...args)
+}
+
+export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
+  process.env.VITE_NODE_WATCHER_DEBUG = 'true'
+  return runCli('vite-node', _options, ...args)
+}
+
+const originalFiles = new Map<string, string>()
+afterEach(() => {
+  originalFiles.forEach((content, file) => {
+    fs.writeFileSync(file, content, 'utf-8')
+  })
+})
+
+export function editFile(file: string, callback: (content: string) => string) {
+  const content = fs.readFileSync(file, 'utf-8')
+  if (!originalFiles.has(file))
+    originalFiles.set(file, content)
+  fs.writeFileSync(file, callback(content), 'utf-8')
 }
