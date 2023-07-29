@@ -5,7 +5,7 @@ import { editFile, runViteNodeCli } from '../../test-utils'
 test('hmr.accept works correctly', async () => {
   const scriptFile = resolve(__dirname, '../src/script.js')
 
-  const viteNode = await runViteNodeCli(scriptFile, '--watch')
+  const viteNode = await runViteNodeCli('--watch', scriptFile)
 
   await viteNode.waitForStderr('Hello!')
 
