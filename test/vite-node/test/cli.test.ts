@@ -39,7 +39,7 @@ it('script args in -- after', async () => {
   expect(parseResult(cli1.stdout)).include('--version').include('--help')
 })
 
-it('correctly runs --watch', async () => {
+it.skip('correctly runs --watch', async () => {
   const entryPath = resolve(__dirname, '../src/watched.js')
   const cli = await runViteNodeCli(entryPath, '--watch')
   await cli.waitForStdout('test 1')

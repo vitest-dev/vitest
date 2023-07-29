@@ -59,7 +59,6 @@ async function run(files: string[], options: CliOptions = {}) {
   else {
     process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
   }
-  options.watch = true
 
   if (options.version) {
     cli.version(version)
