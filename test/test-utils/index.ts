@@ -181,6 +181,8 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   if (command !== 'vitest') {
     if (!args.includes('--watch'))
       await vitest.isDone
+    else
+      await vitest.waitForStdout('[vie-node] watcher is ready')
     return vitest
   }
 
@@ -200,6 +202,7 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
 }
 
 export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
+  process.env.VITE_NODE_WATCHER_DEBUG = 'true'
   return runCli('vite-node', _options, ...args)
 }
 
