@@ -66,7 +66,7 @@ Next, in order to execute the test, add the following section to your `package.j
 }
 ```
 
-Finally, run `yarn test`, `npm test` or `pnpm test` and Vitest will print this message:
+Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
 ```log
 ✓ sum.test.js (1)
