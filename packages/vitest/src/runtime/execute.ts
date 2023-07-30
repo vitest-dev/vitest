@@ -113,16 +113,26 @@ function updateStyle(id: string, css: string) {
   if (typeof document === 'undefined')
     return
 
-  const element = document.getElementById(id)
-  if (element)
-    element.remove()
+  const element = document.querySelector(`[data-vite-dev-id="${id}"]`)
+  if (element) {
+    element.textContent = css
+    return
+  }
 
   const head = document.querySelector('head')
   const style = document.createElement('style')
   style.setAttribute('type', 'text/css')
-  style.id = id
-  style.innerHTML = css
+  style.setAttribute('data-vite-dev-id', id)
+  style.textContent = css
   head?.appendChild(style)
+}
+
+function removeStyle(id: string) {
+  if (typeof document === 'undefined')
+    return
+  const sheet = document.querySelector(`[data-vite-dev-id="${id}"]`)
+  if (sheet)
+    document.head.removeChild(sheet)
 }
 
 export class VitestExecutor extends ViteNodeRunner {
@@ -146,7 +156,7 @@ export class VitestExecutor extends ViteNodeRunner {
         writable: true,
         configurable: true,
       })
-      const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle }
+      const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle, removeStyle }
       this.options.requestStubs = {
         '/@vite/client': clientStub,
         '@vite/client': clientStub,
@@ -162,7 +172,10 @@ export class VitestExecutor extends ViteNodeRunner {
         context: options.context,
         packageCache: options.packageCache,
       })
-      const clientStub = vm.runInContext(`(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()} })`, options.context)(DEFAULT_REQUEST_STUBS['@vite/client'])
+      const clientStub = vm.runInContext(
+        `(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
+        options.context,
+      )(DEFAULT_REQUEST_STUBS['@vite/client'])
       this.options.requestStubs = {
         '/@vite/client': clientStub,
         '@vite/client': clientStub,
