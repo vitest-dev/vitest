@@ -44,13 +44,16 @@ As an example, we will write a simple test that verifies the output of a functio
 
 ``` js
 // sum.js
-export function sum (a, b) {
+export function sum(a, b) {
   return a + b
 }
+```
 
+``` js
 // sum.test.js
-import { sum } from './sum'
 import { expect, test } from 'vitest'
+import { sum } from './sum'
+
 test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
 })
