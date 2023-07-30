@@ -101,3 +101,19 @@ test('coverage provider does not conflict with built-in reporter\'s outputFile',
 
   expect(files).toContain('junit.xml')
 })
+
+test('virtual files should be excluded', () => {
+  const files = fs.readdirSync(resolve('./coverage'))
+  const srcFiles = fs.readdirSync(resolve('./coverage/src'))
+
+  for (const file of [...files, ...srcFiles]) {
+    expect(file).not.toContain('virtual:')
+
+    // Vitest in node
+    expect(file).not.toContain('__x00__')
+    expect(file).not.toContain('\0')
+
+    // Vitest browser
+    expect(file).not.toContain('\x00')
+  }
+})
