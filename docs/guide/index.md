@@ -38,6 +38,51 @@ It is recommended that you install a copy of `vitest` in your `package.json`, us
 
 The `npx` command will execute the command either from a local `node_modules/.bin` installing any packages needed in order for the command to run. By default, npx will check whether command exists in $PATH, or in the local project binaries, and execute that. If command is not found, it will be installed prior to execution.
 
+## Writing Tests
+
+As an example, we will write a simple test that verifies the output of a function that adds two numbers.
+
+``` js
+// sum.js
+export function sum(a, b) {
+  return a + b
+}
+```
+
+``` js
+// sum.test.js
+import { expect, test } from 'vitest'
+import { sum } from './sum'
+
+test('adds 1 + 2 to equal 3', () => {
+  expect(sum(1, 2)).toBe(3)
+})
+```
+
+Next, in order to execute the test, add the following section to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "vitest"
+  }
+}
+```
+
+Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
+
+```log
+✓ sum.test.js (1)
+  ✓ adds 1 + 2 to equal 3
+
+Test Files  1 passed (1)
+    Tests  1 passed (1)
+  Start at  02:15:44
+  Duration  311ms (transform 23ms, setup 0ms, collect 16ms, tests 2ms, environment 0ms, prepare 106ms)
+```
+
+Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
+
 ## Configuring Vitest
 
 One of the main advantages of Vitest is its unified configuration with Vite. If present, `vitest` will read your root `vite.config.ts` to match with the plugins and setup as your Vite app. For example, your Vite [resolve.alias](https://vitejs.dev/config/shared-options.html#resolve-alias) and [plugins](https://vitejs.dev/guide/using-plugins.html) configuration will work out-of-the-box. If you want a different configuration during testing, you can:
