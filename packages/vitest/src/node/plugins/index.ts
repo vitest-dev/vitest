@@ -90,7 +90,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           },
         }
 
-        if (process.env.VITE_TEST_WATCHER_DEBUG) {
+        // chokidar fsevents is unstable on macos when emitting "ready" event
+        if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
           config.server!.watch!.useFsEvents = false
           config.server!.watch!.usePolling = false
         }

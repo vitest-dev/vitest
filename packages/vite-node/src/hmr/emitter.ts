@@ -31,7 +31,8 @@ export function viteNodeHmrPlugin(): Plugin {
     name: 'vite-node:hmr',
 
     config() {
-      if (process.env.VITE_TEST_WATCHER_DEBUG) {
+      // chokidar fsevents is unstable on macos when emitting "ready" event
+      if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
         return {
           server: {
             watch: {
