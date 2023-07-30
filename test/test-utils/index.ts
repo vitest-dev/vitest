@@ -99,8 +99,6 @@ export async function runCli(command: string, _options?: Options | string, ...ar
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
-  let setReady: (value?: unknown) => void
-  const isWatcherReady = new Promise(resolve => (setReady = resolve))
 
   const cli = {
     stdout: '',
@@ -108,7 +106,6 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     stdoutListeners: [] as (() => void)[],
     stderrListeners: [] as (() => void)[],
     isDone,
-    isWatcherReady,
     write(text: string) {
       this.resetOutput()
       subprocess.stdin!.write(text)
@@ -166,11 +163,6 @@ export async function runCli(command: string, _options?: Options | string, ...ar
       this.stderr = ''
     },
   }
-
-  subprocess.on('message', (message) => {
-    if (message === 'watcher-ready')
-      setReady()
-  })
 
   subprocess.stdout!.on('data', (data) => {
     cli.stdout += stripAnsi(data.toString())
