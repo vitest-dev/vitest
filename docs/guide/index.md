@@ -46,7 +46,9 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
+Vitest supports the same extensions for your configuration file as Vite does: `.js`, `.mjs`, `.cjs`, `.ts`, `.cts`, `.mts`. Vitest does not support `.json` extension.
+
+If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -58,7 +60,51 @@ export default defineConfig({
 })
 ```
 
+::: tip
+Even if you do not use Vite yourself, Vitest relies heavily on it for its transformation pipeline. For that reason, you can also configure any property described in [Vite documentation](https://vitejs.dev/config/).
+:::
+
+If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+
+```ts 
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  },
+})
+```
+
 See the list of config options in the [Config Reference](../config/)
+
+::: warning
+If you decide to have two separate config files for Vite and Vitest, make sure to define the same Vite options in your Vitest config file since it will override your Vite file, not extend it. You can also use `mergeConfig` method from `vite` or `vitest/config` entries to merge Vite config with Vitest config:
+
+:::code-group
+```ts [vitest.config.mjs]
+import { defineConfig, mergeConfig } from 'vitest/config'
+import viteConfig from './vite.config.mjs'
+
+export default mergeConfig(viteConfig, defineConfig({
+  test: {
+    // ...
+  }
+}))
+```
+
+```ts [vite.config.mjs]
+import { defineConfig } from 'vite'
+import Vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [Vue()],
+})
+```
+
+But we recommend to use the same file for both Vite and Vitest instead of creating two separate files.
+:::
 
 ## Workspaces Support
 
