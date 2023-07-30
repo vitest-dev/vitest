@@ -100,7 +100,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
 
-  const vitest = {
+  const cli = {
     stdout: '',
     stderr: '',
     stdoutListeners: [] as (() => void)[],
@@ -165,13 +165,13 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   }
 
   subprocess.stdout!.on('data', (data) => {
-    vitest.stdout += stripAnsi(data.toString())
-    vitest.stdoutListeners.forEach(fn => fn())
+    cli.stdout += stripAnsi(data.toString())
+    cli.stdoutListeners.forEach(fn => fn())
   })
 
   subprocess.stderr!.on('data', (data) => {
-    vitest.stderr += stripAnsi(data.toString())
-    vitest.stderrListeners.forEach(fn => fn())
+    cli.stderr += stripAnsi(data.toString())
+    cli.stderrListeners.forEach(fn => fn())
   })
 
   subprocess.on('exit', () => setDone())
@@ -181,43 +181,50 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     if (subprocess.exitCode === null)
       subprocess.kill()
 
-    await vitest.isDone
+    await cli.isDone
   })
 
-  if (command !== 'vitest') {
-    if (!args.includes('--watch'))
-      await vitest.isDone
-    else
-      await vitest.waitForStdout('[vie-node] watcher is ready')
-    return vitest
-  }
-
-  if (args.includes('--watch')) { // Wait for initial test run to complete
-    await vitest.waitForStdout('Waiting for file changes')
-    vitest.resetOutput()
+  if (args.includes('--watch')) {
+    if (command === 'vitest') // Wait for initial test run to complete
+      await cli.waitForStdout('Waiting for file changes')
+    // make sure watcher is ready
+    await cli.waitForStdout('[debug] watcher is ready')
+    cli.stdout = cli.stdout.replace('[debug] watcher is ready\n', '')
   }
   else {
-    await vitest.isDone
+    await cli.isDone
   }
 
-  return vitest
+  return cli
 }
 
 export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
 export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
-  process.env.VITE_NODE_WATCHER_DEBUG = 'true'
+  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vite-node', _options, ...args)
 }
 
 const originalFiles = new Map<string, string>()
+const createdFiles = new Set<string>()
 afterEach(() => {
   originalFiles.forEach((content, file) => {
     fs.writeFileSync(file, content, 'utf-8')
   })
+  createdFiles.forEach((file) => {
+    fs.unlinkSync(file)
+  })
+  originalFiles.clear()
+  createdFiles.clear()
 })
+
+export function createFile(file: string, content: string) {
+  createdFiles.add(file)
+  fs.writeFileSync(file, content, 'utf-8')
+}
 
 export function editFile(file: string, callback: (content: string) => string) {
   const content = fs.readFileSync(file, 'utf-8')
