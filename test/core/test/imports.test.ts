@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { dynamicRelativeImport } from '../src/relative-import'
 
 // @ts-expect-error module is not typed
@@ -128,5 +129,36 @@ describe('importing special files from node_modules', async () => {
   test('importing asset returns a string', async () => {
     const mod = await importModule('../src/node_modules/file.mp3')
     expect(mod.default).toBe('/src/node_modules/file.mp3')
+  })
+})
+
+describe.runIf(process.platform === 'win32')('importing files with different drive casing', async () => {
+  test('importing a local file with different drive casing works', async () => {
+    const path = new URL('./../src/timeout', import.meta.url)
+    const filepath = fileURLToPath(path)
+    const drive = filepath[0].toLowerCase()
+    const upperDrive = drive.toUpperCase()
+    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+    expect(lowercasePath).not.toBe(uppercasePath)
+    const mod1 = await import(lowercasePath)
+    const mod2 = await import(uppercasePath)
+    const mod3 = await import('./../src/timeout')
+    expect(mod1).toBe(mod2)
+    expect(mod1).toBe(mod3)
+  })
+
+  test('importing an external file with different drive casing works', async () => {
+    const path = new URL('./../src/esm/esm.js', import.meta.url)
+    const filepath = fileURLToPath(path)
+    const drive = filepath[0].toLowerCase()
+    const upperDrive = drive.toUpperCase()
+    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+    expect(lowercasePath).not.toBe(uppercasePath)
+    const mod1 = await import(lowercasePath)
+    vi.resetModules() // since they reference the same global ESM cache, it should not matter
+    const mod2 = await import(uppercasePath)
+    expect(mod1).toBe(mod2)
   })
 })

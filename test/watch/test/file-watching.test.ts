@@ -12,6 +12,9 @@ const testFileContent = readFileSync(testFile, 'utf-8')
 const configFile = 'fixtures/vitest.config.ts'
 const configFileContent = readFileSync(configFile, 'utf-8')
 
+const forceTriggerFile = 'fixtures/force-watch/trigger.js'
+const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
+
 const cliArgs = ['--root', 'fixtures', '--watch']
 const cleanups: (() => void)[] = []
 
@@ -26,6 +29,7 @@ afterEach(() => {
   writeFileSync(sourceFile, sourceFileContent, 'utf8')
   writeFileSync(testFile, testFileContent, 'utf8')
   writeFileSync(configFile, configFileContent, 'utf8')
+  writeFileSync(forceTriggerFile, forceTriggerFileContent, 'utf8')
   cleanups.splice(0).forEach(cleanup => cleanup())
 })
 
@@ -37,6 +41,18 @@ test('editing source file triggers re-run', async () => {
   await vitest.waitForStdout('New code running')
   await vitest.waitForStdout('RERUN  ../math.ts')
   await vitest.waitForStdout('1 passed')
+})
+
+test('editing force rerun trigger reruns all tests', async () => {
+  const vitest = await runVitestCli(...cliArgs)
+
+  writeFileSync(forceTriggerFile, editFile(forceTriggerFileContent), 'utf8')
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  await vitest.waitForStdout('RERUN  ../force-watch/trigger.js')
+  await vitest.waitForStdout('example.test.ts')
+  await vitest.waitForStdout('math.test.ts')
+  await vitest.waitForStdout('2 passed')
 })
 
 test('editing test file triggers re-run', async () => {

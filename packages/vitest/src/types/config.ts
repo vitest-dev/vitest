@@ -348,7 +348,7 @@ export interface InlineConfig {
   /**
    * Default timeout to wait for close when Vitest shuts down, in milliseconds
    *
-   * @default 1000
+   * @default 10000
    */
   teardownTimeout?: number
 

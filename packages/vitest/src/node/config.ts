@@ -133,6 +133,8 @@ export function resolveConfig(
       dir += '/'
     return normalize(dir)
   })
+  if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
+    resolved.deps.moduleDirectories.push('/node_modules/')
 
   resolved.server ??= {}
   resolved.server.deps ??= {}

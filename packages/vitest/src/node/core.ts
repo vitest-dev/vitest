@@ -644,7 +644,7 @@ export class Vitest {
 
     if (mm.isMatch(id, this.config.forceRerunTriggers)) {
       this.state.getFilepaths().forEach(file => this.changedTests.add(file))
-      return []
+      return [id]
     }
 
     const projects = this.getModuleProjects(id)

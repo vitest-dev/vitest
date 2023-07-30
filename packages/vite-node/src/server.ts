@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
-import { join, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
@@ -71,6 +71,18 @@ export class ViteNodeServer {
     const customModuleDirectories = envValue?.split(',')
     if (customModuleDirectories)
       options.deps.moduleDirectories.push(...customModuleDirectories)
+
+    options.deps.moduleDirectories = options.deps.moduleDirectories.map((dir) => {
+      if (!dir.startsWith('/'))
+        dir = `/${dir}`
+      if (!dir.endsWith('/'))
+        dir += '/'
+      return normalize(dir)
+    })
+
+    // always add node_modules as a module directory
+    if (!options.deps.moduleDirectories.includes('/node_modules/'))
+      options.deps.moduleDirectories.push('/node_modules/')
   }
 
   shouldExternalize(id: string) {
