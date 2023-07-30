@@ -99,6 +99,8 @@ export async function runCli(command: string, _options?: Options | string, ...ar
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
+  let setReady: (value?: unknown) => void
+  const isWatcherReady = new Promise(resolve => (setReady = resolve))
 
   const cli = {
     stdout: '',
@@ -106,6 +108,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     stdoutListeners: [] as (() => void)[],
     stderrListeners: [] as (() => void)[],
     isDone,
+    isWatcherReady,
     write(text: string) {
       this.resetOutput()
       subprocess.stdin!.write(text)
@@ -164,6 +167,11 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     },
   }
 
+  subprocess.on('message', (message) => {
+    if (message === 'watcher-ready')
+      setReady()
+  })
+
   subprocess.stdout!.on('data', (data) => {
     cli.stdout += stripAnsi(data.toString())
     cli.stdoutListeners.forEach(fn => fn())
@@ -184,8 +192,12 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     await cli.isDone
   })
 
-  if (args.includes('--watch')) { // Wait for initial test run to complete
-    await cli.waitForStdout(command === 'vitest' ? 'Waiting for file changes' : '[vie-node] watcher is ready')
+  if (args.includes('--watch')) {
+    if (command === 'vitest') // Wait for initial test run to complete
+      await cli.waitForStdout('Waiting for file changes')
+    // make sure watcher is ready
+    await cli.waitForStdout('[debug] watcher is ready')
+    cli.stdout = cli.stdout.replace('[debug] watcher is ready\n', '')
   }
   else {
     await cli.isDone
@@ -195,11 +207,12 @@ export async function runCli(command: string, _options?: Options | string, ...ar
 }
 
 export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
 export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
-  process.env.VITE_NODE_WATCHER_DEBUG = 'true'
+  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vite-node', _options, ...args)
 }
 
