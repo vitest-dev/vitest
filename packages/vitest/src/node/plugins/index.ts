@@ -160,7 +160,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         }
       },
       async configureServer(server) {
-        if (process.env.VITE_TEST_WATCHER_DEBUG) {
+        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
           server.watcher.on('ready', () => {
             // eslint-disable-next-line no-console
             console.log('[debug] watcher is ready')
