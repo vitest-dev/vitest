@@ -30,6 +30,19 @@ export function viteNodeHmrPlugin(): Plugin {
   return {
     name: 'vite-node:hmr',
 
+    config() {
+      if (process.env.VITE_TEST_WATCHER_DEBUG) {
+        return {
+          server: {
+            watch: {
+              useFsEvents: false,
+              usePolling: false,
+            },
+          },
+        }
+      }
+    },
+
     configureServer(server) {
       const _send = server.ws.send
       server.emitter = emitter

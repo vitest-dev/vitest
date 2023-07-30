@@ -110,12 +110,6 @@ export class Vitest {
         return await serverRestart(...args)
       }
 
-      if (process.env.VITE_TEST_WATCHER_DEBUG) {
-        server.watcher.on('ready', () => {
-          this.logger.log('[debug] watcher is ready')
-        })
-      }
-
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
