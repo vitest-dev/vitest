@@ -383,7 +383,8 @@ export class Vitest {
       return specs
 
     // don't run anything if no related sources are found
-    if (!related.length)
+    // if we are in watch mode, we want to process all tests
+    if (!this.config.watch && !related.length)
       return []
 
     const testGraphs = await Promise.all(
