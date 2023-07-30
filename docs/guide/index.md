@@ -46,7 +46,9 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-If you are not using Vite as your build tool, you can configure Vitest using `test` property in your config file:
+Vitest supports the same extensions for your configuration file as Vite does: `.js`, `.mjs`, `.cjs`, `.ts`, `.cts`, `.mts`. Vitest does not support `.json` extension.
+
+If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
 ```ts
 import { defineConfig } from 'vitest/config'
