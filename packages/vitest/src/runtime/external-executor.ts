@@ -428,7 +428,7 @@ export class ExternalModulesExecutor {
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.loadCommonJSModule(module, pathUrl)
-      return this.wrapSynteticModule(identifier, exports)
+      return this.wrapSynteticModule(fileUrl, exports)
     }
 
     const inlineCode = this.getIdentifierCode(identifier)
@@ -443,7 +443,7 @@ export class ExternalModulesExecutor {
 
     const module = this.createCommonJSNodeModule(pathUrl)
     const exports = this.loadCommonJSModule(module, pathUrl)
-    return this.wrapSynteticModule(identifier, exports)
+    return this.wrapSynteticModule(fileUrl, exports)
   }
 
   async import(identifier: string) {
