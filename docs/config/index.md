@@ -144,7 +144,11 @@ Handling for dependencies resolution.
 - **Type:** `(string | RegExp)[]`
 - **Default:** `[/\/node_modules\//]`
 
-Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. All packages under `node_modules` are externalized.
+Externalize means that Vite will bypass the package to the native Node. Externalized dependencies will not be applied to Vite's transformers and resolvers, so they do not support HMR on reload. By default, all packages inside `node_modules` are externalized.
+
+These options support package names as they are written in `node_modules` or specified inside [`deps.moduleDirectories`](#deps-moduledirectories). For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`. Basically, Vitest always checks the file path, not the actual package name.
+
+If regexp is used, Vitest calls it on the _file path_, not the package name.
 
 #### server.deps.inline
 
