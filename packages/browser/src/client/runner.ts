@@ -39,8 +39,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRunSuite() {
-      await super.onAfterRunSuite?.()
+    async onAfterRun() {
+      await super.onAfterRun?.()
       const coverage = await coverageModule?.takeCoverage?.()
       await rpc().onAfterSuiteRun({ coverage })
     }
