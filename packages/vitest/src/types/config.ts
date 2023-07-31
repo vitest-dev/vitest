@@ -114,7 +114,7 @@ interface DepsOptions {
    *
    * Typically, packages under `node_modules` are externalized.
    *
-   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.web.exclude`.
+   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.exclude`.
    */
   external?: (string | RegExp)[]
   /**
@@ -124,7 +124,7 @@ interface DepsOptions {
    *
    * If `true`, every dependency will be inlined
    *
-   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.web.include`.
+   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.include`.
    */
   inline?: (string | RegExp)[] | true
 
@@ -204,7 +204,7 @@ export interface InlineConfig {
   /**
    * Vite-node server options
    */
-  server?: ViteNodeServerOptions
+  server?: Omit<ViteNodeServerOptions, 'transformMode'>
 
   /**
    * Base directory to scan for the test files

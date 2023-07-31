@@ -115,28 +115,6 @@ Vite-Node server options.
 
 Inject inline sourcemap to modules.
 
-#### server.transformMode
-
-- **Type:** `{ web?, ssr? }`
-
-Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
-
-#### server.transformMode.ssr
-
-- **Type:** `string[]`
-- **Default:** `[]`
-
-Use SSR transform pipeline for all modules inside specified tests.<br>
-Vite plugins will receive `ssr: true` flag when processing those files.
-
-#### server.transformMode&#46;web
-
-- **Type:** `string[]`
-- **Default:** `[]`
-
-First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
-Vite plugins will receive `ssr: false` flag when processing those files.
-
 #### server.debug
 
 - **Type:** `{ dumpModules?, loadDumppedModules? }`
@@ -164,9 +142,9 @@ Handling for dependencies resolution.
 #### server.deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**']`
+- **Default:** `[/\/node_modules\//]`
 
-Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. All packages under `node_modules` are externalized.
 
 #### server.deps.inline
 
@@ -1165,6 +1143,8 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
  - **Version:** Since Vitest 0.34.0
 
  Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
+
+ These glob patterns are applied to _test files_, not source files (all source files that are imported during the test run will use this transform mode). If you want to change transform mode of a specific file, use [`server.transformMode`](#server-transformmode).
 
  #### testTransformMode.ssr
 

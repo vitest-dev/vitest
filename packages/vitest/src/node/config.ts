@@ -125,7 +125,7 @@ export function resolveConfig(
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
   resolved.deps ??= {}
-  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
       dir = `/${dir}`
@@ -146,9 +146,10 @@ export function resolveConfig(
         console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
       }
       else {
+        const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
         console.warn(
           c.yellow(
-         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.web.${option === 'external' ? 'exclude' : 'include'}"`,
+         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
           ),
         )
       }
