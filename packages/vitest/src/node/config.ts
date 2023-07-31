@@ -141,22 +141,23 @@ export function resolveConfig(
 
   const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
   deprecatedDepsOptions.forEach((option) => {
-    if (resolved.deps[option] !== undefined) {
-      if (option === 'fallbackCJS') {
-        console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
-      }
-      else {
-        const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-        console.warn(
-          c.yellow(
-         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
-          ),
-        )
-      }
+    if (resolved.deps[option] === undefined)
+      return
 
-      if (resolved.server.deps![option] === undefined)
-        resolved.server.deps![option] = resolved.deps[option] as any
+    if (option === 'fallbackCJS') {
+      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
     }
+    else {
+      const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
+        ),
+      )
+    }
+
+    if (resolved.server.deps![option] === undefined)
+      resolved.server.deps![option] = resolved.deps[option] as any
   })
 
   // vitenode will try to import such file with native node,
