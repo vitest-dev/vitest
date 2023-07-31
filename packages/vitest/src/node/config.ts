@@ -124,22 +124,7 @@ export function resolveConfig(
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
-  resolved.deps = resolved.deps || {}
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
-    const ssrOptions = viteConfig.ssr
-
-    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
-      resolved.deps.inline = true
-    }
-    else {
-      resolved.deps.inline ??= []
-      resolved.deps.inline.push(...extraInlineDeps)
-    }
-  }
+  resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
@@ -150,6 +135,48 @@ export function resolveConfig(
   })
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
+
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
+
+  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
+  deprecatedDepsOptions.forEach((option) => {
+    if (resolved.deps[option] === undefined)
+      return
+
+    if (option === 'fallbackCJS') {
+      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+    }
+    else {
+      const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
+        ),
+      )
+    }
+
+    if (resolved.server.deps![option] === undefined)
+      resolved.server.deps![option] = resolved.deps[option] as any
+  })
+
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  if (resolved.server.deps.inline !== true) {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
+    const ssrOptions = viteConfig.ssr
+    if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
+      resolved.server.deps.inline = true
+    }
+    else {
+      resolved.server.deps.inline ??= []
+      resolved.server.deps.inline.push(...extraInlineDeps)
+    }
+  }
+
+  resolved.server.deps.moduleDirectories ??= []
+  resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })

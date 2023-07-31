@@ -101,9 +101,79 @@ Include globs for in-source test files.
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-### deps
+### server
+
+- **Type:** `{ sourcemap?, deps?, ... }`
+- **Version:** Since Vitest 0.34.0
+
+Vite-Node server options.
+
+#### server.sourcemap
+
+- **Type:** `'inline' | boolean`
+- **Default:** `'inline'`
+
+Inject inline sourcemap to modules.
+
+#### server.debug
+
+- **Type:** `{ dumpModules?, loadDumppedModules? }`
+
+Vite-Node debugger options.
+
+#### server.debug.dumpModules
+
+- **Type:** `boolean | string`
+
+Dump the transformed module to filesystem. Passing a string will dump to the specified path.
+
+#### server.debug.loadDumppedModules
+
+- **Type:** `boolean`
+
+Read dumped module from filesystem whenever exists. Useful for debugging by modifying the dump result from the filesystem.
+
+#### server.deps
 
 - **Type:** `{ external?, inline?, ... }`
+
+Handling for dependencies resolution.
+
+#### server.deps.external
+
+- **Type:** `(string | RegExp)[]`
+- **Default:** `[/\/node_modules\//]`
+
+Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. All packages under `node_modules` are externalized.
+
+#### server.deps.inline
+
+- **Type:** `(string | RegExp)[] | true`
+- **Default:** `[]`
+
+Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+
+If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
+
+#### server.deps.fallbackCJS
+
+- **Type** `boolean`
+- **Default:** `false`
+
+When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
+
+This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+
+#### server.deps.cacheDir
+
+- **Type** `string`
+- **Default**: `'node_modules/.vite'`
+
+Directory to save cache files.
+
+### deps
+
+- **Type:** `{ experimentalOptimizer?, registerNodeLoader?, ... }`
 
 Handling for dependencies resolution.
 
@@ -129,34 +199,6 @@ This options also inherits your `optimizeDeps` configuration (for web Vitest wil
 ::: tip
 You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer?.[mode].force` option.
 :::
-
-#### deps.external
-
-- **Type:** `(string | RegExp)[]`
-- **Default:** `[/\/node_modules\//]`
-
-Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
-
-When using strings they need to be paths inside your [`deps.moduleDirectories`](/config/#deps-moduledirectories). For example `external: ['module/folder']` with the default `moduleDirectories` option will externalize `node_modules/module/folder`.
-Regular expressions on the other hand are matched against the whole path.
-
-#### deps.inline
-
-- **Type:** `(string | RegExp)[] | true`
-- **Default:** `[]`
-
-Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
-
-If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
-
-#### deps.fallbackCJS
-
-- **Type** `boolean`
-- **Default:** `false`
-
-When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
-
-This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
 #### deps.registerNodeLoader<NonProjectOption />
 

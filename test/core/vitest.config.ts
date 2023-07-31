@@ -66,9 +66,13 @@ export default defineConfig({
       seed: 101,
     },
     deps: {
-      external: ['tinyspy', /src\/external/, /esm\/esm/],
-      inline: ['inline-lib'],
       moduleDirectories: ['node_modules', 'projects', 'packages'],
+    },
+    server: {
+      deps: {
+        external: ['tinyspy', /src\/external/, /esm\/esm/],
+        inline: ['inline-lib'],
+      },
     },
     alias: [
       {

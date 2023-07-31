@@ -2,6 +2,7 @@ import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'v
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { ViteNodeServerOptions } from 'vite-node'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai'
@@ -112,6 +113,8 @@ interface DepsOptions {
    * And does not support HMR on reload.
    *
    * Typically, packages under `node_modules` are externalized.
+   *
+   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.exclude`.
    */
   external?: (string | RegExp)[]
   /**
@@ -120,6 +123,8 @@ interface DepsOptions {
    * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
    *
    * If `true`, every dependency will be inlined
+   *
+   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.include`.
    */
   inline?: (string | RegExp)[] | true
 
@@ -136,6 +141,9 @@ interface DepsOptions {
    * cause some misalignment if a package have different logic in ESM and CJS mode.
    *
    * @default false
+   *
+   * @deprecated Use `server.deps.fallbackCJS` instead.
+   *
    */
   fallbackCJS?: boolean
 
@@ -149,6 +157,7 @@ interface DepsOptions {
    * A list of directories relative to the config file that should be treated as module directories.
    *
    * @default ['node_modules']
+   *
    */
   moduleDirectories?: string[]
 }
@@ -188,8 +197,14 @@ export interface InlineConfig {
 
   /**
    * Handling for dependencies inlining or externalizing
+   *
    */
   deps?: DepsOptions
+
+  /**
+   * Vite-node server options
+   */
+  server?: Omit<ViteNodeServerOptions, 'transformMode'>
 
   /**
    * Base directory to scan for the test files
