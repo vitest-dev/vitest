@@ -16,18 +16,18 @@ const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m
 const SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code])?$/
 
 const stackIgnorePatterns = [
-  // 'node:internal',
-  // /\/packages\/\w+\/dist\//,
-  // /\/@vitest\/\w+\/dist\//,
-  // '/vitest/dist/',
-  // '/vitest/src/',
-  // '/vite-node/dist/',
-  // '/vite-node/src/',
-  // '/node_modules/chai/',
-  // '/node_modules/tinypool/',
-  // '/node_modules/tinyspy/',
-  // '/deps/chai.js',
-  // /__vitest_browser__/,
+  'node:internal',
+  /\/packages\/\w+\/dist\//,
+  /\/@vitest\/\w+\/dist\//,
+  '/vitest/dist/',
+  '/vitest/src/',
+  '/vite-node/dist/',
+  '/vite-node/src/',
+  '/node_modules/chai/',
+  '/node_modules/tinypool/',
+  '/node_modules/tinyspy/',
+  '/deps/chai.js',
+  /__vitest_browser__/,
 ]
 
 function extractLocation(urlLike: string) {

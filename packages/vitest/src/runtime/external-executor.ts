@@ -7,6 +7,8 @@ import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/contants'
+import { getColors } from '@vitest/utils'
 
 // need to copy paste types for vm
 // because they require latest @types/node which we don't bundle
@@ -30,28 +32,28 @@ declare class VMModule {
 }
 interface SyntheticModuleOptions {
   /**
-     * String used in stack traces.
-     * @default 'vm:module(i)' where i is a context-specific ascending index.
-     */
+   * String used in stack traces.
+   * @default 'vm:module(i)' where i is a context-specific ascending index.
+   */
   identifier?: string | undefined
   /**
-     * The contextified object as returned by the `vm.createContext()` method, to compile and evaluate this module in.
-     */
+   * The contextified object as returned by the `vm.createContext()` method, to compile and evaluate this module in.
+   */
   context?: vm.Context | undefined
 }
 declare class VMSyntheticModule extends VMModule {
   /**
-     * Creates a new `SyntheticModule` instance.
-     * @param exportNames Array of names that will be exported from the module.
-     * @param evaluateCallback Called when the module is evaluated.
-     */
+   * Creates a new `SyntheticModule` instance.
+   * @param exportNames Array of names that will be exported from the module.
+   * @param evaluateCallback Called when the module is evaluated.
+   */
   constructor(exportNames: string[], evaluateCallback: (this: VMSyntheticModule) => void, options?: SyntheticModuleOptions)
   /**
-     * This method is used after the module is linked to set the values of exports.
-     * If it is called before the module is linked, an `ERR_VM_MODULE_STATUS` error will be thrown.
-     * @param name
-     * @param value
-     */
+   * This method is used after the module is linked to set the values of exports.
+   * If it is called before the module is linked, an `ERR_VM_MODULE_STATUS` error will be thrown.
+   * @param name
+   * @param value
+   */
   setExport(name: string, value: any): void
 }
 
@@ -301,7 +303,7 @@ export class ExternalModulesExecutor {
     return null
   }
 
-  private async wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
+  private wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
     // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
     const moduleKeys = Object.keys(exports).filter(key => key !== 'default')
     const m: any = new SyntheticModule(
@@ -396,6 +398,50 @@ export class ExternalModulesExecutor {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
+    const [urlPath] = fileUrl.split('?')
+    if (CSS_LANGS_RE.test(urlPath) || KNOWN_ASSET_RE.test(urlPath)) {
+      const path = normalize(urlPath)
+      let name = path.split('/node_modules/').pop() || ''
+      if (name?.startsWith('@'))
+        name = name.split('/').slice(0, 2).join('/')
+      else
+        name = name.split('/')[0]
+      const ext = extname(path)
+      let error = `[vitest] Cannot import ${fileUrl}. At the moment, importing ${ext} files inside external dependencies is not allowed. `
+      if (name) {
+        const c = getColors()
+        error += 'As a temporary workaround you can try to inline the package by updating your config:'
++ `\n\n${
+c.gray(c.dim('// vitest.config.js'))
+}\n${
+c.green(`export default {
+  test: {
+    deps: {
+      optimizer: {
+        web: {
+          include: [
+            ${c.yellow(c.bold(`"${name}"`))}
+          ]
+        }
+      }
+    }
+  }
+}\n`)}`
+      }
+      throw new this.primitives.Error(error)
+    }
+    // TODO: should not be allowed in strict mode, implement in #2854
+    if (fileUrl.endsWith('.json')) {
+      const m = new SyntheticModule(
+        ['default'],
+        () => {
+          const result = JSON.parse(code)
+          m.setExport('default', result)
+        },
+      )
+      this.moduleCache.set(fileUrl, m)
+      return m
+    }
     const m = new SourceTextModule(
       code,
       {
@@ -536,12 +582,12 @@ export class ExternalModulesExecutor {
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
       const exports = this.requireCoreModule(identifier)
-      return await this.wrapSynteticModule(identifier, exports)
+      return this.wrapSynteticModule(identifier, exports)
     }
 
     const isFileUrl = identifier.startsWith('file://')
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
-    const pathUrl = isFileUrl ? fileURLToPath(identifier) : identifier
+    const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
 
     // TODO: support wasm in the future
     // if (extension === '.wasm') {
@@ -554,7 +600,7 @@ export class ExternalModulesExecutor {
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.loadCommonJSModule(module, pathUrl)
-      return await this.wrapSynteticModule(fileUrl, exports)
+      return this.wrapSynteticModule(fileUrl, exports)
     }
 
     if (extension === '.mjs')
@@ -567,7 +613,7 @@ export class ExternalModulesExecutor {
 
     const module = this.createCommonJSNodeModule(pathUrl)
     const exports = this.loadCommonJSModule(module, pathUrl)
-    return await this.wrapSynteticModule(fileUrl, exports)
+    return this.wrapSynteticModule(fileUrl, exports)
   }
 
   async import(identifier: string) {
