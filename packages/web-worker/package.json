@@ -41,7 +41,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "vitest": ">=0.33.0"
+    "vitest": ">=0.34.0"
   },
   "dependencies": {
     "debug": "^4.3.4"
