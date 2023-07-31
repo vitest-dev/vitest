@@ -1144,8 +1144,6 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
  Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
- These glob patterns are applied to _test files_, not source files (all source files that are imported during the test run will use this transform mode). If you want to change transform mode of a specific file, use [`server.transformMode`](#server-transformmode).
-
  #### testTransformMode.ssr
 
  - **Type:** `string[]`
