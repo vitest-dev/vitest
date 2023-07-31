@@ -7,7 +7,7 @@ import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
-import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/contants'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { getColors } from '@vitest/utils'
 
 // need to copy paste types for vm
