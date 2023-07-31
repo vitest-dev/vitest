@@ -90,6 +90,9 @@ const _require = createRequire(import.meta.url)
 
 const nativeResolve = import.meta.resolve!
 
+const dataURIRegex
+  = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
+
 interface ExternalModulesExecutorOptions {
   context: vm.Context
   packageCache: Map<string, any>
@@ -99,15 +102,21 @@ interface ExternalModulesExecutorOptions {
 export class ExternalModulesExecutor {
   private requireCache: Record<string, NodeModule> = Object.create(null)
   private builtinCache: Record<string, NodeModule> = Object.create(null)
-  private moduleCache = new Map<string, VMModule>()
+  private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
   private extensions: Record<string, (m: NodeModule, filename: string) => unknown> = Object.create(null)
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
   private context: vm.Context
 
   private fsCache = new Map<string, string>()
+  private fsBufferCache = new Map<string, Buffer>()
 
   private Module: typeof _Module
+  private primitives: {
+    Object: typeof Object
+    Array: typeof Array
+    Error: typeof Error
+  }
 
   constructor(private options: ExternalModulesExecutorOptions) {
     this.context = options.context
@@ -117,6 +126,7 @@ export class ExternalModulesExecutor {
       Array: typeof Array
       Error: typeof Error
     }
+    this.primitives = primitives
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const executor = this
@@ -252,7 +262,16 @@ export class ExternalModulesExecutor {
     return source
   }
 
-  private async findNearestPackageData(basedir: string) {
+  private readBuffer(path: string) {
+    const cached = this.fsBufferCache.get(path)
+    if (cached)
+      return cached
+    const buffer = readFileSync(path)
+    this.fsBufferCache.set(path, buffer)
+    return buffer
+  }
+
+  private findNearestPackageData(basedir: string) {
     const originalBasedir = basedir
     const packageCache = this.options.packageCache
     while (basedir) {
@@ -304,7 +323,9 @@ export class ExternalModulesExecutor {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
-        m.link((identifier, referencer) => this.resolveModule(identifier, referencer.identifier)),
+        m.link((identifier, referencer) =>
+          this.resolveModule(identifier, referencer.identifier),
+        ),
       )
     }
 
@@ -408,12 +429,109 @@ export class ExternalModulesExecutor {
     return moduleExports
   }
 
-  private getIdentifierCode(code: string) {
-    if (code.startsWith('data:text/javascript'))
-      return code.match(/data:text\/javascript;.*,(.*)/)?.[1]
+  private async loadWebAssemblyModule(source: Buffer, identifier: string) {
+    const cached = this.moduleCache.get(identifier)
+    if (cached)
+      return cached
+
+    const wasmModule = await WebAssembly.compile(source)
+
+    const exports = WebAssembly.Module.exports(wasmModule)
+    const imports = WebAssembly.Module.imports(wasmModule)
+
+    const moduleLookup: Record<string, VMModule> = {}
+    for (const { module } of imports) {
+      if (moduleLookup[module] === undefined) {
+        const resolvedModule = await this.resolveModule(
+          module,
+          identifier,
+        )
+
+        moduleLookup[module] = await this.evaluateModule(resolvedModule)
+      }
+    }
+
+    const syntheticModule = new SyntheticModule(
+      exports.map(({ name }) => name),
+      () => {
+        const importsObject: WebAssembly.Imports = {}
+        for (const { module, name } of imports) {
+          if (!importsObject[module])
+            importsObject[module] = {}
+
+          importsObject[module][name] = moduleLookup[module].namespace[name]
+        }
+        const wasmInstance = new WebAssembly.Instance(
+          wasmModule,
+          importsObject,
+        )
+        for (const { name } of exports)
+          syntheticModule.setExport(name, wasmInstance.exports[name])
+      },
+      { context: this.context, identifier },
+    )
+
+    return syntheticModule
+  }
+
+  private async createDataModule(identifier: string): Promise<VMModule> {
+    const cached = this.moduleCache.get(identifier)
+    if (cached)
+      return cached
+
+    const Error = this.primitives.Error
+    const match = identifier.match(dataURIRegex)
+
+    if (!match || !match.groups)
+      throw new Error('Invalid data URI')
+
+    const mime = match.groups.mime
+    const encoding = match.groups.encoding
+
+    if (mime === 'application/wasm') {
+      if (!encoding)
+        throw new Error('Missing data URI encoding')
+
+      if (encoding !== 'base64')
+        throw new Error(`Invalid data URI encoding: ${encoding}`)
+
+      const module = await this.loadWebAssemblyModule(
+        Buffer.from(match.groups.code, 'base64'),
+        identifier,
+      )
+      this.moduleCache.set(identifier, module)
+      return module
+    }
+
+    let code = match.groups.code
+    if (!encoding || encoding === 'charset=utf-8')
+      code = decodeURIComponent(code)
+
+    else if (encoding === 'base64')
+      code = Buffer.from(code, 'base64').toString()
+    else
+      throw new Error(`Invalid data URI encoding: ${encoding}`)
+
+    if (mime === 'application/json') {
+      const module = new SyntheticModule(
+        ['default'],
+        () => {
+          const obj = JSON.parse(code)
+          module.setExport('default', obj)
+        },
+        { context: this.context, identifier },
+      )
+      this.moduleCache.set(identifier, module)
+      return module
+    }
+
+    return this.createEsmModule(identifier, code)
   }
 
   private async createModule(identifier: string): Promise<VMModule> {
+    if (identifier.startsWith('data:'))
+      return this.createDataModule(identifier)
+
     const extension = extname(identifier)
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
@@ -425,25 +543,31 @@ export class ExternalModulesExecutor {
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
     const pathUrl = isFileUrl ? fileURLToPath(identifier) : identifier
 
+    // TODO: support wasm in the future
+    // if (extension === '.wasm') {
+    //   const source = this.readBuffer(pathUrl)
+    //   const wasm = this.loadWebAssemblyModule(source, fileUrl)
+    //   this.moduleCache.set(fileUrl, wasm)
+    //   return wasm
+    // }
+
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.loadCommonJSModule(module, pathUrl)
-      return this.wrapSynteticModule(fileUrl, exports)
+      return await this.wrapSynteticModule(fileUrl, exports)
     }
 
-    const inlineCode = this.getIdentifierCode(identifier)
+    if (extension === '.mjs')
+      return await this.createEsmModule(fileUrl, this.readFile(pathUrl))
 
-    if (inlineCode || extension === '.mjs')
-      return await this.createEsmModule(fileUrl, inlineCode || this.readFile(pathUrl))
-
-    const pkgData = await this.findNearestPackageData(normalize(pathUrl))
+    const pkgData = this.findNearestPackageData(normalize(pathUrl))
 
     if (pkgData.type === 'module')
       return await this.createEsmModule(fileUrl, this.readFile(pathUrl))
 
     const module = this.createCommonJSNodeModule(pathUrl)
     const exports = this.loadCommonJSModule(module, pathUrl)
-    return this.wrapSynteticModule(fileUrl, exports)
+    return await this.wrapSynteticModule(fileUrl, exports)
   }
 
   async import(identifier: string) {
