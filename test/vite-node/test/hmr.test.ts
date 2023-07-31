@@ -3,7 +3,7 @@ import { resolve } from 'pathe'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
 test('hmr.accept works correctly', async () => {
-  const scriptFile = resolve(__dirname, '../src/script.js')
+  const scriptFile = resolve(__dirname, '../src/hmr-script.js')
 
   const viteNode = await runViteNodeCli('--watch', scriptFile)
 
