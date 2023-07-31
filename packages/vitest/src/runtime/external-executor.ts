@@ -5,7 +5,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
 import { basename, extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 
@@ -105,6 +104,8 @@ export class ExternalModulesExecutor {
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
   private context: vm.Context
+
+  private fsCache = new Map<string, string>()
 
   private Module: typeof _Module
 
@@ -219,27 +220,36 @@ export class ExternalModulesExecutor {
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
-    const content = readFileSync(filename, 'utf-8')
+    const content = this.readFile(filename)
     ;(m as PrivateNodeModule)._compile(content, filename)
   }
 
   private requireJson = (m: NodeModule, filename: string) => {
-    const code = readFileSync(filename, 'utf-8')
+    const code = this.readFile(filename)
     m.exports = JSON.parse(code)
   }
 
   public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
-    const module = await this.resolveModule(specifier, referencer)
+    const module = await this.resolveModule(specifier, referencer.identifier)
     return this.evaluateModule(module)
   }
 
-  private resolveModule = async (specifier: string, referencer: VMModule) => {
-    const identifier = await this.resolveAsync(specifier, referencer.identifier)
+  private resolveModule = async (specifier: string, referencer: string) => {
+    const identifier = await this.resolveAsync(specifier, referencer)
     return await this.createModule(identifier)
   }
 
   private async resolveAsync(specifier: string, parent: string) {
     return nativeResolve(specifier, parent)
+  }
+
+  private readFile(path: string) {
+    const cached = this.fsCache.get(path)
+    if (cached)
+      return cached
+    const source = readFileSync(path, 'utf-8')
+    this.fsCache.set(path, source)
+    return source
   }
 
   private async findNearestPackageData(basedir: string) {
@@ -253,7 +263,7 @@ export class ExternalModulesExecutor {
       const pkgPath = join(basedir, 'package.json')
       try {
         if (statSync(pkgPath, { throwIfNoEntry: false })?.isFile()) {
-          const pkgData = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+          const pkgData = JSON.parse(this.readFile(pkgPath))
 
           if (packageCache)
             setCacheData(packageCache, pkgData, basedir, originalBasedir)
@@ -272,18 +282,15 @@ export class ExternalModulesExecutor {
     return null
   }
 
-  private async wrapSynteticModule(identifier: string, format: 'esm' | 'builtin' | 'cjs', exports: Record<string, unknown>) {
-    // TODO: technically module should be parsed to find static exports, implement for #2854
-    const moduleKeys = Object.keys(exports)
-    if (format !== 'esm' && !moduleKeys.includes('default'))
-      moduleKeys.push('default')
+  private async wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
+    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
+    const moduleKeys = Object.keys(exports).filter(key => key !== 'default')
     const m: any = new SyntheticModule(
-      moduleKeys,
+      [...moduleKeys, 'default'],
       () => {
         for (const key of moduleKeys)
           m.setExport(key, exports[key])
-        if (format !== 'esm')
-          m.setExport('default', exports)
+        m.setExport('default', exports)
       },
       {
         context: this.context,
@@ -297,7 +304,7 @@ export class ExternalModulesExecutor {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
-        m.link(this.resolveModule),
+        m.link((identifier, referencer) => this.resolveModule(identifier, referencer.identifier)),
       )
     }
 
@@ -411,7 +418,7 @@ export class ExternalModulesExecutor {
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
       const exports = this.requireCoreModule(identifier)
-      return await this.wrapSynteticModule(identifier, 'builtin', exports)
+      return await this.wrapSynteticModule(identifier, exports)
     }
 
     const isFileUrl = identifier.startsWith('file://')
@@ -421,22 +428,22 @@ export class ExternalModulesExecutor {
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.loadCommonJSModule(module, pathUrl)
-      return this.wrapSynteticModule(fileUrl, 'cjs', exports)
+      return this.wrapSynteticModule(identifier, exports)
     }
 
     const inlineCode = this.getIdentifierCode(identifier)
 
     if (inlineCode || extension === '.mjs')
-      return await this.createEsmModule(fileUrl, inlineCode || await readFile(pathUrl, 'utf8'))
+      return await this.createEsmModule(fileUrl, inlineCode || this.readFile(pathUrl))
 
     const pkgData = await this.findNearestPackageData(normalize(pathUrl))
 
     if (pkgData.type === 'module')
-      return await this.createEsmModule(fileUrl, await readFile(pathUrl, 'utf8'))
+      return await this.createEsmModule(fileUrl, this.readFile(pathUrl))
 
     const module = this.createCommonJSNodeModule(pathUrl)
     const exports = this.loadCommonJSModule(module, pathUrl)
-    return this.wrapSynteticModule(fileUrl, 'cjs', exports)
+    return this.wrapSynteticModule(identifier, exports)
   }
 
   async import(identifier: string) {
