@@ -142,7 +142,7 @@ export class ExternalModulesExecutor {
       }
 
       _compile(code: string, filename: string) {
-        const cjsModule = _Module.wrap(code)
+        const cjsModule = Module.wrap(code)
         const script = new vm.Script(cjsModule, {
           filename,
           importModuleDynamically: executor.importModuleDynamically,
@@ -167,8 +167,16 @@ export class ExternalModulesExecutor {
         return require(request)
       }
 
+      static wrap = (script: string) => {
+        return Module.wrapper[0] + script + Module.wrapper[1]
+      }
+
+      static wrapper = [
+        '(function (exports, require, module, __filename, __dirname) { ',
+        '\n});',
+      ]
+
       static builtinModules = _Module.builtinModules
-      static wrap = _Module.wrap
       static findSourceMap = _Module.findSourceMap
       static SourceMap = _Module.SourceMap
       static syncBuiltinESMExports = _Module.syncBuiltinESMExports
