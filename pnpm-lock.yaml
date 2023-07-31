@@ -1438,7 +1438,7 @@ importers:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
       vitest:
-        specifier: '>=0.33.0'
+        specifier: '>=0.34.0'
         version: link:../vitest
     devDependencies:
       '@types/debug':
