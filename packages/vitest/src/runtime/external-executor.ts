@@ -505,7 +505,7 @@ c.green(`export default {
           if (!importsObject[module])
             importsObject[module] = {}
 
-          importsObject[module][name] = moduleLookup[module].namespace[name]
+          importsObject[module][name] = (moduleLookup[module].namespace as any)[name]
         }
         const wasmInstance = new WebAssembly.Instance(
           wasmModule,

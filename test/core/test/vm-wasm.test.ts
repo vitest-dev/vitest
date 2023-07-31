@@ -57,6 +57,7 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
 test('supports wasm files that import js resources (wasm-bindgen)', async () => {
   globalThis.alert = vi.fn()
 
+  // @ts-expect-error not typed
   const { greet } = await import('../src/wasm-bindgen/index.js')
   greet('World')
 

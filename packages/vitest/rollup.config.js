@@ -63,6 +63,7 @@ const external = [
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
+  'vite-node/constants',
   'vite-node/utils',
   '@vitest/utils/diff',
   '@vitest/utils/error',
