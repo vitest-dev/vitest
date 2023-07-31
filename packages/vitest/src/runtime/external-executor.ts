@@ -107,12 +107,15 @@ export class ExternalModulesExecutor {
   private context: vm.Context
 
   private Module: typeof _Module
-  private primitives: {
-    Object: typeof Object
-  }
 
   constructor(private options: ExternalModulesExecutorOptions) {
     this.context = options.context
+
+    const primitives = vm.runInContext('({ Object, Array, Error })', this.context) as {
+      Object: typeof Object
+      Array: typeof Array
+      Error: typeof Error
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const executor = this
@@ -131,7 +134,7 @@ export class ExternalModulesExecutor {
       paths: string[] = []
 
       constructor(id: string, parent?: Module) {
-        this.exports = executor.primitives.Object.create(Object.prototype)
+        this.exports = primitives.Object.create(Object.prototype)
         this.require = Module.createRequire(id)
         // in our case the path should always be resolved already
         this.path = dirname(id)
@@ -171,10 +174,10 @@ export class ExternalModulesExecutor {
         return Module.wrapper[0] + script + Module.wrapper[1]
       }
 
-      static wrapper = [
+      static wrapper = new primitives.Array(
         '(function (exports, require, module, __filename, __dirname) { ',
         '\n});',
-      ]
+      )
 
       static builtinModules = _Module.builtinModules
       static findSourceMap = _Module.findSourceMap
@@ -189,7 +192,7 @@ export class ExternalModulesExecutor {
       }
 
       static runMain = () => {
-        throw new Error('[vitest] "runMain" is not implemented.')
+        throw new primitives.Error('[vitest] "runMain" is not implemented.')
       }
 
       // @ts-expect-error not typed
@@ -213,8 +216,6 @@ export class ExternalModulesExecutor {
 
     this.extensions['.js'] = this.requireJs
     this.extensions['.json'] = this.requireJson
-
-    this.primitives = vm.runInContext('({ Object })', this.context)
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
@@ -310,8 +311,8 @@ export class ExternalModulesExecutor {
 
   private findLongestRegisteredExtension(filename: string) {
     const name = basename(filename)
-    let currentExtension
-    let index
+    let currentExtension: string
+    let index: number
     let startIndex = 0
     // eslint-disable-next-line no-cond-assign
     while ((index = name.indexOf('.', startIndex)) !== -1) {
