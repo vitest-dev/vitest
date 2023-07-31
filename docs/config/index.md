@@ -103,7 +103,7 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 ### server
 
-- **Type:** `{ sourcemap?, transformMode?, ... }`
+- **Type:** `{ sourcemap?, deps?, ... }`
 - **Version:** Since Vitest 0.34.0
 
 Vite-Node server options.
