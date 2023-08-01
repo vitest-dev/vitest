@@ -66,6 +66,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
+    maxMemoryLimitBeforeRecycle: ctx.config.experimentalVmWorkerMemoryLimit || undefined,
   }
 
   if (ctx.config.singleThread) {
