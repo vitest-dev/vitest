@@ -70,9 +70,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             legalComments: 'inline',
           },
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
             alias: testConfig.alias,
             conditions: ['node'],
             // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
