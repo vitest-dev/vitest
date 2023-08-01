@@ -77,7 +77,7 @@ interface SequenceOptions {
 }
 
 export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
-  enabled: boolean
+  enabled?: boolean
 }
 
 export interface TransformModePatterns {
@@ -102,7 +102,7 @@ interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: {
+  optimizer?: {
     web?: DepsOptimizationOptions
     ssr?: DepsOptimizationOptions
   }

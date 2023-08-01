@@ -109,8 +109,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           }
         }
 
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
+        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
+        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
 
         config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
         config.optimizeDeps = webOptimizer.optimizeDeps
