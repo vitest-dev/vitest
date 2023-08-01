@@ -21,8 +21,8 @@ export interface RuntimeRPC {
   onCollected: (files: File[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
-  onCancel(reason: CancelReason): void
-  getCountOfFailedTests(): number
+  onCancel: (reason: CancelReason) => void
+  getCountOfFailedTests: () => number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
@@ -39,8 +39,7 @@ export interface ContextTestEnvironment {
   options: EnvironmentOptions | null
 }
 
-export interface ResolvedTestEnvironment extends ContextTestEnvironment {
-  name: VitestEnvironment
+export interface ResolvedTestEnvironment {
   environment: Environment
   options: EnvironmentOptions | null
 }

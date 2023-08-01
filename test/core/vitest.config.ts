@@ -43,7 +43,7 @@ export default defineConfig({
   },
   test: {
     name: 'core',
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: ['**/fixtures/**', '**/vm-wasm.test.ts', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [
@@ -57,6 +57,9 @@ export default defineConfig({
     env: {
       CUSTOM_ENV: 'foo',
     },
+    poolMatchGlobs: [
+      ['**/vm-wasm.test.ts', 'experimentalVmThreads'],
+    ],
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot'))
         return path + extension
@@ -70,7 +73,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        external: ['tinyspy', /src\/external/, /esm\/esm/],
+        external: ['tinyspy', /src\/external/, /esm\/esm/, /\.wasm$/],
         inline: ['inline-lib'],
       },
     },

@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "latest",
-    "@testing-library/svelte": "latest",
+    "@testing-library/svelte": "^4.0.3",
     "@vitest/ui": "latest",
     "jsdom": "latest",
     "svelte": "latest",

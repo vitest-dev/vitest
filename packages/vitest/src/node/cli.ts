@@ -23,6 +23,8 @@ cli
   .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'Enabled threads (default: true)')
   .option('--single-thread', 'Run tests inside a single thread, requires --threads (default: false)')
+  .option('--experimental-vm-threads', 'Run tests in a worker pool using VM isolation (default: false)')
+  .option('--experimental-vm-worker-memory-limit', 'Set the maximum allowed memory for a worker. When reached, a new worker will be created instead')
   .option('--silent', 'Silent console output from tests')
   .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')

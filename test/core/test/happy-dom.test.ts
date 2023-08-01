@@ -110,6 +110,9 @@ it('globals are the same', () => {
   expect(window.Blob).toBe(globalThis.Blob)
   expect(window.globalThis.Blob).toBe(globalThis.Blob)
   expect(Blob).toBe(globalThis.Blob)
+})
+
+it.skipIf(import.meta.env.VITEST_VM_POOL)('default view references global object', () => {
   expect(document.defaultView).toBe(window)
   expect(document.defaultView).toBe(globalThis)
   const el = document.createElement('div')

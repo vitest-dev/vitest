@@ -1,5 +1,7 @@
+import { pathToFileURL } from 'node:url'
+import { normalize, resolve } from 'pathe'
+import { resolveModule } from 'local-pkg'
 import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
-import type { VitestExecutor } from '../../node'
 import type { Environment } from '../../types'
 import node from './node'
 import jsdom from './jsdom'
@@ -33,16 +35,25 @@ export function getEnvPackageName(env: VitestEnvironment) {
   return `vitest-environment-${env}`
 }
 
-export async function loadEnvironment(name: VitestEnvironment, executor: VitestExecutor): Promise<Environment> {
+export async function loadEnvironment(name: VitestEnvironment, root: string): Promise<Environment> {
   if (isBuiltinEnvironment(name))
     return environments[name]
-  const packageId = (name[0] === '.' || name[0] === '/') ? name : `vitest-environment-${name}`
-  const pkg = await executor.executeId(packageId)
-  if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
-    throw new Error(
+  const packageId = name[0] === '.' || name[0] === '/'
+    ? resolve(root, name)
+    : resolveModule(`vitest-environment-${name}`, { paths: [root] }) ?? resolve(root, name)
+  const pkg = await import(pathToFileURL(normalize(packageId)).href)
+  if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
+    throw new TypeError(
       `Environment "${name}" is not a valid environment. `
-    + `Path "${packageId}" should export default object with a "setup" method.`,
+    + `Path "${packageId}" should export default object with a "setup" or/and "setupVM" method.`,
     )
   }
-  return pkg.default
+  const environment = pkg.default
+  if (environment.transformMode !== 'web' && environment.transformMode !== 'ssr') {
+    throw new TypeError(
+      `Environment "${name}" is not a valid environment. `
+    + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
+    )
+  }
+  return environment
 }

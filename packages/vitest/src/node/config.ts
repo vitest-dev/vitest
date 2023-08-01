@@ -1,12 +1,13 @@
+import { totalmem } from 'node:os'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
+import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -205,6 +206,11 @@ export function resolveConfig(
     // resolved inside the worker
     snapshotEnvironment: null as any,
   }
+
+  resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+    getWorkerMemoryLimit(resolved),
+    totalmem(),
+  )
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath

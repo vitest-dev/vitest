@@ -144,7 +144,11 @@ Handling for dependencies resolution.
 - **Type:** `(string | RegExp)[]`
 - **Default:** `[/\/node_modules\//]`
 
-Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. All packages under `node_modules` are externalized.
+Externalize means that Vite will bypass the package to the native Node. Externalized dependencies will not be applied to Vite's transformers and resolvers, so they do not support HMR on reload. By default, all packages inside `node_modules` are externalized.
+
+These options support package names as they are written in `node_modules` or specified inside [`deps.moduleDirectories`](#deps-moduledirectories). For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`. Basically, Vitest always checks the file path, not the actual package name.
+
+If regexp is used, Vitest calls it on the _file path_, not the package name.
 
 #### server.deps.inline
 
@@ -421,6 +425,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
+  transformMode: 'ssr',
   setup() {
     // custom setup
     return {
@@ -468,7 +473,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'browser' | 'threads' | 'child_process'][]`
+- **Type:** `[string, 'threads' | 'child_process' | 'experimentalVmThreads'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -541,6 +546,69 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
+
+### experimentalVmThreads
+
+- **Type:** `boolean`
+- **CLI:** `--experimentalVmThreads`, `--experimental-vm-threads`
+- **Version:** Since Vitest 0.34.0
+
+Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a worker pool.
+
+This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`experimentalVmWorkerMemoryLimit`](#experimentalvmworkermemorylimit) value.
+
+::: warning
+Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
+
+- The globals within native modules, such as (`fs`, `path`, etc), differ from the globals present in your test environment. As a result, any error thrown by these native modules will reference a different Error constructor compared to the one used in your code:
+
+```ts
+try {
+  fs.writeFileSync('/doesnt exist')
+}
+catch (err) {
+  console.log(err instanceof Error) // false
+}
+```
+
+- Importing ES modules caches them indefinitely which introduces memory leaks if you have a lot of contexts (test files). There is no API in Node.js that clears that cache.
+- Accessing globals [takes longer](https://github.com/nodejs/node/issues/31658) in a sandbox environment.
+
+Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
+:::
+
+### experimentalVmWorkerMemoryLimit
+
+- **Type:** `string | number`
+- **CLI:** `--experimentalVmWorkerMemoryLimit`, `--experimental-vm-worker-memory-limit`
+- **Default:** `1 / CPU Cores`
+- **Version:** Since Vitest 0.34.0
+
+Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default.
+
+This option only affects workers that run tests in [VM context](#experimentalvmthreads).
+
+::: tip
+The implementation is based on Jest's [`workerIdleMemoryLimit`](https://jestjs.io/docs/configuration#workeridlememorylimit-numberstring).
+
+The limit can be specified in a number of different ways and whatever the result is `Math.floor` is used to turn it into an integer value:
+
+- `<= 1` - The value is assumed to be a percentage of system memory. So 0.5 sets the memory limit of the worker to half of the total system memory
+- `\> 1` - Assumed to be a fixed byte value. Because of the previous rule if you wanted a value of 1 byte (I don't know why) you could use 1.1.
+- With units
+  - `50%` - As above, a percentage of total system memory
+  - `100KB`, `65MB`, etc - With units to denote a fixed memory limit.
+    - `K` / `KB` - Kilobytes (x1000)
+    - `KiB` - Kibibytes (x1024)
+    - `M` / `MB` - Megabytes
+    - `MiB` - Mebibytes
+    - `G` / `GB` - Gigabytes
+    - `GiB` - Gibibytes
+:::
+
+::: warning
+Percentage based memory limit [does not work on Linux CircleCI](https://github.com/jestjs/jest/issues/11956#issuecomment-1212925677) workers due to incorrect system memory being reported.
+:::
 
 ### threads
 
@@ -707,6 +775,8 @@ Make sure that your files are not excluded by `watchExclude`.
 - **CLI:** `--isolate`, `--isolate=false`
 
 Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
+
+This options has no effect on [`experimentalVmThreads`](#experimentalvmthreads).
 
 ### coverage<NonProjectOption />
 

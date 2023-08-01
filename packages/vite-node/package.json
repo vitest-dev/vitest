@@ -46,6 +46,11 @@
       "require": "./dist/source-map.cjs",
       "import": "./dist/source-map.mjs"
     },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "require": "./dist/constants.cjs",
+      "import": "./dist/constants.mjs"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.mjs",

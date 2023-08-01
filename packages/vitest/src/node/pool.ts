@@ -7,6 +7,7 @@ import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
+import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
@@ -30,11 +31,14 @@ export function createPool(ctx: Vitest): ProcessPool {
     child_process: null,
     threads: null,
     browser: null,
+    experimentalVmThreads: null,
   }
 
-  function getDefaultPoolName(project: WorkspaceProject) {
+  function getDefaultPoolName(project: WorkspaceProject): VitestPool {
     if (project.config.browser.enabled)
       return 'browser'
+    if (project.config.experimentalVmThreads)
+      return 'experimentalVmThreads'
     if (project.config.threads)
       return 'threads'
     return 'child_process'
@@ -67,6 +71,7 @@ export function createPool(ctx: Vitest): ProcessPool {
             suppressLoaderWarningsPath,
             '--experimental-loader',
             loaderPath,
+            ...conditions,
           ]
         : [
             ...execArgv,
@@ -86,10 +91,13 @@ export function createPool(ctx: Vitest): ProcessPool {
       child_process: [] as WorkspaceSpec[],
       threads: [] as WorkspaceSpec[],
       browser: [] as WorkspaceSpec[],
+      experimentalVmThreads: [] as WorkspaceSpec[],
     }
 
     for (const spec of files) {
       const pool = getPoolName(spec)
+      if (!(pool in filesByPool))
+        throw new Error(`Unknown pool name "${pool}" for ${spec[1]}. Available pools: ${Object.keys(filesByPool).join(', ')}`)
       filesByPool[pool].push(spec)
     }
 
@@ -100,6 +108,11 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
         return pools.browser.runTests(files, invalidate)
+      }
+
+      if (pool === 'experimentalVmThreads') {
+        pools.experimentalVmThreads ??= createVmThreadsPool(ctx, options)
+        return pools.experimentalVmThreads.runTests(files, invalidate)
       }
 
       if (pool === 'threads') {

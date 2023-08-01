@@ -5,7 +5,7 @@ import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
-import type { ChaiConfig } from '../integrations/chai'
+import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -19,7 +19,7 @@ export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
-export type VitestPool = 'browser' | 'threads' | 'child_process'
+export type VitestPool = 'browser' | 'threads' | 'child_process' | 'experimentalVmThreads'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
@@ -300,6 +300,21 @@ export interface InlineConfig {
    * Also definable individually per reporter by using an object instead.
    */
   outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
+
+  /**
+   * Run tests using VM context in a worker pool.
+   *
+   * This makes tests run faster, but VM module is unstable. Your tests might leak memory.
+   */
+  experimentalVmThreads?: boolean
+
+  /**
+   * Specifies the memory limit for workers before they are recycled.
+   * If you see your worker leaking memory, try to tinker this value.
+   *
+   * This only has effect on workers that run tests in VM context.
+   */
+  experimentalVmWorkerMemoryLimit?: string | number
 
   /**
    * Enable multi-threading
@@ -693,7 +708,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'experimentalVmWorkerMemoryLimit'> {
   mode: VitestRunMode
 
   base?: string
@@ -738,6 +753,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   typecheck: TypecheckConfig
   runner?: string
+
+  experimentalVmWorkerMemoryLimit?: number | null
 }
 
 export type ProjectConfig = Omit<
