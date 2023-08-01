@@ -143,13 +143,13 @@ interface DepsOptions {
    * @default false
    *
    * @deprecated Use `server.deps.fallbackCJS` instead.
-   *
    */
   fallbackCJS?: boolean
 
   /**
    * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
    * @default false
+   * @deprecated If you rely on aliases inside external packages, use `deps.optimizer.{web,ssr}.include` instead.
    */
   registerNodeLoader?: boolean
 
@@ -157,7 +157,6 @@ interface DepsOptions {
    * A list of directories relative to the config file that should be treated as module directories.
    *
    * @default ['node_modules']
-   *
    */
   moduleDirectories?: string[]
 }
