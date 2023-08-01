@@ -137,6 +137,12 @@ export function resolveConfig(
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
 
+  resolved.deps.optimizer ??= {}
+  resolved.deps.optimizer.web ??= {} as any
+  resolved.deps.optimizer.web!.enabled = true
+  resolved.deps.optimizer.ssr ??= {} as any
+  resolved.deps.optimizer.ssr!.enabled = true
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
