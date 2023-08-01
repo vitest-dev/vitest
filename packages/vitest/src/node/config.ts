@@ -184,9 +184,15 @@ export function resolveConfig(
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  // disable loader for Yarn PnP until Node implements chain loader
-  // https://github.com/nodejs/node/pull/43772
-  resolved.deps.registerNodeLoader ??= false
+  if (resolved.deps.registerNodeLoader) {
+    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+    console.warn(
+      c.yellow(
+      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
+      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
+      ),
+    )
+  }
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
