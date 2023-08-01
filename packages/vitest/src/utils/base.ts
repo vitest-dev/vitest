@@ -1,4 +1,4 @@
-import type { Arrayable, Nullable } from '../types'
+import type { Arrayable, Nullable } from '../types/general'
 
 export { notNullish, getCallLastIndex } from '@vitest/utils'
 
