@@ -1,1 +1,3 @@
 * text=auto eol=lf
+
+test/reporters/fixture/indicator-position.test.ts eol=crlf
