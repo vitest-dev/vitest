@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/preact'
 import { BrowserRouter } from 'react-router-dom'
 
