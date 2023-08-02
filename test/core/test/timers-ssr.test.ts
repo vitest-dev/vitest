@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 /* eslint-disable no-restricted-globals */
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -11,7 +13,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FakeTimers } from '../../../packages/vitest/src/integrations/mock/timers'
+import { FakeTimers } from 'vitest/src/integrations/mock/timers'
 
 class FakeDate extends Date {}
 
