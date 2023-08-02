@@ -4,7 +4,7 @@ import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
 
 test('should print correct indicator position', async () => {
-  const filename = resolve('./fixtures/indicator-position.test.ts')
+  const filename = resolve('./fixtures/indicator-position.test.js')
   const { stderr } = await runVitest({ root: './fixtures' }, [filename])
   const code = readFileSync(filename, 'utf-8')
 
@@ -13,7 +13,7 @@ test('should print correct indicator position', async () => {
   expect(stderr).toMatchInlineSnapshot(`
     "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  indicator-position.test.ts > 
+     FAIL  indicator-position.test.js > 
     AssertionError: expected 2 to be 3 // Object.is equality
 
     - Expected
@@ -22,7 +22,7 @@ test('should print correct indicator position', async () => {
     - 3
     + 2
 
-     ❯ indicator-position.test.ts:12:17
+     ❯ indicator-position.test.js:12:17
          10| 
          11| test('', async () => {
          12|   expect(1 + 1).toBe(3)
