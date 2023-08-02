@@ -15,11 +15,6 @@ import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 
-interface InitializeServerOptions {
-  server?: ViteNodeServer
-  runner?: ViteNodeRunner
-}
-
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
   extends?: string
@@ -194,13 +189,24 @@ export class WorkspaceProject {
     this.browser = await createBrowserServer(this, options)
   }
 
-  async setServer(options: UserConfig, server: ViteDevServer, params: InitializeServerOptions = {}) {
+  static async createCoreProject(ctx: Vitest, options: UserConfig) {
+    const project = new WorkspaceProject(ctx.config.root, ctx)
+    project.config = ctx.config
+    project.server = ctx.server
+    project.vitenode = ctx.vitenode
+    project.runner = ctx.runner
+
+    await project.initBrowserServer(options)
+    return project
+  }
+
+  async setServer(options: UserConfig, server: ViteDevServer) {
     this.config = resolveConfig(this.ctx.mode, options, server.config)
     this.server = server
 
-    this.vitenode = params.server ?? new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config)
     const node = this.vitenode
-    this.runner = params.runner ?? new ViteNodeRunner({
+    this.runner = new ViteNodeRunner({
       root: server.config.root,
       base: server.config.base,
       fetchModule(id: string) {

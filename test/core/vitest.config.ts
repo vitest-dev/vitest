@@ -69,7 +69,7 @@ export default defineConfig({
       seed: 101,
     },
     deps: {
-      moduleDirectories: ['node_modules', 'projects', 'packages'],
+      moduleDirectories: ['projects'],
     },
     server: {
       deps: {

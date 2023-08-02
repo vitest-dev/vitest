@@ -139,14 +139,10 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
-  private async createCoreWorkspace(options: UserConfig) {
-    const coreWorkspace = new WorkspaceProject(this.config.root, this)
-    await coreWorkspace.setServer(options, this.server, {
-      runner: this.runner,
-      server: this.vitenode,
-    })
-    this.coreWorkspace = coreWorkspace
-    return coreWorkspace
+  private async createCoreProject(options: UserConfig) {
+    const coreProject = await WorkspaceProject.createCoreProject(this, options)
+    this.coreWorkspace = coreProject
+    return coreProject
   }
 
   public getCoreWorkspaceProject(): WorkspaceProject | null {
@@ -171,7 +167,7 @@ export class Vitest {
     })
 
     if (!workspaceConfigName)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreProject(options)]
 
     const workspaceConfigPath = join(configDir, workspaceConfigName)
 
@@ -244,7 +240,7 @@ export class Vitest {
       if (
         this.server.config.configFile === workspacePath
       )
-        return this.createCoreWorkspace(options)
+        return this.createCoreProject(options)
       return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
     })
 
@@ -253,7 +249,7 @@ export class Vitest {
     })
 
     if (!projects.length)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreProject(options)]
 
     const resolvedProjects = await Promise.all(projects)
     const names = new Set<string>()
