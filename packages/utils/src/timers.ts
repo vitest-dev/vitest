@@ -1,5 +1,7 @@
 import { SAFE_TIMERS_SYMBOL } from './constants'
 
+let timersSafe = false
+
 export function getSafeTimers() {
   const {
     setTimeout: safeSetTimeout,
@@ -26,6 +28,9 @@ export function getSafeTimers() {
 }
 
 export function setSafeTimers() {
+  if (timersSafe)
+    return
+  timersSafe = true
   const {
     setTimeout: safeSetTimeout,
     setInterval: safeSetInterval,
