@@ -1,4 +1,4 @@
-// @vitest-environment jsom
+// @vitest-environment jsdom
 
 /* eslint-disable no-restricted-globals */
 
