@@ -6,9 +6,11 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, join, normalize } from 'pathe'
-import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { getCachedData, isNodeBuiltin, isPrimitive, setCacheData, toArray } from 'vite-node/utils'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { getColors } from '@vitest/utils'
+import type { WorkerGlobalState } from '../types'
+import type { ExecuteOptions } from './execute'
 
 // need to copy paste types for vm
 // because they require latest @types/node which we don't bundle
@@ -95,7 +97,7 @@ const nativeResolve = import.meta.resolve!
 const dataURIRegex
   = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
 
-interface ExternalModulesExecutorOptions {
+export interface ExternalModulesExecutorOptions extends ExecuteOptions {
   context: vm.Context
   packageCache: Map<string, any>
 }
@@ -252,7 +254,9 @@ export class ExternalModulesExecutor {
   }
 
   private async resolveAsync(specifier: string, parent: string) {
-    return nativeResolve(specifier, parent)
+    if (specifier === '/@vite/client' && this.isWeb())
+      return '/@vite/client'
+    return await nativeResolve(specifier, parent)
   }
 
   private readFile(path: string) {
@@ -273,7 +277,15 @@ export class ExternalModulesExecutor {
     return buffer
   }
 
-  private findNearestPackageData(basedir: string) {
+  private getWorkerState(): WorkerGlobalState {
+    return this.options.state
+  }
+
+  private isWeb() {
+    return this.getWorkerState().environment.transformMode === 'web'
+  }
+
+  private findNearestPackageData(basedir: string): { type?: 'module' | 'commonjs' } {
     const originalBasedir = basedir
     const packageCache = this.options.packageCache
     while (basedir) {
@@ -300,17 +312,19 @@ export class ExternalModulesExecutor {
       basedir = nextBasedir
     }
 
-    return null
+    return {}
   }
 
-  private wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
+  private wrapSynteticModule(identifier: string, exports: Record<string, unknown> | string | number | boolean | null | undefined) {
     // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
-    const moduleKeys = Object.keys(exports).filter(key => key !== 'default')
+    const moduleKeys = isPrimitive(exports) || Array.isArray(exports) || exports instanceof Promise
+      ? []
+      : Object.keys(exports as Record<string, unknown>).filter(key => key !== 'default')
     const m: any = new SyntheticModule(
       [...moduleKeys, 'default'],
       () => {
         for (const key of moduleKeys)
-          m.setExport(key, exports[key])
+          m.setExport(key, (exports as Record<string, unknown>)[key])
         m.setExport('default', exports)
       },
       {
@@ -394,54 +408,10 @@ export class ExternalModulesExecutor {
     return module.exports
   }
 
-  private async createEsmModule(fileUrl: string, code: string) {
+  private createSourceTextModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
-    const [urlPath] = fileUrl.split('?')
-    if (CSS_LANGS_RE.test(urlPath) || KNOWN_ASSET_RE.test(urlPath)) {
-      const path = normalize(urlPath)
-      let name = path.split('/node_modules/').pop() || ''
-      if (name?.startsWith('@'))
-        name = name.split('/').slice(0, 2).join('/')
-      else
-        name = name.split('/')[0]
-      const ext = extname(path)
-      let error = `[vitest] Cannot import ${fileUrl}. At the moment, importing ${ext} files inside external dependencies is not allowed. `
-      if (name) {
-        const c = getColors()
-        error += 'As a temporary workaround you can try to inline the package by updating your config:'
-+ `\n\n${
-c.gray(c.dim('// vitest.config.js'))
-}\n${
-c.green(`export default {
-  test: {
-    deps: {
-      optimizer: {
-        web: {
-          include: [
-            ${c.yellow(c.bold(`"${name}"`))}
-          ]
-        }
-      }
-    }
-  }
-}\n`)}`
-      }
-      throw new this.primitives.Error(error)
-    }
-    // TODO: should not be allowed in strict mode, implement in #2854
-    if (fileUrl.endsWith('.json')) {
-      const m = new SyntheticModule(
-        ['default'],
-        () => {
-          const result = JSON.parse(code)
-          m.setExport('default', result)
-        },
-      )
-      this.moduleCache.set(fileUrl, m)
-      return m
-    }
     const m = new SourceTextModule(
       code,
       {
@@ -458,6 +428,27 @@ c.green(`export default {
     )
     this.moduleCache.set(fileUrl, m)
     return m
+  }
+
+  private async createEsmModule(fileUrl: string, code: string) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached)
+      return cached
+    // TODO: should not be allowed in strict mode, implement in #2854
+    if (fileUrl.endsWith('.json')) {
+      const m = new SyntheticModule(
+        ['default'],
+        () => {
+          const result = JSON.parse(code)
+          m.setExport('default', result)
+        },
+        { context: this.context, identifier: fileUrl },
+      )
+      this.moduleCache.set(fileUrl, m)
+      return m
+    }
+    const webModule = await this.createWebModule(fileUrl)
+    return webModule || await this.createSourceTextModule(fileUrl, code)
   }
 
   private requireCoreModule(identifier: string) {
@@ -574,6 +565,95 @@ c.green(`export default {
     return this.createEsmModule(identifier, code)
   }
 
+  private getPackageName(modulePath: string) {
+    const path = normalize(modulePath)
+    let name = path.split('/node_modules/').pop() || ''
+    if (name?.startsWith('@'))
+      name = name.split('/').slice(0, 2).join('/')
+    else
+      name = name.split('/')[0]
+    return name
+  }
+
+  private getNoAssetError(modulePath: string, errorMessage?: string) {
+    const name = this.getPackageName(modulePath)
+    const state = this.getWorkerState()
+    const transformMode = state.environment.transformMode
+    const ext = extname(modulePath)
+    let error = `[vitest] Cannot import ${modulePath}. At the moment, importing ${ext} files inside external dependencies in "${transformMode}" mode is not allowed${errorMessage || '.'}`
+    if (name) {
+      const c = getColors()
+      error += ' As a temporary workaround you can try to inline the package by updating your config:'
++ `\n\n${
+c.gray(c.dim('// vitest.config.js'))
+}\n${
+c.green(`export default {
+test: {
+  server: {
+    deps: {
+      inline: [
+        ${c.yellow(c.bold(`"${name}"`))}
+      ]
+    }
+  }
+}
+}\n`)}`
+    }
+    return error
+  }
+
+  private async createViteModule(identifier: string): Promise<VMModule> {
+    const result = await this.options.transformModule(identifier)
+    if (!result.code)
+      throw new Error(`[vitest] Failed to load css file: ${identifier}`)
+    return this.createSourceTextModule(identifier, result.code)
+  }
+
+  private async createViteClientModule(identifier: string): Promise<VMModule> {
+    const cached = this.moduleCache.get(identifier)
+    if (cached)
+      return cached
+    const stub = this.options.requestStubs!['/@vite/client']
+    const moduleKeys = Object.keys(stub)
+    const module = new SyntheticModule(
+      moduleKeys,
+      () => {
+        moduleKeys.forEach((key) => {
+          module.setExport(key, stub[key])
+        })
+      },
+      { context: this.context, identifier },
+    )
+    this.moduleCache.set(identifier, module)
+    return module
+  }
+
+  private async createWebModule(identifier: string): Promise<VMModule | null> {
+    const cached = this.moduleCache.get(identifier)
+    if (cached)
+      return cached
+
+    const state = this.getWorkerState()
+    const [modulePath] = identifier.split('?')
+    if (!this.isWeb())
+      return null
+    const config = state.config.deps.optimizer?.web || {}
+    if (CSS_LANGS_RE.test(modulePath)) {
+      if (!config.transformCss)
+        throw this.getNoAssetError(modulePath, ' because `optimizer.web.transformCss` is set to `false`.')
+      return this.createViteModule(identifier)
+    }
+    if (KNOWN_ASSET_RE.test(modulePath)) {
+      if (!config.transformAssets)
+        throw this.getNoAssetError(modulePath, ' because `optimizer.web.transformAssets` is set to `false`.')
+      return this.createViteModule(identifier)
+    }
+    const shouldTransform = toArray(config.transformGlobPattern).some(pattern => pattern.test(modulePath))
+    if (shouldTransform)
+      return this.createViteModule(identifier)
+    return null
+  }
+
   private async createModule(identifier: string): Promise<VMModule> {
     if (identifier.startsWith('data:'))
       return this.createDataModule(identifier)
@@ -584,6 +664,9 @@ c.green(`export default {
       const exports = this.requireCoreModule(identifier)
       return this.wrapSynteticModule(identifier, exports)
     }
+
+    if (identifier === '/@vite/client' && this.isWeb())
+      return this.createViteClientModule(identifier)
 
     const isFileUrl = identifier.startsWith('file://')
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
@@ -608,7 +691,7 @@ c.green(`export default {
 
     const pkgData = this.findNearestPackageData(normalize(pathUrl))
 
-    if (pkgData.type === 'module')
+    if (pkgData?.type === 'module')
       return await this.createEsmModule(fileUrl, this.readFile(pathUrl))
 
     const module = this.createCommonJSNodeModule(pathUrl)

@@ -137,6 +137,30 @@ export class ViteNodeServer {
     return this.fetchPromiseMap.get(id)!
   }
 
+  async transformModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
+    id = normalizeModuleId(id)
+    // reuse transform for concurrent requests
+    // if (!this.fetchPromiseMap.has(id)) {
+    //   this.fetchPromiseMap.set(id,
+    //     this._fetchModule(id, transformMode)
+    //       .then((r) => {
+    //         return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+    //       })
+    //       .finally(() => {
+    //         this.fetchPromiseMap.delete(id)
+    //       }),
+    //   )
+    // }
+    if (transformMode !== 'web')
+      throw new Error('Can only transform web modules.')
+    const r = await this.server.transformRequest(id)
+
+    return {
+      code: r?.code,
+      map: r?.map as any,
+    }
+  }
+
   async transformRequest(id: string, filepath = id) {
     // reuse transform for concurrent requests
     if (!this.transformPromiseMap.has(id)) {

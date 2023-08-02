@@ -5,11 +5,13 @@ import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
+import type { FetchResult } from 'vite-node/index'
 import type { MockMap } from '../types/mocker'
 import type { ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
+import type { ExternalModulesExecutorOptions } from './external-executor'
 import { ExternalModulesExecutor } from './external-executor'
 
 const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
@@ -20,6 +22,7 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   moduleDirectories?: string[]
   context?: vm.Context
   state: WorkerGlobalState
+  transformModule(id: string): Promise<FetchResult>
 }
 
 export async function createVitestExecutor(options: ExecuteOptions) {
@@ -98,6 +101,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
+    transformModule(id) {
+      return rpc().transform(id, 'web')
+    },
     packageCache,
     moduleCache,
     mockMap,
@@ -168,10 +174,7 @@ export class VitestExecutor extends ViteNodeRunner {
       }
     }
     else {
-      this.externalModules = new ExternalModulesExecutor({
-        context: options.context,
-        packageCache: options.packageCache,
-      })
+      this.externalModules = new ExternalModulesExecutor(options as ExternalModulesExecutorOptions)
       const clientStub = vm.runInContext(
         `(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
         options.context,

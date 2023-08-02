@@ -27,6 +27,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     fetch(id, transformMode) {
       return project.vitenode.fetchModule(id, transformMode)
     },
+    transform(id, transformMode) {
+      return project.vitenode.transformModule(id, transformMode)
+    },
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)
     },
