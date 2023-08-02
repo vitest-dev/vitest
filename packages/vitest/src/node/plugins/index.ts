@@ -87,6 +87,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             open,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              // disable strict access since we are working inside Node.js,
+              // and outside of root imports are allowed here
+              strict: false,
+            },
           },
         }
 
