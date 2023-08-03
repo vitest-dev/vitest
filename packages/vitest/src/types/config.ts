@@ -109,6 +109,8 @@ interface DepsOptions {
         *
         * These module will have a default export equal to the path to the asset, if no query is specified.
         *
+        * **At the moment, this option only works with `experimentalVmThreads` pool.**
+        *
         * @default true
         */
       transformAssets?: boolean
@@ -117,6 +119,8 @@ interface DepsOptions {
         *
         * This option is affected by `css` option.
         *
+        * **At the moment, this option only works with `experimentalVmThreads` pool.**
+        *
         * @default true
         */
       transformCss?: boolean
@@ -124,6 +128,8 @@ interface DepsOptions {
         * Regexp pattern to match external files that should be transformed.
         *
         * By default, files inside `node_modules` are externalized and not transformed.
+        *
+        * **At the moment, this option only works with `experimentalVmThreads` pool.**
         *
         * @default []
         */
