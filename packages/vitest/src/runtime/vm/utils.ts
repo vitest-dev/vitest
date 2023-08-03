@@ -1,4 +1,6 @@
+import vm from 'node:vm'
 import { isPrimitive } from 'vite-node/utils'
+import type { VMSourceTextModule, VMSyntheticModule } from './types'
 
 export function interopCommonJsModule(interopDefault: boolean | undefined, mod: any) {
   if (isPrimitive(mod) || Array.isArray(mod) || mod instanceof Promise) {
@@ -31,3 +33,6 @@ export function interopCommonJsModule(interopDefault: boolean | undefined, mod: 
     defaultExport: mod,
   }
 }
+
+export const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
+export const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule

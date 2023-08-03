@@ -103,7 +103,32 @@ interface DepsOptions {
    * Enable dependency optimization. This can improve the performance of your tests.
    */
   optimizer?: {
-    web?: DepsOptimizationOptions
+    web?: DepsOptimizationOptions & {
+      /**
+        * Should Vitest process .png/.svg/.jpg/... files and resolve them like Vite does in the browser.
+        *
+        * These module will have a default export equal to the path to the asset, if no query is specified.
+        *
+        * @default true
+        */
+      transformAssets?: boolean
+      /**
+        * Should Vitest process .css/.scss/.sass/... files and resolve them like Vite does in the browser.
+        *
+        * This option is affected by `css` option.
+        *
+        * @default true
+        */
+      transformCss?: boolean
+      /**
+        * Regexp pattern to match external files that should be transformed.
+        *
+        * By default, files inside `node_modules` are externalized and not transformed.
+        *
+        * @default []
+        */
+      transformGlobPattern?: RegExp | RegExp[]
+    }
     ssr?: DepsOptimizationOptions
   }
   /**

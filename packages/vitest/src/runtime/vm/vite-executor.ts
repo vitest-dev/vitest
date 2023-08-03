@@ -1,0 +1,99 @@
+import type vm from 'node:vm'
+import { normalize } from 'pathe'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
+import { toArray } from 'vite-node/utils'
+import type { RuntimeRPC } from '../../types/rpc'
+import type { WorkerGlobalState } from '../../types'
+import type { EsmExecutor } from './esm-executor'
+import { SyntheticModule } from './utils'
+
+interface ViteExecutorOptions {
+  context: vm.Context
+  transform: RuntimeRPC['transform']
+  esmExecutor: EsmExecutor
+  viteClientModule: Record<string, unknown>
+}
+
+const CLIENT_ID = '/@vite/client'
+
+export class ViteExecutor {
+  private esm: EsmExecutor
+
+  constructor(private options: ViteExecutorOptions) {
+    this.esm = options.esmExecutor
+  }
+
+  public resolve = (identifier: string, parent: string) => {
+    if (identifier === CLIENT_ID) {
+      if (this.workerState.environment.transformMode === 'web')
+        return identifier
+      const packageName = this.getPackageName(parent)
+      throw new Error(
+        `[vitest] Vitest cannot handle /@vite/env imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
+      )
+    }
+  }
+
+  get workerState(): WorkerGlobalState {
+    return this.options.context.__vitest_worker__
+  }
+
+  private getPackageName(modulePath: string) {
+    const path = normalize(modulePath)
+    let name = path.split('/node_modules/').pop() || ''
+    if (name?.startsWith('@'))
+      name = name.split('/').slice(0, 2).join('/')
+    else
+      name = name.split('/')[0]
+    return name
+  }
+
+  public async createViteModule(fileUrl: string) {
+    if (fileUrl.includes(CLIENT_ID))
+      return this.createViteClientModule()
+    const cached = this.esm.resolveCachedModule(fileUrl)
+    if (cached)
+      return cached
+    const result = await this.options.transform(fileUrl, 'web')
+    if (!result.code)
+      throw new Error(`[vitest] Failed to transform ${fileUrl}. Does the file exists?`)
+    return this.esm.createEsModule(fileUrl, result.code)
+  }
+
+  private createViteClientModule() {
+    const identifier = CLIENT_ID
+    const cached = this.esm.resolveCachedModule(identifier)
+    if (cached)
+      return cached
+    const stub = this.options.viteClientModule
+    const moduleKeys = Object.keys(stub)
+    const module = new SyntheticModule(
+      moduleKeys,
+      () => {
+        moduleKeys.forEach((key) => {
+          module.setExport(key, stub[key])
+        })
+      },
+      { context: this.options.context, identifier },
+    )
+    this.esm.cacheModule(identifier, module)
+    return module
+  }
+
+  public canResolve = (identifier: string) => {
+    const transformMode = this.workerState.environment.transformMode
+    if (transformMode !== 'web')
+      return false
+    if (identifier === CLIENT_ID)
+      return true
+    const config = this.workerState.config.deps.optimizer?.web || {}
+    const [modulePath] = identifier.split('?')
+    if (config.transformCss && CSS_LANGS_RE.test(modulePath))
+      return true
+    if (config.transformAssets && KNOWN_ASSET_RE.test(modulePath))
+      return true
+    if (toArray(config.transformGlobPattern).some(pattern => pattern.test(modulePath)))
+      return true
+    return false
+  }
+}

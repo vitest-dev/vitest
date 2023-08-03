@@ -12,6 +12,7 @@ import { CommonjsExecutor } from './vm/commonjs-executor'
 import type { FileMap } from './vm/file-map'
 import { EsmExecutor } from './vm/esm-executor'
 import { interopCommonJsModule } from './vm/utils'
+import { ViteExecutor } from './vm/vite-executor'
 
 const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 
@@ -27,8 +28,10 @@ export interface ExternalModulesExecutorOptions extends ExecuteOptions {
 export class ExternalModulesExecutor {
   private cjs: CommonjsExecutor
   private esm: EsmExecutor
+  private vite: ViteExecutor
   private context: vm.Context
   private fs: FileMap
+  private resolvers: ((id: string, parent: string) => string | undefined)[] = []
 
   constructor(private options: ExternalModulesExecutorOptions) {
     this.context = options.context
@@ -42,6 +45,13 @@ export class ExternalModulesExecutor {
       importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
     })
+    this.vite = new ViteExecutor({
+      esmExecutor: this.esm,
+      context: this.context,
+      transform: options.transform,
+      viteClientModule: options.requestStubs!['/@vite/client'],
+    })
+    this.resolvers = [this.vite.resolve]
   }
 
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
@@ -56,6 +66,11 @@ export class ExternalModulesExecutor {
   }
 
   public async resolve(specifier: string, parent: string) {
+    for (const resolver of this.resolvers) {
+      const id = resolver(specifier, parent)
+      if (id)
+        return id
+    }
     return nativeResolve(specifier, parent)
   }
 
@@ -139,6 +154,9 @@ export class ExternalModulesExecutor {
     const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
 
+    if (this.vite.canResolve(identifier))
+      return this.vite.createViteModule(fileUrl)
+
     // TODO: support wasm in the future
     // if (extension === '.wasm') {
     //   const source = this.readBuffer(pathUrl)
@@ -153,12 +171,12 @@ export class ExternalModulesExecutor {
     }
 
     if (extension === '.mjs')
-      return await this.esm.createEsmModule(fileUrl, this.fs.readFile(pathUrl))
+      return await this.esm.createEsModule(fileUrl, this.fs.readFile(pathUrl))
 
     const pkgData = this.findNearestPackageData(normalize(pathUrl))
 
     if (pkgData.type === 'module')
-      return await this.esm.createEsmModule(fileUrl, this.fs.readFile(pathUrl))
+      return await this.esm.createEsModule(fileUrl, this.fs.readFile(pathUrl))
 
     const exports = this.cjs.require(pathUrl)
     return this.wrapCommonJsSynteticModule(fileUrl, exports)

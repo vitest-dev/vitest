@@ -1,18 +1,13 @@
 /* eslint-disable antfu/no-cjs-exports */
 
-import vm from 'node:vm'
-import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
-import { extname, normalize } from 'pathe'
-import { getColors } from '@vitest/utils'
+import type vm from 'node:vm'
 import type { ExternalModulesExecutor } from '../external-executor'
-import type { VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
+import type { VMModule } from './types'
+import { SourceTextModule, SyntheticModule } from './utils'
 
 interface EsmExecutorOptions {
   context: vm.Context
 }
-
-const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
-const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
 const dataURIRegex
   = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
@@ -45,42 +40,10 @@ export class EsmExecutor {
     return m
   }
 
-  public async createEsmModule(fileUrl: string, code: string) {
+  public async createEsModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
-    const [urlPath] = fileUrl.split('?')
-    if (CSS_LANGS_RE.test(urlPath) || KNOWN_ASSET_RE.test(urlPath)) {
-      const path = normalize(urlPath)
-      let name = path.split('/node_modules/').pop() || ''
-      if (name?.startsWith('@'))
-        name = name.split('/').slice(0, 2).join('/')
-      else
-        name = name.split('/')[0]
-      const ext = extname(path)
-      let error = `[vitest] Cannot import ${fileUrl}. At the moment, importing ${ext} files inside external dependencies is not allowed. `
-      if (name) {
-        const c = getColors()
-        error += 'As a temporary workaround you can try to inline the package by updating your config:'
-+ `\n\n${
-c.gray(c.dim('// vitest.config.js'))
-}\n${
-c.green(`export default {
-  test: {
-    deps: {
-      optimizer: {
-        web: {
-          include: [
-            ${c.yellow(c.bold(`"${name}"`))}
-          ]
-        }
-      }
-    }
-  }
-}\n`)}`
-      }
-      throw new Error(error)
-    }
     // TODO: should not be allowed in strict mode, implement in #2854
     if (fileUrl.endsWith('.json')) {
       const m = new SyntheticModule(
@@ -156,6 +119,14 @@ c.green(`export default {
     return syntheticModule
   }
 
+  public cacheModule(identifier: string, module: VMModule) {
+    this.moduleCache.set(identifier, module)
+  }
+
+  public resolveCachedModule(identifier: string) {
+    return this.moduleCache.get(identifier)
+  }
+
   public async createDataModule(identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
     if (cached)
@@ -206,6 +177,6 @@ c.green(`export default {
       return module
     }
 
-    return this.createEsmModule(identifier, code)
+    return this.createEsModule(identifier, code)
   }
 }

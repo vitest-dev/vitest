@@ -150,6 +150,20 @@ export class ViteNodeServer {
     return this.transformPromiseMap.get(id)!
   }
 
+  async transformModule(id: string, transformMode?: 'web' | 'ssr') {
+    if (transformMode !== 'web')
+      throw new Error('`transformModule` only supports `transformMode: "web"`.')
+
+    const normalizedId = normalizeModuleId(id)
+    const mod = this.server.moduleGraph.getModuleById(normalizedId)
+    const result = mod?.transformResult || await this.server.transformRequest(normalizedId)
+
+    return {
+      code: result?.code,
+      map: result?.map as any,
+    }
+  }
+
   getTransformMode(id: string) {
     const withoutQuery = id.split('?')[0]
 
