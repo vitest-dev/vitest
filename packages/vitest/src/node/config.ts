@@ -215,7 +215,7 @@ export function resolveConfig(
 
   resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
     getWorkerMemoryLimit(resolved),
-    totalmem(),
+    resolved.watch ? totalmem() / 2 : totalmem(),
   )
 
   if (options.resolveSnapshotPath)
