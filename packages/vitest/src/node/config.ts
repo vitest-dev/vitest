@@ -214,11 +214,20 @@ export function resolveConfig(
   }
 
   const memory = totalmem()
+  const limit = getWorkerMemoryLimit(resolved)
 
-  resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-    getWorkerMemoryLimit(resolved),
-    typeof memory === 'number' && resolved.watch ? memory / 2 : memory,
-  )
+  if (typeof memory === 'number') {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+      limit,
+      resolved.watch ? memory / 2 : memory,
+    )
+  }
+  else if (limit > 1) {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(limit)
+  }
+  else {
+    // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  }
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
