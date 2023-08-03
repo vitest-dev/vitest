@@ -118,13 +118,13 @@ interface VitestUtils {
   /**
    * Makes value available on global namespace.
    * Useful, if you want to have global variables available, like `IntersectionObserver`.
-   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
+   * You can return it back to original value with `vi.unstubAllGlobals`, or by enabling `unstubGlobals` config option.
    */
   stubGlobal(name: string | symbol | number, value: unknown): this
 
   /**
    * Changes the value of `import.meta.env` and `process.env`.
-   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
   stubEnv(name: string, value: string): this
 
