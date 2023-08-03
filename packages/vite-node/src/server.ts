@@ -160,7 +160,6 @@ export class ViteNodeServer {
 
     return {
       code: result?.code,
-      map: result?.map as any,
     }
   }
 
