@@ -15,6 +15,7 @@ interface ViteExecutorOptions {
 }
 
 const CLIENT_ID = '/@vite/client'
+const CLIENT_FILE = `file://${CLIENT_ID}`
 
 export class ViteExecutor {
   private esm: EsmExecutor
@@ -49,7 +50,7 @@ export class ViteExecutor {
   }
 
   public async createViteModule(fileUrl: string) {
-    if (fileUrl === `file://${CLIENT_ID}`)
+    if (fileUrl === CLIENT_FILE)
       return this.createViteClientModule()
     const cached = this.esm.resolveCachedModule(fileUrl)
     if (cached)
@@ -80,14 +81,14 @@ export class ViteExecutor {
     return module
   }
 
-  public canResolve = (identifier: string) => {
+  public canResolve = (fileUrl: string) => {
     const transformMode = this.workerState.environment.transformMode
     if (transformMode !== 'web')
       return false
-    if (identifier === CLIENT_ID)
+    if (fileUrl === CLIENT_FILE)
       return true
     const config = this.workerState.config.deps.optimizer?.web || {}
-    const [modulePath] = identifier.split('?')
+    const [modulePath] = fileUrl.split('?')
     if (config.transformCss && CSS_LANGS_RE.test(modulePath))
       return true
     if (config.transformAssets && KNOWN_ASSET_RE.test(modulePath))

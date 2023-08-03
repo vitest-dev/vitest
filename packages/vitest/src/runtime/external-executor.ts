@@ -24,6 +24,12 @@ export interface ExternalModulesExecutorOptions extends ExecuteOptions {
   packageCache: Map<string, any>
 }
 
+interface ModuleInformation {
+  type: 'data' | 'builtin' | 'vite' | 'module' | 'commonjs'
+  url: string
+  path: string
+}
+
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private cjs: CommonjsExecutor
@@ -139,47 +145,59 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  private async createModule(identifier: string): Promise<VMModule> {
+  private getModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:'))
-      return this.esm.createDataModule(identifier)
+      return { type: 'data', url: identifier, path: identifier }
 
     const extension = extname(identifier)
-
-    if (extension === '.node' || isNodeBuiltin(identifier)) {
-      const exports = this.require(identifier)
-      return this.wrapCoreSynteticModule(identifier, exports)
-    }
+    if (extension === '.node' || isNodeBuiltin(identifier))
+      return { type: 'builtin', url: identifier, path: identifier }
 
     const isFileUrl = identifier.startsWith('file://')
-    const fileUrl = isFileUrl ? identifier : pathToFileURL(identifier).toString()
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
+    const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
 
-    if (this.vite.canResolve(identifier))
-      return this.vite.createViteModule(fileUrl)
-
-    // TODO: support wasm in the future
-    // if (extension === '.wasm') {
-    //   const source = this.readBuffer(pathUrl)
-    //   const wasm = this.loadWebAssemblyModule(source, fileUrl)
-    //   this.moduleCache.set(fileUrl, wasm)
-    //   return wasm
-    // }
-
-    if (extension === '.cjs') {
-      const exports = this.require(pathUrl)
-      return this.wrapCommonJsSynteticModule(fileUrl, exports)
+    let type: 'module' | 'commonjs' | 'vite'
+    if (this.vite.canResolve(fileUrl)) {
+      type = 'vite'
+    }
+    else if (extension === '.mjs') {
+      type = 'module'
+    }
+    else if (extension === '.cjs') {
+      type = 'commonjs'
+    }
+    else {
+      const pkgData = this.findNearestPackageData(normalize(pathUrl))
+      type = pkgData.type === 'module' ? 'module' : 'commonjs'
     }
 
-    if (extension === '.mjs')
-      return await this.esm.createEsModule(fileUrl, this.fs.readFile(pathUrl))
+    return { type, path: pathUrl, url: fileUrl }
+  }
 
-    const pkgData = this.findNearestPackageData(normalize(pathUrl))
+  private async createModule(identifier: string): Promise<VMModule> {
+    const { type, url, path } = this.getModuleInformation(identifier)
 
-    if (pkgData.type === 'module')
-      return await this.esm.createEsModule(fileUrl, this.fs.readFile(pathUrl))
-
-    const exports = this.cjs.require(pathUrl)
-    return this.wrapCommonJsSynteticModule(fileUrl, exports)
+    switch (type) {
+      case 'data':
+        return this.esm.createDataModule(identifier)
+      case 'builtin': {
+        const exports = this.require(identifier)
+        return this.wrapCoreSynteticModule(identifier, exports)
+      }
+      case 'vite':
+        return await this.vite.createViteModule(url)
+      case 'module':
+        return await this.esm.createEsModule(url, this.fs.readFile(path))
+      case 'commonjs': {
+        const exports = this.require(path)
+        return this.wrapCommonJsSynteticModule(identifier, exports)
+      }
+      default: {
+        const _deadend: never = type
+        return _deadend
+      }
+    }
   }
 
   async import(identifier: string) {
