@@ -130,7 +130,7 @@ export class FakeTimers {
     }
 
     if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers) as Array<keyof FakeTimerWithContext['timers']>
+      const toFake = Object.keys(this._fakeTimers.timers).filter(name => name !== 'queueMicrotask') as Array<keyof FakeTimerWithContext['timers']>
 
       this._clock = this._fakeTimers.install({
         now: Date.now(),
