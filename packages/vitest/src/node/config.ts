@@ -215,12 +215,10 @@ export function resolveConfig(
 
   const memory = totalmem()
 
-  if (memory) {
-    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-      getWorkerMemoryLimit(resolved),
-      resolved.watch ? memory / 2 : memory,
-    )
-  }
+  resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+    getWorkerMemoryLimit(resolved),
+    typeof memory === 'number' && resolved.watch ? memory / 2 : memory,
+  )
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
