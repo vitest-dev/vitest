@@ -5,6 +5,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "jsdom": "latest",
     "vitest": "workspace:*"
   }
 }

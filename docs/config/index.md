@@ -196,12 +196,67 @@ When Vitest encounters the external library listed in `include`, it will be bund
 - Your `alias` configuration is now respected inside bundled packages
 - Code in your tests is running closer to how it's running in the browser
 
-Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs. By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#transformmode).
+Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#transformmode).
 
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
 ::: tip
 You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
+:::
+
+#### deps.optimizer.{mode}.enabled
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Enable dependency optimization.
+
+#### deps.web
+
+- **Type:** `{ transformAssets?, ... }`
+- **Version:** Since Vite 0.34.2
+
+Options that are applied to external files when transform mode is set to `web`. By default, `jsdom` and `happy-dom` use `web` mode, while `node` and `edge` environments use `ssr` transform mode, so these options will have no affect on files inside those environments.
+
+Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](#server-deps-external).
+
+#### deps.web.transformAssets
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.
+
+hese module will have a default export equal to the path to the asset, if no query is specified.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
+:::
+
+#### deps.web.transformCss
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
+
+If CSS files are disabled with [`css`](#css) options, this option will just silence `UNKNOWN_EXTENSION` errors.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
+:::
+
+#### deps.web.transformGlobPattern
+
+- **Type:** `RegExp | RegExp[]`
+- **Default:** `[]`
+
+Regexp pattern to match external files that should be transformed.
+
+By default, files inside `node_modules` are externalized and not transformed, unless it's CSS or an asset, and corresponding option is not disabled.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
 :::
 
 #### deps.registerNodeLoader<NonProjectOption />

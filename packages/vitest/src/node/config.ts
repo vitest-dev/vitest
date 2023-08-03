@@ -137,6 +137,11 @@ export function resolveConfig(
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
 
+  resolved.deps.web ??= {}
+  resolved.deps.web.transformAssets ??= true
+  resolved.deps.web.transformCss ??= true
+  resolved.deps.web.transformGlobPattern ??= []
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
