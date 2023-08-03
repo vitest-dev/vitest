@@ -213,9 +213,11 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
+  const memory = totalmem()
+
   resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
     getWorkerMemoryLimit(resolved),
-    resolved.watch ? totalmem() / 2 : totalmem(),
+    typeof memory === 'number' && resolved.watch ? memory / 2 : memory,
   )
 
   if (options.resolveSnapshotPath)
