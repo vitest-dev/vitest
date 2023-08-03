@@ -9,23 +9,28 @@ import type { WorkerRPC } from '../types'
 const { get } = Reflect
 
 function withSafeTimers(fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
+  const { setTimeout, clearTimeout, nextTick, hrtime, setImmediate, clearImmediate, queueMicrotask } = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
+  const currentQueueMicrotask = globalThis.queueMicrotask
 
   const currentNextTick = globalThis.process?.nextTick
+  const currentHrtime = globalThis.process?.hrtime
 
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
+    globalThis.queueMicrotask = queueMicrotask
 
-    if (globalThis.process)
+    if (globalThis.process) {
       globalThis.process.nextTick = nextTick
+      globalThis.process.hrtime = hrtime
+    }
 
     const result = fn()
     return result
@@ -36,8 +41,15 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
+    if (globalThis.queueMicrotask) {
+      queueMicrotask(() => {
+        globalThis.queueMicrotask = currentQueueMicrotask
+      })
+    }
+
     if (globalThis.process) {
       nextTick(() => {
+        globalThis.process.hrtime = currentHrtime
         globalThis.process.nextTick = currentNextTick
       })
     }
