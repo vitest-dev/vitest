@@ -103,39 +103,40 @@ interface DepsOptions {
    * Enable dependency optimization. This can improve the performance of your tests.
    */
   optimizer?: {
-    web?: DepsOptimizationOptions & {
-      /**
-        * Should Vitest process .png/.svg/.jpg/... files and resolve them like Vite does in the browser.
-        *
-        * These module will have a default export equal to the path to the asset, if no query is specified.
-        *
-        * **At the moment, this option only works with `experimentalVmThreads` pool.**
-        *
-        * @default true
-        */
-      transformAssets?: boolean
-      /**
-        * Should Vitest process .css/.scss/.sass/... files and resolve them like Vite does in the browser.
-        *
-        * This option is affected by `css` option.
-        *
-        * **At the moment, this option only works with `experimentalVmThreads` pool.**
-        *
-        * @default true
-        */
-      transformCss?: boolean
-      /**
-        * Regexp pattern to match external files that should be transformed.
-        *
-        * By default, files inside `node_modules` are externalized and not transformed.
-        *
-        * **At the moment, this option only works with `experimentalVmThreads` pool.**
-        *
-        * @default []
-        */
-      transformGlobPattern?: RegExp | RegExp[]
-    }
+    web?: DepsOptimizationOptions
     ssr?: DepsOptimizationOptions
+  }
+  web?: {
+    /**
+     * Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.
+     *
+     * These module will have a default export equal to the path to the asset, if no query is specified.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default true
+     */
+    transformAssets?: boolean
+    /**
+     * Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
+     *
+     * If CSS files are disabled with `css` options, this option will just silence UNKNOWN_EXTENSION errors.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default true
+     */
+    transformCss?: boolean
+    /**
+     * Regexp pattern to match external files that should be transformed.
+     *
+     * By default, files inside `node_modules` are externalized and not transformed.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default []
+     */
+    transformGlobPattern?: RegExp | RegExp[]
   }
   /**
    * Externalize means that Vite will bypass the package to native Node.

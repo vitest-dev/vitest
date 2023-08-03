@@ -30,7 +30,7 @@ export class ViteExecutor {
         return identifier
       const packageName = this.getPackageName(parent)
       throw new Error(
-        `[vitest] Vitest cannot handle /@vite/env imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
+        `[vitest] Vitest cannot handle ${CLIENT_ID} imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
       )
     }
   }
@@ -87,7 +87,7 @@ export class ViteExecutor {
       return false
     if (fileUrl === CLIENT_FILE)
       return true
-    const config = this.workerState.config.deps.optimizer?.web || {}
+    const config = this.workerState.config.deps?.web || {}
     const [modulePath] = fileUrl.split('?')
     if (config.transformCss && CSS_LANGS_RE.test(modulePath))
       return true

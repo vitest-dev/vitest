@@ -285,7 +285,6 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig() {
-    const webDeps = this.config.deps?.optimizer?.web
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
@@ -295,9 +294,6 @@ export class WorkspaceProject {
         optimizer: {
           web: {
             enabled: this.config.deps?.optimizer?.web?.enabled ?? true,
-            transformAssets: webDeps?.transformAssets ?? true,
-            transformCss: webDeps?.transformCss ?? true,
-            transformGlobPattern: webDeps?.transformGlobPattern ?? [],
           },
           ssr: {
             enabled: this.config.deps?.optimizer?.ssr?.enabled ?? true,
