@@ -49,7 +49,7 @@ export class ViteExecutor {
   }
 
   public async createViteModule(fileUrl: string) {
-    if (fileUrl.includes(CLIENT_ID))
+    if (fileUrl === `file://${CLIENT_ID}`)
       return this.createViteClientModule()
     const cached = this.esm.resolveCachedModule(fileUrl)
     if (cached)
