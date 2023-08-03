@@ -1,4 +1,5 @@
 import type vm from 'node:vm'
+import { pathToFileURL } from 'node:url'
 import { normalize } from 'pathe'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { toArray } from 'vite-node/utils'
@@ -15,7 +16,7 @@ interface ViteExecutorOptions {
 }
 
 const CLIENT_ID = '/@vite/client'
-const CLIENT_FILE = `file://${CLIENT_ID}`
+const CLIENT_FILE = pathToFileURL(CLIENT_ID).href
 
 export class ViteExecutor {
   private esm: EsmExecutor
