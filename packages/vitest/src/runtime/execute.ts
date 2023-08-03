@@ -11,6 +11,7 @@ import { distDir } from '../paths'
 import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 import { ExternalModulesExecutor } from './external-executor'
+import { FileMap } from './vm/file-map'
 
 const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
 
@@ -39,6 +40,7 @@ let _viteNode: {
 export const packageCache = new Map<string, any>()
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
+export const fileMap = new FileMap()
 
 export async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode)
@@ -174,6 +176,7 @@ export class VitestExecutor extends ViteNodeRunner {
     else {
       this.externalModules = new ExternalModulesExecutor({
         ...options,
+        fileMap,
         context: options.context,
         packageCache: options.packageCache,
       })
