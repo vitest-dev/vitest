@@ -1,6 +1,7 @@
 {
   "name": "@vitest/test-utils",
   "private": true,
+  "main": "./index.ts",
   "scripts": {
     "test": "echo \"No tests\""
   },

@@ -67,6 +67,7 @@ const external = [
   'vite-node/utils',
   '@vitest/utils/diff',
   '@vitest/utils/error',
+  '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
   '@vitest/snapshot/environment',
