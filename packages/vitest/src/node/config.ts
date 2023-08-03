@@ -213,10 +213,14 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
-  resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-    getWorkerMemoryLimit(resolved),
-    resolved.watch ? totalmem() / 2 : totalmem(),
-  )
+  const memory = totalmem()
+
+  if (memory) {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+      getWorkerMemoryLimit(resolved),
+      resolved.watch ? memory / 2 : memory,
+    )
+  }
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
