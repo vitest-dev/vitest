@@ -146,7 +146,11 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   constructor(public options: ExecuteOptions) {
-    super(options)
+    super({
+      ...options,
+      // interop is done inside the external executor instead
+      interopDefault: options.context ? false : options.interopDefault,
+    })
 
     this.mocker = new VitestMocker(this)
 
@@ -169,6 +173,7 @@ export class VitestExecutor extends ViteNodeRunner {
     }
     else {
       this.externalModules = new ExternalModulesExecutor({
+        ...options,
         context: options.context,
         packageCache: options.packageCache,
       })

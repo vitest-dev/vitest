@@ -6,9 +6,10 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, join, normalize } from 'pathe'
-import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { getCachedData, isNodeBuiltin, isPrimitive, setCacheData } from 'vite-node/utils'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { getColors } from '@vitest/utils'
+import type { ExecuteOptions } from './execute'
 
 // need to copy paste types for vm
 // because they require latest @types/node which we don't bundle
@@ -95,7 +96,7 @@ const nativeResolve = import.meta.resolve!
 const dataURIRegex
   = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
 
-interface ExternalModulesExecutorOptions {
+export interface ExternalModulesExecutorOptions extends ExecuteOptions {
   context: vm.Context
   packageCache: Map<string, any>
 }
@@ -273,7 +274,7 @@ export class ExternalModulesExecutor {
     return buffer
   }
 
-  private findNearestPackageData(basedir: string) {
+  private findNearestPackageData(basedir: string): { type?: 'module' | 'commonjs' } {
     const originalBasedir = basedir
     const packageCache = this.options.packageCache
     while (basedir) {
@@ -300,18 +301,63 @@ export class ExternalModulesExecutor {
       basedir = nextBasedir
     }
 
-    return null
+    return {}
   }
 
-  private wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
-    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
-    const moduleKeys = Object.keys(exports).filter(key => key !== 'default')
+  private wrapCoreSynteticModule(identifier: string, exports: Record<string, unknown>) {
+    const moduleKeys = Object.keys(exports)
     const m: any = new SyntheticModule(
       [...moduleKeys, 'default'],
       () => {
         for (const key of moduleKeys)
           m.setExport(key, exports[key])
         m.setExport('default', exports)
+      },
+      {
+        context: this.context,
+        identifier,
+      },
+    )
+    return m
+  }
+
+  private interopCommonJsModule(mod: any) {
+    if (isPrimitive(mod) || Array.isArray(mod) || mod instanceof Promise) {
+      return {
+        keys: [],
+        moduleExports: {},
+        defaultExport: mod,
+      }
+    }
+
+    if (this.options.interopDefault !== false && '__esModule' in mod && !isPrimitive(mod.default)) {
+      return {
+        keys: Array.from(new Set(Object.keys(mod.default).concat(Object.keys(mod)).filter(key => key !== 'default'))),
+        moduleExports: new Proxy(mod, {
+          get(mod, prop) {
+            return mod[prop] ?? mod.default?.[prop]
+          },
+        }),
+        defaultExport: mod,
+      }
+    }
+
+    return {
+      keys: Object.keys(mod).filter(key => key !== 'default'),
+      moduleExports: mod,
+      defaultExport: mod,
+    }
+  }
+
+  private wrapCommonJsSynteticModule(identifier: string, exports: Record<string, unknown>) {
+    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
+    const { keys, moduleExports, defaultExport } = this.interopCommonJsModule(exports)
+    const m: any = new SyntheticModule(
+      [...keys, 'default'],
+      () => {
+        for (const key of keys)
+          m.setExport(key, moduleExports[key])
+        m.setExport('default', defaultExport)
       },
       {
         context: this.context,
@@ -582,7 +628,7 @@ c.green(`export default {
 
     if (extension === '.node' || isNodeBuiltin(identifier)) {
       const exports = this.requireCoreModule(identifier)
-      return this.wrapSynteticModule(identifier, exports)
+      return this.wrapCoreSynteticModule(identifier, exports)
     }
 
     const isFileUrl = identifier.startsWith('file://')
@@ -600,7 +646,7 @@ c.green(`export default {
     if (extension === '.cjs') {
       const module = this.createCommonJSNodeModule(pathUrl)
       const exports = this.loadCommonJSModule(module, pathUrl)
-      return this.wrapSynteticModule(fileUrl, exports)
+      return this.wrapCommonJsSynteticModule(fileUrl, exports)
     }
 
     if (extension === '.mjs')
@@ -613,7 +659,7 @@ c.green(`export default {
 
     const module = this.createCommonJSNodeModule(pathUrl)
     const exports = this.loadCommonJSModule(module, pathUrl)
-    return this.wrapSynteticModule(fileUrl, exports)
+    return this.wrapCommonJsSynteticModule(fileUrl, exports)
   }
 
   async import(identifier: string) {

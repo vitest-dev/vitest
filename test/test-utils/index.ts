@@ -1,11 +1,13 @@
 import { Console } from 'node:console'
 import { Writable } from 'node:stream'
 import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
 import { type Options, execa } from 'execa'
 import stripAnsi from 'strip-ansi'
+import { dirname, resolve } from 'pathe'
 
 export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test') {
   // Reset possible previous runs
@@ -215,7 +217,8 @@ afterEach(() => {
     fs.writeFileSync(file, content, 'utf-8')
   })
   createdFiles.forEach((file) => {
-    fs.unlinkSync(file)
+    if (fs.existsSync(file))
+      fs.unlinkSync(file)
   })
   originalFiles.clear()
   createdFiles.clear()
@@ -223,6 +226,7 @@ afterEach(() => {
 
 export function createFile(file: string, content: string) {
   createdFiles.add(file)
+  fs.mkdirSync(dirname(file), { recursive: true })
   fs.writeFileSync(file, content, 'utf-8')
 }
 
@@ -231,4 +235,9 @@ export function editFile(file: string, callback: (content: string) => string) {
   if (!originalFiles.has(file))
     originalFiles.set(file, content)
   fs.writeFileSync(file, callback(content), 'utf-8')
+}
+
+export function resolvePath(baseUrl: string, path: string) {
+  const filename = fileURLToPath(baseUrl)
+  return resolve(dirname(filename), path)
 }
