@@ -6,7 +6,7 @@ import { dirname } from 'node:path'
 import { Module as _Module, createRequire } from 'node:module'
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, join, normalize } from 'pathe'
-import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { getCachedData, isNodeBuiltin, isPrimitive, setCacheData } from 'vite-node/utils'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { getColors } from '@vitest/utils'
 
@@ -273,7 +273,7 @@ export class ExternalModulesExecutor {
     return buffer
   }
 
-  private findNearestPackageData(basedir: string) {
+  private findNearestPackageData(basedir: string): { type?: 'module' | 'commonjs' } {
     const originalBasedir = basedir
     const packageCache = this.options.packageCache
     while (basedir) {
@@ -300,12 +300,14 @@ export class ExternalModulesExecutor {
       basedir = nextBasedir
     }
 
-    return null
+    return {}
   }
 
   private wrapSynteticModule(identifier: string, exports: Record<string, unknown>) {
     // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
-    const moduleKeys = Object.keys(exports).filter(key => key !== 'default')
+    const moduleKeys = isPrimitive(exports) || Array.isArray(exports) || exports instanceof Promise
+      ? []
+      : Object.keys(exports).filter(key => key !== 'default')
     const m: any = new SyntheticModule(
       [...moduleKeys, 'default'],
       () => {
