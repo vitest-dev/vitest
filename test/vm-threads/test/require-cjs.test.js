@@ -1,11 +1,11 @@
 import { createRequire } from 'node:module'
 import { describe, expect, test } from 'vitest'
-import { createFile } from '../../test-utils'
+import { createFile, resolvePath } from '../../test-utils'
 
 const require = createRequire(import.meta.url)
 
 test('can require if package.json is null', () => {
-  createFile('src/external/package-null/package-null.js', 'null')
+  createFile(resolvePath(import.meta.url, '../src/external/package-null/package-null.json'), 'null')
   expect(() => require('../src/external/package-null/package-null.js')).not.toThrow()
 })
 
