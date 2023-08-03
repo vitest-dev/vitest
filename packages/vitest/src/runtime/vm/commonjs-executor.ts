@@ -21,7 +21,8 @@ interface PrivateNodeModule extends NodeModule {
 
 export class CommonjsExecutor {
   private context: vm.Context
-  private requireCache: Record<string, NodeModule> = Object.create(null)
+  private requireCache = new Map<string, NodeModule>()
+  private publicRequireCache = this.createProxyCache()
 
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
   private builtinCache: Record<string, NodeModule> = Object.create(null)
@@ -75,7 +76,7 @@ export class CommonjsExecutor {
         script.identifier = filename
         const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
-        executor.requireCache[filename] = this
+        executor.requireCache.set(filename, this)
         try {
           fn(this.exports, this.require, this, filename, __dirname)
           return this.exports
@@ -165,14 +166,31 @@ export class CommonjsExecutor {
       set: () => {},
       configurable: true,
     })
-    require.main = _require.main
-    require.cache = this.requireCache
+    require.main = undefined // there is no main, since we are running tests using ESM
+    require.cache = this.publicRequireCache
     return require
+  }
+
+  private createProxyCache() {
+    return new Proxy(Object.create(null), {
+      defineProperty: () => true,
+      deleteProperty: () => true,
+      set: () => true,
+      get: (_, key: string) => this.requireCache.get(key),
+      has: (_, key: string) => this.requireCache.has(key),
+      ownKeys: () => Array.from(this.requireCache.keys()),
+      getOwnPropertyDescriptor() {
+        return {
+          configurable: true,
+          enumerable: true,
+        }
+      },
+    })
   }
 
   // very naive implementation for Node.js require
   private loadCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
-    const cached = this.requireCache[filename]
+    const cached = this.requireCache.get(filename)
     if (cached)
       return cached.exports
 
