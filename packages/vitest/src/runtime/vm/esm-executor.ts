@@ -14,8 +14,6 @@ interface EsmExecutorOptions {
 const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
-const nativeResolve = import.meta.resolve!
-
 const dataURIRegex
   = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
 
@@ -104,7 +102,7 @@ c.green(`export default {
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
           meta.resolve = (specifier: string, importer?: string) => {
-            return nativeResolve(specifier, importer ?? mod.identifier)
+            return this.executor.resolveId(specifier, importer ?? mod.identifier)
           }
         },
       },
