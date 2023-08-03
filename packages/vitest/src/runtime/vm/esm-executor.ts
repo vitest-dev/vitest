@@ -102,7 +102,7 @@ c.green(`export default {
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
           meta.resolve = (specifier: string, importer?: string) => {
-            return this.executor.resolveId(specifier, importer ?? mod.identifier)
+            return this.executor.resolve(specifier, importer ?? mod.identifier)
           }
         },
       },

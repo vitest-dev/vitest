@@ -51,11 +51,11 @@ export class ExternalModulesExecutor {
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
-    const identifier = await this.resolveId(specifier, referencer)
+    const identifier = await this.resolve(specifier, referencer)
     return await this.createModule(identifier)
   }
 
-  public async resolveId(specifier: string, parent: string) {
+  public async resolve(specifier: string, parent: string) {
     return nativeResolve(specifier, parent)
   }
 
