@@ -14,7 +14,7 @@ import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
 const workerPath = pathToFileURL(resolve(distDir, './vm.js')).href
-const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
+const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: WorkspaceProject) {
   const channel = new MessageChannel()
@@ -61,7 +61,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
       '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
       '--require',
-      suppressLoaderWarningsPath,
+      suppressWarningsPath,
       ...execArgv,
     ],
 

@@ -30,6 +30,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)
     },
+    transform(id, environment) {
+      return project.vitenode.transformModule(id, environment)
+    },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
       project.report('onPathsCollected', paths)
