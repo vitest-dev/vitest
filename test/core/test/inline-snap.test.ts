@@ -146,4 +146,44 @@ ${indent}}\`)
         "
     `)
   })
+
+  describe('replaceObjectSnap()', () => {
+    it('without snapshot', async () => {
+      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) })'
+
+      const s = new MagicString(code)
+      replaceInlineSnap(code, s, 23, `
+      {
+        "foo": Any<String>,
+      }
+    `)
+
+      expect(s.toString()).toMatchInlineSnapshot(`
+        "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
+          {
+                  \\"foo\\": Any<String>,
+                }
+        \`)"
+      `)
+    })
+
+    it('with snapshot', async () => {
+      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `{ }`)'
+
+      const s = new MagicString(code)
+      replaceInlineSnap(code, s, 23, `
+      {
+        "foo": Any<String>,
+      }
+    `)
+
+      expect(s.toString()).toMatchInlineSnapshot(`
+        "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
+          {
+                  \\"foo\\": Any<String>,
+                }
+        \`)"
+      `)
+    })
+  })
 })
