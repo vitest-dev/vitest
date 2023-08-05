@@ -78,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'exclude'
   | 'extension'
   | 'reportOnFailure'
+  | 'allowExternal'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
