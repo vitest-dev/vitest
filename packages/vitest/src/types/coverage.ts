@@ -216,6 +216,13 @@ export interface BaseCoverageOptions {
    * @default false
    */
   reportOnFailure?: boolean
+
+  /**
+   * Allow files from outside of your cwd.
+   *
+   * @default false
+   */
+  allowExternal?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {

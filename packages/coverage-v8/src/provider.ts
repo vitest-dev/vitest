@@ -30,6 +30,7 @@ interface TestExclude {
     exclude?: string | string[]
     extension?: string | string[]
     excludeNodeModules?: boolean
+    relativePath?: boolean
   }): {
     shouldInstrument(filePath: string): boolean
     glob(cwd: string): Promise<string[]>
@@ -79,6 +80,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: this.options.extension,
+      relativePath: !this.options.allowExternal,
     })
   }
 
