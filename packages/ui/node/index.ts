@@ -13,11 +13,11 @@ export default (ctx: Vitest) => {
       const uiOptions = ctx.config
       const base = uiOptions.uiBase
       const coverageFolder = resolveCoverageFolder(ctx)
-      const coveragePath = coverageFolder ? `/${basename(coverageFolder)}/` : undefined
+      const coveragePath = coverageFolder ? coverageFolder[1] : undefined
       if (coveragePath && base === coveragePath)
         throw new Error(`The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`)
 
-      coverageFolder && server.middlewares.use(coveragePath!, sirv(coverageFolder, {
+      coverageFolder && server.middlewares.use(coveragePath!, sirv(coverageFolder[0], {
         single: true,
         dev: true,
         setHeaders: (res) => {
@@ -35,20 +35,35 @@ export default (ctx: Vitest) => {
 
 function resolveCoverageFolder(ctx: Vitest) {
   const options = ctx.config
+  let subdir: string | undefined
   const enabled = options.api?.port
     && options.coverage?.enabled
     && options.coverage.reporter.some((reporter) => {
       if (typeof reporter === 'string')
         return reporter === 'html'
 
-      return reporter.length && reporter.includes('html')
+      if (reporter[0] !== 'html')
+        return false
+
+      if ('subdir' in reporter[1])
+        subdir = reporter[1].subdir as string
+
+      return true
     })
 
   // reportsDirectory not resolved yet
-  return enabled
+  const root = enabled
     ? resolve(
       ctx.config?.root || options.root || process.cwd(),
       options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
     )
     : undefined
+
+  if (!root)
+    return undefined
+
+  if (!subdir)
+    return [root, `/${basename(root)}/`]
+
+  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }
