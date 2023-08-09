@@ -35,32 +35,27 @@ export default (ctx: Vitest) => {
 
 function resolveCoverageFolder(ctx: Vitest) {
   const options = ctx.config
-  let subdir: string | undefined
-  const enabled = options.api?.port
-    && options.coverage?.enabled
-    && options.coverage.reporter.some((reporter) => {
+  const htmlReporter = (options.api?.port && options.coverage?.enabled)
+    ? options.coverage.reporter.find((reporter) => {
       if (typeof reporter === 'string')
         return reporter === 'html'
 
-      if (reporter[0] !== 'html')
-        return false
-
-      if ('subdir' in reporter[1])
-        subdir = reporter[1].subdir as string
-
-      return true
+      return reporter[0] === 'html'
     })
-
-  // reportsDirectory not resolved yet
-  const root = enabled
-    ? resolve(
-      ctx.config?.root || options.root || process.cwd(),
-      options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-    )
     : undefined
 
-  if (!root)
+  if (!htmlReporter)
     return undefined
+
+  // reportsDirectory not resolved yet
+  const root = resolve(
+    ctx.config?.root || options.root || process.cwd(),
+    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
+  )
+
+  const subdir = (htmlReporter && Array.isArray(htmlReporter) && htmlReporter.length > 1 && 'subdir' in htmlReporter[1])
+    ? htmlReporter[1].subdir
+    : undefined
 
   if (!subdir)
     return [root, `/${basename(root)}/`]
