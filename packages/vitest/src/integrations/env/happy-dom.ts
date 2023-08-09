@@ -5,9 +5,12 @@ import { populateGlobal } from './utils'
 export default <Environment>({
   name: 'happy-dom',
   transformMode: 'web',
-  async setupVM() {
+  async setupVM({ 'happy-dom': happyDom = {} }) {
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
-    const win = new Window() as any
+    const win = new Window({
+      ...happyDom,
+      url: happyDom.url || 'http://localhost:3000',
+    }) as any
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     win.Buffer = Buffer
@@ -26,11 +29,14 @@ export default <Environment>({
       },
     }
   },
-  async setup(global) {
+  async setup(global, { 'happy-dom': happyDom = {} }) {
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour
     const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
-    const win = new (GlobalWindow || Window)()
+    const win = new (GlobalWindow || Window)({
+      ...happyDom,
+      url: happyDom.url || 'http://localhost:3000',
+    })
 
     const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })
 
