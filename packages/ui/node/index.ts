@@ -53,7 +53,7 @@ function resolveCoverageFolder(ctx: Vitest) {
     options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 
-  const subdir = (htmlReporter && Array.isArray(htmlReporter) && htmlReporter.length > 1 && 'subdir' in htmlReporter[1])
+  const subdir = (Array.isArray(htmlReporter) && htmlReporter.length > 1 && 'subdir' in htmlReporter[1])
     ? htmlReporter[1].subdir
     : undefined
 
