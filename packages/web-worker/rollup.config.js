@@ -16,7 +16,7 @@ const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   'vitest',
-  'vitest/node',
+  'vitest/execute',
   'vite-node/utils',
 ]
 

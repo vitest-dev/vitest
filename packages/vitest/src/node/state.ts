@@ -1,14 +1,10 @@
 import { relative } from 'pathe'
-import type { File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
-import type { AggregateError as AggregateErrorPonyfill } from '../utils'
+import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
+import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
-
-interface CollectingPromise {
-  promise: Promise<void>
-  resolve: () => void
-}
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
@@ -21,7 +17,6 @@ export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
 export class StateManager {
   filesMap = new Map<string, File[]>()
   pathsSet: Set<string> = new Set()
-  collectingPromise: CollectingPromise | undefined = undefined
   browserTestPromises = new Map<string, { resolve: (v: unknown) => void; reject: (v: unknown) => void }>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
@@ -92,7 +87,9 @@ export class StateManager {
     })
   }
 
-  clearFiles(project: WorkspaceProject, paths: string[] = []) {
+  // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
+  clearFiles(_project: { config: { name: string } }, paths: string[] = []) {
+    const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       if (!files)

@@ -1,6 +1,7 @@
 {
   "name": "@vitest/test-utils",
   "private": true,
+  "main": "./index.ts",
   "scripts": {
     "test": "echo \"No tests\""
   },
@@ -8,6 +9,7 @@
     "execa": "^7.1.1",
     "strip-ansi": "^7.0.1",
     "vite": "latest",
+    "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
 }

@@ -30,6 +30,7 @@
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/node": ["./packages/vitest/src/node/index.ts"],
+      "vitest/execute": ["./packages/vitest/src/public/execute.ts"],
       "vitest/config": ["./packages/vitest/src/config.ts"],
       "vitest/coverage": ["./packages/vitest/src/coverage.ts"],
       "vitest/browser": ["./packages/vitest/src/browser.ts"],

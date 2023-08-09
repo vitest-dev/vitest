@@ -3,41 +3,7 @@ import { isValidNodeImport } from 'mlly'
 import { join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
 import { isNodeBuiltin, slash } from './utils'
-
-const KNOWN_ASSET_TYPES = [
-  // images
-  'apng',
-  'png',
-  'jpe?g',
-  'jfif',
-  'pjpeg',
-  'pjp',
-  'gif',
-  'svg',
-  'ico',
-  'webp',
-  'avif',
-
-  // media
-  'mp4',
-  'webm',
-  'ogg',
-  'mp3',
-  'wav',
-  'flac',
-  'aac',
-
-  // fonts
-  'woff2?',
-  'eot',
-  'ttf',
-  'otf',
-
-  // other
-  'webmanifest',
-  'pdf',
-  'txt',
-]
+import { KNOWN_ASSET_TYPES } from './constants'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/

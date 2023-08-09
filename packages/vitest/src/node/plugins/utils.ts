@@ -3,13 +3,17 @@ import { version as viteVersion } from 'vite'
 import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 
-export function resolveOptimizerConfig(testOptionc: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
+export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
+  const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions } = {} as any
   const [major, minor] = viteVersion.split('.').map(Number)
   const allowed = major >= 5 || (major === 4 && minor >= 3)
-  if (!allowed && testOptionc?.enabled === true)
+  if (!allowed && testOptions?.enabled === true)
     console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
-  if (!allowed || testOptionc?.enabled !== true) {
+  else
+    // enable by default
+    testOptions.enabled ??= true
+  if (!allowed || testOptions?.enabled !== true) {
     newConfig.cacheDir = undefined
     newConfig.optimizeDeps = {
       // experimental in Vite >2.9.2, entries remains to help with older versions
@@ -22,12 +26,12 @@ export function resolveOptimizerConfig(testOptionc: DepsOptimizationOptions | un
     newConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
     newConfig.optimizeDeps = {
       ...viteOptions,
-      ...testOptionc,
+      ...testOptions,
       noDiscovery: true,
       disabled: false,
       entries: [],
-      exclude: ['vitest', ...builtinModules, ...(testOptionc.exclude || viteOptions?.exclude || [])],
-      include: (testOptionc.include || viteOptions?.include || []).filter((n: string) => n !== 'vitest'),
+      exclude: ['vitest', ...builtinModules, ...(testOptions.exclude || viteOptions?.exclude || [])],
+      include: (testOptions.include || viteOptions?.include || []).filter((n: string) => n !== 'vitest'),
     }
   }
   return newConfig

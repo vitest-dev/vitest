@@ -61,7 +61,8 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
 }
 
 export function getRunnerOptions(): any {
-  const { config, rpc, mockMap, moduleCache } = getWorkerState()
+  const state = getWorkerState()
+  const { config, rpc, mockMap, moduleCache } = state
 
   return {
     fetchModule(id: string) {
@@ -76,5 +77,6 @@ export function getRunnerOptions(): any {
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
+    state,
   }
 }

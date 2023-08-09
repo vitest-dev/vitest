@@ -15,6 +15,7 @@ const entries = {
   'client': 'src/client.ts',
   'utils': 'src/utils.ts',
   'cli': 'src/cli.ts',
+  'constants': 'src/constants.ts',
   'hmr': 'src/hmr/index.ts',
   'source-map': 'src/source-map.ts',
 }
@@ -29,6 +30,7 @@ const external = [
   'vite/types/hot',
   'node:url',
   'node:events',
+  'node:vm',
 ]
 
 const plugins = [

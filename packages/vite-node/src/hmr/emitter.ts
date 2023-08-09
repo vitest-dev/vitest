@@ -30,12 +30,32 @@ export function viteNodeHmrPlugin(): Plugin {
   return {
     name: 'vite-node:hmr',
 
+    config() {
+      // chokidar fsevents is unstable on macos when emitting "ready" event
+      if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
+        return {
+          server: {
+            watch: {
+              useFsEvents: false,
+              usePolling: false,
+            },
+          },
+        }
+      }
+    },
+
     configureServer(server) {
       const _send = server.ws.send
       server.emitter = emitter
       server.ws.send = function (payload: HMRPayload) {
         _send(payload)
         emitter.emit('message', payload)
+      }
+      if (process.env.VITE_TEST_WATCHER_DEBUG) {
+        server.watcher.on('ready', () => {
+          // eslint-disable-next-line no-console
+          console.log('[debug] watcher is ready')
+        })
       }
     },
   }

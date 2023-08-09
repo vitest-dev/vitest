@@ -15,6 +15,12 @@ interface ErrorOptions {
   project?: WorkspaceProject
 }
 
+const ESC = '\x1B['
+const ERASE_DOWN = `${ESC}J`
+const ERASE_SCROLLBACK = `${ESC}3J`
+const CURSOR_TO_START = `${ESC}1;1H`
+const CLEAR_SCREEN = '\x1Bc'
+
 export class Logger {
   outputStream = process.stdout
   errorStream = process.stderr
@@ -50,7 +56,7 @@ export class Logger {
       return
     }
 
-    this.console.log(`\x1Bc${message}`)
+    this.console.log(`${ERASE_SCROLLBACK}${CLEAR_SCREEN}${message}`)
   }
 
   clearScreen(message: string, force = false) {
@@ -70,9 +76,7 @@ export class Logger {
 
     const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    // equivalent to ansi-escapes:
-    // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
-    this.console.log(`\u001B[1;1H\u001B[J${log}`)
+    this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
   printError(err: unknown, options: ErrorOptions = {}) {
@@ -98,10 +102,15 @@ export class Logger {
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
-    if (config.passWithNoTests)
-      this.log(`No ${config.mode} files found, exiting with code 0\n`)
-    else
-      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else {
+      if (config.passWithNoTests)
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      else
+        this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    }
   }
 
   printBanner() {

@@ -1,5 +1,26 @@
+import type { ModuleCacheMap } from 'vite-node/client'
+
 import { getWorkerState } from './global'
 import { getSafeTimers } from './timers'
+
+export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
+  const skipPaths = [
+    // Vitest
+    /\/vitest\/dist\//,
+    /\/vite-node\/dist\//,
+    // yarn's .store folder
+    /vitest-virtual-\w+\/dist/,
+    // cnpm
+    /@vitest\/dist/,
+    // don't clear mocks
+    ...(!resetMocks ? [/^mock:/] : []),
+  ]
+  modules.forEach((mod, path) => {
+    if (skipPaths.some(re => re.test(path)))
+      return
+    modules.invalidateModule(mod)
+  })
+}
 
 function waitNextTick() {
   const { setTimeout } = getSafeTimers()

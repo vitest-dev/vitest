@@ -1,12 +1,13 @@
+import { totalmem } from 'node:os'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
+import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -124,23 +125,8 @@ export function resolveConfig(
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
-  resolved.deps = resolved.deps || {}
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
-    const ssrOptions = viteConfig.ssr
-
-    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
-      resolved.deps.inline = true
-    }
-    else {
-      resolved.deps.inline ??= []
-      resolved.deps.inline.push(...extraInlineDeps)
-    }
-  }
-  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps ??= {}
+  resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
       dir = `/${dir}`
@@ -148,15 +134,70 @@ export function resolveConfig(
       dir += '/'
     return normalize(dir)
   })
+  if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
+    resolved.deps.moduleDirectories.push('/node_modules/')
+
+  resolved.deps.web ??= {}
+  resolved.deps.web.transformAssets ??= true
+  resolved.deps.web.transformCss ??= true
+  resolved.deps.web.transformGlobPattern ??= []
+
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
+
+  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
+  deprecatedDepsOptions.forEach((option) => {
+    if (resolved.deps[option] === undefined)
+      return
+
+    if (option === 'fallbackCJS') {
+      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+    }
+    else {
+      const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
+        ),
+      )
+    }
+
+    if (resolved.server.deps![option] === undefined)
+      resolved.server.deps![option] = resolved.deps[option] as any
+  })
+
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  if (resolved.server.deps.inline !== true) {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
+    const ssrOptions = viteConfig.ssr
+    if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
+      resolved.server.deps.inline = true
+    }
+    else {
+      resolved.server.deps.inline ??= []
+      resolved.server.deps.inline.push(...extraInlineDeps)
+    }
+  }
+
+  resolved.server.deps.moduleDirectories ??= []
+  resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  // disable loader for Yarn PnP until Node implements chain loader
-  // https://github.com/nodejs/node/pull/43772
-  resolved.deps.registerNodeLoader ??= false
+  if (resolved.deps.registerNodeLoader) {
+    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+    console.warn(
+      c.yellow(
+      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
+      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
+      ),
+    )
+  }
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -175,6 +216,22 @@ export function resolveConfig(
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
+  }
+
+  const memory = totalmem()
+  const limit = getWorkerMemoryLimit(resolved)
+
+  if (typeof memory === 'number') {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+      limit,
+      resolved.watch ? memory / 2 : memory,
+    )
+  }
+  else if (limit > 1) {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(limit)
+  }
+  else {
+    // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
   }
 
   if (options.resolveSnapshotPath)

@@ -72,6 +72,8 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     const child = fork(childPath, [], {
       execArgv,
       env,
+      // TODO: investigate
+      // serialization: 'advanced',
     })
     children.add(child)
     setupChildProcessChannel(project, child)

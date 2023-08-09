@@ -26,8 +26,8 @@ test("dynamic test case", () => {
 })
 `
 
-function startVitest() {
-  return runVitestCli(
+async function startVitest() {
+  const vitest = await runVitestCli(
     { cwd: root, env: { TEST_WATCH: 'true' } },
     '--root',
     root,
@@ -36,6 +36,8 @@ function startVitest() {
     '--watch',
     '--no-coverage',
   )
+  vitest.resetOutput()
+  return vitest
 }
 
 afterEach(() => {

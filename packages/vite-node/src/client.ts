@@ -17,7 +17,7 @@ const debugNative = createDebug('vite-node:client:native')
 
 const clientStub = {
   injectQuery: (id: string) => id,
-  createHotContext() {
+  createHotContext: () => {
     return {
       accept: () => {},
       prune: () => {},
@@ -28,24 +28,11 @@ const clientStub = {
       send: () => {},
     }
   },
-  updateStyle(id: string, css: string) {
-    if (typeof document === 'undefined')
-      return
-
-    const element = document.getElementById(id)
-    if (element)
-      element.remove()
-
-    const head = document.querySelector('head')
-    const style = document.createElement('style')
-    style.setAttribute('type', 'text/css')
-    style.id = id
-    style.innerHTML = css
-    head?.appendChild(style)
-  },
+  updateStyle: () => {},
+  removeStyle: () => {},
 }
 
-export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
+export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }
@@ -295,7 +282,6 @@ export class ViteNodeRunner {
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
-
     let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
@@ -307,6 +293,8 @@ export class ViteNodeRunner {
 
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
+
+    const { Object, Reflect, Symbol } = this.getContextPrimitives()
 
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
@@ -372,7 +360,7 @@ export class ViteNodeRunner {
       Object.defineProperty(meta, 'hot', {
         enumerable: true,
         get: () => {
-          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          hotContext ||= this.options.createHotContext?.(this, moduleId)
           return hotContext
         },
         set: (value) => {
@@ -407,18 +395,27 @@ export class ViteNodeRunner {
     if (transformed[0] === '#')
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
+    await this.runModule(context, transformed)
+
+    return exports
+  }
+
+  protected getContextPrimitives() {
+    return { Object, Reflect, Symbol }
+  }
+
+  protected async runModule(context: Record<string, any>, transformed: string) {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
-    const fn = vm.runInThisContext(code, {
-      filename: __filename,
+    const options = {
+      filename: context.__filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
-    })
+    }
 
+    const fn = vm.runInThisContext(code, options)
     await fn(...Object.values(context))
-
-    return exports
   }
 
   prepareContext(context: Record<string, any>) {
@@ -437,11 +434,15 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
+  protected importExternalModule(path: string) {
+    return import(path)
+  }
+
   /**
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const importedModule = await import(path)
+    const importedModule = await this.importExternalModule(path)
 
     if (!this.shouldInterop(path, importedModule))
       return importedModule

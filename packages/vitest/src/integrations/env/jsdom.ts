@@ -29,6 +29,62 @@ function catchWindowErrors(window: Window) {
 export default <Environment>({
   name: 'jsdom',
   transformMode: 'web',
+  async setupVM({ jsdom = {} }) {
+    const {
+      CookieJar,
+      JSDOM,
+      ResourceLoader,
+      VirtualConsole,
+    } = await importModule('jsdom') as typeof import('jsdom')
+    const {
+      html = '<!DOCTYPE html>',
+      userAgent,
+      url = 'http://localhost:3000',
+      contentType = 'text/html',
+      pretendToBeVisual = true,
+      includeNodeLocations = false,
+      runScripts = 'dangerously',
+      resources,
+      console = false,
+      cookieJar = false,
+      ...restOptions
+    } = jsdom as any
+    const dom = new JSDOM(
+      html,
+      {
+        pretendToBeVisual,
+        resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+        runScripts,
+        url,
+        virtualConsole: (console && globalThis.console) ? new VirtualConsole().sendTo(globalThis.console) : undefined,
+        cookieJar: cookieJar ? new CookieJar() : undefined,
+        includeNodeLocations,
+        contentType,
+        userAgent,
+        ...restOptions,
+      },
+    )
+    const clearWindowErrors = catchWindowErrors(dom.window as any)
+
+    // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
+    dom.window.Buffer = Buffer
+    // Buffer extends Uint8Array
+    dom.window.Uint8Array = Uint8Array
+
+    // inject structuredClone if it exists
+    if (typeof structuredClone !== 'undefined' && !dom.window.structuredClone)
+      dom.window.structuredClone = structuredClone
+
+    return {
+      getVmContext() {
+        return dom.getInternalVMContext()
+      },
+      teardown() {
+        clearWindowErrors()
+        dom.window.close()
+      },
+    }
+  },
   async setup(global, { jsdom = {} }) {
     const {
       CookieJar,
