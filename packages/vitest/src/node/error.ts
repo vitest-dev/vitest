@@ -179,10 +179,12 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 + '\n'
 + c.green(`export default {
   test: {
-    deps: {
-      inline: [
-        ${c.yellow(c.bold(`"${name}"`))}
-      ]
+    server: {
+      deps: {
+        inline: [
+          ${c.yellow(c.bold(`"${name}"`))}
+        ]
+      }
     }
   }
 }\n`)))
