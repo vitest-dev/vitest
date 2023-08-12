@@ -3,12 +3,13 @@ import { describe, expect, test } from 'vitest'
 // @ts-expect-error -- untyped virtual file provided by custom plugin
 import virtualFile1 from 'virtual:vitest-custom-virtual-file-1'
 
+import * as ExternalMath from '../../test-utils/fixtures/math'
+
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
 import { second } from '../src/function-count'
 import { runDynamicFileCJS, runDynamicFileESM } from '../src/dynamic-files'
 import MultiSuite from '../src/multi-suite'
-import { callExternal } from '../src/callExternal'
 
 // @ts-expect-error -- untyped virtual file provided by custom plugin
 import virtualFile2 from '\0vitest-custom-virtual-file-2'
@@ -59,8 +60,8 @@ describe('Multiple test suites', () => {
   })
 })
 
-test('calling external files', () => {
-  expect(callExternal()).toBe('This line should be covered')
+test('calling files outside project root', () => {
+  expect(ExternalMath.sum(2, 3)).toBe(5)
 })
 
 test.skipIf(skipDynamicFiles)('run dynamic ESM file', async () => {

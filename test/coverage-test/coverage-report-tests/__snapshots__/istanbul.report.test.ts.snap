@@ -2,7 +2,7 @@
 
 exports[`istanbul json report 1`] = `
 {
-  "<process-cwd>/external/file.external.ts": {
+  "<process-cwd>/../test-utils/fixtures/math.ts": {
     "b": {},
     "branchMap": {},
     "f": {
@@ -13,7 +13,7 @@ exports[`istanbul json report 1`] = `
       "0": {
         "decl": {
           "end": {
-            "column": 34,
+            "column": 20,
             "line": 1,
           },
           "start": {
@@ -27,16 +27,16 @@ exports[`istanbul json report 1`] = `
             "line": 3,
           },
           "start": {
-            "column": 34,
+            "column": 42,
             "line": 1,
           },
         },
-        "name": "externalCovered",
+        "name": "sum",
       },
       "1": {
         "decl": {
           "end": {
-            "column": 36,
+            "column": 25,
             "line": 5,
           },
           "start": {
@@ -50,14 +50,14 @@ exports[`istanbul json report 1`] = `
             "line": 7,
           },
           "start": {
-            "column": 36,
+            "column": 47,
             "line": 5,
           },
         },
-        "name": "externalUncovered",
+        "name": "multiply",
       },
     },
-    "path": "<process-cwd>/external/file.external.ts",
+    "path": "<process-cwd>/../test-utils/fixtures/math.ts",
     "s": {
       "0": 1,
       "1": 0,
@@ -598,54 +598,6 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 18,
           "line": 14,
-        },
-      },
-    },
-  },
-  "<process-cwd>/src/callExternal.ts": {
-    "b": {},
-    "branchMap": {},
-    "f": {
-      "0": 1,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 31,
-            "line": 3,
-          },
-          "start": {
-            "column": 16,
-            "line": 3,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 5,
-          },
-          "start": {
-            "column": 31,
-            "line": 3,
-          },
-        },
-        "name": "callExternal",
-      },
-    },
-    "path": "<process-cwd>/src/callExternal.ts",
-    "s": {
-      "0": 1,
-    },
-    "statementMap": {
-      "0": {
-        "end": {
-          "column": null,
-          "line": 4,
-        },
-        "start": {
-          "column": 2,
-          "line": 4,
         },
       },
     },

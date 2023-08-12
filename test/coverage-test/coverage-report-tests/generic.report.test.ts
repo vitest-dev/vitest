@@ -10,7 +10,7 @@ import libCoverage from 'istanbul-lib-coverage'
 import { readCoverageJson } from './utils'
 
 test('html report', async () => {
-  const coveragePath = resolve('./coverage/src')
+  const coveragePath = resolve('./coverage/coverage-test/src')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('index.html')
@@ -31,14 +31,14 @@ test('lcov report', async () => {
 })
 
 test('all includes untested files', () => {
-  const coveragePath = resolve('./coverage/src')
+  const coveragePath = resolve('./coverage/coverage-test/src')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('untested-file.ts.html')
 })
 
 test('files should not contain query parameters', () => {
-  const coveragePath = resolve('./coverage/src/Counter')
+  const coveragePath = resolve('./coverage/coverage-test/src/Counter')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('index.html')
@@ -48,7 +48,7 @@ test('files should not contain query parameters', () => {
 })
 
 test('file using import.meta.env is included in report', async () => {
-  const coveragePath = resolve('./coverage/src')
+  const coveragePath = resolve('./coverage/coverage-test/src')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('importEnv.ts.html')
@@ -58,10 +58,10 @@ test('files should not contain a setup file', () => {
   const coveragePath = resolve('./coverage')
   const files = fs.readdirSync(coveragePath)
 
-  expect(files).not.toContain('coverage-test')
+  // expect(files).not.toContain('coverage-test')
   expect(files).not.toContain('setup.ts.html')
 
-  const coverageSrcPath = resolve('./coverage/src')
+  const coverageSrcPath = resolve('./coverage/coverage-test/src')
   const srcFiles = fs.readdirSync(coverageSrcPath)
 
   expect(srcFiles).not.toContain('another-setup.ts.html')
@@ -104,7 +104,7 @@ test('coverage provider does not conflict with built-in reporter\'s outputFile',
 
 test('virtual files should be excluded', () => {
   const files = fs.readdirSync(resolve('./coverage'))
-  const srcFiles = fs.readdirSync(resolve('./coverage/src'))
+  const srcFiles = fs.readdirSync(resolve('./coverage/coverage-test/src'))
 
   for (const file of [...files, ...srcFiles]) {
     expect(file).not.toContain('virtual:')
