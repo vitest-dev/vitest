@@ -987,7 +987,7 @@ Generate coverage report even when tests fail.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
-Generate coverage report even when tests fail.
+Collect coverage of files outside the [project `root`](https://vitest.dev/config/#root).
 
 #### coverage.skipFull
 

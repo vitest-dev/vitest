@@ -219,7 +219,7 @@ export interface BaseCoverageOptions {
   reportOnFailure?: boolean
 
   /**
-   * Allow files from outside of your cwd.
+   * Collect coverage of files outside the project `root`.
    *
    * @default false
    */
