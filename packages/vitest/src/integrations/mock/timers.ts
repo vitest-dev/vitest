@@ -130,7 +130,20 @@ export class FakeTimers {
     }
 
     if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers).filter(name => name !== 'queueMicrotask' && name !== 'performance' && name !== 'hrtime' && name !== 'nextTick') as Array<keyof FakeTimerWithContext['timers']>
+      const toFake = [
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+        'Date',
+      ] as Array<keyof FakeTimerWithContext['timers']>
+
+      if (typeof setImmediate === 'function') {
+        toFake.push(
+          'setImmediate',
+          'clearImmediate',
+        )
+      }
 
       this._clock = this._fakeTimers.install({
         now: Date.now(),
