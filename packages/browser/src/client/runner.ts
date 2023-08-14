@@ -42,7 +42,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     async onAfterRun() {
       await super.onAfterRun?.()
       const coverage = await coverageModule?.takeCoverage?.()
-      await rpc().onAfterSuiteRun({ coverage })
+      if (coverage)
+        await rpc().onAfterSuiteRun({ coverage })
     }
 
     onCollected(files: File[]): unknown {

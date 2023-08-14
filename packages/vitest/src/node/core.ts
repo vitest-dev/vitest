@@ -53,7 +53,7 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private coreWorkspace!: WorkspaceProject
+  private coreWorkspaceProject!: WorkspaceProject
 
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
@@ -145,12 +145,12 @@ export class Vitest {
       runner: this.runner,
       server: this.vitenode,
     })
-    this.coreWorkspace = coreWorkspace
+    this.coreWorkspaceProject = coreWorkspace
     return coreWorkspace
   }
 
   public getCoreWorkspaceProject(): WorkspaceProject | null {
-    return this.coreWorkspace || null
+    return this.coreWorkspaceProject || null
   }
 
   public getProjectByTaskId(taskId: string): WorkspaceProject {
@@ -232,7 +232,7 @@ export class Vitest {
     const filteredWorkspaces = Object.values(workspacesByFolder).map((configFiles) => {
       if (configFiles.length === 1)
         return configFiles[0]
-      const vitestConfig = configFiles.find(configFile => configFile.startsWith('vitest.config'))
+      const vitestConfig = configFiles.find(configFile => basename(configFile).startsWith('vitest.config'))
       return vitestConfig || configFiles[0]
     })
 
@@ -740,7 +740,8 @@ export class Vitest {
     if (!this.closingPromise) {
       const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
       // close the core workspace server only once
-      if (this.coreWorkspace && !this.projects.includes(this.coreWorkspace))
+      // it's possible that it's not initialized at all because it's not running any tests
+      if (!this.coreWorkspaceProject || !this.projects.includes(this.coreWorkspaceProject))
         closePromises.push(this.server.close().then(() => this.server = undefined as any))
 
       if (this.pool)
