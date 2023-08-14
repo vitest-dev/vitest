@@ -299,7 +299,7 @@ export class ViteNodeRunner {
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const href = pathToFileURL(modulePath).href
-    const meta = { url: href }
+    const meta = { url: href, env: process.env }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',

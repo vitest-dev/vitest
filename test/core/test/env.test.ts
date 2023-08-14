@@ -47,3 +47,9 @@ test('custom env', () => {
 test('ignores import.meta.env in string literals', () => {
   expect('import.meta.env').toBe('import' + '.meta.env')
 })
+
+test('define process and using import.meta.env together', () => {
+  const process = {}
+  expect(process).toMatchObject({})
+  expect(import.meta.env.MODE).toEqual('test')
+})
