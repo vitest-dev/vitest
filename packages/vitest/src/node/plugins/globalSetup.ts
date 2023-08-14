@@ -75,7 +75,6 @@ export function GlobalSetupPlugin(project: SetupInstance, logger: Logger): Plugi
     },
 
     async buildEnd() {
-      // console.log('build ended', globalSetupFiles?.length)
       if (globalSetupFiles?.length) {
         for (const globalSetupFile of globalSetupFiles.reverse()) {
           try {
