@@ -82,7 +82,7 @@ import { vi } from 'vitest'
 
 ## vi.fn
 
-- **Type:** `(fn?: Function) => CallableMockInstance`
+- **Type:** `(fn?: Function) => Mock`
 
   Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
   If no function is given, mock will return `undefined`, when invoked.

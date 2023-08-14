@@ -137,6 +137,11 @@ export function resolveConfig(
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
 
+  resolved.deps.web ??= {}
+  resolved.deps.web.transformAssets ??= true
+  resolved.deps.web.transformCss ??= true
+  resolved.deps.web.transformGlobPattern ??= []
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
@@ -213,10 +218,21 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
-  resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-    getWorkerMemoryLimit(resolved),
-    totalmem(),
-  )
+  const memory = totalmem()
+  const limit = getWorkerMemoryLimit(resolved)
+
+  if (typeof memory === 'number') {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
+      limit,
+      resolved.watch ? memory / 2 : memory,
+    )
+  }
+  else if (limit > 1) {
+    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(limit)
+  }
+  else {
+    // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  }
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
