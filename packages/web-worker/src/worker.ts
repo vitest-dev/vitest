@@ -1,6 +1,6 @@
 import type { CloneOption, DefineWorkerOptions, InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
-import { createMessageEvent, debug, getRunnerOptions } from './utils'
+import { createMessageEvent, debug, getFileIdFromUrl, getRunnerOptions } from './utils'
 
 export function createWorkerConstructor(options?: DefineWorkerOptions): typeof Worker {
   const runnerOptions = getRunnerOptions()
@@ -66,7 +66,7 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
 
       const runner = new InlineWorkerRunner(runnerOptions, context)
 
-      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
+      const id = getFileIdFromUrl(url)
 
       this._vw_name = id
 

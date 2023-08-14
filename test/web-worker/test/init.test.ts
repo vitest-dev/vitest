@@ -75,11 +75,13 @@ it('self injected into worker and its deps should be equal', async () => {
   expect.assertions(4)
   expect(await testSelfWorker(new MySelfWorker())).toBeTruthy()
   // wait for clear worker mod cache
-  await sleep(500)
+  await sleep(0)
   expect(await testSelfWorker(new MySelfWorker())).toBeTruthy()
+
+  await sleep(0)
 
   expect(await testSelfWorker(new Worker(new URL('../src/selfWorker.ts', import.meta.url)))).toBeTruthy()
   // wait for clear worker mod cache
-  await sleep(500)
+  await sleep(0)
   expect(await testSelfWorker(new Worker(new URL('../src/selfWorker.ts', import.meta.url)))).toBeTruthy()
 })
