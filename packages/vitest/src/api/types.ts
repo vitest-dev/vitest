@@ -21,10 +21,10 @@ export interface WebSocketHandlers {
   resolveSnapshotRawPath(testPath: string, rawPath: string): string
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
-  readFile(id: string): Promise<string | null>
-  writeFile(id: string, content: string, ensureDir?: boolean): Promise<void>
-  removeFile(id: string): Promise<void>
-  createDirectory(id: string): Promise<string | undefined>
+  readSnapshotFile(id: string): Promise<string | null>
+  readTestFile(id: string): Promise<string | null>
+  saveSnapshotFile(id: string, content: string): Promise<void>
+  removeSnapshotFile(id: string): Promise<void>
   snapshotSaved(snapshot: SnapshotResult): void
   rerun(files: string[]): Promise<void>
   updateSnapshot(file?: File): Promise<void>

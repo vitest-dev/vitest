@@ -2,7 +2,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
+import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../utils'
 import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
@@ -87,6 +87,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             open,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: [
+                ...toArray(testConfig.setupFiles),
+                ...toArray(testConfig.globalSetup),
+              ],
+            },
           },
         }
 
