@@ -8,13 +8,13 @@ title: Migration Guide | Guide
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:
 
-**Globals as a Default**
+### Globals as a Default
 
 Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vitest does not. You can either enable globals via [the `globals` configuration setting](/config/#globals) or update your code to use imports from the `vitest` module instead.
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
 
-**Module mocks**
+### Module mocks
 
 When mocking a module in Jest, the factory argument's return value is the default export. In Vitest, the factory argument has to return an object with each export explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
 
@@ -27,11 +27,11 @@ When mocking a module in Jest, the factory argument's return value is the defaul
 
 For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
-**Auto-Mocking Behaviour**
+### Auto-Mocking Behaviour
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
-**Importing the original of a mocked package**
+### Importing the original of a mocked package
 
 If you are only partially mocking a package, you might have previously used Jest's function `requireActual`. In Vitest, you should replace these calls with `vi.importActual`.
 
@@ -40,13 +40,13 @@ If you are only partially mocking a package, you might have previously used Jest
 + const { cloneDeep } = await vi.importActual('lodash/cloneDeep')
 ```
 
-**Envs**
+### Envs
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
 
 If you want to modify the envs, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [vi.stubEnv](https://vitest.dev/api/vi.html#vi-stubenv) to do it also in Vitest. 
 
-**Done Callback**
+### Done Callback
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
@@ -59,7 +59,7 @@ From Vitest v0.10.0, the callback style of declaring tests is deprecated. You ca
 + }))
 ```
 
-**Hooks**
+### Hooks
 
 `beforeAll`/`beforeEach` hooks may return [teardown function](/api/#setup-and-teardown) in Vitest. Because of that you may need to rewrite your hooks declarations, if they return something other than `undefined` or `null`:
 
@@ -68,7 +68,7 @@ From Vitest v0.10.0, the callback style of declaring tests is deprecated. You ca
 + beforeEach(() => { setActivePinia(createTestingPinia()) })
 ```
 
-**Types**
+### Types
 
 Vitest doesn't expose a lot of types on `Vi` namespace, it exists mainly for compatibility with matchers, so you might need to import types directly from `vitest` instead of relying on `Vi` namespace:
 
@@ -80,11 +80,11 @@ Vitest doesn't expose a lot of types on `Vi` namespace, it exists mainly for com
 
 Also, Vitest has `Args` type as a first argument instead of `Returns`, as you can see in diff.
 
-**Timers**
+### Timers
 
 Vitest doesn't support Jest's legacy timers.
 
-**Vue Snapshots**
+### Vue Snapshots
 
 This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
