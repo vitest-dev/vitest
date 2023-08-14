@@ -16,6 +16,17 @@ function isCSSModule(id: string) {
   return cssModuleRE.test(id)
 }
 
+// inline css requests are expected to just return the
+// string content directly and not the proxy module
+function isInline(id: string) {
+  const queryStart = id.indexOf('?');
+  if (queryStart === -1) {
+    return false;
+  }
+  const queryParts = id.substring(queryStart + 1).split('&');
+  return queryParts.some(part => part === 'inline');
+}
+
 function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
   if (strategy === 'non-scoped')
     return 'style'
@@ -55,7 +66,7 @@ export function CSSEnablerPlugin(ctx: { config: ResolvedConfig }): VitePlugin[] 
         if (!isCSS(id) || shouldProcessCSS(id))
           return
 
-        if (isCSSModule(id)) {
+        if (isCSSModule(id) && !isInline(id)) {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty

@@ -4,6 +4,7 @@ const configs = [
   ['test/default-css', {}],
   ['test/process-css', { include: [/App\.css/] }],
   ['test/process-module', { include: [/App\.module\.css/] }],
+  ['test/process-inline', { include: [/App\.module\.css/] }],
   ['test/scope-module', { include: [/App\.module\.css/], modules: { classNameStrategy: 'scoped' } }],
   ['test/non-scope-module', { include: [/App\.module\.css/], modules: { classNameStrategy: 'non-scoped' } }],
 ]
