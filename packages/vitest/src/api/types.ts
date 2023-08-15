@@ -23,6 +23,7 @@ export interface WebSocketHandlers {
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
   readSnapshotFile(id: string): Promise<string | null>
   readTestFile(id: string): Promise<string | null>
+  saveTestFile(id: string, content: string): Promise<void>
   saveSnapshotFile(id: string, content: string): Promise<void>
   removeSnapshotFile(id: string): Promise<void>
   snapshotSaved(snapshot: SnapshotResult): void

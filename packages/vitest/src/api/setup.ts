@@ -79,6 +79,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
             return null
           return fs.readFile(id, 'utf-8')
         },
+        async saveTestFile(id, content) {
+          // can save only already existing test file
+          if (!ctx.state.filesMap.has(id) || !existsSync(id))
+            return
+          return fs.writeFile(id, content, 'utf-8')
+        },
         async saveSnapshotFile(id, content) {
           if (!ctx.snapshot.resolvedPaths.has(id))
             return
