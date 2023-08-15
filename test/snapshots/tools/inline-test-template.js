@@ -11,3 +11,13 @@ describe('snapshots are generated in correct order', async () => {
     expect({ foo: ['zed'] }).toMatchInlineSnapshot()
   })
 })
+
+describe('snapshots with properties', () => {
+  test('without snapshot', () => {
+    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) })
+  })
+
+  test('with snapshot', () => {
+    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, '')
+  })
+})

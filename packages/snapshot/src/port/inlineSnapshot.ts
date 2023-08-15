@@ -34,19 +34,45 @@ export async function saveInlineSnapshots(
 const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*({)/m
 
 function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string) {
-  code = code.slice(index)
-  const startMatch = startObjectRegex.exec(code)
+  let _code = code.slice(index)
+  const startMatch = startObjectRegex.exec(_code)
   if (!startMatch)
     return false
 
-  code = code.slice(startMatch.index)
-  const charIndex = getCallLastIndex(code)
-  if (charIndex === null)
-    return false
+  _code = _code.slice(startMatch.index)
 
-  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, code, index)}`)
+  let callEnd = getCallLastIndex(_code)
+  if (callEnd === null)
+    return false
+  callEnd += index + startMatch.index
+
+  const shapeStart = index + startMatch.index + startMatch[0].length
+  const shapeEnd = getObjectShapeEndIndex(code, shapeStart)
+  const snap = `, ${prepareSnapString(newSnap, code, index)}`
+
+  if (shapeEnd === callEnd) {
+    // toMatchInlineSnapshot({ foo: expect.any(String) })
+    s.appendLeft(callEnd, snap)
+  }
+  else {
+    // toMatchInlineSnapshot({ foo: expect.any(String) }, ``)
+    s.overwrite(shapeEnd, callEnd, snap)
+  }
 
   return true
+}
+
+function getObjectShapeEndIndex(code: string, index: number) {
+  let startBraces = 1
+  let endBraces = 0
+  while (startBraces !== endBraces && index < code.length) {
+    const s = code[index++]
+    if (s === '{')
+      startBraces++
+    else if (s === '}')
+      endBraces++
+  }
+  return index
 }
 
 function prepareSnapString(snap: string, source: string, index: number) {
