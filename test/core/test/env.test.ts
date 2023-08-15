@@ -58,4 +58,7 @@ test('PROD, DEV, SSR should be boolean', () => {
   expect(typeof import.meta.env.PROD).toEqual('boolean')
   expect(typeof import.meta.env.DEV).toEqual('boolean')
   expect(typeof import.meta.env.SSR).toEqual('boolean')
+
+  import.meta.env.SSR = false
+  expect(import.meta.env.SSR).toEqual(false)
 })

@@ -215,5 +215,16 @@ export function createImportMetaEnvProxy() {
         return !!process.env[key]
       return process.env[key]
     },
+    set(_, key, value) {
+      if (typeof key !== 'string')
+        return true
+
+      if (booleanKeys.includes(key))
+        process.env[key] = value ? '1' : ''
+      else
+        process.env[key] = value
+
+      return true
+    },
   })
 }
