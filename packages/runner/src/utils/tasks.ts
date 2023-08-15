@@ -6,7 +6,22 @@ function isAtomTest(s: Task): s is Test | TaskCustom {
 }
 
 export function getTests(suite: Arrayable<Task>): (Test | TaskCustom)[] {
-  return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
+  const tests: (Test | TaskCustom)[] = []
+  const suite_arr = toArray(suite)
+  for (const s of suite_arr) {
+    if (isAtomTest(s)) {
+      tests.push(s)
+    }
+    else {
+      for (const task of s.tasks) {
+        if (isAtomTest(task))
+          tests.push(task)
+        else
+          tests.push(...getTests(task))
+      }
+    }
+  }
+  return tests
 }
 
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {
