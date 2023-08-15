@@ -277,7 +277,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
   })
 
   it('assertions', () => {

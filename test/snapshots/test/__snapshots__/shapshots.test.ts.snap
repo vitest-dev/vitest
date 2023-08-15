@@ -9,8 +9,8 @@ describe('snapshots are generated in correct order', async () => {
   test('first snapshot', () => {
     expect({ foo: ['bar'] }).toMatchInlineSnapshot(\`
       Object {
-        \\"foo\\": Array [
-          \\"bar\\",
+        "foo": Array [
+          "bar",
         ],
       }
     \`)
@@ -19,8 +19,8 @@ describe('snapshots are generated in correct order', async () => {
   test('second snapshot', () => {
     expect({ foo: ['zed'] }).toMatchInlineSnapshot(\`
       Object {
-        \\"foo\\": Array [
-          \\"zed\\",
+        "foo": Array [
+          "zed",
         ],
       }
     \`)
@@ -31,7 +31,7 @@ describe('snapshots with properties', () => {
   test('without snapshot', () => {
     expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
       Object {
-        \\"foo\\": Any<String>,
+        "foo": Any<String>,
       }
     \`)
   })

@@ -16,7 +16,7 @@ test('hoists mock, unmock, hoisted', () => {
   vi.unmock('path')
   vi.hoisted(() => {})
   `)).toMatchInlineSnapshot(`
-    "if (typeof globalThis.vi === \\"undefined\\" && typeof globalThis.vitest === \\"undefined\\") { throw new Error(\\"There are some problems in resolving the mocks API.\\\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\\\nTo fix this issue you can either:\\\\n- import the mocks API directly from 'vitest'\\\\n- enable the 'globals' options\\") }
+    "if (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
     vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})"

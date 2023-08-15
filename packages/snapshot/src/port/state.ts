@@ -84,6 +84,7 @@ export default class SnapshotState {
     this.updated = 0
     this._snapshotFormat = {
       printBasicPrototype: false,
+      escapeString: false,
       ...options.snapshotFormat,
     }
     this._environment = options.snapshotEnvironment
