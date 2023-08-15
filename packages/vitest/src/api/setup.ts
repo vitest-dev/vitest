@@ -92,7 +92,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           await ctx.rerunFiles(files)
         },
         getConfig() {
-          return ctx.config
+          return vitestOrWorkspace.config
         },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
