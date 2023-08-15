@@ -12,7 +12,7 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
@@ -158,6 +158,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             ignored: ['**/*'],
           }
         }
+
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
