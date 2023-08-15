@@ -23,7 +23,7 @@ export function SsrReplacerPlugin(): Plugin {
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
-        s.overwrite(startIndex, endIndex, 'process.env')
+        s.overwrite(startIndex, endIndex, '__vite_ssr_import_meta__.env')
       }
 
       if (s) {

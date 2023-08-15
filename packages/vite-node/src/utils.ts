@@ -199,3 +199,32 @@ function traverseBetweenDirs(
     longerDir = dirname(longerDir)
   }
 }
+
+export function createImportMetaEnvProxy() {
+  // packages/vitest/src/node/plugins/index.ts:146
+  const booleanKeys = [
+    'DEV',
+    'PROD',
+    'SSR',
+  ]
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string')
+        return undefined
+      if (booleanKeys.includes(key))
+        return !!process.env[key]
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string')
+        return true
+
+      if (booleanKeys.includes(key))
+        process.env[key] = value ? '1' : ''
+      else
+        process.env[key] = value
+
+      return true
+    },
+  })
+}
