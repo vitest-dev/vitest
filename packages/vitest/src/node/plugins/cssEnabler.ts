@@ -7,6 +7,7 @@ import { toArray } from '../../utils'
 const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
 const cssLangRE = new RegExp(cssLangs)
 const cssModuleRE = new RegExp(`\\.module${cssLangs}`)
+const cssInlineRE = /[?&]inline(&|$)/
 
 function isCSS(id: string) {
   return cssLangRE.test(id)
@@ -19,12 +20,7 @@ function isCSSModule(id: string) {
 // inline css requests are expected to just return the
 // string content directly and not the proxy module
 function isInline(id: string) {
-  const queryStart = id.indexOf('?');
-  if (queryStart === -1) {
-    return false;
-  }
-  const queryParts = id.substring(queryStart + 1).split('&');
-  return queryParts.some(part => part === 'inline');
+  return cssInlineRE.test(id);
 }
 
 function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
