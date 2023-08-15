@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url'
 import { normalize, resolve } from 'pathe'
-import { resolveModule } from 'local-pkg'
+import { resolvePath } from 'mlly'
 import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
 import type { Environment } from '../../types'
 import node from './node'
@@ -40,7 +40,7 @@ export async function loadEnvironment(name: VitestEnvironment, root: string): Pr
     return environments[name]
   const packageId = name[0] === '.' || name[0] === '/'
     ? resolve(root, name)
-    : resolveModule(`vitest-environment-${name}`, { paths: [root] }) ?? resolve(root, name)
+    : await resolvePath(`vitest-environment-${name}`, { url: [root] }) ?? resolve(root, name)
   const pkg = await import(pathToFileURL(normalize(packageId)).href)
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
