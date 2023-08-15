@@ -1840,6 +1840,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/restricted:
+    devDependencies:
+      jsdom:
+        specifier: ^22.1.0
+        version: 22.1.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/run:
     devDependencies:
       vite:
@@ -6771,7 +6780,7 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
-      '@types/node': 20.5.0
+      '@types/node': 18.16.19
       playwright-core: 1.28.0
     dev: true
 
@@ -8928,7 +8937,7 @@ packages:
     resolution: {integrity: sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==}
     dependencies:
       '@types/jsonfile': 6.1.1
-      '@types/node': 18.16.19
+      '@types/node': 20.5.0
     dev: true
 
   /@types/fs-extra@9.0.13:
@@ -9318,7 +9327,7 @@ packages:
   /@types/ws@8.5.5:
     resolution: {integrity: sha512-lwhs8hktwxSjf9UaZ9tG5M03PGogvFaH8gUgLNbN9HKIg0dvv6q+gkSuJ8HN4/VbyxkuLzCjlN7GquQ0gUJfIg==}
     dependencies:
-      '@types/node': 18.16.19
+      '@types/node': 20.5.0
     dev: true
 
   /@types/yargs-parser@21.0.0:

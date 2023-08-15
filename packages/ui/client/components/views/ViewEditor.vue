@@ -24,7 +24,7 @@ watch(() => props.file,
       draft.value = false
       return
     }
-    code.value = await client.rpc.readFile(props.file.filepath) || ''
+    code.value = await client.rpc.readTestFile(props.file.filepath) || ''
     serverCode.value = code.value
     draft.value = false
   },
@@ -116,7 +116,7 @@ watch([cm, failed], ([cmValue]) => {
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
-  await client.rpc.writeFile(props.file!.filepath, content)
+  await client.rpc.saveTestFile(props.file!.filepath, content)
   serverCode.value = content
   draft.value = false
 }

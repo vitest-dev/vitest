@@ -69,24 +69,35 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         resolveSnapshotRawPath(testPath, rawPath) {
           return ctx.snapshot.resolveRawPath(testPath, rawPath)
         },
-        removeFile(id) {
-          return fs.unlink(id)
+        async readSnapshotFile(snapshotPath) {
+          if (!ctx.snapshot.resolvedPaths.has(snapshotPath) || !existsSync(snapshotPath))
+            return null
+          return fs.readFile(snapshotPath, 'utf-8')
         },
-        createDirectory(id) {
-          return fs.mkdir(id, { recursive: true })
-        },
-        async readFile(id) {
-          if (!existsSync(id))
+        async readTestFile(id) {
+          if (!ctx.state.filesMap.has(id) || !existsSync(id))
             return null
           return fs.readFile(id, 'utf-8')
         },
+        async saveTestFile(id, content) {
+          // can save only already existing test file
+          if (!ctx.state.filesMap.has(id) || !existsSync(id))
+            return
+          return fs.writeFile(id, content, 'utf-8')
+        },
+        async saveSnapshotFile(id, content) {
+          if (!ctx.snapshot.resolvedPaths.has(id))
+            return
+          await fs.mkdir(dirname(id), { recursive: true })
+          return fs.writeFile(id, content, 'utf-8')
+        },
+        async removeSnapshotFile(id) {
+          if (!ctx.snapshot.resolvedPaths.has(id) || !existsSync(id))
+            return
+          return fs.unlink(id)
+        },
         snapshotSaved(snapshot) {
           ctx.snapshot.add(snapshot)
-        },
-        async writeFile(id, content, ensureDir) {
-          if (ensureDir)
-            await fs.mkdir(dirname(id), { recursive: true })
-          return await fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
           await ctx.rerunFiles(files)

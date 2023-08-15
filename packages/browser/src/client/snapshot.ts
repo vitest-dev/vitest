@@ -11,11 +11,11 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   readSnapshotFile(filepath: string): Promise<string | null> {
-    return rpc().readFile(filepath)
+    return rpc().readSnapshotFile(filepath)
   }
 
   saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
-    return rpc().writeFile(filepath, snapshot, true)
+    return rpc().saveSnapshotFile(filepath, snapshot)
   }
 
   resolvePath(filepath: string): Promise<string> {
@@ -27,10 +27,6 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   removeSnapshotFile(filepath: string): Promise<void> {
-    return rpc().removeFile(filepath)
-  }
-
-  async prepareDirectory(dirPath: string): Promise<void> {
-    await rpc().createDirectory(dirPath)
+    return rpc().removeSnapshotFile(filepath)
   }
 }

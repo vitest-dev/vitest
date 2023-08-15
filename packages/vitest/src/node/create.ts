@@ -17,6 +17,8 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
       ? resolve(root, options.config)
       : await findUp(configFiles, { cwd: root } as any)
 
+  options.config = configPath
+
   const config: ViteInlineConfig = {
     logLevel: 'error',
     configFile: configPath,

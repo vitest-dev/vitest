@@ -10,7 +10,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, hijackVitePluginInject, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
@@ -69,6 +69,12 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             open: false,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(
+                project.ctx.config.root,
+                project.ctx.server.config.configFile,
+              ),
+            },
           },
           test: {
             env,

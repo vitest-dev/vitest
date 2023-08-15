@@ -1,6 +1,7 @@
 import { builtinModules } from 'node:module'
-import { version as viteVersion } from 'vite'
+import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
+import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 
 export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
@@ -83,4 +84,10 @@ export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
       return originalTransform.call(this, code, id, { ...options, ssr: true })
     }
   }
+}
+
+export function resolveFsAllow(projectRoot: string, rootConfigFile: string | false | undefined) {
+  if (!rootConfigFile)
+    return [searchForWorkspaceRoot(projectRoot)]
+  return [dirname(rootConfigFile), searchForWorkspaceRoot(projectRoot)]
 }
