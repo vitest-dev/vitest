@@ -55,7 +55,7 @@ test('file using import.meta.env is included in report', async () => {
 })
 
 test('files should not contain a setup file', () => {
-  const coveragePath = resolve('./coverage')
+  const coveragePath = resolve('./coverage/coverage-test')
   const files = fs.readdirSync(coveragePath)
 
   // expect(files).not.toContain('coverage-test')
