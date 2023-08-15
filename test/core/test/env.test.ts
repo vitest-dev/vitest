@@ -53,3 +53,9 @@ test('define process and using import.meta.env together', () => {
   expect(process).toMatchObject({})
   expect(import.meta.env.MODE).toEqual('test')
 })
+
+test('PROD, DEV, SSR should be boolean', () => {
+  expect(typeof import.meta.env.PROD).toEqual('boolean')
+  expect(typeof import.meta.env.DEV).toEqual('boolean')
+  expect(typeof import.meta.env.SSR).toEqual('boolean')
+})

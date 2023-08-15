@@ -199,3 +199,21 @@ function traverseBetweenDirs(
     longerDir = dirname(longerDir)
   }
 }
+
+export function createImportMetaEnvProxy() {
+  // packages/vitest/src/node/plugins/index.ts:146
+  const booleanKeys = [
+    'DEV',
+    'PROD',
+    'SSR',
+  ]
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string')
+        return undefined
+      if (booleanKeys.includes(key))
+        return !!process.env[key]
+      return process.env[key]
+    },
+  })
+}
