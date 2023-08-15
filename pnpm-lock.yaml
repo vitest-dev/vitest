@@ -1834,6 +1834,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/restricted:
+    devDependencies:
+      jsdom:
+        specifier: ^22.1.0
+        version: 22.1.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/run:
     devDependencies:
       vite:
@@ -9084,6 +9093,10 @@ packages:
   /@types/node@18.7.13:
     resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
     dev: false
+
+  /@types/node@20.5.0:
+    resolution: {integrity: sha512-Mgq7eCtoTjT89FqNoTzzXg2XvCi5VMhRV6+I2aYanc6kQCBImeNaAYRs/DyoVqk1YEUJK5gN9VO7HRIdz4Wo3Q==}
+    dev: true
 
   /@types/node@20.5.0:
     resolution: {integrity: sha512-Mgq7eCtoTjT89FqNoTzzXg2XvCi5VMhRV6+I2aYanc6kQCBImeNaAYRs/DyoVqk1YEUJK5gN9VO7HRIdz4Wo3Q==}
