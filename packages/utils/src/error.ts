@@ -96,8 +96,10 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined))
-    err.diff = diff(err.expected, err.actual)
+  if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined)) {
+    const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(err.actual, err.expected)
+    err.diff = diff(replacedExpected, replacedActual)
+  }
 
   if (typeof err.expected !== 'string')
     err.expected = stringify(err.expected, 10)

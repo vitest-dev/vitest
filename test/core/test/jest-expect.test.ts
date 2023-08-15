@@ -787,4 +787,28 @@ it('correctly prints diff', () => {
   }
 })
 
+it.only('correctly prints diff with asymmetric matchers', () => {
+  try {
+    expect({ a: 1, b: 'string' }).toEqual({
+      a: expect.any(Number),
+      b: expect.any(Function),
+    })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(err)
+    expect(error.diff).toMatchInlineSnapshot(`
+      "- Expected
+      + Received
+
+        Object {
+          \\"a\\": Any<Number>,
+      -   \\"b\\": Any<Function>,
+      +   \\"b\\": \\"string\\",
+        }"
+    `)
+  }
+})
+
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
