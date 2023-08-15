@@ -2,6 +2,8 @@
  * Istanbul coverage provider specific test cases
  */
 
+import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import { readCoverageJson } from './utils'
 
@@ -49,4 +51,12 @@ test('tests with multiple suites are covered', async () => {
     0: 1,
     1: 1,
   })
+})
+
+test('vite transforms should not show on coverage report', async () => {
+  const filePath = resolve('./coverage/src/process-env.ts.html')
+  const htmlContent = readFileSync(filePath, 'utf-8')
+
+  // Actual source code
+  expect(htmlContent).toContain('process.env.NODE_ENV')
 })

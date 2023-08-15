@@ -3528,6 +3528,109 @@ exports[`v8 json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/process-env.ts": {
+    "all": false,
+    "b": {
+      "0": [
+        1,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 3,
+          },
+          "start": {
+            "column": 7,
+            "line": 1,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 3,
+            },
+            "start": {
+              "column": 7,
+              "line": 1,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+    },
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 3,
+          },
+          "start": {
+            "column": 7,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 3,
+          },
+          "start": {
+            "column": 7,
+            "line": 1,
+          },
+        },
+        "name": "getNodeEnv",
+      },
+    },
+    "path": "<process-cwd>/src/process-env.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 30,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 29,
+          "line": 2,
+        },
+        "start": {
+          "column": 0,
+          "line": 2,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 1,
+          "line": 3,
+        },
+        "start": {
+          "column": 0,
+          "line": 3,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/untested-file.ts": {
     "all": true,
     "b": {
