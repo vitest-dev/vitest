@@ -145,13 +145,13 @@ export class WorkspaceProject {
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
-      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
     }
 
-    return fg(include, globOptions)
+    const files = await fg(include, globOptions)
+    return files.map(file => resolve(cwd, file))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
