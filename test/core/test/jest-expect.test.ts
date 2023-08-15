@@ -787,7 +787,7 @@ it('correctly prints diff', () => {
   }
 })
 
-it.only('correctly prints diff with asymmetric matchers', () => {
+it('correctly prints diff with asymmetric matchers', () => {
   try {
     expect({ a: 1, b: 'string' }).toEqual({
       a: expect.any(Number),
