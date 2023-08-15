@@ -2,7 +2,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../utils'
+import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
 import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
@@ -12,7 +12,7 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, hijackVitePluginInject, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow, resolveOptimizerConfig } from './utils'
 import { VitestResolver } from './vitestResolver'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
@@ -88,10 +88,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             hmr: false,
             preTransformRequests: false,
             fs: {
-              allow: [
-                ...toArray(testConfig.setupFiles),
-                ...toArray(testConfig.globalSetup),
-              ],
+              allow: resolveFsAllow(getRoot(), testConfig.config),
             },
           },
         }
