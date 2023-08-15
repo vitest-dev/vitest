@@ -11,7 +11,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FakeTimers } from '../../../packages/vitest/src/integrations/mock/timers'
+import { FakeTimers } from '../../../../packages/vitest/src/integrations/mock/timers'
 
 class FakeDate extends Date {}
 

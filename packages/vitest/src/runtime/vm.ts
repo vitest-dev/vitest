@@ -89,6 +89,9 @@ export async function run(ctx: WorkerContext) {
   context.process = process
   context.global = context
   context.console = createCustomConsole(state)
+  // TODO: don't hardcode setImmediate in fake timers defaults
+  context.setImmediate = setImmediate
+  context.clearImmediate = clearImmediate
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
