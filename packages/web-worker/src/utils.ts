@@ -80,3 +80,11 @@ export function getRunnerOptions(): any {
     state,
   }
 }
+
+export function getFileIdFromUrl(url: URL | string) {
+  if (!(url instanceof URL))
+    url = new URL(url, self.location.origin)
+  if (url.protocol === 'http:' || url.protocol === 'https:')
+    return url.pathname
+  return url.toString().replace(/^file:\/+/, '/')
+}
