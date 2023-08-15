@@ -162,7 +162,7 @@ import { vi } from 'vitest'
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can defined them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference inside `vi.mock`.
+  Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference them inside `vi.mock`.
 
   ::: warning
   `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
