@@ -58,7 +58,6 @@ test('files should not contain a setup file', () => {
   const coveragePath = resolve('./coverage/coverage-test')
   const files = fs.readdirSync(coveragePath)
 
-  // expect(files).not.toContain('coverage-test')
   expect(files).not.toContain('setup.ts.html')
 
   const coverageSrcPath = resolve('./coverage/coverage-test/src')
