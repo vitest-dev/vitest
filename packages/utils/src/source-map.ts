@@ -127,6 +127,9 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   // normalize Windows path (\ -> /)
   file = resolve(file)
 
+  if (method)
+    method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+
   return {
     method,
     file,

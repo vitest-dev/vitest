@@ -70,7 +70,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return ctx.snapshot.resolveRawPath(testPath, rawPath)
         },
         async readSnapshotFile(snapshotPath) {
-          if (!ctx.snapshot.resolvedPaths.has(snapshotPath))
+          if (!ctx.snapshot.resolvedPaths.has(snapshotPath) || !existsSync(snapshotPath))
             return null
           return fs.readFile(snapshotPath, 'utf-8')
         },
@@ -86,7 +86,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
-          if (!ctx.snapshot.resolvedPaths.has(id))
+          if (!ctx.snapshot.resolvedPaths.has(id) || !existsSync(id))
             return
           return fs.unlink(id)
         },
