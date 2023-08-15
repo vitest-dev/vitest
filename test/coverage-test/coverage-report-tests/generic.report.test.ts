@@ -102,7 +102,7 @@ test('coverage provider does not conflict with built-in reporter\'s outputFile',
 })
 
 test('virtual files should be excluded', () => {
-  const files = fs.readdirSync(resolve('./coverage'))
+  const files = fs.readdirSync(resolve('./coverage/coverage-test'))
   const srcFiles = fs.readdirSync(resolve('./coverage/coverage-test/src'))
 
   for (const file of [...files, ...srcFiles]) {
