@@ -7,7 +7,7 @@ import { cleanUrl } from 'vite-node/utils'
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
 export function SsrReplacerPlugin(): Plugin {
   return {
-    name: 'vitest:env-replacer',
+    name: 'vitest:ssr-replacer',
     enforce: 'pre',
     transform(code, id) {
       if (!/\bimport\.meta\.env\b/.test(code) && !/\bimport\.meta\.url\b/.test(code))
@@ -24,17 +24,6 @@ export function SsrReplacerPlugin(): Plugin {
         const endIndex = startIndex + env[0].length
 
         s.overwrite(startIndex, endIndex, '__vite_ssr_import_meta__.env')
-      }
-
-      const urls = cleanCode.matchAll(/\bimport\.meta\.url\b/g)
-
-      for (const env of urls) {
-        s ||= new MagicString(code)
-
-        const startIndex = env.index!
-        const endIndex = startIndex + env[0].length
-
-        s.overwrite(startIndex, endIndex, '__vite_ssr_import_meta__.url')
       }
 
       if (s) {
