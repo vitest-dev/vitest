@@ -2,7 +2,7 @@
   "name": "@vitest/test-cwd",
   "private": true,
   "scripts": {
-    "test": "cd \".cache/projects/test\" && vitest run"
+    "test": "cd $(pwd)/.cache/projects/test && vitest run"
   },
   "devDependencies": {
     "vitest": "workspace:*"
