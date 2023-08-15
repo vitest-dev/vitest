@@ -20,7 +20,7 @@ function isCSSModule(id: string) {
 // inline css requests are expected to just return the
 // string content directly and not the proxy module
 function isInline(id: string) {
-  return cssInlineRE.test(id);
+  return cssInlineRE.test(id)
 }
 
 function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {

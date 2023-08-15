@@ -15,7 +15,6 @@ describe('processing inline css', () => {
 
   test('returns a string', async () => {
     const { default: style } = await import('../src/App.module.css?inline')
-    expect(typeof style).toBe('string');
-    console.log(style);
+    expect(typeof style).toBe('string')
   })
 })
