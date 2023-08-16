@@ -15,7 +15,7 @@ expect('foo').toMatchInlineSnapshot(\`{
     replaceInlineSnap(code, s, 40, '"bar\nfoo"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-      expect('foo').toMatchInlineSnapshot('"bar"')
+      expect('foo').toMatchInlineSnapshot(\`"bar"\`)
       expect('foo').toMatchInlineSnapshot(\`
         "bar
         foo"
@@ -37,7 +37,7 @@ ${indent}}\`)
     replaceInlineSnap(code, s, 60, '"bar\nfoo"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-        expect('foo').toMatchInlineSnapshot('"bar"')
+        expect('foo').toMatchInlineSnapshot(\`"bar"\`)
         expect('foo').toMatchInlineSnapshot(\`
           "bar
           foo"
@@ -54,7 +54,7 @@ ${indent}}\`)
     replaceInlineSnap(code, s, 0, '"bar"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-        expect('foo').toMatchInlineSnapshot(/* comment1 */'"bar"')
+        expect('foo').toMatchInlineSnapshot(/* comment1 */\`"bar"\`)
         "
     `)
   })
@@ -77,7 +77,7 @@ ${indent}}\`)
              comment2
           */
 
-          '"bar"')
+          \`"bar"\`)
         "
     `)
   })
@@ -96,7 +96,7 @@ ${indent}}\`)
         expect('foo').toMatchInlineSnapshot(
           // comment1
           // comment2
-          '"bar"')
+          \`"bar"\`)
         "
     `)
   })
