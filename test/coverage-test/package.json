@@ -2,11 +2,12 @@
   "name": "@vitest/test-coverage",
   "private": true,
   "scripts": {
-    "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:types",
+    "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:options && pnpm test:types",
     "test:v8": "node ./testing.mjs --provider v8",
     "test:custom": "node ./testing.mjs --provider custom",
     "test:istanbul": "node ./testing.mjs --provider istanbul",
     "test:browser": "node ./testing.mjs --browser --provider istanbul",
+    "test:options": "node ./testing-options.mjs",
     "test:types": "vitest typecheck --run --reporter verbose"
   },
   "devDependencies": {

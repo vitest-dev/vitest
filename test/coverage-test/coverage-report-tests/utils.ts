@@ -31,7 +31,5 @@ export async function readCoverageJson() {
 }
 
 export function normalizeFilename(filename: string) {
-  return normalize(filename)
-    .replace(normalize(process.cwd()), '<process-cwd>')
-    .replace(normalize(process.cwd().replace('coverage-test', '')), '<process-cwd>/../')
+  return normalize(filename).replace(normalize(process.cwd()), '<process-cwd>')
 }

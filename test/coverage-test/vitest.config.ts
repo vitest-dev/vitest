@@ -43,8 +43,7 @@ export default defineConfig({
     coverage: {
       provider: provider as any,
       customProviderModule: provider === 'custom' ? 'custom-provider' : undefined,
-      include: ['**/src/**', '**/test-utils/fixtures/**'],
-      allowExternal: true,
+      include: ['src/**'],
       clean: true,
       all: true,
       reporter: [
