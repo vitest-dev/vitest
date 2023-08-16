@@ -1,6 +1,6 @@
 import { diff } from './diff'
 import { format } from './display'
-import { getOwnProperties, getType } from './helpers'
+import { deepClone, getOwnProperties, getType } from './helpers'
 import { stringify } from './stringify'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
@@ -97,7 +97,10 @@ export function processError(err: any) {
     err.nameStr = String(err.name)
 
   if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined)) {
-    const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(err.actual, err.expected)
+    const clonedActual = deepClone(err.actual, { forceWritable: true })
+    const clonedExpected = deepClone(err.expected, { forceWritable: true })
+
+    const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
     err.diff = diff(replacedExpected, replacedActual)
   }
 
