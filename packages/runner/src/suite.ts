@@ -74,6 +74,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     const test: Test = {
       id: '',
       type: 'test',
+      pending: false,
       name: formatName(name),
       each: this.each,
       mode,
