@@ -8,6 +8,7 @@ import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
+import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
@@ -24,13 +25,14 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
-export { JSDOMOptions }
+export type { JSDOMOptions, HappyDOMOptions }
 
 export interface EnvironmentOptions {
   /**
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
   [x: string]: unknown
 }
 
