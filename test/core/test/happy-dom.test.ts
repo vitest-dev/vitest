@@ -2,7 +2,6 @@
 
 /**
  * @vitest-environment happy-dom
- * @vitest-environment-options { "settings": { "disableCSSFileLoading": true }, "width": 1920 }
  */
 
 /* eslint-disable vars-on-top */
@@ -13,16 +12,15 @@ declare global {
   // eslint-disable-next-line no-var
   var __property_dom: unknown
   // eslint-disable-next-line no-var
-  var happyDOM: unknown
+  var happyDOM: any
 }
 
 it('defaults URL to localhost:3000', () => {
   expect(location.href).toBe('http://localhost:3000/')
 })
 
-it('accepts custom environment options', () => {
-  // default is false
-  expect((window.happyDOM as any).settings.disableCSSFileLoading).toBe(true)
+it('disableCSSFileLoading is false by default because we didn\'t change options', () => {
+  expect(window.happyDOM.settings.disableCSSFileLoading).toBe(false)
 })
 
 it('defined on self/window are defined on global', () => {
