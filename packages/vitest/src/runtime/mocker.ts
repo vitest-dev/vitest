@@ -423,11 +423,13 @@ export class VitestMocker {
       return exports
     }
     if (typeof mock === 'function' && !callstack.includes(mockPath) && !callstack.includes(url)) {
-      callstack.push(mockPath)
-      const result = await this.callFunctionMock(mockPath, mock)
-      const indexMock = callstack.indexOf(mockPath)
-      callstack.splice(indexMock, 1)
-      return result
+      try {
+        callstack.push(mockPath)
+        return await this.callFunctionMock(mockPath, mock)
+      } finally {
+        const indexMock = callstack.indexOf(mockPath)
+        callstack.splice(indexMock, 1)
+      }
     }
     if (typeof mock === 'string' && !callstack.includes(mock))
       return mock
