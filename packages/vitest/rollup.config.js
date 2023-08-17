@@ -45,6 +45,7 @@ const dtsEntries = {
   config: 'src/config.ts',
   coverage: 'src/coverage.ts',
   utils: 'src/public/utils.ts',
+  execute: 'src/public/execute.ts',
 }
 
 const external = [
