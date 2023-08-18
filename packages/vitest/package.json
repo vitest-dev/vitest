@@ -77,6 +77,10 @@
     "./coverage": {
       "types": "./coverage.d.ts",
       "import": "./dist/coverage.js"
+    },
+    "./reporters": {
+      "types": "./dist/reporters.d.ts",
+      "import": "./dist/reporters.js"
     }
   },
   "main": "./dist/index.js",
