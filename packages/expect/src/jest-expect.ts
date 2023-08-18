@@ -499,6 +499,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const promise = utils.flag(this, 'promise')
     const isNot = utils.flag(this, 'negate') as boolean
     let thrown: any = null
+
     if (promise === 'rejects') {
       thrown = obj
     }
