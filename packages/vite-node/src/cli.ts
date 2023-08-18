@@ -75,11 +75,11 @@ async function run(files: string[], options: CliOptions = {}) {
     cli.version(version).outputHelp()
     process.exit(1)
   }
-  const root = options.root || process.cwd()
-
   const serverOptions = options.options
     ? parseServerOptions(options.options)
     : {}
+
+  const root = options.root || process.cwd()
 
   serverOptions.deps ??= {}
   if (serverOptions.deps.inline !== true) {
