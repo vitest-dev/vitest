@@ -332,6 +332,13 @@ describe('jest-expect', () => {
     expect(null).toBe(true)
   })
 
+  it.fails('toThrow should failure when does not throw ', () => {
+    expect(() => {
+    }).toThrow(Error)
+    expect(async () => {
+    }).toThrow(Error)
+  })
+
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {
