@@ -4,7 +4,7 @@ You can import reporters from `vitest/reporters` and extend them to create your 
 
 ## Extending built-in reporters
 
-In general, you don't need to create your reporter from scratch. Vitest comes with several default reporting programs that you can extend.
+In general, you don't need to create your reporter from scratch. `vitest` comes with several default reporting programs that you can extend.
 
 ```ts
 import { DefaultReporter } from 'vitest/reporters'
@@ -58,7 +58,7 @@ export default defineConfig({
 
 ## Exported reporters
 
-Vitest comes with a few built-in reporters that you can use out of the box.
+`vitest` comes with a few built-in reporters that you can use out of the box.
 
 ### Built-in reporters:
 
