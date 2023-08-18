@@ -46,7 +46,7 @@ export default class CustomReporter implements Reporter {
 Then you can use your custom reporter in the `vitest.config.ts` file:
 
 ```ts
-import { defineConfig } from 'vitest'
+import { defineConfig } from 'vitest/config'
 import CustomReporter from './custom-reporter'
 
 export default defineConfig({
