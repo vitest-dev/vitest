@@ -182,6 +182,12 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 
     if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
       (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
+
+    const thresholdAutoUpdate = (coverage as CoverageIstanbulOptions).thresholdAutoUpdate
+    if ((thresholdAutoUpdate as unknown as string) === 'true')
+      (coverage as CoverageIstanbulOptions).thresholdAutoUpdate = true
+    else if ((thresholdAutoUpdate as unknown as string) === 'false')
+      (coverage as CoverageIstanbulOptions).thresholdAutoUpdate = false
   }
   return argv
 }
