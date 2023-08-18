@@ -426,7 +426,8 @@ export class VitestMocker {
       try {
         callstack.push(mockPath)
         return await this.callFunctionMock(mockPath, mock)
-      } finally {
+      }
+      finally {
         const indexMock = callstack.indexOf(mockPath)
         callstack.splice(indexMock, 1)
       }
