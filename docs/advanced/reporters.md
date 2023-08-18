@@ -51,7 +51,7 @@ import CustomReporter from './custom-reporter'
 
 export default defineConfig({
   test: {
-    reporter: CustomReporter,
+    reporters: [new CustomReporter()],
   },
 })
 ```
