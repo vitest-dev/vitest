@@ -1,3 +1,4 @@
+import { isAbsolute, join } from 'node:path'
 import cac from 'cac'
 import c from 'picocolors'
 import { createServer } from 'vite'
@@ -74,10 +75,20 @@ async function run(files: string[], options: CliOptions = {}) {
     cli.version(version).outputHelp()
     process.exit(1)
   }
+  const root = options.root || process.cwd()
 
   const serverOptions = options.options
     ? parseServerOptions(options.options)
     : {}
+
+  serverOptions.deps ??= {}
+  if (serverOptions.deps.inline !== true) {
+    const entries = files.map((file) => {
+      return new RegExp(`[^${isAbsolute(file) ? file : join(root, file)}]`)
+    })
+    serverOptions.deps.inline ??= []
+    serverOptions.deps.inline.push(...entries)
+  }
 
   const server = await createServer({
     logLevel: 'error',
