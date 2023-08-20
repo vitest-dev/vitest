@@ -1,4 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
+import type { Capabilities } from '@wdio/types'
 import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { WorkspaceProject } from '../workspace'
@@ -8,6 +9,13 @@ export type WebdriverBrowser = typeof webdriverBrowsers[number]
 
 export interface WebdriverProviderOptions extends BrowserProviderOptions {
   browser: WebdriverBrowser
+}
+
+interface WebdriverBrowserExtensionMapValue {
+  key: keyof Capabilities.VendorExtensions
+  value: {
+    args: string[]
+  }
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
@@ -42,6 +50,9 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const options = this.ctx.config.browser
 
     if (this.browser === 'safari') {
+      if (options.headless)
+        throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it')
+
       const safaridriver = await import('safaridriver')
       safaridriver.start({ diagnose: true })
       this.stopSafari = () => safaridriver.stop()
@@ -53,13 +64,57 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     const { remote } = await import('webdriverio')
 
+    const webdriverBrowserExtensionMap: {
+      chrome: WebdriverBrowserExtensionMapValue
+      firefox: WebdriverBrowserExtensionMapValue
+      edge: WebdriverBrowserExtensionMapValue
+    } = {
+      chrome: {
+        key: 'goog:chromeOptions',
+        value: {
+          args: [],
+        },
+      },
+      firefox: {
+        key: 'moz:firefoxOptions',
+        value: {
+          args: [],
+        },
+      },
+      edge: {
+        key: 'ms:edgeOptions',
+        value: {
+          args: [],
+        },
+      },
+    }
+
+    const capabilities: Capabilities.VendorExtensions & {
+      browserName: WebdriverProviderOptions['browser']
+    } = {
+      browserName: this.browser,
+    }
+
+    if (this.browser !== 'safari') {
+      if (options.headless) {
+        switch (this.browser) {
+          case 'chrome':
+            webdriverBrowserExtensionMap[this.browser].value.args = webdriverBrowserExtensionMap[this.browser].value.args.concat(['headless', 'disable-gpu'])
+            break
+          case 'firefox':
+            webdriverBrowserExtensionMap[this.browser].value.args.push('-headless')
+            break
+          case 'edge':
+            webdriverBrowserExtensionMap[this.browser].value.args.push('--headless')
+        }
+      }
+      capabilities[webdriverBrowserExtensionMap[this.browser].key] = webdriverBrowserExtensionMap[this.browser].value
+    }
+
     // TODO: close everything, if browser is closed from the outside
     this.cachedBrowser = await remote({
       logLevel: 'error',
-      capabilities: {
-        'browserName': this.browser,
-        'wdio:devtoolsOptions': { headless: options.headless },
-      },
+      capabilities,
     })
 
     return this.cachedBrowser
