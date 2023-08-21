@@ -2,6 +2,7 @@
 
 import type vm from 'node:vm'
 import type { ExternalModulesExecutor } from '../external-executor'
+import type { WorkerGlobalState } from '../../types/worker'
 import type { VMModule } from './types'
 import { SourceTextModule, SyntheticModule } from './utils'
 
@@ -22,6 +23,10 @@ export class EsmExecutor {
     this.context = options.context
   }
 
+  get workerState(): WorkerGlobalState {
+    return this.context.__vitest_worker__
+  }
+
   public async evaluateModule<T extends VMModule>(m: T): Promise<T> {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
@@ -40,22 +45,25 @@ export class EsmExecutor {
     return m
   }
 
+  public createJsonModule(fileUrl: string, content: string) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached)
+      return cached
+    const m = new SyntheticModule(
+      ['default'],
+      () => {
+        const result = JSON.parse(content)
+        m.setExport('default', result)
+      },
+    )
+    this.moduleCache.set(fileUrl, m)
+    return m
+  }
+
   public async createEsModule(fileUrl: string, code: string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
-    // TODO: should not be allowed in strict mode, implement in #2854
-    if (fileUrl.endsWith('.json')) {
-      const m = new SyntheticModule(
-        ['default'],
-        () => {
-          const result = JSON.parse(code)
-          m.setExport('default', result)
-        },
-      )
-      this.moduleCache.set(fileUrl, m)
-      return m
-    }
     const m = new SourceTextModule(
       code,
       {

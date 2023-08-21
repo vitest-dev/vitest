@@ -288,7 +288,7 @@ export class ViteNodeRunner {
 
     if (externalize) {
       debugNative(externalize)
-      const exports = await this.interopedImport(externalize)
+      const exports = await this.interopedImport(externalize, undefined, moduleId)
       mod.exports = exports
       return exports
     }
@@ -436,15 +436,15 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
-  protected importExternalModule(path: string) {
-    return import(path)
+  protected importExternalModule(path: string, options?: ImportCallOptions, _referencer?: string) {
+    return import(path, options)
   }
 
   /**
    * Import a module and interop it
    */
-  async interopedImport(path: string) {
-    const importedModule = await this.importExternalModule(path)
+  async interopedImport(path: string, options?: ImportCallOptions, referencer?: string) {
+    const importedModule = await this.importExternalModule(path, options, referencer)
 
     if (!this.shouldInterop(path, importedModule))
       return importedModule

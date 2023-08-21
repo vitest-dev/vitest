@@ -182,6 +182,7 @@
     "@types/sinonjs__fake-timers": "^8.1.2",
     "birpc": "0.2.12",
     "chai-subset": "^1.6.0",
+    "cjs-module-lexer": "^1.2.3",
     "cli-truncate": "^3.1.0",
     "event-target-polyfill": "^0.0.3",
     "execa": "^7.1.1",

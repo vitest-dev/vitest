@@ -70,3 +70,9 @@ export declare class VMSourceTextModule extends VMModule {
    */
   constructor(code: string, options?: SourceTextModuleOptions)
 }
+
+export interface CreateModuleOptions extends ImportCallOptions {
+  $_referencer?: string
+}
+
+export type ModuleFormat = 'data' | 'builtin' | 'vite' | 'module' | 'commonjs' | 'wasm' | 'json'

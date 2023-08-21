@@ -1,20 +1,23 @@
 /* eslint-disable antfu/no-cjs-exports */
 
-import vm from 'node:vm'
+import type vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
 import { statSync } from 'node:fs'
 import { extname, join, normalize } from 'pathe'
+import * as cjsLexer from 'cjs-module-lexer'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import type { WorkerGlobalState } from '../types/worker'
 import type { ExecuteOptions } from './execute'
-import type { VMModule, VMSyntheticModule } from './vm/types'
+import type { CreateModuleOptions, ModuleFormat, VMModule } from './vm/types'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import type { FileMap } from './vm/file-map'
 import { EsmExecutor } from './vm/esm-executor'
-import { interopCommonJsModule } from './vm/utils'
+import { SyntheticModule, interopCommonJsModule, isStrictNode } from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
+import { validateAssertion } from './vm/validate-assertion'
 
-const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
+let lexerInitialized = false
 
 const nativeResolve = import.meta.resolve!
 
@@ -25,7 +28,7 @@ export interface ExternalModulesExecutorOptions extends ExecuteOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'module' | 'commonjs'
+  format: ModuleFormat
   url: string
   path: string
 }
@@ -60,15 +63,24 @@ export class ExternalModulesExecutor {
     this.resolvers = [this.vite.resolve]
   }
 
+  get workerState(): WorkerGlobalState {
+    return this.options.context.__vitest_worker__
+  }
+
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
-  public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
-    const module = await this.resolveModule(specifier, referencer.identifier)
+  public importModuleDynamically = async (specifier: string, referencer: VMModule, importAssertions: Object) => {
+    const module = await this.resolveModule(
+      specifier,
+      referencer.identifier,
+      { assert: importAssertions as ImportAssertions, $_referencer: referencer.identifier },
+    )
     return this.esm.evaluateModule(module)
   }
 
-  public resolveModule = async (specifier: string, referencer: string) => {
+  public resolveModule = async (specifier: string, referencer: string, options: CreateModuleOptions = {}) => {
     const identifier = await this.resolve(specifier, referencer)
-    return await this.createModule(identifier)
+    options.$_referencer ??= referencer
+    return await this.createModule(identifier, options)
   }
 
   public async resolve(specifier: string, parent: string) {
@@ -127,9 +139,22 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  private wrapCommonJsSynteticModule(identifier: string, exports: Record<string, unknown>) {
-    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
-    const { keys, moduleExports, defaultExport } = interopCommonJsModule(this.options.interopDefault, exports)
+  prepareCommonJsModule(identifier: string, moduleExports: any) {
+    if (this.workerState.environment.name === 'node') {
+      const options = this.workerState.config.environmentOptions.node || {}
+      if (options.strict) {
+        const content = this.fs.readFile(fileURLToPath(identifier))
+        const { exports, reexports } = cjsLexer.parse(content)
+        const keys = new Set([...exports, ...reexports])
+        keys.delete('default')
+        return { keys, moduleExports, defaultExport: moduleExports }
+      }
+    }
+    return interopCommonJsModule(this.options.interopDefault, moduleExports)
+  }
+
+  private wrapCommonJsSynteticModule(identifier: string, exports: any) {
+    const { keys, moduleExports, defaultExport } = this.prepareCommonJsModule(identifier, exports)
     const m = new SyntheticModule(
       [...keys, 'default'],
       () => {
@@ -145,40 +170,58 @@ export class ExternalModulesExecutor {
     return m
   }
 
-  private getModuleInformation(identifier: string): ModuleInformation {
+  public getModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:'))
-      return { type: 'data', url: identifier, path: identifier }
+      return { format: 'data', url: identifier, path: identifier }
 
     const extension = extname(identifier)
+
+    if (extension === 'json')
+      return { format: 'json', url: identifier, path: identifier }
+
     if (extension === '.node' || isNodeBuiltin(identifier))
-      return { type: 'builtin', url: identifier, path: identifier }
+      return { format: 'builtin', url: identifier, path: identifier }
 
     const isFileUrl = identifier.startsWith('file://')
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
     const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
 
-    let type: 'module' | 'commonjs' | 'vite'
+    let format: ModuleFormat
     if (this.vite.canResolve(fileUrl)) {
-      type = 'vite'
+      format = 'vite'
     }
     else if (extension === '.mjs') {
-      type = 'module'
+      format = 'module'
     }
     else if (extension === '.cjs') {
-      type = 'commonjs'
+      format = 'commonjs'
+    }
+    else if (extension === '.wasm') {
+      format = 'wasm'
     }
     else {
       const pkgData = this.findNearestPackageData(normalize(pathUrl))
-      type = pkgData.type === 'module' ? 'module' : 'commonjs'
+      format = pkgData.type === 'module' ? 'module' : 'commonjs'
     }
 
-    return { type, path: pathUrl, url: fileUrl }
+    return { format, path: pathUrl, url: fileUrl }
   }
 
-  private async createModule(identifier: string): Promise<VMModule> {
-    const { type, url, path } = this.getModuleInformation(identifier)
+  private async createModule(identifier: string, options?: CreateModuleOptions): Promise<VMModule> {
+    const { format: type, url, path } = this.getModuleInformation(identifier)
+
+    if (isStrictNode(this.workerState)) {
+      validateAssertion(url, type, options)
+
+      if (!lexerInitialized) {
+        await cjsLexer.init()
+        lexerInitialized = true
+      }
+    }
 
     switch (type) {
+      case 'wasm':
+        throw new Error('[vitest] WebAssembly is not supported yet. Please, open a new issue if you rely on it.')
       case 'data':
         return this.esm.createDataModule(identifier)
       case 'builtin': {
@@ -187,6 +230,8 @@ export class ExternalModulesExecutor {
       }
       case 'vite':
         return await this.vite.createViteModule(url)
+      case 'json':
+        return this.esm.createJsonModule(url, this.fs.readFile(path))
       case 'module':
         return await this.esm.createEsModule(url, this.fs.readFile(path))
       case 'commonjs': {
@@ -200,8 +245,8 @@ export class ExternalModulesExecutor {
     }
   }
 
-  async import(identifier: string) {
-    const module = await this.createModule(identifier)
+  async import(identifier: string, options?: CreateModuleOptions) {
+    const module = await this.createModule(identifier, options)
     await this.esm.evaluateModule(module)
     return module.namespace
   }
