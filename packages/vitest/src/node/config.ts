@@ -279,7 +279,7 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,

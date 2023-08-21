@@ -39,6 +39,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+  allowExternal: false,
 }
 
 export const fakeTimersDefaults = {

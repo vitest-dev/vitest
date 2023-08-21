@@ -78,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'exclude'
   | 'extension'
   | 'reportOnFailure'
+  | 'allowExternal'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -216,6 +217,13 @@ export interface BaseCoverageOptions {
    * @default false
    */
   reportOnFailure?: boolean
+
+  /**
+   * Collect coverage of files outside the project `root`.
+   *
+   * @default false
+   */
+  allowExternal?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {

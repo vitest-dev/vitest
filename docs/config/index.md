@@ -985,6 +985,15 @@ Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vit
 
 Generate coverage report even when tests fail.
 
+#### coverage.allowExternal
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
+
+Collect coverage of files outside the [project `root`](https://vitest.dev/config/#root).
+
 #### coverage.skipFull
 
 - **Type:** `boolean`
