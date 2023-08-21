@@ -27,6 +27,7 @@ cli
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
   .option('--coverage.all', 'Whether to include all files, including the untested ones into report', { default: true })
+  .option('--coverage.thresholdAutoUpdate', 'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds')
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--workspace <path>', 'Path to a workspace configuration file')
@@ -182,19 +183,6 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 
     if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
       (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
-
-    if ('thresholdAutoUpdate' in coverage) {
-      // Convert string values ('true'|'false') to boolean
-      if (typeof coverage.thresholdAutoUpdate === 'string') {
-        const value = coverage.thresholdAutoUpdate === 'false'
-        ? false
-        : coverage.thresholdAutoUpdate === 'true'
-        ? true
-        : coverage.thresholdAutoUpdate
-        
-        coverage.thresholdAutoUpdate = value
-      }
-    }
   }
   return argv
 }
