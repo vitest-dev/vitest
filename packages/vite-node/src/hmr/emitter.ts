@@ -47,7 +47,7 @@ export function viteNodeHmrPlugin(): Plugin {
     configureServer(server) {
       const _send = server.ws.send
       server.emitter = emitter
-      server.ws.send = function (payload: HMRPayload) {
+      server.ws.send = function (payload: any) {
         _send(payload)
         emitter.emit('message', payload)
       }
