@@ -207,9 +207,13 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.optimizer.{mode}.enabled
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `true` if using >= Vite 4.3.2, `false` otherwise
 
 Enable dependency optimization.
+
+::: warning
+This option only works with Vite 4.3.2 and higher.
+:::
 
 #### deps.web
 
