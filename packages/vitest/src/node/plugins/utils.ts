@@ -1,4 +1,3 @@
-import { builtinModules } from 'node:module'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
 import { dirname } from 'pathe'
@@ -24,6 +23,17 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
   }
   else {
     const cacheDir = testConfig.cache !== false ? testConfig.cache?.dir : null
+    const currentInclude = (testOptions.include || viteOptions?.include || [])
+    const exclude = [
+      'vitest',
+      // Ideally, we shouldn't optimize react in test mode, otherwise we need to optimize _every_ dependency that uses react.
+      'react',
+      ...(testOptions.exclude || viteOptions?.exclude || []),
+    ]
+    const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime'))
+    exclude.push(...runtime)
+
+    const include = (testOptions.include || viteOptions?.include || []).filter((n: string) => !exclude.includes(n))
     newConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
     newConfig.optimizeDeps = {
       ...viteOptions,
@@ -31,8 +41,8 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       noDiscovery: true,
       disabled: false,
       entries: [],
-      exclude: ['vitest', ...builtinModules, ...(testOptions.exclude || viteOptions?.exclude || [])],
-      include: (testOptions.include || viteOptions?.include || []).filter((n: string) => n !== 'vitest'),
+      exclude,
+      include,
     }
   }
   return newConfig

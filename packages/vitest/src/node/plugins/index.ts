@@ -50,6 +50,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         )
         testConfig.api = resolveApiServerConfig(testConfig)
 
+        options = testConfig
+
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
@@ -110,15 +112,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
               return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
             }
           }
-        }
-
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
         }
 
         return config
@@ -195,6 +188,22 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : null,
     MocksPlugin(),
     VitestResolver(ctx),
+    <VitePlugin>{
+      name: 'vitest:normalize-optimizer',
+      config: {
+        order: 'post',
+        handler(viteConfig) {
+          const webOptimizer = resolveOptimizerConfig(options.deps?.optimizer?.web, viteConfig.optimizeDeps, options)
+          const ssrOptimizer = resolveOptimizerConfig(options.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, options)
+
+          viteConfig.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
+          viteConfig.optimizeDeps = webOptimizer.optimizeDeps
+          viteConfig.ssr = {
+            optimizeDeps: ssrOptimizer.optimizeDeps,
+          }
+        },
+      },
+    },
   ]
     .filter(notNullish)
 }
