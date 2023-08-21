@@ -129,6 +129,10 @@ export default withPwa(defineConfig({
               text: 'Task Metadata',
               link: '/advanced/metadata',
             },
+            {
+              text: 'Extending default reporters',
+              link: '/advanced/reporters',
+            },
           ],
         },
       ],

@@ -33,6 +33,7 @@ const entries = [
   'src/coverage.ts',
   'src/public/utils.ts',
   'src/public/execute.ts',
+  'src/public/reporters.ts',
 ]
 
 const dtsEntries = {
@@ -46,6 +47,7 @@ const dtsEntries = {
   coverage: 'src/coverage.ts',
   utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
+  reporters: 'src/public/reporters.ts',
 }
 
 const external = [
