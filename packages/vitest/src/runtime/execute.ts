@@ -261,10 +261,13 @@ export class VitestExecutor extends ViteNodeRunner {
     await fn(...Object.values(context))
   }
 
-  public async importExternalModule(path: string): Promise<any> {
-    if (this.externalModules)
-      return this.externalModules.import(path)
-    return super.importExternalModule(path)
+  public async importExternalModule(path: string, options?: ImportCallOptions, referencer?: string): Promise<any> {
+    if (!this.externalModules)
+      return super.importExternalModule(path, options, referencer)
+    return this.externalModules.import(path, {
+      ...options,
+      $_referencer: referencer ? pathToFileURL(referencer).href : undefined,
+    })
   }
 
   async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {

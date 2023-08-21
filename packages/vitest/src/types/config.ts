@@ -14,6 +14,7 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { NodeEnvironmentOptions } from './node-env-options'
 
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -28,11 +29,9 @@ export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'
 export type { JSDOMOptions, HappyDOMOptions }
 
 export interface EnvironmentOptions {
-  /**
-   * jsdom options.
-   */
   jsdom?: JSDOMOptions
   happyDOM?: HappyDOMOptions
+  node?: NodeEnvironmentOptions
   [x: string]: unknown
 }
 
