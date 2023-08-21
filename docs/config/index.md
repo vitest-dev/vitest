@@ -207,9 +207,13 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.optimizer.{mode}.enabled
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `true` if using >= Vite 4.3.2, `false` otherwise
 
 Enable dependency optimization.
+
+::: warning
+This option only works with Vite 4.3.2 and higher.
+:::
 
 #### deps.web
 
@@ -227,7 +231,7 @@ Usually, files inside `node_modules` are externalized, but these options also af
 
 Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.
 
-hese module will have a default export equal to the path to the asset, if no query is specified.
+This module will have a default export equal to the path to the asset, if no query is specified.
 
 ::: warning
 At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
@@ -240,7 +244,7 @@ At the moment, this option only works with [`experimentalVmThreads`](#experiment
 
 Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
 
-If CSS files are disabled with [`css`](#css) options, this option will just silence `UNKNOWN_EXTENSION` errors.
+If CSS files are disabled with [`css`](#css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
 
 ::: warning
 At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.

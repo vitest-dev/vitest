@@ -12,8 +12,9 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -112,15 +113,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           }
         }
 
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
-        }
-
         return config
       },
       async configResolved(viteConfig) {
@@ -195,6 +187,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : null,
     MocksPlugin(),
     VitestResolver(ctx),
+    VitestOptimizer(),
   ]
     .filter(notNullish)
 }

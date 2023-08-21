@@ -137,6 +137,12 @@ export function resolveConfig(
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
 
+  resolved.deps.optimizer ??= {}
+  resolved.deps.optimizer.ssr ??= {}
+  resolved.deps.optimizer.ssr.enabled ??= true
+  resolved.deps.optimizer.web ??= {}
+  resolved.deps.optimizer.web.enabled ??= true
+
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true
   resolved.deps.web.transformCss ??= true
