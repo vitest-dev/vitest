@@ -12,8 +12,9 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -49,8 +50,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           removeUndefinedValues(viteConfig.test ?? {}),
         )
         testConfig.api = resolveApiServerConfig(testConfig)
-
-        options = testConfig
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
@@ -188,22 +187,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : null,
     MocksPlugin(),
     VitestResolver(ctx),
-    <VitePlugin>{
-      name: 'vitest:normalize-optimizer',
-      config: {
-        order: 'post',
-        handler(viteConfig) {
-          const webOptimizer = resolveOptimizerConfig(options.deps?.optimizer?.web, viteConfig.optimizeDeps, options)
-          const ssrOptimizer = resolveOptimizerConfig(options.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, options)
-
-          viteConfig.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
-          viteConfig.optimizeDeps = webOptimizer.optimizeDeps
-          viteConfig.ssr = {
-            optimizeDeps: ssrOptimizer.optimizeDeps,
-          }
-        },
-      },
-    },
+    VitestOptimizer(),
   ]
     .filter(notNullish)
 }
