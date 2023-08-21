@@ -903,6 +903,7 @@ List of files included in coverage as glob patterns
   '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 ```
