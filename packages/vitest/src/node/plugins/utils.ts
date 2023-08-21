@@ -7,10 +7,10 @@ import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions } = {} as any
-  const [major, minor] = viteVersion.split('.').map(Number)
-  const allowed = major >= 5 || (major === 4 && minor >= 3)
+  const [major, minor, fix] = viteVersion.split('.').map(Number)
+  const allowed = major >= 5 || (major === 4 && minor >= 4) || (major === 4 && minor === 3 && fix >= 2)
   if (!allowed && testOptions?.enabled === true)
-    console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
+    console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`)
   else
     // enable by default
     testOptions.enabled ??= true

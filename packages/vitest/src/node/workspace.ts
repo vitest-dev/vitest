@@ -294,10 +294,10 @@ export class WorkspaceProject {
         ...this.config.deps,
         optimizer: {
           web: {
-            enabled: optimizer?.web?.enabled ?? false,
+            enabled: optimizer?.web?.enabled ?? true,
           },
           ssr: {
-            enabled: optimizer?.ssr?.enabled ?? false,
+            enabled: optimizer?.ssr?.enabled ?? true,
           },
         },
       },
