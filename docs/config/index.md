@@ -207,7 +207,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.optimizer.{mode}.enabled
 
 - **Type:** `boolean`
-- **Default:** `false` since 0.34.3
+- **Default:** `true`
 
 Enable dependency optimization.
 
