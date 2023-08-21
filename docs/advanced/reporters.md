@@ -47,7 +47,7 @@ Then you can use your custom reporter in the `vitest.config.ts` file:
 
 ```ts
 import { defineConfig } from 'vitest/config'
-import CustomReporter from './custom-reporter'
+import CustomReporter from './custom-reporter.js'
 
 export default defineConfig({
   test: {
