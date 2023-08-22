@@ -3,15 +3,19 @@ import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import { resolveConfig as resolveViteConfig } from 'vite'
+import { findUp } from 'find-up'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort } from '../constants'
+import { configFiles, defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { VitestCache } from './cache'
+import { Vitest } from './core'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
+import { VitestPlugin } from './plugins'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -363,4 +367,34 @@ export function isBrowserEnabled(config: ResolvedConfig) {
     return true
 
   return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+}
+
+export async function resolveConfigPath(options: UserConfig = {}) {
+  const root = resolve(options.root || process.cwd())
+
+  const configPath = options.config === false
+    ? false
+    : options.config
+      ? resolve(root, options.config)
+      : await findUp(configFiles, { cwd: root } as any)
+
+  return configPath
+}
+
+export async function resolveVitestConfig(
+  mode: VitestRunMode,
+  options: UserConfig = {},
+) {
+  const ctx = new Vitest(mode)
+  const viteConfig = await resolveViteConfig(
+    {
+      logLevel: 'error',
+      configFile: await resolveConfigPath(options),
+      // this will make "mode" = "test" inside defineConfig
+      mode: options.mode || process.env.NODE_ENV || mode,
+      plugins: await VitestPlugin(options, ctx),
+    },
+    'serve',
+  )
+  return resolveConfig(mode, ctx._userOptions || options, viteConfig)
 }
