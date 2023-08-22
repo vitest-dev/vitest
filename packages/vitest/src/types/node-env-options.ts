@@ -9,4 +9,7 @@ export interface NodeEnvironmentOptions {
    * @default false
    */
   strict?: boolean
+
+  // don't provide ESM for CJS context, and vice versa - consider as a separate flag
+  strictESM?: boolean
 }
