@@ -216,6 +216,23 @@ export class JUnitReporter implements Reporter {
           skipped: 0,
         })
 
+        // If there are no tests, but the file failed to load, we still want to report it as a failure
+        if (tasks.length === 0 && file.result?.state === 'fail') {
+          stats.failures = 1
+
+          tasks.push({
+            id: file.id,
+            type: 'test',
+            name: file.name,
+            mode: 'run',
+            result: file.result,
+            meta: {},
+            // NOTE: not used in JUnitReporter
+            context: null as any,
+            suite: null as any,
+          } satisfies Task)
+        }
+
         return {
           ...file,
           tasks,
