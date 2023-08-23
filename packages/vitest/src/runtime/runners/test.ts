@@ -3,7 +3,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getWorkerState } from '../../utils'
+import { getFullName, getNames, getTasks, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -36,6 +36,16 @@ export class VitestTestRunner implements VitestRunner {
   onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
+
+    getTasks(suite).forEach((suiteTask) => {
+      if (suiteTask.mode === 'skip') {
+        getTasks(suiteTask).forEach((task) => {
+          const name = getNames(task).slice(1)
+
+          this.snapshotClient.skipTestSnapshots(name[name.length - 1])
+        })
+      }
+    })
   }
 
   onAfterRunTest(test: Test) {
