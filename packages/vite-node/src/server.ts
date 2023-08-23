@@ -17,7 +17,7 @@ const debugRequest = createDebug('vite-node:server:request')
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
-  private extraInline: RegExp[] = []
+
   private existingOptimizedDeps = new Set<string>()
 
   fetchCache = new Map<string, {
@@ -120,8 +120,8 @@ export class ViteNodeServer {
     return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
   }
 
-  async fetchModule(originalId: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
-    const id = normalizeModuleId(originalId)
+  async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
+    id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
