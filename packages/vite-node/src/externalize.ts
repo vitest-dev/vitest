@@ -19,8 +19,8 @@ const defaultInline = [
 ]
 
 const depsExternal = [
-  /\.cjs\.js$/,
-  /\.mjs$/,
+  /\/node_modules\/.*\.cjs\.js$/,
+  /\/node_modules\/.*\.mjs$/,
 ]
 
 export function guessCJSversion(id: string): string | undefined {
@@ -65,7 +65,6 @@ async function _shouldExternalize(
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
     return id
-
   // data: should be processed by native import,
   // since it is a feature of ESM
   if (id.startsWith('data:'))

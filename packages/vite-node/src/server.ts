@@ -86,15 +86,7 @@ export class ViteNodeServer {
   }
 
   shouldExternalize(id: string) {
-    return shouldExternalize(id, {
-      ...this.options.deps,
-      inline: this.options.deps?.inline === true
-        ? true
-        : [
-            ...toArray(this.options.deps?.inline),
-            ...this.extraInline,
-          ],
-    }, this.externalizeCache)
+    return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
   private async ensureExists(id: string): Promise<boolean> {
@@ -132,9 +124,6 @@ export class ViteNodeServer {
     const id = normalizeModuleId(originalId)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
-      if (originalId.startsWith('/@fs/'))
-        this.extraInline.push(new RegExp(`[^${id}]`))
-
       this.fetchPromiseMap.set(id,
         this._fetchModule(id, transformMode)
           .then((r) => {
