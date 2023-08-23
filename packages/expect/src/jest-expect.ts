@@ -529,7 +529,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       }
 
       if (!isThrow && !isNot) {
-        const message = utils.flag(this, 'message') || 'expected function to throw an error, but it didn`t'
+        const message = utils.flag(this, 'message') || 'expected function to throw an error, but it didn\'t'
         const error = {
           showDiff: false,
         }

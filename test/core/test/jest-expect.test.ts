@@ -332,13 +332,6 @@ describe('jest-expect', () => {
     expect(null).toBe(true)
   })
 
-  it.fails('toThrow should failure when does not throw ', () => {
-    expect(() => {
-    }).toThrow(Error)
-    expect(async () => {
-    }).toThrow(Error)
-  })
-
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {
@@ -374,6 +367,18 @@ describe('jest-expect', () => {
         bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
       },
     ])
+  })
+
+  it('toThrow didn\'t throw', () => {
+    expect(() => {
+      expect(async () => {
+      }).toThrow(Error)
+    }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+
+    expect(() => {
+      expect(() => {
+      }).toThrow(Error)
+    }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
   })
 })
 
