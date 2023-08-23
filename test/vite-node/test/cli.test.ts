@@ -45,6 +45,4 @@ it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', asy
   await cli.waitForStdout('test 1')
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
   await cli.waitForStdout('test 2')
-}, {
-  timeout: 10_000,
 })

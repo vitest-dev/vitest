@@ -65,6 +65,7 @@ async function _shouldExternalize(
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
     return id
+
   // data: should be processed by native import,
   // since it is a feature of ESM
   if (id.startsWith('data:'))
