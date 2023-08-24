@@ -14,7 +14,6 @@ export default <Environment>({
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     win.Buffer = Buffer
-    win.Uint8Array = Uint8Array
 
     // inject structuredClone if it exists
     if (typeof structuredClone !== 'undefined' && !win.structuredClone)
@@ -24,8 +23,8 @@ export default <Environment>({
       getVmContext() {
         return win
       },
-      teardown() {
-        win.happyDOM.cancelAsync()
+      async teardown() {
+        await win.happyDOM.cancelAsync()
       },
     }
   },
