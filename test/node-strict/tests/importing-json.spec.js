@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 it('cannot import json without an assertion in an external file', async () => {
   try {
-    await import('../src/external/import-json.js')
+    await import('../src/external/import-json.js', { assert: { type: 'javascript' } })
     expect.unreachable()
   }
   catch (err) {

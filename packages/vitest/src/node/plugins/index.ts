@@ -1,5 +1,9 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
+
+// @ts-expect-error not typed
+import { importAssertions as importAssertionsPlugin } from 'acorn-import-assertions'
+
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
@@ -32,6 +36,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       enforce: 'pre',
       options() {
         this.meta.watchMode = false
+        return {
+          acornInjectPlugins: [importAssertionsPlugin],
+        }
       },
       async config(viteConfig) {
         if (options.watch) {
