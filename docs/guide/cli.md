@@ -69,7 +69,10 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |
+| `--threads` | Enable Threads (default: `true`) |   
+| `--single-thread` | Run tests inside a single thread, requires --threads (default: `false`) |
+| `--experimental-vm-threads` | Run tests in a worker pool using VM isolation (default: `false`) |
+| `--experimental-vm-worker-memory-limit` | Set the maximum allowed memory for a worker. When reached, a new worker will be created instead |
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
@@ -88,11 +91,12 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
+| `--retry <times>` | Retry the test specific number of times if it fails |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

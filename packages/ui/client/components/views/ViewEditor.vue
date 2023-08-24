@@ -9,11 +9,13 @@ import type { ErrorWithDiff, File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
+
 watch(() => props.file,
   async () => {
     if (!props.file || !props.file?.filepath) {
@@ -22,12 +24,13 @@ watch(() => props.file,
       draft.value = false
       return
     }
-    code.value = await client.rpc.readFile(props.file.filepath) || ''
+    code.value = await client.rpc.readTestFile(props.file.filepath) || ''
     serverCode.value = code.value
     draft.value = false
   },
   { immediate: true },
 )
+
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 
@@ -113,7 +116,7 @@ watch([cm, failed], ([cmValue]) => {
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
-  await client.rpc.writeFile(props.file!.filepath, content)
+  await client.rpc.saveTestFile(props.file!.filepath, content)
   serverCode.value = content
   draft.value = false
 }

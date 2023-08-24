@@ -933,3 +933,29 @@ function test() {
     }"
   `)
 })
+
+test('avoid binding ClassExpression', () => {
+  const result = injectSimpleCode(
+    `
+ import Foo, { Bar } from './foo';
+ console.log(Foo, Bar);
+ const obj = {
+   foo: class Foo {},
+   bar: class Bar {}
+ }
+ const Baz = class extends Foo {}
+ `,
+  )
+  expect(result).toMatchInlineSnapshot(`
+    "import { __vi_inject__ as __vi_esm_0__ } from './foo'
+
+     
+     console.log(__vi_esm_0__.default, __vi_esm_0__.Bar);
+     const obj = {
+       foo: class Foo {},
+       bar: class Bar {}
+     }
+     const Baz = class extends __vi_esm_0__.default {}
+     "
+  `)
+})

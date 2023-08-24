@@ -1,9 +1,13 @@
-import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
+import type { Arrayable, Nullable } from '../types/general'
 
 export { notNullish, getCallLastIndex } from '@vitest/utils'
 
-function isFinalObj(obj: any) {
-  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
+export interface GlobalConstructors {
+  Object: ObjectConstructor
+  Function: FunctionConstructor
+  RegExp: RegExpConstructor
+  Array: ArrayConstructor
+  Map: MapConstructor
 }
 
 function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
@@ -25,12 +29,20 @@ export function isPrimitive(value: unknown) {
   return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
-export function getAllMockableProperties(obj: any, isModule: boolean) {
+export function getAllMockableProperties(obj: any, isModule: boolean, constructors: GlobalConstructors) {
+  const {
+    Map,
+    Object,
+    Function,
+    RegExp,
+    Array,
+  } = constructors
+
   const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
   do {
     // we don't need properties from these
-    if (isFinalObj(curr))
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
       break
 
     collectOwnProperties(curr, (key) => {
@@ -126,12 +138,6 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
-}
-
-export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
-  if (!config.deps?.experimentalOptimizer?.enabled)
-    return undefined
-  return (environment === 'happy-dom' || environment === 'jsdom') ? 'web' : 'ssr'
 }
 
 // AggregateError is supported in Node.js 15.0.0+

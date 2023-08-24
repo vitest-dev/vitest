@@ -1,4 +1,4 @@
-export type { ErrorWithDiff, ParsedStack } from '@vitest/runner/utils'
+export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
@@ -18,11 +18,18 @@ export interface ModuleCache {
 }
 
 export interface EnvironmentReturn {
-  teardown: (global: any) => Awaitable<void>
+  teardown(global: any): Awaitable<void>
+}
+
+export interface VmEnvironmentReturn {
+  getVmContext(): { [key: string]: any }
+  teardown(): Awaitable<void>
 }
 
 export interface Environment {
   name: string
+  transformMode: 'web' | 'ssr'
+  setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

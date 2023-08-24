@@ -1,14 +1,14 @@
 import { existsSync, readdirSync } from 'node:fs'
+import vm from 'node:vm'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
-import { getWorkerState } from '../utils/global'
+import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
-import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
-const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
+const spyModulePath = resolve(distDir, 'spy.js')
 
 class RefTracker {
   private idMap = new Map<any, number>()
@@ -39,12 +39,34 @@ function isSpecialProp(prop: Key, parentType: string) {
 }
 
 export class VitestMocker {
-  private static pendingIds: PendingSuiteMock[] = []
+  static pendingIds: PendingSuiteMock[] = []
+  private spyModule?: typeof import('@vitest/spy')
   private resolveCache = new Map<string, Record<string, string>>()
+  private primitives: {
+    Object: typeof Object
+    Function: typeof Function
+    RegExp: typeof RegExp
+    Array: typeof Array
+    Map: typeof Map
+    Error: typeof Error
+    Symbol: typeof Symbol
+  }
+
+  private filterPublicKeys: (symbol | string)[]
 
   constructor(
     public executor: VitestExecutor,
-  ) {}
+  ) {
+    const context = this.executor.options.context
+    if (context)
+      this.primitives = vm.runInContext('({ Object, Error, Function, RegExp, Symbol, Array, Map })', context)
+    else
+      this.primitives = { Object, Error, Function, RegExp, Symbol: globalThis.Symbol, Array, Map }
+
+    const Symbol = this.primitives.Symbol
+
+    this.filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
+  }
 
   private get root() {
     return this.executor.options.root
@@ -62,6 +84,10 @@ export class VitestMocker {
     return this.executor.options.moduleDirectories || []
   }
 
+  public async initializeSpyModule() {
+    this.spyModule = await this.executor.executeId(spyModulePath)
+  }
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))
@@ -73,7 +99,12 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return getWorkerState().filepath || 'global'
+    return this.executor.state.filepath || 'global'
+  }
+
+  private createError(message: string) {
+    const Error = this.primitives.Error
+    return new Error(message)
   }
 
   public getMocks() {
@@ -88,7 +119,22 @@ export class VitestMocker {
   }
 
   private async resolvePath(rawId: string, importer: string) {
-    const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
+    let id: string
+    let fsPath: string
+    try {
+      [id, fsPath] = await this.executor.originalResolveUrl(rawId, importer)
+    }
+    catch (error: any) {
+      // it's allowed to mock unresolved modules
+      if (error.code === 'ERR_MODULE_NOT_FOUND') {
+        const { id: unresolvedId } = error[Symbol.for('vitest.error.not_found.data')]
+        id = unresolvedId
+        fsPath = unresolvedId
+      }
+      else {
+        throw error
+      }
+    }
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
     const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
@@ -100,7 +146,10 @@ export class VitestMocker {
     }
   }
 
-  private async resolveMocks() {
+  public async resolveMocks() {
+    if (!VitestMocker.pendingIds.length)
+      return
+
     await Promise.all(VitestMocker.pendingIds.map(async (mock) => {
       const { fsPath, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
@@ -121,7 +170,7 @@ export class VitestMocker {
       exports = await mock()
     }
     catch (err) {
-      const vitestError = new Error(
+      const vitestError = this.createError(
         '[vitest] There was an error when mocking a module. '
       + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
       + 'Read more: https://vitest.dev/api/vi.html#vi-mock')
@@ -133,10 +182,10 @@ export class VitestMocker {
     const mockpath = this.resolveCache.get(this.getSuiteFilepath())?.[filepath] || filepath
 
     if (exports === null || typeof exports !== 'object')
-      throw new Error(`[vitest] vi.mock("${mockpath}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`)
+      throw this.createError(`[vitest] vi.mock("${mockpath}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`)
 
     const moduleExports = new Proxy(exports, {
-      get(target, prop) {
+      get: (target, prop) => {
         const val = target[prop]
 
         // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
@@ -145,10 +194,10 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          if (filterPublicKeys.includes(prop))
+          if (this.filterPublicKeys.includes(prop))
             return undefined
           const c = getColors()
-          throw new Error(
+          throw this.createError(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
             + '\nIf you need to partially mock a module, you can use "vi.importActual" inside:\n\n'
@@ -230,7 +279,7 @@ export class VitestMocker {
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule, this.primitives)) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule && descriptor.get) {
           try {
@@ -275,10 +324,13 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          const mock = spyOn(newContainer, property).mockImplementation(() => undefined)
+          const spyModule = this.spyModule
+          if (!spyModule)
+            throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
           mock.mockRestore = () => {
             mock.mockReset()
-            mock.mockImplementation(undefined!)
+            mock.mockImplementation(() => undefined)
             return mock
           }
           // tinyspy retains length, but jest doesn't.
@@ -353,9 +405,6 @@ export class VitestMocker {
   }
 
   public async requestWithMock(url: string, callstack: string[]) {
-    if (VitestMocker.pendingIds.length)
-      await this.resolveMocks()
-
     const id = this.normalizePath(url)
     const mock = this.getDependencyMock(id)
 
@@ -374,11 +423,14 @@ export class VitestMocker {
       return exports
     }
     if (typeof mock === 'function' && !callstack.includes(mockPath) && !callstack.includes(url)) {
-      callstack.push(mockPath)
-      const result = await this.callFunctionMock(mockPath, mock)
-      const indexMock = callstack.indexOf(mockPath)
-      callstack.splice(indexMock, 1)
-      return result
+      try {
+        callstack.push(mockPath)
+        return await this.callFunctionMock(mockPath, mock)
+      }
+      finally {
+        const indexMock = callstack.indexOf(mockPath)
+        callstack.splice(indexMock, 1)
+      }
     }
     if (typeof mock === 'string' && !callstack.includes(mock))
       return mock

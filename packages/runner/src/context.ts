@@ -2,6 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers } from '@vitest/utils'
 import type { RuntimeContext, SuiteCollector, Test, TestContext } from './types'
 import type { VitestRunner } from './types/runner'
+import { PendingError } from './errors'
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
@@ -24,7 +25,7 @@ export function withTimeout<T extends((...args: any[]) => any)>(
   timeout: number,
   isHook = false,
 ): T {
-  if (timeout <= 0 || timeout === Infinity)
+  if (timeout <= 0 || timeout === Number.POSITIVE_INFINITY)
     return fn
 
   const { setTimeout, clearTimeout } = getSafeTimers()
@@ -48,6 +49,11 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
 
   context.meta = test
   context.task = test
+
+  context.skip = () => {
+    test.pending = true
+    throw new PendingError('test is skipped; abort execution', test)
+  }
 
   context.onTestFailed = (fn) => {
     test.onFailed ||= []

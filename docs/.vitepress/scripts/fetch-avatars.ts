@@ -1,8 +1,9 @@
-import { join, resolve } from 'pathe'
+import { fileURLToPath } from 'node:url'
+import { dirname, join, resolve } from 'pathe'
 import fs from 'fs-extra'
 import { $fetch } from 'ohmyfetch'
 
-const docsDir = resolve(__dirname, '../..')
+const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const pathContributors = resolve(docsDir, '.vitepress/contributor-names.json')
 const dirAvatars = resolve(docsDir, 'public/user-avatars/')
 const dirSponsors = resolve(docsDir, 'public/sponsors/')

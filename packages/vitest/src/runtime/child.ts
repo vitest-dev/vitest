@@ -1,15 +1,17 @@
+import { performance } from 'node:perf_hooks'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
 import type { CancelReason } from '@vitest/runner'
-import type { ResolvedConfig } from '../types'
+import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
+import { loadEnvironment } from '../integrations/env'
 import { mockMap, moduleCache, startViteNode } from './execute'
-import { rpcDone } from './rpc'
+import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
-function init(ctx: ChildContext) {
+async function init(ctx: ChildContext) {
   const { config } = ctx
 
   process.env.VITEST_WORKER_ID = '1'
@@ -20,34 +22,41 @@ function init(ctx: ChildContext) {
     setCancel = resolve
   })
 
-  // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = config.environment
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = {
+  const rpc = createBirpc<RuntimeRPC, RunnerRPC>(
+    {
+      onCancel: setCancel,
+    },
+    {
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      serialize: v8.serialize,
+      deserialize: v => v8.deserialize(Buffer.from(v)),
+      post(v) {
+        process.send?.(v)
+      },
+      on(fn) { process.on('message', fn) },
+    },
+  )
+
+  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+  if (ctx.environment.transformMode)
+    environment.transformMode = ctx.environment.transformMode
+
+  const state: WorkerGlobalState = {
     ctx,
     moduleCache,
     config,
     mockMap,
     onCancel,
+    environment,
     durations: {
       environment: 0,
       prepare: performance.now(),
     },
-    rpc: createBirpc<RuntimeRPC, RunnerRPC>(
-      {
-        onCancel: setCancel,
-      },
-      {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
-        serialize: v8.serialize,
-        deserialize: v => v8.deserialize(Buffer.from(v)),
-        post(v) {
-          process.send?.(v)
-        },
-        on(fn) { process.on('message', fn) },
-      },
-    ),
+    rpc: createSafeRpc(rpc),
   }
+
+  // @ts-expect-error I know what I am doing :P
+  globalThis.__vitest_worker__ = state
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
@@ -56,6 +65,8 @@ function init(ctx: ChildContext) {
     })
   }
   ctx.files.forEach(i => moduleCache.delete(i))
+
+  return state
 }
 
 function parsePossibleRegexp(str: string | RegExp) {
@@ -75,9 +86,11 @@ export async function run(ctx: ChildContext) {
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
-    init(ctx)
-    const { run, executor } = await startViteNode(ctx)
-    await run(ctx.files, ctx.config, ctx.environment, executor)
+    const state = await init(ctx)
+    const { run, executor } = await startViteNode({
+      state,
+    })
+    await run(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
     await rpcDone()
   }
   finally {

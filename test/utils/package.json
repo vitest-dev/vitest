@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-utils",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/utils": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

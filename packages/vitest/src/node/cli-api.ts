@@ -56,10 +56,13 @@ export async function startVitest(
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
+  if ('threads' in options && options.experimentalVmThreads)
+    throw new Error('Cannot use both "threads" (or "no-threads") and "experimentalVmThreads" at the same time.')
+
   const ctx = await createVitest(mode, options, viteOverrides)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'c8'
+    const provider = ctx.config.coverage.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
@@ -77,10 +80,9 @@ export async function startVitest(
     return ctx
   }
 
-  if (process.stdin.isTTY && ctx.config.watch)
-    registerConsoleShortcuts(ctx)
-  else
-    process.on('SIGINT', () => ctx.cancelCurrentRun('keyboard-input'))
+  let stdinCleanup
+  if (process.stdin.isTTY)
+    stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
@@ -99,7 +101,7 @@ export async function startVitest(
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.logger.printError(e, true, 'Unhandled Error')
+    await ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')
     return ctx
   }
@@ -107,6 +109,7 @@ export async function startVitest(
   if (ctx.shouldKeepServer())
     return ctx
 
+  stdinCleanup?.()
   await ctx.close()
   return ctx
 }

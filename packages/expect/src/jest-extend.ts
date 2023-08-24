@@ -17,6 +17,7 @@ import {
   iterableEquality,
   subsetEquality,
 } from './jest-utils'
+import { wrapSoft } from './utils'
 
 function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expect: ExpectStatic) {
   const obj = assertion._obj
@@ -75,8 +76,9 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
           throw new JestExtendError(message(), actual, expected)
       }
 
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, expectAssertionName, expectWrapper)
-      utils.addMethod(c.Assertion.prototype, expectAssertionName, expectWrapper)
+      const softWrapper = wrapSoft(utils, expectWrapper)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, expectAssertionName, softWrapper)
+      utils.addMethod(c.Assertion.prototype, expectAssertionName, softWrapper)
 
       class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
         constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {

@@ -9,10 +9,6 @@ import { setupDialogsSpy } from './dialog'
 import { BrowserSnapshotEnvironment } from './snapshot'
 import { VitestBrowserClientMocker } from './mocker'
 
-// @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
-globalThis.global = globalThis
-
 export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${
@@ -72,6 +68,9 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    environment: {
+      name: 'browser',
+    },
     // @ts-expect-error untyped global for internal use
     moduleCache: globalThis.__vi_module_cache__,
     rpc: client.rpc,

@@ -52,7 +52,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.enabled)
+  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
@@ -67,11 +67,13 @@ export class WorkspaceProject {
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
-  browser: ViteDevServer = undefined!
+  browser?: ViteDevServer
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
+
+  testFilesList: string[] = []
 
   constructor(
     public path: string | number,
@@ -84,6 +86,20 @@ export class WorkspaceProject {
 
   isCore() {
     return this.ctx.getCoreWorkspaceProject() === this
+  }
+
+  getModuleById(id: string) {
+    return this.server.moduleGraph.getModuleById(id)
+      || this.browser?.moduleGraph.getModuleById(id)
+  }
+
+  getSourceMapModuleById(id: string) {
+    const mod = this.server.moduleGraph.getModuleById(id)
+    return mod?.ssrTransformResult?.map || mod?.transformResult?.map
+  }
+
+  getBrowserSourceMapModuleById(id: string) {
+    return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -118,18 +134,24 @@ export class WorkspaceProject {
       }))
     }
 
+    this.testFilesList = testFiles
+
     return testFiles
+  }
+
+  isTestFile(id: string) {
+    return this.testFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
-      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
     }
 
-    return fg(include, globOptions)
+    const files = await fg(include, globOptions)
+    return files.map(file => resolve(cwd, file))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -263,14 +285,20 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig() {
+    const optimizer = this.config.deps?.optimizer
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
       reporters: [],
       deps: {
         ...this.config.deps,
-        experimentalOptimizer: {
-          enabled: this.config.deps?.experimentalOptimizer?.enabled ?? false,
+        optimizer: {
+          web: {
+            enabled: optimizer?.web?.enabled ?? true,
+          },
+          ssr: {
+            enabled: optimizer?.ssr?.enabled ?? true,
+          },
         },
       },
       snapshotOptions: {
@@ -288,6 +316,7 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      alias: [],
     }, this.ctx.configOverride || {} as any,
     ) as ResolvedConfig
   }

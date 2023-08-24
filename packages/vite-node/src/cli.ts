@@ -12,21 +12,31 @@ import { installSourcemapsSupport } from './source-map'
 const cli = cac('vite-node')
 
 cli
-  .version(version)
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
   .option('-m, --mode <mode>', 'Set env mode')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
   .option('--script', 'Use vite-node as a script runner')
   .option('--options <options>', 'Use specified Vite server options')
-  .help()
+  .option('-v, --version', 'Output the version number')
+  .option('-h, --help', 'Display help for command')
 
 cli
   .command('[...files]')
   .allowUnknownOptions()
   .action(run)
 
-cli.parse()
+cli.parse(process.argv, { run: false })
+
+if (cli.args.length === 0) {
+  cli.runMatchedCommand()
+}
+else {
+  const i = cli.rawArgs.indexOf(cli.args[0]) + 1
+  const scriptArgs = cli.rawArgs.slice(i).filter(it => it !== '--')
+  const executeArgs = [...cli.rawArgs.slice(0, i), '--', ...scriptArgs]
+  cli.parse(executeArgs)
+}
 
 export interface CliOptions {
   root?: string
@@ -35,6 +45,8 @@ export interface CliOptions {
   mode?: string
   watch?: boolean
   options?: ViteNodeServerOptionsCLI
+  version?: boolean
+  help?: boolean
   '--'?: string[]
 }
 
@@ -48,9 +60,18 @@ async function run(files: string[], options: CliOptions = {}) {
     process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
   }
 
+  if (options.version) {
+    cli.version(version)
+    cli.outputVersion()
+    process.exit(0)
+  }
+  if (options.help) {
+    cli.version(version).outputHelp()
+    process.exit(0)
+  }
   if (!files.length) {
     console.error(c.red('No files specified.'))
-    cli.outputHelp()
+    cli.version(version).outputHelp()
     process.exit(1)
   }
 
@@ -63,6 +84,9 @@ async function run(files: string[], options: CliOptions = {}) {
     configFile: options.config,
     root: options.root,
     mode: options.mode,
+    server: {
+      hmr: !!options.watch,
+    },
     plugins: [
       options.watch && viteNodeHmrPlugin(),
     ],

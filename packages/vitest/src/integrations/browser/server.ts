@@ -8,6 +8,7 @@ import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
 import { MocksPlugin } from '../../node/plugins/mocks'
+import { resolveFsAllow } from '../../node/plugins/utils'
 
 export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
   const root = project.config.root
@@ -44,7 +45,13 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
 
           config.server = server
           config.server.fs ??= {}
-          config.server.fs.strict = false
+          config.server.fs.allow = config.server.fs.allow || []
+          config.server.fs.allow.push(
+            ...resolveFsAllow(
+              project.ctx.config.root,
+              project.ctx.server.config.configFile,
+            ),
+          )
 
           return {
             resolve: {

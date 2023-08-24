@@ -1,13 +1,12 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types'
-import { getEnvironmentTransformMode } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 
 export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
   return {
     async onWorkerExit(error, code) {
-      await ctx.logger.printError(error, false, 'Unexpected Exit')
+      await ctx.logger.printError(error, { type: 'Unexpected Exit' })
       process.exit(code || 1)
     },
     snapshotSaved(snapshot) {
@@ -25,13 +24,14 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id, environment) {
-      const transformMode = getEnvironmentTransformMode(project.config, environment)
+    fetch(id, transformMode) {
       return project.vitenode.fetchModule(id, transformMode)
     },
-    resolveId(id, importer, environment) {
-      const transformMode = getEnvironmentTransformMode(project.config, environment)
+    resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)
+    },
+    transform(id, environment) {
+      return project.vitenode.transformModule(id, environment)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)

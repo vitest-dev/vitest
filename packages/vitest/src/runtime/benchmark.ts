@@ -21,7 +21,7 @@ export const bench = createBenchmark(
     if (!isRunningInBenchmark())
       throw new Error('`bench()` is only available in benchmark mode.')
 
-    const task = getCurrentSuite().custom.call(this, name)
+    const task = getCurrentSuite().custom.call(this, formatName(name))
     task.meta = {
       benchmark: true,
     }
@@ -33,7 +33,7 @@ export const bench = createBenchmark(
 function createBenchmark(fn: (
   (
     this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
-    name: string,
+    name: string | Function,
     fn?: BenchFunction,
     options?: BenchOptions
   ) => void
@@ -47,4 +47,8 @@ function createBenchmark(fn: (
   benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
 
   return benchmark as BenchmarkAPI
+}
+
+function formatName(name: string | Function) {
+  return typeof name === 'string' ? name : name instanceof Function ? (name.name || '<anonymous>') : String(name)
 }

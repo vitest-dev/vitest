@@ -147,7 +147,7 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
   return result
 }
 
-type DeferPromise<T> = Promise<T> & {
+export type DeferPromise<T> = Promise<T> & {
   resolve: (value: T | PromiseLike<T>) => void
   reject: (reason?: any) => void
 }

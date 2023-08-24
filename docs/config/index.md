@@ -81,7 +81,7 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 ### include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+- **Default:** `['**/*.{test,spec}.?(c|m)[jt]s?(x)']`
 
 Files to include in the test run, using glob pattern.
 
@@ -101,43 +101,56 @@ Include globs for in-source test files.
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-### deps
+### server
+
+- **Type:** `{ sourcemap?, deps?, ... }`
+- **Version:** Since Vitest 0.34.0
+
+Vite-Node server options.
+
+#### server.sourcemap
+
+- **Type:** `'inline' | boolean`
+- **Default:** `'inline'`
+
+Inject inline sourcemap to modules.
+
+#### server.debug
+
+- **Type:** `{ dumpModules?, loadDumppedModules? }`
+
+Vite-Node debugger options.
+
+#### server.debug.dumpModules
+
+- **Type:** `boolean | string`
+
+Dump the transformed module to filesystem. Passing a string will dump to the specified path.
+
+#### server.debug.loadDumppedModules
+
+- **Type:** `boolean`
+
+Read dumped module from filesystem whenever exists. Useful for debugging by modifying the dump result from the filesystem.
+
+#### server.deps
 
 - **Type:** `{ external?, inline?, ... }`
 
 Handling for dependencies resolution.
 
-#### deps.experimentalOptimizer
-
-- **Type:** `DepOptimizationConfig & { enabled: boolean }`
-- **Version:** Since Vitest 0.29.0
-- **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
-
-Enable dependency optimization. If you have a lot of tests, this might improve their performance.
-
-For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
-
-- Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
-- Importing UI libraries is expensive because they are not meant to run inside Node.js
-- Your `alias` configuration is now respected inside bundled packages
-- Code in your tests is running closer to how it's running in the browser
-
-Be aware that only packages in `deps.experimentalOptimizer.include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
-
-This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
-
-::: tip
-You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer.force` option.
-:::
-
-#### deps.external
+#### server.deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**/node_modules/**']`
+- **Default:** `[/\/node_modules\//]`
 
-Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+Externalize means that Vite will bypass the package to the native Node. Externalized dependencies will not be applied to Vite's transformers and resolvers, so they do not support HMR on reload. By default, all packages inside `node_modules` are externalized.
 
-#### deps.inline
+These options support package names as they are written in `node_modules` or specified inside [`deps.moduleDirectories`](#deps-moduledirectories). For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`. Basically, Vitest always checks the file path, not the actual package name.
+
+If regexp is used, Vitest calls it on the _file path_, not the package name.
+
+#### server.deps.inline
 
 - **Type:** `(string | RegExp)[] | true`
 - **Default:** `[]`
@@ -146,7 +159,7 @@ Vite will process inlined modules. This could be helpful to handle packages that
 
 If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
 
-#### deps.fallbackCJS
+#### server.deps.fallbackCJS
 
 - **Type** `boolean`
 - **Default:** `false`
@@ -154,6 +167,101 @@ If `true`, every dependency will be inlined. All dependencies, specified in [`ss
 When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+
+#### server.deps.cacheDir
+
+- **Type** `string`
+- **Default**: `'node_modules/.vite'`
+
+Directory to save cache files.
+
+### deps
+
+- **Type:** `{ optimizer?, registerNodeLoader?, ... }`
+
+Handling for dependencies resolution.
+
+#### deps.optimizer
+
+- **Type:** `{ ssr?, web? }`
+- **Version:** Since Vitest 0.34.0
+- **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
+
+Enable dependency optimization. If you have a lot of tests, this might improve their performance. Before Vitest 0.34.0, it was named as `deps.experimentalOptimizer`.
+
+When Vitest encounters the external library listed in `include`, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
+
+- Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
+- Importing UI libraries is expensive because they are not meant to run inside Node.js
+- Your `alias` configuration is now respected inside bundled packages
+- Code in your tests is running closer to how it's running in the browser
+
+Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#transformmode).
+
+This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
+
+::: tip
+You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
+:::
+
+#### deps.optimizer.{mode}.enabled
+
+- **Type:** `boolean`
+- **Default:** `true` if using >= Vite 4.3.2, `false` otherwise
+
+Enable dependency optimization.
+
+::: warning
+This option only works with Vite 4.3.2 and higher.
+:::
+
+#### deps.web
+
+- **Type:** `{ transformAssets?, ... }`
+- **Version:** Since Vite 0.34.2
+
+Options that are applied to external files when transform mode is set to `web`. By default, `jsdom` and `happy-dom` use `web` mode, while `node` and `edge` environments use `ssr` transform mode, so these options will have no affect on files inside those environments.
+
+Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](#server-deps-external).
+
+#### deps.web.transformAssets
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.
+
+This module will have a default export equal to the path to the asset, if no query is specified.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
+:::
+
+#### deps.web.transformCss
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
+
+If CSS files are disabled with [`css`](#css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
+:::
+
+#### deps.web.transformGlobPattern
+
+- **Type:** `RegExp | RegExp[]`
+- **Default:** `[]`
+
+Regexp pattern to match external files that should be transformed.
+
+By default, files inside `node_modules` are externalized and not transformed, unless it's CSS or an asset, and corresponding option is not disabled.
+
+::: warning
+At the moment, this option only works with [`experimentalVmThreads`](#experimentalvmthreads) pool.
+:::
 
 #### deps.registerNodeLoader<NonProjectOption />
 
@@ -226,7 +334,7 @@ Options used when running `vitest bench`.
 #### benchmark.include
 
 - **Type:** `string[]`
-- **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+- **Default:** `['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)']`
 
 Include globs for benchmark test files
 
@@ -376,6 +484,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
+  transformMode: 'ssr',
   setup() {
     // custom setup
     return {
@@ -423,7 +532,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'browser' | 'threads' | 'child_process'][]`
+- **Type:** `[string, 'threads' | 'child_process' | 'experimentalVmThreads'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -483,7 +592,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
+  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
   - `'json'` -  give a simple JSON summary
   - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
@@ -496,6 +605,69 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
+
+### experimentalVmThreads
+
+- **Type:** `boolean`
+- **CLI:** `--experimentalVmThreads`, `--experimental-vm-threads`
+- **Version:** Since Vitest 0.34.0
+
+Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a worker pool.
+
+This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`experimentalVmWorkerMemoryLimit`](#experimentalvmworkermemorylimit) value.
+
+::: warning
+Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
+
+- The globals within native modules, such as (`fs`, `path`, etc), differ from the globals present in your test environment. As a result, any error thrown by these native modules will reference a different Error constructor compared to the one used in your code:
+
+```ts
+try {
+  fs.writeFileSync('/doesnt exist')
+}
+catch (err) {
+  console.log(err instanceof Error) // false
+}
+```
+
+- Importing ES modules caches them indefinitely which introduces memory leaks if you have a lot of contexts (test files). There is no API in Node.js that clears that cache.
+- Accessing globals [takes longer](https://github.com/nodejs/node/issues/31658) in a sandbox environment.
+
+Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
+:::
+
+### experimentalVmWorkerMemoryLimit
+
+- **Type:** `string | number`
+- **CLI:** `--experimentalVmWorkerMemoryLimit`, `--experimental-vm-worker-memory-limit`
+- **Default:** `1 / CPU Cores`
+- **Version:** Since Vitest 0.34.0
+
+Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default.
+
+This option only affects workers that run tests in [VM context](#experimentalvmthreads).
+
+::: tip
+The implementation is based on Jest's [`workerIdleMemoryLimit`](https://jestjs.io/docs/configuration#workeridlememorylimit-numberstring).
+
+The limit can be specified in a number of different ways and whatever the result is `Math.floor` is used to turn it into an integer value:
+
+- `<= 1` - The value is assumed to be a percentage of system memory. So 0.5 sets the memory limit of the worker to half of the total system memory
+- `\> 1` - Assumed to be a fixed byte value. Because of the previous rule if you wanted a value of 1 byte (I don't know why) you could use 1.1.
+- With units
+  - `50%` - As above, a percentage of total system memory
+  - `100KB`, `65MB`, etc - With units to denote a fixed memory limit.
+    - `K` / `KB` - Kilobytes (x1000)
+    - `KiB` - Kibibytes (x1024)
+    - `M` / `MB` - Megabytes
+    - `MiB` - Mebibytes
+    - `G` / `GB` - Gigabytes
+    - `GiB` - Gibibytes
+:::
+
+::: warning
+Percentage based memory limit [does not work on Linux CircleCI](https://github.com/jestjs/jest/issues/11956#issuecomment-1212925677) workers due to incorrect system memory being reported.
+:::
 
 ### threads
 
@@ -663,9 +835,11 @@ Make sure that your files are not excluded by `watchExclude`.
 
 Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
 
+This options has no effect on [`experimentalVmThreads`](#experimentalvmthreads).
+
 ### coverage<NonProjectOption />
 
-You can use [`c8`](https://github.com/bcoe/c8), [`istanbul`](https://istanbul.js.org/)  or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](https://v8.dev/blog/javascript-code-coverage), [`istanbul`](https://istanbul.js.org/) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -679,8 +853,8 @@ If you are using coverage options with dot notation, don't forget to specify `--
 
 #### coverage.provider
 
-- **Type:** `'c8' | 'istanbul' | 'custom'`
-- **Default:** `'c8'`
+- **Type:** `'v8' | 'istanbul' | 'custom'`
+- **Default:** `'v8'`
 - **CLI:** `--coverage.provider=<provider>`
 
 Use `provider` to select the tool for coverage collection.
@@ -689,7 +863,7 @@ Use `provider` to select the tool for coverage collection.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
 Enables coverage collection. Can be overridden using `--coverage` CLI option.
@@ -698,7 +872,7 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 - **Type:** `string[]`
 - **Default:** `['**']`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.include=<path>`, `--coverage.include=<path1> --coverage.include=<path2>`
 
 List of files included in coverage as glob patterns
@@ -707,7 +881,7 @@ List of files included in coverage as glob patterns
 
 - **Type:** `string | string[]`
 - **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
 #### coverage.exclude
@@ -718,19 +892,22 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
-  'packages/*/test{,s}/**',
+  'packages/*/test?(s)/**',
   '**/*.d.ts',
+  '**/virtual:*',
+  '**/__x00__*',
+  '**/\x00*',
   'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
+  'test?(s)/**',
+  'test?(-*).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
+  '**/vitest.{workspace,projects}.[jt]s?(on)',
+  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 ```
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
@@ -739,7 +916,7 @@ List of files excluded from coverage as glob patterns.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 
 Whether to include all files, including the untested ones into report.
@@ -748,7 +925,7 @@ Whether to include all files, including the untested ones into report.
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.clean`, `--coverage.clean=false`
 
 Clean coverage results before running tests
@@ -757,7 +934,7 @@ Clean coverage results before running tests
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
 Clean coverage report on watch rerun
@@ -766,7 +943,7 @@ Clean coverage report on watch rerun
 
 - **Type:** `string`
 - **Default:** `'./coverage'`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
@@ -775,7 +952,7 @@ Directory to write coverage report to.
 
 - **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
 Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
@@ -801,18 +978,27 @@ Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vit
 #### coverage.reportOnFailure
 
 - **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Default:** `false` (since Vitest `0.34.0`)
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportOnFailure`, `--coverage.reportOnFailure=false`
 - **Version:** Since Vitest 0.31.2
 
 Generate coverage report even when tests fail.
 
+#### coverage.allowExternal
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
+
+Collect coverage of files outside the [project `root`](https://vitest.dev/config/#root).
+
 #### coverage.skipFull
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.skipFull`, `--coverage.skipFull=false`
 
 Do not show files with 100% statement, branch, and function coverage.
@@ -821,7 +1007,7 @@ Do not show files with 100% statement, branch, and function coverage.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.perFile`, `--coverage.perFile=false`
 
 Check thresholds per file.
@@ -831,7 +1017,7 @@ See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholdAutoUpdate=<boolean>`
 
 Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
@@ -840,7 +1026,7 @@ This option helps to maintain thresholds when coverage is improved.
 #### coverage.lines
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.lines=<number>`
 
 Threshold for lines.
@@ -849,7 +1035,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.functions
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.functions=<number>`
 
 Threshold for functions.
@@ -858,7 +1044,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.branches
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.branches=<number>`
 
 Threshold for branches.
@@ -867,44 +1053,17 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 #### coverage.statements
 
 - **Type:** `number`
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.statements=<number>`
 
 Threshold for statements.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### coverage.allowExternal
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
-
-Allow files from outside of your cwd.
-
-#### coverage.excludeNodeModules
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.excludeNodeModules`, `--coverage.excludeNodeModules=false`
-
-Exclude coverage under `/node_modules/`.
-
-#### coverage.src
-
-- **Type:** `string[]`
-- **Default:** `process.cwd()`
-- **Available for providers:** `'c8'`
-- **CLI:** `--coverage.src=<path>`
-
-Specifies the directories that are used when `--all` is enabled.
-
 #### coverage.100
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'c8'`
+- **Available for providers:** `'v8'`
 - **CLI:** `--coverage.100`, `--coverage.100=false`
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
@@ -943,7 +1102,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 }
 ```
 
-- **Available for providers:** `'c8' | 'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
@@ -1117,41 +1276,28 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### transformMode
+### testTransformMode
 
-- **Type:** `{ web?, ssr? }`
+ - **Type:** `{ web?, ssr? }`
+ - **Version:** Since Vitest 0.34.0
 
-Determine the transform method of modules
+ Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
-#### transformMode.ssr
+ #### testTransformMode.ssr
 
-- **Type:** `RegExp[]`
-- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-Use SSR transform pipeline for the specified files.<br>
-Vite plugins will receive `ssr: true` flag when processing those files.
+ Use SSR transform pipeline for all modules inside specified tests.<br>
+ Vite plugins will receive `ssr: true` flag when processing those files.
 
-#### transformMode&#46;web
+ #### testTransformMode&#46;web
 
-- **Type:** `RegExp[]`
-- **Default:** *modules other than those specified in `transformMode.ssr`*
+ - **Type:** `string[]`
+ - **Default:** `[]`
 
-First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
-Vite plugins will receive `ssr: false` flag when processing those files.
-
-When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    transformMode: {
-      web: [/\.[jt]sx$/],
-    },
-  },
-})
-```
+ First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
+ Vite plugins will receive `ssr: false` flag when processing those files.
 
 ### snapshotFormat<NonProjectOption />
 
@@ -1305,6 +1451,15 @@ If you want tests to run randomly, you can enable it with this option, or CLI ar
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 
+#### sequence.concurrent
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
+- **Version**: Since Vitest 0.32.2
+
+If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
+
 #### sequence.seed<NonProjectOption />
 
 - **Type**: `number`
@@ -1358,7 +1513,7 @@ You can also pass down a path to custom binary or command name that produces the
 #### typecheck.include
 
 - **Type**: `string[]`
-- **Default**: `['**/*.{test,spec}-d.{ts,js}']`
+- **Default**: `['**/*.{test,spec}-d.?(c|m)[jt]s?(x)']`
 
 Glob pattern for files that should be treated as test files
 
@@ -1440,3 +1595,12 @@ This config option affects truncating values in `test.each` titles and inside th
 Stop test execution when given number of tests have failed.
 
 By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occured.
+
+### retry
+
+- **Type:** `number`
+- **Default:** `0`
+- **CLI:** `--retry=<value>`
+- **Version:** Since Vitest 0.32.3
+
+Retry the test specific number of times if it fails.

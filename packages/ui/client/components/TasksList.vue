@@ -5,25 +5,50 @@ import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
-const props = withDefaults(defineProps<{
+defineOptions({ inheritAttrs: false })
+
+// eslint-disable-next-line unused-imports/no-unused-vars
+const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = defineProps<{
   tasks: Task[]
   indent?: number
   nested?: boolean
   groupByType?: boolean
   onItemClick?: (task: Task) => void
-}>(), {
-  indent: 0,
-  groupByType: false,
-  nested: false,
-})
+}>()
 
 const emit = defineEmits<{
   (event: 'run', files?: File[]): void
 }>()
 
-const search = ref('')
+const search = ref<string>('')
 const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
+
+const filtered = computed(() => {
+  if (!search.value.trim())
+    return tasks
+
+  return tasks.filter(task => matchTasks([task], search.value))
+})
+const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+
+const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
+const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
+const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
+const running = computed(() => filtered.value.filter(task =>
+  !failed.value.includes(task)
+  && !success.value.includes(task)
+  && !skipped.value.includes(task),
+))
+
+const disableClearSearch = computed(() => search.value === '')
+
+const throttledRunning = useThrottle(running, 250)
+
+function clearSearch(focus: boolean) {
+  search.value = ''
+  focus && searchBox.value?.focus()
+}
 
 function matchTasks(tasks: Task[], search: string): boolean {
   let result = false
@@ -45,38 +70,6 @@ function matchTasks(tasks: Task[], search: string): boolean {
   }
 
   return result
-}
-
-const filtered = computed(() => {
-  if (!search.value.trim())
-    return props.tasks
-
-  return props.tasks.filter(task => matchTasks([task], search.value))
-})
-const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
-
-const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
-const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
-const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => filtered.value.filter(task =>
-  !failed.value.includes(task)
-  && !success.value.includes(task)
-  && !skipped.value.includes(task),
-))
-const throttledRunning = useThrottle(running, 250)
-
-function clearSearch(focus: boolean) {
-  search.value = ''
-  focus && searchBox.value?.focus()
-}
-const disableClearSearch = computed(() => {
-  return search.value === ''
-})
-</script>
-
-<script lang="ts">
-export default {
-  inheritAttrs: false,
 }
 </script>
 

@@ -1,8 +1,19 @@
 import { resolve } from 'pathe'
+import type { SourceMapInput } from '@jridgewell/trace-mapping'
+import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { ErrorWithDiff, ParsedStack } from './types'
 import { isPrimitive, notNullish } from './helpers'
 
-export const lineSplitRE = /\r?\n/
+export { TraceMap, originalPositionFor, generatedPositionFor } from '@jridgewell/trace-mapping'
+export type { SourceMapInput } from '@jridgewell/trace-mapping'
+
+export interface StackTraceParserOptions {
+  ignoreStackEntries?: (RegExp | string)[]
+  getSourceMap?: (file: string) => unknown
+}
+
+const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m
+const SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code])?$/
 
 const stackIgnorePatterns = [
   'node:internal',
@@ -15,6 +26,8 @@ const stackIgnorePatterns = [
   '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
+  '/deps/chai.js',
+  /__vitest_browser__/,
 ]
 
 function extractLocation(urlLike: string) {
@@ -26,13 +39,60 @@ function extractLocation(urlLike: string) {
   const parts = regExp.exec(urlLike.replace(/^\(|\)$/g, ''))
   if (!parts)
     return [urlLike]
-  return [parts[1], parts[2] || undefined, parts[3] || undefined]
+  let url = parts[1]
+  if (url.startsWith('http:') || url.startsWith('https:')) {
+    const urlObj = new URL(url)
+    url = urlObj.pathname
+  }
+  if (url.startsWith('/@fs/')) {
+    url
+       = url.slice(typeof process !== 'undefined' && process.platform === 'win32' ? 5 : 4)
+  }
+  return [url, parts[2] || undefined, parts[3] || undefined]
+}
+
+export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
+  let line = raw.trim()
+
+  if (SAFARI_NATIVE_CODE_REGEXP.test(line))
+    return null
+
+  if (line.includes(' > eval'))
+    line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g, ':$1')
+
+  if (!line.includes('@') && !line.includes(':'))
+    return null
+
+  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(?:@)/
+  const matches = line.match(functionNameRegex)
+  const functionName = matches && matches[1] ? matches[1] : undefined
+  const [url, lineNumber, columnNumber] = extractLocation(line.replace(functionNameRegex, ''))
+
+  if (!url || !lineNumber || !columnNumber)
+    return null
+
+  return {
+    file: url,
+    method: functionName || '',
+    line: Number.parseInt(lineNumber),
+    column: Number.parseInt(columnNumber),
+  }
+}
+
+export function parseSingleStack(raw: string) {
+  const line = raw.trim()
+  if (!CHROME_IE_STACK_REGEXP.test(line))
+    return parseSingleFFOrSafariStack(line)
+  return parseSingleV8Stack(line)
 }
 
 // Based on https://github.com/stacktracejs/error-stack-parser
 // Credit to stacktracejs
-export function parseSingleStack(raw: string): ParsedStack | null {
+export function parseSingleV8Stack(raw: string): ParsedStack | null {
   let line = raw.trim()
+
+  if (!CHROME_IE_STACK_REGEXP.test(line))
+    return null
 
   if (line.includes('(eval '))
     line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^()]*)|(,.*$)/g, '')
@@ -67,31 +127,51 @@ export function parseSingleStack(raw: string): ParsedStack | null {
   // normalize Windows path (\ -> /)
   file = resolve(file)
 
+  if (method)
+    method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+
   return {
     method,
     file,
-    line: parseInt(lineNumber),
-    column: parseInt(columnNumber),
+    line: Number.parseInt(lineNumber),
+    column: Number.parseInt(columnNumber),
   }
 }
 
-export function parseStacktrace(stack: string, ignore = stackIgnorePatterns): ParsedStack[] {
-  const stackFrames = stack
-    .split('\n')
-    .map((raw): ParsedStack | null => {
-      const stack = parseSingleStack(raw)
-
-      if (!stack || (ignore.length && ignore.some(p => stack.file.match(p))))
-        return null
-
+export function parseStacktrace(stack: string, options: StackTraceParserOptions = {}): ParsedStack[] {
+  const { ignoreStackEntries = stackIgnorePatterns } = options
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+    ? parseFFOrSafariStackTrace(stack)
+    : parseV8Stacktrace(stack)
+  if (ignoreStackEntries.length)
+    stacks = stacks.filter(stack => !ignoreStackEntries.some(p => stack.file.match(p)))
+  return stacks.map((stack) => {
+    const map = options.getSourceMap?.(stack.file) as SourceMapInput | null | undefined
+    if (!map || typeof map !== 'object' || !map.version)
       return stack
-    })
-    .filter(notNullish)
-
-  return stackFrames
+    const traceMap = new TraceMap(map)
+    const { line, column } = originalPositionFor(traceMap, stack)
+    if (line != null && column != null)
+      return { ...stack, line, column }
+    return stack
+  })
 }
 
-export function parseErrorStacktrace(e: ErrorWithDiff, ignore = stackIgnorePatterns): ParsedStack[] {
+function parseFFOrSafariStackTrace(stack: string): ParsedStack[] {
+  return stack
+    .split('\n')
+    .map(line => parseSingleFFOrSafariStack(line))
+    .filter(notNullish)
+}
+
+function parseV8Stacktrace(stack: string): ParsedStack[] {
+  return stack
+    .split('\n')
+    .map(line => parseSingleV8Stack(line))
+    .filter(notNullish)
+}
+
+export function parseErrorStacktrace(e: ErrorWithDiff, options: StackTraceParserOptions = {}): ParsedStack[] {
   if (!e || isPrimitive(e))
     return []
 
@@ -99,49 +179,8 @@ export function parseErrorStacktrace(e: ErrorWithDiff, ignore = stackIgnorePatte
     return e.stacks
 
   const stackStr = e.stack || e.stackStr || ''
-  const stackFrames = parseStacktrace(stackStr, ignore)
+  const stackFrames = parseStacktrace(stackStr, options)
 
   e.stacks = stackFrames
   return stackFrames
-}
-
-export function positionToOffset(
-  source: string,
-  lineNumber: number,
-  columnNumber: number,
-): number {
-  const lines = source.split(lineSplitRE)
-  const nl = /\r\n/.test(source) ? 2 : 1
-  let start = 0
-
-  if (lineNumber > lines.length)
-    return source.length
-
-  for (let i = 0; i < lineNumber - 1; i++)
-    start += lines[i].length + nl
-
-  return start + columnNumber
-}
-
-export function offsetToLineNumber(
-  source: string,
-  offset: number,
-): number {
-  if (offset > source.length) {
-    throw new Error(
-      `offset is longer than source length! offset ${offset} > length ${source.length}`,
-    )
-  }
-  const lines = source.split(lineSplitRE)
-  const nl = /\r\n/.test(source) ? 2 : 1
-  let counted = 0
-  let line = 0
-  for (; line < lines.length; line++) {
-    const lineLength = lines[line].length + nl
-    if (counted + lineLength >= offset)
-      break
-
-    counted += lineLength
-  }
-  return line + 1
 }

@@ -1,14 +1,14 @@
 import limit from 'p-limit'
 import { getSafeTimers, shuffle } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
-import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
-import { markVersion } from './version'
+import { PendingError } from './errors'
 
 const now = Date.now
 
@@ -128,22 +128,20 @@ export async function runTest(test: Test, runner: VitestRunner) {
   test.result = {
     state: 'run',
     startTime: start,
+    retryCount: 0,
   }
   updateTask(test, runner)
 
   setCurrentTest(test)
 
-  const repeats = typeof test.repeats === 'number' ? test.repeats : 1
-
-  for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
-    const retry = test.retry || 1
-
-    for (let retryCount = 0; retryCount < retry; retryCount++) {
+  const repeats = test.repeats ?? 0
+  for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    const retry = test.retry ?? 0
+    for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
         await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        test.result.retryCount = retryCount
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
@@ -157,7 +155,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw new Error('Test function is not found. Did you add it using `setFn`?')
           await fn()
         }
-
         // some async expect will be added to this array, in case user forget to await theme
         if (test.promises) {
           const result = await Promise.allSettled(test.promises)
@@ -168,13 +165,23 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
         await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
 
-        if (!test.repeats)
-          test.result.state = 'pass'
-        else if (test.repeats && retry === retryCount)
-          test.result.state = 'pass'
+        if (test.result.state !== 'fail') {
+          if (!test.repeats)
+            test.result.state = 'pass'
+          else if (test.repeats && retry === retryCount)
+            test.result.state = 'pass'
+        }
       }
       catch (e) {
         failTask(test.result, e)
+      }
+
+      // skipped with new PendingError
+      if (test.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = { state: 'skip' }
+        updateTask(test, runner)
+        return
       }
 
       try {
@@ -187,6 +194,13 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
       if (test.result.state === 'pass')
         break
+
+      if (retryCount < retry) {
+        // reset state when retry test
+        test.result.state = 'run'
+        test.result.retryCount = (test.result.retryCount ?? 0) + 1
+      }
+
       // update retry info
       updateTask(test, runner)
     }
@@ -220,6 +234,11 @@ export async function runTest(test: Test, runner: VitestRunner) {
 }
 
 function failTask(result: TaskResult, err: unknown) {
+  if (err instanceof PendingError) {
+    result.state = 'skip'
+    return
+  }
+
   result.state = 'fail'
   const errors = Array.isArray(err)
     ? err
@@ -358,8 +377,6 @@ export async function runFiles(files: File[], runner: VitestRunner) {
 }
 
 export async function startTests(paths: string[], runner: VitestRunner) {
-  markVersion()
-
   await runner.onBeforeCollect?.(paths)
 
   const files = await collectTests(paths, runner)

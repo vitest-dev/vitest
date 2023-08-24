@@ -2,11 +2,13 @@ import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'v
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { ViteNodeServerOptions } from 'vite-node'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
-import type { ChaiConfig } from '../integrations/chai'
+import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
+import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
@@ -18,18 +20,19 @@ export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
-export type VitestPool = 'browser' | 'threads' | 'child_process'
+export type VitestPool = 'browser' | 'threads' | 'child_process' | 'experimentalVmThreads'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
-export { JSDOMOptions }
+export type { JSDOMOptions, HappyDOMOptions }
 
 export interface EnvironmentOptions {
   /**
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
   [x: string]: unknown
 }
 
@@ -48,6 +51,11 @@ interface SequenceOptions {
    * @default false
    */
   shuffle?: boolean
+  /**
+   * Should tests run in parallel.
+   * @default false
+   */
+  concurrent?: boolean
   /**
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
@@ -70,12 +78,67 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
+  enabled?: boolean
+}
+
+export interface TransformModePatterns {
+  /**
+   * Use SSR transform pipeline for all modules inside specified tests.
+   * Vite plugins will receive `ssr: true` flag when processing those files.
+   *
+   * @default tests with node or edge environment
+   */
+  ssr?: string[]
+  /**
+   * First do a normal transform pipeline (targeting browser),
+   * then then do a SSR rewrite to run the code in Node.
+   * Vite plugins will receive `ssr: false` flag when processing those files.
+   *
+   * @default tests with jsdom or happy-dom environment
+   */
+  web?: string[]
+}
+
 interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
-    enabled: boolean
+  optimizer?: {
+    web?: DepsOptimizationOptions
+    ssr?: DepsOptimizationOptions
+  }
+  web?: {
+    /**
+     * Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.
+     *
+     * These module will have a default export equal to the path to the asset, if no query is specified.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default true
+     */
+    transformAssets?: boolean
+    /**
+     * Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
+     *
+     * If CSS files are disabled with `css` options, this option will just silence UNKNOWN_EXTENSION errors.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default true
+     */
+    transformCss?: boolean
+    /**
+     * Regexp pattern to match external files that should be transformed.
+     *
+     * By default, files inside `node_modules` are externalized and not transformed.
+     *
+     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     *
+     * @default []
+     */
+    transformGlobPattern?: RegExp | RegExp[]
   }
   /**
    * Externalize means that Vite will bypass the package to native Node.
@@ -84,6 +147,8 @@ interface DepsOptions {
    * And does not support HMR on reload.
    *
    * Typically, packages under `node_modules` are externalized.
+   *
+   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.exclude`.
    */
   external?: (string | RegExp)[]
   /**
@@ -92,6 +157,8 @@ interface DepsOptions {
    * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
    *
    * If `true`, every dependency will be inlined
+   *
+   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.include`.
    */
   inline?: (string | RegExp)[] | true
 
@@ -108,12 +175,15 @@ interface DepsOptions {
    * cause some misalignment if a package have different logic in ESM and CJS mode.
    *
    * @default false
+   *
+   * @deprecated Use `server.deps.fallbackCJS` instead.
    */
   fallbackCJS?: boolean
 
   /**
    * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
    * @default false
+   * @deprecated If you rely on aliases inside external packages, use `deps.optimizer.{web,ssr}.include` instead.
    */
   registerNodeLoader?: boolean
 
@@ -141,7 +211,7 @@ export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+   * @default ['**\/*.{test,spec}.?(c|m)[jt]s?(x)']
    */
   include?: string[]
 
@@ -160,8 +230,14 @@ export interface InlineConfig {
 
   /**
    * Handling for dependencies inlining or externalizing
+   *
    */
   deps?: DepsOptions
+
+  /**
+   * Vite-node server options
+   */
+  server?: Omit<ViteNodeServerOptions, 'transformMode'>
 
   /**
    * Base directory to scan for the test files
@@ -259,6 +335,21 @@ export interface InlineConfig {
   outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
+   * Run tests using VM context in a worker pool.
+   *
+   * This makes tests run faster, but VM module is unstable. Your tests might leak memory.
+   */
+  experimentalVmThreads?: boolean
+
+  /**
+   * Specifies the memory limit for workers before they are recycled.
+   * If you see your worker leaking memory, try to tinker this value.
+   *
+   * This only has effect on workers that run tests in VM context.
+   */
+  experimentalVmWorkerMemoryLimit?: string | number
+
+  /**
    * Enable multi-threading
    *
    * @default true
@@ -305,7 +396,7 @@ export interface InlineConfig {
   /**
    * Default timeout to wait for close when Vitest shuts down, in milliseconds
    *
-   * @default 1000
+   * @default 10000
    */
   teardownTimeout?: number
 
@@ -439,25 +530,9 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method of modules
+   * Determine the transform method for all modules inported inside a test that matches the glob pattern.
    */
-  transformMode?: {
-    /**
-     * Use SSR transform pipeline for the specified files.
-     * Vite plugins will receive `ssr: true` flag when processing those files.
-     *
-     * @default [/\.([cm]?[jt]sx?|json)$/]
-     */
-    ssr?: RegExp[]
-    /**
-     * First do a normal transform pipeline (targeting browser),
-     * then then do a SSR rewrite to run the code in Node.
-     * Vite plugins will receive `ssr: false` flag when processing those files.
-     *
-     * @default other than `ssr`
-     */
-    web?: RegExp[]
-  }
+  testTransformMode?: TransformModePatterns
 
   /**
    * Format options for snapshot testing.
@@ -587,6 +662,13 @@ export interface InlineConfig {
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
+
+  /**
+   * Retry the test specific number of times if it fails.
+   *
+   * @default 0
+  */
+  retry?: number
 }
 
 export interface TypecheckConfig {
@@ -659,7 +741,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'experimentalVmWorkerMemoryLimit'> {
   mode: VitestRunMode
 
   base?: string
@@ -698,11 +780,14 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
     shuffle?: boolean
+    concurrent?: boolean
     seed: number
   }
 
   typecheck: TypecheckConfig
   runner?: string
+
+  experimentalVmWorkerMemoryLimit?: number | null
 }
 
 export type ProjectConfig = Omit<

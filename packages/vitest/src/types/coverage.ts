@@ -61,13 +61,13 @@ type CoverageReporterWithOptions<ReporterName extends CoverageReporter = Coverag
        : [ReporterName, Partial<ReportOptions[ReporterName]>]
      : never
 
-type Provider = 'c8' | 'istanbul' | 'custom' | undefined
+type Provider = 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
   T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
-    T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
+    T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
       T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
-          ({ provider?: T } & (CoverageC8Options))
+          ({ provider?: T } & (CoverageV8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -78,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'exclude'
   | 'extension'
   | 'reportOnFailure'
+  | 'allowExternal'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -213,9 +214,16 @@ export interface BaseCoverageOptions {
   /**
    * Generate coverage report even when tests fail.
    *
-   * @default true
+   * @default false
    */
   reportOnFailure?: boolean
+
+  /**
+   * Collect coverage of files outside the project `root`.
+   *
+   * @default false
+   */
+  allowExternal?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -227,28 +235,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageC8Options extends BaseCoverageOptions {
-  /**
-   * Allow files from outside of your cwd.
-   *
-   * @default false
-   */
-  allowExternal?: boolean
-
-  /**
-   * Exclude coverage under `/node_modules/`
-   *
-   * @default true
-   */
-  excludeNodeModules?: boolean
-
-  /**
-   * Specifies the directories that are used when `--all` is enabled.
-   *
-   * @default cwd
-  */
-  src?: string[]
-
+export interface CoverageV8Options extends BaseCoverageOptions {
   /**
    * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
    *

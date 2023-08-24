@@ -76,7 +76,7 @@ test('thresholdAutoUpdate updates thresholds', async () => {
     const coverage = match?.groups?.coverage || '0'
 
     // Configuration has fixed value of 1.01 set for each threshold
-    expect(parseInt(coverage)).toBeGreaterThan(1.01)
+    expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
   }
 
   // Update thresholds back to fixed values
@@ -100,4 +100,20 @@ test('coverage provider does not conflict with built-in reporter\'s outputFile',
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('junit.xml')
+})
+
+test('virtual files should be excluded', () => {
+  const files = fs.readdirSync(resolve('./coverage'))
+  const srcFiles = fs.readdirSync(resolve('./coverage/src'))
+
+  for (const file of [...files, ...srcFiles]) {
+    expect(file).not.toContain('virtual:')
+
+    // Vitest in node
+    expect(file).not.toContain('__x00__')
+    expect(file).not.toContain('\0')
+
+    // Vitest browser
+    expect(file).not.toContain('\x00')
+  }
 })

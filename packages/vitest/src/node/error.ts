@@ -3,7 +3,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import { stringify } from '@vitest/utils'
+import type { StackTraceParserOptions } from '@vitest/utils/source-map'
+import { inspect } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
@@ -12,15 +13,18 @@ import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
+import type { WorkspaceProject } from './workspace'
 
 interface PrintErrorOptions {
   type?: string
+  logger: Logger
   fullStack?: boolean
   showCodeFrame?: boolean
 }
 
-export async function printError(error: unknown, ctx: Vitest, options: PrintErrorOptions = {}) {
+export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions) {
   const { showCodeFrame = true, fullStack = false, type } = options
+  const logger = options.logger
   let e = error as ErrorWithDiff
 
   if (isPrimitive(e)) {
@@ -39,37 +43,44 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   }
 
   // Error may have occured even before the configuration was resolved
-  if (!ctx.config)
-    return printErrorMessage(e, ctx.logger)
+  if (!project)
+    return printErrorMessage(e, logger)
 
-  const stacks = parseErrorStacktrace(e, fullStack ? [] : undefined)
+  const parserOptions: StackTraceParserOptions = {
+    // only browser stack traces require remapping
+    getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+  }
+
+  if (fullStack)
+    parserOptions.ignoreStackEntries = []
+  const stacks = parseErrorStacktrace(e, parserOptions)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      ctx.getModuleProjects(stack.file).length
+      project.getModuleById(stack.file)
       && existsSync(stack.file),
     )
 
   const errorProperties = getErrorProperties(e)
 
   if (type)
-    printErrorType(type, ctx)
-  printErrorMessage(e, ctx.logger)
+    printErrorType(type, project.ctx)
+  printErrorMessage(e, logger)
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff)
-    displayDiff(e.diff, ctx.logger.console)
+    displayDiff(e.diff, logger.console)
 
   // if the error provide the frame
   if (e.frame) {
-    ctx.logger.error(c.yellow(e.frame))
+    logger.error(c.yellow(e.frame))
   }
   else {
-    printStack(ctx, stacks, nearest, errorProperties, (s) => {
+    printStack(project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        ctx.logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
+        logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
       }
     })
   }
@@ -79,24 +90,24 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath)
-    ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
+    logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
   if (testName) {
-    ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
+    logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
     + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
   }
   if (afterEnvTeardown) {
-    ctx.logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
+    logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
     + '\n- cancel timeouts using clearTimeout and clearInterval'
     + '\n- wait for promises to resolve using the await keyword'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
+    await printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
   }
 
-  handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
+  handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -139,7 +150,7 @@ const esmErrors = [
   'Unexpected token \'export\'',
 ]
 
-function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
+function handleImportOutsideModuleError(stack: string, logger: Logger) {
   if (!esmErrors.some(e => stack.includes(e)))
     return
 
@@ -151,9 +162,9 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
     name = name.split('/')[0]
 
   if (name)
-    printModuleWarningForPackage(ctx.logger, path, name)
+    printModuleWarningForPackage(logger, path, name)
   else
-    printModuleWarningForSourceCode(ctx.logger, path)
+    printModuleWarningForSourceCode(logger, path)
 }
 
 function printModuleWarningForPackage(logger: Logger, path: string, name: string) {
@@ -168,10 +179,9 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 + '\n'
 + c.green(`export default {
   test: {
-    deps: {
-      experimentalOptimizer: {
-        enabled: true,
-        include: [
+    server: {
+      deps: {
+        inline: [
           ${c.yellow(c.bold(`"${name}"`))}
         ]
       }
@@ -187,27 +197,38 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   ))
 }
 
-export function displayDiff(diff: string, console: Console) {
-  console.error(`\n${diff}\n`)
+export function displayDiff(diff: string | null, console: Console) {
+  if (diff)
+    console.error(`\n${diff}\n`)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  if (!error.message) {
+    logger.error(error)
+    return
+  }
+  if (error.message.length > 5000) {
+    // Protect against infinite stack trace in picocolors
+    logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
+  }
+  else {
+    logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  }
 }
 
 function printStack(
-  ctx: Vitest,
+  project: WorkspaceProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  const logger = ctx.logger
+  const logger = project.ctx.logger
 
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
-    const path = relative(ctx.config.root, frame.file)
+    const path = relative(project.config.root, frame.file)
 
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`].filter(Boolean).join(' ')}`))
     onStack?.(frame)
@@ -217,7 +238,7 @@ function printStack(
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
     logger.error(c.red(c.dim(divider())))
-    const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
+    const propertiesString = inspect(errorProperties)
     logger.error(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }
@@ -232,6 +253,7 @@ export function generateCodeFrame(
   const start = positionToOffset(source, lineNumber, columnNumber)
   const end = start
   const lines = source.split(lineSplitRE)
+  const nl = /\r\n/.test(source) ? 2 : 1
   let count = 0
   let res: string[] = []
 
@@ -242,7 +264,7 @@ export function generateCodeFrame(
   }
 
   for (let i = 0; i < lines.length; i++) {
-    count += lines[i].length + 1
+    count += lines[i].length + nl
     if (count >= start) {
       for (let j = i - range; j <= i + range || end > count; j++) {
         if (j < 0 || j >= lines.length)
@@ -258,7 +280,7 @@ export function generateCodeFrame(
 
         if (j === i) {
           // push underline
-          const pad = start - (count - lineLength)
+          const pad = start - (count - lineLength) + (nl - 1)
           const length = Math.max(1, end > count ? lineLength - pad : end - start)
           res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
         }

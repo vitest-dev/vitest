@@ -1,5 +1,3 @@
-import { builtinModules } from 'node:module'
-import { version as viteVersion } from 'vite'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
@@ -9,11 +7,14 @@ import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
+import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -42,56 +43,24 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
-        const preOptions = deepMerge(
+        const testConfig = deepMerge(
           {} as UserConfig,
           configDefaults,
           options,
           removeUndefinedValues(viteConfig.test ?? {}),
         )
-        preOptions.api = resolveApiServerConfig(preOptions)
-
-        if (viteConfig.define) {
-          delete viteConfig.define['import.meta.vitest']
-          delete viteConfig.define['process.env']
-        }
+        testConfig.api = resolveApiServerConfig(testConfig)
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = {}
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        for (const key in viteConfig.define) {
-          const val = viteConfig.define[key]
-          let replacement: any
-          try {
-            replacement = typeof val === 'string' ? JSON.parse(val) : val
-          }
-          catch {
-            // probably means it contains reference to some variable,
-            // like this: "__VAR__": "process.env.VAR"
-            continue
-          }
-          if (key.startsWith('import.meta.env.')) {
-            const envKey = key.slice('import.meta.env.'.length)
-            process.env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (key.startsWith('process.env.')) {
-            const envKey = key.slice('process.env.'.length)
-            process.env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (!key.includes('.')) {
-            defines[key] = replacement
-            delete viteConfig.define[key]
-          }
-        }
-
-        (options as ResolvedConfig).defines = defines
+        ;(options as ResolvedConfig).defines = defines
 
         let open: string | boolean | undefined
 
-        if (preOptions.ui && preOptions.open)
-          open = preOptions.uiBase ?? '/__vitest__/'
+        if (testConfig.ui && testConfig.open)
+          open = testConfig.uiBase ?? '/__vitest__/'
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
@@ -105,24 +74,33 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
-            alias: preOptions.alias,
+            alias: testConfig.alias,
             conditions: ['node'],
             // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
             // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
             browserField: false,
           },
           server: {
-            ...preOptions.api,
+            ...testConfig.api,
             watch: {
-              ignored: preOptions.watchExclude,
+              ignored: testConfig.watchExclude,
             },
             open,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(getRoot(), testConfig.config),
+            },
           },
         }
 
-        const classNameStrategy = (typeof preOptions.css !== 'boolean' && preOptions.css?.modules?.classNameStrategy) || 'stable'
+        // chokidar fsevents is unstable on macos when emitting "ready" event
+        if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
+          config.server!.watch!.useFsEvents = false
+          config.server!.watch!.usePolling = false
+        }
+
+        const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -134,35 +112,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             }
           }
         }
-
-        const optimizeConfig: Partial<ViteConfig> = {}
-        const optimizer = preOptions.deps?.experimentalOptimizer
-        const [major, minor] = viteVersion.split('.').map(Number)
-        const allowed = major >= 5 || (major === 4 && minor >= 3)
-        if (!allowed && optimizer?.enabled === true)
-          console.warn(`Vitest: "deps.experimentalOptimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
-        if (!allowed || optimizer?.enabled !== true) {
-          optimizeConfig.cacheDir = undefined
-          optimizeConfig.optimizeDeps = {
-            // experimental in Vite >2.9.2, entries remains to help with older versions
-            disabled: true,
-            entries: [],
-          }
-        }
-        else {
-          const cacheDir = preOptions.cache !== false ? preOptions.cache?.dir : null
-          optimizeConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
-          optimizeConfig.optimizeDeps = {
-            ...viteConfig.optimizeDeps,
-            ...optimizer,
-            noDiscovery: true,
-            disabled: false,
-            entries: [],
-            exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
-            include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
-          }
-        }
-        Object.assign(config, optimizeConfig)
 
         return config
       },
@@ -204,15 +153,23 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             ignored: ['**/*'],
           }
         }
+
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
+        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+          server.watcher.on('ready', () => {
+            // eslint-disable-next-line no-console
+            console.log('[debug] watcher is ready')
+          })
+        }
         try {
           await ctx.setServer(options, server, userConfig)
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          await ctx.logger.printError(err, true)
+          await ctx.logger.printError(err, { fullStack: true })
           process.exit(1)
         }
 
@@ -221,7 +178,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
@@ -229,6 +186,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       ? await UIPlugin()
       : null,
     MocksPlugin(),
+    VitestResolver(ctx),
+    VitestOptimizer(),
   ]
     .filter(notNullish)
 }

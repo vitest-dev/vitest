@@ -61,14 +61,15 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
 }
 
 export function getRunnerOptions(): any {
-  const { config, ctx, rpc, mockMap, moduleCache } = getWorkerState()
+  const state = getWorkerState()
+  const { config, rpc, mockMap, moduleCache } = state
 
   return {
     fetchModule(id: string) {
-      return rpc.fetch(id, ctx.environment.name)
+      return rpc.fetch(id, 'web')
     },
     resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, ctx.environment.name)
+      return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
     mockMap,
@@ -76,5 +77,14 @@ export function getRunnerOptions(): any {
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
+    state,
   }
+}
+
+export function getFileIdFromUrl(url: URL | string) {
+  if (!(url instanceof URL))
+    url = new URL(url, self.location.origin)
+  if (url.protocol === 'http:' || url.protocol === 'https:')
+    return url.pathname
+  return url.toString().replace(/^file:\/+/, '/')
 }

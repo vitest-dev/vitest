@@ -7,12 +7,13 @@ import { getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getCurrentEnvironment, getFullName } from '../../utils'
+import { getFullName } from '../../utils/tasks'
+import { getCurrentEnvironment } from '../../utils/global'
 
 export function createExpect(test?: Test) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1 }, expect)
+    setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test)
@@ -44,6 +45,18 @@ export function createExpect(test?: Test) {
 
   // @ts-expect-error untyped
   expect.extend = matchers => chai.expect.extend(expect, matchers)
+
+  expect.soft = (...args) => {
+    const assert = expect(...args)
+    expect.setState({
+      soft: true,
+    })
+    return assert
+  }
+
+  expect.unreachable = (message?: string) => {
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
+  }
 
   function assertions(expected: number) {
     const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)
@@ -83,9 +96,3 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
-
-export function setupChaiConfig(config: ChaiConfig) {
-  Object.assign(chai.config, config)
-}
-
-export type ChaiConfig = Omit<Partial<typeof chai.config>, 'useProxy' | 'proxyExcludedKeys'>

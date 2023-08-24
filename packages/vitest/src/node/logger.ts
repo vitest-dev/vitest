@@ -7,6 +7,19 @@ import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
 import { printError } from './error'
+import type { WorkspaceProject } from './workspace'
+
+interface ErrorOptions {
+  type?: string
+  fullStack?: boolean
+  project?: WorkspaceProject
+}
+
+const ESC = '\x1B['
+const ERASE_DOWN = `${ESC}J`
+const ERASE_SCROLLBACK = `${ESC}3J`
+const CURSOR_TO_START = `${ESC}1;1H`
+const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
   outputStream = process.stdout
@@ -43,7 +56,7 @@ export class Logger {
       return
     }
 
-    this.console.log(`\x1Bc${message}`)
+    this.console.log(`${ERASE_SCROLLBACK}${CLEAR_SCREEN}${message}`)
   }
 
   clearScreen(message: string, force = false) {
@@ -63,16 +76,17 @@ export class Logger {
 
     const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    // equivalent to ansi-escapes:
-    // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
-    this.console.log(`\u001B[1;1H\u001B[J${log}`)
+    this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, fullStack = false, type?: string) {
-    return printError(err, this.ctx, {
+  printError(err: unknown, options: ErrorOptions = {}) {
+    const { fullStack = false, type } = options
+    const project = options.project ?? this.ctx.getCoreWorkspaceProject() ?? this.ctx.projects[0]
+    return printError(err, project, {
       fullStack,
       type,
       showCodeFrame: true,
+      logger: this,
     })
   }
 
@@ -88,10 +102,15 @@ export class Logger {
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
-    if (config.passWithNoTests)
-      this.log(`No ${config.mode} files found, exiting with code 0\n`)
-    else
-      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else {
+      if (config.passWithNoTests)
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      else
+        this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    }
   }
 
   printBanner() {
@@ -137,7 +156,7 @@ export class Logger {
     this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
     this.log(errorMessage)
     await Promise.all(errors.map(async (err) => {
-      await this.printError(err, true, (err as ErrorWithDiff).type || 'Unhandled Error')
+      await this.printError(err, { fullStack: true, type: (err as ErrorWithDiff).type || 'Unhandled Error' })
     }))
     this.log(c.red(divider()))
   }
@@ -149,7 +168,7 @@ export class Logger {
     this.log(c.red(divider(c.bold(c.inverse(' Source Errors ')))))
     this.log(errorMessage)
     await Promise.all(errors.map(async (err) => {
-      await this.printError(err, true)
+      await this.printError(err, { fullStack: true })
     }))
     this.log(c.red(divider()))
   }

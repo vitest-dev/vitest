@@ -81,6 +81,7 @@ const failed = computed(() => {
       level: 0,
       type: 'suite',
       mode: 'run',
+      meta: {},
       tasks: [],
       result,
     }

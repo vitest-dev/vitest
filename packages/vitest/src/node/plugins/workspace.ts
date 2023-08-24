@@ -1,7 +1,5 @@
-import { builtinModules } from 'node:module'
 import { dirname, relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { version as viteVersion } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
@@ -9,9 +7,12 @@ import type { WorkspaceProject } from '../workspace'
 import type { UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
-import { EnvReplacerPlugin } from './envReplacer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
+import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -26,37 +27,8 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
       options() {
         this.meta.watchMode = false
       },
-      // TODO: refactor so we don't have the same code here and in plugins/index.ts
       config(viteConfig) {
-        if (viteConfig.define) {
-          delete viteConfig.define['import.meta.vitest']
-          delete viteConfig.define['process.env']
-        }
-
-        const env: Record<string, any> = {}
-
-        for (const key in viteConfig.define) {
-          const val = viteConfig.define[key]
-          let replacement: any
-          try {
-            replacement = typeof val === 'string' ? JSON.parse(val) : val
-          }
-          catch {
-            // probably means it contains reference to some variable,
-            // like this: "__VAR__": "process.env.VAR"
-            continue
-          }
-          if (key.startsWith('import.meta.env.')) {
-            const envKey = key.slice('import.meta.env.'.length)
-            env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-          else if (key.startsWith('process.env.')) {
-            const envKey = key.slice('process.env.'.length)
-            env[envKey] = replacement
-            delete viteConfig.define[key]
-          }
-        }
+        const env: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
 
@@ -98,6 +70,12 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             open: false,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(
+                project.ctx.config.root,
+                project.ctx.server.config.configFile,
+              ),
+            },
           },
           test: {
             env,
@@ -118,36 +96,10 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           }
         }
 
-        const optimizeConfig: Partial<ViteConfig> = {}
-        const optimizer = testConfig.deps?.experimentalOptimizer
-        const [major, minor] = viteVersion.split('.').map(Number)
-        const allowed = major >= 5 || (major === 4 && minor >= 3)
-        if (!allowed && optimizer?.enabled === true)
-          console.warn(`Vitest: "deps.experimentalOptimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
-        if (!allowed || optimizer?.enabled !== true) {
-          optimizeConfig.cacheDir = undefined
-          optimizeConfig.optimizeDeps = {
-            // experimental in Vite >2.9.2, entries remains to help with older versions
-            disabled: true,
-            entries: [],
-          }
-        }
-        else {
-          const cacheDir = testConfig.cache !== false ? testConfig.cache?.dir : null
-          optimizeConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
-          optimizeConfig.optimizeDeps = {
-            ...viteConfig.optimizeDeps,
-            ...optimizer,
-            noDiscovery: true,
-            disabled: false,
-            entries: [],
-            exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
-            include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
-          }
-        }
-        Object.assign(config, optimizeConfig)
-
         return config
+      },
+      configResolved(viteConfig) {
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         try {
@@ -159,17 +111,19 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           await project.setServer(options, server)
         }
         catch (err) {
-          await project.ctx.logger.printError(err, true)
+          await project.ctx.logger.printError(err, { fullStack: true })
           process.exit(1)
         }
 
         await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
+    VitestResolver(project.ctx),
+    VitestOptimizer(),
   ]
 }

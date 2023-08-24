@@ -65,7 +65,9 @@ it('worker with invalid url throws an error', async () => {
     }
   })
   expect(event).toBeInstanceOf(ErrorEvent)
-  expect(event.error).toBeInstanceOf(Error)
+  // Error is in different context when running in VM. This is consistent with jest.
+  if (!import.meta.env.VITEST_VM_POOL)
+    expect(event.error).toBeInstanceOf(Error)
   expect(event.error.message).toContain('Failed to load')
 })
 
@@ -73,11 +75,13 @@ it('self injected into worker and its deps should be equal', async () => {
   expect.assertions(4)
   expect(await testSelfWorker(new MySelfWorker())).toBeTruthy()
   // wait for clear worker mod cache
-  await sleep(500)
+  await sleep(0)
   expect(await testSelfWorker(new MySelfWorker())).toBeTruthy()
+
+  await sleep(0)
 
   expect(await testSelfWorker(new Worker(new URL('../src/selfWorker.ts', import.meta.url)))).toBeTruthy()
   // wait for clear worker mod cache
-  await sleep(500)
+  await sleep(0)
   expect(await testSelfWorker(new Worker(new URL('../src/selfWorker.ts', import.meta.url)))).toBeTruthy()
 })

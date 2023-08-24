@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { relative } from 'pathe'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../types'
 
@@ -58,6 +59,59 @@ export class BaseCoverageProvider {
       // eslint-disable-next-line no-console
       console.log('Updating thresholds to configuration file. You may want to push with updated coverage thresholds.')
       writeFileSync(configurationFile, updatedConfig, 'utf-8')
+    }
+  }
+
+  /**
+   * Checked collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
+   */
+  checkThresholds({ coverageMap, thresholds, perFile }: {
+    coverageMap: CoverageMap
+    thresholds: Record<Threshold, number | undefined>
+    perFile?: boolean
+  }) {
+    // Construct list of coverage summaries where thresholds are compared against
+    const summaries = perFile
+      ? coverageMap.files()
+        .map((file: string) => ({
+          file,
+          summary: coverageMap.fileCoverageFor(file).toSummary(),
+        }))
+      : [{
+          file: null,
+          summary: coverageMap.getCoverageSummary(),
+        }]
+
+    // Check thresholds of each summary
+    for (const { summary, file } of summaries) {
+      for (const thresholdKey of ['lines', 'functions', 'statements', 'branches'] as const) {
+        const threshold = thresholds[thresholdKey]
+
+        if (threshold !== undefined) {
+          const coverage = summary.data[thresholdKey].pct
+
+          if (coverage < threshold) {
+            process.exitCode = 1
+
+            /*
+             * Generate error message based on perFile flag:
+             * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
+             * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
+             */
+            let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet`
+
+            if (!perFile)
+              errorMessage += ' global'
+
+            errorMessage += ` threshold (${threshold}%)`
+
+            if (perFile && file)
+              errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
+
+            console.error(errorMessage)
+          }
+        }
+      }
     }
   }
 

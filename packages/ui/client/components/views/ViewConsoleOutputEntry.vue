@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UserConsoleLog } from '#types'
 
-const props = defineProps<{
+defineProps<{
   taskName: string
   type: UserConsoleLog['type']
   time: UserConsoleLog['time']
@@ -18,11 +18,11 @@ function formatTime(t: number) {
   <div border="b base" p-4>
     <div
       text-xs mb-1
-      :class="props.type === 'stderr' ? 'text-red-600 dark:text-red-300' : 'op30'"
+      :class="type === 'stderr' ? 'text-red-600 dark:text-red-300' : 'op30'"
     >
-      {{ formatTime(props.time) }} | {{ props.taskName }} | {{ props.type }}
+      {{ formatTime(time) }} | {{ taskName }} | {{ type }}
     </div>
-    <pre v-if="props.html" data-type="html" v-html="props.content" />
-    <pre v-else data-type="text" v-text="props.content" />
+    <pre v-if="html" data-type="html" v-html="content" />
+    <pre v-else data-type="text" v-text="content" />
   </div>
 </template>

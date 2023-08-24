@@ -1,6 +1,6 @@
 import type { CloneOption, DefineWorkerOptions, InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
-import { createMessageEvent, debug, getRunnerOptions } from './utils'
+import { createMessageEvent, debug, getFileIdFromUrl, getRunnerOptions } from './utils'
 
 export function createWorkerConstructor(options?: DefineWorkerOptions): typeof Worker {
   const runnerOptions = getRunnerOptions()
@@ -66,7 +66,7 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
 
       const runner = new InlineWorkerRunner(runnerOptions, context)
 
-      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
+      const id = getFileIdFromUrl(url)
 
       this._vw_name = id
 
@@ -75,7 +75,7 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
 
         debug('initialize worker %s', this._vw_name)
 
-        runner.executeFile(fsPath).then(() => {
+        return runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
           runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
           const q = this._vw_messageQueue
@@ -83,17 +83,17 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
           if (q)
             q.forEach(([data, transfer]) => this.postMessage(data, transfer), this)
           debug('worker %s successfully initialized', this._vw_name)
-        }).catch((e) => {
-          debug('worker %s failed to initialize: %o', this._vw_name, e)
-          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-          const error = new EventConstructor('error', {
-            error: e,
-            message: e.message,
-          })
-          this.dispatchEvent(error)
-          this.onerror?.(error)
-          console.error(e)
         })
+      }).catch((e) => {
+        debug('worker %s failed to initialize: %o', this._vw_name, e)
+        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+        const error = new EventConstructor('error', {
+          error: e,
+          message: e.message,
+        })
+        this.dispatchEvent(error)
+        this.onerror?.(error)
+        console.error(e)
       })
     }
 
