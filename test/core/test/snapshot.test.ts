@@ -1,4 +1,7 @@
-import { expect, test, vi } from 'vitest'
+import path from 'node:path'
+
+import { describe, expect, test, vi } from 'vitest'
+import { runVitest } from '../../test-utils'
 import { testOutsideInlineSnapshot } from './snapshots-outside'
 
 test('object', () => {
@@ -112,3 +115,18 @@ test('renders inline mock snapshot', () => {
     }
   `)
 })
+
+const root = path.resolve(__dirname, './fixtures')
+function run(testNamePattern?: string) {
+  return runVitest({
+    root,
+    testNamePattern,
+  })
+}
+
+describe('snapshot should not be obsolete', () => {
+  test('should skip', async () => {
+    const { stdout } = await run('should skip')
+    expect(stdout).toContain('1 skipped')
+  })
+}, { timeout: 10000 })
