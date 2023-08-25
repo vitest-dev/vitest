@@ -369,16 +369,20 @@ describe('jest-expect', () => {
     ])
   })
 
-  it('toThrow didn\'t throw', () => {
-    expect(() => {
-      expect(async () => {
-      }).toThrow(Error)
-    }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
-
-    expect(() => {
+  describe('toThrow', () => {
+    it('error wasn\'t thrown', () => {
       expect(() => {
-      }).toThrow(Error)
-    }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+        expect(() => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
+
+    it('async wasn\'t awaited', () => {
+      expect(() => {
+        expect(async () => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
   })
 })
 
