@@ -103,7 +103,20 @@ cli
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
   .option('--project <name>', 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2')
-  .help()
+  .help((info) => {
+    if (process.env.VERBOSE === 'true')
+      return info
+
+    const optionObj = info.find(current => current.title === 'Options')
+    if (typeof optionObj !== 'object')
+      return info
+
+    const options = optionObj.body.split('\n')
+    const filteredOptions = options.filter(option => option.search(/\S+\.\S+/) === -1).join('\n')
+    optionObj.body = filteredOptions
+
+    return info
+  })
 
 cli
   .command('run [...filters]')
