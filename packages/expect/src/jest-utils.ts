@@ -485,8 +485,13 @@ export function arrayBufferEquality(a: unknown,
     if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
       return undefined
 
-    dataViewA = new DataView(a)
-    dataViewB = new DataView(b)
+    try {
+      dataViewA = new DataView(a)
+      dataViewB = new DataView(b)
+    }
+    catch {
+      return undefined
+    }
   }
 
   // Buffers are not equal when they do not have the same byte length

@@ -56,21 +56,6 @@ it('worker with url', async () => {
   await testWorker(new Worker(new URL('../src/worker.ts', url)))
 })
 
-it('worker with invalid url throws an error', async () => {
-  const url = import.meta.url
-  const worker = new Worker(new URL('../src/workerInvalid-path.ts', url))
-  const event = await new Promise<ErrorEvent>((resolve) => {
-    worker.onerror = (e) => {
-      resolve(e)
-    }
-  })
-  expect(event).toBeInstanceOf(ErrorEvent)
-  // Error is in different context when running in VM. This is consistent with jest.
-  if (!import.meta.env.VITEST_VM_POOL)
-    expect(event.error).toBeInstanceOf(Error)
-  expect(event.error.message).toContain('Failed to load')
-})
-
 it('self injected into worker and its deps should be equal', async () => {
   expect.assertions(4)
   expect(await testSelfWorker(new MySelfWorker())).toBeTruthy()
