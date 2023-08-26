@@ -143,6 +143,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       watermarks: this.options.watermarks,
     })
 
+    if (hasTerminalReporter(this.options.reporter))
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
+
     for (const reporter of this.options.reporter) {
       reports.create(reporter[0], {
         skipFull: this.options.skipFull,
@@ -294,4 +297,12 @@ function normalizeTransformResults(fetchCaches: Map<string, { result: FetchResul
   }
 
   return normalized
+}
+
+function hasTerminalReporter(reporters: Options['reporter']) {
+  return reporters.some(([reporter]) =>
+    reporter === 'text'
+    || reporter === 'text-summary'
+    || reporter === 'text-lcov'
+    || reporter === 'teamcity')
 }
