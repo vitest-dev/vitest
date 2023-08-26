@@ -6,6 +6,6 @@ export function getWorkerState(): WorkerGlobalState {
 }
 
 export function getCurrentEnvironment(): string {
-  // @ts-expect-error untyped global
-  return globalThis.__vitest_environment__
+  const state = getWorkerState()
+  return state?.environment.name
 }

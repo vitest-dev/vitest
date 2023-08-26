@@ -39,8 +39,7 @@ export class ViteNodeServer {
     const ssrOptions = server.config.ssr
 
     options.deps ??= {}
-
-    options.deps.cacheDir = relative(server.config.root, server.config.cacheDir)
+    options.deps.cacheDir = relative(server.config.root, options.deps.cacheDir || server.config.cacheDir)
 
     if (ssrOptions) {
       // we don't externalize ssr, because it has different semantics in Vite
@@ -149,6 +148,19 @@ export class ViteNodeServer {
       )
     }
     return this.transformPromiseMap.get(id)!
+  }
+
+  async transformModule(id: string, transformMode?: 'web' | 'ssr') {
+    if (transformMode !== 'web')
+      throw new Error('`transformModule` only supports `transformMode: "web"`.')
+
+    const normalizedId = normalizeModuleId(id)
+    const mod = this.server.moduleGraph.getModuleById(normalizedId)
+    const result = mod?.transformResult || await this.server.transformRequest(normalizedId)
+
+    return {
+      code: result?.code,
+    }
   }
 
   getTransformMode(id: string) {

@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
-import { execa } from 'execa'
 import { resolve } from 'pathe'
 import ansiEscapes, { HelloWorld } from '../src/self-export'
+import { runViteNodeCli } from '../../test-utils'
 
 it('should export self', () => {
   expect(ansiEscapes.HelloWorld).eq(HelloWorld)
@@ -9,16 +9,14 @@ it('should export self', () => {
   expect(HelloWorld).eq(1)
 })
 
-const cliPath = resolve(__dirname, '../../../packages/vite-node/src/cli.ts')
-
 it('example 1', async () => {
   const entryPath = resolve(__dirname, '../src/self-export-example1.ts')
-  const result = await execa('npx', ['esno', cliPath, entryPath], { reject: true })
-  expect(result.stdout).includes('Function')
+  const cli = await runViteNodeCli(entryPath)
+  await cli.waitForStdout('Function')
 }, 60_000)
 
 it('example 2', async () => {
   const entryPath = resolve(__dirname, '../src/self-export-example2.ts')
-  const result = await execa('npx', ['esno', cliPath, entryPath], { reject: true })
-  expect(result.stdout).includes('HelloWorld: 1').includes('default')
+  const cli = await runViteNodeCli(entryPath)
+  await cli.waitForStdout('HelloWorld: 1')
 }, 60_000)

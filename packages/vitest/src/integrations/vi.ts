@@ -3,8 +3,9 @@ import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import type { MockFactoryWithHelper } from '../types/mocker'
+import { getWorkerState } from '../utils/global'
+import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -117,13 +118,13 @@ interface VitestUtils {
   /**
    * Makes value available on global namespace.
    * Useful, if you want to have global variables available, like `IntersectionObserver`.
-   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
+   * You can return it back to original value with `vi.unstubAllGlobals`, or by enabling `unstubGlobals` config option.
    */
   stubGlobal(name: string | symbol | number, value: unknown): this
 
   /**
    * Changes the value of `import.meta.env` and `process.env`.
-   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
   stubEnv(name: string, value: string): this
 
@@ -163,10 +164,10 @@ function createVitest(): VitestUtils {
     // @ts-expect-error injected by vite-nide
     ? __vitest_mocker__
     : new Proxy({}, {
-      get(name) {
+      get(_, name) {
         throw new Error(
           'Vitest mocker was not initialized in this environment. '
-          + `vi.${name}() is forbidden.`,
+          + `vi.${String(name)}() is forbidden.`,
         )
       },
     })

@@ -5,6 +5,7 @@ import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
 import type { ResolvedConfig } from './config'
 import type { ContextRPC, RuntimeRPC } from './rpc'
+import type { Environment } from './general'
 
 export interface WorkerContext extends ContextRPC {
   workerId: number
@@ -17,12 +18,15 @@ export interface AfterSuiteRunMeta {
   coverage?: unknown
 }
 
+export type WorkerRPC = BirpcReturn<RuntimeRPC>
+
 export interface WorkerGlobalState {
-  ctx: WorkerContext
+  ctx: ContextRPC
   config: ResolvedConfig
-  rpc: BirpcReturn<RuntimeRPC>
+  rpc: WorkerRPC
   current?: Test
   filepath?: string
+  environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap

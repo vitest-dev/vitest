@@ -1,10 +1,19 @@
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { builtinModules } from 'node:module'
 import { existsSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
+
+const drive = isWindows ? process.cwd()[0] : null
+const driveOpposite = drive
+  ? (drive === drive.toUpperCase()
+      ? drive.toLowerCase()
+      : drive.toUpperCase())
+  : null
+const driveRegexp = drive ? new RegExp(`(?:^|/@fs/)${drive}(\:[\\/])`) : null
+const driveOppositeRegext = driveOpposite ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`) : null
 
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
@@ -15,6 +24,10 @@ export const VALID_ID_PREFIX = '/@id/'
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`
+
+  // keep drive the same as in process cwd
+  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id))
+    id = id.replace(driveOppositeRegext, `${drive}$1`)
 
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
@@ -139,4 +152,79 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
     return array
 
   return [array]
+}
+
+export function getCachedData<T>(
+  cache: Map<string, T>,
+  basedir: string,
+  originalBasedir: string,
+) {
+  const pkgData = cache.get(getFnpdCacheKey(basedir))
+  if (pkgData) {
+    traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+      cache.set(getFnpdCacheKey(dir), pkgData)
+    })
+    return pkgData
+  }
+}
+
+export function setCacheData<T>(
+  cache: Map<string, T>,
+  data: T,
+  basedir: string,
+  originalBasedir: string,
+) {
+  cache.set(getFnpdCacheKey(basedir), data)
+  traverseBetweenDirs(originalBasedir, basedir, (dir) => {
+    cache.set(getFnpdCacheKey(dir), data)
+  })
+}
+
+function getFnpdCacheKey(basedir: string) {
+  return `fnpd_${basedir}`
+}
+
+/**
+ * Traverse between `longerDir` (inclusive) and `shorterDir` (exclusive) and call `cb` for each dir.
+ * @param longerDir Longer dir path, e.g. `/User/foo/bar/baz`
+ * @param shorterDir Shorter dir path, e.g. `/User/foo`
+ */
+function traverseBetweenDirs(
+  longerDir: string,
+  shorterDir: string,
+  cb: (dir: string) => void,
+) {
+  while (longerDir !== shorterDir) {
+    cb(longerDir)
+    longerDir = dirname(longerDir)
+  }
+}
+
+export function createImportMetaEnvProxy() {
+  // packages/vitest/src/node/plugins/index.ts:146
+  const booleanKeys = [
+    'DEV',
+    'PROD',
+    'SSR',
+  ]
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string')
+        return undefined
+      if (booleanKeys.includes(key))
+        return !!process.env[key]
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string')
+        return true
+
+      if (booleanKeys.includes(key))
+        process.env[key] = value ? '1' : ''
+      else
+        process.env[key] = value
+
+      return true
+    },
+  })
 }

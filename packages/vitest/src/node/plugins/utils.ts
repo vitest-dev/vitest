@@ -1,15 +1,19 @@
-import { builtinModules } from 'node:module'
-import { version as viteVersion } from 'vite'
-import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
+import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
+import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 
-export function resolveOptimizerConfig(testOptionc: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
+export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
+  const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions } = {} as any
-  const [major, minor] = viteVersion.split('.').map(Number)
-  const allowed = major >= 5 || (major === 4 && minor >= 3)
-  if (!allowed && testOptionc?.enabled === true)
-    console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.0, current Vite version: ${viteVersion}`)
-  if (!allowed || testOptionc?.enabled !== true) {
+  const [major, minor, fix] = viteVersion.split('.').map(Number)
+  const allowed = major >= 5 || (major === 4 && minor >= 4) || (major === 4 && minor === 3 && fix >= 2)
+  if (!allowed && testOptions?.enabled === true)
+    console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`)
+  else
+    // enable by default
+    testOptions.enabled ??= true
+  if (!allowed || testOptions?.enabled !== true) {
     newConfig.cacheDir = undefined
     newConfig.optimizeDeps = {
       // experimental in Vite >2.9.2, entries remains to help with older versions
@@ -19,15 +23,26 @@ export function resolveOptimizerConfig(testOptionc: DepsOptimizationOptions | un
   }
   else {
     const cacheDir = testConfig.cache !== false ? testConfig.cache?.dir : null
+    const currentInclude = (testOptions.include || viteOptions?.include || [])
+    const exclude = [
+      'vitest',
+      // Ideally, we shouldn't optimize react in test mode, otherwise we need to optimize _every_ dependency that uses react.
+      'react',
+      ...(testOptions.exclude || viteOptions?.exclude || []),
+    ]
+    const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime'))
+    exclude.push(...runtime)
+
+    const include = (testOptions.include || viteOptions?.include || []).filter((n: string) => !exclude.includes(n))
     newConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
     newConfig.optimizeDeps = {
       ...viteOptions,
-      ...testOptionc,
+      ...testOptions,
       noDiscovery: true,
       disabled: false,
       entries: [],
-      exclude: ['vitest', ...builtinModules, ...(testOptionc.exclude || viteOptions?.exclude || [])],
-      include: (testOptionc.include || viteOptions?.include || []).filter((n: string) => n !== 'vitest'),
+      exclude,
+      include,
     }
   }
   return newConfig
@@ -68,4 +83,21 @@ export function deleteDefineConfig(viteConfig: ViteConfig) {
     }
   }
   return defines
+}
+
+export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
+  // disable replacing `process.env.NODE_ENV` with static string
+  const processEnvPlugin = viteConfig.plugins.find(p => p.name === 'vite:client-inject')
+  if (processEnvPlugin) {
+    const originalTransform = processEnvPlugin.transform as any
+    processEnvPlugin.transform = function transform(code, id, options) {
+      return originalTransform.call(this, code, id, { ...options, ssr: true })
+    }
+  }
+}
+
+export function resolveFsAllow(projectRoot: string, rootConfigFile: string | false | undefined) {
+  if (!rootConfigFile)
+    return [searchForWorkspaceRoot(projectRoot)]
+  return [dirname(rootConfigFile), searchForWorkspaceRoot(projectRoot)]
 }

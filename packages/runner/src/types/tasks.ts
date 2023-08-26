@@ -59,6 +59,7 @@ export interface File extends Suite {
 export interface Test<ExtraContext = {}> extends TaskBase {
   type: 'test'
   suite: Suite
+  pending?: boolean
   result?: TaskResult
   fails?: boolean
   context: TestContext & ExtraContext
@@ -262,6 +263,11 @@ export interface TestContext {
    * Extract hooks on test failed
    */
   onTestFailed: (fn: OnTestFailedHandler) => void
+
+  /**
+   * Mark tests as skipped. All execution after this call will be skipped.
+   */
+  skip: () => void
 }
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>

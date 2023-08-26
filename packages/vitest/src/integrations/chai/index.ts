@@ -7,7 +7,8 @@ import { getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getCurrentEnvironment, getFullName } from '../../utils'
+import { getFullName } from '../../utils/tasks'
+import { getCurrentEnvironment } from '../../utils/global'
 
 export function createExpect(test?: Test) {
   const expect = ((value: any, message?: string): Assertion => {
@@ -95,9 +96,3 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
-
-export function setupChaiConfig(config: ChaiConfig) {
-  Object.assign(chai.config, config)
-}
-
-export type ChaiConfig = Omit<Partial<typeof chai.config>, 'useProxy' | 'proxyExcludedKeys'>

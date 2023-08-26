@@ -8,6 +8,7 @@ import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
+import { PendingError } from './errors'
 
 const now = Date.now
 
@@ -175,6 +176,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
         failTask(test.result, e)
       }
 
+      // skipped with new PendingError
+      if (test.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = { state: 'skip' }
+        updateTask(test, runner)
+        return
+      }
+
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
@@ -225,6 +234,11 @@ export async function runTest(test: Test, runner: VitestRunner) {
 }
 
 function failTask(result: TaskResult, err: unknown) {
+  if (err instanceof PendingError) {
+    result.state = 'skip'
+    return
+  }
+
   result.state = 'fail'
   const errors = Array.isArray(err)
     ? err

@@ -53,7 +53,7 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private coreWorkspace!: WorkspaceProject
+  private coreWorkspaceProject!: WorkspaceProject
 
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
@@ -89,7 +89,7 @@ export class Vitest {
     if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
-    this.vitenode = new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config.server)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
@@ -145,12 +145,12 @@ export class Vitest {
       runner: this.runner,
       server: this.vitenode,
     })
-    this.coreWorkspace = coreWorkspace
+    this.coreWorkspaceProject = coreWorkspace
     return coreWorkspace
   }
 
   public getCoreWorkspaceProject(): WorkspaceProject | null {
-    return this.coreWorkspace || null
+    return this.coreWorkspaceProject || null
   }
 
   public getProjectByTaskId(taskId: string): WorkspaceProject {
@@ -198,7 +198,7 @@ export class Vitest {
       onlyFiles: false,
       markDirectories: true,
       cwd: this.config.root,
-      ignore: ['**/node_modules/**'],
+      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
     }
 
     const workspacesFs = await fg(workspaceGlobMatches, globOptions)
@@ -221,6 +221,21 @@ export class Vitest {
       return filepath
     }))
 
+    const workspacesByFolder = resolvedWorkspacesPaths
+      .reduce((configByFolder, filepath) => {
+        const dir = dirname(filepath)
+        configByFolder[dir] ??= []
+        configByFolder[dir].push(filepath)
+        return configByFolder
+      }, {} as Record<string, string[]>)
+
+    const filteredWorkspaces = Object.values(workspacesByFolder).map((configFiles) => {
+      if (configFiles.length === 1)
+        return configFiles[0]
+      const vitestConfig = configFiles.find(configFile => basename(configFile).startsWith('vitest.config'))
+      return vitestConfig || configFiles[0]
+    })
+
     const overridesOptions = [
       'logHeapUsage',
       'allowOnly',
@@ -239,7 +254,7 @@ export class Vitest {
       return acc
     }, {} as UserConfig)
 
-    const projects = resolvedWorkspacesPaths.map(async (workspacePath) => {
+    const projects = filteredWorkspaces.map(async (workspacePath) => {
       // don't start a new server, but reuse existing one
       if (
         this.server.config.configFile === workspacePath
@@ -306,19 +321,28 @@ export class Vitest {
       await this.globTestFiles(filters),
     )
 
+    // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      const exitCode = this.config.passWithNoTests ? 0 : 1
-
       await this.reportCoverage(true)
+
       this.logger.printNoTestFound(filters)
 
-      process.exit(exitCode)
+      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+        const exitCode = this.config.passWithNoTests ? 0 : 1
+        process.exit(exitCode)
+      }
     }
 
-    // populate once, update cache on watch
-    await this.cache.stats.populateStats(this.config.root, files)
+    // all subsequent runs will treat this as a fresh run
+    this.config.changed = false
+    this.config.related = undefined
 
-    await this.runFiles(files)
+    if (files.length) {
+      // populate once, update cache on watch
+      await this.cache.stats.populateStats(this.config.root, files)
+
+      await this.runFiles(files)
+    }
 
     await this.reportCoverage(true)
 
@@ -326,15 +350,16 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
-  private async getTestDependencies(filepath: WorkspaceSpec) {
-    const deps = new Set<string>()
-
+  private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
-      const transformed = await project.vitenode.transformRequest(filepath)
+      if (deps.has(filepath))
+        return
+      const mod = project.server.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed)
         return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-      for (const dep of dependencies) {
+      await Promise.all(dependencies.map(async (dep) => {
         const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
@@ -342,7 +367,7 @@ export class Vitest {
 
           await addImports([project, fsPath])
         }
-      }
+      }))
     }
 
     await addImports(filepath)
@@ -373,7 +398,8 @@ export class Vitest {
       return specs
 
     // don't run anything if no related sources are found
-    if (!related.length)
+    // if we are in watch mode, we want to process all tests
+    if (!this.config.watch && !related.length)
       return []
 
     const testGraphs = await Promise.all(
@@ -653,7 +679,8 @@ export class Vitest {
 
     const files: string[] = []
 
-    for (const { server, browser } of projects) {
+    for (const project of projects) {
+      const { server, browser } = project
       const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
       if (!mod) {
         // files with `?v=` query from the browser
@@ -675,7 +702,8 @@ export class Vitest {
 
       this.invalidates.add(id)
 
-      if (this.state.filesMap.has(id)) {
+      // one of test files that we already run, or one of test files that we can run
+      if (this.state.filesMap.has(id) || project.isTestFile(id)) {
         this.changedTests.add(id)
         files.push(id)
         continue
@@ -712,7 +740,8 @@ export class Vitest {
     if (!this.closingPromise) {
       const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
       // close the core workspace server only once
-      if (this.coreWorkspace && !this.projects.includes(this.coreWorkspace))
+      // it's possible that it's not initialized at all because it's not running any tests
+      if (!this.coreWorkspaceProject || !this.projects.includes(this.coreWorkspaceProject))
         closePromises.push(this.server.close().then(() => this.server = undefined as any))
 
       if (this.pool)

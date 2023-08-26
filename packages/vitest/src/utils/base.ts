@@ -1,9 +1,13 @@
-import type { Arrayable, Nullable } from '../types'
+import type { Arrayable, Nullable } from '../types/general'
 
 export { notNullish, getCallLastIndex } from '@vitest/utils'
 
-function isFinalObj(obj: any) {
-  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
+export interface GlobalConstructors {
+  Object: ObjectConstructor
+  Function: FunctionConstructor
+  RegExp: RegExpConstructor
+  Array: ArrayConstructor
+  Map: MapConstructor
 }
 
 function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
@@ -25,12 +29,20 @@ export function isPrimitive(value: unknown) {
   return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
-export function getAllMockableProperties(obj: any, isModule: boolean) {
+export function getAllMockableProperties(obj: any, isModule: boolean, constructors: GlobalConstructors) {
+  const {
+    Map,
+    Object,
+    Function,
+    RegExp,
+    Array,
+  } = constructors
+
   const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
   do {
     // we don't need properties from these
-    if (isFinalObj(curr))
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
       break
 
     collectOwnProperties(curr, (key) => {

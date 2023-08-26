@@ -12,8 +12,9 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -87,7 +88,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             open,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(getRoot(), testConfig.config),
+            },
           },
+        }
+
+        // chokidar fsevents is unstable on macos when emitting "ready" event
+        if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
+          config.server!.watch!.useFsEvents = false
+          config.server!.watch!.usePolling = false
         }
 
         const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
@@ -101,15 +111,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
               return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
             }
           }
-        }
-
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
         }
 
         return config
@@ -152,8 +153,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             ignored: ['**/*'],
           }
         }
+
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
+        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+          server.watcher.on('ready', () => {
+            // eslint-disable-next-line no-console
+            console.log('[debug] watcher is ready')
+          })
+        }
         try {
           await ctx.setServer(options, server, userConfig)
           if (options.api && options.watch)
@@ -178,6 +187,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : null,
     MocksPlugin(),
     VitestResolver(ctx),
+    VitestOptimizer(),
   ]
     .filter(notNullish)
 }

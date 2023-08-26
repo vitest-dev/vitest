@@ -34,9 +34,9 @@ export const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode ===
 export const totalTests = computed(() => testsFailed.value.length + testsSuccess.value.length)
 export const time = computed(() => {
   const t = getTests(tests.value).reduce((acc, t) => {
-    if (t.result?.duration)
-      acc += t.result.duration
-
+    acc += Math.max(0, t.collectDuration || 0)
+    acc += Math.max(0, t.setupDuration || 0)
+    acc += Math.max(0, t.result?.duration || 0)
     return acc
   }, 0)
 

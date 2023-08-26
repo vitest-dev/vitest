@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.33.0",
+  "version": "0.34.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -45,6 +45,10 @@
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
     },
+    "./execute": {
+      "types": "./dist/execute.d.ts",
+      "import": "./dist/execute.js"
+    },
     "./browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js"
@@ -73,6 +77,10 @@
     "./coverage": {
       "types": "./coverage.d.ts",
       "import": "./dist/coverage.js"
+    },
+    "./reporters": {
+      "types": "./dist/reporters.d.ts",
+      "import": "./dist/reporters.js"
     }
   },
   "main": "./dist/index.js",
@@ -155,7 +163,7 @@
     "strip-literal": "^1.0.1",
     "tinybench": "^2.5.0",
     "tinypool": "^0.7.0",
-    "vite": "^3.0.0 || ^4.0.0",
+    "vite": "^3.1.0 || ^4.0.0 || ^5.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
   },

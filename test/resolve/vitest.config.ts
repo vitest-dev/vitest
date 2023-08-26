@@ -6,8 +6,10 @@ export default defineConfig({
       ['**/web.test.ts', 'happy-dom'],
       ['**/ssr.test.ts', 'node'],
     ],
-    deps: {
-      external: [/pkg-/],
+    server: {
+      deps: {
+        external: [/pkg-/],
+      },
     },
   },
 })

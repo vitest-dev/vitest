@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
@@ -128,13 +127,6 @@ function printBacktickString(str: string): string {
   return `\`${escapeBacktickString(str)}\``
 }
 
-export async function ensureDirectoryExists(environment: SnapshotEnvironment, filePath: string) {
-  try {
-    await environment.prepareDirectory(join(dirname(filePath)))
-  }
-  catch { }
-}
-
 export function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
@@ -157,7 +149,6 @@ export async function saveSnapshotFile(
   if (skipWriting)
     return
 
-  await ensureDirectoryExists(environment, snapshotPath)
   await environment.saveSnapshotFile(
     snapshotPath,
     content,
@@ -175,7 +166,6 @@ export async function saveSnapshotFileRaw(
   if (skipWriting)
     return
 
-  await ensureDirectoryExists(environment, snapshotPath)
   await environment.saveSnapshotFile(
     snapshotPath,
     content,

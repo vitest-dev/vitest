@@ -10,8 +10,9 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -69,6 +70,12 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             open: false,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(
+                project.ctx.config.root,
+                project.ctx.server.config.configFile,
+              ),
+            },
           },
           test: {
             env,
@@ -89,16 +96,10 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           }
         }
 
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.experimentalOptimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
-        }
-
         return config
+      },
+      configResolved(viteConfig) {
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         try {
@@ -123,5 +124,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
     VitestResolver(project.ctx),
+    VitestOptimizer(),
   ]
 }

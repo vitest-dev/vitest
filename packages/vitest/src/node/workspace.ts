@@ -52,7 +52,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.experimentalOptimizer?.web?.enabled || project.config.deps?.experimentalOptimizer?.ssr?.enabled)
+  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
@@ -72,6 +72,8 @@ export class WorkspaceProject {
 
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
+
+  testFilesList: string[] = []
 
   constructor(
     public path: string | number,
@@ -132,18 +134,24 @@ export class WorkspaceProject {
       }))
     }
 
+    this.testFilesList = testFiles
+
     return testFiles
+  }
+
+  isTestFile(id: string) {
+    return this.testFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
-      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
     }
 
-    return fg(include, globOptions)
+    const files = await fg(include, globOptions)
+    return files.map(file => resolve(cwd, file))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -277,6 +285,7 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig() {
+    const optimizer = this.config.deps?.optimizer
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
@@ -285,10 +294,10 @@ export class WorkspaceProject {
         ...this.config.deps,
         optimizer: {
           web: {
-            enabled: this.config.deps?.experimentalOptimizer?.web?.enabled ?? false,
+            enabled: optimizer?.web?.enabled ?? true,
           },
           ssr: {
-            enabled: this.config.deps?.experimentalOptimizer?.ssr?.enabled ?? false,
+            enabled: optimizer?.ssr?.enabled ?? true,
           },
         },
       },
@@ -307,6 +316,7 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      alias: [],
     }, this.ctx.configOverride || {} as any,
     ) as ResolvedConfig
   }
