@@ -154,11 +154,7 @@ export class CommonjsExecutor {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
-      const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved))
-        return this.requireCoreModule(resolved)
-      const module = new this.Module(resolved)
-      return this.loadCommonJSModule(module, resolved)
+      return this.require(resolved)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
@@ -190,10 +186,6 @@ export class CommonjsExecutor {
 
   // very naive implementation for Node.js require
   private loadCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
-    const cached = this.requireCache.get(filename)
-    if (cached)
-      return cached.exports
-
     const extension = this.findLongestRegisteredExtension(filename)
     const loader = this.extensions[extension] || this.extensions['.js']
     loader(module, filename)
@@ -222,6 +214,9 @@ export class CommonjsExecutor {
     const ext = extname(identifier)
     if (ext === '.node' || isNodeBuiltin(identifier))
       return this.requireCoreModule(identifier)
+    const cached = this.requireCache.get(identifier)
+    if (cached)
+      return cached.exports
     const module = new this.Module(identifier)
     return this.loadCommonJSModule(module, identifier)
   }
@@ -238,7 +233,7 @@ export class CommonjsExecutor {
       return module.exports
     }
     this.builtinCache[normalized] = _require.cache[normalized]!
-    // TODO: should we wrapp module to rethrow context errors?
+    // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
 }
