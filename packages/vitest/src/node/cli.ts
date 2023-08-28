@@ -104,16 +104,69 @@ cli
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
   .option('--project <name>', 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2')
   .help((info) => {
-    if (process.env.VERBOSE === 'true')
+    const options = info.find(current => current.title === 'Options')
+    if (typeof options !== 'object')
       return info
 
-    const optionObj = info.find(current => current.title === 'Options')
-    if (typeof optionObj !== 'object')
+    const helpIndex = process.argv.findIndex(arg => arg === '--help')
+    const subCommands = process.argv.slice(helpIndex + 1)
+
+    const defaultOutput = options.body
+      .split('\n')
+      .filter(line => /--\S+\./.test(line) === false)
+      .join('\n')
+
+    // Filter out options with dot-notation if --help is not called with a sub-command (default behavior)
+    if (subCommands.length === 0) {
+      options.body = defaultOutput
+      return info
+    }
+
+    if (subCommands.length === 1 && subCommands[0] === '--verbose')
       return info
 
-    const options = optionObj.body.split('\n')
-    const filteredOptions = options.filter(option => option.search(/\S+\.\S+/) === -1).join('\n')
-    optionObj.body = filteredOptions
+    const subCommandMarker = '$SUB_COMMAND_MARKER$'
+
+    const banner = info.find(current => /^vitest\/[0-9]+\.[0-9]+\.[0-9]+$/.test(current.body))
+    function addBannerWarning(warning: string) {
+      if (typeof banner?.body === 'string') {
+        if (banner?.body.includes(warning))
+          return
+
+        banner.body = `${banner.body}\n WARN: ${warning}`
+      }
+    }
+
+    // If other sub-command combinations are used, only show options for the sub-command
+    for (let i = 0; i < subCommands.length; i++) {
+      const subCommand = subCommands[i]
+
+      // --help --verbose can't be called with multiple sub-commands and is handled above
+      if (subCommand === '--verbose') {
+        addBannerWarning('--verbose sub-command ignored because, when used with --help, it must be the only sub-command')
+        continue
+      }
+
+      // Mark the help section for the sub-commands
+      if (subCommand.startsWith('--')) {
+        options.body = options.body
+          .split('\n')
+          .map(line => (line.trim().startsWith(subCommand)) ? `${subCommandMarker}${line}` : line)
+          .join('\n')
+      }
+    }
+
+    // Filter based on the marked options to preserve the original sort order
+    options.body = options.body
+      .split('\n')
+      .map(line => line.startsWith(subCommandMarker) ? line.split(subCommandMarker)[1] : '')
+      .filter(line => line.length !== 0)
+      .join('\n')
+
+    if (!options.body) {
+      addBannerWarning('no options were found for your sub-commands so we printed the whole output')
+      options.body = defaultOutput
+    }
 
     return info
   })
