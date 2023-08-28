@@ -109,23 +109,23 @@ cli
       return info
 
     const helpIndex = process.argv.findIndex(arg => arg === '--help')
-    const subCommands = process.argv.slice(helpIndex + 1)
+    const subcommands = process.argv.slice(helpIndex + 1)
 
     const defaultOutput = options.body
       .split('\n')
       .filter(line => /--\S+\./.test(line) === false)
       .join('\n')
 
-    // Filter out options with dot-notation if --help is not called with a sub-command (default behavior)
-    if (subCommands.length === 0) {
+    // Filter out options with dot-notation if --help is not called with a subcommand (default behavior)
+    if (subcommands.length === 0) {
       options.body = defaultOutput
       return info
     }
 
-    if (subCommands.length === 1 && subCommands[0] === '--verbose')
+    if (subcommands.length === 1 && subcommands[0] === '--verbose')
       return info
 
-    const subCommandMarker = '$SUB_COMMAND_MARKER$'
+    const subcommandMarker = '$SUB_COMMAND_MARKER$'
 
     const banner = info.find(current => /^vitest\/[0-9]+\.[0-9]+\.[0-9]+$/.test(current.body))
     function addBannerWarning(warning: string) {
@@ -137,21 +137,21 @@ cli
       }
     }
 
-    // If other sub-command combinations are used, only show options for the sub-command
-    for (let i = 0; i < subCommands.length; i++) {
-      const subCommand = subCommands[i]
+    // If other subcommand combinations are used, only show options for the subcommand
+    for (let i = 0; i < subcommands.length; i++) {
+      const subcommand = subcommands[i]
 
-      // --help --verbose can't be called with multiple sub-commands and is handled above
-      if (subCommand === '--verbose') {
-        addBannerWarning('--verbose sub-command ignored because, when used with --help, it must be the only sub-command')
+      // --help --verbose can't be called with multiple subcommands and is handled above
+      if (subcommand === '--verbose') {
+        addBannerWarning('--verbose subcommand ignored because, when used with --help, it must be the only subcommand')
         continue
       }
 
-      // Mark the help section for the sub-commands
-      if (subCommand.startsWith('--')) {
+      // Mark the help section for the subcommands
+      if (subcommand.startsWith('--')) {
         options.body = options.body
           .split('\n')
-          .map(line => (line.trim().startsWith(subCommand)) ? `${subCommandMarker}${line}` : line)
+          .map(line => (line.trim().startsWith(subcommand)) ? `${subcommandMarker}${line}` : line)
           .join('\n')
       }
     }
@@ -159,12 +159,12 @@ cli
     // Filter based on the marked options to preserve the original sort order
     options.body = options.body
       .split('\n')
-      .map(line => line.startsWith(subCommandMarker) ? line.split(subCommandMarker)[1] : '')
+      .map(line => line.startsWith(subcommandMarker) ? line.split(subcommandMarker)[1] : '')
       .filter(line => line.length !== 0)
       .join('\n')
 
     if (!options.body) {
-      addBannerWarning('no options were found for your sub-commands so we printed the whole output')
+      addBannerWarning('no options were found for your subcommands so we printed the whole output')
       options.body = defaultOutput
     }
 
