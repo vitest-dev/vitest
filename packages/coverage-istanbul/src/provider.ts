@@ -3,6 +3,7 @@ import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
+import c from 'picocolors'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -134,6 +135,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       watermarks: this.options.watermarks,
     })
 
+    if (hasTerminalReporter(this.options.reporter))
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
+
     for (const reporter of this.options.reporter) {
       reports.create(reporter[0], {
         skipFull: this.options.skipFull,
@@ -252,4 +256,12 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
+}
+
+function hasTerminalReporter(reporters: Options['reporter']) {
+  return reporters.some(([reporter]) =>
+    reporter === 'text'
+    || reporter === 'text-summary'
+    || reporter === 'text-lcov'
+    || reporter === 'teamcity')
 }

@@ -983,6 +983,9 @@ importers:
       istanbul-reports:
         specifier: ^3.1.5
         version: 3.1.5
+      picocolors:
+        specifier: ^1.0.0
+        version: 1.0.0
       test-exclude:
         specifier: ^6.0.0
         version: 6.0.0

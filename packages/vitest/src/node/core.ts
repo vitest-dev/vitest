@@ -730,10 +730,8 @@ export class Vitest {
     if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
       return
 
-    if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+    if (this.coverageProvider)
       await this.coverageProvider.reportCoverage({ allTestsRun })
-    }
   }
 
   async close() {
