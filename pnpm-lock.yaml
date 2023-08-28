@@ -54,6 +54,9 @@ importers:
       '@vitest/ui':
         specifier: workspace:*
         version: link:packages/ui
+      '@wdio/types':
+        specifier: ^8.15.0
+        version: 8.15.0
       bumpp:
         specifier: ^9.1.1
         version: 9.1.1
