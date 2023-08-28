@@ -319,7 +319,7 @@ export function resolveConfig(
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
 
   resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
