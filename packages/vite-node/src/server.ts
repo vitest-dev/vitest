@@ -182,7 +182,7 @@ export class ViteNodeServer {
     const cacheDir = this.options.deps?.cacheDir
 
     if (cacheDir && id.includes(cacheDir)) {
-      if (!id.startsWith(withTrailingSlash(this.server.config.root))
+      if (!id.startsWith(withTrailingSlash(this.server.config.root)))
         id = join(this.server.config.root, id)
       const timeout = setTimeout(() => {
         throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
