@@ -22,7 +22,7 @@ export function slash(str: string) {
 export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {
-  if (base && id.startsWith(base))
+  if (base && id.startsWith(`${base}/`))
     id = `/${id.slice(base.length)}`
 
   // keep drive the same as in process cwd
@@ -105,12 +105,12 @@ export function toFilePath(id: string, root: string): { path: string; exists: bo
     if (id.startsWith('/@fs/'))
       return { absolute: id.slice(4), exists: true }
     // check if /src/module.js -> <root>/src/module.js
-    if (!id.startsWith(root) && id.startsWith('/')) {
+    if (!id.startsWith(`${root}/`) && id.startsWith('/')) {
       const resolved = resolve(root, id.slice(1))
       if (existsSync(cleanUrl(resolved)))
         return { absolute: resolved, exists: true }
     }
-    else if (id.startsWith(root) && existsSync(cleanUrl(id))) {
+    else if (id.startsWith(`${root}/`) && existsSync(cleanUrl(id))) {
       return { absolute: id, exists: true }
     }
     return { absolute: id, exists: false }
