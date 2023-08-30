@@ -251,7 +251,7 @@ export class ViteNodeServer {
         result = await this.server.ssrTransform(result.code, result.map, id)
     }
     else {
-      result = await this.server.transformRequest(filepath, { ssr: true })
+      result = await this.server.transformRequest(id, { ssr: true })
     }
 
     const sourcemap = this.options.sourcemap ?? 'inline'
