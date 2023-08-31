@@ -1,6 +1,7 @@
 import type { TransformResult } from 'vite'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import { withTrailingSlash } from './utils'
 import { install } from './source-map-handler'
 
 interface InstallSourceMapSupportOptions {
@@ -32,7 +33,7 @@ export function withInlineSourcemap(result: TransformResult, options: {
     // this is a bug in Vite
     // all files should be either absolute to the file system or relative to the source map file
     if (isAbsolute(source)) {
-      const actualPath = (!source.startsWith(options.root) && source.startsWith('/'))
+      const actualPath = (!source.startsWith(withTrailingSlash(options.root)) && source.startsWith('/'))
         ? resolve(options.root, source.slice(1))
         : source
       return relative(dirname(options.filepath), actualPath)
