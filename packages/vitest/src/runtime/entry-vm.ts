@@ -11,7 +11,7 @@ import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments
 import * as VitestIndex from '../index'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
-import { setupCommonEnv } from './setup.common'
+import { loadDiffConfig, setupCommonEnv } from './setup.common'
 
 export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
@@ -41,7 +41,9 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
 
+  const diffConfig = await loadDiffConfig(config, executor)
   const runner = await resolveTestRunner(config, executor)
+  runner.config.diffOptions = diffConfig
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 

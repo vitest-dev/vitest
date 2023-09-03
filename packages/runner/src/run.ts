@@ -174,7 +174,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         }
       }
       catch (e) {
-        failTask(test.result, e, runner.config.diff as DiffOptions)
+        failTask(test.result, e, runner.config.diffOptions)
       }
 
       // skipped with new PendingError
@@ -190,7 +190,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         await callCleanupHooks(beforeEachCleanups)
       }
       catch (e) {
-        failTask(test.result, e, runner.config.diff as DiffOptions)
+        failTask(test.result, e, runner.config.diffOptions)
       }
 
       if (test.result.state === 'pass')
@@ -317,7 +317,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       }
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diff as DiffOptions)
+      failTask(suite.result, e, runner.config.diffOptions)
     }
 
     try {
@@ -325,7 +325,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diff as DiffOptions)
+      failTask(suite.result, e, runner.config.diffOptions)
     }
 
     if (suite.mode === 'run') {

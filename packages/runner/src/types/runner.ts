@@ -22,10 +22,10 @@ export interface VitestRunnerConfig {
   testTimeout: number
   hookTimeout: number
   retry: number
-  diff?: string | DiffOptions
+  diffOptions?: DiffOptions
 }
 
-export type VitestRunnerImportSource = 'collect' | 'setup' | 'diff'
+export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
   new(config: VitestRunnerConfig): VitestRunner

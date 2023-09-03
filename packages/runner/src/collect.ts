@@ -6,7 +6,7 @@ import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly 
 import { clearCollectorContext, getDefaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { collectorContext } from './context'
-import { loadDiffOptionFile, runSetupFiles } from './setup'
+import { runSetupFiles } from './setup'
 
 const now = Date.now
 
@@ -33,7 +33,6 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
     try {
       const setupStart = now()
       await runSetupFiles(config, runner)
-      await loadDiffOptionFile(config, runner)
 
       const collectStart = now()
       file.setupDuration = collectStart - setupStart
