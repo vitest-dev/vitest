@@ -1,4 +1,5 @@
-import type { TestContext } from './types'
+import { getFixture } from './map'
+import { getCurrentTest } from './test-state'
 
 export interface FixtureItem {
   prop: string
@@ -43,32 +44,40 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   return context
 }
 
-export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
-  if (!fixtures.length)
-    return () => fn(context)
+export function withFixtures(fn: Function) {
+  return () => {
+    const test = getCurrentTest()
 
-  const usedProps = getUsedProps(fn)
-  if (!usedProps.length)
-    return () => fn(context)
+    if (!test)
+      return fn({})
+    const context = test.context as typeof test.context & { [key: string]: any }
+    const fixtures = getFixture(test)
+    if (!fixtures?.length)
+      return fn(context)
 
-  const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
-  const pendingFixtures = resolveDeps(usedFixtures)
-  let cursor = 0
+    const usedProps = getUsedProps(fn)
+    if (!usedProps.length)
+      return fn(context)
 
-  async function use(fixtureValue: any) {
-    const { prop } = pendingFixtures[cursor++]
-    context[prop] = fixtureValue
-    if (cursor < pendingFixtures.length)
-      await next()
-    else await fn(context)
+    const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
+    const pendingFixtures = resolveDeps(usedFixtures)
+    let cursor = 0
+
+    async function use(fixtureValue: any) {
+      const { prop } = pendingFixtures[cursor++]
+      context[prop] = fixtureValue
+      if (cursor < pendingFixtures.length)
+        await next()
+      else await fn(context)
+    }
+
+    async function next() {
+      const { value } = pendingFixtures[cursor]
+      typeof value === 'function' ? await value(context, use) : await use(value)
+    }
+
+    return next()
   }
-
-  async function next() {
-    const { value } = pendingFixtures[cursor]
-    typeof value === 'function' ? await value(context, use) : await use(value)
-  }
-
-  return () => next()
 }
 
 function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {
