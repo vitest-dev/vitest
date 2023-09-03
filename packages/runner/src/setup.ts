@@ -22,6 +22,8 @@ export async function loadDiffOptionFile(config: VitestRunnerConfig, runner: Vit
 
   const diffModule = await runner.importFile(config.diff, 'diff') as any
 
-  if (diffModule && diffModule.default)
+  if (diffModule && typeof diffModule.default === 'object' && diffModule.default != null)
     runner.config.diff = diffModule.default
+  else
+    throw new Error(`invalid diff config file ${config.diff}. Must have a default export with config object`)
 }
