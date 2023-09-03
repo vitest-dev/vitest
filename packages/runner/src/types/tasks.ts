@@ -1,4 +1,5 @@
 import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
+import type { DiffOptions } from '@vitest/utils/diff'
 import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -258,6 +259,11 @@ export interface TestContext {
    * Metadata of the current test
    */
   task: Readonly<Test>
+
+  /**
+   * Diff options
+   */
+  diff?: DiffOptions
 
   /**
    * Extract hooks on test failed
