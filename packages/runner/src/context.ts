@@ -1,6 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers } from '@vitest/utils'
-import type { DiffOptions } from '@vitest/utils/diff'
 import type { RuntimeContext, SuiteCollector, Test, TestContext } from './types'
 import type { VitestRunner } from './types/runner'
 import { PendingError } from './errors'
@@ -50,7 +49,6 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
 
   context.meta = test
   context.task = test
-  context.diff = runner.config.diff as DiffOptions
 
   context.skip = () => {
     test.pending = true
