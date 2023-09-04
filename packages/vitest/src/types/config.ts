@@ -530,7 +530,7 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method for all modules inported inside a test that matches the glob pattern.
+   * Determine the transform method for all modules imported inside a test that matches the glob pattern.
    */
   testTransformMode?: TransformModePatterns
 

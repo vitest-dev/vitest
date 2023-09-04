@@ -1296,7 +1296,7 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
  - **Type:** `{ web?, ssr? }`
  - **Version:** Since Vitest 0.34.0
 
- Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
+ Determine the transform method for all modules imported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
  #### testTransformMode.ssr
 
