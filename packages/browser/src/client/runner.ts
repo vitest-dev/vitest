@@ -22,7 +22,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       this.hashMap = options.browserHashMap
     }
 
-    async onAfterRunTest(task: Test) {
+    async onAfterRunTask(task: Test) {
       await super.onAfterRunTest?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
@@ -39,7 +39,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRun() {
+    async onAfterRunFiles() {
       await super.onAfterRun?.()
       const coverage = await coverageModule?.takeCoverage?.()
       if (coverage)
