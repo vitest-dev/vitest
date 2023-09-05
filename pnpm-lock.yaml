@@ -1402,6 +1402,9 @@ importers:
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.2
         version: 8.1.2
+      '@wdio/types':
+        specifier: ^8.16.3
+        version: 8.16.3
       birpc:
         specifier: 0.2.12
         version: 0.2.12
@@ -9107,6 +9110,10 @@ packages:
     resolution: {integrity: sha512-Mgq7eCtoTjT89FqNoTzzXg2XvCi5VMhRV6+I2aYanc6kQCBImeNaAYRs/DyoVqk1YEUJK5gN9VO7HRIdz4Wo3Q==}
     dev: true
 
+  /@types/node@20.5.9:
+    resolution: {integrity: sha512-PcGNd//40kHAS3sTlzKB9C9XL4K0sTup8nbG5lC14kzEteTNuAFh9u5nA0o5TWnSG2r/JNPRXFVcHJIIeRlmqQ==}
+    dev: true
+
   /@types/normalize-package-data@2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
     dev: true
@@ -10309,6 +10316,13 @@ packages:
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.5.0
+    dev: true
+
+  /@wdio/types@8.16.3:
+    resolution: {integrity: sha512-cH6eKNKkx5ZVJxf7omwtqt88N/mI8Hn2qnXe4DHIYNC4wSDFPhSsuurRhH7s7fnk3biLEQfinuc3cxV0HefSVw==}
+    engines: {node: ^16.13 || >=18}
+    dependencies:
+      '@types/node': 20.5.9
     dev: true
 
   /@wdio/utils@8.12.1:
