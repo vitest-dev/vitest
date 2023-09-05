@@ -284,15 +284,17 @@ export function resolveConfig(
   )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
-  resolved.diff = normalize(
-    resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
-
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
     ...resolved.setupFiles,
-    resolved.diff,
   ]
+
+  if (resolved.diff) {
+    resolved.diff = normalize(
+      resolveModule(resolved.diff, { paths: [resolved.root] })
+        ?? resolve(resolved.root, resolved.diff))
+    resolved.forceRerunTriggers.push(resolved.diff)
+  }
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiServerConfig(options)
