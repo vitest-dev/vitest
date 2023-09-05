@@ -140,7 +140,7 @@ export class Vitest {
   }
 
   private async createCoreProject() {
-    this.coreWorkspaceProject = WorkspaceProject.createCoreProject(this)
+    this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
     return this.coreWorkspaceProject
   }
 

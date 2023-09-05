@@ -182,19 +182,20 @@ export class WorkspaceProject {
     return testFiles
   }
 
-  async initBrowserServer(options: UserConfig) {
+  async initBrowserServer(configFile: string | undefined) {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, options)
+    this.browser = await createBrowserServer(this, configFile)
   }
 
-  static createCoreProject(ctx: Vitest) {
+  static async createCoreProject(ctx: Vitest) {
     const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
     project.vitenode = ctx.vitenode
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    await project.initBrowserServer(ctx.server.config.configFile)
     return project
   }
 
@@ -215,7 +216,7 @@ export class WorkspaceProject {
       },
     })
 
-    await this.initBrowserServer(options)
+    await this.initBrowserServer(this.server.config.configFile)
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
