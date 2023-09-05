@@ -1641,3 +1641,10 @@ export default defineConfig({
 })
 ```
 
+### diff
+
+- **Type:** `string`
+- **CLI:** `--diff=<value>`
+- **Version:** Since Vitest 0.34.4
+
+Path to a diff config that will be used to generate diff interface. Useful if you want to customize diff display.
