@@ -4,6 +4,18 @@
 Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
 :::
 
+## resolveConfig
+
+This method returns resolved Vitest config (returns the `test` property on Vitest/Vite config, not the whole Vite config).
+
+```ts
+import { resolveConfig } from 'vitest/node'
+
+const config = await resolveConfig('test')
+config.watch === true
+config.root === process.cwd()
+```
+
 ## startVitest
 
 You can start running Vitest tests using its Node API:

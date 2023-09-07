@@ -53,6 +53,8 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
+  _userOptions?: UserConfig
+
   private coreWorkspaceProject!: WorkspaceProject
 
   public projects: WorkspaceProject[] = []
