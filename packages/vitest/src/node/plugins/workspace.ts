@@ -70,6 +70,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             open: false,
             hmr: false,
             preTransformRequests: false,
+            middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
                 project.ctx.config.root,

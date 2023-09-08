@@ -46,11 +46,8 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
 
   const server = await createServer(config)
 
-  // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
+  if (ctx.config.api?.port)
     await server.listen()
-  else
-    await server.pluginContainer.buildStart({})
 
   return project
 }
