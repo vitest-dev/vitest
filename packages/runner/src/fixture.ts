@@ -1,5 +1,6 @@
 import { getFixture } from './map'
 import { getCurrentTest } from './test-state'
+import type { TestContext } from './types'
 
 export interface FixtureItem {
   prop: string
@@ -45,12 +46,14 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 export function withFixtures(fn: Function) {
-  return () => {
+  return (context: TestContext & { [key: string]: any }) => {
     const test = getCurrentTest()
-
     if (!test)
       return fn({})
-    const context = test.context as typeof test.context & { [key: string]: any }
+
+    if (!context)
+      context = test.context
+
     const fixtures = getFixture(test)
     if (!fixtures?.length)
       return fn(context)
