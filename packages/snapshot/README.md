@@ -19,6 +19,8 @@ const client = new SnapshotClient({
 // by default uses fs module, but you can provide your own implementation depending on the environment
 const environment = new NodeSnapshotEnvironment()
 
+// you need to implement this yourselves,
+// this depends on your runner
 function getCurrentFilepath() {
   return '/file.spec.ts'
 }
@@ -35,8 +37,6 @@ function wrapper(received) {
       message,
       isInline: true,
       inlineSnapshot,
-      // you need to implement this yourselves,
-      // this depends on your runner
       filepath: getCurrentFilepath(),
       name: getCurrentTestName(),
     })
@@ -54,6 +54,12 @@ const options = {
 }
 
 await client.startCurrentRun(getCurrentFilepath(), getCurrentTestName(), options)
+
+// this will save snapshot to a file which is returned by "snapshotEnvironment.resolvePath"
+client.assert({
+  received: 'some text',
+  isInline: false,
+})
 
 // uses "pretty-format", so it requires quotes
 // also naming is hard-coded when parsing test files
