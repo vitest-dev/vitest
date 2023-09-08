@@ -41,6 +41,9 @@ export default defineConfig({
       { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
     ],
   },
+  server: {
+    port: 3022,
+  },
   test: {
     name: 'core',
     exclude: ['**/fixtures/**', '**/vm-wasm.test.ts', ...defaultExclude],

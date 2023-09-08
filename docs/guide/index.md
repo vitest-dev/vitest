@@ -71,7 +71,7 @@ Next, in order to execute the test, add the following section to your `package.j
 
 Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
-```log
+```txt
 ✓ sum.test.js (1)
   ✓ adds 1 + 2 to equal 3
 
@@ -111,7 +111,7 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts 
+```ts
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
