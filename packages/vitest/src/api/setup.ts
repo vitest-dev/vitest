@@ -80,20 +80,19 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return fs.readFile(id, 'utf-8')
         },
         async saveTestFile(id, content) {
-          // can save only already existing test file
           if (!ctx.state.filesMap.has(id) || !existsSync(id))
-            return
+            throw new Error(`Test file "${id}" was not registered, so it cannot be updated using the API.`)
           return fs.writeFile(id, content, 'utf-8')
         },
         async saveSnapshotFile(id, content) {
           if (!ctx.snapshot.resolvedPaths.has(id))
-            return
+            throw new Error(`Snapshot file "${id}" does not exist.`)
           await fs.mkdir(dirname(id), { recursive: true })
           return fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           if (!ctx.snapshot.resolvedPaths.has(id) || !existsSync(id))
-            return
+            throw new Error(`Snapshot file "${id}" does not exist.`)
           return fs.unlink(id)
         },
         snapshotSaved(snapshot) {

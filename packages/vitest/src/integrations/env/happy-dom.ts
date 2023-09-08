@@ -34,6 +34,7 @@ export default <Environment>({
     const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new (GlobalWindow || Window)({
       ...happyDOM,
+      console: (console && global.console) ? global.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
     })
 

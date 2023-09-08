@@ -13,9 +13,8 @@ export function VitestOptimizer(): Plugin {
 
         viteConfig.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
-        viteConfig.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
-        }
+        viteConfig.ssr ??= {}
+        viteConfig.ssr.optimizeDeps = ssrOptimizer.optimizeDeps
       },
     },
   }

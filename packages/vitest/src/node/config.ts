@@ -49,8 +49,11 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
 
   if (api) {
-    if (!api.port)
+    if (!api.port && !api.middlewareMode)
       api.port = defaultPort
+  }
+  else {
+    api = { middlewareMode: true }
   }
 
   return api
