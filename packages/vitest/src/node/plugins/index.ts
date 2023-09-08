@@ -140,7 +140,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // so we are making them truthy
         process.env.PROD ??= PROD ? '1' : ''
         process.env.DEV ??= DEV ? '1' : ''
-        process.env.SSR ??= '1'
 
         for (const name in envs)
           process.env[name] ??= envs[name]
