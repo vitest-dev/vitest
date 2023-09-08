@@ -71,12 +71,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         },
         async readSnapshotFile(snapshotPath) {
           if (!ctx.snapshot.resolvedPaths.has(snapshotPath) || !existsSync(snapshotPath))
-            throw new Error(`Snapshot file "${snapshotPath}" does not exist.`)
+            return null
           return fs.readFile(snapshotPath, 'utf-8')
         },
         async readTestFile(id) {
           if (!ctx.state.filesMap.has(id) || !existsSync(id))
-            throw new Error(`Test file "${id}" was not registered, so it cannot be read using the API.`)
+            return null
           return fs.readFile(id, 'utf-8')
         },
         async saveTestFile(id, content) {
