@@ -33,6 +33,8 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
     api = { port: defaultPort }
   else if (typeof options.api === 'number')
     api = { port: options.api }
+  else if (options.deps?.optimizer?.ssr || options.deps?.optimizer?.web)
+    api = { port: defaultPort }
 
   if (typeof options.api === 'object') {
     if (api) {
