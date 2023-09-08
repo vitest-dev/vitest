@@ -46,7 +46,7 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 export function withFixtures(fn: Function) {
-  return (context: TestContext & { [key: string]: any }) => {
+  return (context?: TestContext & { [key: string]: any }) => {
     const test = getCurrentTest()
     if (!test)
       return fn({})
