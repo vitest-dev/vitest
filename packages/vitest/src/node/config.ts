@@ -27,11 +27,7 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
-  const optimizer = options.deps?.optimizer
-  const optimizerEnabled = optimizer?.web?.enabled !== false || optimizer?.ssr?.enabled !== false
-  const needApi = options.ui || optimizerEnabled
-
-  if (needApi && !options.api)
+  if (options.ui && !options.api)
     api = { port: defaultPort }
   else if (options.api === true)
     api = { port: defaultPort }
@@ -53,7 +49,7 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
 
   if (api) {
-    if (!api.port)
+    if (!api.port && !api.middlewareMode)
       api.port = defaultPort
   }
   else {

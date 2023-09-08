@@ -27,10 +27,21 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     plugins: await VitestPlugin(options, ctx),
   }
 
+  // Vite prints an error (https://github.com/vitejs/vite/issues/14328)
+  // But Vitest works correctly either way
+  const error = console.error
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('WebSocket server error:'))
+      return
+    error(...args)
+  }
+
   const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
   if (ctx.config.api?.port)
     await server.listen()
+
+  console.error = error
 
   return ctx
 }
