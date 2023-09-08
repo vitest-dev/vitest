@@ -133,20 +133,15 @@ export class Vitest {
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
-    this.projects = await this.resolveWorkspace(options, cliOptions)
+    this.projects = await this.resolveWorkspace(cliOptions)
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
-  private async createCoreWorkspace(options: UserConfig) {
-    const coreWorkspace = new WorkspaceProject(this.config.root, this)
-    await coreWorkspace.setServer(options, this.server, {
-      runner: this.runner,
-      server: this.vitenode,
-    })
-    this.coreWorkspaceProject = coreWorkspace
-    return coreWorkspace
+  private async createCoreProject() {
+    this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
+    return this.coreWorkspaceProject
   }
 
   public getCoreWorkspaceProject(): WorkspaceProject | null {
@@ -161,7 +156,7 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
+  private async resolveWorkspace(cliOptions: UserConfig) {
     const configDir = this.server.config.configFile
       ? dirname(this.server.config.configFile)
       : this.config.root
@@ -171,7 +166,7 @@ export class Vitest {
     })
 
     if (!workspaceConfigName)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreProject()]
 
     const workspaceConfigPath = join(configDir, workspaceConfigName)
 
@@ -259,7 +254,7 @@ export class Vitest {
       if (
         this.server.config.configFile === workspacePath
       )
-        return this.createCoreWorkspace(options)
+        return this.createCoreProject()
       return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
     })
 
@@ -268,7 +263,7 @@ export class Vitest {
     })
 
     if (!projects.length)
-      return [await this.createCoreWorkspace(options)]
+      return [await this.createCoreProject()]
 
     const resolvedProjects = await Promise.all(projects)
     const names = new Set<string>()
