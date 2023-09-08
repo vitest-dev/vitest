@@ -1,11 +1,12 @@
 import { resolve } from 'pathe'
-import { createServer, mergeConfig } from 'vite'
+import { mergeConfig } from 'vite'
 import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { findUp } from 'find-up'
 import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
+import { createViteServer } from './vite'
 
 export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest(mode)
@@ -27,21 +28,10 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     plugins: await VitestPlugin(options, ctx),
   }
 
-  // Vite prints an error (https://github.com/vitejs/vite/issues/14328)
-  // But Vitest works correctly either way
-  const error = console.error
-  console.error = (...args: any[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('WebSocket server error:'))
-      return
-    error(...args)
-  }
-
-  const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
+  const server = await createViteServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
   if (ctx.config.api?.port)
     await server.listen()
-
-  console.error = error
 
   return ctx
 }

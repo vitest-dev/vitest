@@ -2,7 +2,6 @@ import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
-import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -14,6 +13,7 @@ import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
+import { createViteServer } from './vite'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -44,7 +44,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     ],
   }
 
-  await createServer(config)
+  await createViteServer(config)
 
   return project
 }
