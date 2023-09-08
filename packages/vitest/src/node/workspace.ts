@@ -44,10 +44,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     ],
   }
 
-  const server = await createServer(config)
-
-  if (ctx.config.api?.port)
-    await server.listen()
+  await createServer(config)
 
   return project
 }
