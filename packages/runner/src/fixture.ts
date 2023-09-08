@@ -1,5 +1,4 @@
 import { getFixture } from './map'
-import { getCurrentTest } from './test-state'
 import type { TestContext } from './types'
 
 export interface FixtureItem {
@@ -45,15 +44,14 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   return context
 }
 
-export function withFixtures(fn: Function) {
-  return (textContext?: TestContext & { [key: string]: any }) => {
-    const test = getCurrentTest()
-    if (!test)
+export function withFixtures(fn: Function, testContext?: TestContext & { [key: string]: any }) {
+  return (hookContext?: TestContext & { [key: string]: any }) => {
+    const context = hookContext || testContext
+
+    if (!context)
       return fn({})
 
-    const context: TestContext & { [key: string]: any } = textContext || test.context
-
-    const fixtures = getFixture(test)
+    const fixtures = getFixture(context)
     if (!fixtures?.length)
       return fn(context)
 
@@ -67,7 +65,8 @@ export function withFixtures(fn: Function) {
 
     async function use(fixtureValue: any) {
       const { prop } = pendingFixtures[cursor++]
-      context[prop] = fixtureValue
+      context![prop] = fixtureValue
+
       if (cursor < pendingFixtures.length)
         await next()
       else await fn(context)

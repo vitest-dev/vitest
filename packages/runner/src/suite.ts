@@ -96,9 +96,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       enumerable: false,
     })
 
-    setFixture(test, this.fixtures)
+    setFixture(context, this.fixtures)
     setFn(test, withTimeout(
-      withFixtures(fn),
+      withFixtures(fn, context),
       options?.timeout ?? runner.config.testTimeout,
     ))
 
