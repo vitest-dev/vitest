@@ -36,6 +36,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             port: defaultBrowserPort,
           }
 
+          // browser never runs in middleware mode
+          server.middlewareMode = false
+
           config.server = server
           config.server.fs ??= {}
           config.server.fs.allow = config.server.fs.allow || []

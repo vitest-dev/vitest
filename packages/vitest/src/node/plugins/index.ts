@@ -57,7 +57,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         ;(options as ResolvedConfig).defines = defines
 
-        let open: string | boolean | undefined
+        let open: string | boolean | undefined = false
 
         if (testConfig.ui && testConfig.open)
           open = testConfig.uiBase ?? '/__vitest__/'

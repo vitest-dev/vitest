@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "dev": "vite",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
