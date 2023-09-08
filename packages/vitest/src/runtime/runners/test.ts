@@ -27,8 +27,8 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
-  async onAfterRunFile() {
-    const result = await this.snapshotClient.resetCurrent()
+  async onAfterRunFiles() {
+    const result = await this.snapshotClient.finishCurrentRun()
     if (result)
       await rpc().snapshotSaved(result)
   }
@@ -63,7 +63,7 @@ export class VitestTestRunner implements VitestRunner {
     }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.setTest(test.file!.filepath, name, this.workerState.config.snapshotOptions)
+    await this.snapshotClient.startCurrentRun(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }
