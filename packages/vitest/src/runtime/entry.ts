@@ -8,7 +8,6 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { setupGlobalEnv, withEnv } from './setup.node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
-import { loadDiffConfig } from './setup.common'
 
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
@@ -20,9 +19,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
 
-  const diffConfig = await loadDiffConfig(config, executor)
   const runner = await resolveTestRunner(config, executor)
-  runner.config.diffOptions = diffConfig
 
   workerState.onCancel.then(reason => runner.onCancel?.(reason))
 
