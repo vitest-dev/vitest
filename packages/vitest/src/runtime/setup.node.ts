@@ -37,6 +37,10 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
     _require.extensions['.scss'] = () => ({})
     _require.extensions['.sass'] = () => ({})
     _require.extensions['.less'] = () => ({})
+    process.env.SSR = ''
+  }
+  else {
+    process.env.SSR = '1'
   }
 
   installSourcemapsSupport({
