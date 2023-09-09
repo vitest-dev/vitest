@@ -101,6 +101,7 @@ async function runTests(paths: string[], config: ResolvedConfig) {
   const {
     startTests,
     setupCommonEnv,
+    loadDiffConfig,
     takeCoverageInsideWorker,
   } = await importId('vitest/browser') as typeof import('vitest/browser')
 
@@ -122,6 +123,9 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
+    const diffOptions = await loadDiffConfig(config, executor.executeId)
+    runner.config.diffOptions = diffOptions
+
     await setupCommonEnv(config)
     const files = paths.map((path) => {
       return (`${config.root}/${path}`).replace(/\/+/g, '/')
