@@ -24,11 +24,11 @@ function setupDefines(defines: Record<string, any>) {
     (globalThis as any)[key] = defines[key]
 }
 
-export async function loadDiffConfig(config: ResolvedConfig, executeId: VitestExecutor['executeId']) {
+export async function loadDiffConfig(config: ResolvedConfig, executor: VitestExecutor) {
   if (typeof config.diff !== 'string')
     return
 
-  const diffModule = await executeId(config.diff)
+  const diffModule = await executor.executeId(config.diff)
 
   if (diffModule && typeof diffModule.default === 'object' && diffModule.default != null)
     return diffModule.default as DiffOptions

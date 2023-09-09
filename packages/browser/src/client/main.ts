@@ -1,6 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
+import type { VitestExecutor } from 'vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
@@ -123,8 +124,7 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
-    const diffOptions = await loadDiffConfig(config, executor.executeId)
-    runner.config.diffOptions = diffOptions
+    runner.config.diffOptions = await loadDiffConfig(config, executor as VitestExecutor)
 
     await setupCommonEnv(config)
     const files = paths.map((path) => {
