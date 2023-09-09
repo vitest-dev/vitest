@@ -11,8 +11,9 @@ export interface WebdriverProviderOptions extends BrowserProviderOptions {
   browser: WebdriverBrowser
 }
 
+type BrowserOptionsKey = 'goog:chromeOptions' | 'moz:firefoxOptions' | 'ms:edgeOptions'
 interface WebdriverBrowserExtensionMapValue {
-  key: keyof Capabilities.VendorExtensions
+  key: BrowserOptionsKey
   value: {
     args: string[]
   }
