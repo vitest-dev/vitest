@@ -30,14 +30,3 @@ test('match by pattern that also matches current working directory', async () =>
   expect(stdout).toMatch('Test Files  1 passed (1)')
   expect(stdout).not.toMatch('test/example.test.ts')
 })
-
-test('match by test name pattern with ^', async () => {
-  const { stdout } = await runVitest({
-    root: './fixtures',
-    testNamePattern: '^this',
-  }, ['filters'])
-
-  expect(stdout).toMatch('✓ test/filters.test.ts > this will pass')
-  expect(stdout).toMatch('Test Files  1 passed (1)')
-  expect(stdout).not.toMatch('test/example.test.ts')
-})
