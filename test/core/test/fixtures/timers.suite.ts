@@ -59,7 +59,7 @@ describe('FakeTimers', () => {
         },
         setTimeout,
       }
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useFakeTimers()
       expect(global.process.nextTick).not.toBe(origNextTick)
     })
@@ -106,7 +106,7 @@ describe('FakeTimers', () => {
         setTimeout,
       }
 
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useFakeTimers()
 
       const runOrder = []
@@ -154,7 +154,7 @@ describe('FakeTimers', () => {
         setTimeout,
       }
 
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useFakeTimers()
 
       const mock1 = vi.fn()
@@ -178,7 +178,7 @@ describe('FakeTimers', () => {
         setTimeout,
       }
 
-      const timers = new FakeTimers({ global, config: { loopLimit: 100 } })
+      const timers = new FakeTimers({ global, config: { loopLimit: 100, toFake: ['nextTick'] } })
 
       timers.useFakeTimers()
 
@@ -324,7 +324,7 @@ describe('FakeTimers', () => {
 
     it('also clears ticks', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick', 'setTimeout'] } })
       timers.useFakeTimers()
 
       const fn = vi.fn()
@@ -430,7 +430,7 @@ describe('FakeTimers', () => {
 
     it('also clears ticks', async () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['setTimeout', 'nextTick'] } })
       timers.useFakeTimers()
 
       const fn = vi.fn()
@@ -1071,7 +1071,7 @@ describe('FakeTimers', () => {
         process: { nextTick: nativeProcessNextTick },
         setTimeout,
       }
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useFakeTimers()
 
       // Ensure that timers has overridden the native timer APIs
@@ -1152,7 +1152,7 @@ describe('FakeTimers', () => {
         process: { nextTick: nativeProcessNextTick },
         setTimeout,
       }
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useRealTimers()
 
       // Ensure that the real timers are installed at this point
@@ -1217,7 +1217,7 @@ describe('FakeTimers', () => {
     })
 
     it('includes immediates and ticks', () => {
-      const timers = new FakeTimers({ global })
+      const timers = new FakeTimers({ global, config: { toFake: ['setTimeout', 'setImmediate', 'nextTick'] } })
 
       timers.useFakeTimers()
 

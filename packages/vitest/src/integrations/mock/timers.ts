@@ -130,7 +130,9 @@ export class FakeTimers {
     }
 
     if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers) as Array<keyof FakeTimerWithContext['timers']>
+      const toFake = Object.keys(this._fakeTimers.timers)
+        // Do not mock nextTick by default. It can still be mocked through userConfig.
+        .filter(timer => timer !== 'nextTick') as (keyof FakeTimerWithContext['timers'])[]
 
       this._clock = this._fakeTimers.install({
         now: Date.now(),

@@ -706,6 +706,11 @@ unmockedIncrement(30) === 31
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
+  ::: tip
+  Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
+  It can still be mocked by specyfing the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+  :::
+
 ## vi.isFakeTimers
 
 - **Type:** `() => boolean`
