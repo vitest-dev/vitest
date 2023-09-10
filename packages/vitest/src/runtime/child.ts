@@ -58,6 +58,7 @@ async function init(ctx: ChildContext) {
       prepare: performance.now(),
     },
     rpc,
+    isChildProcess: true,
   }
 
   // @ts-expect-error I know what I am doing :P

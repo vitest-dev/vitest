@@ -205,13 +205,21 @@ function createVitest(): VitestUtils {
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      if (config) {
+      const workerState = getWorkerState()
+
+      if (workerState.isChildProcess) {
+        if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
+          throw new Error(
+            'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --threads if mocking nextTick is required.',
+          )
+        }
+      }
+
+      if (config)
         _timers.configure(config)
-      }
-      else {
-        const workerState = getWorkerState()
+      else
         _timers.configure(workerState.config.fakeTimers)
-      }
+
       _timers.useFakeTimers()
       return utils
     },

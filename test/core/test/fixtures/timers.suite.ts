@@ -15,6 +15,8 @@ import { FakeTimers } from '../../../../packages/vitest/src/integrations/mock/ti
 
 class FakeDate extends Date {}
 
+const isChildProcess = globalThis.__vitest_worker__.isChildProcess
+
 describe('FakeTimers', () => {
   afterEach(() => {
     vi.useRealTimers()
@@ -49,7 +51,7 @@ describe('FakeTimers', () => {
       expect(global.clearInterval).not.toBe(undefined)
     })
 
-    it('mocks process.nextTick if it exists on global', () => {
+    it.skipIf(isChildProcess)('mocks process.nextTick if it exists on global', () => {
       const origNextTick = () => {}
       const global = {
         Date: FakeDate,
@@ -62,6 +64,30 @@ describe('FakeTimers', () => {
       const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
       timers.useFakeTimers()
       expect(global.process.nextTick).not.toBe(origNextTick)
+    })
+
+    it.runIf(isChildProcess)('does not mock process.nextTick if it exists on global and is child_process', () => {
+      const origNextTick = () => {}
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: origNextTick,
+        },
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.process.nextTick).toBe(origNextTick)
+    })
+
+    it.runIf(isChildProcess)('throws when is child_process and tries to mock nextTick', () => {
+      const global = { process, setTimeout, clearTimeout }
+      const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
+
+      expect(() => timers.useFakeTimers()).toThrow(
+        'process.nextTick cannot be mocked inside child_process',
+      )
     })
 
     it('mocks setImmediate if it exists on global', () => {
@@ -96,7 +122,7 @@ describe('FakeTimers', () => {
   })
 
   describe('runAllTicks', () => {
-    it('runs all ticks, in order', () => {
+    it.skipIf(isChildProcess)('runs all ticks, in order', () => {
       const global = {
         Date: FakeDate,
         clearTimeout,
@@ -144,7 +170,7 @@ describe('FakeTimers', () => {
       expect(nextTick).toHaveBeenCalledTimes(0)
     })
 
-    it('only runs a scheduled callback once', () => {
+    it.skipIf(isChildProcess)('only runs a scheduled callback once', () => {
       const global = {
         Date: FakeDate,
         clearTimeout,
@@ -168,7 +194,7 @@ describe('FakeTimers', () => {
       expect(mock1).toHaveBeenCalledTimes(1)
     })
 
-    it('throws before allowing infinite recursion', () => {
+    it.skipIf(isChildProcess)('throws before allowing infinite recursion', () => {
       const global = {
         Date: FakeDate,
         clearTimeout,
@@ -322,7 +348,7 @@ describe('FakeTimers', () => {
       )
     })
 
-    it('also clears ticks', () => {
+    it.skipIf(isChildProcess)('also clears ticks', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
       const timers = new FakeTimers({ global, config: { toFake: ['nextTick', 'setTimeout'] } })
       timers.useFakeTimers()
@@ -428,7 +454,7 @@ describe('FakeTimers', () => {
       )
     })
 
-    it('also clears ticks', async () => {
+    it.skipIf(isChildProcess)('also clears ticks', async () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
       const timers = new FakeTimers({ global, config: { toFake: ['setTimeout', 'nextTick'] } })
       timers.useFakeTimers()
@@ -1062,7 +1088,7 @@ describe('FakeTimers', () => {
       expect(global.clearInterval).toBe(nativeClearInterval)
     })
 
-    it('resets native process.nextTick when present', () => {
+    it.skipIf(isChildProcess)('resets native process.nextTick when present', () => {
       const nativeProcessNextTick = vi.fn()
 
       const global = {
@@ -1143,7 +1169,7 @@ describe('FakeTimers', () => {
       expect(global.clearInterval).not.toBe(nativeClearInterval)
     })
 
-    it('resets mock process.nextTick when present', () => {
+    it.skipIf(isChildProcess)('resets mock process.nextTick when present', () => {
       const nativeProcessNextTick = vi.fn()
 
       const global = {
@@ -1216,7 +1242,7 @@ describe('FakeTimers', () => {
       timers.useRealTimers()
     })
 
-    it('includes immediates and ticks', () => {
+    it.skipIf(isChildProcess)('includes immediates and ticks', () => {
       const timers = new FakeTimers({ global, config: { toFake: ['setTimeout', 'setImmediate', 'nextTick'] } })
 
       timers.useFakeTimers()
