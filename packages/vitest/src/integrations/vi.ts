@@ -9,6 +9,7 @@ import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
+import { waitFor } from './wait'
 
 interface VitestUtils {
   useFakeTimers(config?: FakeTimerInstallOpts): this
@@ -30,6 +31,7 @@ interface VitestUtils {
 
   spyOn: typeof spyOn
   fn: typeof fn
+  waitFor: typeof waitFor
 
   /**
    * Run the factory before imports are evaluated. You can return a value from the factory
@@ -292,7 +294,7 @@ function createVitest(): VitestUtils {
 
     spyOn,
     fn,
-
+    waitFor,
     hoisted<T>(factory: () => T): T {
       assertTypes(factory, '"vi.hoisted" factory', ['function'])
       return factory()
