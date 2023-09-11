@@ -224,8 +224,8 @@ importers:
   examples/graphql:
     dependencies:
       '@rollup/plugin-graphql':
-        specifier: ^2.0.3
-        version: 2.0.3(graphql@16.6.0)(rollup@3.26.0)
+        specifier: ^1.1.0
+        version: 1.1.0(graphql@16.6.0)(rollup@2.79.1)
       graphql:
         specifier: ^16.5.0
         version: 16.6.0
@@ -8227,20 +8227,16 @@ packages:
       rollup: 3.26.0
     dev: true
 
-  /@rollup/plugin-graphql@2.0.3(graphql@16.6.0)(rollup@3.26.0):
-    resolution: {integrity: sha512-IuuELo+0t29adRuLVg8izBFiUXFSFw8BmezespscynRfvfXSOV0S7g8RzQt75VzP6KHHVmNmlAgz+8qlkLur3w==}
-    engines: {node: '>=14.0.0'}
+  /@rollup/plugin-graphql@1.1.0(graphql@16.6.0)(rollup@2.79.1):
+    resolution: {integrity: sha512-X+H6oFlprDlnO3D0UiEytdW97AMphPXO0C7KunS7i/rBXIGQRQVDU5WKTXnBu2tfyYbjCTtfhXMSGI0i885PNg==}
     peerDependencies:
       graphql: '>=0.9.0'
-      rollup: ^1.20.0||^2.0.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
+      rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@3.26.0)
+      '@rollup/pluginutils': 4.2.1
       graphql: 16.6.0
       graphql-tag: 2.12.6(graphql@16.6.0)
-      rollup: 3.26.0
+      rollup: 2.79.1
     dev: false
 
   /@rollup/plugin-json@6.0.0(rollup@3.26.0):
@@ -8317,7 +8313,6 @@ packages:
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.3.1
-    dev: true
 
   /@rollup/pluginutils@5.0.2(rollup@2.79.1):
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
@@ -24080,7 +24075,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /rollup@3.26.0:
     resolution: {integrity: sha512-YzJH0eunH2hr3knvF3i6IkLO/jTjAEwU4HoMUbQl4//Tnl3ou0e7P5SjxdDr8HQJdeUJShlbEHXrrnEHy1l7Yg==}
