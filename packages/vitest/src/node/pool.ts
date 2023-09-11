@@ -9,6 +9,7 @@ import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
+import { createShadowRealmPool } from './pools/shadow-realm'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
@@ -32,6 +33,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     threads: null,
     browser: null,
     experimentalVmThreads: null,
+    realms: null,
   }
 
   function getDefaultPoolName(project: WorkspaceProject): VitestPool {
@@ -92,6 +94,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       threads: [] as WorkspaceSpec[],
       browser: [] as WorkspaceSpec[],
       experimentalVmThreads: [] as WorkspaceSpec[],
+      realms: [] as WorkspaceSpec[],
     }
 
     for (const spec of files) {
@@ -104,6 +107,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     await Promise.all(Object.entries(filesByPool).map(([pool, files]) => {
       if (!files.length)
         return null
+
+      if (pool === 'realms') {
+        pools.realms ??= createShadowRealmPool(ctx)
+        return pools.realms.runTests(files, invalidate)
+      }
 
       if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)

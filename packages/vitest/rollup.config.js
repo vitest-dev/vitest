@@ -14,27 +14,29 @@ import { defineConfig } from 'rollup'
 
 import pkg from './package.json' assert { type: 'json' }
 
-const entries = [
-  'src/index.ts',
-  'src/node/cli.ts',
-  'src/node/cli-wrapper.ts',
-  'src/node.ts',
-  'src/suite.ts',
-  'src/browser.ts',
-  'src/runners.ts',
-  'src/environments.ts',
-  'src/runtime/worker.ts',
-  'src/runtime/vm.ts',
-  'src/runtime/child.ts',
-  'src/runtime/loader.ts',
-  'src/runtime/entry.ts',
-  'src/runtime/entry-vm.ts',
-  'src/integrations/spy.ts',
-  'src/coverage.ts',
-  'src/public/utils.ts',
-  'src/public/execute.ts',
-  'src/public/reporters.ts',
-]
+const entries = {
+  'index': 'src/index.ts',
+  'cli': 'src/node/cli.ts',
+  'cli-wrapper': 'src/node/cli-wrapper.ts',
+  'node': 'src/node.ts',
+  'suite': 'src/suite.ts',
+  'browser': 'src/browser.ts',
+  'runners': 'src/runners.ts',
+  'environments': 'src/environments.ts',
+  'worker': 'src/runtime/worker.ts',
+  'vm': 'src/runtime/vm.ts',
+  'shadow-realm': 'src/runtime/shadow-realm.ts',
+  'child': 'src/runtime/child.ts',
+  'loader': 'src/runtime/loader.ts',
+  'entry': 'src/runtime/entry.ts',
+  'entry-vm': 'src/runtime/entry-vm.ts',
+  'spy': 'src/integrations/spy.ts',
+  'coverage': 'src/coverage.ts',
+  'utils': 'src/public/utils.ts',
+  'execute': 'src/public/execute.ts',
+  'reporters': 'src/public/reporters.ts',
+  // 'bun': 'src/bun/loader.ts',
+}
 
 const dtsEntries = {
   index: 'src/index.ts',

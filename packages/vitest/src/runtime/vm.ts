@@ -88,7 +88,7 @@ export async function run(ctx: WorkerContext) {
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = createCustomConsole(state)
+  context.console = await createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate

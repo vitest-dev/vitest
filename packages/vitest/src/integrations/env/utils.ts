@@ -39,9 +39,17 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   const keys = getWindowKeys(global, win)
 
   const originals = new Map<string | symbol, any>()
+  const ignoredKeys = new Set()
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
+    const descriptor = Object.getOwnPropertyDescriptor(global, key)
+    if (descriptor?.configurable === false) {
+      ignoredKeys.add(key)
+      keys.delete(key)
+      continue
+    }
+
     const boundFunction = bindFunctions
       && typeof win[key] === 'function'
       && !isClassLikeName(key)
@@ -50,19 +58,22 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
     if (KEYS.includes(key) && key in global)
       originals.set(key, global[key])
 
-    Object.defineProperty(global, key, {
-      get() {
-        if (overrideObject.has(key))
-          return overrideObject.get(key)
-        if (boundFunction)
-          return boundFunction
-        return win[key]
-      },
-      set(v) {
-        overrideObject.set(key, v)
-      },
-      configurable: true,
-    })
+    try {
+      Object.defineProperty(global, key, {
+        get() {
+          if (overrideObject.has(key))
+            return overrideObject.get(key)
+          if (boundFunction)
+            return boundFunction
+          return win[key]
+        },
+        set(v) {
+          overrideObject.set(key, v)
+        },
+        configurable: true,
+      })
+    }
+    catch {}
   }
 
   global.window = global
@@ -82,7 +93,11 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
     })
   }
 
-  skipKeys.forEach(k => keys.add(k))
+  skipKeys.forEach((k) => {
+    const descriptor = Object.getOwnPropertyDescriptor(global, k)
+    if (descriptor?.configurable !== false)
+      keys.add(k)
+  })
 
   return {
     keys,

@@ -47,13 +47,14 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
     getSourceMap: source => state.moduleCache.getSourceMap(source),
   })
 
-  await setupConsoleLogSpy(state)
+  if (!process.versions.bun)
+    await setupConsoleLogSpy(state)
 }
 
 export async function setupConsoleLogSpy(state: WorkerGlobalState) {
   const { createCustomConsole } = await import('./console')
 
-  globalThis.console = createCustomConsole(state)
+  globalThis.console = await createCustomConsole(state)
 }
 
 export async function withEnv(

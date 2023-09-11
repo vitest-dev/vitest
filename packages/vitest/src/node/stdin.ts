@@ -34,7 +34,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       if (!ctx.isCancelling) {
         ctx.logger.logUpdate.clear()
         ctx.logger.log(c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'))
-        process.exitCode = 130
+        process.exitCode = 100
 
         await ctx.cancelCurrentRun('keyboard-input')
         await ctx.runningPromise

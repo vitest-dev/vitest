@@ -12,6 +12,8 @@ export interface WorkerContext extends ContextRPC {
   port: MessagePort
 }
 
+export interface ShadowRealmContext extends ContextRPC {}
+
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface AfterSuiteRunMeta {

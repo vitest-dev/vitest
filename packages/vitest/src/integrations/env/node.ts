@@ -1,4 +1,3 @@
-import { Console } from 'node:console'
 import type { Environment } from '../../types'
 
 // some globals we do not want, either because deprecated or we set it ourselves
@@ -113,6 +112,7 @@ export default <Environment>({
     }
   },
   async setup(global) {
+    const { Console } = await import('node:console')
     global.console.Console = Console
     return {
       teardown(global) {

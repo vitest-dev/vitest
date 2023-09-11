@@ -1,6 +1,6 @@
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import { version } from '../../../../package.json'
+import pkg from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { divider } from './reporters/renderers/utils'
@@ -117,8 +117,8 @@ export class Logger {
     this.log()
 
     const versionTest = this.ctx.config.watch
-      ? c.blue(`v${version}`)
-      : c.cyan(`v${version}`)
+      ? c.blue(`v${pkg.version}`)
+      : c.cyan(`v${pkg.version}`)
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')

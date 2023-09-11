@@ -1,10 +1,11 @@
 import { Writable } from 'node:stream'
-import { Console } from 'node:console'
 import { getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
 import type { WorkerGlobalState } from '../types'
 
-export function createCustomConsole(state: WorkerGlobalState) {
+export async function createCustomConsole(state: WorkerGlobalState) {
+  const { Console } = await import('node:console')
+
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()

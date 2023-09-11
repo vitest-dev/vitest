@@ -1,7 +1,7 @@
 import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
-import { version } from '../../package.json'
+import pkg from '../../package.json'
 import { toArray } from '../utils'
 import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
@@ -11,7 +11,7 @@ import { divider } from './reporters/renderers/utils'
 const cli = cac('vitest')
 
 cli
-  .version(version)
+  .version(pkg.version)
   .option('-r, --root <path>', 'Root path')
   .option('-c, --config <path>', 'Path to config file')
   .option('-u, --update', 'Update snapshot')

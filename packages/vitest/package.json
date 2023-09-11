@@ -87,7 +87,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "vitest": "./vitest.mjs"
+    "vitest": "./vitest.mjs",
+    "vitest-bun": "./vitest-bun.mjs"
   },
   "files": [
     "dist",
@@ -181,6 +182,7 @@
     "@types/prompts": "^2.4.4",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "birpc": "0.2.12",
+    "bun-types": "^1.0.1",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
     "event-target-polyfill": "^0.0.3",

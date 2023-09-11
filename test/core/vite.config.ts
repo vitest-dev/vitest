@@ -61,7 +61,8 @@ export default defineConfig({
       CUSTOM_ENV: 'foo',
     },
     poolMatchGlobs: [
-      ['**/vm-wasm.test.ts', 'experimentalVmThreads'],
+      ['**/*', 'realms'],
+      // ['**/vm-wasm.test.ts', 'experimentalVmThreads'],
     ],
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot'))

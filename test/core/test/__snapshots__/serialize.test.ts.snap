@@ -33,3 +33,37 @@ exports[`error serialize > works 1`] = `
   "symbol": "Symbol(hi)",
 }
 `;
+
+exports[`error serialize works 1`] = `
+{
+  "array": [
+    1,
+    undefined,
+    3,
+  ],
+  "fn": "Function<fn>",
+  "foo": "hi",
+  "nested": {
+    "class": "Function<class>",
+    "false": false,
+  },
+  "null": null,
+  "promise": "Promise",
+  "symbol": "Symbol(hi)",
+}
+`;
+
+exports[`error serialize Should skip circular references to prevent hit the call stack limit 1`] = `
+{
+  "toString": "Function<toString>",
+  "whatever": [Circular],
+  "whateverArray": [
+    [Circular],
+    [Circular],
+  ],
+  "whateverArrayClone": [
+    [Circular],
+    [Circular],
+  ],
+}
+`;
