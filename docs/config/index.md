@@ -1078,7 +1078,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'v8'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.100`, `--coverage.100=false`
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
