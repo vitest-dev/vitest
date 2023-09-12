@@ -22,7 +22,7 @@ describe('waitFor', () => {
 
       await expect(
         vi.waitFor(callback, {
-          timeout: 49,
+          timeout: 45,
           interval: 10,
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot('"interval error"')
@@ -91,7 +91,7 @@ describe('waitFor', () => {
     const { setTimeout: safeSetTimeout } = getSafeTimers()
 
     safeSetTimeout(() => {
-      vi.advanceTimersByTime(2000)
+      vi.advanceTimersByTime(200)
     }, 50)
 
     await vi.waitFor(() => {
