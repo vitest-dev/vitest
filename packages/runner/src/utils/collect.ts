@@ -46,8 +46,7 @@ export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, 
 }
 
 function getTaskFullName(task: TaskBase): string {
-  const fullName = task.suite ? getTaskFullName(task.suite) : null
-  return fullName ? `${fullName} ${task.name}` : task.name
+  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
 }
 
 export function someTasksAreOnly(suite: Suite): boolean {
