@@ -725,24 +725,25 @@ unmockedIncrement(30) === 31
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
 
-This is very useful for testing, see the following example.
+This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 
 ```ts
 import { test, vi } from 'vitest'
 
-let server = false
-setTimeout(() => {
-  server = true
-}, 100)
-
-function checkServerStart() {
-  if (!server)
-    throw new Error('Server not started')
-
-  console.log('Server started')
-}
-
 test('Server started successfully', async () => {
+  let server = false
+
+  setTimeout(() => {
+    server = true
+  }, 100)
+
+  function checkServerStart() {
+    if (!server)
+      throw new Error('Server not started')
+
+    console.log('Server started')
+  }
+
   const res = await vi.waitFor(checkServerStart, {
     timeout: 500, // default is 1000
     interval: 20, // default is 50
@@ -756,16 +757,16 @@ It also works for asynchronous callbacks
 ```ts
 import { test, vi } from 'vitest'
 
-async function startServer() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      server = true
-      resolve('Server started')
-    }, 100)
-  })
-}
-
 test('Server started successfully', async () => {
+  async function startServer() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        server = true
+        resolve('Server started')
+      }, 100)
+    })
+  }
+
   const server = await vi.waitFor(startServer, {
     timeout: 500, // default is 1000
     interval: 20, // default is 50
