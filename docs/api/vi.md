@@ -775,4 +775,4 @@ test('Server started successfully', async () => {
 })
 ```
 
-If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.AdvanceTimersByTime(interval)` in every check callback.
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
