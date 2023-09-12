@@ -9,9 +9,9 @@ describe('waitFor', () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve(true)
-            }, 1000)
+            }, 100)
           })
-        }, 500)
+        }, 50)
       }).rejects.toThrow('Timed out in waitFor!')
     })
 
@@ -22,10 +22,10 @@ describe('waitFor', () => {
 
       await expect(
         vi.waitFor(callback, {
-          timeout: 499,
-          interval: 100,
+          timeout: 49,
+          interval: 10,
         }),
-      ).rejects.toMatchInlineSnapshot('[Error: interval error]')
+      ).rejects.toThrowErrorMatchingInlineSnapshot('"interval error"')
 
       expect(callback).toHaveBeenCalledTimes(5)
     })
@@ -46,7 +46,7 @@ describe('waitFor', () => {
     let finished = false
     setTimeout(() => {
       finished = true
-    }, 500)
+    }, 50)
     await vi.waitFor(async () => {
       if (finished)
         return Promise.resolve(true)
@@ -62,7 +62,7 @@ describe('waitFor', () => {
       _a += 1
     }
     try {
-      await vi.waitFor(check)
+      await vi.waitFor(check, 100)
     }
     catch (error) {
       expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
@@ -73,11 +73,11 @@ describe('waitFor', () => {
   test('stacktrace point to waitFor', async () => {
     const check = async () => {
       return new Promise((resolve) => {
-        setTimeout(resolve, 600)
+        setTimeout(resolve, 60)
       })
     }
     try {
-      await vi.waitFor(check, 500)
+      await vi.waitFor(check, 50)
     }
     catch (error) {
       expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
@@ -92,15 +92,15 @@ describe('waitFor', () => {
 
     safeSetTimeout(() => {
       vi.advanceTimersByTime(2000)
-    }, 500)
+    }, 50)
 
     await vi.waitFor(() => {
       return new Promise<void>((resolve) => {
         setTimeout(() => {
           resolve()
-        }, 1500)
+        }, 150)
       })
-    }, 500)
+    }, 50)
 
     vi.useRealTimers()
   })
