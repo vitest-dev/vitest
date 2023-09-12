@@ -28,7 +28,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
   workerState.durations.environment = performance.now()
 
-  await withEnv(environment, environment.options || config.environmentOptions || {}, async () => {
+  await withEnv(environment.environment, environment.options || config.environmentOptions || {}, async () => {
     workerState.durations.environment = performance.now() - workerState.durations.environment
 
     for (const file of files) {

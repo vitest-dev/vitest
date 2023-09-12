@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { Environment, EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
@@ -58,7 +58,7 @@ export async function setupConsoleLogSpy(state: WorkerGlobalState) {
 }
 
 export async function withEnv(
-  { environment }: ResolvedTestEnvironment,
+  environment: Environment,
   options: EnvironmentOptions,
   fn: () => Promise<void>,
 ) {

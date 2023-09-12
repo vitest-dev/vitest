@@ -35,7 +35,6 @@ const entries = {
   'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
-  // 'bun': 'src/bun/loader.ts',
 }
 
 const dtsEntries = {
