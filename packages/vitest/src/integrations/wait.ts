@@ -3,13 +3,14 @@ import { getSafeTimers } from '@vitest/utils'
 export type WaitForCallback<T> = () => T | Promise<T>
 
 export interface WaitForOptions {
-
   /**
+   * @description Time in ms between each check callback
    * @default 50ms
    */
   interval?: number
   /**
-   * @default 5000
+   * @description Time in ms after which the throw a timeout error
+   * @default 1000ms
    */
   timeout?: number
 }
@@ -20,9 +21,9 @@ function copyStackTrace(target: Error, source: Error) {
   return target
 }
 
-export function waitFor<T>(callback: WaitForCallback<T>, options: WaitForOptions = {}) {
+export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitForOptions = {}) {
   const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
-  const { interval = 50, timeout = 5000 } = options
+  const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<T>((resolve, reject) => {

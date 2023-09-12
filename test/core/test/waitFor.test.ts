@@ -11,9 +11,7 @@ describe('waitFor', () => {
               resolve(true)
             }, 1000)
           })
-        }, {
-          timeout: 500,
-        })
+        }, 500)
       }).rejects.toThrow('Timed out in waitFor!')
     })
 
@@ -64,9 +62,7 @@ describe('waitFor', () => {
       _a += 1
     }
     try {
-      await vi.waitFor(check, {
-        timeout: 1000,
-      })
+      await vi.waitFor(check)
     }
     catch (error) {
       expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
@@ -81,9 +77,7 @@ describe('waitFor', () => {
       })
     }
     try {
-      await vi.waitFor(check, {
-        timeout: 500,
-      })
+      await vi.waitFor(check, 500)
     }
     catch (error) {
       expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
@@ -106,12 +100,8 @@ describe('waitFor', () => {
           resolve()
         }, 1500)
       })
-    }, {
-      timeout: 500,
-    })
+    }, 500)
 
     vi.useRealTimers()
   })
-}, {
-  timeout: 6_000,
 })
