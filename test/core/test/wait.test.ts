@@ -66,7 +66,7 @@ describe('waitFor', () => {
     }
     catch (error) {
       expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
-      expect((error as Error).stack).toContain('/vitest/test/core/test/waitFor.test.ts:')
+      expect((error as Error).stack).toContain('/vitest/test/core/test/wait.test.ts:')
     }
   })
 
