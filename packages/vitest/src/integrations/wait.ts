@@ -1,5 +1,7 @@
 import { getSafeTimers } from '@vitest/utils'
 
+// The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
+
 export type WaitForCallback<T> = () => T | Promise<T>
 
 export interface WaitForOptions {
