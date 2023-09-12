@@ -226,7 +226,7 @@ export interface BaseCoverageOptions {
   allowExternal?: boolean
 
   /**
-   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
+   * Shortcut for `{ lines: 100, functions: 100, branches: 100, statements: 100 }`
    *
    * @default false
    */
