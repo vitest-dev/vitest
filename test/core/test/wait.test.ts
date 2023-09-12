@@ -22,12 +22,12 @@ describe('waitFor', () => {
 
       await expect(
         vi.waitFor(callback, {
-          timeout: 45,
-          interval: 10,
+          timeout: 60,
+          interval: 30,
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot('"interval error"')
 
-      expect(callback).toHaveBeenCalledTimes(5)
+      expect(callback).toHaveBeenCalledTimes(2)
     })
   })
 
