@@ -1,4 +1,5 @@
 import { getSafeTimers } from '@vitest/utils'
+import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
 
@@ -52,6 +53,10 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
     }
 
     const checkCallback = () => {
+      // use fake timers
+      if (globalThis.setTimeout !== setTimeout)
+        vi.advanceTimersByTime(interval)
+
       if (promiseStatus === 'pending')
         return
       try {

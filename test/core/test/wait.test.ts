@@ -1,4 +1,3 @@
-import { getSafeTimers } from '@vitest/utils'
 import { describe, expect, test, vi } from 'vitest'
 
 describe('waitFor', () => {
@@ -88,9 +87,7 @@ describe('waitFor', () => {
   test('fakeTimer works', async () => {
     vi.useFakeTimers()
 
-    const { setTimeout: safeSetTimeout } = getSafeTimers()
-
-    safeSetTimeout(() => {
+    setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
 
@@ -100,7 +97,7 @@ describe('waitFor', () => {
           resolve()
         }, 150)
       })
-    }, 50)
+    }, 200)
 
     vi.useRealTimers()
   })
