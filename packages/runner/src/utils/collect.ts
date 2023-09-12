@@ -27,8 +27,14 @@ export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, 
       }
     }
     if (t.type === 'test') {
-      if (namePattern && !getTaskFullName(t).match(namePattern))
-        t.mode = 'skip'
+      if (namePattern) {
+        const taskFullName = getTaskFullName(t)
+        // Match also the task full name with a leading space to be backward-compatible with tools like
+        // IntelliJ/WebStorm. Previous Vitest versions (<= 0.34.3) had the task full name starting
+        // with a space, and the tools passed `testNamePattern` matching it.
+        if (!(taskFullName.match(namePattern) || ` ${taskFullName}`.match(namePattern)))
+          t.mode = 'skip'
+      }
     }
     else if (t.type === 'suite') {
       if (t.mode === 'skip')
