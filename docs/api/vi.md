@@ -715,6 +715,7 @@ unmockedIncrement(30) === 31
 ## vi.isFakeTimers
 
 - **Type:** `() => boolean`
+- **Version:** Since Vitest 0.34.5
 
   Returns `true` if fake timers are enabled.
 
