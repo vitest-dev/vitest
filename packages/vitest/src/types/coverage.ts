@@ -224,6 +224,13 @@ export interface BaseCoverageOptions {
    * @default false
    */
   allowExternal?: boolean
+
+  /**
+   * Shortcut for `{ lines: 100, functions: 100, branches: 100, statements: 100 }`
+   *
+   * @default false
+   */
+  100?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -235,14 +242,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
-   *
-   * @default false
-   */
-  100?: boolean
-}
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
   /** Name of the module or path to a file to load the custom provider from */
