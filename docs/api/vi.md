@@ -433,12 +433,6 @@ import.meta.env.MODE = 'test'
 ```
 :::
 
-:::warning
-Vitest transforms all `import.meta.env` calls into `process.env`, so they can be easily changed at runtime. Node.js only supports string values as env parameters, while Vite supports several built-in envs as boolean (namely, `SSR`, `DEV`, `PROD`). To mimic Vite, set "truthy" values as env: `''` instead of `false`, and `'1'` instead of `true`.
-
-But beware that you cannot rely on `import.meta.env.DEV === false` in this case. Use `!import.meta.env.DEV`. This also affects simple assigning, not just `vi.stubEnv` method.
-:::
-
 ## vi.unstubAllEnvs
 
 - **Type:** `() => Vitest`
