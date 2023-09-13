@@ -728,7 +728,7 @@ unmockedIncrement(30) === 31
 ### vi.waitFor
 
 - **Type:** `function waitFor<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions): Promise<T>`
-- **Version**: Since Vitest 0.35.0
+- **Version**: Since Vitest 0.34.5
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
 
