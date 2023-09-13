@@ -53,12 +53,8 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
     }
 
     const checkCallback = () => {
-      try {
-        // use fake timers
-        vi.getTimerCount()
+      if (vi.isFakeTimers())
         vi.advanceTimersByTime(interval)
-      }
-      catch {}
 
       if (promiseStatus === 'pending')
         return

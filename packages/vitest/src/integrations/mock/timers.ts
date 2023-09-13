@@ -175,6 +175,10 @@ export class FakeTimers {
     this._userConfig = config
   }
 
+  isFakeTimers() {
+    return this._fakingTime
+  }
+
   private _checkFakeTimers() {
     if (!this._fakingTime) {
       throw new Error(

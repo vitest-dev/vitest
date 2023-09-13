@@ -12,6 +12,7 @@ import { fn, isMockFunction, spies, spyOn } from './spy'
 import { waitFor } from './wait'
 
 interface VitestUtils {
+  isFakeTimers: () => boolean
   useFakeTimers(config?: FakeTimerInstallOpts): this
   useRealTimers(): this
   runOnlyPendingTimers(): this
@@ -213,6 +214,10 @@ function createVitest(): VitestUtils {
       }
       _timers.useFakeTimers()
       return utils
+    },
+
+    isFakeTimers() {
+      return _timers.isFakeTimers()
     },
 
     useRealTimers() {

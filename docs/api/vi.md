@@ -712,6 +712,12 @@ unmockedIncrement(30) === 31
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
+## vi.isFakeTimers
+
+- **Type:** `() => boolean`
+
+  Returns `true` if fake timers are enabled.
+
 ## vi.useRealTimers
 
 - **Type:** `() => Vitest`
