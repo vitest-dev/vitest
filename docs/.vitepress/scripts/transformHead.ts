@@ -12,13 +12,13 @@ export async function transformHead({ pageData }: TransformContext): Promise<Hea
     head.push(['link', { rel: 'preconnect', href: link }])
   })
 
-  head.push(['link', { rel: 'prefetch', href: '/logo.svg', type: 'image' }])
+  head.push(['link', { rel: 'prefetch', href: '/logo.svg', as: 'image' }])
   if (home) {
-    head.push(['link', { rel: 'prefetch', href: '/logo-shadow.svg', type: 'image' }])
-    head.push(['link', { rel: 'prefetch', href: '/sponsors/antfu.svg', type: 'image' }])
-    head.push(['link', { rel: 'prefetch', href: '/sponsors/sheremet-va.svg', type: 'image' }])
-    head.push(['link', { rel: 'prefetch', href: '/sponsors/patak-dev.svg', type: 'image' }])
-    head.push(['link', { rel: 'prefetch', href: '/netlify.svg', type: 'image' }])
+    head.push(['link', { rel: 'prefetch', href: '/logo-shadow.svg', as: 'image' }])
+    head.push(['link', { rel: 'prefetch', href: '/sponsors/antfu.svg', as: 'image' }])
+    head.push(['link', { rel: 'prefetch', href: '/sponsors/sheremet-va.svg', as: 'image' }])
+    head.push(['link', { rel: 'prefetch', href: '/sponsors/patak-dev.svg', as: 'image' }])
+    head.push(['link', { rel: 'prefetch', href: '/netlify.svg', as: 'image' }])
   }
 
   return head
