@@ -15,7 +15,7 @@ for (const isolate of [true, false]) {
 
 for (const config of configs) {
   test(`should bail with "${JSON.stringify(config)}"`, async () => {
-    process.env.THREADS = config?.threads ? 'true' : 'false'
+    process.env.THREADS = config?.singleThread ? 'false' : 'true'
 
     const { exitCode, stdout } = await runVitest({
       root: './fixtures',

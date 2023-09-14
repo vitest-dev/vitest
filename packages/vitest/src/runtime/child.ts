@@ -2,6 +2,8 @@ import { performance } from 'node:perf_hooks'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
+import { workerId as poolId } from 'tinypool'
+import type { TinypoolWorkerMessage } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
@@ -12,10 +14,10 @@ import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
 async function init(ctx: ChildContext) {
-  const { config } = ctx
+  const { config, workerId } = ctx
 
-  process.env.VITEST_WORKER_ID = '1'
-  process.env.VITEST_POOL_ID = '1'
+  process.env.VITEST_WORKER_ID = String(workerId)
+  process.env.VITEST_POOL_ID = String(poolId)
 
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
@@ -33,7 +35,15 @@ async function init(ctx: ChildContext) {
       post(v) {
         process.send?.(v)
       },
-      on(fn) { process.on('message', fn) },
+      on(fn) {
+        process.on('message', (message: any, ...extras: any) => {
+          // Do not react on Tinypool's internal messaging
+          if ((message as TinypoolWorkerMessage)?.__tinypool_worker_message__)
+            return
+
+          return fn(message, ...extras)
+        })
+      },
     },
   ))
 
@@ -89,6 +99,9 @@ function unwrapConfig(config: ResolvedConfig) {
 }
 
 export async function run(ctx: ChildContext) {
+  const exit = process.exit
+
+  ctx.config = unwrapConfig(ctx.config)
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
@@ -101,19 +114,6 @@ export async function run(ctx: ChildContext) {
   }
   finally {
     inspectorCleanup()
+    process.exit = exit
   }
 }
-
-const procesExit = process.exit
-
-process.on('message', async (message: any) => {
-  if (typeof message === 'object' && message.command === 'start') {
-    try {
-      message.config = unwrapConfig(message.config)
-      await run(message)
-    }
-    finally {
-      procesExit()
-    }
-  }
-})

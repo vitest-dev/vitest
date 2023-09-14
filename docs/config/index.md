@@ -692,7 +692,7 @@ Percentage based memory limit [does not work on Linux CircleCI](https://github.c
 
 Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). Prior to Vitest 0.29.0, Vitest was still running tests inside worker thread, even if this option was disabled. Since 0.29.0, if this option is disabled, Vitest uses `child_process` to spawn a process to run tests inside, meaning you can use `process.chdir` and other API that was not available inside workers. If you want to revert to the previous behaviour, use `--single-thread` option instead.
 
-Disabling this option also disables module isolation, meaning all tests with the same environment are running inside a single child process.
+Disabling this option makes all tests run inside multiple child processes.
 
 ### singleThread
 

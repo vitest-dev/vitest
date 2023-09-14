@@ -1196,8 +1196,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       codemirror:
         specifier: ^5.65.13
         version: 5.65.13
@@ -1354,8 +1354,8 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       tinypool:
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.8.1
+        version: 0.8.1
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@18.7.13)
@@ -1403,8 +1403,8 @@ importers:
         specifier: ^8.1.2
         version: 8.1.2
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -1497,8 +1497,8 @@ importers:
   packages/ws-client:
     dependencies:
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       flatted:
         specifier: ^3.2.7
         version: 3.2.7
@@ -13111,8 +13111,8 @@ packages:
     dev: true
     optional: true
 
-  /birpc@0.2.12:
-    resolution: {integrity: sha512-6Wz9FXuJ/FE4gDH+IGQhrYdalAvAQU1Yrtcu1UlMk3+9mMXxIRXiL+MxUcGokso42s+Fy+YoUXGLOdOs0siV3A==}
+  /birpc@0.2.14:
+    resolution: {integrity: sha512-37FHE8rqsYM5JEKCnXFyHpBCzvgHEExwVVTq+nUmloInU7l8ezD1TpOhKpS8oe1DTYFqEK27rFZVKG43oTqXRA==}
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -26029,8 +26029,8 @@ packages:
     resolution: {integrity: sha512-kRwSG8Zx4tjF9ZiyH4bhaebu+EDz1BOx9hOigYHlUW4xxI/wKIUQUqo018UlU4ar6ATPBsaMrdbKZ+tmPdohFA==}
     dev: false
 
-  /tinypool@0.7.0:
-    resolution: {integrity: sha512-zSYNUlYSMhJ6Zdou4cJwo/p7w5nmAH17GRfU/ui3ctvjXFErXXkruT4MWW6poDeXgCaIBlGLrfU6TbTXxyGMww==}
+  /tinypool@0.8.1:
+    resolution: {integrity: sha512-zBTCK0cCgRROxvs9c0CGK838sPkeokNGdQVUUwHAbynHFlmyJYj825f/oRs528HaIJ97lo0pLIlDUzwN+IorWg==}
     engines: {node: '>=14.0.0'}
     dev: false
 

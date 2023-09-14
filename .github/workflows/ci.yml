@@ -81,8 +81,8 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
-      - name: Test Single Thread
-        run: pnpm run test:ci:single-thread
+      - name: Test No Threads
+        run: pnpm run test:ci:no-threads
 
       - name: Test Vm Threads
         run: pnpm run test:ci:vm-threads
