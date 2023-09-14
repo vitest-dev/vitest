@@ -24,7 +24,7 @@ async function init(ctx: WorkerContext) {
     setCancel = resolve
   })
 
-  const rpc = createBirpc<RuntimeRPC, RunnerRPC>(
+  const rpc = createSafeRpc(createBirpc<RuntimeRPC, RunnerRPC>(
     {
       onCancel: setCancel,
     },
@@ -33,9 +33,14 @@ async function init(ctx: WorkerContext) {
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },
-  )
+  ))
 
-  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+  const environment = await loadEnvironment(ctx.environment.name, {
+    root: ctx.config.root,
+    fetchModule(id) {
+      return rpc.fetch(id, 'ssr')
+    },
+  })
   if (ctx.environment.transformMode)
     environment.transformMode = ctx.environment.transformMode
 
@@ -50,7 +55,7 @@ async function init(ctx: WorkerContext) {
       environment: 0,
       prepare: performance.now(),
     },
-    rpc: createSafeRpc(rpc),
+    rpc,
   }
 
   // @ts-expect-error I know what I am doing :P
