@@ -10,15 +10,14 @@ import { parse, stringify } from 'flatted'
 import { processError } from '@vitest/utils/error'
 import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
-import type { RunnerRPC, RuntimeRPC, WorkerContext } from '../types'
+import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
-import * as VitestIndex from '../index'
 import { loadEnvironment } from '../integrations/env'
 import { mockMap, moduleCache, startVitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup.common'
-import { withEnv } from './setup.node'
 import { createSafeRpc, rpcDone } from './rpc'
+import { withEnv } from './withEnv'
 
 interface ShadowRealmOnCallback {
   (fn: (data: string) => void): void
@@ -39,7 +38,7 @@ async function runTests(
   if (ctx.environment.transformMode)
     environment.transformMode = ctx.environment.transformMode
 
-  const workerState: VitestIndex.WorkerGlobalState = {
+  const workerState: WorkerGlobalState = {
     ctx,
     moduleCache,
     config: ctx.config,
@@ -61,6 +60,8 @@ async function runTests(
   })
 
   await setupCommonEnv(config)
+
+  const VitestIndex = await import('../index')
 
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
@@ -88,6 +89,10 @@ async function runTests(
   const runner = await resolveTestRunner(config, executor)
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
+
+  VitestIndex.expect.setState({
+    environment: workerState.environment.name,
+  })
 
   await withEnv(environment, ctx.environment.options || config.environmentOptions || {}, async () => {
     for (const file of files) {

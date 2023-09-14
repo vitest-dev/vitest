@@ -2,11 +2,10 @@ import { createRequire } from 'node:module'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { Environment, EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
+import type { ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
 import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
-import { getSafeTimers, getWorkerState } from '../utils'
+import { getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
-import { expect } from '../integrations/chai'
 import { setupCommonEnv } from './setup.common'
 
 // this should only be used in Node
@@ -55,27 +54,4 @@ export async function setupConsoleLogSpy(state: WorkerGlobalState) {
   const { createCustomConsole } = await import('./console')
 
   globalThis.console = await createCustomConsole(state)
-}
-
-export async function withEnv(
-  environment: Environment,
-  options: EnvironmentOptions,
-  fn: () => Promise<void>,
-) {
-  // @ts-expect-error untyped global
-  globalThis.__vitest_environment__ = environment.name
-  expect.setState({
-    environment: environment.name,
-  })
-  const env = await environment.setup(globalThis, options)
-  try {
-    await fn()
-  }
-  finally {
-    // Run possible setTimeouts, e.g. the onces used by ConsoleLogSpy
-    const { setTimeout } = getSafeTimers()
-    await new Promise(resolve => setTimeout(resolve))
-
-    await env.teardown(globalThis)
-  }
 }

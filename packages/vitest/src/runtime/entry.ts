@@ -3,11 +3,13 @@ import { startTests } from '@vitest/runner'
 import type { ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
+import { expect } from '../integrations/chai'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { setupChaiConfig } from '../integrations/chai/config'
-import { setupGlobalEnv, withEnv } from './setup.node'
+import { setupGlobalEnv } from './setup.node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
+import { withEnv } from './withEnv'
 
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
@@ -27,6 +29,10 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   workerState.environment = environment.environment
 
   workerState.durations.environment = performance.now()
+
+  expect.setState({
+    environment: environment.environment.name,
+  })
 
   await withEnv(environment.environment, environment.options || config.environmentOptions || {}, async () => {
     workerState.durations.environment = performance.now() - workerState.durations.environment

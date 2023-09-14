@@ -9,6 +9,7 @@ import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
+import { createRealmsPool } from './pools/realms'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
@@ -28,7 +29,7 @@ const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export function createPool(ctx: Vitest): ProcessPool {
   const regularWorkerPath = pathToFileURL(resolve(distDir, './worker.js')).href
-  const shadowRealmWorkerPath = pathToFileURL(resolve(distDir, './shadow-realm.js')).href
+  // const shadowRealmWorkerPath = pathToFileURL(resolve(distDir, './shadow-realm.js')).href
 
   const pools: Record<VitestPool, ProcessPool | null> = {
     child_process: null,
@@ -111,7 +112,8 @@ export function createPool(ctx: Vitest): ProcessPool {
         return null
 
       if (pool === 'realms') {
-        pools.realms ??= createThreadsPool(ctx, { ...options, workerPath: shadowRealmWorkerPath })
+        pools.realms ??= createRealmsPool(ctx)
+        // pools.realms ??= createThreadsPool(ctx, { ...options, workerPath: shadowRealmWorkerPath })
         return pools.realms.runTests(files, invalidate)
       }
 

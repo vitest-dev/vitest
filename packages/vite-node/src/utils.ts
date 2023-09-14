@@ -100,6 +100,17 @@ export function isPrimitive(v: any) {
   return v !== Object(v)
 }
 
+// TODO: investigate improving toFilePath with this logic
+// function fileToUrl(file: string, root: string) {
+//   const url = path.relative(root, file)
+//   // out of root, use /@fs/ prefix
+//   if (url[0] === '.') {
+//     return path.posix.join(FS_PREFIX, normalizePath(file))
+//   }
+//   // file within root, create root-relative url
+//   return '/' + normalizePath(url)
+// }
+
 export function toFilePath(id: string, root: string): { path: string; exists: boolean } {
   let { absolute, exists } = (() => {
     if (id.startsWith('/@fs/'))

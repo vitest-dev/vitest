@@ -30,6 +30,7 @@ const entries = {
   'loader': 'src/runtime/loader.ts',
   'entry': 'src/runtime/entry.ts',
   'entry-vm': 'src/runtime/entry-vm.ts',
+  'entry-shadow-realm': 'src/runtime/entry-shadow-realm.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/coverage.ts',
   'utils': 'src/public/utils.ts',
