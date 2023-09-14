@@ -1,5 +1,5 @@
 import { MessageChannel } from 'node:worker_threads'
-import { cpus } from 'node:os'
+import * as nodeos from 'node:os'
 import { pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
@@ -40,9 +40,14 @@ function createWorkerChannel(project: WorkspaceProject) {
 }
 
 export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
+
   const threadsCount = ctx.config.watch
-    ? Math.max(Math.floor(cpus().length / 2), 1)
-    : Math.max(cpus().length - 1, 1)
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
 
   const maxThreads = ctx.config.maxThreads ?? threadsCount
   const minThreads = ctx.config.minThreads ?? threadsCount
