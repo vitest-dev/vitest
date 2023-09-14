@@ -254,10 +254,10 @@ import { vi } from 'vitest'
   ```ts
   // increment.test.js
   import { vi } from 'vitest'
-  
+
   // axios is a default export from `__mocks__/axios.js`
   import axios from 'axios'
-  
+
   // increment is a named export from `src/__mocks__/increment.js`
   import { increment } from '../increment.js'
 
@@ -371,7 +371,7 @@ test('importing the next module imports mocked one', async () => {
 
   ```ts
   import { vi } from 'vitest'
-  
+
   import { data } from './data.js' // Will not get reevaluated beforeEach test
 
   beforeEach(() => {
@@ -706,8 +706,74 @@ unmockedIncrement(30) === 31
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
+## vi.isFakeTimers
+
+- **Type:** `() => boolean`
+- **Version:** Since Vitest 0.34.5
+
+  Returns `true` if fake timers are enabled.
+
 ## vi.useRealTimers
 
 - **Type:** `() => Vitest`
 
   When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
+
+### vi.waitFor
+
+- **Type:** `function waitFor<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions): Promise<T>`
+- **Version**: Since Vitest 0.34.5
+
+Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
+
+This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
+
+```ts
+import { test, vi } from 'vitest'
+
+test('Server started successfully', async () => {
+  let server = false
+
+  setTimeout(() => {
+    server = true
+  }, 100)
+
+  function checkServerStart() {
+    if (!server)
+      throw new Error('Server not started')
+
+    console.log('Server started')
+  }
+
+  const res = await vi.waitFor(checkServerStart, {
+    timeout: 500, // default is 1000
+    interval: 20, // default is 50
+  })
+  expect(server).toBe(true)
+})
+```
+
+It also works for asynchronous callbacks
+
+```ts
+import { test, vi } from 'vitest'
+
+test('Server started successfully', async () => {
+  async function startServer() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        server = true
+        resolve('Server started')
+      }, 100)
+    })
+  }
+
+  const server = await vi.waitFor(startServer, {
+    timeout: 500, // default is 1000
+    interval: 20, // default is 50
+  })
+  expect(server).toBe('Server started')
+})
+```
+
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
