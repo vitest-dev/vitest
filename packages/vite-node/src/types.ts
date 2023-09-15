@@ -31,7 +31,7 @@ export interface StartOfSourceMap {
   sourceRoot?: string
 }
 
-export type { EncodedSourceMap, DecodedSourceMap } from '@jridgewell/trace-mapping'
+export type { EncodedSourceMap, DecodedSourceMap, SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface RawSourceMap extends StartOfSourceMap {
   version: string
