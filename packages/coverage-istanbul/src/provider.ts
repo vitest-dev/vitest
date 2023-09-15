@@ -61,6 +61,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       provider: 'istanbul',
       reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
       reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+      lines: config['100'] ? 100 : config.lines,
+      functions: config['100'] ? 100 : config.functions,
+      branches: config['100'] ? 100 : config.branches,
+      statements: config['100'] ? 100 : config.statements,
     }
 
     this.instrumenter = createInstrumenter({
