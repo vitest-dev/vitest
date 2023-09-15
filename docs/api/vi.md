@@ -784,3 +784,25 @@ If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimer
 - **Version**: Since Vitest 0.34.5
 
 This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
+
+Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
+
+```ts
+import { test, vi } from 'vitest'
+
+test('Element render correctly', async () => {
+
+  const element = await vi.waitUntil(
+    () => document.querySelector('.element'),
+    {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+
+  // do something with the element
+  expect(element.querySelector('.element-child')).toBeTruthy()
+})
+```
+
+```
