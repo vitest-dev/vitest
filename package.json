@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.34.2",
+  "version": "0.34.4",
   "private": true,
-  "packageManager": "pnpm@8.6.6",
+  "packageManager": "pnpm@8.7.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
@@ -75,7 +75,7 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^4.3.9",
+      "vite": "^4.4.9",
       "vitest": "workspace:*"
     },
     "peerDependencyRules": {

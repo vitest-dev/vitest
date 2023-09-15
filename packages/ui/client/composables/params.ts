@@ -3,7 +3,7 @@ export interface Params {
   view: null | 'graph' | 'editor' | 'console'
 }
 
-export const params = useUrlSearchParams<Params>('hash-params', {
+export const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     file: '',
     view: null,

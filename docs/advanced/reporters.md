@@ -19,7 +19,7 @@ Of course, you can create your reporter from scratch. Just extend the `BaseRepor
 And here is an example of a custom reporter:
 
 ```ts
-// ./custom-reporter.ts
+// ./custom-reporter.js
 import { BaseReporter } from 'vitest/reporters'
 
 export default class CustomReporter extends BaseReporter {
@@ -33,7 +33,7 @@ export default class CustomReporter extends BaseReporter {
 Or implement the `Reporter` interface:
 
 ```ts
-// ./custom-reporter.ts
+// ./custom-reporter.js
 import { Reporter } from 'vitest/reporters'
 
 export default class CustomReporter implements Reporter {

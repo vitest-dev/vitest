@@ -9,8 +9,10 @@ import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
+import { waitFor } from './wait'
 
 interface VitestUtils {
+  isFakeTimers(): boolean
   useFakeTimers(config?: FakeTimerInstallOpts): this
   useRealTimers(): this
   runOnlyPendingTimers(): this
@@ -30,6 +32,7 @@ interface VitestUtils {
 
   spyOn: typeof spyOn
   fn: typeof fn
+  waitFor: typeof waitFor
 
   /**
    * Run the factory before imports are evaluated. You can return a value from the factory
@@ -200,7 +203,7 @@ function createVitest(): VitestUtils {
     return stack?.file || ''
   }
 
-  return {
+  const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
       if (config) {
         _timers.configure(config)
@@ -210,58 +213,62 @@ function createVitest(): VitestUtils {
         _timers.configure(workerState.config.fakeTimers)
       }
       _timers.useFakeTimers()
-      return this
+      return utils
+    },
+
+    isFakeTimers() {
+      return _timers.isFakeTimers()
     },
 
     useRealTimers() {
       _timers.useRealTimers()
       _mockedDate = null
-      return this
+      return utils
     },
 
     runOnlyPendingTimers() {
       _timers.runOnlyPendingTimers()
-      return this
+      return utils
     },
 
     async runOnlyPendingTimersAsync() {
       await _timers.runOnlyPendingTimersAsync()
-      return this
+      return utils
     },
 
     runAllTimers() {
       _timers.runAllTimers()
-      return this
+      return utils
     },
 
     async runAllTimersAsync() {
       await _timers.runAllTimersAsync()
-      return this
+      return utils
     },
 
     runAllTicks() {
       _timers.runAllTicks()
-      return this
+      return utils
     },
 
     advanceTimersByTime(ms: number) {
       _timers.advanceTimersByTime(ms)
-      return this
+      return utils
     },
 
     async advanceTimersByTimeAsync(ms: number) {
       await _timers.advanceTimersByTimeAsync(ms)
-      return this
+      return utils
     },
 
     advanceTimersToNextTimer() {
       _timers.advanceTimersToNextTimer()
-      return this
+      return utils
     },
 
     async advanceTimersToNextTimerAsync() {
       await _timers.advanceTimersToNextTimerAsync()
-      return this
+      return utils
     },
 
     getTimerCount() {
@@ -272,7 +279,7 @@ function createVitest(): VitestUtils {
       const date = time instanceof Date ? time : new Date(time)
       _mockedDate = date
       _timers.setSystemTime(date)
-      return this
+      return utils
     },
 
     getMockedSystemTime() {
@@ -285,14 +292,14 @@ function createVitest(): VitestUtils {
 
     clearAllTimers() {
       _timers.clearAllTimers()
-      return this
+      return utils
     },
 
     // mocks
 
     spyOn,
     fn,
-
+    waitFor,
     hoisted<T>(factory: () => T): T {
       assertTypes(factory, '"vi.hoisted" factory', ['function'])
       return factory()
@@ -337,17 +344,17 @@ function createVitest(): VitestUtils {
 
     clearAllMocks() {
       spies.forEach(spy => spy.mockClear())
-      return this
+      return utils
     },
 
     resetAllMocks() {
       spies.forEach(spy => spy.mockReset())
-      return this
+      return utils
     },
 
     restoreAllMocks() {
       spies.forEach(spy => spy.mockRestore())
-      return this
+      return utils
     },
 
     stubGlobal(name: string | symbol | number, value: any) {
@@ -359,14 +366,14 @@ function createVitest(): VitestUtils {
         configurable: true,
         enumerable: true,
       })
-      return this
+      return utils
     },
 
     stubEnv(name: string, value: string) {
       if (!_stubsEnv.has(name))
         _stubsEnv.set(name, process.env[name])
       process.env[name] = value
-      return this
+      return utils
     },
 
     unstubAllGlobals() {
@@ -377,7 +384,7 @@ function createVitest(): VitestUtils {
           Object.defineProperty(globalThis, name, original)
       })
       _stubsGlobal.clear()
-      return this
+      return utils
     },
 
     unstubAllEnvs() {
@@ -388,13 +395,13 @@ function createVitest(): VitestUtils {
           process.env[name] = original
       })
       _stubsEnv.clear()
-      return this
+      return utils
     },
 
     resetModules() {
       const state = getWorkerState()
       resetModules(state.moduleCache)
-      return this
+      return utils
     },
 
     async dynamicImportSettled() {
@@ -414,8 +421,9 @@ function createVitest(): VitestUtils {
         Object.assign(state.config, _config)
       }
     },
-
   }
+
+  return utils
 }
 
 export const vitest = createVitest()

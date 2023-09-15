@@ -26,7 +26,7 @@ export async function run(ctx: WorkerContext) {
     setCancel = resolve
   })
 
-  const rpc = createBirpc<RuntimeRPC>(
+  const rpc = createSafeRpc(createBirpc<RuntimeRPC>(
     {
       onCancel: setCancel,
     },
@@ -35,9 +35,14 @@ export async function run(ctx: WorkerContext) {
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },
-  )
+  ))
 
-  const environment = await loadEnvironment(ctx.environment.name, ctx.config.root)
+  const environment = await loadEnvironment(ctx.environment.name, {
+    root: ctx.config.root,
+    fetchModule(id) {
+      return rpc.fetch(id, 'ssr')
+    },
+  })
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -59,7 +64,7 @@ export async function run(ctx: WorkerContext) {
       environment: performance.now(),
       prepare: performance.now(),
     },
-    rpc: createSafeRpc(rpc),
+    rpc,
   }
 
   installSourcemapsSupport({

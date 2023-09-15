@@ -49,8 +49,11 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
 
   if (api) {
-    if (!api.port)
+    if (!api.port && !api.middlewareMode)
       api.port = defaultPort
+  }
+  else {
+    api = { middlewareMode: true }
   }
 
   return api
@@ -319,7 +322,7 @@ export function resolveConfig(
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
 
   resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {

@@ -68,8 +68,6 @@ export default <Environment>({
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
-    // Buffer extends Uint8Array
-    dom.window.Uint8Array = Uint8Array
 
     // inject structuredClone if it exists
     if (typeof structuredClone !== 'undefined' && !dom.window.structuredClone)

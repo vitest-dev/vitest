@@ -3,7 +3,7 @@ import type { File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFac
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
-import { getHooks, setFn, setHooks } from './map'
+import { getHooks, setFixture, setFn, setHooks } from './map'
 import type { FixtureItem } from './fixture'
 import { mergeContextFixtures, withFixtures } from './fixture'
 
@@ -96,10 +96,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       enumerable: false,
     })
 
+    setFixture(context, this.fixtures)
     setFn(test, withTimeout(
-      this.fixtures
-        ? withFixtures(fn, this.fixtures, context)
-        : () => fn(context),
+      withFixtures(fn, context),
       options?.timeout ?? runner.config.testTimeout,
     ))
 

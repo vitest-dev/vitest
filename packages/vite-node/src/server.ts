@@ -3,10 +3,9 @@ import { existsSync } from 'node:fs'
 import { join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
-import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { DebuggerOptions, EncodedSourceMap, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { normalizeModuleId, toArray, toFilePath } from './utils'
+import { normalizeModuleId, toArray, toFilePath, withTrailingSlash } from './utils'
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
@@ -106,7 +105,7 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string, transformMode?: 'web' | 'ssr'): Promise<ViteNodeResolveId | null> {
-    if (importer && !importer.startsWith(this.server.config.root))
+    if (importer && !importer.startsWith(withTrailingSlash(this.server.config.root)))
       importer = resolve(this.server.config.root, importer)
     const mode = transformMode ?? ((importer && this.getTransformMode(importer)) || 'ssr')
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
@@ -182,7 +181,7 @@ export class ViteNodeServer {
     const cacheDir = this.options.deps?.cacheDir
 
     if (cacheDir && id.includes(cacheDir)) {
-      if (!id.startsWith(this.server.config.root))
+      if (!id.startsWith(withTrailingSlash(this.server.config.root)))
         id = join(this.server.config.root, id)
       const timeout = setTimeout(() => {
         throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
