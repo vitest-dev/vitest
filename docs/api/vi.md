@@ -783,4 +783,4 @@ If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimer
 - **Type:** `function waitUntil(callback: WaitUntilCallback, options?: number | WaitUntilOptions): Promise`
 - **Version**: Since Vitest 0.34.5
 
-This is similar to `vi.waitFor`, but only allows `boolean` values to be returned. If the callback returns `false`, the next check will continue until `true` is returned. This is useful when you need to wait for something to exist before taking the next step.
+This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.

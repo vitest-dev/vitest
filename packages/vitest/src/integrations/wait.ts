@@ -96,16 +96,16 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
   })
 }
 
-export type WaitUntilCallback = () => boolean | Promise<boolean>
+export type WaitUntilCallback<T> = () => T | Promise<T>
 
 export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
 
-export function waitUntil(callback: WaitUntilCallback, options: number | WaitUntilOptions = {}) {
+export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | WaitUntilOptions = {}) {
   const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
   const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
-  return new Promise<boolean>((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
     let timeoutId: ReturnType<typeof setTimeout>
     let intervalId: ReturnType<typeof setInterval>
@@ -116,12 +116,9 @@ export function waitUntil(callback: WaitUntilCallback, options: number | WaitUnt
       reject(error)
     }
 
-    const onResolve = (result: boolean) => {
-      if (result === false)
+    const onResolve = (result: T) => {
+      if (!result)
         return
-
-      if (typeof result !== 'boolean')
-        return onReject(new Error(`waitUntil callback must return a boolean, or a promise that resolves to a boolean, but got ${typeof result}`))
 
       if (timeoutId)
         clearTimeout(timeoutId)
@@ -145,7 +142,7 @@ export function waitUntil(callback: WaitUntilCallback, options: number | WaitUnt
           && typeof result === 'object'
           && typeof (result as any).then === 'function'
         ) {
-          const thenable = result as PromiseLike<boolean>
+          const thenable = result as PromiseLike<T>
           promiseStatus = 'pending'
           thenable.then(
             (resolvedValue) => {
@@ -159,7 +156,7 @@ export function waitUntil(callback: WaitUntilCallback, options: number | WaitUnt
           )
         }
         else {
-          return onResolve(result as boolean)
+          return onResolve(result as T)
         }
       }
       catch (error) {

@@ -152,16 +152,6 @@ describe('waitUntil', () => {
     })
   })
 
-  test('return non-boolean', async () => {
-    const fn = vi.fn(() => {
-      return 'string'
-    })
-    await expect(vi.waitUntil(fn as unknown as () => boolean, {
-      timeout: 100,
-      interval: 10,
-    })).rejects.toThrowErrorMatchingInlineSnapshot('"waitUntil callback must return a boolean, or a promise that resolves to a boolean, but got string"')
-  })
-
   test('stacktrace correctly when callback throw error', async () => {
     const check = () => {
       const _a = 1
