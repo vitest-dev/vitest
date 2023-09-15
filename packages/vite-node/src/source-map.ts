@@ -1,8 +1,8 @@
 import type { TransformResult } from 'vite'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
-import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import { withTrailingSlash } from './utils'
 import { install } from './source-map-handler'
+import type { EncodedSourceMap } from './types'
 
 interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => EncodedSourceMap | null | undefined
