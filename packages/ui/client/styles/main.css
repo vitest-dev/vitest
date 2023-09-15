@@ -2,6 +2,7 @@ html,
 body {
   height: 100%;
   font-family: 'Readex Pro', sans-serif;
+  scroll-behavior: smooth;
 }
 
 :root {
