@@ -152,8 +152,7 @@ test('editing source file generates new test report to file system', async () =>
   expect(existsSync(report)).toBe(true)
 })
 
-// TODO: don't skip
-describe.skip('browser', () => {
+describe('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', async () => {
     const vitest = await runVitestCli(...cliArgs, '--browser.enabled', '--browser.headless', '--browser.name=chrome')
 
