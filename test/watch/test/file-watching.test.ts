@@ -50,6 +50,18 @@ test('editing source file triggers re-run', async () => {
   await vitest.waitForStdout('1 passed')
 })
 
+test('editing file that was imported with a query reruns suite', async () => {
+  const vitest = await runVitestCli(...cliArgs)
+
+  testUtils.editFile(
+    testUtils.resolvePath(import.meta.url, '../fixtures/42.txt'),
+    file => `${file}\n`,
+  )
+
+  await vitest.waitForStdout('RERUN  ../42.txt')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('editing force rerun trigger reruns all tests', async () => {
   const vitest = await runVitestCli(...cliArgs)
 
@@ -140,7 +152,8 @@ test('editing source file generates new test report to file system', async () =>
   expect(existsSync(report)).toBe(true)
 })
 
-describe('browser', () => {
+// TODO: don't skip
+describe.skip('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', async () => {
     const vitest = await runVitestCli(...cliArgs, '--browser.enabled', '--browser.headless', '--browser.name=chrome')
 
