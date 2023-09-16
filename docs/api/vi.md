@@ -730,49 +730,49 @@ This is very useful when you need to wait for some asynchronous action to comple
 
 ```ts
 import { expect, test, vi } from 'vitest'
+import { createServer } from './server.js'
 
 test('Server started successfully', async () => {
-  let server = false
+  const server = createServer()
 
-  setTimeout(() => {
-    server = true
-  }, 100)
+  await vi.waitFor(
+    () => {
+      if (!server.isReady)
+        throw new Error('Server not started')
 
-  function checkServerStart() {
-    if (!server)
-      throw new Error('Server not started')
-
-    console.log('Server started')
-  }
-
-  const res = await vi.waitFor(checkServerStart, {
-    timeout: 500, // default is 1000
-    interval: 20, // default is 50
-  })
-  expect(server).toBe(true)
+      console.log('Server started')
+    }, {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+  expect(server.isReady).toBe(true)
 })
 ```
 
 It also works for asynchronous callbacks
 
 ```ts
+// @vitest-environment jsdom
+
 import { expect, test, vi } from 'vitest'
+import { getDOMElementAsync, populateDOMAsync } from './dom.js'
 
-test('Server started successfully', async () => {
-  async function startServer() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        server = true
-        resolve('Server started')
-      }, 100)
-    })
-  }
+test('Element exists in a DOM', async () => {
+  // start populating DOM
+  populateDOMAsync()
 
-  const server = await vi.waitFor(startServer, {
+  const element = await vi.waitFor(async () => {
+    // try to get the element until it exists
+    const element = await getDOMElementAsync() as HTMLElement | null
+    expect(element).toBeTruthy()
+    expect(element.dataset.initialized).toBeTruthy()
+    return element
+  }, {
     timeout: 500, // default is 1000
     interval: 20, // default is 50
   })
-  expect(server).toBe('Server started')
+  expect(element).toBeInstanceOf(HTMLElement)
 })
 ```
 
