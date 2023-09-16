@@ -95,3 +95,79 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
     intervalId = setInterval(checkCallback, interval)
   })
 }
+
+export type WaitUntilCallback<T> = () => T | Promise<T>
+
+export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
+
+export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | WaitUntilOptions = {}) {
+  const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
+  const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
+  const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
+
+  return new Promise<T>((resolve, reject) => {
+    let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
+    let timeoutId: ReturnType<typeof setTimeout>
+    let intervalId: ReturnType<typeof setInterval>
+
+    const onReject = (error?: Error) => {
+      if (!error)
+        error = copyStackTrace(new Error('Timed out in waitUntil!'), STACK_TRACE_ERROR)
+      reject(error)
+    }
+
+    const onResolve = (result: T) => {
+      if (!result)
+        return
+
+      if (timeoutId)
+        clearTimeout(timeoutId)
+      if (intervalId)
+        clearInterval(intervalId)
+
+      resolve(result)
+      return true
+    }
+
+    const checkCallback = () => {
+      if (vi.isFakeTimers())
+        vi.advanceTimersByTime(interval)
+
+      if (promiseStatus === 'pending')
+        return
+      try {
+        const result = callback()
+        if (
+          result !== null
+          && typeof result === 'object'
+          && typeof (result as any).then === 'function'
+        ) {
+          const thenable = result as PromiseLike<T>
+          promiseStatus = 'pending'
+          thenable.then(
+            (resolvedValue) => {
+              promiseStatus = 'resolved'
+              onResolve(resolvedValue)
+            },
+            (rejectedValue) => {
+              promiseStatus = 'rejected'
+              onReject(rejectedValue)
+            },
+          )
+        }
+        else {
+          return onResolve(result as T)
+        }
+      }
+      catch (error) {
+        onReject(error as Error)
+      }
+    }
+
+    if (checkCallback() === true)
+      return
+
+    timeoutId = setTimeout(onReject, timeout)
+    intervalId = setInterval(checkCallback, interval)
+  })
+}
