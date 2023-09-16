@@ -729,7 +729,7 @@ Wait for the callback to execute successfully. If the callback throws an error o
 This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 
 ```ts
-import { test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('Server started successfully', async () => {
   let server = false
@@ -756,7 +756,7 @@ test('Server started successfully', async () => {
 It also works for asynchronous callbacks
 
 ```ts
-import { test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('Server started successfully', async () => {
   async function startServer() {
@@ -788,10 +788,9 @@ This is similar to `vi.waitFor`, but if the callback throws any errors, executio
 Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
 
 ```ts
-import { test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('Element render correctly', async () => {
-
   const element = await vi.waitUntil(
     () => document.querySelector('.element'),
     {
