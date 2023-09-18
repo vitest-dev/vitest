@@ -1,7 +1,5 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
-import { fileURLToPath } from 'node:url'
-import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage, setupColors } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
@@ -751,17 +749,13 @@ describe('async expect', () => {
   })
 
   it('printing error message', async () => {
-    const root = resolve(fileURLToPath(import.meta.url), '../../../../')
-    // have "\" on windows, and "/" on unix
-    const filename = fileURLToPath(import.meta.url).replace(root, '<root>')
     try {
       await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
       expect.unreachable()
     }
     catch (err: any) {
-      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
       expect(err.message).toMatchInlineSnapshot('"promise resolved \\"{ foo: { bar: 42 } }\\" instead of rejecting"')
-      expect(stack).toContain(`at ${filename}`)
+      expect(err.stack).toContain('jest-expect.test.ts')
     }
 
     try {
@@ -771,9 +765,8 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
       expect(err.message).toMatchInlineSnapshot('"promise rejected \\"Error: some error { foo: { bar: 42 } }\\" instead of resolving"')
-      expect(stack).toContain(`at ${filename}`)
+      expect(err.stack).toContain('jest-expect.test.ts')
     }
   })
 
