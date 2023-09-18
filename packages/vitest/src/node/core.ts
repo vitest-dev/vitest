@@ -596,11 +596,13 @@ export class Vitest {
     const updateLastChanged = (id: string) => {
       const projects = this.getModuleProjects(id)
       projects.forEach(({ server, browser }) => {
-        const mods = server.moduleGraph.getModulesByFile(id)
-        mods?.forEach((mod) => {
-          server.moduleGraph.invalidateModule(mod)
-          browser?.moduleGraph.invalidateModule(mod)
-        })
+        const serverMods = server.moduleGraph.getModulesByFile(id)
+        serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+
+        if (browser) {
+          const browserMods = browser.moduleGraph.getModulesByFile(id)
+          browserMods?.forEach(mod => browser.moduleGraph.invalidateModule(mod))
+        }
       })
     }
 
