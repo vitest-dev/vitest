@@ -12,9 +12,9 @@ export interface HappyDOMOptions {
     disableIframePageLoading?: boolean
     disableComputedStyleRendering?: boolean
     enableFileSystemHttpRequests?: boolean
-		navigator?: {
-			userAgent?: string
-		}
+    navigator?: {
+      userAgent?: string
+    }
     device?: {
       prefersColorScheme?: string
       mediaType?: string
