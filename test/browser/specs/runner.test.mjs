@@ -5,7 +5,12 @@ import { execa } from 'execa'
 
 const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
 
-const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.name=${browser}`, '--browser.headless'], {
+const testArgs = ['vitest', '--run', `--browser.name=${browser}`]
+// Safari doesn't support headless mode
+if (browser !== 'safari')
+  testArgs.push('--browser.headless')
+
+const { stderr, stdout } = await execa('npx', testArgs, {
   env: {
     ...process.env,
     CI: 'true',
