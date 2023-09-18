@@ -21,7 +21,7 @@ const external = [
 export default () => [
   'index',
   'reporter',
-].map(entry => [
+].flatMap(entry => [
   {
     input: `./node/${entry}.ts`,
     output: {
@@ -57,7 +57,7 @@ export default () => [
       dts(),
     ],
   },
-]).flat()
+])
 
 function onwarn(message) {
   if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
