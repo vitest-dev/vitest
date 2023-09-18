@@ -1,9 +1,11 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage, setupColors } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { getDefaultColors } from '@vitest/utils'
+import { resolve } from 'pathe'
 
 class TestError extends Error {}
 
@@ -742,6 +744,29 @@ describe('async expect', () => {
     })
   })
 
+  it('printing error message', async () => {
+    const root = resolve(fileURLToPath(import.meta.url), '../../../../')
+    try {
+      await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
+    }
+    catch (err: any) {
+      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
+      expect(err.message).toMatchInlineSnapshot('"promise resolved \\"{ foo: { bar: 42 } }\\" instead of rejecting"')
+      expect(stack).toContain('at <root>/test/core/test/jest-expect.test.ts')
+    }
+
+    try {
+      const error = new Error('some error')
+      Object.assign(error, { foo: { bar: 42 } })
+      await expect(Promise.reject(error)).resolves.toBe(1)
+    }
+    catch (err: any) {
+      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
+      expect(err.message).toMatchInlineSnapshot('"promise rejected \\"Error: some error { foo: { bar: 42 } }\\" instead of resolving"')
+      expect(stack).toContain('at <root>/test/core/test/jest-expect.test.ts')
+    }
+  })
+
   it('handle thenable objects', async () => {
     await expect({ then: (resolve: any) => resolve(0) }).resolves.toBe(0)
     await expect({ then: (_: any, reject: any) => reject(0) }).rejects.toBe(0)
@@ -750,14 +775,14 @@ describe('async expect', () => {
       await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise resolved "0" instead of rejecting'))
+      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
     }
 
     try {
       await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise rejected "0" instead of resolving'))
+      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
     }
   })
 })
