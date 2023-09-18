@@ -368,6 +368,22 @@ describe('jest-expect', () => {
       },
     ])
   })
+
+  describe('toThrow', () => {
+    it('error wasn\'t thrown', () => {
+      expect(() => {
+        expect(() => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
+
+    it('async wasn\'t awaited', () => {
+      expect(() => {
+        expect(async () => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
+  })
 })
 
 describe('.toStrictEqual()', () => {
