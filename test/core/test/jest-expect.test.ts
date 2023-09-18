@@ -606,6 +606,7 @@ describe('async expect', () => {
 
     try {
       expect(1).resolves.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -660,6 +661,7 @@ describe('async expect', () => {
 
     try {
       expect(1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -667,6 +669,7 @@ describe('async expect', () => {
 
     try {
       expect(() => 1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -688,6 +691,7 @@ describe('async expect', () => {
     const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
     try {
       expect(actual).toBe({ ...actual })
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toStrictEqualError1.message)
@@ -696,6 +700,7 @@ describe('async expect', () => {
     const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
     try {
       expect(new FakeClass()).toBe(new FakeClass())
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toStrictEqualError2.message)
@@ -704,15 +709,16 @@ describe('async expect', () => {
     const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
     try {
       expect({}).toBe(new FakeClass())
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toEqualError1.message)
-      // expect(error).toEqual('1234')
     }
 
     const toEqualError2 = generatedToBeMessage('toEqual', 'FakeClass{}', '{}')
     try {
       expect(new FakeClass()).toBe({})
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toEqualError2.message)
@@ -748,6 +754,7 @@ describe('async expect', () => {
     const root = resolve(fileURLToPath(import.meta.url), '../../../../')
     try {
       await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
+      expect.unreachable()
     }
     catch (err: any) {
       const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
@@ -759,6 +766,7 @@ describe('async expect', () => {
       const error = new Error('some error')
       Object.assign(error, { foo: { bar: 42 } })
       await expect(Promise.reject(error)).resolves.toBe(1)
+      expect.unreachable()
     }
     catch (err: any) {
       const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
@@ -773,6 +781,7 @@ describe('async expect', () => {
 
     try {
       await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
@@ -780,6 +789,7 @@ describe('async expect', () => {
 
     try {
       await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
