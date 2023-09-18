@@ -1,5 +1,7 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage, setupColors } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
@@ -604,6 +606,7 @@ describe('async expect', () => {
 
     try {
       expect(1).resolves.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -658,6 +661,7 @@ describe('async expect', () => {
 
     try {
       expect(1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -665,6 +669,7 @@ describe('async expect', () => {
 
     try {
       expect(() => 1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -686,6 +691,7 @@ describe('async expect', () => {
     const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
     try {
       expect(actual).toBe({ ...actual })
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toStrictEqualError1.message)
@@ -694,6 +700,7 @@ describe('async expect', () => {
     const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
     try {
       expect(new FakeClass()).toBe(new FakeClass())
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toStrictEqualError2.message)
@@ -702,15 +709,16 @@ describe('async expect', () => {
     const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
     try {
       expect({}).toBe(new FakeClass())
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toEqualError1.message)
-      // expect(error).toEqual('1234')
     }
 
     const toEqualError2 = generatedToBeMessage('toEqual', 'FakeClass{}', '{}')
     try {
       expect(new FakeClass()).toBe({})
+      expect.unreachable()
     }
     catch (error: any) {
       expect(error.message).toBe(toEqualError2.message)
@@ -742,22 +750,51 @@ describe('async expect', () => {
     })
   })
 
+  it('printing error message', async () => {
+    const root = resolve(fileURLToPath(import.meta.url), '../../../../')
+    // have "\" on windows, and "/" on unix
+    const filename = fileURLToPath(import.meta.url).replace(root, '<root>')
+    try {
+      await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
+      expect.unreachable()
+    }
+    catch (err: any) {
+      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
+      expect(err.message).toMatchInlineSnapshot('"promise resolved \\"{ foo: { bar: 42 } }\\" instead of rejecting"')
+      expect(stack).toContain(`at ${filename}`)
+    }
+
+    try {
+      const error = new Error('some error')
+      Object.assign(error, { foo: { bar: 42 } })
+      await expect(Promise.reject(error)).resolves.toBe(1)
+      expect.unreachable()
+    }
+    catch (err: any) {
+      const stack = err.stack.replace(new RegExp(root, 'g'), '<root>')
+      expect(err.message).toMatchInlineSnapshot('"promise rejected \\"Error: some error { foo: { bar: 42 } }\\" instead of resolving"')
+      expect(stack).toContain(`at ${filename}`)
+    }
+  })
+
   it('handle thenable objects', async () => {
     await expect({ then: (resolve: any) => resolve(0) }).resolves.toBe(0)
     await expect({ then: (_: any, reject: any) => reject(0) }).rejects.toBe(0)
 
     try {
       await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
+      expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise resolved "0" instead of rejecting'))
+      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
     }
 
     try {
       await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
+      expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise rejected "0" instead of resolving'))
+      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
     }
   })
 })
