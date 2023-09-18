@@ -729,51 +729,77 @@ Wait for the callback to execute successfully. If the callback throws an error o
 This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 
 ```ts
-import { test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
+import { createServer } from './server.js'
 
 test('Server started successfully', async () => {
-  let server = false
+  const server = createServer()
 
-  setTimeout(() => {
-    server = true
-  }, 100)
+  await vi.waitFor(
+    () => {
+      if (!server.isReady)
+        throw new Error('Server not started')
 
-  function checkServerStart() {
-    if (!server)
-      throw new Error('Server not started')
-
-    console.log('Server started')
-  }
-
-  const res = await vi.waitFor(checkServerStart, {
-    timeout: 500, // default is 1000
-    interval: 20, // default is 50
-  })
-  expect(server).toBe(true)
+      console.log('Server started')
+    }, {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+  expect(server.isReady).toBe(true)
 })
 ```
 
 It also works for asynchronous callbacks
 
 ```ts
-import { test, vi } from 'vitest'
+// @vitest-environment jsdom
 
-test('Server started successfully', async () => {
-  async function startServer() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        server = true
-        resolve('Server started')
-      }, 100)
-    })
-  }
+import { expect, test, vi } from 'vitest'
+import { getDOMElementAsync, populateDOMAsync } from './dom.js'
 
-  const server = await vi.waitFor(startServer, {
+test('Element exists in a DOM', async () => {
+  // start populating DOM
+  populateDOMAsync()
+
+  const element = await vi.waitFor(async () => {
+    // try to get the element until it exists
+    const element = await getDOMElementAsync() as HTMLElement | null
+    expect(element).toBeTruthy()
+    expect(element.dataset.initialized).toBeTruthy()
+    return element
+  }, {
     timeout: 500, // default is 1000
     interval: 20, // default is 50
   })
-  expect(server).toBe('Server started')
+  expect(element).toBeInstanceOf(HTMLElement)
 })
 ```
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
+
+### vi.waitUntil
+
+- **Type:** `function waitUntil(callback: WaitUntilCallback, options?: number | WaitUntilOptions): Promise`
+- **Version**: Since Vitest 0.34.5
+
+This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
+
+Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('Element render correctly', async () => {
+  const element = await vi.waitUntil(
+    () => document.querySelector('.element'),
+    {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+
+  // do something with the element
+  expect(element.querySelector('.element-child')).toBeTruthy()
+})
+```

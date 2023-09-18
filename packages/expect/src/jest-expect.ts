@@ -1,4 +1,3 @@
-import { AssertionError } from 'chai'
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
@@ -13,6 +12,7 @@ import { recordAsyncExpect, wrapSoft } from './utils'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
+  const { AssertionError } = chai
   const c = () => getColors()
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
@@ -436,11 +436,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (called && isNot)
       msg = formatCalls(spy, msg)
 
-    if ((called && isNot) || (!called && !isNot)) {
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((called && isNot) || (!called && !isNot))
+      throw new AssertionError(msg)
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
@@ -448,7 +445,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
     const isNot = utils.flag(this, 'negate') as boolean
 
-    let msg = utils.getMessage(
+    const msg = utils.getMessage(
       this,
       [
         pass,
@@ -458,12 +455,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
 
-    if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatCalls(spy, msg, args)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((pass && isNot) || (!pass && !isNot))
+      throw new AssertionError(formatCalls(spy, msg, args))
   })
   def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function (times: number, ...args: any[]) {
     const spy = getSpy(this)
@@ -595,7 +588,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
     const isNot = utils.flag(this, 'negate') as boolean
 
-    let msg = utils.getMessage(
+    const msg = utils.getMessage(
       this,
       [
         pass,
@@ -605,12 +598,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
 
-    if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatReturns(spy, msg, value)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((pass && isNot) || (!pass && !isNot))
+      throw new AssertionError(formatReturns(spy, msg, value))
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
     const spy = getSpy(this)
@@ -650,8 +639,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
+    const error = new Error('resolves')
     utils.flag(this, 'promise', 'resolves')
-    utils.flag(this, 'error', new Error('resolves'))
+    utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
@@ -672,7 +662,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected "${String(err)}" instead of resolving`)
+              const _error = new AssertionError(
+                `promise rejected "${utils.inspect(err)}" instead of resolving`,
+                { showDiff: false },
+              )
+              _error.stack = (error.stack as string).replace(error.message, _error.message)
+              throw _error
             },
           )
 
@@ -685,8 +680,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
+    const error = new Error('rejects')
     utils.flag(this, 'promise', 'rejects')
-    utils.flag(this, 'error', new Error('rejects'))
+    utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
@@ -704,7 +700,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async (...args: any[]) => {
           const promise = wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
+              const _error = new AssertionError(
+                `promise resolved "${utils.inspect(value)}" instead of rejecting`,
+                { showDiff: false },
+              )
+              _error.stack = (error.stack as string).replace(error.message, _error.message)
+              throw _error
             },
             (err: any) => {
               utils.flag(this, 'object', err)
