@@ -289,6 +289,13 @@ export function resolveConfig(
     ...resolved.setupFiles,
   ]
 
+  if (resolved.diff) {
+    resolved.diff = normalize(
+      resolveModule(resolved.diff, { paths: [resolved.root] })
+        ?? resolve(resolved.root, resolved.diff))
+    resolved.forceRerunTriggers.push(resolved.diff)
+  }
+
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiServerConfig(options)
 
