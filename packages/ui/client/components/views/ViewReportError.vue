@@ -17,7 +17,7 @@ function relative(p: string) {
 const filter = computed(() => createAnsiToHtmlFilter(isDark.value))
 
 const isDiffShowable = computed(() => {
-  return props.error?.expected && props.error?.actual
+  return !!props.error?.diff
 })
 
 const diff = computed(() => props.error.diff ? filter.value.toHtml(props.error.diff) : undefined)
@@ -38,8 +38,7 @@ const diff = computed(() => props.error.diff ? filter.value.toHtml(props.error.d
       />
     </div>
     <template v-if="isDiffShowable">
-      <br>
-      <pre v-html="diff" />
+      <pre data-testid="diff" v-html="diff" />
     </template>
   </div>
 </template>
