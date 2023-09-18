@@ -1,3 +1,4 @@
+import type { DiffOptions } from '@vitest/utils/diff'
 import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResultPack, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
@@ -21,6 +22,7 @@ export interface VitestRunnerConfig {
   testTimeout: number
   hookTimeout: number
   retry: number
+  diffOptions?: DiffOptions
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
