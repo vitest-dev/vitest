@@ -4,11 +4,27 @@ import { getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
 import type { WorkerGlobalState } from '../types'
 
+export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
+
+function getTaskIdByStack() {
+  const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')
+
+  if (!stack)
+    return UNKNOWN_TEST_ID
+
+  const index = stack.findIndex(line => line.includes('at Console.value (node:internal/console/'))
+  const line = index === -1 ? null : stack[index + 2]
+
+  if (!line)
+    return UNKNOWN_TEST_ID
+
+  return line.match(/at\s(.*)\s?/)?.[1] ?? UNKNOWN_TEST_ID
+}
+
 export function createCustomConsole(state: WorkerGlobalState) {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
-  const unknownTestId = '__vitest__unknown_test__'
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
@@ -63,7 +79,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? unknownTestId
+      const id = state?.current?.id ?? getTaskIdByStack()
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -84,7 +100,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? unknownTestId
+      const id = state?.current?.id ?? getTaskIdByStack()
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
