@@ -9,7 +9,12 @@ export default <Environment>({
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new Window({
       ...happyDOM,
+      console: (console && globalThis.console) ? globalThis.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
+      settings: {
+        ...happyDOM.settings,
+        disableErrorCapturing: true,
+      },
     }) as any
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
@@ -36,6 +41,10 @@ export default <Environment>({
       ...happyDOM,
       console: (console && global.console) ? global.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
+      settings: {
+        ...happyDOM.settings,
+        disableErrorCapturing: true,
+      },
     })
 
     const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })
