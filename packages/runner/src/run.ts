@@ -1,6 +1,7 @@
 import limit from 'p-limit'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
+import type { DiffOptions } from '@vitest/utils/diff'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
@@ -173,7 +174,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         }
       }
       catch (e) {
-        failTask(test.result, e)
+        failTask(test.result, e, runner.config.diffOptions)
       }
 
       // skipped with new PendingError
@@ -189,7 +190,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         await callCleanupHooks(beforeEachCleanups)
       }
       catch (e) {
-        failTask(test.result, e)
+        failTask(test.result, e, runner.config.diffOptions)
       }
 
       if (test.result.state === 'pass')
@@ -233,7 +234,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown) {
+function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
   if (err instanceof PendingError) {
     result.state = 'skip'
     return
@@ -244,7 +245,7 @@ function failTask(result: TaskResult, err: unknown) {
     ? err
     : [err]
   for (const e of errors) {
-    const error = processError(e)
+    const error = processError(e, diffOptions)
     result.error ??= error
     result.errors ??= []
     result.errors.push(error)
@@ -316,7 +317,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       }
     }
     catch (e) {
-      failTask(suite.result, e)
+      failTask(suite.result, e, runner.config.diffOptions)
     }
 
     try {
@@ -324,7 +325,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      failTask(suite.result, e)
+      failTask(suite.result, e, runner.config.diffOptions)
     }
 
     if (suite.mode === 'run') {

@@ -50,6 +50,18 @@ test('editing source file triggers re-run', async () => {
   await vitest.waitForStdout('1 passed')
 })
 
+test('editing file that was imported with a query reruns suite', async () => {
+  const vitest = await runVitestCli(...cliArgs)
+
+  testUtils.editFile(
+    testUtils.resolvePath(import.meta.url, '../fixtures/42.txt'),
+    file => `${file}\n`,
+  )
+
+  await vitest.waitForStdout('RERUN  ../42.txt')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('editing force rerun trigger reruns all tests', async () => {
   const vitest = await runVitestCli(...cliArgs)
 

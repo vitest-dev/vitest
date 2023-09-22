@@ -34,9 +34,35 @@ describe('snapshots with properties', () => {
   })
 
   test('with snapshot', () => {
-    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `
+    expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, `
       Object {
-        "foo": Any<String>,
+        "first": Object {
+          "second": Object {
+            "foo": Any<String>,
+          },
+        },
+      }
+    `)
+  })
+
+  test('mixed with and without snapshot', () => {
+    expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, `
+      Object {
+        "first": Object {
+          "second": Object {
+            "foo": Any<String>,
+          },
+        },
+      }
+    `)
+
+    expect({ first: { second: { foo: 'zed' } } }).toMatchInlineSnapshot(`
+      Object {
+        "first": Object {
+          "second": Object {
+            "foo": "zed",
+          },
+        },
       }
     `)
   })

@@ -2,7 +2,6 @@ import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
-import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -14,11 +13,7 @@ import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-
-interface InitializeServerOptions {
-  server?: ViteNodeServer
-  runner?: ViteNodeRunner
-}
+import { createViteServer } from './vite'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -49,13 +44,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     ],
   }
 
-  const server = await createServer(config)
-
-  // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
-    await server.listen()
-  else
-    await server.pluginContainer.buildStart({})
+  await createViteServer(config)
 
   return project
 }
@@ -86,6 +75,13 @@ export class WorkspaceProject {
 
   isCore() {
     return this.ctx.getCoreWorkspaceProject() === this
+  }
+
+  // it's possible that file path was imported with different queries (?raw, ?url, etc)
+  getModulesByFilepath(file: string) {
+    const set = this.server.moduleGraph.getModulesByFile(file)
+      || this.browser?.moduleGraph.getModulesByFile(file)
+    return set || new Set()
   }
 
   getModuleById(id: string) {
@@ -187,20 +183,30 @@ export class WorkspaceProject {
     return testFiles
   }
 
-  async initBrowserServer(options: UserConfig) {
+  async initBrowserServer(configFile: string | undefined) {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, options)
+    this.browser = await createBrowserServer(this, configFile)
   }
 
-  async setServer(options: UserConfig, server: ViteDevServer, params: InitializeServerOptions = {}) {
+  static async createCoreProject(ctx: Vitest) {
+    const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
+    project.vitenode = ctx.vitenode
+    project.server = ctx.server
+    project.runner = ctx.runner
+    project.config = ctx.config
+    await project.initBrowserServer(ctx.server.config.configFile)
+    return project
+  }
+
+  async setServer(options: UserConfig, server: ViteDevServer) {
     this.config = resolveConfig(this.ctx.mode, options, server.config)
     this.server = server
 
-    this.vitenode = params.server ?? new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config)
     const node = this.vitenode
-    this.runner = params.runner ?? new ViteNodeRunner({
+    this.runner = new ViteNodeRunner({
       root: server.config.root,
       base: server.config.base,
       fetchModule(id: string) {
@@ -211,7 +217,7 @@ export class WorkspaceProject {
       },
     })
 
-    await this.initBrowserServer(options)
+    await this.initBrowserServer(this.server.config.configFile)
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {

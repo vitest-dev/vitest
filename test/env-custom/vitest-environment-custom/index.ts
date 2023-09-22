@@ -1,6 +1,7 @@
 import vm from 'node:vm'
+import type { Environment } from 'vitest'
 
-export default {
+export default <Environment>{
   name: 'custom',
   transformMode: 'ssr',
   setupVM({ custom }) {

@@ -254,10 +254,10 @@ import { vi } from 'vitest'
   ```ts
   // increment.test.js
   import { vi } from 'vitest'
-  
+
   // axios is a default export from `__mocks__/axios.js`
   import axios from 'axios'
-  
+
   // increment is a named export from `src/__mocks__/increment.js`
   import { increment } from '../increment.js'
 
@@ -371,7 +371,7 @@ test('importing the next module imports mocked one', async () => {
 
   ```ts
   import { vi } from 'vitest'
-  
+
   import { data } from './data.js' // Will not get reevaluated beforeEach test
 
   beforeEach(() => {
@@ -397,12 +397,6 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 ## vi.restoreAllMocks
 
   Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
-
-## vi.restoreCurrentDate
-
-- **Type:** `() => void`
-
-  Restores `Date` back to its native implementation.
 
 ## vi.stubEnv
 
@@ -431,12 +425,6 @@ You can also change the value by simply assigning it, but you won't be able to u
 ```ts
 import.meta.env.MODE = 'test'
 ```
-:::
-
-:::warning
-Vitest transforms all `import.meta.env` calls into `process.env`, so they can be easily changed at runtime. Node.js only supports string values as env parameters, while Vite supports several built-in envs as boolean (namely, `SSR`, `DEV`, `PROD`). To mimic Vite, set "truthy" values as env: `''` instead of `false`, and `'1'` instead of `true`.
-
-But beware that you cannot rely on `import.meta.env.DEV === false` in this case. Use `!import.meta.env.DEV`. This also affects simple assigning, not just `vi.stubEnv` method.
 :::
 
 ## vi.unstubAllEnvs
@@ -712,8 +700,100 @@ unmockedIncrement(30) === 31
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
+## vi.isFakeTimers
+
+- **Type:** `() => boolean`
+- **Version:** Since Vitest 0.34.5
+
+  Returns `true` if fake timers are enabled.
+
 ## vi.useRealTimers
 
 - **Type:** `() => Vitest`
 
   When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
+
+### vi.waitFor
+
+- **Type:** `function waitFor<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions): Promise<T>`
+- **Version**: Since Vitest 0.34.5
+
+Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
+
+This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
+
+```ts
+import { expect, test, vi } from 'vitest'
+import { createServer } from './server.js'
+
+test('Server started successfully', async () => {
+  const server = createServer()
+
+  await vi.waitFor(
+    () => {
+      if (!server.isReady)
+        throw new Error('Server not started')
+
+      console.log('Server started')
+    }, {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+  expect(server.isReady).toBe(true)
+})
+```
+
+It also works for asynchronous callbacks
+
+```ts
+// @vitest-environment jsdom
+
+import { expect, test, vi } from 'vitest'
+import { getDOMElementAsync, populateDOMAsync } from './dom.js'
+
+test('Element exists in a DOM', async () => {
+  // start populating DOM
+  populateDOMAsync()
+
+  const element = await vi.waitFor(async () => {
+    // try to get the element until it exists
+    const element = await getDOMElementAsync() as HTMLElement | null
+    expect(element).toBeTruthy()
+    expect(element.dataset.initialized).toBeTruthy()
+    return element
+  }, {
+    timeout: 500, // default is 1000
+    interval: 20, // default is 50
+  })
+  expect(element).toBeInstanceOf(HTMLElement)
+})
+```
+
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
+
+### vi.waitUntil
+
+- **Type:** `function waitUntil(callback: WaitUntilCallback, options?: number | WaitUntilOptions): Promise`
+- **Version**: Since Vitest 0.34.5
+
+This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
+
+Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('Element render correctly', async () => {
+  const element = await vi.waitUntil(
+    () => document.querySelector('.element'),
+    {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+
+  // do something with the element
+  expect(element.querySelector('.element-child')).toBeTruthy()
+})
+```

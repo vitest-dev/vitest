@@ -1,7 +1,8 @@
 import type { TransformResult } from 'vite'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
-import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import { withTrailingSlash } from './utils'
 import { install } from './source-map-handler'
+import type { EncodedSourceMap } from './types'
 
 interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => EncodedSourceMap | null | undefined
@@ -24,21 +25,23 @@ export function withInlineSourcemap(result: TransformResult, options: {
   if (!map || code.includes(VITE_NODE_SOURCEMAPPING_SOURCE))
     return result
 
-  map.sources = map.sources?.map((source) => {
-    if (!source)
+  if ('sources' in map) {
+    map.sources = map.sources?.map((source) => {
+      if (!source)
+        return source
+      // sometimes files here are absolute,
+      // but they are considered absolute to the server url, not the file system
+      // this is a bug in Vite
+      // all files should be either absolute to the file system or relative to the source map file
+      if (isAbsolute(source)) {
+        const actualPath = (!source.startsWith(withTrailingSlash(options.root)) && source.startsWith('/'))
+          ? resolve(options.root, source.slice(1))
+          : source
+        return relative(dirname(options.filepath), actualPath)
+      }
       return source
-    // sometimes files here are absolute,
-    // but they are considered absolute to the server url, not the file system
-    // this is a bug in Vite
-    // all files should be either absolute to the file system or relative to the source map file
-    if (isAbsolute(source)) {
-      const actualPath = (!source.startsWith(options.root) && source.startsWith('/'))
-        ? resolve(options.root, source.slice(1))
-        : source
-      return relative(dirname(options.filepath), actualPath)
-    }
-    return source
-  })
+    })
+  }
 
   // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
   const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,([A-Za-z0-9+/=]+)$`, 'gm')

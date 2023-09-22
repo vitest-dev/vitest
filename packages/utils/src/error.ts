@@ -1,4 +1,4 @@
-import { diff } from './diff'
+import { type DiffOptions, diff } from './diff'
 import { format } from './display'
 import { deepClone, getOwnProperties, getType } from './helpers'
 import { stringify } from './stringify'
@@ -86,7 +86,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__vite_ssr_import_\d+__\./g, '')
 }
 
-export function processError(err: any) {
+export function processError(err: any, diffOptions?: DiffOptions) {
   if (!err || typeof err !== 'object')
     return { message: err }
   // stack is not serialized in worker communication
@@ -101,7 +101,7 @@ export function processError(err: any) {
     const clonedExpected = deepClone(err.expected, { forceWritable: true })
 
     const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
-    err.diff = diff(replacedExpected, replacedActual)
+    err.diff = diff(replacedExpected, replacedActual, diffOptions)
   }
 
   if (typeof err.expected !== 'string')

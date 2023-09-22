@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-istanbul",
   "type": "module",
-  "version": "0.34.3",
+  "version": "0.34.5",
   "description": "Istanbul coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -50,6 +50,7 @@
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^4.0.1",
     "istanbul-reports": "^3.1.5",
+    "picocolors": "^1.0.0",
     "test-exclude": "^6.0.0"
   },
   "devDependencies": {

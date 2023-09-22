@@ -13,6 +13,7 @@ export type * from './worker'
 export type * from './general'
 export type * from './coverage'
 export type * from './benchmark'
+export type { DiffOptions } from '@vitest/utils/diff'
 export type {
   EnhancedSpy,
   MockedFunction,

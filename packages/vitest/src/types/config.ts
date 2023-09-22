@@ -1,4 +1,4 @@
-import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'vite'
+import type { AliasOptions, DepOptimizationConfig, ServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -23,7 +23,7 @@ export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, nev
 export type VitestPool = 'browser' | 'threads' | 'child_process' | 'experimentalVmThreads'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
-export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
+export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'middlewareMode'>
 
 export type { JSDOMOptions, HappyDOMOptions }
 
@@ -530,7 +530,7 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method for all modules inported inside a test that matches the glob pattern.
+   * Determine the transform method for all modules imported inside a test that matches the glob pattern.
    */
   testTransformMode?: TransformModePatterns
 
@@ -538,6 +538,11 @@ export interface InlineConfig {
    * Format options for snapshot testing.
    */
   snapshotFormat?: PrettyFormatOptions
+
+  /**
+   * Path to a module which has a default export of diff config.
+   */
+  diff?: string
 
   /**
    * Resolve custom snapshot path

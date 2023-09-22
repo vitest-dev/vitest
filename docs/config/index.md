@@ -1078,10 +1078,10 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **Available for providers:** `'v8'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.100`, `--coverage.100=false`
 
-Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
+Shortcut for `--coverage.lines 100 --coverage.functions 100 --coverage.branches 100 --coverage.statements 100`.
 
 #### coverage.ignoreClassMethods
 
@@ -1296,7 +1296,7 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
  - **Type:** `{ web?, ssr? }`
  - **Version:** Since Vitest 0.34.0
 
- Determine the transform method for all modules inported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
+ Determine the transform method for all modules imported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
 
  #### testTransformMode.ssr
 
@@ -1619,3 +1619,55 @@ By default Vitest will run all of your test cases even if some of them fail. Thi
 - **Version:** Since Vitest 0.32.3
 
 Retry the test specific number of times if it fails.
+
+### onConsoleLog
+
+- **Type**: `(log: string, type: 'stdout' | 'stderr') => false | void`
+
+Custom handler for `console.log` in tests. If you return `false`, Vitest will not print the log to the console.
+
+Can be useful for filtering out logs from third-party libraries.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onConsoleLog(log: string, type: 'stdout' | 'stderr'): boolean | void {
+      if (log === 'message from third party library' && type === 'stdout')
+        return false
+    },
+  },
+})
+```
+
+### diff
+
+- **Type:** `string`
+- **CLI:** `--diff=<value>`
+- **Version:** Since Vitest 0.34.5
+
+Path to a diff config that will be used to generate diff interface. Useful if you want to customize diff display.
+
+:::code-group
+```ts [vitest.diff.ts]
+import type { DiffOptions } from 'vitest'
+import c from 'picocolors'
+
+export default {
+  aIndicator: c.bold('--'),
+  bIndicator: c.bold('++'),
+  omitAnnotationLines: true,
+} satisfies DiffOptions
+```
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    diff: './vitest.diff.ts'
+  }
+})
+```
+:::

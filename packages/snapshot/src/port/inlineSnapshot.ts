@@ -96,12 +96,17 @@ function prepareSnapString(snap: string, source: string, index: number) {
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*[\w_$]*(['"`\)])/m
 export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
-  const startMatch = startRegex.exec(code.slice(index))
-  if (!startMatch)
+  const codeStartingAtIndex = code.slice(index)
+
+  const startMatch = startRegex.exec(codeStartingAtIndex)
+
+  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(codeStartingAtIndex)
+
+  if (!startMatch || startMatch.index !== firstKeywordMatch?.index)
     return replaceObjectSnap(code, s, index, newSnap)
 
   const quote = startMatch[1]
-  const startIndex = index + startMatch.index! + startMatch[0].length
+  const startIndex = index + startMatch.index + startMatch[0].length
   const snapString = prepareSnapString(newSnap, code, index)
 
   if (quote === ')') {
