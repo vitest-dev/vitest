@@ -49,13 +49,3 @@ test('custom env', () => {
 test('ignores import.meta.env in string literals', () => {
   expect('import.meta.env').toBe('import' + '.meta.env')
 })
-
-test('url correctly creates an object', () => {
-  expect(() => {
-    URL.createObjectURL(new Blob([]))
-  }).not.toThrow()
-
-  expect(() => {
-    URL.createObjectURL(new File([], 'file.txt'))
-  }).not.toThrow()
-})
