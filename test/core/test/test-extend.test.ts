@@ -38,39 +38,34 @@ const myTest = test
   })
 
 describe('test.extend()', () => {
-  myTest('todoList and doneList', ({ todoList, doneList, archiveList }) => {
-    expect(todoFn).toBeCalledTimes(1)
-    expect(doneFn).toBeCalledTimes(1)
+  describe('basic', () => {
+    myTest('todoList and doneList', ({ todoList, doneList, archiveList }) => {
+      expect(todoFn).toBeCalledTimes(1)
+      expect(doneFn).toBeCalledTimes(1)
 
-    expectTypeOf(todoList).toEqualTypeOf<number[]>()
-    expectTypeOf(doneList).toEqualTypeOf<number[]>()
-    expectTypeOf(doneList).toEqualTypeOf<number[]>()
+      expectTypeOf(todoList).toEqualTypeOf<number[]>()
+      expectTypeOf(doneList).toEqualTypeOf<number[]>()
+      expectTypeOf(doneList).toEqualTypeOf<number[]>()
 
-    expect(todoList).toEqual([1, 2, 3])
-    expect(doneList).toEqual([])
-    expect(archiveList).toEqual([])
+      expect(todoList).toEqual([1, 2, 3])
+      expect(doneList).toEqual([])
+      expect(archiveList).toEqual([])
 
-    doneList.push(todoList.shift()!)
-    expect(todoList).toEqual([2, 3])
-    expect(doneList).toEqual([1])
+      doneList.push(todoList.shift()!)
+      expect(todoList).toEqual([2, 3])
+      expect(doneList).toEqual([1])
 
-    doneList.push(todoList.shift()!)
-    expect(todoList).toEqual([3])
-    expect(doneList).toEqual([1, 2])
+      doneList.push(todoList.shift()!)
+      expect(todoList).toEqual([3])
+      expect(doneList).toEqual([1, 2])
 
-    archiveList.push(todoList.shift()!)
-    expect(todoList).toEqual([])
-    expect(archiveList).toEqual([3])
+      archiveList.push(todoList.shift()!)
+      expect(todoList).toEqual([])
+      expect(archiveList).toEqual([3])
 
-    archiveList.pop()
+      archiveList.pop()
+    })
   })
-
-  myTest('should called cleanup functions', ({ todoList, doneList, archiveList }) => {
-    expect(todoList).toEqual([1, 2, 3])
-    expect(doneList).toEqual([])
-    expect(archiveList).toEqual([])
-  })
-
   describe('smartly init fixtures', () => {
     myTest('should not init any fixtures', function () {
       expect(todoFn).not.toBeCalled()

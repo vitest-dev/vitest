@@ -316,14 +316,13 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
           }
         }
       }
-
-      await callFixtureCleanup()
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
     }
 
     try {
+      await callFixtureCleanup()
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(beforeAllCleanups)
     }

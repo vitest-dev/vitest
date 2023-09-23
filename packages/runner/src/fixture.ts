@@ -44,14 +44,15 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   return context
 }
 
+const fixtureValueMap = new Map<FixtureItem, any>()
 const fixtureCleanupSet = new Set<() => void | Promise<void>>()
+
 export async function callFixtureCleanup() {
   await Promise.all([...fixtureCleanupSet].map(async (fn) => {
     await fn()
   }))
+  fixtureValueMap.clear()
 }
-
-const fixtureValueWeakMap = new WeakMap<FixtureItem, any>()
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
   return (hookContext?: TestContext) => {
@@ -76,7 +77,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       async function use(fixtureValue: any) {
         const fixture = pendingFixtures[cursor++]
         context![fixture.prop] = fixtureValue
-        fixtureValueWeakMap.set(fixture, fixtureValue)
+        fixtureValueMap.set(fixture, fixtureValue)
 
         if (cursor < pendingFixtures.length) {
           await next()
@@ -89,24 +90,21 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           catch (err) {
             reject(err)
           }
-          await new Promise<void>((resolve) => {
-            fixtureCleanupSet.add(resolve)
-          })
+          return new Promise<void>(fixtureCleanupSet.add)
         }
       }
 
       async function next() {
         const fixture = pendingFixtures[cursor]
         const { isFn, value } = fixture
-        if (fixtureValueWeakMap.has(fixture))
-          await use(fixtureValueWeakMap.get(fixture))
+        if (fixtureValueMap.has(fixture))
+          return use(fixtureValueMap.get(fixture))
         else
-          isFn ? await value(context, use) : use(value)
+          return isFn ? value(context, use) : use(value)
       }
 
-      // collect fixture cleanup functions
-      const cleanup = next()
-      fixtureCleanupSet.add(() => cleanup)
+      const setupFixturePromise = next()
+      fixtureCleanupSet.add(() => setupFixturePromise)
     })
   }
 }
