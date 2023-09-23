@@ -90,7 +90,9 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           catch (err) {
             reject(err)
           }
-          return new Promise<void>(fixtureCleanupSet.add)
+          return new Promise<void>((resolve) => {
+            fixtureCleanupSet.add(resolve)
+          })
         }
       }
 
