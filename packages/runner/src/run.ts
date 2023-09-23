@@ -10,6 +10,7 @@ import { collectTests } from './collect'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
+import { callFixtureCleanup } from './fixture'
 
 const now = Date.now
 
@@ -315,6 +316,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
           }
         }
       }
+
+      await callFixtureCleanup()
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)

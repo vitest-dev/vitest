@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params */
 /* eslint-disable no-empty-pattern */
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
   todoList: number[]
@@ -148,6 +148,60 @@ describe('test.extend()', () => {
       expect(todos).toEqual([1, 2, 3])
       expect(done).toEqual([])
       expect(archive).toEqual([])
+    })
+  })
+
+  describe('fixture call times', () => {
+    const apiFn = vi.fn(() => true)
+    const serviceFn = vi.fn(() => true)
+    const teardownFn = vi.fn()
+
+    interface APIFixture {
+      api: boolean
+      service: boolean
+    }
+
+    const testAPI = test.extend<APIFixture>({
+      api: async ({}, use) => {
+        await use(apiFn())
+        apiFn.mockClear()
+        teardownFn()
+      },
+      service: async ({}, use) => {
+        await use(serviceFn())
+        serviceFn.mockClear()
+        teardownFn()
+      },
+    })
+
+    beforeEach<APIFixture>(({ api, service }) => {
+      expect(api).toBe(true)
+      expect(service).toBe(true)
+    })
+
+    testAPI('Should init1 time', ({ api }) => {
+      expect(api).toBe(true)
+      expect(apiFn).toBeCalledTimes(1)
+    })
+
+    testAPI('Should init 1 time has multiple fixture', ({ api, service }) => {
+      expect(api).toBe(true)
+      expect(service).toBe(true)
+      expect(serviceFn).toBeCalledTimes(1)
+      expect(apiFn).toBeCalledTimes(1)
+    })
+
+    afterEach<APIFixture>(({ api, service }) => {
+      expect(api).toBe(true)
+      expect(service).toBe(true)
+      expect(apiFn).toBeCalledTimes(1)
+      expect(serviceFn).toBeCalledTimes(1)
+    })
+
+    afterAll(() => {
+      expect(serviceFn).toBeCalledTimes(0)
+      expect(apiFn).toBeCalledTimes(0)
+      expect(teardownFn).toBeCalledTimes(2)
     })
   })
 })

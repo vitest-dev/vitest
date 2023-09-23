@@ -44,6 +44,15 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   return context
 }
 
+const fixtureCleanupSet = new Set<() => void | Promise<void>>()
+export async function callFixtureCleanup() {
+  await Promise.all([...fixtureCleanupSet].map(async (fn) => {
+    await fn()
+  }))
+}
+
+const fixtureValueWeakMap = new WeakMap<FixtureItem, any>()
+
 export function withFixtures(fn: Function, testContext?: TestContext) {
   return (hookContext?: TestContext) => {
     const context: TestContext & { [key: string]: any } | undefined = hookContext || testContext
@@ -63,21 +72,42 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     const pendingFixtures = resolveDeps(usedFixtures)
     let cursor = 0
 
-    async function use(fixtureValue: any) {
-      const { prop } = pendingFixtures[cursor++]
-      context![prop] = fixtureValue
+    return new Promise((resolve, reject) => {
+      async function use(fixtureValue: any) {
+        const fixture = pendingFixtures[cursor++]
+        context![fixture.prop] = fixtureValue
+        fixtureValueWeakMap.set(fixture, fixtureValue)
 
-      if (cursor < pendingFixtures.length)
-        await next()
-      else await fn(context)
-    }
+        if (cursor < pendingFixtures.length) {
+          await next()
+        }
+        else {
+          // When all fixtures setup, call the test function
+          try {
+            resolve(await fn(context))
+          }
+          catch (err) {
+            reject(err)
+          }
+          await new Promise<void>((resolve) => {
+            fixtureCleanupSet.add(resolve)
+          })
+        }
+      }
 
-    async function next() {
-      const { value } = pendingFixtures[cursor]
-      typeof value === 'function' ? await value(context, use) : await use(value)
-    }
+      async function next() {
+        const fixture = pendingFixtures[cursor]
+        const { isFn, value } = fixture
+        if (fixtureValueWeakMap.has(fixture))
+          await use(fixtureValueWeakMap.get(fixture))
+        else
+          isFn ? await value(context, use) : use(value)
+      }
 
-    return next()
+      // collect fixture cleanup functions
+      const cleanup = next()
+      fixtureCleanupSet.add(() => cleanup)
+    })
   }
 }
 
