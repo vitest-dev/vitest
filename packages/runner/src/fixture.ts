@@ -45,13 +45,17 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 const fixtureValueMap = new Map<FixtureItem, any>()
-const fixtureCleanupSet = new Set<() => void | Promise<void>>()
+const fixtureCleanupFnMap = new Map<string, Array<() => void | Promise<void>>>()
 
-export async function callFixtureCleanup() {
-  await Promise.all([...fixtureCleanupSet].map(async (fn) => {
-    await fn()
-  }))
-  fixtureValueMap.clear()
+export async function callFixtureCleanup(id: string) {
+  const cleanupFnArray = fixtureCleanupFnMap.get(id)
+  if (!cleanupFnArray)
+    return
+
+  for (const cleanup of cleanupFnArray.reverse())
+    await cleanup()
+
+  fixtureCleanupFnMap.delete(id)
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
@@ -60,6 +64,12 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     if (!context)
       return fn({})
+
+    let cleanupFnArray = fixtureCleanupFnMap.get(context.task.suite.id)!
+    if (!cleanupFnArray) {
+      cleanupFnArray = []
+      fixtureCleanupFnMap.set(context.task.suite.id, cleanupFnArray)
+    }
 
     const fixtures = getFixture(context)
     if (!fixtures?.length)
@@ -77,7 +87,13 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       async function use(fixtureValue: any) {
         const fixture = pendingFixtures[cursor++]
         context![fixture.prop] = fixtureValue
-        fixtureValueMap.set(fixture, fixtureValue)
+
+        if (!fixtureValueMap.has(fixture)) {
+          fixtureValueMap.set(fixture, fixtureValue)
+          cleanupFnArray.unshift(() => {
+            fixtureValueMap.delete(fixture)
+          })
+        }
 
         if (cursor < pendingFixtures.length) {
           await next()
@@ -91,7 +107,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
             reject(err)
           }
           return new Promise<void>((resolve) => {
-            fixtureCleanupSet.add(resolve)
+            cleanupFnArray.push(resolve)
           })
         }
       }
@@ -106,7 +122,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       }
 
       const setupFixturePromise = next()
-      fixtureCleanupSet.add(() => setupFixturePromise)
+      cleanupFnArray.unshift(() => setupFixturePromise)
     })
   }
 }

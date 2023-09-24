@@ -322,7 +322,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     try {
-      await callFixtureCleanup()
+      await callFixtureCleanup(suite.id)
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(beforeAllCleanups)
     }

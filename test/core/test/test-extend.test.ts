@@ -199,4 +199,82 @@ describe('test.extend()', () => {
       expect(teardownFn).toBeCalledTimes(2)
     })
   })
+
+  describe('fixture in nested describe', () => {
+    interface Fixture {
+      foo: number
+      bar: number
+    }
+
+    const fooFn = vi.fn(() => 0)
+    const fooCleanup = vi.fn()
+
+    const barFn = vi.fn(() => 0)
+    const barCleanup = vi.fn()
+
+    const nestedTest = test.extend<Fixture>({
+      async foo({}, use) {
+        await use(fooFn())
+        fooCleanup()
+      },
+      async bar({}, use) {
+        await use(barFn())
+        barCleanup()
+      },
+    })
+
+    beforeEach<Fixture>(({ foo }) => {
+      expect(foo).toBe(0)
+    })
+
+    nestedTest('should only initialize foo', ({ foo }) => {
+      expect(foo).toBe(0)
+      expect(fooFn).toBeCalledTimes(1)
+      expect(barFn).toBeCalledTimes(0)
+    })
+
+    describe('level 2, using both foo and bar together', () => {
+      beforeEach<Fixture>(({ foo, bar }) => {
+        expect(foo).toBe(0)
+        expect(bar).toBe(0)
+      })
+
+      nestedTest('should only initialize bar', ({ foo, bar }) => {
+        expect(foo).toBe(0)
+        expect(bar).toBe(0)
+        expect(fooFn).toBeCalledTimes(1)
+        expect(barFn).toBeCalledTimes(1)
+      })
+
+      afterEach<Fixture>(({ foo, bar }) => {
+        expect(foo).toBe(0)
+        expect(bar).toBe(0)
+      })
+
+      afterAll(() => {
+        // foo setup in outside describe
+        // cleanup also called in outside describe
+        expect(fooCleanup).toHaveBeenCalledTimes(0)
+        // bar setup in inside describe
+        // cleanup also called in inside describe
+        expect(barCleanup).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    nestedTest('level 2 will not call foo cleanup', ({ foo }) => {
+      expect(foo).toBe(0)
+      expect(fooFn).toBeCalledTimes(1)
+    })
+
+    afterEach<Fixture>(({ foo }) => {
+      expect(foo).toBe(0)
+    })
+
+    afterAll(() => {
+      // foo setup in this describe
+      // cleanup also called in this describe
+      expect(fooCleanup).toHaveBeenCalledTimes(1)
+      expect(barCleanup).toHaveBeenCalledTimes(1)
+    })
+  })
 })
