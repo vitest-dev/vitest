@@ -61,10 +61,18 @@ export interface BrowserConfigOptions {
    * @experimental
    */
   slowHijackESM?: boolean
+
+  /**
+   * Isolate test environment after each test
+   *
+   * @default true
+   */
+  isolate?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   enabled: boolean
   headless: boolean
+  isolate: boolean
   api: ApiConfig
 }

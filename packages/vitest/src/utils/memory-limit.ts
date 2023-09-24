@@ -20,9 +20,12 @@ function getDefaultThreadsCount(config: ResolvedConfig) {
 }
 
 export function getWorkerMemoryLimit(config: ResolvedConfig) {
-  if (config.experimentalVmWorkerMemoryLimit)
-    return config.experimentalVmWorkerMemoryLimit
-  return 1 / (config.maxThreads ?? getDefaultThreadsCount(config))
+  const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
+
+  if (memoryLimit)
+    return stringToBytes(memoryLimit)
+
+  return 1 / (config.poolOptions?.vmThreads?.maxThreads ?? getDefaultThreadsCount(config))
 }
 
 /**

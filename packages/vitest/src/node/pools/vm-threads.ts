@@ -11,6 +11,7 @@ import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
+import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { createMethodsRPC } from './rpc'
 
 const workerPath = pathToFileURL(resolve(distDir, './vm.js')).href
@@ -49,14 +50,14 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.maxThreads ?? threadsCount
-  const minThreads = ctx.config.minThreads ?? threadsCount
+  const maxThreads = ctx.config.poolOptions?.vmThreads?.maxThreads ?? threadsCount
+  const minThreads = ctx.config.poolOptions?.vmThreads?.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.useAtomics ?? false,
+    useAtomics: ctx.config.poolOptions?.vmThreads?.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -71,10 +72,10 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
-    maxMemoryLimitBeforeRecycle: ctx.config.experimentalVmWorkerMemoryLimit || undefined,
+    maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
 
-  if (ctx.config.singleThread) {
+  if (ctx.config.poolOptions?.vmThreads?.singleThread) {
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1
@@ -159,4 +160,22 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
         await pool.destroy()
     },
   }
+}
+
+function getMemoryLimit(config: ResolvedConfig) {
+  const memory = nodeos.totalmem()
+  const limit = getWorkerMemoryLimit(config)
+
+  if (typeof memory === 'number') {
+    return stringToBytes(
+      limit,
+      config.watch ? memory / 2 : memory,
+    )
+  }
+
+  if (limit && limit > 1)
+    return stringToBytes(limit)
+
+  // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  return null
 }

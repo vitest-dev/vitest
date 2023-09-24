@@ -61,7 +61,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  threads: true,
+  pool: 'threads',
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -70,7 +70,6 @@ const config = {
   testTimeout: 5000,
   hookTimeout: 10000,
   teardownTimeout: 10000,
-  isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
     '**/package.json/**',

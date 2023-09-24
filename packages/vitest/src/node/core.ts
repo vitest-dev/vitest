@@ -236,9 +236,7 @@ export class Vitest {
       'allowOnly',
       'sequence',
       'testTimeout',
-      'threads',
-      'singleThread',
-      'isolate',
+      'pool',
       'globals',
       'mode',
     ] as const

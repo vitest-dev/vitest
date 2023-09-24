@@ -30,22 +30,22 @@ test('shard index must be smaller than count', async () => {
   expect(stderr).toMatch('Error: --shard <index> must be a positive number less then <count>')
 })
 
-test('inspect requires changing threads or singleThread', async () => {
+test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('inspect cannot be used with threads', async () => {
-  const { stderr } = await runVitest({ inspect: true, threads: true })
+test('inspect cannot be used with multi-threading', async () => {
+  const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('inspect-brk cannot be used with threads', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, threads: true })
+test('inspect-brk cannot be used with multi processing', async () => {
+  const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "threads: false" or "singleThread: true"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('c8 coverage provider is not supported', async () => {
@@ -90,7 +90,7 @@ test('boolean browser flag without dot notation, with more dot notation options'
 
 test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
-    threads: false,
+    pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fixtures/test/fake-timers.test.ts'],
   })
@@ -100,7 +100,6 @@ test('nextTick cannot be mocked inside child_process', async () => {
 
 test('nextTick can be mocked inside worker_threads', async () => {
   const { stderr } = await runVitest({
-    threads: true,
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fixtures/test/fake-timers.test.ts'],
   })

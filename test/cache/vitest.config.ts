@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    threads: false,
+    pool: 'forks',
     cache: {
       dir: 'cache/.vitest-base',
     },

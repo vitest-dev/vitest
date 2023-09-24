@@ -11,7 +11,10 @@ import { createSafeRpc, rpcDone } from './rpc'
 
 async function init(ctx: WorkerContext) {
   // @ts-expect-error untyped global
-  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
+  const isInitialized = typeof __vitest_worker__ !== 'undefined'
+  const isIsolatedThreads = ctx.config.pool === 'threads' && (ctx.config.poolOptions?.threads?.isolate ?? true)
+
+  if (isInitialized && isIsolatedThreads)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
   const { config, port, workerId } = ctx

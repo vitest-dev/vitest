@@ -48,14 +48,14 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.maxThreads ?? threadsCount
-  const minThreads = ctx.config.minThreads ?? threadsCount
+  const maxThreads = ctx.config.poolOptions?.threads?.maxThreads ?? threadsCount
+  const minThreads = ctx.config.poolOptions?.threads?.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.useAtomics ?? false,
+    useAtomics: ctx.config.poolOptions?.threads?.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -66,12 +66,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     terminateTimeout: ctx.config.teardownTimeout,
   }
 
-  if (ctx.config.isolate) {
+  if (ctx.config.poolOptions?.threads?.isolate ?? true) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
   }
 
-  if (ctx.config.singleThread) {
+  if (ctx.config.poolOptions?.threads?.singleThread) {
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1
@@ -147,15 +147,15 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       specs = await sequencer.sort(specs)
 
-      const singleThreads = specs.filter(([project]) => project.config.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.singleThread)
+      const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
+      const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (ctx.config.isolate) {
+        if (ctx.config.poolOptions?.threads?.isolate ?? true) {
           results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
         }

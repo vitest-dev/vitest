@@ -1,6 +1,6 @@
 import v8 from 'node:v8'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { cpus } from 'node:os'
+import * as nodeos from 'node:os'
 import EventEmitter from 'node:events'
 import { Tinypool } from 'tinypool'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
@@ -54,12 +54,17 @@ function stringifyRegex(input: RegExp | string): string {
 }
 
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
-  const threadsCount = ctx.config.watch
-    ? Math.max(Math.floor(cpus().length / 2), 1)
-    : Math.max(cpus().length - 1, 1)
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
 
-  const maxThreads = ctx.config.maxThreads ?? threadsCount
-  const minThreads = ctx.config.minThreads ?? threadsCount
+  const threadsCount = ctx.config.watch
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
+
+  const maxThreads = ctx.config.poolOptions?.forks?.maxForks ?? threadsCount
+  const minThreads = ctx.config.poolOptions?.forks?.minForks ?? threadsCount
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
@@ -74,12 +79,12 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     terminateTimeout: ctx.config.teardownTimeout,
   }
 
-  if (ctx.config.isolate) {
+  if (ctx.config.poolOptions?.forks?.isolate ?? true) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
   }
 
-  if (ctx.config.singleThread) {
+  if (ctx.config.poolOptions?.threads?.singleThread) {
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1
@@ -162,16 +167,15 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
       specs = await sequencer.sort(specs)
 
-      // TODO: What to do about singleThread flag?
-      const singleThreads = specs.filter(([project]) => project.config.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.singleThread)
+      const singleFork = specs.filter(([project]) => project.config.poolOptions?.forks?.singleFork)
+      const multipleForks = specs.filter(([project]) => !project.config.poolOptions?.forks?.singleFork)
 
-      if (multipleThreads.length) {
-        const filesByEnv = await groupFilesByEnv(multipleThreads)
+      if (multipleForks.length) {
+        const filesByEnv = await groupFilesByEnv(multipleForks)
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (ctx.config.isolate) {
+        if (ctx.config.poolOptions?.forks?.isolate ?? true) {
           results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
         }
@@ -197,8 +201,8 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
           throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
       }
 
-      if (singleThreads.length) {
-        const filesByEnv = await groupFilesByEnv(singleThreads)
+      if (singleFork.length) {
+        const filesByEnv = await groupFilesByEnv(singleFork)
         const envs = envsOrder.concat(
           Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
         )
