@@ -190,7 +190,7 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
 }
 
 type FixtureType<T> = T extends (context: any, use: (fixture: infer F) => any) => any ? F : T
-type Fixture<
+export type Fixture<
   T,
   K extends keyof T,
   OnlyFunction,
@@ -207,7 +207,7 @@ type Fixture<
     use: (fixture: V) => Promise<void>
   ) => Promise<void>,
 > = OnlyFunction extends true ? FN : (FN | V)
-type Fixtures<T extends Record<string, any>, ExtraContext> = {
+export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
   [K in keyof T]: Fixture<T, K, false, ExtraContext>
 } | {
   [K in keyof T]: Fixture<T, K, true, ExtraContext>
