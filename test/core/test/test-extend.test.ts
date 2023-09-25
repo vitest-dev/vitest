@@ -40,7 +40,7 @@ const myTest = test
   })
 
 describe('test.extend()', () => {
-  describe('types', () => {
+  test('types', () => {
     interface TypesContext {
       number: number
       array: number[]
