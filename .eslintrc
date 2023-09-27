@@ -5,6 +5,9 @@
     // prefer global Buffer to not initialize the whole module
     "n/prefer-global/buffer": "off",
     "@typescript-eslint/no-invalid-this": "off",
+    "@typescript-eslint/quotes": ["error", "single", {
+      "allowTemplateLiterals": true
+    }],
     "no-restricted-imports": [
       "error",
       {
