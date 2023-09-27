@@ -47,7 +47,6 @@ export function createTestContext<T extends Test | Custom>(test: T, runner: Vite
     throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as TaskContext<T>
 
-  context.meta = test
   context.task = test
 
   context.skip = () => {

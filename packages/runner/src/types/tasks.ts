@@ -223,13 +223,9 @@ export type Fixture<
   ) => Promise<void>,
 > = OnlyFunction extends true ? FN : (FN | V)
 export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
-  [K in keyof T]: T[K] | ((context: {
-    [P in keyof T | keyof ExtraContext as P extends K ?
-      P extends keyof ExtraContext ? P : never : P
-    ]:
-    K extends P ? K extends keyof ExtraContext ? ExtraContext[K] : never :
-      P extends keyof T ? T[P] : never
-  } & ExtendedContext<Test>, use: (fixture: T[K]) => Promise<void>) => Promise<void>)
+  [K in keyof T]: Fixture<T, K, false, ExtraContext>
+} | {
+  [K in keyof T]: Fixture<T, K, true, ExtraContext>
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
@@ -297,13 +293,6 @@ export interface RuntimeContext {
 export interface TestContext {}
 
 export interface TaskContext<Task extends Custom | Test = Custom | Test> {
-  /**
-   * Metadata of the current test
-   *
-   * @deprecated Use `task` instead
-   */
-  meta: Readonly<Task>
-
   /**
    * Metadata of the current test
    */
