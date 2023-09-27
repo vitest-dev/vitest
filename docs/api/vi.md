@@ -720,9 +720,9 @@ unmockedIncrement(30) === 31
 
   When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
 
-### vi.waitFor
+## vi.waitFor
 
-- **Type:** `function waitFor<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions): Promise<T>`
+- **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 - **Version**: Since Vitest 0.34.5
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
@@ -779,9 +779,9 @@ test('Element exists in a DOM', async () => {
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
 
-### vi.waitUntil
+## vi.waitUntil
 
-- **Type:** `function waitUntil(callback: WaitUntilCallback, options?: number | WaitUntilOptions): Promise`
+- **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
 - **Version**: Since Vitest 0.34.5
 
 This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
