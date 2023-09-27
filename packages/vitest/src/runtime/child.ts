@@ -19,6 +19,11 @@ async function init(ctx: ChildContext) {
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  try {
+    process.title = `node (vitest ${poolId})`
+  }
+  catch {}
+
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve

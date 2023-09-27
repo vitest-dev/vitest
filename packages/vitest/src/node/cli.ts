@@ -167,7 +167,10 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
-  process.title = 'node (vitest)'
+  try {
+    process.title = 'node (vitest)'
+  }
+  catch {}
 
   try {
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
