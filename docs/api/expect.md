@@ -1055,7 +1055,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 
   test('buyApples throws an error when no id provided', async () => {
     // toThrow returns a promise now, so you HAVE to await it
-    await expect(buyApples()).rejects.toThrow('no id')
+    await expect(() => buyApples()).rejects.toThrow('no id')
   })
   ```
 
