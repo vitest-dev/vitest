@@ -1,5 +1,7 @@
 /* eslint-disable prefer-rest-params */
 /* eslint-disable no-empty-pattern */
+import type { InferFixturesTypes } from '@vitest/runner'
+import type { TestAPI } from 'vitest'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
@@ -38,6 +40,30 @@ const myTest = test
   })
 
 describe('test.extend()', () => {
+  test('types', () => {
+    interface TypesContext {
+      number: number
+      array: number[]
+      string: string
+      any: any
+      boolean: boolean
+    }
+
+    const typesTest = test.extend<TypesContext>({
+      number: 1,
+      array: [1, 2, 3],
+      async string({ }, use) {
+        await use('string')
+      },
+      async any({}, use) {
+        await use({})
+      },
+      boolean: true,
+    })
+
+    expectTypeOf(typesTest).toEqualTypeOf<TestAPI<InferFixturesTypes<typeof typesTest>>>()
+  })
+
   describe('basic', () => {
     myTest('todoList and doneList', ({ todoList, doneList, archiveList }) => {
       expect(todoFn).toBeCalledTimes(1)
@@ -66,6 +92,7 @@ describe('test.extend()', () => {
       archiveList.pop()
     })
   })
+
   describe('smartly init fixtures', () => {
     myTest('should not init any fixtures', function () {
       expect(todoFn).not.toBeCalled()

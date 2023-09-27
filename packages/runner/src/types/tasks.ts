@@ -189,15 +189,31 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
 }
 
+type FixtureType<T> = T extends (context: any, use: (fixture: infer F) => any) => any ? F : T
+export type Fixture<
+  T,
+  K extends keyof T,
+  OnlyFunction,
+  ExtraContext = {},
+  V = FixtureType<T[K]>,
+  FN = (
+    context: {
+      [P in keyof T | keyof ExtraContext as P extends K ?
+        P extends keyof ExtraContext ? P : never : P
+      ]:
+      K extends P ? K extends keyof ExtraContext ? ExtraContext[K] : V :
+        P extends keyof T ? T[P] : never
+    } & TestContext,
+    use: (fixture: V) => Promise<void>
+  ) => Promise<void>,
+> = OnlyFunction extends true ? FN : (FN | V)
 export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
-  [K in keyof T]: T[K] | ((context: {
-    [P in keyof T | keyof ExtraContext as P extends K ?
-      P extends keyof ExtraContext ? P : never : P
-    ]:
-    K extends P ? K extends keyof ExtraContext ? ExtraContext[K] : never :
-      P extends keyof T ? T[P] : never
-  } & TestContext, use: (fixture: T[K]) => Promise<void>) => Promise<void>)
+  [K in keyof T]: Fixture<T, K, false, ExtraContext>
+} | {
+  [K in keyof T]: Fixture<T, K, true, ExtraContext>
 }
+
+export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
