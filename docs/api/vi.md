@@ -277,7 +277,7 @@ import { vi } from 'vitest'
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next import of the module will be mocked. This will not mock modules that were imported before this was called.
+  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked. This will not mock modules that were imported before this was called.
 
 ```ts
 // ./increment.js
@@ -304,7 +304,7 @@ test('importing the next module imports mocked one', async () => {
   // original import WAS NOT MOCKED, because vi.doMock is evaluated AFTER imports
   expect(increment(1)).toBe(2)
   const { increment: mockedIncrement } = await import('./increment.js')
-  // new import returns mocked module
+  // new dynamic import returns mocked module
   expect(mockedIncrement(1)).toBe(101)
   expect(mockedIncrement(1)).toBe(102)
   expect(mockedIncrement(1)).toBe(103)
