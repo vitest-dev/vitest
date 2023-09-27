@@ -59,7 +59,7 @@ Vitest also supports debugging tests without IDEs. However this requires that te
 vitest --inspect-brk --single-thread
 
 # To run in a child process
-vitest --inspect-brk --no-threads
+vitest --inspect-brk  --single-thread --no-threads
 ```
 
 Once Vitest starts it will stop execution and waits for you to open developer tools that can connect to [NodeJS inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.

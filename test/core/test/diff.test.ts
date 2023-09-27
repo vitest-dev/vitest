@@ -15,9 +15,9 @@ test('displays object diff', () => {
     + Received
 
       Object {
-        \\"a\\": 1,
-    -   \\"b\\": 2,
-    +   \\"b\\": 3,
+        "a": 1,
+    -   "b": 2,
+    +   "b": 3,
       }
     "
   `)
