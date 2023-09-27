@@ -93,11 +93,10 @@ export async function startChromium() {
   }
 }
 
-export async function startServerCommand(root: string, command: string, url: string) {
+export async function startServerCommand(command: string, url: string) {
   let error: any
   const exitChromium = await startChromium()
   const subProcess = execaCommand(command, {
-    cwd: root,
     env: {
       ...process.env,
       CI: 'true',

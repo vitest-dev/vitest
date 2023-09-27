@@ -698,7 +698,14 @@ unmockedIncrement(30) === 31
 
   To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
+  Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--no-threads`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--threads`.
+
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
+
+  ::: tip
+  Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
+  It can still be mocked by specyfing the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+  :::
 
 ## vi.isFakeTimers
 
