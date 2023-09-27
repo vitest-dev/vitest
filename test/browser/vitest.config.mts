@@ -20,6 +20,7 @@ export default defineConfig({
     },
     open: false,
     isolate: false,
+    diff: './custom-diff-config.ts',
     outputFile: './browser.json',
     reporters: ['json', {
       onInit: noop,

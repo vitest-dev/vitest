@@ -4,7 +4,7 @@ import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
-import type { UserWorkspaceConfig } from '../../types'
+import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -28,7 +28,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         this.meta.watchMode = false
       },
       config(viteConfig) {
-        const env: Record<string, any> = deleteDefineConfig(viteConfig)
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
 
@@ -79,10 +79,11 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             },
           },
           test: {
-            env,
             name,
           },
         }
+
+        ;(config.test as ResolvedConfig).defines = defines
 
         const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
 

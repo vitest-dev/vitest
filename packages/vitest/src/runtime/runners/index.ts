@@ -6,6 +6,7 @@ import { distDir } from '../../paths'
 import { getWorkerState } from '../../utils/global'
 import { rpc } from '../rpc'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
+import { loadDiffConfig } from '../setup.common'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
@@ -36,6 +37,8 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
 
   if (!testRunner.importFile)
     throw new Error('Runner must implement "importFile" method.')
+
+  testRunner.config.diffOptions = await loadDiffConfig(config, executor)
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate

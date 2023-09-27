@@ -77,6 +77,13 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
+  // it's possible that file path was imported with different queries (?raw, ?url, etc)
+  getModulesByFilepath(file: string) {
+    const set = this.server.moduleGraph.getModulesByFile(file)
+      || this.browser?.moduleGraph.getModulesByFile(file)
+    return set || new Set()
+  }
+
   getModuleById(id: string) {
     return this.server.moduleGraph.getModuleById(id)
       || this.browser?.moduleGraph.getModuleById(id)

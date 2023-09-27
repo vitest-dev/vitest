@@ -540,6 +540,11 @@ export interface InlineConfig {
   snapshotFormat?: PrettyFormatOptions
 
   /**
+   * Path to a module which has a default export of diff config.
+   */
+  diff?: string
+
+  /**
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string

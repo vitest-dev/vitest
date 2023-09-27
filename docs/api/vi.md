@@ -398,12 +398,6 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 
   Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
-## vi.restoreCurrentDate
-
-- **Type:** `() => void`
-
-  Restores `Date` back to its native implementation.
-
 ## vi.stubEnv
 
 - **Type:** `(name: string, value: string) => Vitest`

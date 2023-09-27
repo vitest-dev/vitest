@@ -51,6 +51,7 @@ cli
   .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
+  .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
   .help()
 
 cli

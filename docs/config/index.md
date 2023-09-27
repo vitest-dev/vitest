@@ -1641,3 +1641,33 @@ export default defineConfig({
 })
 ```
 
+### diff
+
+- **Type:** `string`
+- **CLI:** `--diff=<value>`
+- **Version:** Since Vitest 0.34.5
+
+Path to a diff config that will be used to generate diff interface. Useful if you want to customize diff display.
+
+:::code-group
+```ts [vitest.diff.ts]
+import type { DiffOptions } from 'vitest'
+import c from 'picocolors'
+
+export default {
+  aIndicator: c.bold('--'),
+  bIndicator: c.bold('++'),
+  omitAnnotationLines: true,
+} satisfies DiffOptions
+```
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    diff: './vitest.diff.ts'
+  }
+})
+```
+:::

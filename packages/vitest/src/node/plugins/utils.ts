@@ -30,6 +30,7 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       'vitest',
       // Ideally, we shouldn't optimize react in test mode, otherwise we need to optimize _every_ dependency that uses react.
       'react',
+      'vue',
       ...(testOptions.exclude || viteOptions?.exclude || []),
     ]
     const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime'))
