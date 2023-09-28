@@ -133,9 +133,12 @@ test('editing source file generates new test report to file system', async () =>
 
   const vitest = await runVitestCli(
     ...cliArgs,
-    '--reporter', 'verbose',
-    '--reporter', 'junit',
-    '--output-file', 'test-results/junit.xml',
+    '--reporter',
+    'verbose',
+    '--reporter',
+    'junit',
+    '--output-file',
+    'test-results/junit.xml',
   )
 
   // Test report should be generated on initial test run

@@ -16,20 +16,17 @@ const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
 
-watch(() => props.file,
-  async () => {
-    if (!props.file || !props.file?.filepath) {
-      code.value = ''
-      serverCode.value = code.value
-      draft.value = false
-      return
-    }
-    code.value = await client.rpc.readTestFile(props.file.filepath) || ''
+watch(() => props.file, async () => {
+  if (!props.file || !props.file?.filepath) {
+    code.value = ''
     serverCode.value = code.value
     draft.value = false
-  },
-  { immediate: true },
-)
+    return
+  }
+  code.value = await client.rpc.readTestFile(props.file.filepath) || ''
+  serverCode.value = code.value
+  draft.value = false
+}, { immediate: true })
 
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()

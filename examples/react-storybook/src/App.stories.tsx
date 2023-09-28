@@ -16,9 +16,7 @@ export const Loading = Template.bind({})
 Loading.parameters = {
   msw: {
     handlers: [
-      rest.get('https://jsonplaceholder.typicode.com/posts', (req, res, ctx) =>
-        res(ctx.delay('infinite')),
-      ),
+      rest.get('https://jsonplaceholder.typicode.com/posts', (req, res, ctx) => res(ctx.delay('infinite'))),
     ],
   },
 }
@@ -39,9 +37,7 @@ export const Error = Template.bind({})
 Error.parameters = {
   msw: {
     handlers: [
-      rest.get('https://jsonplaceholder.typicode.com/posts', (req, res, ctx) =>
-        res(ctx.status(500)),
-      ),
+      rest.get('https://jsonplaceholder.typicode.com/posts', (req, res, ctx) => res(ctx.status(500))),
     ],
   },
 }

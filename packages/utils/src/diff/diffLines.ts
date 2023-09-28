@@ -42,17 +42,19 @@ function countChanges(diffs: Array<Diff>): ChangeCounts {
   return { a, b }
 }
 
-function printAnnotation({
-  aAnnotation,
-  aColor,
-  aIndicator,
-  bAnnotation,
-  bColor,
-  bIndicator,
-  includeChangeCounts,
-  omitAnnotationLines,
-}: DiffOptionsNormalized,
-changeCounts: ChangeCounts): string {
+function printAnnotation(
+  {
+    aAnnotation,
+    aColor,
+    aIndicator,
+    bAnnotation,
+    bColor,
+    bIndicator,
+    includeChangeCounts,
+    omitAnnotationLines,
+  }: DiffOptionsNormalized,
+  changeCounts: ChangeCounts,
+): string {
   if (omitAnnotationLines)
     return ''
 
@@ -82,8 +84,7 @@ changeCounts: ChangeCounts): string {
   return `${aColor(a)}\n${bColor(b)}\n\n`
 }
 
-export function printDiffLines(diffs: Array<Diff>,
-  options: DiffOptionsNormalized): string {
+export function printDiffLines(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
   return printAnnotation(options, countChanges(diffs))
   + (options.expand
     ? joinAlignedDiffsExpand(diffs, options)
@@ -91,9 +92,7 @@ export function printDiffLines(diffs: Array<Diff>,
 }
 
 // Compare two arrays of strings line-by-line. Format as comparison lines.
-export function diffLinesUnified(aLines: Array<string>,
-  bLines: Array<string>,
-  options?: DiffOptions): string {
+export function diffLinesUnified(aLines: Array<string>, bLines: Array<string>, options?: DiffOptions): string {
   return printDiffLines(
     diffLinesRaw(
       isEmptyString(aLines) ? [] : aLines,
@@ -106,11 +105,7 @@ export function diffLinesUnified(aLines: Array<string>,
 // Given two pairs of arrays of strings:
 // Compare the pair of comparison arrays line-by-line.
 // Format the corresponding lines in the pair of displayable arrays.
-export function diffLinesUnified2(aLinesDisplay: Array<string>,
-  bLinesDisplay: Array<string>,
-  aLinesCompare: Array<string>,
-  bLinesCompare: Array<string>,
-  options?: DiffOptions): string {
+export function diffLinesUnified2(aLinesDisplay: Array<string>, bLinesDisplay: Array<string>, aLinesCompare: Array<string>, bLinesCompare: Array<string>, options?: DiffOptions): string {
   if (isEmptyString(aLinesDisplay) && isEmptyString(aLinesCompare)) {
     aLinesDisplay = []
     aLinesCompare = []
@@ -156,13 +151,11 @@ export function diffLinesUnified2(aLinesDisplay: Array<string>,
 }
 
 // Compare two arrays of strings line-by-line.
-export function diffLinesRaw(aLines: Array<string>,
-  bLines: Array<string>): Array<Diff> {
+export function diffLinesRaw(aLines: Array<string>, bLines: Array<string>): Array<Diff> {
   const aLength = aLines.length
   const bLength = bLines.length
 
-  const isCommon = (aIndex: number, bIndex: number) =>
-    aLines[aIndex] === bLines[bIndex]
+  const isCommon = (aIndex: number, bIndex: number) => aLines[aIndex] === bLines[bIndex]
 
   const diffs: Array<Diff> = []
   let aIndex = 0

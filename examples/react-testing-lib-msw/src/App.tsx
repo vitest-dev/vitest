@@ -40,8 +40,7 @@ function App() {
     <main className="App">
       <h1>MSW Testing Library Example</h1>
       {isLoading && <span aria-label="loading">Loading...</span>}
-      {posts.length > 0 && posts.map(post => (
-        <article key={post.id}>
+      {posts.length > 0 && posts.map(post => (<article key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.body}</p>
         </article>
@@ -49,8 +48,7 @@ function App() {
       <button onClick={() => fetchPosts()}>Fetch Posts</button>
 
       {loading && <span aria-label="loading">Loading...</span>}
-      {postsGql.length > 0 && postsGql.map(post => (
-        <article key={post.id}>
+      {postsGql.length > 0 && postsGql.map(post => (<article key={post.id}>
           <h2>{post.title}</h2>
           <p>{post.body}</p>
         </article>

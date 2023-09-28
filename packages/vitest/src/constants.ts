@@ -25,18 +25,14 @@ const CONFIG_EXTENSIONS = [
   '.cjs',
 ]
 
-export const configFiles = CONFIG_NAMES.flatMap(name =>
-  CONFIG_EXTENSIONS.map(ext => name + ext),
-)
+export const configFiles = CONFIG_NAMES.flatMap(name => CONFIG_EXTENSIONS.map(ext => name + ext))
 
 const WORKSPACES_EXTENSIONS = [
   ...CONFIG_EXTENSIONS,
   '.json',
 ]
 
-export const workspacesFiles = WORKSPACES_NAMES.flatMap(name =>
-  WORKSPACES_EXTENSIONS.map(ext => name + ext),
-)
+export const workspacesFiles = WORKSPACES_NAMES.flatMap(name => WORKSPACES_EXTENSIONS.map(ext => name + ext))
 
 export const globalApis = [
   // suite

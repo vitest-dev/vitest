@@ -44,7 +44,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return seen.get(val)
 
   if (Array.isArray(val)) {
-    const clone: any[] = new Array(val.length)
+    const clone: any[] = Array.from({ length: val.length })
     seen.set(val, clone)
     val.forEach((e, i) => {
       try {

@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
     "lib": ["esnext", "dom"],
+    "module": "esnext",
     "moduleResolution": "node",
+    "types": [
+      "vitest/globals"
+    ],
+    "resolveJsonModule": true,
+    "declaration": true,
+    "inlineSourceMap": true,
+    "outDir": "./dist",
     "esModuleInterop": true,
     "strict": true,
     "strictNullChecks": true,
-    "resolveJsonModule": true,
     "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "inlineSourceMap": true,
-    "types": [
-      "vitest/globals"
-    ]
+    "skipLibCheck": true
   },
   "exclude": [
     "**/dist/**"

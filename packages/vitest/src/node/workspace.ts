@@ -323,8 +323,7 @@ export class WorkspaceProject {
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
       alias: [],
-    }, this.ctx.configOverride || {} as any,
-    ) as ResolvedConfig
+    }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 
   close() {

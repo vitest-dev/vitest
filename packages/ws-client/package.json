@@ -25,9 +25,9 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
     "*.d.ts",
-    "*.mjs"
+    "*.mjs",
+    "dist"
   ],
   "engines": {
     "node": ">=v14.18.0"

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:url'
+import { resolve } from 'node:path'
 import { expect, test, vi } from 'vitest'
 
 // TODO: currently not supported
@@ -43,15 +43,13 @@ test('supports imports from "data:application/wasm" URI with base64 encoding', a
 
 test('imports from "data:application/wasm" URI without explicit encoding fail', async () => {
   await expect(() =>
-    import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`),
-  ).rejects.toThrow('Missing data URI encoding')
+    import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`)).rejects.toThrow('Missing data URI encoding')
 })
 
 test('imports from "data:application/wasm" URI with invalid encoding fail', async () => {
   await expect(() =>
     // @ts-expect-error import is not typed
-    import('data:application/wasm;charset=utf-8,oops'),
-  ).rejects.toThrow('Invalid data URI encoding: charset=utf-8')
+    import('data:application/wasm;charset=utf-8,oops')).rejects.toThrow('Invalid data URI encoding: charset=utf-8')
 })
 
 test('supports wasm files that import js resources (wasm-bindgen)', async () => {

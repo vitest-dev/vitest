@@ -124,8 +124,7 @@ export class JsonReporter implements Reporter {
         assertionResults,
         startTime,
         endTime,
-        status: tests.some(t =>
-          t.result?.state === 'fail')
+        status: tests.some(t => t.result?.state === 'fail')
           ? 'failed'
           : 'passed',
         message: file.result?.errors?.[0]?.message ?? '',

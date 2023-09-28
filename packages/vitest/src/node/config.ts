@@ -276,12 +276,11 @@ export function resolveConfig(
       resolved.benchmark.outputFile = options.outputFile
   }
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    normalize(
+  resolved.setupFiles = toArray(resolved.setupFiles || [])
+    .map(file => normalize(
       resolveModule(file, { paths: [resolved.root] })
         ?? resolve(resolved.root, file),
-    ),
-  )
+    ))
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [
@@ -292,7 +291,8 @@ export function resolveConfig(
   if (resolved.diff) {
     resolved.diff = normalize(
       resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
+        ?? resolve(resolved.root, resolved.diff),
+    )
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 

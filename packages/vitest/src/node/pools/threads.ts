@@ -156,8 +156,9 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         const results: PromiseSettledResult<void>[] = []
 
         if (ctx.config.isolate) {
-          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
-            runFiles(project, getConfig(project), [file], environment, invalidates))))
+          results.push(...await Promise.allSettled(
+            files.map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates)),
+          ))
         }
         else {
           // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
@@ -166,8 +167,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           for (const group of Object.values(grouped)) {
             // Push all files to pool's queue
-            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
-              runFiles(project, getConfig(project), [file], environment, invalidates))))
+            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates))))
 
             // Once all tasks are running or finished, recycle worker for isolation.
             // On-going workers will run in the previous environment.

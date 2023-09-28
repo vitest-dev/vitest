@@ -9,11 +9,9 @@ type Arrayable<T> = T | Array<T>
 export const filesFailed = computed(() => files.value.filter(f => f.result?.state === 'fail'))
 export const filesSuccess = computed(() => files.value.filter(f => f.result?.state === 'pass'))
 export const filesIgnore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
-export const filesRunning = computed(() => files.value.filter(f =>
-  !filesFailed.value.includes(f)
+export const filesRunning = computed(() => files.value.filter(f => !filesFailed.value.includes(f)
     && !filesSuccess.value.includes(f)
-    && !filesIgnore.value.includes(f),
-))
+    && !filesIgnore.value.includes(f)))
 export const filesSkipped = computed(() => filesIgnore.value.filter(f => f.mode === 'skip'))
 export const filesSnapshotFailed = computed(() => files.value.filter(hasFailedSnapshot))
 export const filesTodo = computed(() => filesIgnore.value.filter(f => f.mode === 'todo'))

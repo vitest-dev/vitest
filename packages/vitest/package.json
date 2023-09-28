@@ -25,13 +25,13 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": {
-        "types": "./index.d.cts",
-        "default": "./index.cjs"
-      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
       }
     },
     "./*": "./*",
@@ -71,8 +71,8 @@
     },
     "./config": {
       "types": "./config.d.ts",
-      "require": "./dist/config.cjs",
-      "import": "./dist/config.js"
+      "import": "./dist/config.js",
+      "require": "./dist/config.cjs"
     },
     "./coverage": {
       "types": "./coverage.d.ts",
@@ -90,12 +90,12 @@
     "vitest": "./vitest.mjs"
   },
   "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
+    "*.cjs",
     "*.d.cts",
+    "*.d.ts",
     "*.mjs",
-    "*.cjs"
+    "bin",
+    "dist"
   ],
   "engines": {
     "node": ">=v14.18.0"

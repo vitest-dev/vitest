@@ -299,17 +299,13 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockReturnValue = (val: TReturns) => stub.mockImplementation(() => val)
   stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(() => val)
 
-  stub.mockResolvedValue = (val: Awaited<TReturns>) =>
-    stub.mockImplementation(() => Promise.resolve(val as TReturns))
+  stub.mockResolvedValue = (val: Awaited<TReturns>) => stub.mockImplementation(() => Promise.resolve(val as TReturns))
 
-  stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
-    stub.mockImplementationOnce(() => Promise.resolve(val as TReturns))
+  stub.mockResolvedValueOnce = (val: Awaited<TReturns>) => stub.mockImplementationOnce(() => Promise.resolve(val as TReturns))
 
-  stub.mockRejectedValue = (val: unknown) =>
-    stub.mockImplementation(() => Promise.reject(val))
+  stub.mockRejectedValue = (val: unknown) => stub.mockImplementation(() => Promise.reject(val))
 
-  stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementationOnce(() => Promise.reject(val))
+  stub.mockRejectedValueOnce = (val: unknown) => stub.mockImplementationOnce(() => Promise.reject(val))
 
   Object.defineProperty(stub, 'mock', {
     get: () => mockContext,

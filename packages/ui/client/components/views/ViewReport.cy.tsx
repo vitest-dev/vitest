@@ -20,7 +20,7 @@ function makeTextStack() {
 }
 
 // 5 Stacks
-const textStacks = Array.from(new Array(5)).map(makeTextStack)
+const textStacks = Array.from(Array.from({ length: 5 })).map(makeTextStack)
 
 const diff = `
   \x1B[32m- Expected\x1B[39m

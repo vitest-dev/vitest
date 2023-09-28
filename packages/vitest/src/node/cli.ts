@@ -102,8 +102,7 @@ catch (originalError) {
     throw originalError
 
   const error = conflictingArgs
-    .map(({ arg, dotArgs }) =>
-      `A boolean argument "${arg}" was used with dot notation arguments "${dotArgs.join(' ')}".`
+    .map(({ arg, dotArgs }) => `A boolean argument "${arg}" was used with dot notation arguments "${dotArgs.join(' ')}".`
       + `\nPlease specify the "${arg}" argument with dot notation as well: "${arg}.enabled"`)
     .join('\n')
 

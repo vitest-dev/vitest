@@ -4,6 +4,8 @@ export default antfu(
   {
     // Disable tests rules because we need to test with various setup
     test: false,
+    componentExts: ['js'],
+    // This replaces the old `.gitignore`
     ignores: [
       '**/coverage',
       '**/*.snap',
@@ -17,9 +19,17 @@ export default antfu(
     rules: {
       // prefer global Buffer to not initialize the whole module
       'node/prefer-global/buffer': 'off',
+      'node/prefer-global/process': 'off',
 
       'ts/no-invalid-this': 'off',
 
+      // TODO: migrate later
+      'ts/ban-types': 'off',
+      'ts/no-extraneous-class': 'off',
+      'ts/no-useless-constructor': 'off',
+      'ts/unified-signatures': 'off',
+      'jsdoc/valid-types': 'off',
+      'import/export': 'off',
       'style/quotes': ['error', 'single', {
         allowTemplateLiterals: true,
       }],
@@ -58,7 +68,11 @@ export default antfu(
     },
   },
   {
-    files: ['docs/**', `packages/web-worker/${GLOB_SRC}`, `test/web-worker/${GLOB_SRC}`],
+    files: [
+      `docs/${GLOB_SRC}`,
+`packages/web-worker/${GLOB_SRC}`,
+`test/web-worker/${GLOB_SRC}`,
+    ],
     rules: {
       'no-restricted-globals': 'off',
     },

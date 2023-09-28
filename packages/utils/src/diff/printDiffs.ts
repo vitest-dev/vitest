@@ -27,9 +27,11 @@ function hasCommonDiff(diffs: Array<Diff>, isMultiline: boolean): boolean {
 
 // Compare two strings character-by-character.
 // Format as comparison lines in which changed substrings have inverse colors.
-export function diffStringsUnified(a: string,
+export function diffStringsUnified(
+  a: string,
   b: string,
-  options?: DiffOptions): string {
+  options?: DiffOptions,
+): string {
   if (a !== b && a.length !== 0 && b.length !== 0) {
     const isMultiline = a.includes('\n') || b.includes('\n')
 
@@ -53,9 +55,11 @@ export function diffStringsUnified(a: string,
 
 // Compare two strings character-by-character.
 // Optionally clean up small common substrings, also known as chaff.
-export function diffStringsRaw(a: string,
+export function diffStringsRaw(
+  a: string,
   b: string,
-  cleanup: boolean): Array<Diff> {
+  cleanup: boolean,
+): Array<Diff> {
   const diffs = diffStrings(a, b)
 
   if (cleanup)

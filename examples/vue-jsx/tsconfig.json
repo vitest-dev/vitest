@@ -1,19 +1,19 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
     "lib": ["esnext", "dom"],
+    "jsx": "preserve",
+    "module": "esnext",
     "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "inlineSourceMap": true,
+    "outDir": "./dist",
     "esModuleInterop": true,
     "strict": true,
     "strictNullChecks": true,
-    "resolveJsonModule": true,
     "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "inlineSourceMap": true,
-    "jsx": "preserve"
+    "skipLibCheck": true
   },
   "exclude": ["node_modules"]
 }

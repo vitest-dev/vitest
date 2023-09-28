@@ -66,15 +66,13 @@ function Providers({ children, history, route, swrCache }: ProvidersProps) {
   return Wrapper
 }
 
-function renderWithProviders(ui: React.ReactElement,
-  options: ProviderOptions = {}) {
+function renderWithProviders(ui: React.ReactElement, options: ProviderOptions = {}) {
   const { initialEntries = [], route, ...rest } = options
   const history = createMemoryHistory({ initialEntries })
   const swrCache = new Map(cache)
 
   const rtl = render(ui, {
-    wrapper: ({ children }) => (
-      <Providers history={history} route={route} swrCache={swrCache}>
+    wrapper: ({ children }) => (<Providers history={history} route={route} swrCache={swrCache}>
         {children}
       </Providers>
     ),
@@ -83,12 +81,11 @@ function renderWithProviders(ui: React.ReactElement,
 
   return {
     ...rtl,
-    rerender: (ui: React.ReactElement, rerenderOptions?: ProviderOptions) =>
-      renderWithProviders(ui, {
-        container: rtl.container,
-        ...options,
-        ...rerenderOptions,
-      }),
+    rerender: (ui: React.ReactElement, rerenderOptions?: ProviderOptions) => renderWithProviders(ui, {
+      container: rtl.container,
+      ...options,
+      ...rerenderOptions,
+    }),
     history,
     swrCache,
   }

@@ -1,18 +1,9 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
     "lib": ["esnext", "dom"],
+    "module": "esnext",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "inlineSourceMap": true,
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
@@ -43,7 +34,16 @@
     "types": [
       "node",
       "vite/client"
-    ]
+    ],
+    "resolveJsonModule": true,
+    "declaration": true,
+    "inlineSourceMap": true,
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
   },
   "exclude": [
     "**/dist/**",

@@ -57,10 +57,8 @@ export async function printError(error: unknown, project: WorkspaceProject | und
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
-    : stacks.find(stack =>
-      project.getModuleById(stack.file)
-      && existsSync(stack.file),
-    )
+    : stacks.find(stack => project.getModuleById(stack.file)
+      && existsSync(stack.file))
 
   const errorProperties = getErrorProperties(e)
 
@@ -187,7 +185,8 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
       }
     }
   }
-}\n`)))
+}\n`),
+  ))
 }
 
 function printModuleWarningForSourceCode(logger: Logger, path: string) {

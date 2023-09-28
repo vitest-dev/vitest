@@ -247,10 +247,11 @@ export abstract class BaseReporter implements Reporter {
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
-      logger.log(snapshotOutput.map((t, i) => i === 0
-        ? `${padTitle('Snapshots')} ${t}`
-        : `${padTitle('')} ${t}`,
-      ).join('\n'))
+      logger.log(snapshotOutput
+        .map((t, i) => i === 0
+          ? `${padTitle('Snapshots')} ${t}`
+          : `${padTitle('')} ${t}`)
+        .join('\n'))
       if (snapshotOutput.length > 1)
         logger.log()
     }

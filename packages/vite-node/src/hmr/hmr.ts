@@ -125,9 +125,7 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
   let fetchedModule: ModuleNamespace | undefined
 
   // determine the qualified callbacks before we re-import the modules
-  const qualifiedCallbacks = mod.callbacks.filter(({ deps }) =>
-    deps.includes(acceptedPath),
-  )
+  const qualifiedCallbacks = mod.callbacks.filter(({ deps }) => deps.includes(acceptedPath))
 
   if (isSelfUpdate || qualifiedCallbacks.length > 0) {
     const disposer = maps.disposeMap.get(acceptedPath)

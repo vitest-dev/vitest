@@ -22,7 +22,9 @@ export class SnapshotManager {
     const resolver = this.options.resolveSnapshotPath || (() => {
       return join(
         join(
-          dirname(testPath), '__snapshots__'),
+          dirname(testPath),
+          '__snapshots__',
+        ),
         `${basename(testPath)}${this.extension}`,
       )
     })

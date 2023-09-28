@@ -42,13 +42,13 @@ test('from outside', () => {
 
 test('with big array', () => {
   expect({
-    this: { is: new Set(['one', new Array(30).fill({})]) },
+    this: { is: new Set(['one', Array.from({ length: 30 }).fill({})]) },
   }).toMatchSnapshot()
 })
 
 test('with big string', () => {
   expect({
-    this: { is: new Set(['one', new Array(30).fill('zoo').join()]) },
+    this: { is: new Set(['one', Array.from({ length: 30 }).fill('zoo').join()]) },
   }).toMatchSnapshot()
 })
 

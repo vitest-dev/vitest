@@ -300,8 +300,7 @@ function normalizeTransformResults(fetchCaches: Map<string, { result: FetchResul
 }
 
 function hasTerminalReporter(reporters: Options['reporter']) {
-  return reporters.some(([reporter]) =>
-    reporter === 'text'
+  return reporters.some(([reporter]) => reporter === 'text'
     || reporter === 'text-summary'
     || reporter === 'text-lcov'
     || reporter === 'teamcity')
