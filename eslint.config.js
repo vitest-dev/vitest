@@ -4,7 +4,6 @@ export default antfu(
   {
     // Disable tests rules because we need to test with various setup
     test: false,
-    componentExts: ['js'],
     // This replaces the old `.gitignore`
     ignores: [
       '**/coverage',
@@ -23,16 +22,8 @@ export default antfu(
 
       'ts/no-invalid-this': 'off',
 
-      // TODO: migrate later
+      // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
-      'ts/no-extraneous-class': 'off',
-      'ts/no-useless-constructor': 'off',
-      'ts/unified-signatures': 'off',
-      'jsdoc/valid-types': 'off',
-      'import/export': 'off',
-      'style/quotes': ['error', 'single', {
-        allowTemplateLiterals: true,
-      }],
 
       'no-restricted-imports': [
         'error',
@@ -70,8 +61,8 @@ export default antfu(
   {
     files: [
       `docs/${GLOB_SRC}`,
-`packages/web-worker/${GLOB_SRC}`,
-`test/web-worker/${GLOB_SRC}`,
+      `packages/web-worker/${GLOB_SRC}`,
+      `test/web-worker/${GLOB_SRC}`,
     ],
     rules: {
       'no-restricted-globals': 'off',
