@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/quotes */
+/* eslint-disable style/quotes */
 
 import { expect, test, vi } from 'vitest'
 import { testOutsideInlineSnapshot } from './snapshots-outside'

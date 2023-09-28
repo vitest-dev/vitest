@@ -41,8 +41,9 @@ export function calcExternalLabels(labels: ModuleLabelItem[]): Map<string, strin
         label.candidate += label.candidate === '' ? head : `/${head}`
         splitMap.get(head)?.push(i)
         splits.shift()
-      // eslint-disable-next-line @typescript-eslint/brace-style
-      } else {
+      // eslint-disable-next-line ts/brace-style
+      }
+      else {
         splitMap.set(head, [i])
         // record the index of the label where the head first appears
         firsts.push(i)

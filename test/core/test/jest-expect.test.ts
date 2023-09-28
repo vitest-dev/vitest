@@ -21,7 +21,7 @@ declare module 'vitest' {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R
@@ -770,7 +770,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot(`"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`)
+      expect(err.message).toMatchInlineSnapshot('"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"')
       expect(err.stack).toContain('jest-expect.test.ts')
     }
 
@@ -781,7 +781,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+      expect(err.message).toMatchInlineSnapshot('"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"')
       expect(err.stack).toContain('jest-expect.test.ts')
     }
   })

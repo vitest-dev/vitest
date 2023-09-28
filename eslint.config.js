@@ -19,7 +19,8 @@ export default antfu(
       'node/prefer-global/buffer': 'off',
 
       'ts/no-invalid-this': 'off',
-      'ts/quotes': ['error', 'single', {
+
+      'style/quotes': ['error', 'single', {
         allowTemplateLiterals: true,
       }],
 

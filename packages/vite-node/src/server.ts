@@ -33,7 +33,7 @@ export class ViteNodeServer {
     public server: ViteDevServer,
     public options: ViteNodeServerOptions = {},
   ) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // eslint-disable-next-line ts/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = server.config.ssr
 
@@ -123,15 +123,13 @@ export class ViteNodeServer {
     id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
-      this.fetchPromiseMap.set(id,
-        this._fetchModule(id, transformMode)
-          .then((r) => {
-            return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-          })
-          .finally(() => {
-            this.fetchPromiseMap.delete(id)
-          }),
-      )
+      this.fetchPromiseMap.set(id, this._fetchModule(id, transformMode)
+        .then((r) => {
+          return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+        })
+        .finally(() => {
+          this.fetchPromiseMap.delete(id)
+        }))
     }
     return this.fetchPromiseMap.get(id)!
   }
@@ -139,12 +137,10 @@ export class ViteNodeServer {
   async transformRequest(id: string, filepath = id) {
     // reuse transform for concurrent requests
     if (!this.transformPromiseMap.has(id)) {
-      this.transformPromiseMap.set(id,
-        this._transformRequest(id, filepath)
-          .finally(() => {
-            this.transformPromiseMap.delete(id)
-          }),
-      )
+      this.transformPromiseMap.set(id, this._transformRequest(id, filepath)
+        .finally(() => {
+          this.transformPromiseMap.delete(id)
+        }))
     }
     return this.transformPromiseMap.get(id)!
   }

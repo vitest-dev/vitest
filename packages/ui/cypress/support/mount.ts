@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable ts/no-namespace */
 
 import { mount } from 'cypress/vue'
 import type { Component } from 'vue'

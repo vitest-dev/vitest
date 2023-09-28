@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/quotes */
+/* eslint-disable style/quotes */
 import { expect, it } from 'vitest'
 
 it('should have sourcemaps', () => {

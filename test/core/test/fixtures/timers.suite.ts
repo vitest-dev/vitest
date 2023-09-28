@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck taken from Jest, but tsconfig doesn't allow most of the code
 
 /**
