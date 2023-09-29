@@ -39,9 +39,8 @@ export async function run(ctx: WorkerContext) {
 
   const environment = await loadEnvironment(ctx.environment.name, {
     root: ctx.config.root,
-    fetchModule(id) {
-      return rpc.fetch(id, 'ssr')
-    },
+    fetchModule: id => rpc.fetch(id, 'ssr'),
+    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
 
   if (!environment.setupVM) {
