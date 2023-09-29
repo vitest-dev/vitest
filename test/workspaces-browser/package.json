@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-workspaces",
+  "name": "@vitest/test-workspaces-browser",
   "type": "module",
   "private": true,
   "scripts": {

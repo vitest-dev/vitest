@@ -87,3 +87,23 @@ test('boolean browser flag without dot notation, with more dot notation options'
   expect(stderr).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
   expect(stderr).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
 })
+
+test('nextTick cannot be mocked inside child_process', async () => {
+  const { stderr } = await runVitest({
+    threads: false,
+    fakeTimers: { toFake: ['nextTick'] },
+    include: ['./fixtures/test/fake-timers.test.ts'],
+  })
+
+  expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --threads if mocking nextTick is required.')
+})
+
+test('nextTick can be mocked inside worker_threads', async () => {
+  const { stderr } = await runVitest({
+    threads: true,
+    fakeTimers: { toFake: ['nextTick'] },
+    include: ['./fixtures/test/fake-timers.test.ts'],
+  })
+
+  expect(stderr).not.toMatch('Error')
+})

@@ -277,7 +277,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
   })
 
   it('assertions', () => {
@@ -770,7 +770,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot('"promise resolved \\"{ foo: { bar: 42 } }\\" instead of rejecting"')
+      expect(err.message).toMatchInlineSnapshot(`"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
 
@@ -781,7 +781,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot('"promise rejected \\"Error: some error { foo: { bar: 42 } }\\" instead of resolving"')
+      expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
   })
@@ -849,9 +849,9 @@ it('correctly prints diff with asymmetric matchers', () => {
       + Received
 
         Object {
-          \\"a\\": Any<Number>,
-      -   \\"b\\": Any<Function>,
-      +   \\"b\\": \\"string\\",
+          "a": Any<Number>,
+      -   "b": Any<Function>,
+      +   "b": "string",
         }"
     `)
   }

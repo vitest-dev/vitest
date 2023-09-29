@@ -934,9 +934,6 @@ importers:
       magic-string:
         specifier: ^0.30.1
         version: 0.30.1
-      modern-node-polyfills:
-        specifier: ^1.0.0
-        version: 1.0.0(esbuild@0.18.11)(rollup@3.26.0)
       sirv:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1193,8 +1190,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       codemirror:
         specifier: ^5.65.13
         version: 5.65.13
@@ -1348,8 +1345,8 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       tinypool:
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.8.1
+        version: 0.8.1
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@18.7.13)
@@ -1400,8 +1397,8 @@ importers:
         specifier: ^8.16.3
         version: 8.16.3
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -1494,8 +1491,8 @@ importers:
   packages/ws-client:
     dependencies:
       birpc:
-        specifier: 0.2.12
-        version: 0.2.12
+        specifier: 0.2.14
+        version: 0.2.14
       flatted:
         specifier: ^3.2.7
         version: 3.2.7
@@ -7559,10 +7556,6 @@ packages:
       type-detect: 4.0.8
     dev: true
 
-  /@jspm/core@2.0.1:
-    resolution: {integrity: sha512-Lg3PnLp0QXpxwLIAuuJboLeRaIhrgJjeuh797QADg3xz8wGLugQOS5DpsE8A6i6Adgzf+bacllkKZG3J0tGfDw==}
-    dev: false
-
   /@lit/reactive-element@1.4.1:
     resolution: {integrity: sha512-qDv4851VFSaBWzpS02cXHclo40jsbAjRXnebNXpm0uVg32kCneZPo9RYVQtrTNICtZ+1wAYHu1ZtxWSWMbKrBw==}
     dev: false
@@ -8345,6 +8338,7 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.26.0
+    dev: true
 
   /@sinclair/typebox@0.25.24:
     resolution: {integrity: sha512-XJfwUVUKDHF5ugKwIcxEgc9k8b7HbznCp6eUfWgu710hMPNIO4aw4/zB5RogDQz8nd6gyCDpU9O/m6qYEWY6yQ==}
@@ -13085,8 +13079,8 @@ packages:
     dev: true
     optional: true
 
-  /birpc@0.2.12:
-    resolution: {integrity: sha512-6Wz9FXuJ/FE4gDH+IGQhrYdalAvAQU1Yrtcu1UlMk3+9mMXxIRXiL+MxUcGokso42s+Fy+YoUXGLOdOs0siV3A==}
+  /birpc@0.2.14:
+    resolution: {integrity: sha512-37FHE8rqsYM5JEKCnXFyHpBCzvgHEExwVVTq+nUmloInU7l8ezD1TpOhKpS8oe1DTYFqEK27rFZVKG43oTqXRA==}
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -21105,20 +21099,6 @@ packages:
       pkg-types: 1.0.3
       ufo: 1.1.2
 
-  /modern-node-polyfills@1.0.0(esbuild@0.18.11)(rollup@3.26.0):
-    resolution: {integrity: sha512-w1yb6ae5qSUJJ2u41krkUAxs+L7i9143Qam8EuXwDMeZHxl1JN8RfTSXG4S2bt0RHIRMeoWm/HCeO0pNIHmIYQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      esbuild: ^0.14.0 || ^0.15.0 || ^0.16.0 || ^0.17.0 || ^0.18.0
-    dependencies:
-      '@jspm/core': 2.0.1
-      '@rollup/pluginutils': 5.0.2(rollup@3.26.0)
-      esbuild: 0.18.11
-      local-pkg: 0.4.3
-    transitivePeerDependencies:
-      - rollup
-    dev: false
-
   /moment@2.29.4:
     resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
     dev: true
@@ -24085,6 +24065,7 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
 
   /rollup@3.29.0:
     resolution: {integrity: sha512-nszM8DINnx1vSS+TpbWKMkxem0CDWk3cSit/WWCBVs9/JZ1I/XLwOsiUglYuYReaeWWSsW9kge5zE5NZtf/a4w==}
@@ -25768,8 +25749,8 @@ packages:
     resolution: {integrity: sha512-kRwSG8Zx4tjF9ZiyH4bhaebu+EDz1BOx9hOigYHlUW4xxI/wKIUQUqo018UlU4ar6ATPBsaMrdbKZ+tmPdohFA==}
     dev: false
 
-  /tinypool@0.7.0:
-    resolution: {integrity: sha512-zSYNUlYSMhJ6Zdou4cJwo/p7w5nmAH17GRfU/ui3ctvjXFErXXkruT4MWW6poDeXgCaIBlGLrfU6TbTXxyGMww==}
+  /tinypool@0.8.1:
+    resolution: {integrity: sha512-zBTCK0cCgRROxvs9c0CGK838sPkeokNGdQVUUwHAbynHFlmyJYj825f/oRs528HaIJ97lo0pLIlDUzwN+IorWg==}
     engines: {node: '>=14.0.0'}
     dev: false
 

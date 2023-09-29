@@ -162,7 +162,7 @@
     "std-env": "^3.3.3",
     "strip-literal": "^1.0.1",
     "tinybench": "^2.5.0",
-    "tinypool": "^0.7.0",
+    "tinypool": "^0.8.1",
     "vite": "^3.1.0 || ^4.0.0 || ^5.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
@@ -181,7 +181,7 @@
     "@types/prompts": "^2.4.4",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@wdio/types": "^8.16.3",
-    "birpc": "0.2.12",
+    "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
     "event-target-polyfill": "^0.0.3",

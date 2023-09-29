@@ -21,7 +21,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
 
   const wss = new WebSocketServer({ noServer: true })
 
-  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents>>()
+  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
   ;(server || ctx.server).httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
@@ -154,7 +154,7 @@ class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
-    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents>>,
+    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>,
   ) {}
 
   onCollected(files?: File[]) {
