@@ -1,4 +1,4 @@
-import type { OnTestFailedHandler, SuiteHooks, Test } from './types'
+import type { OnTestFailedHandler, SuiteHooks, TaskPopulated } from './types'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
 import { withTimeout } from './context'
@@ -27,7 +27,7 @@ export const onTestFailed = createTestHook<OnTestFailedHandler>('onTestFailed', 
   test.onFailed.push(handler)
 })
 
-function createTestHook<T>(name: string, handler: (test: Test, handler: T) => void) {
+function createTestHook<T>(name: string, handler: (test: TaskPopulated, handler: T) => void) {
   return (fn: T) => {
     const current = getCurrentTest()
 

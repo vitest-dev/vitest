@@ -142,7 +142,7 @@ export class NodeBenchmarkRunner implements VitestRunner {
     await runBenchmarkSuite(suite, this)
   }
 
-  async runTest(): Promise<void> {
+  async runTask(): Promise<void> {
     throw new Error('`test()` and `it()` is only available in test mode.')
   }
 }

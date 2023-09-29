@@ -3,7 +3,7 @@ import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { VitestRunner } from './types/runner'
-import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
+import type { Custom, File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
@@ -114,8 +114,8 @@ async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   }))
 }
 
-export async function runTest(test: Test, runner: VitestRunner) {
-  await runner.onBeforeRunTest?.(test)
+export async function runTest(test: Test | Custom, runner: VitestRunner) {
+  await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run')
     return
@@ -142,14 +142,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
-        await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+        await runner.onBeforeTryTask?.(test, { retry: retryCount, repeats: repeatCount })
 
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
-        if (runner.runTest) {
-          await runner.runTest(test)
+        if (runner.runTask) {
+          await runner.runTask(test)
         }
         else {
           const fn = getFn(test)
@@ -165,7 +165,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw errors
         }
 
-        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+        await runner.onAfterTryTask?.(test, { retry: retryCount, repeats: repeatCount })
 
         if (test.result.state !== 'fail') {
           if (!test.repeats)
@@ -230,7 +230,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   test.result.duration = now() - start
 
-  await runner.onAfterRunTest?.(test)
+  await runner.onAfterRunTask?.(test)
 
   updateTask(test, runner)
 }
@@ -356,7 +356,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 }
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
-  if (c.type === 'test')
+  if (c.type === 'test' || c.type === 'custom')
     return runTest(c, runner)
 
   else if (c.type === 'suite')
@@ -385,11 +385,11 @@ export async function startTests(paths: string[], runner: VitestRunner) {
   const files = await collectTests(paths, runner)
 
   runner.onCollected?.(files)
-  await runner.onBeforeRun?.(files)
+  await runner.onBeforeRunFiles?.(files)
 
   await runFiles(files, runner)
 
-  await runner.onAfterRun?.(files)
+  await runner.onAfterRunFiles?.(files)
 
   await sendTasksUpdate(runner)
 
