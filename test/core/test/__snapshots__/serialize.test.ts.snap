@@ -19,7 +19,7 @@ exports[`error serialize > works 1`] = `
 {
   "array": [
     1,
-    ,
+    undefined,
     3,
   ],
   "fn": "Function<fn>",
