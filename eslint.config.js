@@ -9,6 +9,7 @@ export default antfu(
       '**/coverage',
       '**/*.snap',
       '**/bench.json',
+      '**/fixtures',
       'test/core/src/self',
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
