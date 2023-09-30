@@ -80,14 +80,14 @@ export default <Environment>({
       'MessageChannel',
       'MessagePort',
     ]
-    globalNames.forEach(name => {
+    for (const name of globalNames) {
       const value = globalThis[name]
       if (
         typeof value !== 'undefined' &&
         typeof dom.window[name] === 'undefined'
       )
         dom.window[name] = value
-    })       
+    }
 
     return {
       getVmContext() {
