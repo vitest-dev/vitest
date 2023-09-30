@@ -69,9 +69,25 @@ export default <Environment>({
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
 
-    // inject structuredClone if it exists
-    if (typeof structuredClone !== 'undefined' && !dom.window.structuredClone)
-      dom.window.structuredClone = structuredClone
+    // inject web globals if they missing in JSDOM but otherwise available in Nodejs
+    // https://nodejs.org/dist/latest/docs/api/globals.html
+    const globalNames = [
+      'structuredClone',
+      'fetch',
+      'Request',
+      'Response',
+      'BroadcastChannel',
+      'MessageChannel',
+      'MessagePort',
+    ]
+    globalNames.forEach(name => {
+      const value = globalThis[name]
+      if (
+        typeof value !== 'undefined' &&
+        typeof dom.window[name] === 'undefined'
+      )
+        dom.window[name] = value
+    })       
 
     return {
       getVmContext() {
