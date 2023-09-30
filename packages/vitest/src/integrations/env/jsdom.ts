@@ -79,12 +79,12 @@ export default <Environment>({
       'BroadcastChannel',
       'MessageChannel',
       'MessagePort',
-    ]
+    ] as const
     for (const name of globalNames) {
       const value = globalThis[name]
       if (
-        typeof value !== 'undefined' &&
-        typeof dom.window[name] === 'undefined'
+        typeof value !== 'undefined'
+        && typeof dom.window[name] === 'undefined'
       )
         dom.window[name] = value
     }
