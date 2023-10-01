@@ -22,7 +22,7 @@ describe('should fail', async () => {
     expect(stderr).toBeTruthy()
     const lines = String(stderr).split(/\n/g)
     const msg = lines
-      .filter(i => i.includes('TypeCheckError: '))
+      .filter((line, i, arr) => line.includes('TypeCheckError: ') || arr[i - 1]?.includes('TypeCheckError: '))
       .reverse()
       .join('\n')
       .trim()
