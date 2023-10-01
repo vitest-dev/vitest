@@ -1352,8 +1352,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       expect-type:
-        specifier: ^0.16.0
-        version: 0.16.0
+        specifier: ^0.17.3
+        version: 0.17.3
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.2
@@ -15954,8 +15954,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /expect-type@0.16.0:
-    resolution: {integrity: sha512-wCpFeVBiAPGiYkQZzaqvGuuBnNCHbtnowMOBpBGY8a27XbG8VAit3lklWph1r8VmgsH61mOZqI3NuGm8bZnUlw==}
+  /expect-type@0.17.3:
+    resolution: {integrity: sha512-K0ZdZJ97jiAtaOwhEHHz/f0N6Xbj5reRz5g6+5BO7+OvqQ7PMQz0/c8bFSJs1zPotNJL5HJaC6t6lGPEAtGyOw==}
     engines: {node: '>=12.0.0'}
     dev: true
 
