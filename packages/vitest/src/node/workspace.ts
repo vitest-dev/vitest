@@ -307,9 +307,14 @@ export class WorkspaceProject {
           },
         },
       },
+      snapshotFormat: {},
       snapshotOptions: {
         ...this.config.snapshotOptions,
         resolveSnapshotPath: undefined,
+        snapshotFormat: {
+          ...this.config.snapshotOptions?.snapshotFormat,
+          plugins: [],
+        },
       },
       onConsoleLog: undefined!,
       sequence: {
