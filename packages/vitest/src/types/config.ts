@@ -537,7 +537,7 @@ export interface InlineConfig {
   /**
    * Format options for snapshot testing.
    */
-  snapshotFormat?: PrettyFormatOptions
+  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins'>
 
   /**
    * Path to a module which has a default export of diff config.

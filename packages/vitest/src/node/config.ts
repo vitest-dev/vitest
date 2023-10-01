@@ -214,6 +214,9 @@ export function resolveConfig(
       : new RegExp(resolved.testNamePattern)
     : undefined
 
+  if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat)
+    (resolved.snapshotFormat as any).plugins = []
+
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
