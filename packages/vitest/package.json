@@ -106,7 +106,6 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@types/node": ">= 14",
     "@edge-runtime/vm": "*",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
@@ -114,6 +113,7 @@
     "jsdom": "*",
     "playwright": "*",
     "safaridriver": "*",
+    "@types/node": ">= 14",
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
