@@ -217,7 +217,7 @@ function createVitest(): VitestUtils {
       }
 
       if (config)
-        _timers.configure(config)
+        _timers.configure({ ...workerState.config.fakeTimers, ...config })
       else
         _timers.configure(workerState.config.fakeTimers)
 
