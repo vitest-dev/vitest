@@ -106,6 +106,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "@types/node": ">= 14",
     "@edge-runtime/vm": "*",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
@@ -116,6 +117,9 @@
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
+    "@types/node": {
+      "optional": true
+    },
     "@vitest/ui": {
       "optional": true
     },
@@ -142,9 +146,6 @@
     }
   },
   "dependencies": {
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
-    "@types/node": "*",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
