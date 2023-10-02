@@ -5,6 +5,7 @@ import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
+import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge, hasFailed } from '../utils'
@@ -14,6 +15,9 @@ import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
+import type { GlobalSetupFile } from './globalSetup'
+import { loadGlobalSetupFiles } from './globalSetup'
+import { divider } from './reporters/renderers/utils'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -64,6 +68,9 @@ export class WorkspaceProject {
 
   testFilesList: string[] = []
 
+  private _globalSetupInit = false
+  private _globalSetups: GlobalSetupFile[] = []
+
   constructor(
     public path: string | number,
     public ctx: Vitest,
@@ -75,6 +82,50 @@ export class WorkspaceProject {
 
   isCore() {
     return this.ctx.getCoreWorkspaceProject() === this
+  }
+
+  async initializeGlobalSetup() {
+    if (this._globalSetupInit)
+      return
+
+    this._globalSetupInit = true
+
+    this._globalSetups = await loadGlobalSetupFiles(this)
+
+    try {
+      for (const globalSetupFile of this._globalSetups) {
+        const teardown = await globalSetupFile.setup?.()
+        if (teardown == null || !!globalSetupFile.teardown)
+          continue
+        if (typeof teardown !== 'function')
+          throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
+        globalSetupFile.teardown = teardown
+      }
+    }
+    catch (e) {
+      this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
+      await this.logger.printError(e)
+      process.exit(1)
+    }
+  }
+
+  async teardownGlobalSetup() {
+    if (!this._globalSetupInit || !this._globalSetups.length)
+      return
+    for (const globalSetupFile of this._globalSetups.reverse()) {
+      try {
+        await globalSetupFile.teardown?.()
+      }
+      catch (error) {
+        this.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
+        await this.logger.printError(error)
+        process.exitCode = 1
+      }
+    }
+  }
+
+  get logger() {
+    return this.ctx.logger
   }
 
   // it's possible that file path was imported with different queries (?raw, ?url, etc)
@@ -337,6 +388,7 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
+        this.teardownGlobalSetup(),
       ].filter(Boolean))
     }
     return this.closingPromise

@@ -8,7 +8,6 @@ import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
@@ -178,7 +177,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
     },
     SsrReplacerPlugin(),
-    GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     options.ui
