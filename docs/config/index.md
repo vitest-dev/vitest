@@ -924,7 +924,7 @@ globalThis.resetBeforeEachTest = true
 
 - **Type:** `string | string[]`
 
-Path to global setup files, relative to project root
+Path to global setup files, relative to project root.
 
 A global setup file can either export named functions `setup` and `teardown` or a `default` function that returns a teardown function ([example](https://github.com/vitest-dev/vitest/blob/main/test/global-setup/vitest.config.ts)).
 
@@ -933,7 +933,7 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that the global setup is run in a different global scope, so your tests don't have access to variables defined here.
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Also, since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed, for example (the test file will wait for global setup to finish before running).
 :::
 
 
