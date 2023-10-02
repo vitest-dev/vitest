@@ -84,7 +84,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     options.concurrentTasksPerWorker = 1
   }
 
-  if (ctx.config.poolOptions?.threads?.singleThread) {
+  if (ctx.config.poolOptions?.forks?.singleFork) {
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1

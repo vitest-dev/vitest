@@ -547,7 +547,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'threads' | 'forks' | 'VmThreads'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -1327,7 +1327,7 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **CLI:** `--browser`, `--browser.isolate=false`
+- **CLI:** `--browser.isolate`, `--browser.isolate=false`
 
 Isolate test environment after each test.
 
