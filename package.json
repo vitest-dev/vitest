@@ -82,6 +82,9 @@
       "ignoreMissing": [
         "@algolia/client-search"
       ]
+    },
+    "patchedDependencies": {
+      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch"
     }
   },
   "simple-git-hooks": {

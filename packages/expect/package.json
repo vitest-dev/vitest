@@ -17,14 +17,14 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./index.d.ts",
       "import": "./dist/index.js"
     },
     "./*": "./*"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./index.d.ts",
   "files": [
     "dist"
   ],
@@ -39,7 +39,9 @@
     "chai": "^4.3.10"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.6",
     "@vitest/runner": "workspace:*",
-    "picocolors": "^1.0.0"
+    "picocolors": "^1.0.0",
+    "rollup-plugin-copy": "^3.5.0"
   }
 }

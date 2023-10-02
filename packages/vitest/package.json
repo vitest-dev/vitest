@@ -106,8 +106,8 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@types/node": ">= 14",
     "@edge-runtime/vm": "*",
+    "@types/node": ">= 14",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
@@ -146,8 +146,6 @@
     }
   },
   "dependencies": {
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",

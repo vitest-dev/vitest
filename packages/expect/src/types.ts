@@ -1,5 +1,3 @@
-import type { use as chaiUse } from 'chai'
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
@@ -12,8 +10,7 @@ import type { Formatter } from 'picocolors/types'
 import type { Constructable } from '@vitest/utils'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
-export type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
-export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
+export type ChaiPlugin = Chai.ChaiPlugin
 
 export type Tester = (a: any, b: any) => boolean | undefined
 
