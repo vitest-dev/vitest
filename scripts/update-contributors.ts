@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs'
-import { $fetch } from 'ohmyfetch'
+import { ofetch } from 'ofetch'
 
 interface Contributor {
   login: string
@@ -7,7 +7,7 @@ interface Contributor {
 
 async function fetchContributors(page = 1) {
   const collaborators: string[] = []
-  const data = await $fetch<Contributor[]>(`https://api.github.com/repos/vitest-dev/vitest/contributors?per_page=100&page=${page}`, {
+  const data = await ofetch<Contributor[]>(`https://api.github.com/repos/vitest-dev/vitest/contributors?per_page=100&page=${page}`, {
     method: 'get',
     headers: {
       'content-type': 'application/json',
