@@ -1,20 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should fail > typecheck files 1`] = `
-"❯ only.test-d.ts:4:33
-TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
-  Type 'ExpectArray<number>' has no call signatures.
-TypeCheckError: This expression is not callable.
-  Type 'ExpectUndefined<number>' has no call signatures.
-TypeCheckError: This expression is not callable.
-  Type 'ExpectVoid<number>' has no call signatures.
-TypeCheckError: This expression is not callable.
- ❯ fail.test-d.ts:4:33
-TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
- ❯ expect-error.test-d.ts:4:3
-TypeCheckError: Unused '@ts-expect-error' directive.
-  Type 'ExpectVoid<number>' has no call signatures.
-TypeCheckError: This expression is not callable."
+"TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'. ❯ only.test-d.ts:4:33
+TypeCheckError: This expression is not callable.  Type 'ExpectArray<number>' has no call signatures.
+TypeCheckError: This expression is not callable.  Type 'ExpectUndefined<number>' has no call signatures.
+TypeCheckError: This expression is not callable.  Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'. ❯ fail.test-d.ts:4:33
+TypeCheckError: Unused '@ts-expect-error' directive. ❯ expect-error.test-d.ts:4:3
+TypeCheckError: This expression is not callable.  Type 'ExpectVoid<number>' has no call signatures."
 `;
 
 exports[`should fail > typecheck files 2`] = `
