@@ -107,13 +107,13 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@types/node": ">= 14",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
     "jsdom": "*",
     "playwright": "*",
     "safaridriver": "*",
-    "@types/node": ">= 14",
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
