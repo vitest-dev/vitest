@@ -7,8 +7,12 @@ import solid from 'vite-plugin-solid'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    threads: false,
-    isolate: false,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        isolate: false,
+      },
+    },
   },
   plugins: [solid()],
   resolve: {

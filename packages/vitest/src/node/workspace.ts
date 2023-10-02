@@ -295,6 +295,10 @@ export class WorkspaceProject {
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
+
+      pool: this.ctx.config.pool,
+      poolOptions: this.ctx.config.poolOptions,
+
       reporters: [],
       deps: {
         ...this.config.deps,

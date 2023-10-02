@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-// When using multi threads the first test will start before failing.test.ts fails
+// When using multi threads/forks the first test will start before failing.test.ts fails
 const isThreads = process.env.THREADS === 'true'
 
 test(`1 - second.test.ts - this should ${isThreads ? 'pass' : 'be skipped'}`, async () => {

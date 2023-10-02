@@ -14,12 +14,12 @@ export default defineConfig({
       name: process.env.BROWSER || 'chrome',
       headless: false,
       provider: process.env.PROVIDER || 'webdriverio',
+      isolate: false,
     },
     alias: {
       '#src': resolve(dir, './src'),
     },
     open: false,
-    isolate: false,
     diff: './custom-diff-config.ts',
     outputFile: './browser.json',
     reporters: ['json', {
