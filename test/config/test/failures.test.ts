@@ -95,7 +95,7 @@ test('nextTick cannot be mocked inside child_process', async () => {
     include: ['./fixtures/test/fake-timers.test.ts'],
   })
 
-  expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --threads if mocking nextTick is required.')
+  expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.')
 })
 
 test('nextTick can be mocked inside worker_threads', async () => {
