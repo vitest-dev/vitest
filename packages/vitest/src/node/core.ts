@@ -420,6 +420,10 @@ export class Vitest {
     return Array.from(projects).map(project => [project, file] as WorkspaceSpec)
   }
 
+  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
+    await Promise.all(paths.map(async ([project]) => project.initializeGlobalSetup()))
+  }
+
   async runFiles(paths: WorkspaceSpec[]) {
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
@@ -440,6 +444,8 @@ export class Vitest {
       this.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
+      await this.initializeGlobalSetup(paths)
+
       try {
         await this.pool.runTests(paths, invalidates)
       }
