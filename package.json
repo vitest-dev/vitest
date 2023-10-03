@@ -19,6 +19,7 @@
     "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public",
+    "release:beta": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public --tag beta",
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
