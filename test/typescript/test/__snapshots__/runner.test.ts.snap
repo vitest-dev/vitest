@@ -1,24 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should fail > typecheck files 1`] = `
-"TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'. ❯ only.test-d.ts:4:33
-TypeCheckError: This expression is not callable.  Type 'ExpectArray<number>' has no call signatures.
-TypeCheckError: This expression is not callable.  Type 'ExpectUndefined<number>' has no call signatures.
-TypeCheckError: This expression is not callable.  Type 'ExpectVoid<number>' has no call signatures.
-TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'. ❯ fail.test-d.ts:4:33
-TypeCheckError: Unused '@ts-expect-error' directive. ❯ expect-error.test-d.ts:4:3
-TypeCheckError: This expression is not callable.  Type 'ExpectVoid<number>' has no call signatures."
+"TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+TypeCheckError: Unused '@ts-expect-error' directive.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures."
 `;
 
 exports[`should fail > typecheck files 2`] = `
 " FAIL  fail.test-d.ts > nested suite
-TypeCheckError: This expression is not callable.
-  Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:15:19
      13|   })
      14| 
      15|   expectTypeOf(1).toBeVoid()
-       |                   ^"
+       |                   ^
+     16| })"
 `;
 
 exports[`should fail > typecheck files 3`] = `
@@ -45,35 +45,35 @@ TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string,
 
 exports[`should fail > typecheck files 5`] = `
 " FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
-TypeCheckError: This expression is not callable.
-  Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:10:23
       8|   describe('nested 2', () => {
       9|     test('failing test 2', () => {
      10|       expectTypeOf(1).toBeVoid()
-       |                       ^"
+       |                       ^
+     11|       expectTypeOf(1).toBeUndefined()"
 `;
 
 exports[`should fail > typecheck files 6`] = `
 " FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
-TypeCheckError: This expression is not callable.
-  Type 'ExpectUndefined<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
  ❯ fail.test-d.ts:11:23
       9|     test('failing test 2', () => {
      10|       expectTypeOf(1).toBeVoid()
      11|       expectTypeOf(1).toBeUndefined()
-       |                       ^"
+       |                       ^
+     12|     })"
 `;
 
 exports[`should fail > typecheck files 7`] = `
 " FAIL  js-fail.test-d.js > js test fails
-TypeCheckError: This expression is not callable.
-  Type 'ExpectArray<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
  ❯ js-fail.test-d.js:6:19
       4| 
       5| test('js test fails', () => {
       6|   expectTypeOf(1).toBeArray()
-       |                   ^"
+       |                   ^
+      7| })"
 `;
 
 exports[`should fail > typecheck files 8`] = `
