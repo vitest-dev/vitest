@@ -4,7 +4,7 @@
   "version": "1.0.0-beta.0",
   "private": true,
   "packageManager": "pnpm@8.7.4",
-  "description": "A blazing fast unit test framework powered by Vite",
+  "description": "Next generation testing framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "build": "pnpm -r --filter='./packages/**' run build",

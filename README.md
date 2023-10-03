@@ -6,7 +6,7 @@
 Vitest
 </h1>
 <p align="center">
-A blazing fast unit test framework powered by Vite.
+Next generation testing framework powered by Vite.
 <p>
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
