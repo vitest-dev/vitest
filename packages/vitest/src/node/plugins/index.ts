@@ -45,8 +45,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         const testConfig = deepMerge(
           {} as UserConfig,
           configDefaults,
-          options,
           removeUndefinedValues(viteConfig.test ?? {}),
+          options,
         )
         testConfig.api = resolveApiServerConfig(testConfig)
 
