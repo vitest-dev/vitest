@@ -11,19 +11,33 @@ import { withInlineSourcemap } from './source-map'
 
 export * from './externalize'
 
+interface FetchCache {
+  duration?: number
+  timestamp: number
+  result: FetchResult
+}
+
 const debugRequest = createDebug('vite-node:server:request')
 
 export class ViteNodeServer {
-  private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
-  private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
+  private fetchPromiseMap = {
+    ssr: new Map<string, Promise<FetchResult>>(),
+    web: new Map<string, Promise<FetchResult>>(),
+  }
+
+  private transformPromiseMap = {
+    ssr: new Map<string, Promise<TransformResult | null | undefined>>(),
+    web: new Map<string, Promise<TransformResult | null | undefined>>(),
+  }
 
   private existingOptimizedDeps = new Set<string>()
 
-  fetchCache = new Map<string, {
-    duration?: number
-    timestamp: number
-    result: FetchResult
-  }>()
+  fetchCaches = {
+    ssr: new Map<string, FetchCache>(),
+    web: new Map<string, FetchCache>(),
+  }
+
+  fetchCache = new Map<string, FetchCache>()
 
   externalizeCache = new Map<string, Promise<string | false>>()
 
@@ -33,8 +47,6 @@ export class ViteNodeServer {
     public server: ViteDevServer,
     public options: ViteNodeServerOptions = {},
   ) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = server.config.ssr
 
     options.deps ??= {}
@@ -120,33 +132,37 @@ export class ViteNodeServer {
   }
 
   async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
-    id = normalizeModuleId(id)
+    const moduleId = normalizeModuleId(id)
+    const mode = transformMode || this.getTransformMode(id)
+    const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
-    if (!this.fetchPromiseMap.has(id)) {
-      this.fetchPromiseMap.set(id,
-        this._fetchModule(id, transformMode)
+    if (!promiseMap.has(moduleId)) {
+      promiseMap.set(moduleId,
+        this._fetchModule(moduleId, mode)
           .then((r) => {
             return this.options.sourcemap !== true ? { ...r, map: undefined } : r
           })
           .finally(() => {
-            this.fetchPromiseMap.delete(id)
+            promiseMap.delete(moduleId)
           }),
       )
     }
-    return this.fetchPromiseMap.get(id)!
+    return promiseMap.get(moduleId)!
   }
 
-  async transformRequest(id: string, filepath = id) {
+  async transformRequest(id: string, filepath = id, transformMode?: 'web' | 'ssr') {
+    const mode = transformMode || this.getTransformMode(id)
+    const promiseMap = this.transformPromiseMap[mode]
     // reuse transform for concurrent requests
-    if (!this.transformPromiseMap.has(id)) {
-      this.transformPromiseMap.set(id,
-        this._transformRequest(id, filepath)
+    if (!promiseMap.has(id)) {
+      promiseMap.set(id,
+        this._transformRequest(id, filepath, mode)
           .finally(() => {
-            this.transformPromiseMap.delete(id)
+            promiseMap.delete(id)
           }),
       )
     }
-    return this.transformPromiseMap.get(id)!
+    return promiseMap.get(id)!
   }
 
   async transformModule(id: string, transformMode?: 'web' | 'ssr') {
@@ -175,7 +191,7 @@ export class ViteNodeServer {
     return 'web'
   }
 
-  private async _fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
+  private async _fetchModule(id: string, transformMode: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
 
     const cacheDir = this.options.deps?.cacheDir
@@ -194,7 +210,7 @@ export class ViteNodeServer {
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
-    const cache = this.fetchCache.get(filePath)
+    const cache = this.fetchCaches[transformMode].get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
 
@@ -212,11 +228,14 @@ export class ViteNodeServer {
       result = { code: r?.code, map: r?.map as any }
     }
 
-    this.fetchCache.set(filePath, {
+    const cacheEntry = {
       duration,
       timestamp: time,
       result,
-    })
+    }
+
+    this.fetchCaches[transformMode].set(filePath, cacheEntry)
+    this.fetchCache.set(filePath, cacheEntry)
 
     return result
   }
@@ -229,7 +248,7 @@ export class ViteNodeServer {
     })
   }
 
-  private async _transformRequest(id: string, filepath: string, customTransformMode?: 'web' | 'ssr') {
+  private async _transformRequest(id: string, filepath: string, transformMode: 'web' | 'ssr') {
     debugRequest(id)
 
     let result: TransformResult | null = null
@@ -239,8 +258,6 @@ export class ViteNodeServer {
       if (result)
         return result
     }
-
-    const transformMode = customTransformMode ?? this.getTransformMode(id)
 
     if (transformMode === 'web') {
       // for components like Vue, we want to use the client side
