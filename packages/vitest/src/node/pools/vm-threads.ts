@@ -1,11 +1,10 @@
 import { MessageChannel } from 'node:worker_threads'
 import * as nodeos from 'node:os'
-import { pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
-import { distDir, rootDir } from '../../paths'
+import { rootDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
@@ -14,7 +13,6 @@ import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { createMethodsRPC } from './rpc'
 
-const workerPath = pathToFileURL(resolve(distDir, './vm.js')).href
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: WorkspaceProject) {
@@ -40,7 +38,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -54,7 +52,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
   const minThreads = ctx.config.poolOptions?.vmThreads?.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
-    filename: workerPath,
+    filename: vmPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: ctx.config.poolOptions?.vmThreads?.useAtomics ?? false,

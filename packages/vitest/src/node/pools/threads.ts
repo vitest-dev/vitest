@@ -1,19 +1,14 @@
 import { MessageChannel } from 'node:worker_threads'
 import * as nodeos from 'node:os'
-import { pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
-import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
-import { distDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
-
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
 function createWorkerChannel(project: WorkspaceProject) {
   const channel = new MessageChannel()
@@ -38,7 +33,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()

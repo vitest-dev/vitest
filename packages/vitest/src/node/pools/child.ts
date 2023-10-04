@@ -1,21 +1,16 @@
 import v8 from 'node:v8'
-import { fileURLToPath, pathToFileURL } from 'node:url'
 import * as nodeos from 'node:os'
 import EventEmitter from 'node:events'
 import { Tinypool } from 'tinypool'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import { createBirpc } from 'birpc'
-import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import { distDir } from '../../paths'
 import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { groupBy } from '../../utils'
 import { createMethodsRPC } from './rpc'
-
-const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
 function createChildProcessChannel(project: WorkspaceProject) {
   const emitter = new EventEmitter()
@@ -53,7 +48,7 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -68,7 +63,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: childPath,
+    filename: forksPath,
 
     maxThreads,
     minThreads,
