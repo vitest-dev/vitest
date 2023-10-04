@@ -19,6 +19,9 @@ export interface ProcessPool {
 }
 
 export interface PoolProcessOptions {
+  workerPath: string
+  forksPath: string
+  vmPath: string
   execArgv: string[]
   env: Record<string, string>
 }
@@ -61,6 +64,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     )
 
     const options: PoolProcessOptions = {
+      ...ctx.projectFiles,
       execArgv: ctx.config.deps.registerNodeLoader
         ? [
             ...execArgv,

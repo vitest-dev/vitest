@@ -1,5 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
+import assert from 'node:assert'
 import { join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
@@ -131,9 +132,14 @@ export class ViteNodeServer {
     return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
   }
 
+  private assertMode(mode: 'web' | 'ssr') {
+    assert(mode === 'web' || mode === 'ssr', `"transformMode" can only be "web" or "ssr", received "${mode}".`)
+  }
+
   async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
     const moduleId = normalizeModuleId(id)
     const mode = transformMode || this.getTransformMode(id)
+    this.assertMode(mode)
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
@@ -152,6 +158,7 @@ export class ViteNodeServer {
 
   async transformRequest(id: string, filepath = id, transformMode?: 'web' | 'ssr') {
     const mode = transformMode || this.getTransformMode(id)
+    this.assertMode(mode)
     const promiseMap = this.transformPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(id)) {
