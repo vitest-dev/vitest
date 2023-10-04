@@ -164,6 +164,32 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return this.match(expected)
   })
   def('toContain', function (item) {
+    const actual = this._obj
+
+    if (typeof Node !== 'undefined' && actual instanceof Node) {
+      if (!(item instanceof Node))
+        throw new TypeError(`toContain() expected a DOM node as the argument, but got ${typeof item}`)
+
+      return this.assert(
+        actual.contains(item),
+        'expected #{this} to contain element #{exp}',
+        'expected #{this} not to contain element #{exp}',
+        item,
+        actual,
+      )
+    }
+
+    if (typeof DOMTokenList !== 'undefined' && actual instanceof DOMTokenList) {
+      assertTypes(item, 'class name', ['string'])
+      return this.assert(
+        actual.contains(item),
+        `expected "${actual.value}" to contain "${item}"`,
+        `expected "${actual.value}" not to contain "${item}"`,
+        `${actual.value} ${item}`,
+        actual.value,
+      )
+    }
+
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {
@@ -200,7 +226,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -213,7 +239,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -226,7 +252,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -239,7 +265,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(

@@ -422,7 +422,7 @@ test('structurally the same, but semantically different', () => {
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -430,6 +430,12 @@ import { getAllFruits } from './stocks.js'
 
 test('the fruit list contains orange', () => {
   expect(getAllFruits()).toContain('orange')
+
+  const element = document.querySelector('#el')
+  // element has a class
+  expect(element.classList).toContain('flex')
+  // element is inside another one
+  expect(document.querySelector('#wrapper')).toContain(element)
 })
 ```
 

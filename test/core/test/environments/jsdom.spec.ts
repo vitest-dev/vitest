@@ -21,3 +21,29 @@ test.runIf(nodeMajor >= 18)('fetch, Request, Response, and BroadcastChannel are 
   expect(TextDecoder).toBeDefined()
   expect(BroadcastChannel).toBeDefined()
 })
+
+test('toContain correctly handles DOM nodes', () => {
+  const wrapper = document.createElement('div')
+  const child = document.createElement('div')
+  const external = document.createElement('div')
+  wrapper.appendChild(child)
+
+  expect(wrapper).toContain(child)
+  expect(wrapper).not.toContain(external)
+
+  wrapper.classList.add('flex', 'flex-col')
+
+  expect(wrapper.classList).toContain('flex-col')
+  expect(wrapper.classList).not.toContain('flex-row')
+
+  expect(() => {
+    expect(wrapper).toContain('some-element')
+  }).toThrowErrorMatchingInlineSnapshot(`"toContain() expected a DOM node as the argument, but got string"`)
+
+  expect(() => {
+    expect(wrapper.classList).toContain('flex-row')
+  }).toThrowErrorMatchingInlineSnapshot(`"expected "flex flex-col" to contain "flex-row""`)
+  expect(() => {
+    expect(wrapper.classList).toContain(2)
+  }).toThrowErrorMatchingInlineSnapshot(`"class name value must be string, received "number""`)
+})
