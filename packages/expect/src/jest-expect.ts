@@ -181,11 +181,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     if (typeof DOMTokenList !== 'undefined' && actual instanceof DOMTokenList) {
       assertTypes(item, 'class name', ['string'])
+      const isNot = utils.flag(this, 'negate') as boolean
+      const expectedClassList = isNot ? actual.value.replace(item, '').trim() : `${actual.value} ${item}`
       return this.assert(
         actual.contains(item),
         `expected "${actual.value}" to contain "${item}"`,
         `expected "${actual.value}" not to contain "${item}"`,
-        `${actual.value} ${item}`,
+        expectedClassList,
         actual.value,
       )
     }
