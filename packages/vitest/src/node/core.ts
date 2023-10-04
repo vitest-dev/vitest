@@ -98,6 +98,7 @@ export class Vitest {
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
 
+    // if Vitest is running globally, then we should still import local vitest if possible
     const projectVitestPath = await this.vitenode.resolveId('vitest')
     const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
     this.projectFiles = {
