@@ -3,7 +3,7 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
-import type { UserConfig, Vitest, VitestRunMode } from '../types'
+import type { CollectedTests, UserConfig, Vitest, VitestRunMode } from '../types'
 import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
@@ -20,12 +20,13 @@ export interface CliOptions extends UserConfig {
  *
  * Returns a Vitest instance if initialized successfully.
  */
-export async function startVitest(
+async function executeVitest(
+  callback: (ctx: Vitest) => Promise<unknown>,
   mode: VitestRunMode,
   cliFilters: string[] = [],
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
-): Promise<Vitest | undefined> {
+): Promise<Vitest> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= options.mode || 'test'
@@ -38,7 +39,7 @@ export async function startVitest(
 
   if (!await ensurePackageInstalled('vite', root)) {
     process.exitCode = 1
-    return
+    throw new Error('Vitest requires "vite" to be installed in the project root.')
   }
 
   if (typeof options.coverage === 'boolean')
@@ -94,7 +95,7 @@ export async function startVitest(
   })
 
   try {
-    await ctx.start(cliFilters)
+    await callback(ctx)
   }
   catch (e) {
     process.exitCode = 1
@@ -109,4 +110,41 @@ export async function startVitest(
   stdinCleanup?.()
   await ctx.close()
   return ctx
+}
+
+export async function startVitest(
+  mode: VitestRunMode,
+  cliFilters: string[] = [],
+  options: CliOptions = {},
+  viteOverrides?: ViteUserConfig,
+) {
+  return executeVitest(
+    ctx => ctx.start(cliFilters),
+    mode,
+    cliFilters,
+    options,
+    viteOverrides,
+  )
+}
+
+export function collectTests(
+  cliFilters: string[] = [],
+  options: CliOptions = {},
+  viteOverrides?: ViteUserConfig,
+) {
+  options.run = true
+  options.watch = false
+
+  return new Promise<CollectedTests>((resolve, reject) => {
+    executeVitest(
+      async (ctx) => {
+        const tests = await ctx.collect(cliFilters)
+        resolve(tests)
+      },
+      'test',
+      cliFilters,
+      options,
+      viteOverrides,
+    ).catch(reject)
+  })
 }

@@ -5,7 +5,7 @@ import { version } from '../../package.json'
 import { toArray } from '../utils'
 import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
-import { startVitest } from './cli-api'
+import { collectTests, startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
 
 const cli = cac('vitest')
@@ -56,6 +56,10 @@ cli
 cli
   .command('run [...filters]')
   .action(run)
+
+cli
+  .command('list [...filters]')
+  .action(list)
 
 cli
   .command('related [...filters]')
@@ -176,6 +180,34 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     if (!ctx?.shouldKeepServer())
       await ctx?.exit()
     return ctx
+  }
+  catch (e) {
+    console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
+    console.error(e)
+    console.error('\n\n')
+    process.exit(1)
+  }
+}
+
+// TODO: docs
+async function list(cliFilters: string[], options: CliOptions): Promise<void> {
+  try {
+    process.title = 'node (vitest)'
+  }
+  catch {}
+
+  try {
+    const { tests, errors } = await collectTests(cliFilters.map(normalize), normalizeCliOptions(options))
+
+    if (errors.length) {
+      console.error('\nThere were unhandled errors during test collection')
+      errors.forEach(e => console.error(e))
+      console.error('\n\n')
+      process.exit(1)
+    }
+
+    // TODO: how to print tests?
+    console.log(tests)
   }
   catch (e) {
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)

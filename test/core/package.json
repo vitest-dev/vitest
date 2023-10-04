@@ -4,6 +4,7 @@
   "scripts": {
     "test": "vitest",
     "dev": "vite",
+    "test:list": "vitest list",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

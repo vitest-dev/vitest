@@ -6,7 +6,7 @@ import type { VitestRunner } from './types/runner'
 import type { Custom, File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
-import { collectTests } from './collect'
+import { collectTests as collect } from './collect'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
@@ -382,7 +382,7 @@ export async function runFiles(files: File[], runner: VitestRunner) {
 export async function startTests(paths: string[], runner: VitestRunner) {
   await runner.onBeforeCollect?.(paths)
 
-  const files = await collectTests(paths, runner)
+  const files = await collect(paths, runner)
 
   runner.onCollected?.(files)
   await runner.onBeforeRunFiles?.(files)
@@ -393,5 +393,16 @@ export async function startTests(paths: string[], runner: VitestRunner) {
 
   await sendTasksUpdate(runner)
 
+  return files
+}
+
+export async function collectTests(paths: string[], runner: VitestRunner) {
+  await runner.onBeforeCollect?.(paths)
+
+  const files = await collect(paths, runner)
+
+  runner.onCollected?.(files)
+
+  await sendTasksUpdate(runner)
   return files
 }

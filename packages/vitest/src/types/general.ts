@@ -1,3 +1,5 @@
+import type { File } from '@vitest/runner'
+
 export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
@@ -31,6 +33,11 @@ export interface Environment {
   transformMode: 'web' | 'ssr'
   setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
+}
+
+export interface CollectedTests {
+  tests: File[]
+  errors: unknown[]
 }
 
 export interface UserConsoleLog {

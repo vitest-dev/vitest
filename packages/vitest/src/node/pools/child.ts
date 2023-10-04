@@ -229,6 +229,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
   return {
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: async () => {
       await pool.destroy()
     },

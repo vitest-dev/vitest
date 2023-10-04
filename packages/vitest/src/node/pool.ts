@@ -15,6 +15,7 @@ export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => P
 
 export interface ProcessPool {
   runTests: RunWithFiles
+  collectTests: RunWithFiles
   close: () => Promise<void>
 }
 
@@ -51,7 +52,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     return getDefaultPoolName(project)
   }
 
-  async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
+  async function executeFiles(method: 'collectTests' | 'runTests', files: WorkspaceSpec[], invalidate?: string[]) {
     const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
     // Instead of passing whole process.execArgv to the workers, pick allowed options.
@@ -106,26 +107,31 @@ export function createPool(ctx: Vitest): ProcessPool {
 
       if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
-        return pools.browser.runTests(files, invalidate)
+        return pools.browser[method](files, invalidate)
       }
 
       if (pool === 'vmThreads') {
         pools.vmThreads ??= createVmThreadsPool(ctx, options)
-        return pools.vmThreads.runTests(files, invalidate)
+        return pools.vmThreads[method](files, invalidate)
       }
 
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
-        return pools.threads.runTests(files, invalidate)
+        return pools.threads[method](files, invalidate)
       }
 
       pools.forks ??= createChildProcessPool(ctx, options)
-      return pools.forks.runTests(files, invalidate)
+      return pools.forks[method](files, invalidate)
     }))
   }
 
   return {
-    runTests,
+    async collectTests(files, invalidates) {
+      return executeFiles('collectTests', files, invalidates)
+    },
+    runTests(files, invalidates) {
+      return executeFiles('runTests', files, invalidates)
+    },
     async close() {
       await Promise.all(Object.values(pools).map(p => p?.close()))
     },

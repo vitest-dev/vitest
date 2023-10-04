@@ -87,3 +87,10 @@ export async function run(ctx: WorkerContext) {
     inspectorCleanup()
   }
 }
+
+export async function collect(ctx: WorkerContext) {
+  const state = await init(ctx)
+  const { collect, executor } = await startViteNode({ state })
+  await collect(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
+  await rpcDone()
+}

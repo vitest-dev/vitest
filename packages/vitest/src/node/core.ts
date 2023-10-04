@@ -10,7 +10,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CollectedTests, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
@@ -46,6 +46,7 @@ export class Vitest {
   changedTests: Set<string> = new Set()
   filenamePattern?: string
   runningPromise?: Promise<void>
+  collectingPromise?: Promise<void>
   closingPromise?: Promise<void>
   isCancelling = false
 
@@ -343,6 +344,28 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
+  async collect(filters?: string[]): Promise<CollectedTests> {
+    await this.initBrowserProviders()
+    await this.report('onInit', this)
+
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
+
+    if (!files.length)
+      return { tests: [], errors: [] }
+
+    this.config.changed = false
+    this.config.related = undefined
+
+    await this.collectTests(files)
+
+    return {
+      tests: this.state.getFiles(),
+      errors: this.state.getUnhandledErrors(),
+    }
+  }
+
   private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
       if (deps.has(filepath))
@@ -469,6 +492,36 @@ export class Vitest {
       })
 
     return await this.runningPromise
+  }
+
+  private async collectTests(paths: WorkspaceSpec[]) {
+    await this.collectingPromise
+
+    this._onCancelListeners = []
+    this.isCancelling = false
+
+    this.collectingPromise = (async () => {
+      if (!this.pool)
+        this.pool = createPool(this)
+
+      const invalidates = Array.from(this.invalidates)
+      this.invalidates.clear()
+      this.snapshot.clear()
+      this.state.clearErrors()
+      await this.initializeGlobalSetup(paths)
+
+      try {
+        await this.pool.collectTests(paths, invalidates)
+      }
+      catch (err) {
+        this.state.catchError(err, 'Unhandled Error')
+      }
+    })()
+      .finally(() => {
+        this.collectingPromise = undefined
+      })
+
+    return await this.collectingPromise
   }
 
   async cancelCurrentRun(reason: CancelReason) {

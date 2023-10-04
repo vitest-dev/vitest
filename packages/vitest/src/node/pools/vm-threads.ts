@@ -153,6 +153,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
 
   return {
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: async () => {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
       const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
