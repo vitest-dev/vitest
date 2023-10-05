@@ -135,9 +135,18 @@ export function collectTests(
   options.run = true
   options.watch = false
 
+  // don't isolate test files in collect mode by default to improve speed, but allow overwrite
+  options.poolOptions ??= {}
+  options.poolOptions.threads ??= {}
+  options.poolOptions.threads.isolate ??= false
+  options.poolOptions.forks ??= {}
+  options.poolOptions.forks.isolate ??= false
+
   return new Promise<CollectedTests>((resolve, reject) => {
     executeVitest(
       async (ctx) => {
+        if (ctx.config.browser)
+          ctx.config.browser.isolate = options.browser?.isolate ?? false
         const tests = await ctx.collect(cliFilters)
         resolve(tests)
       },

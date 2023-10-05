@@ -27,7 +27,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  const runTests = async (project: WorkspaceProject, files: string[]) => {
+  const executeTests = async (mode: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
 
     let isCancelled = false
@@ -49,6 +49,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         }
 
         const url = new URL('/', origin)
+        url.searchParams.set('mode', mode)
         url.searchParams.append('path', path)
         url.searchParams.set('id', path)
         await provider.openPage(url.toString())
@@ -57,6 +58,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
     else {
       const url = new URL('/', origin)
+      url.searchParams.set('mode', mode)
       url.searchParams.set('id', 'no-isolate')
       paths.forEach(path => url.searchParams.append('path', path))
       await provider.openPage(url.toString())
@@ -64,7 +66,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
+  const executeWorkspaceTests = async (mode: 'run' | 'collect', specs: [WorkspaceProject, string][]) => {
     const groupedFiles = new Map<WorkspaceProject, string[]>()
     for (const [project, file] of specs) {
       const files = groupedFiles.get(project) || []
@@ -73,7 +75,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
 
     for (const [project, files] of groupedFiles.entries())
-      await runTests(project, files)
+      await executeTests(mode, project, files)
   }
 
   return {
@@ -82,6 +84,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
     },
-    runTests: runWorkspaceTests,
+    runTests(specs) {
+      return executeWorkspaceTests('run', specs)
+    },
+    async collectTests(specs) {
+      return executeWorkspaceTests('collect', specs)
+    },
   }
 }

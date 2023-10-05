@@ -23,6 +23,8 @@ const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
+const mode = url.searchParams.get('mode') || 'run'
+
 function getQueryPaths() {
   return url.searchParams.getAll('path')
 }
@@ -91,15 +93,16 @@ ws.addEventListener('open', async () => {
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
-  await runTests(paths, config!)
+  await executeTests(paths, config!)
 })
 
-async function runTests(paths: string[], config: ResolvedConfig) {
+async function executeTests(paths: string[], config: ResolvedConfig) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
   const {
+    collectTests,
     startTests,
     setupCommonEnv,
     loadDiffConfig,
@@ -134,8 +137,13 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     const now = `${new Date().getTime()}`
     files.forEach(i => browserHashMap.set(i, [true, now]))
 
-    for (const file of files)
-      await startTests([file], runner)
+    if (mode === 'collect') {
+      await collectTests(files, runner)
+    }
+    else {
+      for (const file of files)
+        await startTests([file], runner)
+    }
   }
   finally {
     await rpcDone()
