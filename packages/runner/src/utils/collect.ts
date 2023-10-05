@@ -26,7 +26,7 @@ export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, 
         t.mode = 'run'
       }
     }
-    if (t.type === 'test') {
+    if (t.type === 'test' || t.type === 'custom') {
       if (namePattern && !getTaskFullName(t).match(namePattern))
         t.mode = 'skip'
     }

@@ -35,6 +35,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
+  collectors: Reporter[] = []
   coverageProvider: CoverageProvider | null | undefined
   browserProvider: BrowserProvider | undefined
   logger: Logger
@@ -345,24 +346,35 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<CollectedTests> {
-    await this.initBrowserProviders()
-    await this.report('onInit', this)
+    const collectors = this.collectors
+      || (this.collectors = await createReporters(toArray(this.config.collectors), this.runner))
 
-    const files = await this.filterTestsBySource(
-      await this.globTestFiles(filters),
-    )
+    const reporters = this.reporters
+    this.reporters = collectors
 
-    if (!files.length)
-      return { tests: [], errors: [] }
+    try {
+      await this.initBrowserProviders()
+      await this.report('onInit', this)
 
-    this.config.changed = false
-    this.config.related = undefined
+      const files = await this.filterTestsBySource(
+        await this.globTestFiles(filters),
+      )
 
-    await this.collectTests(files)
+      if (!files.length)
+        return { tests: [], errors: [] }
 
-    return {
-      tests: this.state.getFiles(),
-      errors: this.state.getUnhandledErrors(),
+      this.config.changed = false
+      this.config.related = undefined
+
+      await this.collectTests(files)
+
+      return {
+        tests: this.state.getFiles(),
+        errors: this.state.getUnhandledErrors(),
+      }
+    }
+    finally {
+      this.reporters = reporters
     }
   }
 

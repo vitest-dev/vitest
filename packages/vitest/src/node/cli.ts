@@ -7,6 +7,7 @@ import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMod
 import type { CliOptions } from './cli-api'
 import { collectTests, startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
+import { processCollected } from './collect'
 
 const cli = cac('vitest')
 
@@ -59,6 +60,7 @@ cli
 
 cli
   .command('list [...filters]')
+  .option('--json [path]', 'Output results in JSON format')
   .action(list)
 
 cli
@@ -206,8 +208,7 @@ async function list(cliFilters: string[], options: CliOptions): Promise<void> {
       process.exit(1)
     }
 
-    // TODO: how to print tests?
-    console.log(tests)
+    processCollected(tests, options)
   }
   catch (e) {
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)

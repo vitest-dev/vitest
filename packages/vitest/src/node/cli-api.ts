@@ -13,6 +13,11 @@ export interface CliOptions extends UserConfig {
    * Override the watch mode
    */
   run?: boolean
+
+  /**
+   * During collection, this can be set to "true" to output tests in a json format
+   */
+  json?: string | boolean
 }
 
 /**
