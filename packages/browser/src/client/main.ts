@@ -64,7 +64,7 @@ async function defaultErrorListener(event: ErrorEvent) {
     message: event.error.message,
     stack: event.error.stack,
   }
-  await client.rpc.onUnhandledError(error)
+  await client.rpc.onUnhandledError(error, 'Error')
   await client.rpc.onDone(testId)
 }
 
@@ -75,7 +75,7 @@ async function defaultUnhandledRejectionListener({ reason }: PromiseRejectionEve
     message: reason.message,
     stack: reason.stack,
   }
-  await client.rpc.onUnhandledError(error)
+  await client.rpc.onUnhandledError(error, 'Unhandled Rejection')
   await client.rpc.onDone(testId)
 }
 
@@ -84,9 +84,9 @@ window.addEventListener('unhandledrejection', defaultUnhandledRejectionListener)
 
 let runningTests = false
 
-async function reportUnexpectedError(rpc: typeof client.rpc, error: any) {
+async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error: any) {
   const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
-  await rpc.onUnhandledError(processError(error))
+  await rpc.onUnhandledError(processError(error), type)
   if (!runningTests)
     await rpc.onDone(testId)
 }
@@ -100,8 +100,8 @@ ws.addEventListener('open', async () => {
   window.removeEventListener('error', defaultErrorListener)
   window.removeEventListener('unhandledrejection', defaultUnhandledRejectionListener)
 
-  window.addEventListener('error', event => reportUnexpectedError(safeRpc, event.error))
-  window.addEventListener('unhandledrejection', event => reportUnexpectedError(safeRpc, event.reason))
+  window.addEventListener('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
+  window.addEventListener('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
 
   // @ts-expect-error untyped global for internal use
   globalThis.__vitest_browser__ = true
