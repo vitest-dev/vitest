@@ -9,6 +9,9 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
+  '@sinonjs/fake-timers@11.0.0':
+    hash: gpozmbrzvnv566ktrt6yoxewty
+    path: patches/@sinonjs__fake-timers@11.0.0.patch
   '@types/chai@4.3.6':
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
@@ -1373,7 +1376,7 @@ importers:
         version: 3.0.3
       '@sinonjs/fake-timers':
         specifier: ^11.0.0
-        version: 11.0.0
+        version: 11.0.0(patch_hash=gpozmbrzvnv566ktrt6yoxewty)
       '@types/diff':
         specifier: ^5.0.3
         version: 5.0.3
@@ -9381,11 +9384,12 @@ packages:
       type-detect: 4.0.8
     dev: true
 
-  /@sinonjs/fake-timers@11.0.0:
+  /@sinonjs/fake-timers@11.0.0(patch_hash=gpozmbrzvnv566ktrt6yoxewty):
     resolution: {integrity: sha512-bqiI/5ur6ZOozG06BeJjbplIqHY/KftV1zaewbZHORH902GrHURKwl7H1G/4OC5EaxDYQJlrD0OLJ1XD6x01dQ==}
     dependencies:
       '@sinonjs/commons': 3.0.0
     dev: true
+    patched: true
 
   /@sinonjs/fake-timers@8.1.0:
     resolution: {integrity: sha512-OAPJUAtgeINhh/TAlUID4QTs53Njm7xzddaVlEs/SXwgtiD1tW22zAB/W1wdqfrpmikgaWQ9Fw6Ws+hsiRm5Vg==}

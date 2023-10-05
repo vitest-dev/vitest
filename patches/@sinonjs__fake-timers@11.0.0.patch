@@ -1,0 +1,25 @@
+diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
+index f5129e5e2b50aec46ba437ffbc02e9e360bdd914..4324fb191415a469f6cfd71cfdf4a70b4f7dd522 100644
+--- a/src/fake-timers-src.js
++++ b/src/fake-timers-src.js
+@@ -2,9 +2,9 @@
+ 
+ const globalObject = require("@sinonjs/commons").global;
+ let timersModule;
+-if (typeof require === "function" && typeof module === "object") {
++if (typeof __vitest_required__ !== 'undefined') {
+     try {
+-        timersModule = require("timers");
++        timersModule = __vitest_required__.timers
+     } catch (e) {
+         // ignored
+     }
+@@ -161,7 +161,7 @@ function withGlobal(_global) {
+         hrtimePresent && typeof _global.process.hrtime.bigint === "function";
+     const nextTickPresent =
+         _global.process && typeof _global.process.nextTick === "function";
+-    const utilPromisify = _global.process && require("util").promisify;
++    const utilPromisify = _global.process && _global.__vitest_required__ && _global.__vitest_required__.util.promisify;
+     const performancePresent =
+         _global.performance && typeof _global.performance.now === "function";
+     const hasPerformancePrototype =
