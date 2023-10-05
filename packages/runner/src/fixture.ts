@@ -45,17 +45,12 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 const fixtureValueMap = new Map<FixtureItem, any>()
-const fixtureCleanupFnMap = new Map<string, Array<() => void | Promise<void>>>()
+let cleanupFnArray = new Array<() => void | Promise<void>>()
 
-export async function callFixtureCleanup(id: string) {
-  const cleanupFnArray = fixtureCleanupFnMap.get(id)
-  if (!cleanupFnArray)
-    return
-
+export async function callFixtureCleanup() {
   for (const cleanup of cleanupFnArray.reverse())
     await cleanup()
-
-  fixtureCleanupFnMap.delete(id)
+  cleanupFnArray = []
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
@@ -64,12 +59,6 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     if (!context)
       return fn({})
-
-    let cleanupFnArray = fixtureCleanupFnMap.get(context.task.suite.id)!
-    if (!cleanupFnArray) {
-      cleanupFnArray = []
-      fixtureCleanupFnMap.set(context.task.suite.id, cleanupFnArray)
-    }
 
     const fixtures = getFixture(context)
     if (!fixtures?.length)
