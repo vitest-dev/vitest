@@ -303,3 +303,26 @@ describe('test.extend()', () => {
     })
   })
 })
+
+// test extend with top level test
+const numbers: number[] = []
+const teardownFn = vi.fn()
+const teardownTest = test.extend<{
+  numbers: number[]
+}>({
+  numbers: async ({}, use) => {
+    numbers.push(1, 2, 3)
+    await use(numbers)
+    numbers.splice(0, numbers.length)
+    teardownFn()
+  },
+})
+
+teardownTest('test without describe', ({ numbers }) => {
+  expect(numbers).toHaveLength(3)
+})
+
+test('teardown should be called once time', () => {
+  expect(numbers).toHaveLength(0)
+  expect(teardownFn).toBeCalledTimes(1)
+})
