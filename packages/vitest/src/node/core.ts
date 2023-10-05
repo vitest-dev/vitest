@@ -529,8 +529,10 @@ export class Vitest {
         this.state.catchError(err, 'Unhandled Error')
       }
     })()
-      .finally(() => {
+      .finally(async () => {
         this.collectingPromise = undefined
+        const specs = Array.from(new Set(paths.map(([, p]) => p)))
+        await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
       })
 
     return await this.collectingPromise
