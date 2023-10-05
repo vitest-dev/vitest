@@ -121,3 +121,19 @@ export async function run(ctx: ChildContext) {
     process.exit = exit
   }
 }
+
+export async function collect(ctx: ChildContext) {
+  const exit = process.exit
+
+  ctx.config = unwrapConfig(ctx.config)
+
+  try {
+    const state = await init(ctx)
+    const { collect, executor } = await startViteNode({ state })
+    await collect(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
+    await rpcDone()
+  }
+  finally {
+    process.exit = exit
+  }
+}

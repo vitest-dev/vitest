@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks'
-import { startTests } from '@vitest/runner'
+import { collectTests, startTests } from '@vitest/runner'
 import type { ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
@@ -52,6 +52,25 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
     }
 
     await stopCoverageInsideWorker(config.coverage, executor)
+  })
+
+  workerState.environmentTeardownRun = true
+}
+
+export async function collect(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
+  const workerState = getWorkerState()
+  await setupGlobalEnv(config, environment)
+
+  if (config.chaiConfig)
+    setupChaiConfig(config.chaiConfig)
+
+  const runner = await resolveTestRunner(config, executor)
+
+  workerState.onCancel.then(reason => runner.onCancel?.(reason))
+  workerState.environment = environment.environment
+
+  await withEnv(environment, environment.options || config.environmentOptions || {}, async () => {
+    await collectTests(files, runner)
   })
 
   workerState.environmentTeardownRun = true

@@ -33,8 +33,11 @@ export async function createVitestExecutor(options: ExecuteOptions) {
   return runner
 }
 
+type ViteNodeRunnerMethod = (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
+
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
+  collect: ViteNodeRunnerMethod
+  run: ViteNodeRunnerMethod
   executor: VitestExecutor
 }
 
@@ -49,9 +52,9 @@ export async function startViteNode(options: ContextExecutorOptions) {
 
   const executor = await startVitestExecutor(options)
 
-  const { run } = await import(entryUrl)
+  const { run, collect } = await import(entryUrl)
 
-  _viteNode = { run, executor }
+  _viteNode = { run, executor, collect }
 
   return _viteNode
 }

@@ -30,6 +30,22 @@ Run all test suites but watch for changes and rerun tests when they change. Same
 
 Alias to `vitest watch`.
 
+### `vitest list`
+
+Outputs a list of test names that will be called with current filters. This works as a regular `vitest` command, but it will not run tests, only collect them.
+
+For performance reasons, this command disables [isolation](/config#pooloptions). If you rely on isolated environment for collecting tests, you can enable it manually. For example, if you use threads pool (which is a default), you can call `vitest list` as:
+
+```bash
+vitest list --poolOptions.threads.isolate=true
+```
+
+By default, it will output test names to stdout. This command also supports `--json` flag. If specified without an argument, it will output an array of file names and test names to stdout. If it receives a value, Vitest will create a file in that path (relative to current working directory or `--root` flag):
+
+```bash
+vitest list --json=./test-names.js
+```
+
 ### `vitest related`
 
 Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.ts')` or `import index from './index.ts`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.

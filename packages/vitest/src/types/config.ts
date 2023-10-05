@@ -344,6 +344,11 @@ export interface InlineConfig {
   reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
 
   /**
+   * Custom reporters that are called during "vitest list" command. They share the same API as reporters.
+   */
+  collectors?: Arrayable<Reporter>
+
+  /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */

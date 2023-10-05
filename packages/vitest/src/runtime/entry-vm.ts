@@ -1,7 +1,7 @@
 import { isatty } from 'node:tty'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
-import { startTests } from '@vitest/runner'
+import { collectTests, startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
 import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
@@ -13,7 +13,7 @@ import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup.common'
 
-export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
+async function prepareEnvironment(config: ResolvedConfig) {
   const workerState = getWorkerState()
 
   await setupCommonEnv(config)
@@ -35,6 +35,12 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     _require.extensions['.sass'] = () => ({})
     _require.extensions['.less'] = () => ({})
   }
+}
+
+export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
+  const workerState = getWorkerState()
+
+  await prepareEnvironment(config)
 
   await startCoverageInsideWorker(config.coverage, executor)
 
@@ -54,4 +60,12 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
   }
 
   await stopCoverageInsideWorker(config.coverage, executor)
+}
+
+export async function collect(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
+  await prepareEnvironment(config)
+
+  const runner = await resolveTestRunner(config, executor)
+
+  await collectTests(files, runner)
 }

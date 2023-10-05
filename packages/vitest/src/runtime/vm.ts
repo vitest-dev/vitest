@@ -16,7 +16,7 @@ import { createSafeRpc } from './rpc'
 
 const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 
-export async function run(ctx: WorkerContext) {
+async function execute(method: 'run' | 'collect', ctx: WorkerContext) {
   const moduleCache = new ModuleCacheMap()
   const mockMap = new Map()
   const { config, port } = ctx
@@ -114,13 +114,21 @@ export async function run(ctx: WorkerContext) {
 
   context.__vitest_mocker__ = executor.mocker
 
-  const { run } = await executor.importExternalModule(entryFile)
+  const entryModule = await executor.importExternalModule(entryFile)
 
   try {
-    await run(ctx.files, ctx.config, executor)
+    await entryModule[method](ctx.files, ctx.config, executor)
   }
   finally {
     await vm.teardown?.()
     state.environmentTeardownRun = true
   }
+}
+
+export async function run(ctx: WorkerContext) {
+  await execute('run', ctx)
+}
+
+export async function collect(ctx: WorkerContext) {
+  await execute('collect', ctx)
 }

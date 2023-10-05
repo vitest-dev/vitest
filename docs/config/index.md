@@ -613,6 +613,15 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
+### collectors<NonProjectOption />
+
+- **Type:** `Reporter | Reporter[]`
+- **Default:** `[]`
+- **CLI:** `--collector=<name>`, `--collector=<name1> --collector=<name2>`
+- **Version:** Since Vitest 1.0.0-beta.1
+
+Custom collectors that are called during `vitest list` command. This is useful to track test collection in real time.
+
 ### outputFile<NonProjectOption />
 
 - **Type:** `string | Record<string, string>`
