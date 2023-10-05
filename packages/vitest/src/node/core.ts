@@ -347,7 +347,11 @@ export class Vitest {
 
   async collect(filters?: string[]): Promise<CollectedTests> {
     const collectors = this.collectors
-      || (this.collectors = await createReporters(toArray(this.config.collectors), this.runner))
+      || (this.collectors = await createReporters([
+        // @ts-expect-error CLI type
+        ...toArray(this.config.collector),
+        ...toArray(this.config.collectors),
+      ], this.runner))
 
     const reporters = this.reporters
     this.reporters = collectors

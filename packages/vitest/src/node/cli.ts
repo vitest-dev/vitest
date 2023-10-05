@@ -61,6 +61,7 @@ cli
 cli
   .command('list [...filters]')
   .option('--json [path]', 'Output results in JSON format')
+  .option('--colector <name>', 'Specify collectors')
   .action(list)
 
 cli
