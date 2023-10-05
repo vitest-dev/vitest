@@ -1,5 +1,6 @@
 import { Writable } from 'node:stream'
 import { Console } from 'node:console'
+import { relative } from 'node:path'
 import { getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
 import type { WorkerGlobalState } from '../types'
@@ -18,7 +19,12 @@ function getTaskIdByStack() {
   if (!line)
     return UNKNOWN_TEST_ID
 
-  return line.match(/at\s(.*)\s?/)?.[1] ?? UNKNOWN_TEST_ID
+  const filepath = line.match(/at\s(.*)\s?/)?.[1]
+
+  if (filepath)
+    return relative(process.cwd(), filepath)
+
+  return UNKNOWN_TEST_ID
 }
 
 export function createCustomConsole(state: WorkerGlobalState) {
