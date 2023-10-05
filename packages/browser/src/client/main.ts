@@ -57,30 +57,25 @@ async function loadConfig() {
   throw new Error('cannot load configuration after 5 retries')
 }
 
+function on(event: string, listener: (...args: any[]) => void) {
+  window.addEventListener(event, listener)
+  return () => window.removeEventListener(event, listener)
+}
+
 // we can't import "processError" yet because error might've been thrown before the module was loaded
-async function defaultErrorListener(event: ErrorEvent) {
+async function defaultErrorReport(type: string, unhandledError: any) {
   const error = {
-    name: event.error.name,
-    message: event.error.message,
-    stack: event.error.stack,
+    ...unhandledError,
+    name: unhandledError.name,
+    message: unhandledError.message,
+    stack: unhandledError.stack,
   }
-  await client.rpc.onUnhandledError(error, 'Error')
+  await client.rpc.onUnhandledError(error, type)
   await client.rpc.onDone(testId)
 }
 
-async function defaultUnhandledRejectionListener({ reason }: PromiseRejectionEvent) {
-  const error = {
-    ...reason,
-    name: reason.name,
-    message: reason.message,
-    stack: reason.stack,
-  }
-  await client.rpc.onUnhandledError(error, 'Unhandled Rejection')
-  await client.rpc.onDone(testId)
-}
-
-window.addEventListener('error', defaultErrorListener)
-window.addEventListener('unhandledrejection', defaultUnhandledRejectionListener)
+const stopErrorHandler = on('error', e => defaultErrorReport('Error', e.error))
+const stopRejectionHandler = on('unhandledrejection', e => defaultErrorReport('Unhandled Rejection', e.reason))
 
 let runningTests = false
 
@@ -97,11 +92,11 @@ ws.addEventListener('open', async () => {
   const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
   const safeRpc = createSafeRpc(client, getSafeTimers)
 
-  window.removeEventListener('error', defaultErrorListener)
-  window.removeEventListener('unhandledrejection', defaultUnhandledRejectionListener)
+  stopErrorHandler()
+  stopRejectionHandler()
 
-  window.addEventListener('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
-  window.addEventListener('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
+  on('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
+  on('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
 
   // @ts-expect-error untyped global for internal use
   globalThis.__vitest_browser__ = true
