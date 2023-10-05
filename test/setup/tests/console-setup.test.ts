@@ -1,5 +1,5 @@
+import { normalize } from 'node:path'
 import { describe, expect, test } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 async function run() {
@@ -12,7 +12,7 @@ async function run() {
 describe('setup files console', () => {
   test('print stdout and stderr correctly', async () => {
     const { stdout, stderr } = await run()
-    const filepath = 'setupFiles/console-setup.ts'
+    const filepath = normalize('setupFiles/console-setup.ts')
     expect(stdout).toContain(`stdout | ${filepath}`)
     expect(stderr).toContain(`stderr | ${filepath}`)
   })
