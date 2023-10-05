@@ -7,7 +7,7 @@ import type { WorkerGlobalState } from '../types'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
-function getTaskIdByStack() {
+function getTaskIdByStack(root: string) {
   const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')
 
   if (!stack)
@@ -22,7 +22,7 @@ function getTaskIdByStack() {
   const filepath = line.match(/at\s(.*)\s?/)?.[1]
 
   if (filepath)
-    return relative(process.cwd(), filepath)
+    return relative(root, filepath)
 
   return UNKNOWN_TEST_ID
 }
@@ -85,7 +85,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? getTaskIdByStack()
+      const id = state?.current?.id ?? getTaskIdByStack(state.ctx.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -106,7 +106,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? getTaskIdByStack()
+      const id = state?.current?.id ?? getTaskIdByStack(state.ctx.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
