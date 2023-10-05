@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
-import { basename, dirname, join, normalize, relative } from 'pathe'
+import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -15,6 +15,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
+import { rootDir } from '../paths'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -58,6 +59,12 @@ export class Vitest {
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
+  projectFiles!: {
+    workerPath: string
+    forksPath: string
+    vmPath: string
+  }
+
   constructor(
     public readonly mode: VitestRunMode,
   ) {
@@ -90,6 +97,16 @@ export class Vitest {
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
+
+    // if Vitest is running globally, then we should still import local vitest if possible
+    const projectVitestPath = await this.vitenode.resolveId('vitest')
+    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    this.projectFiles = {
+      workerPath: join(vitestDir, 'dist/worker.js'),
+      forksPath: join(vitestDir, 'dist/child.js'),
+      vmPath: join(vitestDir, 'dist/vm.js'),
+    }
+
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
@@ -236,9 +253,7 @@ export class Vitest {
       'allowOnly',
       'sequence',
       'testTimeout',
-      'threads',
-      'singleThread',
-      'isolate',
+      'pool',
       'globals',
       'mode',
     ] as const
@@ -422,6 +437,10 @@ export class Vitest {
     return Array.from(projects).map(project => [project, file] as WorkspaceSpec)
   }
 
+  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
+    await Promise.all(paths.map(async ([project]) => project.initializeGlobalSetup()))
+  }
+
   async runFiles(paths: WorkspaceSpec[]) {
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
@@ -442,6 +461,8 @@ export class Vitest {
       this.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
+      await this.initializeGlobalSetup(paths)
+
       try {
         await this.pool.runTests(paths, invalidates)
       }

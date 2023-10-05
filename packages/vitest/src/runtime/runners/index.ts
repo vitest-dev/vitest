@@ -62,15 +62,15 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
     await originalOnCollected?.call(testRunner, files)
   }
 
-  const originalOnAfterRun = testRunner.onAfterRun
-  testRunner.onAfterRun = async (files) => {
+  const originalOnAfterRun = testRunner.onAfterRunFiles
+  testRunner.onAfterRunFiles = async (files) => {
     const coverage = await takeCoverageInsideWorker(config.coverage, executor)
     rpc().onAfterSuiteRun({ coverage })
     await originalOnAfterRun?.call(testRunner, files)
   }
 
-  const originalOnAfterRunTest = testRunner.onAfterRunTest
-  testRunner.onAfterRunTest = async (test) => {
+  const originalOnAfterRunTask = testRunner.onAfterRunTask
+  testRunner.onAfterRunTask = async (test) => {
     if (config.bail && test.result?.state === 'fail') {
       const previousFailures = await rpc().getCountOfFailedTests()
       const currentFailures = 1 + previousFailures
@@ -80,7 +80,7 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
         testRunner.onCancel?.('test-failure')
       }
     }
-    await originalOnAfterRunTest?.call(testRunner, test)
+    await originalOnAfterRunTask?.call(testRunner, test)
   }
 
   return testRunner

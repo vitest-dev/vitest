@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    experimentalVmThreads: true,
+    pool: 'vmThreads',
     css: {
       include: [/processed/],
     },

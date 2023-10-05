@@ -1,5 +1,9 @@
 import vm from 'node:vm'
+import debug from 'debug'
 import type { Environment } from 'vitest'
+
+// test that external packages (debug) are loaded correctly
+const log = debug('test:env')
 
 export default <Environment>{
   name: 'custom',
@@ -28,6 +32,9 @@ export default <Environment>{
       teardown() {
         delete global.testEnvironment
         delete global.option
+
+        if (global.__exists)
+          log('should not log')
       },
     }
   },

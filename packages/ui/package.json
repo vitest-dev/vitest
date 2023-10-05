@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.34.4",
+  "version": "1.0.0-beta.1",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -69,7 +69,7 @@
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^10.2.1",
     "ansi-to-html": "^0.7.2",
-    "birpc": "0.2.12",
+    "birpc": "0.2.14",
     "codemirror": "^5.65.13",
     "codemirror-theme-vars": "^0.1.2",
     "cypress": "^12.16.0",

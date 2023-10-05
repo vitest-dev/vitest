@@ -39,25 +39,29 @@ interface AssertOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
+export interface SnapshotClientOptions {
+  isEqual?: (received: unknown, expected: unknown) => boolean
+}
+
 export class SnapshotClient {
   filepath?: string
   name?: string
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()
 
-  constructor(private Service = SnapshotState) {}
+  constructor(private options: SnapshotClientOptions = {}) {}
 
-  async setTest(filepath: string, name: string, options: SnapshotStateOptions) {
+  async startCurrentRun(filepath: string, name: string, options: SnapshotStateOptions) {
     this.filepath = filepath
     this.name = name
 
     if (this.snapshotState?.testFilePath !== filepath) {
-      this.resetCurrent()
+      await this.finishCurrentRun()
 
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          await this.Service.create(
+          await SnapshotState.create(
             filepath,
             options,
           ),
@@ -78,15 +82,6 @@ export class SnapshotClient {
 
   skipTestSnapshots(name: string) {
     this.snapshotState?.markSnapshotsAsCheckedForTest(name)
-  }
-
-  /**
-   * Should be overridden by the consumer.
-   *
-   * Vitest checks equality with @vitest/expect.
-   */
-  equalityCheck(received: unknown, expected: unknown) {
-    return received === expected
   }
 
   assert(options: AssertOptions): void {
@@ -111,7 +106,7 @@ export class SnapshotClient {
         throw new Error('Received value must be an object when the matcher has properties')
 
       try {
-        const pass = this.equalityCheck(received, properties)
+        const pass = this.options.isEqual?.(received, properties) ?? false
         // const pass = equals(received, properties, [iterableEquality, subsetEquality])
         if (!pass)
           throw createMismatchError('Snapshot properties mismatched', received, properties)
@@ -169,7 +164,7 @@ export class SnapshotClient {
     return this.assert(options)
   }
 
-  async resetCurrent() {
+  async finishCurrentRun() {
     if (!this.snapshotState)
       return null
     const result = await this.snapshotState.pack()

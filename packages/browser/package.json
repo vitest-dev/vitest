@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.34.4",
+  "version": "1.0.0-beta.1",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -44,7 +44,6 @@
   "dependencies": {
     "estree-walker": "^3.0.3",
     "magic-string": "^0.30.1",
-    "modern-node-polyfills": "^1.0.0",
     "sirv": "^2.0.3"
   },
   "devDependencies": {

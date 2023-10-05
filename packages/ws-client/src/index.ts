@@ -22,7 +22,7 @@ export interface VitestClientOptions {
 export interface VitestClient {
   ws: WebSocket
   state: StateManager
-  rpc: BirpcReturn<WebSocketHandlers>
+  rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
   waitForConnection(): Promise<void>
   reconnect(): Promise<void>
 }

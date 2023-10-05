@@ -7,7 +7,7 @@ import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import type { CancelReason } from '@vitest/runner'
-import type { RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
+import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
 import { loadEnvironment } from '../integrations/env'
 import { startVitestExecutor } from './execute'
@@ -26,7 +26,7 @@ export async function run(ctx: WorkerContext) {
     setCancel = resolve
   })
 
-  const rpc = createSafeRpc(createBirpc<RuntimeRPC>(
+  const rpc = createSafeRpc(createBirpc<RuntimeRPC, RunnerRPC>(
     {
       onCancel: setCancel,
     },
@@ -39,9 +39,8 @@ export async function run(ctx: WorkerContext) {
 
   const environment = await loadEnvironment(ctx.environment.name, {
     root: ctx.config.root,
-    fetchModule(id) {
-      return rpc.fetch(id, 'ssr')
-    },
+    fetchModule: id => rpc.fetch(id, 'ssr'),
+    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
 
   if (!environment.setupVM) {

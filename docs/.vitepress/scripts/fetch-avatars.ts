@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'pathe'
 import fs from 'fs-extra'
-import { $fetch } from 'ohmyfetch'
+import { ofetch } from 'ofetch'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const pathContributors = resolve(docsDir, '.vitepress/contributor-names.json')
@@ -16,7 +16,7 @@ async function download(url: string, fileName: string) {
   // eslint-disable-next-line no-console
   console.log('downloading', fileName)
   try {
-    const image = await $fetch(url, { responseType: 'arrayBuffer' })
+    const image = await ofetch(url, { responseType: 'arrayBuffer' })
     await fs.writeFile(fileName, Buffer.from(image))
   }
   catch {}

@@ -5,7 +5,6 @@ const skipKeys = [
   'self',
   'top',
   'parent',
-  'URL',
 ]
 
 export function getWindowKeys(global: any, win: any) {

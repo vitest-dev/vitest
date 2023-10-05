@@ -41,8 +41,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser!.config.server.port}`
     const paths = files.map(file => relative(project.config.root, file))
 
-    const isolate = project.config.isolate
-    if (isolate) {
+    if (project.config.browser.isolate) {
       for (const path of paths) {
         if (isCancelled) {
           ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root)

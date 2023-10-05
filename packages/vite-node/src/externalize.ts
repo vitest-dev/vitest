@@ -19,8 +19,8 @@ const defaultInline = [
 ]
 
 const depsExternal = [
-  /\.cjs\.js$/,
-  /\.mjs$/,
+  /\/node_modules\/.*\.cjs\.js$/,
+  /\/node_modules\/.*\.mjs$/,
 ]
 
 export function guessCJSversion(id: string): string | undefined {
