@@ -1,7 +1,15 @@
 import { mkdir, writeFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { dynamicRelativeImport } from '../src/relative-import'
+
+// @ts-expect-error module is not typed
+import promiseExport from '../src/cjs/promise-export'
+
+test('promise export works correctly', async () => {
+  await expect(promiseExport).resolves.toEqual({ value: 42 })
+})
 
 test('dynamic relative import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
@@ -37,7 +45,7 @@ test('dynamic absolute from root import works', async () => {
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
-test('dynamic absolute with extension mport works', async () => {
+test('dynamic absolute with extension import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout.ts'
@@ -49,6 +57,12 @@ test('dynamic absolute with extension mport works', async () => {
 test('data with dynamic import works', async () => {
   const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
   const { default: hi } = await import(dataUri)
+  expect(hi).toBe('hi')
+})
+
+test('dynamic import coerces to string', async () => {
+  const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
+  const { default: hi } = await import({ toString: () => dataUri } as string)
   expect(hi).toBe('hi')
 })
 
@@ -68,7 +82,7 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  await expect(imported).rejects.toThrowError(/Failed to load/)
+  await expect(imported).rejects.toThrowError(/Failed to load url \.\/some-unknown-path/)
   // @ts-expect-error path does not exist
   await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load/)
 })
@@ -115,5 +129,36 @@ describe('importing special files from node_modules', async () => {
   test('importing asset returns a string', async () => {
     const mod = await importModule('../src/node_modules/file.mp3')
     expect(mod.default).toBe('/src/node_modules/file.mp3')
+  })
+})
+
+describe.runIf(process.platform === 'win32')('importing files with different drive casing', async () => {
+  test('importing a local file with different drive casing works', async () => {
+    const path = new URL('./../src/timeout', import.meta.url)
+    const filepath = fileURLToPath(path)
+    const drive = filepath[0].toLowerCase()
+    const upperDrive = drive.toUpperCase()
+    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+    expect(lowercasePath).not.toBe(uppercasePath)
+    const mod1 = await import(lowercasePath)
+    const mod2 = await import(uppercasePath)
+    const mod3 = await import('./../src/timeout')
+    expect(mod1).toBe(mod2)
+    expect(mod1).toBe(mod3)
+  })
+
+  test('importing an external file with different drive casing works', async () => {
+    const path = new URL('./../src/esm/esm.js', import.meta.url)
+    const filepath = fileURLToPath(path)
+    const drive = filepath[0].toLowerCase()
+    const upperDrive = drive.toUpperCase()
+    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+    expect(lowercasePath).not.toBe(uppercasePath)
+    const mod1 = await import(lowercasePath)
+    vi.resetModules() // since they reference the same global ESM cache, it should not matter
+    const mod2 = await import(uppercasePath)
+    expect(mod1).toBe(mod2)
   })
 })

@@ -2,8 +2,10 @@ import type { Ref, WritableComputedRef } from 'vue'
 import { watch } from 'vue'
 import CodeMirror from 'codemirror'
 import 'codemirror/mode/javascript/javascript'
+
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'
+
 // import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
@@ -40,7 +42,7 @@ export function useCodeMirror(
       if (v !== cm.getValue()) {
         skip = true
         const selections = cm.listSelections()
-        cm.replaceRange(v, cm.posFromIndex(0), cm.posFromIndex(Infinity))
+        cm.replaceRange(v, cm.posFromIndex(0), cm.posFromIndex(Number.POSITIVE_INFINITY))
         cm.setSelections(selections)
       }
     },

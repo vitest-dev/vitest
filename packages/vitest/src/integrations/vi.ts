@@ -1,141 +1,45 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import type { MockFactoryWithHelper } from '../types/mocker'
-import { createSimpleStackTrace } from '../utils/error'
+import { getWorkerState } from '../utils/global'
+import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
+import { waitFor, waitUntil } from './wait'
 
-class VitestUtils {
-  private _timers: FakeTimers
-  private _mockedDate: string | number | Date | null
-  private _mocker: VitestMocker
+interface VitestUtils {
+  isFakeTimers(): boolean
+  useFakeTimers(config?: FakeTimerInstallOpts): this
+  useRealTimers(): this
+  runOnlyPendingTimers(): this
+  runOnlyPendingTimersAsync(): Promise<this>
+  runAllTimers(): this
+  runAllTimersAsync(): Promise<this>
+  runAllTicks(): this
+  advanceTimersByTime(ms: number): this
+  advanceTimersByTimeAsync(ms: number): Promise<this>
+  advanceTimersToNextTimer(): this
+  advanceTimersToNextTimerAsync(): Promise<this>
+  getTimerCount(): number
+  setSystemTime(time: number | string | Date): this
+  getMockedSystemTime(): Date | null
+  getRealSystemTime(): number
+  clearAllTimers(): this
 
-  constructor() {
-    // @ts-expect-error injected by vite-nide
-    this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
-    this._mockedDate = null
+  spyOn: typeof spyOn
+  fn: typeof fn
+  waitFor: typeof waitFor
+  waitUntil: typeof waitUntil
 
-    if (!this._mocker) {
-      const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
-      + '\n\nOne of the following is possible:'
-      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
-      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
-      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
-      throw new Error(errorMsg)
-    }
-
-    const workerState = getWorkerState()
-    this._timers = new FakeTimers({
-      global: globalThis,
-      config: workerState.config.fakeTimers,
-    })
-  }
-
-  // timers
-
-  public useFakeTimers(config?: FakeTimerInstallOpts) {
-    if (config) {
-      this._timers.configure(config)
-    }
-    else {
-      const workerState = getWorkerState()
-      this._timers.configure(workerState.config.fakeTimers)
-    }
-    this._timers.useFakeTimers()
-    return this
-  }
-
-  public useRealTimers() {
-    this._timers.useRealTimers()
-    this._mockedDate = null
-    return this
-  }
-
-  public runOnlyPendingTimers() {
-    this._timers.runOnlyPendingTimers()
-    return this
-  }
-
-  public async runOnlyPendingTimersAsync() {
-    await this._timers.runOnlyPendingTimersAsync()
-    return this
-  }
-
-  public runAllTimers() {
-    this._timers.runAllTimers()
-    return this
-  }
-
-  public async runAllTimersAsync() {
-    await this._timers.runAllTimersAsync()
-    return this
-  }
-
-  public runAllTicks() {
-    this._timers.runAllTicks()
-    return this
-  }
-
-  public advanceTimersByTime(ms: number) {
-    this._timers.advanceTimersByTime(ms)
-    return this
-  }
-
-  public async advanceTimersByTimeAsync(ms: number) {
-    await this._timers.advanceTimersByTimeAsync(ms)
-    return this
-  }
-
-  public advanceTimersToNextTimer() {
-    this._timers.advanceTimersToNextTimer()
-    return this
-  }
-
-  public async advanceTimersToNextTimerAsync() {
-    await this._timers.advanceTimersToNextTimerAsync()
-    return this
-  }
-
-  public getTimerCount() {
-    return this._timers.getTimerCount()
-  }
-
-  public setSystemTime(time: number | string | Date) {
-    const date = time instanceof Date ? time : new Date(time)
-    this._mockedDate = date
-    this._timers.setSystemTime(date)
-    return this
-  }
-
-  public getMockedSystemTime() {
-    return this._mockedDate
-  }
-
-  public getRealSystemTime() {
-    return this._timers.getRealSystemTime()
-  }
-
-  public clearAllTimers() {
-    this._timers.clearAllTimers()
-    return this
-  }
-
-  // mocks
-
-  spyOn = spyOn
-  fn = fn
-
-  private getImporter() {
-    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
-    const importerStack = stackTrace.split('\n')[4]
-    const stack = parseSingleStack(importerStack)
-    return stack?.file || ''
-  }
+  /**
+   * Run the factory before imports are evaluated. You can return a value from the factory
+   * to reuse it inside your `vi.mock` factory and tests.
+   */
+  hoisted<T>(factory: () => T): T
 
   /**
    * Makes all `imports` to passed module to be mocked.
@@ -148,31 +52,17 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: MockFactoryWithHelper) {
-    const importer = this.getImporter()
-    this._mocker.queueMock(
-      path,
-      importer,
-      factory ? () => factory(() => this._mocker.importActual(path, importer)) : undefined,
-    )
-  }
+  mock(path: string, factory?: MockFactoryWithHelper): void
 
   /**
    * Removes module from mocked registry. All subsequent calls to import will
    * return original module even if it was mocked.
    * @param path Path to the module. Can be aliased, if your config supports it
    */
-  public unmock(path: string) {
-    this._mocker.queueUnmock(path, this.getImporter())
-  }
+  unmock(path: string): void
 
-  public doMock(path: string, factory?: () => any) {
-    this._mocker.queueMock(path, this.getImporter(), factory)
-  }
-
-  public doUnmock(path: string) {
-    this._mocker.queueUnmock(path, this.getImporter())
-  }
+  doMock(path: string, factory?: () => any): void
+  doUnmock(path: string): void
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -186,9 +76,7 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Actual module without spies
    */
-  public async importActual<T = unknown>(path: string): Promise<T> {
-    return this._mocker.importActual<T>(path, this.getImporter())
-  }
+  importActual<T = unknown>(path: string): Promise<T>
 
   /**
    * Imports a module with all of its properties and nested properties mocked.
@@ -196,9 +84,7 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
-  public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-    return this._mocker.importMock(path, this.getImporter())
-  }
+  importMock<T>(path: string): Promise<MaybeMockedDeep<T>>
 
   /**
    * Type helpers for TypeScript. In reality just returns the object that was passed.
@@ -219,131 +105,336 @@ class VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  public mocked<T>(item: T, deep?: false): MaybeMocked<T>
-  public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>
-  public mocked<T>(item: T, options: { partial?: false; deep?: false }): MaybeMocked<T>
-  public mocked<T>(item: T, options: { partial?: false; deep: true }): MaybeMockedDeep<T>
-  public mocked<T>(item: T, options: { partial: true; deep?: false }): MaybePartiallyMocked<T>
-  public mocked<T>(item: T, options: { partial: true; deep: true }): MaybePartiallyMockedDeep<T>
-  public mocked<T>(item: T, _options = {}): MaybeMocked<T> {
-    return item as any
-  }
+  mocked<T>(item: T, deep?: false): MaybeMocked<T>
+  mocked<T>(item: T, deep: true): MaybeMockedDeep<T>
+  mocked<T>(item: T, options: { partial?: false; deep?: false }): MaybeMocked<T>
+  mocked<T>(item: T, options: { partial?: false; deep: true }): MaybeMockedDeep<T>
+  mocked<T>(item: T, options: { partial: true; deep?: false }): MaybePartiallyMocked<T>
+  mocked<T>(item: T, options: { partial: true; deep: true }): MaybePartiallyMockedDeep<T>
+  mocked<T>(item: T): MaybeMocked<T>
 
-  public isMockFunction(fn: any): fn is EnhancedSpy {
-    return isMockFunction(fn)
-  }
+  isMockFunction(fn: any): fn is EnhancedSpy
 
-  public clearAllMocks() {
-    spies.forEach(spy => spy.mockClear())
-    return this
-  }
-
-  public resetAllMocks() {
-    spies.forEach(spy => spy.mockReset())
-    return this
-  }
-
-  public restoreAllMocks() {
-    spies.forEach(spy => spy.mockRestore())
-    return this
-  }
-
-  private _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
-  private _stubsEnv = new Map()
+  clearAllMocks(): this
+  resetAllMocks(): this
+  restoreAllMocks(): this
 
   /**
    * Makes value available on global namespace.
    * Useful, if you want to have global variables available, like `IntersectionObserver`.
-   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
+   * You can return it back to original value with `vi.unstubAllGlobals`, or by enabling `unstubGlobals` config option.
    */
-  public stubGlobal(name: string | symbol | number, value: any) {
-    if (!this._stubsGlobal.has(name))
-      this._stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
-    Object.defineProperty(globalThis, name, {
-      value,
-      writable: true,
-      configurable: true,
-      enumerable: true,
-    })
-    return this
-  }
+  stubGlobal(name: string | symbol | number, value: unknown): this
 
   /**
    * Changes the value of `import.meta.env` and `process.env`.
-   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
-  public stubEnv(name: string, value: string) {
-    if (!this._stubsEnv.has(name))
-      this._stubsEnv.set(name, process.env[name])
-    process.env[name] = value
-    return this
-  }
+  stubEnv(name: string, value: string): this
 
   /**
    * Reset the value to original value that was available before first `vi.stubGlobal` was called.
    */
-  public unstubAllGlobals() {
-    this._stubsGlobal.forEach((original, name) => {
-      if (!original)
-        Reflect.deleteProperty(globalThis, name)
-      else
-        Object.defineProperty(globalThis, name, original)
-    })
-    this._stubsGlobal.clear()
-    return this
-  }
+  unstubAllGlobals(): this
 
   /**
-   * Reset enviromental variables to the ones that were available before first `vi.stubEnv` was called.
+   * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
    */
-  public unstubAllEnvs() {
-    this._stubsEnv.forEach((original, name) => {
-      if (original === undefined)
-        delete process.env[name]
-      else
-        process.env[name] = original
-    })
-    this._stubsEnv.clear()
-    return this
-  }
+  unstubAllEnvs(): this
 
-  public resetModules() {
-    const state = getWorkerState()
-    resetModules(state.moduleCache)
-    return this
-  }
+  resetModules(): this
 
   /**
    * Wait for all imports to load. Useful, if you have a synchronous call that starts
    * importing a module that you cannot await otherwise.
    * Will also wait for new imports, started during the wait.
    */
-  public async dynamicImportSettled() {
-    return waitForImportsToResolve()
-  }
-
-  private _config: null | ResolvedConfig = null
+  dynamicImportSettled(): Promise<void>
 
   /**
    * Updates runtime config. You can only change values that are used when executing tests.
    */
-  public setConfig(config: RuntimeConfig) {
-    const state = getWorkerState()
-    if (!this._config)
-      this._config = { ...state.config }
-    Object.assign(state.config, config)
-  }
+  setConfig(config: RuntimeConfig): void
 
   /**
    * If config was changed with `vi.setConfig`, this will reset it to the original state.
    */
-  public resetConfig() {
-    if (this._config) {
-      const state = getWorkerState()
-      Object.assign(state.config, this._config)
-    }
-  }
+  resetConfig(): void
 }
 
-export const vitest = new VitestUtils()
+function createVitest(): VitestUtils {
+  // @ts-expect-error injected by vite-nide
+  const _mocker: VitestMocker = typeof __vitest_mocker__ !== 'undefined'
+    // @ts-expect-error injected by vite-nide
+    ? __vitest_mocker__
+    : new Proxy({}, {
+      get(_, name) {
+        throw new Error(
+          'Vitest mocker was not initialized in this environment. '
+          + `vi.${String(name)}() is forbidden.`,
+        )
+      },
+    })
+  let _mockedDate: Date | null = null
+  let _config: null | ResolvedConfig = null
+
+  const workerState = getWorkerState()
+
+  if (!workerState) {
+    const errorMsg = 'Vitest failed to access its internal state.'
+      + '\n\nOne of the following is possible:'
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+    throw new Error(errorMsg)
+  }
+
+  const _timers = new FakeTimers({
+    global: globalThis,
+    config: workerState.config.fakeTimers,
+  })
+
+  const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
+  const _stubsEnv = new Map()
+
+  const getImporter = () => {
+    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
+    const importerStack = stackTrace.split('\n')[4]
+    const stack = parseSingleStack(importerStack)
+    return stack?.file || ''
+  }
+
+  const utils: VitestUtils = {
+    useFakeTimers(config?: FakeTimerInstallOpts) {
+      const workerState = getWorkerState()
+
+      if (workerState.isChildProcess) {
+        if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
+          throw new Error(
+            'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
+          )
+        }
+      }
+
+      if (config)
+        _timers.configure({ ...workerState.config.fakeTimers, ...config })
+      else
+        _timers.configure(workerState.config.fakeTimers)
+
+      _timers.useFakeTimers()
+      return utils
+    },
+
+    isFakeTimers() {
+      return _timers.isFakeTimers()
+    },
+
+    useRealTimers() {
+      _timers.useRealTimers()
+      _mockedDate = null
+      return utils
+    },
+
+    runOnlyPendingTimers() {
+      _timers.runOnlyPendingTimers()
+      return utils
+    },
+
+    async runOnlyPendingTimersAsync() {
+      await _timers.runOnlyPendingTimersAsync()
+      return utils
+    },
+
+    runAllTimers() {
+      _timers.runAllTimers()
+      return utils
+    },
+
+    async runAllTimersAsync() {
+      await _timers.runAllTimersAsync()
+      return utils
+    },
+
+    runAllTicks() {
+      _timers.runAllTicks()
+      return utils
+    },
+
+    advanceTimersByTime(ms: number) {
+      _timers.advanceTimersByTime(ms)
+      return utils
+    },
+
+    async advanceTimersByTimeAsync(ms: number) {
+      await _timers.advanceTimersByTimeAsync(ms)
+      return utils
+    },
+
+    advanceTimersToNextTimer() {
+      _timers.advanceTimersToNextTimer()
+      return utils
+    },
+
+    async advanceTimersToNextTimerAsync() {
+      await _timers.advanceTimersToNextTimerAsync()
+      return utils
+    },
+
+    getTimerCount() {
+      return _timers.getTimerCount()
+    },
+
+    setSystemTime(time: number | string | Date) {
+      const date = time instanceof Date ? time : new Date(time)
+      _mockedDate = date
+      _timers.setSystemTime(date)
+      return utils
+    },
+
+    getMockedSystemTime() {
+      return _mockedDate
+    },
+
+    getRealSystemTime() {
+      return _timers.getRealSystemTime()
+    },
+
+    clearAllTimers() {
+      _timers.clearAllTimers()
+      return utils
+    },
+
+    // mocks
+
+    spyOn,
+    fn,
+    waitFor,
+    waitUntil,
+    hoisted<T>(factory: () => T): T {
+      assertTypes(factory, '"vi.hoisted" factory', ['function'])
+      return factory()
+    },
+
+    mock(path: string, factory?: MockFactoryWithHelper) {
+      const importer = getImporter()
+      _mocker.queueMock(
+        path,
+        importer,
+        factory ? () => factory(() => _mocker.importActual(path, importer)) : undefined,
+      )
+    },
+
+    unmock(path: string) {
+      _mocker.queueUnmock(path, getImporter())
+    },
+
+    doMock(path: string, factory?: () => any) {
+      _mocker.queueMock(path, getImporter(), factory)
+    },
+
+    doUnmock(path: string) {
+      _mocker.queueUnmock(path, getImporter())
+    },
+
+    async importActual<T = unknown>(path: string): Promise<T> {
+      return _mocker.importActual<T>(path, getImporter())
+    },
+
+    async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
+      return _mocker.importMock(path, getImporter())
+    },
+
+    mocked<T>(item: T, _options = {}): MaybeMocked<T> {
+      return item as any
+    },
+
+    isMockFunction(fn: any): fn is EnhancedSpy {
+      return isMockFunction(fn)
+    },
+
+    clearAllMocks() {
+      spies.forEach(spy => spy.mockClear())
+      return utils
+    },
+
+    resetAllMocks() {
+      spies.forEach(spy => spy.mockReset())
+      return utils
+    },
+
+    restoreAllMocks() {
+      spies.forEach(spy => spy.mockRestore())
+      return utils
+    },
+
+    stubGlobal(name: string | symbol | number, value: any) {
+      if (!_stubsGlobal.has(name))
+        _stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
+      Object.defineProperty(globalThis, name, {
+        value,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      })
+      return utils
+    },
+
+    stubEnv(name: string, value: string) {
+      if (!_stubsEnv.has(name))
+        _stubsEnv.set(name, process.env[name])
+      process.env[name] = value
+      return utils
+    },
+
+    unstubAllGlobals() {
+      _stubsGlobal.forEach((original, name) => {
+        if (!original)
+          Reflect.deleteProperty(globalThis, name)
+        else
+          Object.defineProperty(globalThis, name, original)
+      })
+      _stubsGlobal.clear()
+      return utils
+    },
+
+    unstubAllEnvs() {
+      _stubsEnv.forEach((original, name) => {
+        if (original === undefined)
+          delete process.env[name]
+        else
+          process.env[name] = original
+      })
+      _stubsEnv.clear()
+      return utils
+    },
+
+    resetModules() {
+      const state = getWorkerState()
+      resetModules(state.moduleCache)
+      return utils
+    },
+
+    async dynamicImportSettled() {
+      return waitForImportsToResolve()
+    },
+
+    setConfig(config: RuntimeConfig) {
+      const state = getWorkerState()
+      if (!_config)
+        _config = { ...state.config }
+      Object.assign(state.config, config)
+    },
+
+    resetConfig() {
+      if (_config) {
+        const state = getWorkerState()
+        Object.assign(state.config, _config)
+      }
+    },
+  }
+
+  return utils
+}
+
+export const vitest = createVitest()
 export const vi = vitest

@@ -4,16 +4,18 @@ import type CodeMirror from 'codemirror'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'
 import { client } from '~/composables/client'
-import type { ErrorWithDiff, File, ParsedStack } from '#types'
+import type { ErrorWithDiff, File } from '#types'
 
 const props = defineProps<{
   file?: File
 }>()
+
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
+
 watch(() => props.file,
   async () => {
     if (!props.file || !props.file?.filepath) {
@@ -22,12 +24,13 @@ watch(() => props.file,
       draft.value = false
       return
     }
-    code.value = await client.rpc.readFile(props.file.filepath)
+    code.value = await client.rpc.readTestFile(props.file.filepath) || ''
     serverCode.value = code.value
     draft.value = false
   },
   { immediate: true },
 )
+
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 
@@ -40,7 +43,7 @@ const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
 
 const hasBeenEdited = ref(false)
 
-const clearListeners = () => {
+function clearListeners() {
   listeners.forEach(([el, l, t]) => {
     el.removeEventListener('click', l)
     t()
@@ -75,7 +78,7 @@ function createErrorElement(e: ErrorWithDiff) {
   span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
   span.tabIndex = 0
   span.ariaLabel = 'Open in Editor'
-  const tooltip = createTooltip(span, {
+  createTooltip(span, {
     content: 'Open in Editor',
     placement: 'bottom',
   }, false)
@@ -113,7 +116,7 @@ watch([cm, failed], ([cmValue]) => {
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
-  await client.rpc.writeFile(props.file!.filepath, content)
+  await client.rpc.saveTestFile(props.file!.filepath, content)
   serverCode.value = content
   draft.value = false
 }

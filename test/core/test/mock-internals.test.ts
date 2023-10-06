@@ -1,6 +1,6 @@
-import childProcess, { exec } from 'child_process'
-import timers from 'timers'
-import { expect, test, vi } from 'vitest'
+import childProcess, { exec } from 'node:child_process'
+import timers from 'node:timers'
+import { type SpyInstance, afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { execDefault, execHelloWorld, execImportAll } from '../src/exec'
 import { dynamicImport } from '../src/dynamic-import'
 
@@ -27,4 +27,32 @@ test('mocked dynamically imported packages', async () => {
   expect(mod).toHaveProperty('default')
   expect(mod.default).toHaveProperty('clearInterval')
   expect(mod.default.clearInterval()).toBe('foo')
+})
+
+describe('Math.random', () => {
+  describe('mock is restored', () => {
+    let spy: SpyInstance
+
+    beforeEach(() => {
+      spy = vi.spyOn(Math, 'random').mockReturnValue(0.1)
+    })
+    afterEach(() => {
+      spy.mockRestore()
+    })
+
+    test('is mocked', () => {
+      expect(Math.random()).toBe(0.1)
+    })
+  })
+
+  // This used to make dependencies stuck, e.g. birpc
+  describe('mock is not restored and leaks', () => {
+    beforeEach(() => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.1)
+    })
+
+    test('is mocked', () => {
+      expect(Math.random()).toBe(0.1)
+    })
+  })
 })

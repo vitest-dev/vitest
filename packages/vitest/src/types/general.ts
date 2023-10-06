@@ -1,24 +1,9 @@
-export type { ErrorWithDiff, ParsedStack } from '@vitest/runner/utils'
+export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
-
-export type MergeInsertions<T> =
-  T extends object
-    ? { [K in keyof T]: MergeInsertions<T[K]> }
-    : T
-
-export type DeepMerge<F, S> = MergeInsertions<{
-  [K in keyof F | keyof S]: K extends keyof S & keyof F
-    ? DeepMerge<F[K], S[K]>
-    : K extends keyof S
-      ? S[K]
-      : K extends keyof F
-        ? F[K]
-        : never;
-}>
 
 export type MutableArray<T extends readonly any[]> = { -readonly [k in keyof T]: T[k] }
 
@@ -33,11 +18,18 @@ export interface ModuleCache {
 }
 
 export interface EnvironmentReturn {
-  teardown: (global: any) => Awaitable<void>
+  teardown(global: any): Awaitable<void>
+}
+
+export interface VmEnvironmentReturn {
+  getVmContext(): { [key: string]: any }
+  teardown(): Awaitable<void>
 }
 
 export interface Environment {
   name: string
+  transformMode: 'web' | 'ssr'
+  setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
   setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 

@@ -1,3 +1,4 @@
+import type { Reporter } from '../../types'
 import { BasicReporter } from './basic'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
@@ -7,8 +8,20 @@ import { TapReporter } from './tap'
 import { JUnitReporter } from './junit'
 import { TapFlatReporter } from './tap-flat'
 import { HangingProcessReporter } from './hanging-process'
+import type { BaseReporter } from './base'
 
-export { DefaultReporter }
+export {
+  DefaultReporter,
+  BasicReporter,
+  DotReporter,
+  JsonReporter,
+  VerboseReporter,
+  TapReporter,
+  JUnitReporter,
+  TapFlatReporter,
+  HangingProcessReporter,
+}
+export type { BaseReporter, Reporter }
 
 export const ReportersMap = {
   'default': DefaultReporter,

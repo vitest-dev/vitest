@@ -40,13 +40,39 @@ npx vite-node -h
 
 ### Options via CLI
 
-[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L70-L89) are supported by the CLI. They may be defined through the dot syntax, as shown below:
+[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L92-L111) are supported by the CLI. They may be defined through the dot syntax, as shown below:
 
 ```bash
 npx vite-node --options.deps.inline="module-name" --options.deps.external="/module-regexp/" index.ts
 ```
 
 Note that for options supporting RegExps, strings passed to the CLI must start _and_ end with a `/`;
+
+### Hashbang
+
+If you prefer to write scripts that don't need to be passed into Vite Node, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
+
+Simply add `#!/usr/bin/env vite-node --script` at the top of your file:
+
+_file.ts_
+```ts
+#!/usr/bin/env vite-node --script
+
+console.log('argv:', process.argv.slice(2))
+```
+
+And make the file executable:
+```sh
+chmod +x ./file.ts
+```
+
+Now, you can run the file without passing it into Vite Node:
+```sh
+$ ./file.ts hello
+argv: [ 'hello' ]
+```
+
+Note that when using the `--script` option, Vite Node forwards every argument and option to the script to execute, even the one supported by Vite Node itself.
 
 ## Programmatic Usage
 
@@ -104,7 +130,7 @@ await server.close()
 
 Sometimes you might want to inspect the transformed code to investigate issues. You can set environment variable `VITE_NODE_DEBUG_DUMP=true` to let vite-node write the transformed result of each module under `.vite-node/dump`.
 
-If you want to debug by modifying the dumped code, you can change the value of `VITE_NODE_DEBUG_DUMP` to `load` and search for the dumpped files and use them for executing.
+If you want to debug by modifying the dumped code, you can change the value of `VITE_NODE_DEBUG_DUMP` to `load` and search for the dumped files and use them for executing.
 
 ```bash
 VITE_NODE_DEBUG_DUMP=load vite-node example.ts
@@ -125,7 +151,7 @@ const server = new ViteNodeServer(viteServer, {
 
 ### Debug Execution
 
-If the process get stuck, it might because there is a unresolvable circular dependencies, you can set `VITE_NODE_DEBUG_RUNNER=true` to vite-node warn about it.
+If the process gets stuck, it might be because there are unresolvable circular dependencies. You can set `VITE_NODE_DEBUG_RUNNER=true` for vite-node to warn about this.
 
 ```bash
 VITE_NODE_DEBUG_RUNNER=true vite-node example.ts

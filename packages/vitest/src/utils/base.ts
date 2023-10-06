@@ -1,7 +1,13 @@
-import type { Arrayable, DeepMerge, Nullable } from '../types'
+import type { Arrayable, Nullable } from '../types/general'
 
-function isFinalObj(obj: any) {
-  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
+export { notNullish, getCallLastIndex } from '@vitest/utils'
+
+export interface GlobalConstructors {
+  Object: ObjectConstructor
+  Function: FunctionConstructor
+  RegExp: RegExpConstructor
+  Array: ArrayConstructor
+  Map: MapConstructor
 }
 
 function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
@@ -10,12 +16,33 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function getAllMockableProperties(obj: any, isModule: boolean) {
+export function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
+  return collection.reduce((acc, item) => {
+    const key = iteratee(item)
+    acc[key] ||= []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<K, T[]>)
+}
+
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
+}
+
+export function getAllMockableProperties(obj: any, isModule: boolean, constructors: GlobalConstructors) {
+  const {
+    Map,
+    Object,
+    Function,
+    RegExp,
+    Array,
+  } = constructors
+
   const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
   do {
     // we don't need properties from these
-    if (isFinalObj(curr))
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
       break
 
     collectOwnProperties(curr, (key) => {
@@ -34,15 +61,11 @@ export function getAllMockableProperties(obj: any, isModule: boolean) {
   return Array.from(allProps.values())
 }
 
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
-}
-
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export const noop = () => { }
+export function noop() { }
 
 export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
@@ -64,12 +87,12 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   return [array]
 }
 
-export const toString = (v: any) => Object.prototype.toString.call(v)
-export const isPlainObject = (val: any): val is object =>
-  // `Object.create(null).constructor` is `undefined`
-  // `{}.constructor.name` is `Object`
-  // `new (class A{})().constructor.name` is `A`
-  toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+export function toString(v: any) {
+  return Object.prototype.toString.call(v)
+}
+export function isPlainObject(val: any): val is object {
+  return toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+}
 
 export function isObject(item: unknown): boolean {
   return item != null && typeof item === 'object' && !Array.isArray(item)
@@ -79,8 +102,10 @@ export function isObject(item: unknown): boolean {
  * Deep merge :P
  *
  * Will merge objects only if they are plain
+ *
+ * Do not merge types - it is very expensive and usually it's better to case a type here
  */
-export function deepMerge<T extends object = object, S extends object = T>(target: T, ...sources: S[]): DeepMerge<T, S> {
+export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
   if (!sources.length)
     return target as any
 
@@ -89,7 +114,7 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
     return target as any
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
-    (Object.keys(source) as (keyof S & keyof T)[]).forEach((key) => {
+    (Object.keys(source) as (keyof T)[]).forEach((key) => {
       if (isMergeableObject(source[key])) {
         if (!target[key])
           target[key] = {} as any
@@ -114,3 +139,13 @@ export function stdout(): NodeJS.WriteStream {
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
 }
+
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
+  }
+}
+export { AggregateErrorPonyfill as AggregateError }

@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-config",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "vitest": "workspace:*"
+  }
+}

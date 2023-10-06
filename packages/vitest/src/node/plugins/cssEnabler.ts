@@ -1,30 +1,36 @@
 import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
-import type { CSSModuleScopeStrategy } from '../../types'
+import type { CSSModuleScopeStrategy, ResolvedConfig } from '../../types'
 import { toArray } from '../../utils'
-import type { Vitest } from '../core'
 
 const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
 const cssLangRE = new RegExp(cssLangs)
 const cssModuleRE = new RegExp(`\\.module${cssLangs}`)
+const cssInlineRE = /[?&]inline(&|$)/
 
-const isCSS = (id: string) => {
+function isCSS(id: string) {
   return cssLangRE.test(id)
 }
 
-const isCSSModule = (id: string) => {
+function isCSSModule(id: string) {
   return cssModuleRE.test(id)
 }
 
-const getCSSModuleProxyReturn = (strategy: CSSModuleScopeStrategy, filename: string) => {
+// inline css requests are expected to just return the
+// string content directly and not the proxy module
+function isInline(id: string) {
+  return cssInlineRE.test(id)
+}
+
+function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
   if (strategy === 'non-scoped')
     return 'style'
   const hash = generateCssFilenameHash(filename)
   return `\`_\${style}_${hash}\``
 }
 
-export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
+export function CSSEnablerPlugin(ctx: { config: ResolvedConfig }): VitePlugin[] {
   const shouldProcessCSS = (id: string) => {
     const { css } = ctx.config
     if (typeof css === 'boolean')
@@ -56,7 +62,7 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
         if (!isCSS(id) || shouldProcessCSS(id))
           return
 
-        if (isCSSModule(id)) {
+        if (isCSSModule(id) && !isInline(id)) {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty

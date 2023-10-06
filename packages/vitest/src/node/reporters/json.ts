@@ -4,7 +4,7 @@ import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
-import { parseStacktrace } from '../../utils/source-map'
+import { parseErrorStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -89,8 +89,8 @@ export class JsonReporter implements Reporter {
 
     for (const file of files) {
       const tests = getTests([file])
-      let startTime = tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity)
-      if (startTime === Infinity)
+      let startTime = tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Number.POSITIVE_INFINITY), Number.POSITIVE_INFINITY)
+      if (startTime === Number.POSITIVE_INFINITY)
         startTime = this.start
 
       const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
@@ -183,8 +183,11 @@ export class JsonReporter implements Reporter {
     if (!error)
       return
 
-    const stack = parseStacktrace(error)
-    const frame = stack[stack.length - 1]
+    const project = this.ctx.getProjectByTaskId(test.id)
+    const stack = parseErrorStacktrace(error, {
+      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    })
+    const frame = stack[0]
     if (!frame)
       return
 

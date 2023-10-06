@@ -1,13 +1,15 @@
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
+import json from '@rollup/plugin-json'
 import dts from 'rollup-plugin-dts'
 import { defineConfig } from 'rollup'
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  '@vitest/utils/error',
 ]
 
 const entries = {
@@ -20,6 +22,7 @@ const plugins = [
   esbuild({
     target: 'node14',
   }),
+  json(),
 ]
 
 export default defineConfig([

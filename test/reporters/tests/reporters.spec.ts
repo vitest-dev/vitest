@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync } from 'fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { afterEach, expect, test, vi } from 'vitest'
 import { normalize, resolve } from 'pathe'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'

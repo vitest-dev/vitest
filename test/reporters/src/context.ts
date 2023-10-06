@@ -25,13 +25,14 @@ export function getContext(): Context {
   }
 
   const state: Partial<StateManager> = {
-    filesMap: new Map<string, File>(),
+    filesMap: new Map<string, File[]>(),
   }
 
   const context: Partial<Vitest> = {
     state: state as StateManager,
     config: config as ResolvedConfig,
     server: server as ViteDevServer,
+    getProjectByTaskId: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
   }
 
   context.logger = {

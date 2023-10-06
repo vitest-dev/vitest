@@ -1,13 +1,18 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.28.4",
+  "version": "1.0.0-beta.1",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/utils"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "sideEffects": false,
   "exports": {
@@ -19,9 +24,17 @@
       "types": "./dist/diff.d.ts",
       "import": "./dist/diff.js"
     },
+    "./error": {
+      "types": "./dist/error.d.ts",
+      "import": "./dist/error.js"
+    },
     "./helpers": {
       "types": "./dist/helpers.d.ts",
       "import": "./dist/helpers.js"
+    },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "import": "./dist/source-map.js"
     },
     "./*": "./*"
   },
@@ -29,7 +42,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "*.d.ts"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -37,13 +51,11 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "cli-truncate": "^3.1.0",
-    "diff": "^5.1.0",
+    "diff-sequences": "^29.4.3",
     "loupe": "^2.3.6",
-    "picocolors": "^1.0.0",
-    "pretty-format": "^27.5.1"
+    "pretty-format": "^29.5.0"
   },
   "devDependencies": {
-    "@types/diff": "^5.0.2"
+    "@jridgewell/trace-mapping": "^0.3.18"
   }
 }

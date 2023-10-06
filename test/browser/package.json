@@ -1,12 +1,17 @@
 {
   "name": "@vitest/test-browser",
   "private": true,
+  "module": "true",
   "scripts": {
-    "test": "vitest --browser --open",
-    "coverage": "vitest run --coverage"
+    "test": "pnpm run test:webdriverio && pnpm run test:playwright",
+    "test:webdriverio": "PROVIDER=webdriverio node --test specs/",
+    "test:playwright": "PROVIDER=playwright node --test specs/",
+    "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
+    "execa": "^7.1.1",
+    "safaridriver": "^0.0.4",
     "vitest": "workspace:*"
   }
 }

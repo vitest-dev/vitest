@@ -1,8 +1,8 @@
 import type { Task } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/runner/utils'
+import type { ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
-import { parseStacktrace } from '../../utils/source-map'
+import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
 function yamlString(str: string): string {
@@ -52,7 +52,7 @@ export class TapReporter implements Reporter {
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
-      const ok = task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo' ? 'ok' : 'not ok'
+      const ok = (task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo') ? 'ok' : 'not ok'
 
       const comment = TapReporter.getComment(task)
 
@@ -68,11 +68,15 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
+        const project = this.ctx.getProjectByTaskId(task.id)
+
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = parseStacktrace(error)
+            const stacks = parseErrorStacktrace(error, {
+              getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+            })
             const stack = stacks[0]
 
             this.logger.log('---')

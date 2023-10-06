@@ -1,6 +1,6 @@
 import MagicString from 'magic-string'
 import { describe, expect, it } from 'vitest'
-import { replaceInlineSnap } from '../../../packages/vitest/src/integrations/snapshot/port/inlineSnapshot'
+import { replaceInlineSnap } from '../../../packages/snapshot/src/port/inlineSnapshot'
 
 describe('inline-snap utils', () => {
   it('replaceInlineSnap', async () => {
@@ -15,10 +15,10 @@ expect('foo').toMatchInlineSnapshot(\`{
     replaceInlineSnap(code, s, 40, '"bar\nfoo"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-      expect('foo').toMatchInlineSnapshot('\\"bar\\"')
+      expect('foo').toMatchInlineSnapshot(\`"bar"\`)
       expect('foo').toMatchInlineSnapshot(\`
-        \\"bar
-        foo\\"
+        "bar
+        foo"
       \`)
       "
     `)
@@ -37,10 +37,10 @@ ${indent}}\`)
     replaceInlineSnap(code, s, 60, '"bar\nfoo"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-        expect('foo').toMatchInlineSnapshot('\\"bar\\"')
+        expect('foo').toMatchInlineSnapshot(\`"bar"\`)
         expect('foo').toMatchInlineSnapshot(\`
-          \\"bar
-          foo\\"
+          "bar
+          foo"
         \`)
       "
     `)
@@ -54,7 +54,7 @@ ${indent}}\`)
     replaceInlineSnap(code, s, 0, '"bar"')
     expect(s.toString()).toMatchInlineSnapshot(`
       "
-        expect('foo').toMatchInlineSnapshot(/* comment1 */'\\"bar\\"')
+        expect('foo').toMatchInlineSnapshot(/* comment1 */\`"bar"\`)
         "
     `)
   })
@@ -77,7 +77,7 @@ ${indent}}\`)
              comment2
           */
 
-          '\\"bar\\"')
+          \`"bar"\`)
         "
     `)
   })
@@ -96,7 +96,7 @@ ${indent}}\`)
         expect('foo').toMatchInlineSnapshot(
           // comment1
           // comment2
-          '\\"bar\\"')
+          \`"bar"\`)
         "
     `)
   })
@@ -137,13 +137,53 @@ ${indent}}\`)
           */
           \`
         {
-              \\"bar\\": {
-                \\"map2\\": Map {},
-                \\"type\\": \\"object1\\",
+              "bar": {
+                "map2": Map {},
+                "type": "object1",
               },
             }
       \`)
         "
     `)
+  })
+
+  describe('replaceObjectSnap()', () => {
+    it('without snapshot', async () => {
+      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) })'
+
+      const s = new MagicString(code)
+      replaceInlineSnap(code, s, 23, `
+      {
+        "foo": Any<String>,
+      }
+    `)
+
+      expect(s.toString()).toMatchInlineSnapshot(`
+        "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
+          {
+                  "foo": Any<String>,
+                }
+        \`)"
+      `)
+    })
+
+    it('with snapshot', async () => {
+      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `{ }`)'
+
+      const s = new MagicString(code)
+      replaceInlineSnap(code, s, 23, `
+      {
+        "foo": Any<String>,
+      }
+    `)
+
+      expect(s.toString()).toMatchInlineSnapshot(`
+        "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
+          {
+                  "foo": Any<String>,
+                }
+        \`)"
+      `)
+    })
   })
 })

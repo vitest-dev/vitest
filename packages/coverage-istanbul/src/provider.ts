@@ -1,22 +1,21 @@
-/* eslint-disable no-restricted-imports */
-import { existsSync, promises as fs } from 'fs'
-import { relative, resolve } from 'pathe'
-import type { TransformPluginContext } from 'rollup'
+import { existsSync, promises as fs } from 'node:fs'
+import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import { BaseCoverageProvider } from 'vitest/coverage'
+import c from 'picocolors'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
+
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
-
-type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
 interface TestExclude {
   new(opts: {
@@ -25,13 +24,14 @@ interface TestExclude {
     exclude?: string | string[]
     extension?: string | string[]
     excludeNodeModules?: boolean
+    relativePath?: boolean
   }): {
     shouldInstrument(filePath: string): boolean
     glob(cwd: string): Promise<string[]>
   }
 }
 
-export class IstanbulCoverageProvider implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -48,8 +48,24 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   coverages: any[] = []
 
   initialize(ctx: Vitest) {
+    const config: CoverageIstanbulOptions = ctx.config.coverage
+
     this.ctx = ctx
-    this.options = resolveIstanbulOptions(ctx.config.coverage, ctx.config.root)
+    this.options = {
+      ...coverageConfigDefaults,
+
+      // User's options
+      ...config,
+
+      // Resolved fields
+      provider: 'istanbul',
+      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
+      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+      lines: config['100'] ? 100 : config.lines,
+      functions: config['100'] ? 100 : config.functions,
+      branches: config['100'] ? 100 : config.branches,
+      statements: config['100'] ? 100 : config.statements,
+    }
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -69,6 +85,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: this.options.extension,
+      relativePath: !this.options.allowExternal,
     })
   }
 
@@ -76,7 +93,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     return this.options
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: TransformPluginContext) {
+  onFileTransform(sourceCode: string, id: string, pluginCtx: any) {
     if (!this.testExclude.shouldInstrument(id))
       return
 
@@ -122,10 +139,14 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       watermarks: this.options.watermarks,
     })
 
+    if (hasTerminalReporter(this.options.reporter))
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
+
     for (const reporter of this.options.reporter) {
-      reports.create(reporter, {
+      reports.create(reporter[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
+        ...reporter[1],
       }).execute(context)
     }
 
@@ -133,58 +154,30 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       || this.options.functions
       || this.options.lines
       || this.options.statements) {
-      this.checkThresholds(coverageMap, {
-        branches: this.options.branches,
-        functions: this.options.functions,
-        lines: this.options.lines,
-        statements: this.options.statements,
+      this.checkThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        perFile: this.options.perFile,
       })
     }
-  }
 
-  checkThresholds(coverageMap: CoverageMap, thresholds: Record<Threshold, number | undefined>) {
-    // Construct list of coverage summaries where thresholds are compared against
-    const summaries = this.options.perFile
-      ? coverageMap.files()
-        .map((file: string) => ({
-          file,
-          summary: coverageMap.fileCoverageFor(file).toSummary(),
-        }))
-      : [{
-          file: null,
-          summary: coverageMap.getCoverageSummary(),
-        }]
-
-    // Check thresholds of each summary
-    for (const { summary, file } of summaries) {
-      for (const thresholdKey of ['lines', 'functions', 'statements', 'branches'] as const) {
-        const threshold = thresholds[thresholdKey]
-
-        if (threshold !== undefined) {
-          const coverage = summary.data[thresholdKey].pct
-
-          if (coverage < threshold) {
-            process.exitCode = 1
-
-            /*
-             * Generate error message based on perFile flag:
-             * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-             * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-             */
-            let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet`
-
-            if (!this.options.perFile)
-              errorMessage += ' global'
-
-            errorMessage += ` threshold (${threshold}%)`
-
-            if (this.options.perFile && file)
-              errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-
-            console.error(errorMessage)
-          }
-        }
-      }
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        perFile: this.options.perFile,
+        configurationFile: this.ctx.server.config.configFile,
+      })
     }
   }
 
@@ -217,25 +210,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       }
     }
   }
-}
-
-function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string): Options {
-  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-  const reporter = options.reporter || coverageConfigDefaults.reporter
-
-  const resolved: Options = {
-    ...coverageConfigDefaults,
-
-    // User's options
-    ...options,
-
-    // Resolved fields
-    provider: 'istanbul',
-    reportsDirectory,
-    reporter: Array.isArray(reporter) ? reporter : [reporter],
-  }
-
-  return resolved
 }
 
 /**
@@ -286,4 +260,12 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
+}
+
+function hasTerminalReporter(reporters: Options['reporter']) {
+  return reporters.some(([reporter]) =>
+    reporter === 'text'
+    || reporter === 'text-summary'
+    || reporter === 'text-lcov'
+    || reporter === 'teamcity')
 }

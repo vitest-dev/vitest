@@ -130,7 +130,13 @@ export class FakeTimers {
     }
 
     if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers) as Array<keyof FakeTimerWithContext['timers']>
+      const toFake = Object.keys(this._fakeTimers.timers)
+        // Do not mock nextTick by default. It can still be mocked through userConfig.
+        .filter(timer => timer !== 'nextTick') as (keyof FakeTimerWithContext['timers'])[]
+
+      // @ts-expect-error -- untyped internal
+      if (this._userConfig?.toFake?.includes('nextTick') && globalThis.__vitest_worker__.isChildProcess)
+        throw new Error('process.nextTick cannot be mocked inside child_process')
 
       this._clock = this._fakeTimers.install({
         now: Date.now(),
@@ -173,6 +179,10 @@ export class FakeTimers {
 
   configure(config: FakeTimerInstallOpts): void {
     this._userConfig = config
+  }
+
+  isFakeTimers() {
+    return this._fakingTime
   }
 
   private _checkFakeTimers() {

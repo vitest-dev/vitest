@@ -1,12 +1,12 @@
 {
   "name": "@vitest/coverage-istanbul",
   "type": "module",
-  "version": "0.28.4",
+  "version": "1.0.0-beta.1",
   "description": "Istanbul coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/antfu",
-  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/coverage-istanbul#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -41,14 +41,17 @@
     "dev": "rollup -c --watch --watch.include 'src/**'",
     "prepublishOnly": "pnpm build"
   },
+  "peerDependencies": {
+    "vitest": ">=0.32.0 <1"
+  },
   "dependencies": {
     "istanbul-lib-coverage": "^3.2.0",
-    "istanbul-lib-instrument": "^5.2.1",
-    "istanbul-lib-report": "^3.0.0",
+    "istanbul-lib-instrument": "^6.0.0",
+    "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^4.0.1",
     "istanbul-reports": "^3.1.5",
-    "test-exclude": "^6.0.0",
-    "vitest": "workspace:*"
+    "picocolors": "^1.0.0",
+    "test-exclude": "^6.0.0"
   },
   "devDependencies": {
     "@types/istanbul-lib-coverage": "^2.0.4",
@@ -56,6 +59,7 @@
     "@types/istanbul-lib-report": "^3.0.0",
     "@types/istanbul-lib-source-maps": "^4.0.1",
     "@types/istanbul-reports": "^3.0.1",
-    "pathe": "^1.1.0"
+    "pathe": "^1.1.1",
+    "vitest": "workspace:*"
   }
 }

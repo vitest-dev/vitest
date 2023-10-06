@@ -51,6 +51,10 @@ export default {
 ```
 :::
 
+### `vitest bench`
+
+Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experimental) tests, which compare performance results.
+
 ## Options
 
 | Options       |               |
@@ -65,14 +69,13 @@ export default {
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |
+| `--threads` | Enable Threads (default: `true`) |   
+| `--single-thread` | Run tests inside a single thread, requires --threads (default: `false`) |
+| `--experimental-vm-threads` | Run tests in a worker pool using VM isolation (default: `false`) |
+| `--experimental-vm-worker-memory-limit` | Set the maximum allowed memory for a worker. When reached, a new worker will be created instead |
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
-| `--outputDiffMaxSize <length>` | Object diff output max size (default: 10000) |
-| `--outputDiffMaxLines <lines>` | Max lines in diff output window (default: 50) |
-| `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
-| `--outputDiffLines <lines>` | Limit number of output diff lines up to `<lines>`. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
@@ -80,7 +83,7 @@ export default {
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--browser` | Run tests in browser |
+| `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--logHeapUsage` | Show the size of heap for each test |
@@ -88,10 +91,12 @@ export default {
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
+| `--bail <number>` | Stop test execution when given number of tests have failed |
+| `--retry <times>` | Retry the test specific number of times if it fails |
 | `-h, --help` | Display available CLI options |
 
 ::: tip
@@ -145,3 +150,5 @@ vitest --api=false
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
+
+[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

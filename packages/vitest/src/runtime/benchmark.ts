@@ -1,18 +1,18 @@
-import type { TaskCustom } from '@vitest/runner'
+import type { Custom } from '@vitest/runner'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
 import { noop } from '@vitest/utils'
 import type { BenchFunction, BenchOptions, BenchmarkAPI } from '../types'
 import { isRunningInBenchmark } from '../utils'
 
-const benchFns = new WeakMap<TaskCustom, BenchFunction>()
+const benchFns = new WeakMap<Custom, BenchFunction>()
 const benchOptsMap = new WeakMap()
 
-export function getBenchOptions(key: TaskCustom): BenchOptions {
+export function getBenchOptions(key: Custom): BenchOptions {
   return benchOptsMap.get(key)
 }
 
-export function getBenchFn(key: TaskCustom): BenchFunction {
+export function getBenchFn(key: Custom): BenchFunction {
   return benchFns.get(key)!
 }
 
@@ -21,10 +21,12 @@ export const bench = createBenchmark(
     if (!isRunningInBenchmark())
       throw new Error('`bench()` is only available in benchmark mode.')
 
-    const task = getCurrentSuite().custom.call(this, name)
-    task.meta = {
-      benchmark: true,
-    }
+    const task = getCurrentSuite().task(formatName(name), {
+      ...this,
+      meta: {
+        benchmark: true,
+      },
+    })
     benchFns.set(task, fn)
     benchOptsMap.set(task, options)
   },
@@ -33,7 +35,7 @@ export const bench = createBenchmark(
 function createBenchmark(fn: (
   (
     this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
-    name: string,
+    name: string | Function,
     fn?: BenchFunction,
     options?: BenchOptions
   ) => void
@@ -47,4 +49,8 @@ function createBenchmark(fn: (
   benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
 
   return benchmark as BenchmarkAPI
+}
+
+function formatName(name: string | Function) {
+  return typeof name === 'string' ? name : name instanceof Function ? (name.name || '<anonymous>') : String(name)
 }

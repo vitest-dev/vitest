@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`istanbul json report 1`] = `
 {
@@ -519,6 +519,611 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/dynamic-files.ts": {
+    "b": {
+      "0": [
+        0,
+        0,
+      ],
+      "1": [
+        0,
+        0,
+      ],
+      "2": [
+        0,
+        0,
+      ],
+      "3": [
+        0,
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 9,
+          },
+          "start": {
+            "column": 2,
+            "line": 8,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 9,
+            },
+            "start": {
+              "column": 2,
+              "line": 8,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 9,
+            },
+            "start": {
+              "column": 2,
+              "line": 8,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 22,
+          },
+          "start": {
+            "column": 2,
+            "line": 21,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 22,
+            },
+            "start": {
+              "column": 2,
+              "line": 21,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 22,
+            },
+            "start": {
+              "column": 2,
+              "line": 21,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "2": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 31,
+          },
+          "start": {
+            "column": 2,
+            "line": 30,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 31,
+            },
+            "start": {
+              "column": 2,
+              "line": 30,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 31,
+            },
+            "start": {
+              "column": 2,
+              "line": 30,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "3": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 44,
+          },
+          "start": {
+            "column": 2,
+            "line": 43,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 44,
+            },
+            "start": {
+              "column": 2,
+              "line": 43,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 44,
+            },
+            "start": {
+              "column": 2,
+              "line": 43,
+            },
+          },
+        ],
+        "type": "if",
+      },
+    },
+    "f": {
+      "0": 0,
+      "1": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 42,
+            "line": 5,
+          },
+          "start": {
+            "column": 22,
+            "line": 5,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 25,
+          },
+          "start": {
+            "column": 42,
+            "line": 5,
+          },
+        },
+        "name": "runDynamicFileESM",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 42,
+            "line": 27,
+          },
+          "start": {
+            "column": 22,
+            "line": 27,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 47,
+          },
+          "start": {
+            "column": 42,
+            "line": 27,
+          },
+        },
+        "name": "runDynamicFileCJS",
+      },
+    },
+    "path": "<process-cwd>/src/dynamic-files.ts",
+    "s": {
+      "0": 0,
+      "1": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 6,
+        },
+        "start": {
+          "column": 19,
+          "line": 6,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 9,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "10": {
+        "end": {
+          "column": null,
+          "line": 31,
+        },
+        "start": {
+          "column": 4,
+          "line": 31,
+        },
+      },
+      "11": {
+        "end": {
+          "column": null,
+          "line": 39,
+        },
+        "start": {
+          "column": 2,
+          "line": 33,
+        },
+      },
+      "12": {
+        "end": {
+          "column": null,
+          "line": 41,
+        },
+        "start": {
+          "column": 18,
+          "line": 41,
+        },
+      },
+      "13": {
+        "end": {
+          "column": null,
+          "line": 44,
+        },
+        "start": {
+          "column": 2,
+          "line": 43,
+        },
+      },
+      "14": {
+        "end": {
+          "column": null,
+          "line": 44,
+        },
+        "start": {
+          "column": 4,
+          "line": 44,
+        },
+      },
+      "15": {
+        "end": {
+          "column": null,
+          "line": 46,
+        },
+        "start": {
+          "column": 2,
+          "line": 46,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 9,
+        },
+        "start": {
+          "column": 4,
+          "line": 9,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 17,
+        },
+        "start": {
+          "column": 2,
+          "line": 11,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 19,
+        },
+        "start": {
+          "column": 18,
+          "line": 19,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 22,
+        },
+        "start": {
+          "column": 2,
+          "line": 21,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 22,
+        },
+        "start": {
+          "column": 4,
+          "line": 22,
+        },
+      },
+      "7": {
+        "end": {
+          "column": null,
+          "line": 24,
+        },
+        "start": {
+          "column": 2,
+          "line": 24,
+        },
+      },
+      "8": {
+        "end": {
+          "column": null,
+          "line": 28,
+        },
+        "start": {
+          "column": 19,
+          "line": 28,
+        },
+      },
+      "9": {
+        "end": {
+          "column": null,
+          "line": 31,
+        },
+        "start": {
+          "column": 2,
+          "line": 30,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/function-count.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+      "1": 1,
+      "2": 0,
+      "3": 0,
+      "4": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 17,
+            "line": 11,
+          },
+          "start": {
+            "column": 9,
+            "line": 11,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 13,
+          },
+          "start": {
+            "column": 17,
+            "line": 11,
+          },
+        },
+        "name": "first",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 25,
+            "line": 18,
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 21,
+          },
+          "start": {
+            "column": 25,
+            "line": 18,
+          },
+        },
+        "name": "second",
+      },
+      "2": {
+        "decl": {
+          "end": {
+            "column": 24,
+            "line": 24,
+          },
+          "start": {
+            "column": 16,
+            "line": 24,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 26,
+          },
+          "start": {
+            "column": 24,
+            "line": 24,
+          },
+        },
+        "name": "third",
+      },
+      "3": {
+        "decl": {
+          "end": {
+            "column": 18,
+            "line": 29,
+          },
+          "start": {
+            "column": 9,
+            "line": 29,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 31,
+          },
+          "start": {
+            "column": 18,
+            "line": 29,
+          },
+        },
+        "name": "fourth",
+      },
+      "4": {
+        "decl": {
+          "end": {
+            "column": 17,
+            "line": 34,
+          },
+          "start": {
+            "column": 9,
+            "line": 34,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 36,
+          },
+          "start": {
+            "column": 17,
+            "line": 34,
+          },
+        },
+        "name": "fifth",
+      },
+    },
+    "path": "<process-cwd>/src/function-count.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "6": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 2,
+          "line": 12,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 15,
+        },
+        "start": {
+          "column": 0,
+          "line": 15,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 19,
+        },
+        "start": {
+          "column": 2,
+          "line": 19,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 20,
+        },
+        "start": {
+          "column": 2,
+          "line": 20,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 25,
+        },
+        "start": {
+          "column": 2,
+          "line": 25,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 30,
+        },
+        "start": {
+          "column": 2,
+          "line": 30,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 35,
+        },
+        "start": {
+          "column": 2,
+          "line": 35,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/implicitElse.ts": {
     "b": {
       "0": [
@@ -733,6 +1338,89 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 2,
           "line": 6,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/multi-suite.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+      "1": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 8,
+            "line": 2,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 4,
+          },
+          "start": {
+            "column": 21,
+            "line": 2,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 8,
+            "line": 6,
+          },
+          "start": {
+            "column": 2,
+            "line": 6,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 8,
+          },
+          "start": {
+            "column": 21,
+            "line": 6,
+          },
+        },
+        "name": "(anonymous_1)",
+      },
+    },
+    "path": "<process-cwd>/src/multi-suite.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 3,
+        },
+        "start": {
+          "column": 4,
+          "line": 3,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 7,
+        },
+        "start": {
+          "column": 4,
+          "line": 7,
         },
       },
     },

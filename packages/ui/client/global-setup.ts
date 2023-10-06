@@ -1,6 +1,6 @@
 /// <reference types="vite-plugin-pages/client" />
 
-import { createRouter as _createRouter, createWebHistory } from 'vue-router'
+import { createRouter as _createRouter, createWebHashHistory } from 'vue-router'
 import FloatingVue, { VTooltip } from 'floating-vue'
 import routes from 'virtual:generated-pages'
 import 'd3-graph-controller/default.css'
@@ -19,9 +19,11 @@ export const directives = {
 FloatingVue.options.instantMove = true
 FloatingVue.options.distance = 10
 
-export const createRouter = () => _createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-})
+export function createRouter() {
+  return _createRouter({
+    history: createWebHashHistory(),
+    routes,
+  })
+}
 
 export const plugins = [createRouter]

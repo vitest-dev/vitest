@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-failing",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/runner": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

@@ -1,7 +1,9 @@
 /* eslint-disable no-sparse-arrays */
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage } from '@vitest/expect'
+import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { processError } from '@vitest/utils/error'
+import { getDefaultColors } from '@vitest/utils'
 
 class TestError extends Error {}
 
@@ -12,10 +14,18 @@ interface CustomMatchers<R = unknown> {
   toBeTestedSync(): R
   toBeTestedPromise(): R
 }
+
+declare module 'vitest' {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}
+
 declare global {
-  namespace Vi {
-    interface JestAssertion extends CustomMatchers {}
-    interface AsymmetricMatchersContaining extends CustomMatchers {}
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toBeJestCompatible(): R
+    }
   }
 }
 
@@ -205,6 +215,12 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
+      toBeJestCompatible() {
+        return {
+          pass: true,
+          message: () => '',
+        }
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -218,6 +234,8 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+
+    expect(expect).toBeJestCompatible()
   })
 
   it('object', () => {
@@ -228,6 +246,7 @@ describe('jest-expect', () => {
 
     const foo = {}
     const complex = {
+      '0': 'zero',
       'foo': 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
@@ -250,12 +269,22 @@ describe('jest-expect', () => {
 
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
+    expect(complex).toHaveProperty('0')
+    expect(complex).toHaveProperty('0', 'zero')
+    expect(complex).toHaveProperty(['0'])
+    expect(complex).toHaveProperty(['0'], 'zero')
+    expect(complex).toHaveProperty([0])
+    expect(complex).toHaveProperty([0], 'zero')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
     expect(complex).toHaveProperty('bar.arr[0]')
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
+    expect(complex).toHaveProperty(['bar', 'arr', '0'])
+    expect(complex).toHaveProperty(['bar', 'arr', '0'], 'first')
+    expect(complex).toHaveProperty(['bar', 'arr', 0])
+    expect(complex).toHaveProperty(['bar', 'arr', 0], 'first')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
@@ -271,7 +300,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { foo: 1, \'foo.bar[0]\': \'baz\', …(3) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
   })
 
   it('assertions', () => {
@@ -361,6 +390,22 @@ describe('jest-expect', () => {
         bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
       },
     ])
+  })
+
+  describe('toThrow', () => {
+    it('error wasn\'t thrown', () => {
+      expect(() => {
+        expect(() => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
+
+    it('async wasn\'t awaited', () => {
+      expect(() => {
+        expect(async () => {
+        }).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+    })
   })
 })
 
@@ -460,6 +505,25 @@ describe('.toStrictEqual()', () => {
       Uint8Array.from([9, 3]).buffer,
     )
   })
+
+  it('does not pass for DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).not.toStrictEqual(
+      new DataView(Uint8Array.from([3, 2, 1]).buffer),
+    )
+
+    expect(new DataView(Uint16Array.from([1, 2]).buffer)).not.toStrictEqual(
+      new DataView(Uint16Array.from([2, 1]).buffer),
+    )
+  })
+
+  it('passes for matching DataView', () => {
+    expect(new DataView(Uint8Array.from([1, 2, 3]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([1, 2, 3]).buffer),
+    )
+    expect(new DataView(Uint8Array.from([]).buffer)).toStrictEqual(
+      new DataView(Uint8Array.from([]).buffer),
+    )
+  })
 })
 
 describe('toBeTypeOf()', () => {
@@ -467,11 +531,11 @@ describe('toBeTypeOf()', () => {
     [1n, 'bigint'],
     [true, 'boolean'],
     [false, 'boolean'],
-    [() => {}, 'function'],
-    [function () {}, 'function'],
+    [(() => {}) as () => void, 'function'],
+    [function () {} as () => void, 'function'],
     [1, 'number'],
-    [Infinity, 'number'],
-    [NaN, 'number'],
+    [Number.POSITIVE_INFINITY, 'number'],
+    [Number.NaN, 'number'],
     [0, 'number'],
     [{}, 'object'],
     [[], 'object'],
@@ -556,7 +620,7 @@ describe('async expect', () => {
     })()).resolves.not.toThrow(Error)
   })
 
-  it('resolves trows chai', async () => {
+  it('resolves throws chai', async () => {
     const assertion = async () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow()
     }
@@ -564,7 +628,7 @@ describe('async expect', () => {
     await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
   })
 
-  it('resolves trows jest', async () => {
+  it('resolves throws jest', async () => {
     const assertion = async () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
     }
@@ -579,6 +643,7 @@ describe('async expect', () => {
 
     try {
       expect(1).resolves.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -633,6 +698,7 @@ describe('async expect', () => {
 
     try {
       expect(1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -640,6 +706,7 @@ describe('async expect', () => {
 
     try {
       expect(() => 1).rejects.toEqual(2)
+      expect.unreachable()
     }
     catch (error) {
       expect(error).toEqual(expectedError)
@@ -661,34 +728,105 @@ describe('async expect', () => {
     const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
     try {
       expect(actual).toBe({ ...actual })
+      expect.unreachable()
     }
-    catch (error) {
-      expect(error).toEqual(toStrictEqualError1)
+    catch (error: any) {
+      expect(error.message).toBe(toStrictEqualError1.message)
     }
 
     const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
     try {
       expect(new FakeClass()).toBe(new FakeClass())
+      expect.unreachable()
     }
-    catch (error) {
-      expect(error).toEqual(toStrictEqualError2)
+    catch (error: any) {
+      expect(error.message).toBe(toStrictEqualError2.message)
     }
 
     const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
     try {
       expect({}).toBe(new FakeClass())
+      expect.unreachable()
     }
-    catch (error) {
-      expect(error).toEqual(toEqualError1)
-      // expect(error).toEqual('1234')
+    catch (error: any) {
+      expect(error.message).toBe(toEqualError1.message)
     }
 
     const toEqualError2 = generatedToBeMessage('toEqual', 'FakeClass{}', '{}')
     try {
       expect(new FakeClass()).toBe({})
+      expect.unreachable()
+    }
+    catch (error: any) {
+      expect(error.message).toBe(toEqualError2.message)
+    }
+  })
+
+  describe('promise auto queuing', () => {
+    it.fails('fails', () => {
+      expect(() => new Promise((resolve, reject) => setTimeout(reject, 500)))
+        .resolves
+        .toBe('true')
+    })
+
+    let value = 0
+
+    it('pass first', () => {
+      expect((async () => {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        value += 1
+        return value
+      })())
+        .resolves
+        .toBe(1)
+    })
+
+    it('pass second', () => {
+    // even if 'pass first' is sync, we will still wait the expect to resolve
+      expect(value).toBe(1)
+    })
+  })
+
+  it('printing error message', async () => {
+    try {
+      await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
+      expect.unreachable()
+    }
+    catch (err: any) {
+      expect(err.message).toMatchInlineSnapshot(`"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`)
+      expect(err.stack).toContain('jest-expect.test.ts')
+    }
+
+    try {
+      const error = new Error('some error')
+      Object.assign(error, { foo: { bar: 42 } })
+      await expect(Promise.reject(error)).resolves.toBe(1)
+      expect.unreachable()
+    }
+    catch (err: any) {
+      expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+      expect(err.stack).toContain('jest-expect.test.ts')
+    }
+  })
+
+  it('handle thenable objects', async () => {
+    await expect({ then: (resolve: any) => resolve(0) }).resolves.toBe(0)
+    await expect({ then: (_: any, reject: any) => reject(0) }).rejects.toBe(0)
+
+    try {
+      await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
+      expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(toEqualError2)
+      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
+    }
+
+    try {
+      await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
+      expect.unreachable()
+    }
+    catch (error) {
+      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
     }
   })
 })
@@ -703,6 +841,43 @@ it('compatible with jest', () => {
   expect(matchers).toHaveProperty('someObject')
   expect(matchers).toHaveProperty('toBe')
   expect(state.assertionCalls).toBe(2)
+})
+
+it('correctly prints diff', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(err)
+    expect(error.diff).toContain('-   "a": 2')
+    expect(error.diff).toContain('+   "a": 1')
+  }
+})
+
+it('correctly prints diff with asymmetric matchers', () => {
+  try {
+    expect({ a: 1, b: 'string' }).toEqual({
+      a: expect.any(Number),
+      b: expect.any(Function),
+    })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(err)
+    expect(error.diff).toMatchInlineSnapshot(`
+      "- Expected
+      + Received
+
+        Object {
+          "a": Any<Number>,
+      -   "b": Any<Function>,
+      +   "b": "string",
+        }"
+    `)
+  }
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

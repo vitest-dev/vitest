@@ -16,6 +16,7 @@ ltex*
 .DS_Store
 bench/test/*/*/
 **/benchmark/bench.json
+**/browser/browser.json
 cypress/videos
 cypress/downloads
 cypress/screenshots
@@ -26,3 +27,4 @@ docs/public/user-avatars
 docs/public/sponsors
 .eslintcache
 docs/.vitepress/cache/
+!test/cwd/**/.cache

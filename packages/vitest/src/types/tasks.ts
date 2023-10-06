@@ -20,5 +20,10 @@ export type {
   SuiteFactory,
   RuntimeContext,
   TestContext,
+  TaskContext,
+  ExtendedContext,
+  Custom,
+  TaskCustomOptions,
   OnTestFailedHandler,
-} from '@vitest/runner/types'
+  TaskMeta,
+} from '@vitest/runner'

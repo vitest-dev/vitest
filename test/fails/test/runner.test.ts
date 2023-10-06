@@ -1,39 +1,48 @@
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
-import { execa } from 'execa'
-import { describe, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 
-describe('should fails', async () => {
-  const root = resolve(__dirname, '../fixtures')
-  const files = await fg('**/*.test.ts', { cwd: root, dot: true })
+import { runVitest } from '../../test-utils'
 
-  for (const file of files) {
-    it(file, async () => {
-      // in Windows child_process is very unstable, we skip testing it
-      if (process.platform === 'win32' && process.env.CI)
-        return
+const root = resolve(__dirname, '../fixtures')
+const files = await fg('**/*.test.ts', { cwd: root, dot: true })
 
-      let error: any
-      await execa('npx', ['vitest', 'run', file], {
-        cwd: root,
-        env: {
-          ...process.env,
-          CI: 'true',
-          NO_COLOR: 'true',
-        },
-      })
-        .catch((e) => {
-          error = e
-        })
+it.each(files)('should fail %s', async (file) => {
+  const { stderr } = await runVitest({ root }, [file])
 
-      expect(error).toBeTruthy()
-      const msg = String(error)
-        .split(/\n/g)
-        .reverse()
-        .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
-        .map(i => i.trim().replace(root, '<rootDir>'),
-        ).join('\n')
-      expect(msg).toMatchSnapshot(file)
-    }, 30_000)
-  }
+  expect(stderr).toBeTruthy()
+  const msg = String(stderr)
+    .split(/\n/g)
+    .reverse()
+    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
+    .map(i => i.trim().replace(root, '<rootDir>'),
+    ).join('\n')
+  expect(msg).toMatchSnapshot(file)
+}, 30_000)
+
+it('should report coverage when "coverag.reportOnFailure: true" and tests fail', async () => {
+  const { stdout } = await runVitest({
+    root,
+    coverage: {
+      enabled: true,
+      provider: 'istanbul',
+      reportOnFailure: true,
+      reporter: ['text'],
+    },
+  }, [files[0]])
+
+  expect(stdout).toMatch('Coverage report from istanbul')
+})
+
+it('should not report coverage when "coverag.reportOnFailure" has default value and tests fail', async () => {
+  const { stdout } = await runVitest({
+    root,
+    coverage: {
+      enabled: true,
+      provider: 'istanbul',
+      reporter: ['text'],
+    },
+  }, [files[0]])
+
+  expect(stdout).not.toMatch('Coverage report from istanbul')
 })

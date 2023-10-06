@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-const noop = () => {}
+function noop() {}
 
 export default defineConfig({
   test: {
@@ -19,7 +19,7 @@ export default defineConfig({
         onWatcherRerun: noop,
         onServerRestart: noop,
         onUserConsoleLog: noop,
-      }, 'default'],
+      }],
     },
   },
 })

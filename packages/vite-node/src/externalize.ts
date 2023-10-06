@@ -1,41 +1,9 @@
 import { existsSync } from 'node:fs'
-import { isNodeBuiltin, isValidNodeImport } from 'mlly'
+import { isValidNodeImport } from 'mlly'
+import { join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
-import { slash } from './utils'
-
-const KNOWN_ASSET_TYPES = [
-  // images
-  'png',
-  'jpe?g',
-  'jfif',
-  'pjpeg',
-  'pjp',
-  'gif',
-  'svg',
-  'ico',
-  'webp',
-  'avif',
-
-  // media
-  'mp4',
-  'webm',
-  'ogg',
-  'mp3',
-  'wav',
-  'flac',
-  'aac',
-
-  // fonts
-  'woff2?',
-  'eot',
-  'ttf',
-  'otf',
-
-  // other
-  'webmanifest',
-  'pdf',
-  'txt',
-]
+import { isNodeBuiltin, slash } from './utils'
+import { KNOWN_ASSET_TYPES } from './constants'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
@@ -51,8 +19,8 @@ const defaultInline = [
 ]
 
 const depsExternal = [
-  /\.cjs\.js$/,
-  /\.mjs$/,
+  /\/node_modules\/.*\.cjs\.js$/,
+  /\/node_modules\/.*\.mjs$/,
 ]
 
 export function guessCJSversion(id: string): string | undefined {
@@ -105,35 +73,40 @@ async function _shouldExternalize(
 
   id = patchWindowsImportPath(id)
 
-  if (matchExternalizePattern(id, options?.inline))
-    return false
-  if (matchExternalizePattern(id, options?.external))
+  // always externalize Vite deps, they are too big to inline
+  if (options?.cacheDir && id.includes(options.cacheDir))
     return id
 
-  const isNodeModule = id.includes('/node_modules/')
-  const guessCJS = isNodeModule && options?.fallbackCJS
-  id = guessCJS ? guessCJSversion(id) || id : id
+  const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
-  if (matchExternalizePattern(id, defaultInline))
+  if (matchExternalizePattern(id, moduleDirectories, options?.inline))
     return false
-  if (matchExternalizePattern(id, depsExternal))
+  if (matchExternalizePattern(id, moduleDirectories, options?.external))
     return id
 
-  const isDist = id.includes('/dist/')
-  if ((isNodeModule || isDist) && await isValidNodeImport(id))
+  const isLibraryModule = moduleDirectories.some(dir => id.includes(dir))
+  const guessCJS = isLibraryModule && options?.fallbackCJS
+  id = guessCJS ? (guessCJSversion(id) || id) : id
+
+  if (matchExternalizePattern(id, moduleDirectories, defaultInline))
+    return false
+  if (matchExternalizePattern(id, moduleDirectories, depsExternal))
+    return id
+
+  if (isLibraryModule && await isValidNodeImport(id))
     return id
 
   return false
 }
 
-function matchExternalizePattern(id: string, patterns?: (string | RegExp)[] | true) {
+function matchExternalizePattern(id: string, moduleDirectories: string[], patterns?: (string | RegExp)[] | true) {
   if (patterns == null)
     return false
   if (patterns === true)
     return true
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (id.includes(`/node_modules/${ex}/`))
+      if (moduleDirectories.some(dir => id.includes(join(dir, ex))))
         return true
     }
     else {

@@ -1,6 +1,6 @@
 import app from './app'
 
-const start = async () => {
+async function start() {
   try {
     await app.listen({ port: 3000 })
   }

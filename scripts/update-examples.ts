@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'url'
-import { promises as fs } from 'fs'
+import { fileURLToPath } from 'node:url'
+import { promises as fs } from 'node:fs'
 import { basename, dirname, resolve } from 'pathe'
 import fg from 'fast-glob'
 import { notNullish } from '../packages/vitest/src/utils'
@@ -21,7 +21,7 @@ async function run() {
       return
 
     const github = `https://github.com/vitest-dev/vitest/tree/main/examples/${name}`
-    const stackblitz = noOnlinePlayground.includes(name) ? undefined : `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?initialPath=__vitest__`
+    const stackblitz = noOnlinePlayground.includes(name) ? undefined : `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?initialPath=__vitest__/`
     return {
       name,
       path,

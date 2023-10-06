@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
-import { initializeNavigation } from '../composables/navigation'
+import { coverageUrl, coverageVisible, initializeNavigation } from '../composables/navigation'
 
 const dashboardVisible = initializeNavigation()
 const mainSizes = reactive([33, 67])
@@ -18,7 +18,7 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   })
 }, 0)
 
-const resizeMain = () => {
+function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
   mainSizes[0] = (100 * panelWidth) / width
@@ -39,6 +39,7 @@ const resizeMain = () => {
       <Pane :size="mainSizes[1]">
         <transition>
           <Dashboard v-if="dashboardVisible" key="summary" />
+          <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
           <Splitpanes v-else key="detail" @resized="onModuleResized">
             <Pane :size="detailSizes[0]">
               <Suites />

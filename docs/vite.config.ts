@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import Components from 'unplugin-vue-components/vite'
@@ -10,10 +10,14 @@ export default defineConfig({
   optimizeDeps: {
     // vitepress is aliased with replacement `join(DIST_CLIENT_PATH, '/index')`
     // This needs to be excluded from optimization
-    exclude: ['vitepress'],
+    exclude: ['@vueuse/core', 'vitepress'],
+  },
+  server: {
+    hmr: {
+      overlay: false,
+    },
   },
   plugins: [
-    // TODO remove cast when moved to Vite 3
     Components({
       include: [/\.vue/, /\.md/],
       dirs: '.vitepress/components',
@@ -32,7 +36,7 @@ export default defineConfig({
           scale: 1.2,
         }),
       ],
-    }) as unknown as Plugin,
+    }),
     IncludesPlugin(),
   ],
 })

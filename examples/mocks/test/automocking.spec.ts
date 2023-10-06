@@ -48,14 +48,18 @@ test('automock properly restores mock', async () => {
   expect(moduleWithSymbol.warn()).toBeUndefined()
   expect(moduleWithSymbol[methodSymbol]()).toBeUndefined()
 
+  expect(log.warn).toHaveProperty('mockImplementation')
+
   vi.restoreAllMocks()
 
   expect(() => {
     log.warn()
   }).not.toThrow()
 
-  expect(moduleWithSymbol[methodSymbol]()).toBe('hello')
-  expect(moduleWithSymbol.warn()).toBe('hello')
+  expect(moduleWithSymbol[methodSymbol]()).toBe(undefined)
+  expect(moduleWithSymbol.warn()).toBe(undefined)
+
+  expect(log.warn).toHaveProperty('mockImplementation')
 })
 
 test('automock has a getter', () => {

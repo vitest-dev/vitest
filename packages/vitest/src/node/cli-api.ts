@@ -22,8 +22,8 @@ export interface CliOptions extends UserConfig {
  */
 export async function startVitest(
   mode: VitestRunMode,
-  cliFilters: string[],
-  options: CliOptions,
+  cliFilters: string[] = [],
+  options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
 ): Promise<Vitest | undefined> {
   process.env.TEST = 'true'
@@ -32,8 +32,6 @@ export async function startVitest(
 
   if (options.run)
     options.watch = false
-  if (options.browser) // enabling threads in browser mode causes inconsistences
-    options.threads = false
 
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
@@ -46,13 +44,25 @@ export async function startVitest(
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
+  // running "vitest --browser", assumes browser name is set in the config
+  if (typeof options.browser === 'boolean')
+    options.browser = { enabled: options.browser } as any
+
+  // running "vitest --browser=chrome"
+  if (typeof options.browser === 'string')
+    options.browser = { enabled: true, name: options.browser }
+
+  // running "vitest --browser.headless"
+  if (typeof options.browser === 'object' && !('enabled' in options.browser))
+    options.browser.enabled = true
+
   const ctx = await createVitest(mode, options, viteOverrides)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'c8'
-    if (typeof provider === 'string') {
-      const requiredPackages = CoverageProviderMap[provider]
+    const provider = ctx.config.coverage.provider || 'v8'
+    const requiredPackages = CoverageProviderMap[provider]
 
+    if (requiredPackages) {
       if (!await ensurePackageInstalled(requiredPackages, root)) {
         process.exitCode = 1
         return ctx
@@ -67,8 +77,9 @@ export async function startVitest(
     return ctx
   }
 
-  if (process.stdin.isTTY && ctx.config.watch)
-    registerConsoleShortcuts(ctx)
+  let stdinCleanup
+  if (process.stdin.isTTY)
+    stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
@@ -87,14 +98,15 @@ export async function startVitest(
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.logger.printError(e, true, 'Unhandled Error')
+    await ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')
     return ctx
   }
 
-  if (ctx.config.watch)
+  if (ctx.shouldKeepServer())
     return ctx
 
+  stdinCleanup?.()
   await ctx.close()
   return ctx
 }

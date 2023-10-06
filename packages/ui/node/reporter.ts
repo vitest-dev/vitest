@@ -1,10 +1,11 @@
 import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
+import { gzip, constants as zlibConstants } from 'node:zlib'
 import { basename, dirname, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
-// eslint-disable-next-line no-restricted-imports
 import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { getOutputFile } from '../../vitest/src/utils/config-helpers'
@@ -30,7 +31,7 @@ export default class HTMLReporter implements Reporter {
 
   async onFinished() {
     const result: HTMLReportData = {
-      paths: await this.ctx.state.getPaths(),
+      paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.config,
       moduleGraph: {},
@@ -48,11 +49,15 @@ export default class HTMLReporter implements Reporter {
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 
-    const metaFile = resolve(htmlDir, 'html.meta.json')
+    const metaFile = resolve(htmlDir, 'html.meta.json.gz')
 
     await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
 
-    await fs.writeFile(metaFile, report, 'utf-8')
+    const promiseGzip = promisify(gzip)
+    const data = await promiseGzip(report, {
+      level: zlibConstants.Z_BEST_COMPRESSION,
+    })
+    await fs.writeFile(metaFile, data, 'base64')
     const ui = resolve(distDir, 'client')
     // copy ui
     const files = fg.sync('**/*', { cwd: ui })
@@ -71,6 +76,6 @@ export default class HTMLReporter implements Reporter {
     }))
 
     this.ctx.logger.log(`${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta('Report is generated')}`)
-    this.ctx.logger.log(`${c.dim('       You can run ')}${c.bold(`npx vite preview --base __vitest__ --outDir ${relative(this.ctx.config.root, htmlDir)}`)}${c.dim(' to see the test results.')}`)
+    this.ctx.logger.log(`${c.dim('       You can run ')}${c.bold(`npx vite preview --outDir ${relative(this.ctx.config.root, htmlDir)}`)}${c.dim(' to see the test results.')}`)
   }
 }

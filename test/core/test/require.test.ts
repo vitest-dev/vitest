@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from 'vitest'
 
 const _require = require
@@ -7,9 +9,11 @@ describe('using "require" to import a module', () => {
     const css = _require('./../src/file-css.css')
     const sass = _require('./../src/file-sass.sass')
     const scss = _require('./../src/file-scss.scss')
+    const less = _require('./../src/file-less.less')
 
     expect(css).toEqual({})
     expect(sass).toEqual({})
     expect(scss).toEqual({})
+    expect(less).toEqual({})
   })
 })

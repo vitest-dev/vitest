@@ -6,7 +6,9 @@ import type { MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 import { getWorkerState } from 'vitest/src/utils'
 
-const expectType = <T>(obj: T) => obj
+function expectType<T>(obj: T) {
+  return obj
+}
 
 describe('testing vi utils', () => {
   test('global scope has variable', () => {
@@ -61,6 +63,22 @@ describe('testing vi utils', () => {
     })
 
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
+      baz: 'baz',
+    })
+
+    type FooBarAsyncFactory = () => Promise<FooBar>
+
+    const mockFactoryAsync: FooBarAsyncFactory = vi.fn()
+
+    vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
+      foo: vi.fn(),
+    })
+
+    vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
+      bar: vi.fn(),
+    })
+
+    vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
   })

@@ -4,20 +4,9 @@ title: Debugging | Guide
 
 # Debugging
 
-## Terminal
-
-To debug a test file without an IDE, you can use [`ndb`](https://github.com/GoogleChromeLabs/ndb). Just add a `debugger` statement anywhere in your code, and then run `ndb`:
-
-```sh
-# install ndb globally
-npm install -g ndb
-
-# alternatively, with yarn
-yarn global add ndb
-
-# run tests with debugger enabled
-ndb npm run test
-```
+:::tip
+When debugging tests you might want to use `--test-timeout` CLI argument to prevent tests from timing out when stopping at breakpoints.
+:::
 
 ## VSCode
 
@@ -57,6 +46,22 @@ Setting | Value
  --- | ---
 Working directory | /path/to/your-project-root
 JavaScript file | ./node_modules/vitest/vitest.mjs
-Application parameters | run --threads false
+Application parameters | run --pool forks
 
 Then run this configuration in debug mode. The IDE will stop at JS/TS breakpoints set in the editor.
+
+## Node Inspector, e.g. Chrome DevTools
+
+Vitest also supports debugging tests without IDEs. However this requires that tests are not run parallel. Use one of the following commands to launch Vitest.
+
+```sh
+# To run in a single worker
+vitest --inspect-brk --pool threads --poolOptions.threads.singleThread
+
+# To run in a single child process
+vitest --inspect-brk --pool forks --poolOptions.forks.singleFork
+```
+
+Once Vitest starts it will stop execution and waits for you to open developer tools that can connect to [NodeJS inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
+
+In watch mode you can keep the debugger open during test re-runs by using the `--poolOptions.threads.isolate false` options.

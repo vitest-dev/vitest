@@ -54,14 +54,14 @@ $ npx vitest
 
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
-```diff
+```ts
 // vite.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-+ define: {
-+   'import.meta.vitest': 'undefined',
-+ },
+  define: { // [!code ++]
+    'import.meta.vitest': 'undefined', // [!code ++]
+  }, // [!code ++]
   test: {
     includeSource: ['src/**/*.{js,ts}']
   },
@@ -73,14 +73,14 @@ export default defineConfig({
 <details mt4>
 <summary text-xl>unbuild</summary>
 
-```diff
+```ts
 // build.config.ts
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
-+ replace: {
-+   'import.meta.vitest': 'undefined',
-+ },
+  replace: { // [!code ++]
+    'import.meta.vitest': 'undefined', // [!code ++]
+  }, // [!code ++]
   // other options
 })
 ```
@@ -92,15 +92,15 @@ Learn more: <a href="https://github.com/unjs/unbuild" target="_blank">unbuild</a
 <details my2>
 <summary text-xl>rollup</summary>
 
-```diff
+```ts
 // rollup.config.js
-+ import replace from '@rollup/plugin-replace'
+import replace from '@rollup/plugin-replace' // [!code ++]
 
 export default {
   plugins: [
-+   replace({
-+     'import.meta.vitest': 'undefined',
-+   })
+    replace({ // [!code ++]
+      'import.meta.vitest': 'undefined', // [!code ++]
+    }) // [!code ++]
   ],
   // other options
 }
@@ -114,12 +114,12 @@ Learn more: <a href="https://rollupjs.org/" target="_blank">rollup</a>
 
 To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to your `tsconfig.json`:
 
-```diff
+```json
 // tsconfig.json
 {
   "compilerOptions": {
     "types": [
-+     "vitest/importMeta"
+      "vitest/importMeta" // [!code ++]
     ]
   }
 }

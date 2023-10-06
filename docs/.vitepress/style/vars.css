@@ -19,6 +19,9 @@
   --vp-c-text-light-2: rgba(56 56 56 / 70%);
   /* fix contrast: lang name on gray code block */
   --vp-c-text-dark-3: rgba(180, 180, 180, 0.7);
+  --vp-code-copy-code-bg: rgba(125,125,125,0.1);
+  --vp-code-copy-code-hover-bg: rgba(125,125,125,0.2);
+  --vp-c-disabled-bg: rgba(125,125,125,0.2);
 }
 
 .dark {

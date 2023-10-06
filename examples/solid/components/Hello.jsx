@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js'
 
-export const Hello = (props) => {
+export function Hello(props) {
   const [times, setTimes] = createSignal(2)
   return <>
     <div>{`${props.count} x ${times()} = ${props.count * times()}`}</div>

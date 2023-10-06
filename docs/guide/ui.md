@@ -34,6 +34,8 @@ export default {
 }
 ```
 
+Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+
 ::: warning
 If you still want to see how your tests are running in real time in the terminal, don't forget to add `default` reporter to `reporters` option: `['default', 'html']`.
 :::
@@ -42,7 +44,7 @@ If you still want to see how your tests are running in real time in the terminal
 To preview your HTML report, you can use [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
-npx vite preview --base __vitest__ --outDir ./html
+npx vite preview --outDir ./html
 ```
 
 You can configure output with [`outputFile`](/config/#outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.

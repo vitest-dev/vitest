@@ -1,10 +1,10 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.28.4",
+  "version": "1.0.0-beta.1",
   "private": true,
-  "packageManager": "pnpm@7.23.0",
-  "description": "A blazing fast unit test framework powered by Vite",
+  "packageManager": "pnpm@8.7.4",
+  "description": "Next generation testing framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "build": "pnpm -r --filter='./packages/**' run build",
@@ -18,72 +18,82 @@
     "docs:contributors": "esno scripts/update-contributors.ts",
     "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
-    "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
+    "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public",
+    "release:beta": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public --tag beta",
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
     "test:ci": "CI=true pnpm -r --stream --filter !test-fails --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly",
-    "test:ci:single-thread": "CI=true pnpm -r --stream --filter !test-fails --filter !test-esm --filter !test-browser run test --allowOnly --no-threads",
+    "test:ci:vm-threads": "CI=true pnpm -r --stream --filter !test-fails --filter !test-coverage --filter !test-single-thread --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly --pool vmThreads",
+    "test:ci:no-threads": "CI=true pnpm -r --stream --filter !test-fails --filter !test-vm-threads --filter !test-coverage --filter !test-watch --filter !test-bail --filter !test-esm --filter !test-browser run test --allowOnly --pool forks",
     "typecheck": "tsc --noEmit",
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
-    "ui:test": "npm -C packages/ui run test:run"
+    "ui:test": "npm -C packages/ui run test:run",
+    "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
+    "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.34.1",
-    "@antfu/ni": "^0.18.8",
-    "@rollup/plugin-alias": "^4.0.2",
-    "@rollup/plugin-commonjs": "^23.0.2",
-    "@rollup/plugin-json": "^5.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@types/fs-extra": "^11.0.0",
-    "@types/lodash": "^4.14.191",
-    "@types/node": "^18.11.18",
-    "@types/ws": "^8.5.4",
+    "@antfu/eslint-config": "^0.39.6",
+    "@antfu/ni": "^0.21.4",
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.1",
+    "@types/fs-extra": "^11.0.1",
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^18.16.19",
+    "@types/ws": "^8.5.5",
     "@vitest/browser": "workspace:*",
-    "@vitest/coverage-c8": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
+    "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^8.2.1",
-    "c8": "^7.12.0",
-    "esbuild": "^0.16.16",
-    "eslint": "^8.31.0",
+    "bumpp": "^9.1.1",
+    "esbuild": "^0.18.11",
+    "eslint": "^8.44.0",
     "esno": "^0.16.3",
-    "fast-glob": "^3.2.12",
+    "fast-glob": "^3.3.0",
     "if-node-version": "^1.1.1",
-    "lint-staged": "^13.1.0",
-    "magic-string": "^0.27.0",
-    "node-fetch-native": "^1.0.1",
+    "lint-staged": "^13.2.3",
+    "magic-string": "^0.30.1",
+    "node-fetch-native": "^1.4.0",
     "npm-run-all": "^4.1.5",
-    "ohmyfetch": "^0.4.21",
-    "pathe": "^1.1.0",
-    "pnpm": "7.23.0",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.79.1",
-    "rollup-plugin-dts": "^4.2.3",
-    "rollup-plugin-esbuild": "^4.10.1",
-    "rollup-plugin-license": "^2.8.2",
+    "ofetch": "^1.3.3",
+    "pathe": "^1.1.1",
+    "pnpm": "8.6.6",
+    "rimraf": "^5.0.1",
+    "rollup": "^3.29.4",
+    "rollup-plugin-dts": "^6.0.2",
+    "rollup-plugin-esbuild": "^6.0.2",
+    "rollup-plugin-license": "^3.1.0",
     "simple-git-hooks": "^2.8.1",
     "ts-node": "^10.9.1",
-    "tsup": "^6.5.0",
-    "typescript": "^4.9.4",
-    "vite": "^3.2.3",
+    "tsup": "^6.7.0",
+    "typescript": "^5.1.6",
+    "vite": "^4.2.1",
     "vitest": "workspace:*"
   },
   "pnpm": {
     "overrides": {
-      "esbuild": "^0.16.3",
-      "vite": "^4.0.0",
-      "vitest": "workspace:*",
-      "rollup": "^2.79.1"
+      "vite": "^4.4.10",
+      "vitest": "workspace:*"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@algolia/client-search"
+      ]
+    },
+    "patchedDependencies": {
+      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
+      "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch"
     }
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*.{js,ts,tsx,vue,md}": [
+    "*.{[jt]s?(x),vue,md}": [
       "eslint --cache --fix"
     ]
   }

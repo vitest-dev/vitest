@@ -7,6 +7,17 @@ import { createListRenderer } from './renderers/listRenderer'
 export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
+  private renderSucceedDefault?: boolean
+
+  onPathsCollected(paths: string[] = []) {
+    if (this.isTTY) {
+      if (this.renderSucceedDefault === undefined)
+        this.renderSucceedDefault = !!this.rendererOptions.renderSucceed
+
+      if (this.renderSucceedDefault !== true)
+        this.rendererOptions.renderSucceed = paths.length <= 1
+    }
+  }
 
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
@@ -14,7 +25,7 @@ export class DefaultReporter extends BaseReporter {
     const files = this.ctx.state.getFiles(this.watchFilters)
     createListRenderer(files, this.rendererOptions).stop()
     this.ctx.logger.log()
-    await super.reportSummary(files)
+    await super.reportSummary(files, this.ctx.state.getUnhandledErrors())
     super.onWatcherStart()
   }
 

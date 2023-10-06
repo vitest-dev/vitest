@@ -1,21 +1,27 @@
+// CI failes only for this file, but it works locally
+
 import * as chai from 'chai'
 import './setup'
-import type { Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '@vitest/runner'
+import { getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
+import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getCurrentEnvironment, getFullName } from '../../utils'
+import { getFullName } from '../../utils/tasks'
+import { getCurrentEnvironment } from '../../utils/global'
 
-export function createExpect(test?: Test) {
-  const expect = ((value: any, message?: string): Vi.Assertion => {
+export function createExpect(test?: TaskPopulated) {
+  const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1 }, expect)
-    const assert = chai.expect(value, message) as unknown as Vi.Assertion
-    if (test)
+    setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
+    const assert = chai.expect(value, message) as unknown as Assertion
+    const _test = test || getCurrentTest()
+    if (_test)
       // @ts-expect-error internal
-      return assert.withTest(test) as Vi.Assertion
+      return assert.withTest(_test) as Assertion
     else
       return assert
-  }) as Vi.ExpectStatic
+  }) as ExpectStatic
   Object.assign(expect, chai.expect)
 
   expect.getState = () => getState<MatcherState>(expect)
@@ -34,11 +40,23 @@ export function createExpect(test?: Test) {
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
     testPath: test ? test.suite.file?.filepath : globalState.testPath,
-    currentTestName: test ? getFullName(test) : globalState.currentTestName,
+    currentTestName: test ? getFullName(test as Test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped
   expect.extend = matchers => chai.expect.extend(expect, matchers)
+
+  expect.soft = (...args) => {
+    const assert = expect(...args)
+    expect.setState({
+      soft: true,
+    })
+    return assert
+  }
+
+  expect.unreachable = (message?: string) => {
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
+  }
 
   function assertions(expected: number) {
     const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)

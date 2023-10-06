@@ -35,7 +35,7 @@ function escapeHtml(unsafe: string) {
 
 function createHtmlError(filter: Convert, error: ErrorWithDiff) {
   let htmlError = ''
-  if (error.message.includes('\x1B'))
+  if (error.message?.includes('\x1B'))
     htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
 
   const startStrWithX1B = error.stackStr?.includes('\x1B')
@@ -81,6 +81,7 @@ const failed = computed(() => {
       level: 0,
       type: 'suite',
       mode: 'run',
+      meta: {},
       tasks: [],
       result,
     }

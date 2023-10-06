@@ -8,7 +8,7 @@ Vitest allows you to write tests for your types, using `expectTypeOf` or `assert
 
 Under the hood Vitest calls `tsc` or `vue-tsc`, depending on your config, and parses results. Vitest will also print out type errors in your source code, if it finds any. You can disable it with [`typecheck.ignoreSourceErrors`](/config/#typecheck-ignoresourceerrors) config option.
 
-Keep in mind that Vitest doesn't run or compile these files, they are only statically analyzed by the compiler, and because of that you cannot use any dynamic statements. Meaning, you cannot use dynamic test names, and `test.each`, `test.runIf`, `test.skipIf`, `test.each`, `test.concurrent` APIs. But you can use other APIs, like `test`, `describe`, `.only`, `.skip` and `.todo`.
+Keep in mind that Vitest doesn't run or compile these files, they are only statically analyzed by the compiler, and because of that you cannot use any dynamic statements. Meaning, you cannot use dynamic test names, and `test.each`, `test.runIf`, `test.skipIf`, `test.concurrent` APIs. But you can use other APIs, like `test`, `describe`, `.only`, `.skip` and `.todo`.
 
 Using CLI flags, like `--allowOnly` and `-t` are also supported for type checking.
 
@@ -27,7 +27,7 @@ test('my types work properly', () => {
 
 Any type error triggered inside a test file will be treated as a test error, so you can use any type trick you want to test types of your project.
 
-You can see a list of possible matchers in [API section](/api/#expecttypeof).
+You can see a list of possible matchers in [API section](/api/expect-typeof).
 
 ## Reading Errors
 
@@ -41,7 +41,7 @@ expectTypeOf(1).toEqualTypeOf<string>()
 
 This is due to how [`expect-type`](https://github.com/mmkal/expect-type) handles type errors.
 
-Unfortunately, TypeScript doesn't provide type metadata without patching, so we cannot provide useful error messages at this point, but there are <a href="https://github.com/microsoft/TypeScript/pull/40468" tatger="_blank">works in TypeScript project</a> to fix this. If you want better messages, please, ask TypeScript team to have a look at mentioned PR.
+Unfortunately, TypeScript doesn't provide type metadata without patching, so we cannot provide useful error messages at this point, but there are <a href="https://github.com/microsoft/TypeScript/pull/40468" target="_blank">works in TypeScript project</a> to fix this. If you want better messages, please, ask TypeScript team to have a look at mentioned PR.
 
 If you find it hard working with `expectTypeOf` API and figuring out errors, you can always use more simple `assertType` API:
 

@@ -4,7 +4,8 @@ import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '@vitest/runner/utils'
-import type { File, Suite, Test, Vitest } from '../types'
+import type { File, Suite, Test } from '../types'
+import type { WorkspaceProject } from '../node/workspace'
 
 interface ParsedFile extends File {
   start: number
@@ -38,8 +39,8 @@ export interface FileInformation {
   definitions: LocalCallDefinition[]
 }
 
-export async function collectTests(ctx: Vitest, filepath: string): Promise<null | FileInformation> {
-  const request = await ctx.vitenode.transformRequest(filepath)
+export async function collectTests(ctx: WorkspaceProject, filepath: string): Promise<null | FileInformation> {
+  const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request)
     return null
   const ast = parseAst(request.code, {
@@ -50,12 +51,13 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: generateHash(testFilepath),
+    id: generateHash(`${testFilepath}${ctx.config.name || ''}`),
     name: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
     end: ast.end,
+    meta: { typecheck: true },
   }
   const definitions: LocalCallDefinition[] = []
   const getName = (callee: any): string | null => {
@@ -82,7 +84,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
         return
       const { arguments: [{ value: message }] } = node as any
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
+      let mode = (!property || property === name) ? 'run' : property
       if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode))
         throw new Error(`${name}.${mode} syntax is not supported when testing types`)
       // cannot statically analyze, so we always skip it
@@ -92,7 +94,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
         start: node.start,
         end: node.end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: (name === 'it' || name === 'test') ? 'test' : 'suite',
         mode,
       } as LocalCallDefinition)
     },

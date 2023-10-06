@@ -21,12 +21,23 @@ export default withPwa(defineConfig({
   lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
+  locales: {
+    root: {
+      label: 'English',
+      lang: 'en-US',
+    },
+    zh: {
+      label: '简体中文',
+      lang: 'zh',
+      link: 'https://cn.vitest.dev/',
+    },
+  },
   head: [
     ['meta', { name: 'theme-color', content: '#729b1a' }],
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
-    ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-    ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
+    ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
     ['meta', { property: 'og:title', content: vitestName }],
     ['meta', { property: 'og:description', content: vitestDescription }],
     ['meta', { property: 'og:url', content: ogUrl }],
@@ -55,20 +66,17 @@ export default withPwa(defineConfig({
       text: 'Suggest changes to this page',
     },
 
-    algolia: {
-      appId: 'ZTF29HGJ69',
-      apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
-      indexName: 'vitest',
-      // searchParameters: {
-      //   facetFilters: ['tags:en'],
-      // },
-    },
-
-    localeLinks: {
-      text: 'English',
-      items: [
-        { text: '简体中文', link: 'https://cn.vitest.dev' },
-      ],
+    search: {
+      provider: 'local',
+      /* provider: 'algolia',
+      options: {
+        appId: 'ZTF29HGJ69',
+        apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
+        indexName: 'vitest',
+        // searchParameters: {
+        //   facetFilters: ['tags:en'],
+        // },
+      }, */
     },
 
     socialLinks: [
@@ -84,10 +92,10 @@ export default withPwa(defineConfig({
     },
 
     nav: [
-      { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/' },
-      { text: 'Config', link: '/config/' },
-      { text: 'Advanced', link: '/advanced/api' },
+      { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
+      { text: 'API', link: '/api/', activeMatch: '^/api/' },
+      { text: 'Config', link: '/config/', activeMatch: '^/config/' },
+      { text: 'Advanced', link: '/advanced/api', activeMatch: '^/advanced/' },
       {
         text: `v${version}`,
         items: [
@@ -117,6 +125,14 @@ export default withPwa(defineConfig({
               text: 'Runner API',
               link: '/advanced/runner',
             },
+            {
+              text: 'Task Metadata',
+              link: '/advanced/metadata',
+            },
+            {
+              text: 'Extending default reporters',
+              link: '/advanced/reporters',
+            },
           ],
         },
       ],
@@ -135,6 +151,10 @@ export default withPwa(defineConfig({
             {
               text: 'Features',
               link: '/guide/features',
+            },
+            {
+              text: 'Workspace',
+              link: '/guide/workspace',
             },
             {
               text: 'CLI',
@@ -163,6 +183,10 @@ export default withPwa(defineConfig({
             {
               text: 'Vitest UI',
               link: '/guide/ui',
+            },
+            {
+              text: 'Browser Mode',
+              link: '/guide/browser',
             },
             {
               text: 'In-source Testing',
@@ -195,6 +219,10 @@ export default withPwa(defineConfig({
             {
               text: 'Migration Guide',
               link: '/guide/migration',
+            },
+            {
+              text: 'Common Errors',
+              link: '/guide/common-errors',
             },
           ],
         },

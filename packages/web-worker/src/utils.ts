@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-imports */
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
@@ -30,7 +29,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
     })
   }
   if (clone !== 'none') {
-    debug('create message event, using polifylled structured clone')
+    debug('create message event, using polyfilled structured clone')
     transfer?.length && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '
@@ -38,7 +37,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
       + 'or update to Node 17+.',
     )
     return new MessageEvent('message', {
-      data: ponyfillStructuredClone(data, { lossy: true }),
+      data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
     })
   }
@@ -61,20 +60,37 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
   }
 }
 
-export function getRunnerOptions() {
-  const { config, rpc, mockMap, moduleCache } = getWorkerState()
+export function getRunnerOptions(): any {
+  const state = getWorkerState()
+  const { config, rpc, mockMap, moduleCache } = state
 
   return {
     fetchModule(id: string) {
-      return rpc.fetch(id)
+      return rpc.fetch(id, 'web')
     },
     resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer)
+      return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
     mockMap,
     interopDefault: config.deps.interopDefault ?? true,
+    moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
     base: config.base,
+    state,
   }
+}
+
+function stripProtocol(url: string | URL) {
+  return url.toString().replace(/^file:\/+/, '/')
+}
+
+export function getFileIdFromUrl(url: URL | string) {
+  if (typeof self === 'undefined')
+    return stripProtocol(url)
+  if (!(url instanceof URL))
+    url = new URL(url, self.location.origin)
+  if (url.protocol === 'http:' || url.protocol === 'https:')
+    return url.pathname
+  return stripProtocol(url)
 }

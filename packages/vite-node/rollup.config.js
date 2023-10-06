@@ -1,4 +1,4 @@
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
@@ -6,7 +6,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import { defineConfig } from 'rollup'
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const entries = {
   'index': 'src/index.ts',
@@ -15,6 +15,7 @@ const entries = {
   'client': 'src/client.ts',
   'utils': 'src/utils.ts',
   'cli': 'src/cli.ts',
+  'constants': 'src/constants.ts',
   'hmr': 'src/hmr/index.ts',
   'source-map': 'src/source-map.ts',
 }
@@ -28,6 +29,7 @@ const external = [
   'vite',
   'node:url',
   'node:events',
+  'node:vm',
 ]
 
 const plugins = [

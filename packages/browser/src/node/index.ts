@@ -1,16 +1,13 @@
-import { fileURLToPath } from 'url'
-// eslint-disable-next-line no-restricted-imports
-import { resolve } from 'path'
-import { builtinModules } from 'module'
-import { polyfillPath } from 'modern-node-polyfills'
+import { fileURLToPath } from 'node:url'
+
+import { resolve } from 'node:path'
+import { builtinModules } from 'node:module'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import { injectVitestModule } from './esmInjector'
 
-const polyfills = [
-  'util',
-]
-
-export default (base = '/'): Plugin[] => {
+// don't expose type to not bundle it here
+export default (project: any, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
@@ -18,20 +15,10 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr)
-          return
-
-        if (id === '/__vitest_index__')
-          return this.resolve('vitest/browser')
-
-        if (id === '/__vitest_runners__')
-          return this.resolve('vitest/runners')
-
-        if (polyfills.includes(id))
-          return polyfillPath(normalizeId(id))
-
-        return null
+      async config(viteConfig) {
+        // Enables using ignore hint for coverage providers with @preserve keyword
+        viteConfig.esbuild ||= {}
+        viteConfig.esbuild.legalComments = 'inline'
       },
       async configureServer(server) {
         server.middlewares.use(
@@ -44,27 +31,54 @@ export default (base = '/'): Plugin[] => {
       },
     },
     {
-      name: 'modern-node-polyfills',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr || !builtinModules.includes(id))
+      name: 'vitest:browser:tests',
+      enforce: 'pre',
+      config() {
+        return {
+          optimizeDeps: {
+            exclude: [
+              ...builtinModules,
+              'vitest',
+              'vitest/utils',
+              'vitest/browser',
+              'vitest/runners',
+              '@vitest/utils',
+            ],
+            include: [
+              'vitest > @vitest/utils > pretty-format',
+              'vitest > diff-sequences',
+              'vitest > loupe',
+              'vitest > pretty-format',
+              'vitest > pretty-format > ansi-styles',
+              'vitest > pretty-format > ansi-regex',
+              'vitest > chai',
+            ],
+          },
+        }
+      },
+      async resolveId(id) {
+        if (!/\?browserv=\w+$/.test(id))
           return
 
-        id = normalizeId(id)
-        return { id: await polyfillPath(id), moduleSideEffects: false }
+        let useId = id.slice(0, id.lastIndexOf('?'))
+        if (useId.startsWith('/@fs/'))
+          useId = useId.slice(5)
+
+        if (/^\w:/.test(useId))
+          useId = useId.replace(/\\/g, '/')
+
+        return useId
+      },
+    },
+    {
+      name: 'vitest:browser:esm-injector',
+      enforce: 'post',
+      transform(source, id) {
+        const hijackESM = project.config.browser.slowHijackESM ?? false
+        if (!hijackESM)
+          return
+        return injectVitestModule(source, id, this.parse)
       },
     },
   ]
-}
-
-function normalizeId(id: string, base?: string): string {
-  if (base && id.startsWith(base))
-    id = `/${id.slice(base.length)}`
-
-  return id
-    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
-    .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/\?$/, '') // remove end query mark
 }

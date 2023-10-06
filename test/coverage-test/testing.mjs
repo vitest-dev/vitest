@@ -3,61 +3,92 @@ import { startVitest } from 'vitest/node'
 // Set this to true when intentionally updating the snapshots
 const UPDATE_SNAPSHOTS = false
 
-const provider = getArgument('--provider')
+const provider = process.argv[1 + process.argv.indexOf('--provider')]
+const isBrowser = process.argv.includes('--browser')
+process.env.COVERAGE_PROVIDER = provider
+
+const poolConfigs = [
+  { pool: 'threads', poolOptions: { threads: { } } },
+  { pool: 'forks', poolOptions: { forks: { } } },
+  { pool: 'threads', poolOptions: { threads: { singleThread: true } } },
+
+  // TODO: Figure out what's wrong with vmThreads and coverage test "runDynamicFileCJS". This issue is likely present in main branch too.
+  // { pool: 'vmThreads', poolOptions: { vmThreads: { } } },
+]
+
+// Threads have no effect in browser mode
+if (isBrowser)
+  poolConfigs.splice(1)
 
 const configs = [
   // Run test cases. Generates coverage report.
   ['test/', {
     include: ['test/*.test.*'],
-    exclude: ['coverage-report-tests/**/*'],
+    exclude: [
+      'coverage-report-tests/**/*',
+      // TODO: Include once mocking is supported in browser
+      isBrowser && '**/no-esbuild-transform.test.js',
+    ].filter(Boolean),
+    coverage: { enabled: true },
+    browser: { enabled: isBrowser, name: 'chrome', headless: true },
+
+    // Regression vitest#3330
+    reporters: ['default', 'junit'],
+    outputFile: { junit: 'coverage/junit.xml' },
   }],
 
   // Run tests for checking coverage report contents.
   ['coverage-report-tests', {
     include: [
-      './coverage-report-tests/generic.report.test.ts',
+      ['v8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
       `./coverage-report-tests/${provider}.report.test.ts`,
-    ],
+    ].filter(Boolean),
     coverage: { enabled: false, clean: false },
   }],
 ]
 
-runTests()
+// Prevent the "vitest/src/node/browser/webdriver.ts" from calling process.exit
+const exit = process.exit
+process.exit = () => !isBrowser && exit()
 
-async function runTests() {
-  for (const threads of [true, false]) {
+for (const { pool, poolOptions } of poolConfigs) {
+  for (const isolate of [true, false]) {
     for (const [directory, config] of configs) {
-      await startVitest('test', [directory], {
-        run: true,
-        update: UPDATE_SNAPSHOTS,
-        ...config,
-        threads,
-        coverage: {
-          include: ['src/**'],
-          provider,
-          ...config.coverage,
-        },
-      })
+      // Retry flaky browser tests
+      const retries = Array(config.browser?.enabled ? 3 : 1).fill(0)
 
-      if (process.exitCode)
-        process.exit()
+      for (const retry of retries.keys()) {
+        const poolConfig = {
+          pool,
+          poolOptions: {
+            [pool]: {
+              ...poolOptions[pool],
+              isolate,
+            },
+          },
+        }
+
+        await startVitest('test', [directory], {
+          name: `With settings: ${JSON.stringify({ ...poolConfig, directory, browser: config.browser?.enabled })}`,
+          ...config,
+          update: UPDATE_SNAPSHOTS,
+          ...poolConfig,
+        })
+
+        if (process.exitCode && retry === retries.length - 1) {
+          console.error(`process.exitCode was set to ${process.exitCode}, exiting.`)
+          exit()
+        }
+        else if (process.exitCode) {
+          process.exitCode = null
+          console.warn(`Browser tests failed, retrying ${1 + retry}/${retries.length - 1}...`)
+        }
+        else {
+          break
+        }
+      }
     }
   }
-
-  process.exit(0)
 }
 
-function getArgument(name) {
-  const args = process.argv
-  const index = args.indexOf(name)
-
-  if (index === -1)
-    throw new Error(`Missing argument ${name}, received ${args}`)
-
-  const value = args[index + 1]
-
-  if (!value)
-    throw new Error(`Missing value of ${name}, received ${args}`)
-
-  return value
-}
+exit()

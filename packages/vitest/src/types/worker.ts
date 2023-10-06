@@ -1,18 +1,15 @@
 import type { MessagePort } from 'node:worker_threads'
-import type { File, TaskResultPack, Test } from '@vitest/runner'
-import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { CancelReason, Test } from '@vitest/runner'
+import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
 import type { ResolvedConfig } from './config'
-import type { SnapshotResult } from './snapshot'
-import type { UserConsoleLog } from './general'
+import type { ContextRPC, RunnerRPC, RuntimeRPC } from './rpc'
+import type { Environment } from './general'
 
-export interface WorkerContext {
+export interface WorkerContext extends ContextRPC {
   workerId: number
   port: MessagePort
-  config: ResolvedConfig
-  files: string[]
-  invalidates?: string[]
 }
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
@@ -21,30 +18,22 @@ export interface AfterSuiteRunMeta {
   coverage?: unknown
 }
 
-export interface WorkerRPC {
-  fetch: FetchFunction
-  resolveId: ResolveIdFunction
-  getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
-
-  onFinished: (files: File[], errors?: unknown[]) => void
-  onWorkerExit: (error: unknown, code?: number) => void
-  onPathsCollected: (paths: string[]) => void
-  onUserConsoleLog: (log: UserConsoleLog) => void
-  onUnhandledError: (err: unknown, type: string) => void
-  onCollected: (files: File[]) => void
-  onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskUpdate: (pack: TaskResultPack[]) => void
-
-  snapshotSaved: (snapshot: SnapshotResult) => void
-  resolveSnapshotPath: (testPath: string) => string
-}
+export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
 
 export interface WorkerGlobalState {
-  ctx: WorkerContext
+  ctx: ContextRPC
   config: ResolvedConfig
-  rpc: BirpcReturn<WorkerRPC>
+  rpc: WorkerRPC
   current?: Test
   filepath?: string
+  environment: Environment
+  environmentTeardownRun?: boolean
+  onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  durations: {
+    environment: number
+    prepare: number
+  }
+  isChildProcess?: boolean
 }

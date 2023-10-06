@@ -41,6 +41,17 @@ describe('jest mock compat layer', () => {
     expect(Spy.mock.instances).toHaveLength(0)
   })
 
+  it('implementation is set correctly on init', () => {
+    const impl = () => 1
+    const mock1 = vi.fn(impl)
+
+    expect(mock1.getMockImplementation()).toEqual(impl)
+
+    const mock2 = vi.fn()
+
+    expect(mock2.getMockImplementation()).toBeUndefined()
+  })
+
   it('implementation sync fn', () => {
     const originalFn = function () {
       return 'original'
@@ -49,7 +60,7 @@ describe('jest mock compat layer', () => {
 
     spy() // returns 'original'
 
-    expect(spy.getMockImplementation()).toBe(undefined)
+    expect(spy.getMockImplementation()).toBe(originalFn)
 
     spy.mockReturnValueOnce('2-once').mockReturnValueOnce('3-once')
 
@@ -250,7 +261,7 @@ describe('jest mock compat layer', () => {
     obj.property = true
     // unlike jest, mockRestore only restores implementation to the original one,
     // we are still spying on the setter
-    expect(spy).toHaveBeenCalled()
+    expect(spy).not.toHaveBeenCalled()
     expect(obj.property).toBe(true)
   })
 
@@ -309,5 +320,16 @@ describe('jest mock compat layer', () => {
 
     const instance2 = new Fn()
     expect(Fn.mock.instances[1]).toBe(instance2)
+  })
+
+  it('.mockRestore() should restore initial implementation', () => {
+    const testFn = vi.fn(() => true)
+    expect(testFn()).toBe(true)
+
+    testFn.mockReturnValue(false)
+    expect(testFn()).toBe(false)
+
+    testFn.mockRestore()
+    expect(testFn()).toBe(true)
   })
 })

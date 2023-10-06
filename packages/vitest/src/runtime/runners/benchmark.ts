@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
@@ -5,6 +6,7 @@ import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../../utils'
 import type { BenchTask, Benchmark, BenchmarkResult } from '../../types/benchmark'
 import type { ResolvedConfig } from '../../types/config'
+import type { VitestExecutor } from '../execute'
 
 async function importTinybench() {
   if (!globalThis.EventTarget)
@@ -21,6 +23,8 @@ function createBenchmarkResult(name: string): BenchmarkResult {
     samples: [] as number[],
   } as BenchmarkResult
 }
+
+const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
 
 async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
   const { Task, Bench } = await importTinybench()
@@ -65,12 +69,13 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
       benchmarkMap[id] = benchmark
 
       const task = new Task(benchmarkInstance, id, benchmarkFn)
-      benchmark.meta.task = task
+      benchmarkTasks.set(benchmark, task)
       updateTask(benchmark)
     })
 
     benchmarkGroup.forEach((benchmark) => {
-      benchmark.meta.task!.addEventListener('complete', (e) => {
+      const task = benchmarkTasks.get(benchmark)!
+      task.addEventListener('complete', (e) => {
         const task = e.task
         const _benchmark = benchmarkMap[task.name || '']
         if (_benchmark) {
@@ -80,37 +85,39 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
           updateTask(_benchmark)
         }
       })
-      benchmark.meta.task!.addEventListener('error', (e) => {
+      task.addEventListener('error', (e) => {
         const task = e.task
         const _benchmark = benchmarkMap[task.name || '']
         defer.reject(_benchmark ? task.result!.error : e)
       })
     })
 
-    Promise.all(benchmarkGroup.map(async (benchmark) => {
-      await benchmark.meta.task!.warmup()
+    const tasks: BenchTask[] = []
+    for (const benchmark of benchmarkGroup) {
+      const task = benchmarkTasks.get(benchmark)!
+      await task.warmup()
       const { setTimeout } = getSafeTimers()
-      return await new Promise<BenchTask>(resolve => setTimeout(async () => {
-        resolve(await benchmark.meta.task!.run())
-      }))
-    })).then((tasks) => {
-      suite.result!.duration = performance.now() - start
-      suite.result!.state = 'pass'
+      tasks.push(await new Promise<BenchTask>(resolve => setTimeout(async () => {
+        resolve(await task.run())
+      })))
+    }
 
-      tasks
-        .sort((a, b) => a.result!.mean - b.result!.mean)
-        .forEach((cycle, idx) => {
-          const benchmark = benchmarkMap[cycle.name || '']
-          benchmark.result!.state = 'pass'
-          if (benchmark) {
-            const result = benchmark.result!.benchmark!
-            result.rank = Number(idx) + 1
-            updateTask(benchmark)
-          }
-        })
-      updateTask(suite)
-      defer.resolve(null)
-    })
+    suite.result!.duration = performance.now() - start
+    suite.result!.state = 'pass'
+
+    tasks
+      .sort((a, b) => a.result!.mean - b.result!.mean)
+      .forEach((cycle, idx) => {
+        const benchmark = benchmarkMap[cycle.name || '']
+        benchmark.result!.state = 'pass'
+        if (benchmark) {
+          const result = benchmark.result!.benchmark!
+          result.rank = Number(idx) + 1
+          updateTask(benchmark)
+        }
+      })
+    updateTask(suite)
+    defer.resolve(null)
 
     await defer
   }
@@ -121,19 +128,21 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
+  private __vitest_executor!: VitestExecutor
+
   constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
       getWorkerState().moduleCache.delete(filepath)
-    return import(filepath)
+    return this.__vitest_executor.executeId(filepath)
   }
 
   async runSuite(suite: Suite): Promise<void> {
     await runBenchmarkSuite(suite, this)
   }
 
-  async runTest(): Promise<void> {
+  async runTask(): Promise<void> {
     throw new Error('`test()` and `it()` is only available in test mode.')
   }
 }

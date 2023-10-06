@@ -17,14 +17,16 @@ export interface CoreTeam extends DefaultTheme.TeamMember {
 
 const contributorsAvatars: Record<string, string> = {}
 
-const getAvatarUrl = (name: string) => import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
+function getAvatarUrl(name: string) {
+  return import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
+}
 
 export const contributors = (contributorNames as string[]).reduce((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
 }, [] as Contributor[])
-const createLinks = (tm: CoreTeam): CoreTeam => {
+function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
   if (tm.mastodon)
     tm.links.push({ icon: 'mastodon', link: tm.mastodon })
@@ -67,6 +69,15 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Core team member of Vitest',
   },
   {
+    avatar: contributorsAvatars.AriPerkkio,
+    name: 'Ari Perkkiö',
+    github: 'AriPerkkio',
+    title: 'A fullstack developer, working',
+    desc: 'Team member of Vitest',
+    org: 'Cloudamite',
+    orgLink: 'https://cloudamite.com/',
+  },
+  {
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     github: 'patak-dev',
@@ -77,6 +88,15 @@ const plainTeamMembers: CoreTeam[] = [
     org: 'StackBlitz',
     orgLink: 'https://stackblitz.com/',
     desc: 'Core team member of Vite & Vue',
+  },
+  {
+    avatar: contributorsAvatars.userquin,
+    name: 'Joaquín Sánchez',
+    github: 'userquin',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
+    twitter: 'userquin',
+    title: 'A fullstack and android developer',
+    desc: 'Vite\'s fanatical follower',
   },
   {
     avatar: contributorsAvatars.Aslemammad,
@@ -96,15 +116,6 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Author of fluent-vue',
   },
   {
-    avatar: contributorsAvatars.userquin,
-    name: 'Joaquín Sánchez',
-    github: 'userquin',
-    mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
-    twitter: 'userquin',
-    title: 'A fullstack and android developer',
-    desc: 'Vite\'s fanatical follower',
-  },
-  {
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
@@ -120,15 +131,6 @@ const plainTeamMembers: CoreTeam[] = [
     twitter: '@yoho_po',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
-  },
-  {
-    avatar: contributorsAvatars.AriPerkkio,
-    name: 'Ari Perkkiö',
-    github: 'AriPerkkio',
-    title: 'A fullstack developer, working',
-    desc: 'Team member of Vitest',
-    org: 'Cloudamite',
-    orgLink: 'https://cloudamite.com/',
   },
 ]
 

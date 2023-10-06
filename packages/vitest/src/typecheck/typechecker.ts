@@ -1,11 +1,13 @@
 import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
-import { extname, resolve } from 'pathe'
-import { SourceMapConsumer } from 'source-map'
+import { basename, extname, resolve } from 'pathe'
+import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
+import type { RawSourceMap } from '@ampproject/remapping'
 import { getTasks } from '../utils'
 import { ensurePackageInstalled } from '../node/pkg'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
+import type { WorkspaceProject } from '../node/workspace'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -35,12 +37,13 @@ export class Typechecker {
     sourceErrors: [],
   }
 
+  private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
-  private process!: ExecaChildProcess
+  private process?: ExecaChildProcess
 
-  constructor(protected ctx: Vitest, protected files: string[]) {}
+  constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
@@ -118,25 +121,29 @@ export class Typechecker {
       }
       const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
       // has no map for ".js" files that use // @ts-check
-      const mapConsumer = map && new SourceMapConsumer(map)
+      const traceMap = map && new TraceMap(map as unknown as RawSourceMap)
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
+          state: (task.mode === 'run' || task.mode === 'only') ? state : task.mode,
         }
         if (task.suite)
           markState(task.suite, state)
       }
       errors.forEach(({ error, originalError }) => {
-        const originalPos = mapConsumer?.generatedPositionFor({
-          line: originalError.line,
-          column: originalError.column,
-          source: path,
-        }) || originalError
-        const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
+        const processedPos = traceMap
+          ? generatedPositionFor(traceMap, {
+            line: originalError.line,
+            column: originalError.column,
+            source: basename(path),
+          })
+          : originalError
+        const line = processedPos.line ?? originalError.line
+        const column = processedPos.column ?? originalError.column
+        const index = indexMap.get(`${line}:${column}`)
         const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
         const suite = definition ? definition.task : file
-        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = (suite.mode === 'run' || suite.mode === 'only') ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,
@@ -215,6 +222,14 @@ export class Typechecker {
     this.allowJs = typecheck.allowJs || config.allowJs || false
   }
 
+  public getExitCode() {
+    return this.process?.exitCode != null && this.process.exitCode
+  }
+
+  public getOutput() {
+    return this._output
+  }
+
   public async start() {
     if (!this.tempConfigPath)
       throw new Error('tsconfig was not initialized')
@@ -227,7 +242,7 @@ export class Typechecker {
       args.push('--watch')
     if (typecheck.allowJs)
       args.push('--allowJs', '--checkJs')
-    let output = ''
+    this._output = ''
     const child = execa(typecheck.checker, args, {
       cwd: root,
       stdout: 'pipe',
@@ -237,28 +252,28 @@ export class Typechecker {
     await this._onParseStart?.()
     let rerunTriggered = false
     child.stdout?.on('data', (chunk) => {
-      output += chunk
+      this._output += chunk
       if (!watch)
         return
-      if (output.includes('File change detected') && !rerunTriggered) {
+      if (this._output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
         this._result.sourceErrors = []
         this._result.files = []
-        this._tests = null // test structure migh've changed
+        this._tests = null // test structure might've changed
         rerunTriggered = true
       }
-      if (/Found \w+ errors*. Watching for/.test(output)) {
+      if (/Found \w+ errors*. Watching for/.test(this._output)) {
         rerunTriggered = false
-        this.prepareResults(output).then((result) => {
+        this.prepareResults(this._output).then((result) => {
           this._result = result
           this._onParseEnd?.(result)
         })
-        output = ''
+        this._output = ''
       }
     })
     if (!watch) {
       await child
-      this._result = await this.prepareResults(output)
+      this._result = await this.prepareResults(this._output)
       await this._onParseEnd?.(this._result)
     }
   }
@@ -275,6 +290,6 @@ export class Typechecker {
     return Object.values(this._tests || {})
       .map(({ file }) => getTasks(file))
       .flat()
-      .map(i => [i.id, undefined] as TaskResultPack)
+      .map<TaskResultPack>(i => [i.id, undefined, { typecheck: true }])
   }
 }
