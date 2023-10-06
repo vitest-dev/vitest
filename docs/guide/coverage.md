@@ -17,7 +17,7 @@ Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -58,7 +58,7 @@ By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 To configure it, set `test.coverage` options in your config file:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -75,7 +75,7 @@ export default defineConfig({
 It's also possible to provide your custom coverage provider by passing `'custom'` in `test.coverage.provider`:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
