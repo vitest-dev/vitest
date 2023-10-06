@@ -27,7 +27,7 @@ Or you can also set [`environmentMatchGlobs`](https://vitest.dev/config/#environ
 
 ## Custom Environment
 
-Starting from 0.23.0, you can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS file (supported since 0.34.0). That package should export an object with the shape of `Environment`:
+Starting from 0.23.0, you can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file (supported since 0.34.0). That package should export an object with the shape of `Environment`:
 
 ```ts
 import type { Environment } from 'vitest'

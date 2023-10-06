@@ -33,6 +33,8 @@ export function getEnvPackageName(env: VitestEnvironment) {
     return null
   if (env in envPackageNames)
     return (envPackageNames as any)[env]
+  if (env.startsWith('.') || env.startsWith('/'))
+    return null
   return `vitest-environment-${env}`
 }
 
