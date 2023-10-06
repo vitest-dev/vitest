@@ -39,7 +39,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
 }
 
