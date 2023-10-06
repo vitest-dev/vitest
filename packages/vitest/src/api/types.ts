@@ -7,6 +7,7 @@ export interface TransformResultWithSource extends TransformResult {
 }
 
 export interface WebSocketHandlers {
+  onUnhandledError(error: unknown, type: string): Promise<void>
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void

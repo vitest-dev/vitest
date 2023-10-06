@@ -3,4 +3,5 @@ export { test, it, describe, suite, getCurrentSuite, createTaskCollector } from 
 export { beforeAll, beforeEach, afterAll, afterEach, onTestFailed } from './hooks'
 export { setFn, getFn } from './map'
 export { getCurrentTest } from './test-state'
+export { processError } from '@vitest/utils/error'
 export * from './types'
