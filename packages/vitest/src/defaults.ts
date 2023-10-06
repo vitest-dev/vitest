@@ -32,6 +32,7 @@ const defaultCoverageExcludes = [
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'v8',
   enabled: false,
+  all: true,
   clean: true,
   cleanOnRerun: true,
   reportsDirectory: './coverage',
