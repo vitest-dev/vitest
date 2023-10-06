@@ -14,6 +14,7 @@ import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
+import { NormalizeURLPlugin } from './normalizeURL'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -185,6 +186,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     MocksPlugin(),
     VitestResolver(ctx),
     VitestOptimizer(),
+    NormalizeURLPlugin(),
   ]
     .filter(notNullish)
 }
