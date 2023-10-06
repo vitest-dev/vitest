@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index f5129e5e2b50aec46ba437ffbc02e9e360bdd914..4324fb191415a469f6cfd71cfdf4a70b4f7dd522 100644
+index 607336d6a9c568a32b0cde4499c8fd56f06d424a..35187b0ee298df858118494b5a9b3e5efa8197b0 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -2,9 +2,9 @@
@@ -10,11 +10,11 @@ index f5129e5e2b50aec46ba437ffbc02e9e360bdd914..4324fb191415a469f6cfd71cfdf4a70b
 +if (typeof __vitest_required__ !== 'undefined') {
      try {
 -        timersModule = require("timers");
-+        timersModule = __vitest_required__.timers
++        timersModule = __vitest_required__.timers;
      } catch (e) {
          // ignored
      }
-@@ -161,7 +161,7 @@ function withGlobal(_global) {
+@@ -159,7 +159,7 @@ function withGlobal(_global) {
          hrtimePresent && typeof _global.process.hrtime.bigint === "function";
      const nextTickPresent =
          _global.process && typeof _global.process.nextTick === "function";
