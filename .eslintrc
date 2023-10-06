@@ -14,7 +14,8 @@
         "paths": ["path"]
       }
     ],
-    "import/no-named-as-default": "off"
+    "import/no-named-as-default": "off",
+    "no-cond-assign": "off"
   },
   "overrides": [
     {
