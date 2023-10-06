@@ -40,6 +40,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
+        async onUnhandledError(error, type) {
+          ctx.state.catchError(error, type)
+        },
         async onDone(testId) {
           return ctx.state.browserTestPromises.get(testId)?.resolve(true)
         },

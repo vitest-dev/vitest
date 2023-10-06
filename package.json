@@ -85,7 +85,8 @@
       ]
     },
     "patchedDependencies": {
-      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch"
+      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
+      "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch"
     }
   },
   "simple-git-hooks": {

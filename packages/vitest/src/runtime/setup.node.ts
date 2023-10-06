@@ -1,4 +1,6 @@
 import { createRequire } from 'node:module'
+import util from 'node:util'
+import timers from 'node:timers'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
@@ -41,6 +43,12 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
   }
   else {
     process.env.SSR = '1'
+  }
+
+  // @ts-expect-error not typed global for patched timers
+  globalThis.__vitest_required__ = {
+    util,
+    timers,
   }
 
   installSourcemapsSupport({
