@@ -143,6 +143,31 @@ describe('jest-expect', () => {
 
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.closeTo(0.3, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).not.toEqual({
+      sum: expect.closeTo(0.4, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.not.closeTo(0.4, 5),
+    })
+
+    expect(() => {
+      expect({
+        sum: 0.1 + 0.2,
+      }).toEqual({
+        sum: expect.closeTo(0.4),
+      })
+    }).toThrowErrorMatchingInlineSnapshot(`"expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }"`)
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
