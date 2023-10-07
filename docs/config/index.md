@@ -1042,7 +1042,7 @@ List of files excluded from coverage as glob patterns.
 #### coverage.all
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true` (since Vitest `1.0.0`)
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 
