@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 test('nested test should throw error', () => {
   expect(() => {
@@ -12,4 +12,19 @@ test('nested test should throw error', () => {
   expect(() => {
     test.skipIf(false)('test.skipIf inside test', () => {})
   }).toThrowErrorMatchingInlineSnapshot(`"Nested tests are not allowed"`)
+})
+
+describe('parallel tests', () => {
+  test.concurrent('parallel test 1 with nested test', () => {
+    expect(() => {
+      test('test inside test', () => {})
+    }).toThrowErrorMatchingInlineSnapshot(`"Nested tests are not allowed"`)
+  })
+  test.concurrent('parallel test 2 without nested test', () => {})
+  test.concurrent('parallel test 3 without nested test', () => {})
+  test.concurrent('parallel test 4 with nested test', () => {
+    expect(() => {
+      test('test inside test', () => {})
+    }).toThrowErrorMatchingInlineSnapshot(`"Nested tests are not allowed"`)
+  })
 })
