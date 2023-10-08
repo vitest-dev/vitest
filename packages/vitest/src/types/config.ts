@@ -461,7 +461,28 @@ export interface InlineConfig {
    * Enable Vitest UI
    * @internal WIP
    */
-  ui?: boolean
+  ui?: boolean | {
+    /**
+     * Enable Vitest UI
+     */
+    enabled?: boolean
+    /**
+     * Coverage report provider
+     * @default 'html'
+     */
+    coverageProvider?: string
+    /**
+     * Base url for the UI
+     * @default '/__vitest__/''
+     */
+    baseURL?: string
+    /**
+     * Open UI automatically.
+     *
+     * @default true
+     */
+    open?: boolean
+  }
 
   /**
    * options for test in a browser environment
@@ -475,6 +496,7 @@ export interface InlineConfig {
    * Open UI automatically.
    *
    * @default true
+   * @deprecated see ui.open
    */
   open?: boolean
 
@@ -482,6 +504,7 @@ export interface InlineConfig {
    * Base url for the UI
    *
    * @default '/__vitest__/'
+   * @deprecated see ui.baseURL
    */
   uiBase?: string
 
@@ -704,7 +727,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'uiBase' | 'open' | 'ui' | 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions'> {
   mode: VitestRunMode
 
   base?: string
@@ -726,6 +749,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+
+  ui: Required<Exclude<InlineConfig['ui'], boolean | undefined>>
 
   benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & {
     outputFile?: BenchmarkUserOptions['outputFile']

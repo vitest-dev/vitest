@@ -10,8 +10,8 @@ export default (ctx: Vitest) => {
     name: 'vitest:ui',
     apply: 'serve',
     configureServer(server) {
-      const uiOptions = ctx.config
-      const base = uiOptions.uiBase
+      const uiOptions = ctx.config.ui
+      const base = uiOptions.baseURL
       const coverageFolder = resolveCoverageFolder(ctx)
       const coveragePath = coverageFolder ? coverageFolder[1] : undefined
       if (coveragePath && base === coveragePath)
@@ -35,16 +35,17 @@ export default (ctx: Vitest) => {
 
 function resolveCoverageFolder(ctx: Vitest) {
   const options = ctx.config
-  const htmlReporter = (options.api?.port && options.coverage?.enabled)
+  const provider = ctx.config.ui.coverageProvider
+  const providerReporter = (options.api?.port && options.coverage?.enabled)
     ? options.coverage.reporter.find((reporter) => {
       if (typeof reporter === 'string')
-        return reporter === 'html'
+        return reporter === provider
 
-      return reporter[0] === 'html'
+      return reporter[0] === provider
     })
     : undefined
 
-  if (!htmlReporter)
+  if (!providerReporter)
     return undefined
 
   // reportsDirectory not resolved yet
@@ -53,8 +54,8 @@ function resolveCoverageFolder(ctx: Vitest) {
     options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 
-  const subdir = (Array.isArray(htmlReporter) && htmlReporter.length > 1 && 'subdir' in htmlReporter[1])
-    ? htmlReporter[1].subdir
+  const subdir = (Array.isArray(providerReporter) && providerReporter.length > 1 && 'subdir' in providerReporter[1])
+    ? providerReporter[1].subdir
     : undefined
 
   if (!subdir)

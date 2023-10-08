@@ -175,6 +175,29 @@ export function resolveConfig(
       resolved.server.deps![option] = resolved.deps[option] as any
   })
 
+  // Covert boolean config to object
+  if (typeof resolved.ui === 'boolean') {
+    (resolved as any).ui = {
+      enabled: resolved.ui,
+    }
+  }
+
+  const deprecatedUIOptions = [['open', 'open'], ['uiBase', 'baseURL']] as const
+  deprecatedUIOptions.forEach(([option, useInstead]) => {
+    if (options[option] === undefined)
+      return
+
+    console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "${option}" is deprecated. Use "ui.${useInstead}" instead`))
+    delete (resolved as any)[option];
+    (resolved.ui as any)[useInstead] ??= options[option]
+  })
+
+  // Fill with default values
+  resolved.ui = {
+    ...(configDefaults.ui as ResolvedConfig['ui']),
+    ...resolved.ui,
+  }
+
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
