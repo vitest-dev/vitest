@@ -57,11 +57,46 @@ async function loadConfig() {
   throw new Error('cannot load configuration after 5 retries')
 }
 
+function on(event: string, listener: (...args: any[]) => void) {
+  window.addEventListener(event, listener)
+  return () => window.removeEventListener(event, listener)
+}
+
+// we can't import "processError" yet because error might've been thrown before the module was loaded
+async function defaultErrorReport(type: string, unhandledError: any) {
+  const error = {
+    ...unhandledError,
+    name: unhandledError.name,
+    message: unhandledError.message,
+    stack: unhandledError.stack,
+  }
+  await client.rpc.onUnhandledError(error, type)
+  await client.rpc.onDone(testId)
+}
+
+const stopErrorHandler = on('error', e => defaultErrorReport('Error', e.error))
+const stopRejectionHandler = on('unhandledrejection', e => defaultErrorReport('Unhandled Rejection', e.reason))
+
+let runningTests = false
+
+async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error: any) {
+  const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
+  await rpc.onUnhandledError(processError(error), type)
+  if (!runningTests)
+    await rpc.onDone(testId)
+}
+
 ws.addEventListener('open', async () => {
   await loadConfig()
 
   const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
   const safeRpc = createSafeRpc(client, getSafeTimers)
+
+  stopErrorHandler()
+  stopRejectionHandler()
+
+  on('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
+  on('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
 
   // @ts-expect-error untyped global for internal use
   globalThis.__vitest_browser__ = true
@@ -134,10 +169,14 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     const now = `${new Date().getTime()}`
     files.forEach(i => browserHashMap.set(i, [true, now]))
 
+    runningTests = true
+
     for (const file of files)
       await startTests([file], runner)
   }
   finally {
+    runningTests = false
+
     await rpcDone()
     await rpc().onDone(testId)
   }

@@ -85,7 +85,7 @@ interface WorkerContextOptions {
 
 interface VmOptions {
   /**
-   * Specifies the memory limit for `worker_thread` or `child_processe` before they are recycled.
+   * Specifies the memory limit for `worker_thread` or `child_process` before they are recycled.
    * If you see memory leaks, try to tinker this value.
    */
   memoryLimit?: string | number

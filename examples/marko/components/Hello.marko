@@ -1,0 +1,17 @@
+export interface Input {
+  count: number;
+}
+
+class {
+  declare state: { times: number };
+  onCreate() {
+    this.state = { times: 2 };
+  }
+}
+
+$ const { count } = input;
+$ const { times } = state;
+$ const result = count * times;
+
+<div>${count} x ${times} = ${result}</div>
+<button onClick(() => component.state.times++)>x1</button>

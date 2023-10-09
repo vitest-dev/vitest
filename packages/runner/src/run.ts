@@ -189,6 +189,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
+        await callFixtureCleanup()
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
@@ -322,7 +323,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     try {
-      await callFixtureCleanup(suite.id)
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(beforeAllCleanups)
     }

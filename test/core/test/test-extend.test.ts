@@ -201,7 +201,7 @@ describe('test.extend()', () => {
       expect(service).toBe(true)
     })
 
-    testAPI('Should init1 time', ({ api }) => {
+    testAPI('Should init 1 time', ({ api }) => {
       expect(api).toBe(true)
       expect(apiFn).toBeCalledTimes(1)
     })
@@ -223,7 +223,7 @@ describe('test.extend()', () => {
     afterAll(() => {
       expect(serviceFn).toBeCalledTimes(0)
       expect(apiFn).toBeCalledTimes(0)
-      expect(teardownFn).toBeCalledTimes(2)
+      expect(teardownFn).toBeCalledTimes(4)
     })
   })
 
@@ -266,10 +266,10 @@ describe('test.extend()', () => {
         expect(bar).toBe(0)
       })
 
-      nestedTest('should only initialize bar', ({ foo, bar }) => {
+      nestedTest('should initialize foo and bar', ({ foo, bar }) => {
         expect(foo).toBe(0)
         expect(bar).toBe(0)
-        expect(fooFn).toBeCalledTimes(1)
+        expect(fooFn).toBeCalledTimes(2)
         expect(barFn).toBeCalledTimes(1)
       })
 
@@ -279,18 +279,16 @@ describe('test.extend()', () => {
       })
 
       afterAll(() => {
-        // foo setup in outside describe
-        // cleanup also called in outside describe
-        expect(fooCleanup).toHaveBeenCalledTimes(0)
-        // bar setup in inside describe
-        // cleanup also called in inside describe
+        expect(barFn).toHaveBeenCalledTimes(1)
+        expect(barCleanup).toHaveBeenCalledTimes(1)
+        expect(fooFn).toHaveBeenCalledTimes(2)
         expect(barCleanup).toHaveBeenCalledTimes(1)
       })
     })
 
-    nestedTest('level 2 will not call foo cleanup', ({ foo }) => {
+    nestedTest('should initialize foo again', ({ foo }) => {
       expect(foo).toBe(0)
-      expect(fooFn).toBeCalledTimes(1)
+      expect(fooFn).toBeCalledTimes(3)
     })
 
     afterEach<Fixture>(({ foo }) => {
@@ -298,10 +296,33 @@ describe('test.extend()', () => {
     })
 
     afterAll(() => {
-      // foo setup in this describe
-      // cleanup also called in this describe
-      expect(fooCleanup).toHaveBeenCalledTimes(1)
+      expect(fooFn).toHaveBeenCalledTimes(3)
+      expect(fooCleanup).toHaveBeenCalledTimes(3)
+      expect(barFn).toHaveBeenCalledTimes(1)
       expect(barCleanup).toHaveBeenCalledTimes(1)
     })
   })
+})
+
+// test extend with top level test
+const numbers: number[] = []
+const teardownFn = vi.fn()
+const teardownTest = test.extend<{
+  numbers: number[]
+}>({
+  numbers: async ({}, use) => {
+    numbers.push(1, 2, 3)
+    await use(numbers)
+    numbers.splice(0, numbers.length)
+    teardownFn()
+  },
+})
+
+teardownTest('test without describe', ({ numbers }) => {
+  expect(numbers).toHaveLength(3)
+})
+
+test('teardown should be called once time', () => {
+  expect(numbers).toHaveLength(0)
+  expect(teardownFn).toBeCalledTimes(1)
 })
