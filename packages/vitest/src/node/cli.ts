@@ -4,6 +4,7 @@ import c from 'picocolors'
 import { version } from '../../package.json'
 import { toArray } from '../utils'
 import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
+import { defaultExclude } from '../defaults'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -51,6 +52,7 @@ cli
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
+  .option('--exclude <glob>', 'Files to exclude from tests (default: node_modules, dist, .idea, .git, .cache')
   .help()
 
 cli
@@ -150,6 +152,9 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
     argv.dir = normalize(argv.dir)
   else
     delete argv.dir
+
+  if (argv.exclude)
+    argv.exclude = [...defaultExclude, ...toArray(argv.exclude)]
 
   if (argv.coverage) {
     const coverage = argv.coverage
