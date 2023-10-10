@@ -30,7 +30,7 @@ export function SsrReplacerPlugin(): Plugin {
         return {
           code: s.toString(),
           map: s.generateMap({
-            hires: true,
+            hires: 'boundary',
 
             // Remove possible query parameters, e.g. vue's "?vue&type=script&src=true&lang.ts"
             source: cleanUrl(id),
