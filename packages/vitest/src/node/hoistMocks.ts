@@ -188,6 +188,6 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
   return {
     ast,
     code: s.toString(),
-    map: s.generateMap({ hires: true, source: id }),
+    map: s.generateMap({ hires: 'boundary', source: id }),
   }
 }
