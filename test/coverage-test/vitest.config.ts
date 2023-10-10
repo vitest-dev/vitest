@@ -54,9 +54,9 @@ export default defineConfig({
 
       // These will be updated by tests and reseted back by generic.report.test.ts
       thresholdAutoUpdate: true,
-      functions: 1.01,
+      functions: 0,
       branches: 1.01,
-      lines: 1.01,
+      lines: 0,
       statements: 1.01,
     },
     setupFiles: [

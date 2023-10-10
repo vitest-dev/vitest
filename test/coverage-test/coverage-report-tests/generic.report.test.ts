@@ -75,12 +75,14 @@ test('thresholdAutoUpdate updates thresholds', async () => {
     const match = configContents.match(new RegExp(`${threshold}: (?<coverage>[\\d|\\.]+)`))
     const coverage = match?.groups?.coverage || '0'
 
-    // Configuration has fixed value of 1.01 set for each threshold
+    // Configuration has fixed value of 1.01 and 0 set for each threshold
     expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
   }
 
   // Update thresholds back to fixed values
-  const updatedConfig = configContents.replace(/(branches|functions|lines|statements): ([\d|\.])+/g, '$1: 1.01')
+  const updatedConfig = configContents
+    .replace(/(branches|statements): ([\d|\.])+/g, '$1: 1.01')
+    .replace(/(functions|lines): ([\d|\.])+/g, '$1: 0')
   fs.writeFileSync(configFilename, updatedConfig)
 })
 
