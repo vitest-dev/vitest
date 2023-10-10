@@ -69,7 +69,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |   
+| `--threads` | Enable Threads (default: `true`) |
 | `--single-thread` | Run tests inside a single thread, requires --threads (default: `false`) |
 | `--experimental-vm-threads` | Run tests in a worker pool using VM isolation (default: `false`) |
 | `--experimental-vm-worker-memory-limit` | Set the maximum allowed memory for a worker. When reached, a new worker will be created instead |
@@ -97,6 +97,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
+| `--exclude <glob>` | Additional file globs to be excluded from test |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

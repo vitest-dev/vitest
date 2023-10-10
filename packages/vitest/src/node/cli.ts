@@ -52,7 +52,7 @@ cli
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
-  .option('--exclude <glob>', 'Files to exclude from tests (default: node_modules, dist, .idea, .git, .cache')
+  .option('--exclude <glob>', 'Additional file globs to be excluded from test')
   .help()
 
 cli
