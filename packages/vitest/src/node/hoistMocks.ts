@@ -46,10 +46,11 @@ function transformImportSpecifiers(node: ImportDeclaration) {
 }
 
 const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
+const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
-  const hasMocks = regexpHoistable.test(code)
+  const hasMocks = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
   if (!hasMocks)
     return
@@ -187,6 +188,6 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
   return {
     ast,
     code: s.toString(),
-    map: s.generateMap({ hires: true, source: id }),
+    map: s.generateMap({ hires: 'boundary', source: id }),
   }
 }
