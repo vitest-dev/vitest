@@ -98,7 +98,7 @@
     "*.cjs"
   ],
   "engines": {
-    "node": ">=v14.18.0"
+    "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -107,7 +107,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
-    "@types/node": ">= 14",
+    "@types/node": "^18.0.0 || >=20.0.0",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
