@@ -294,7 +294,7 @@ export interface InlineConfig {
    *
    * @default 'threads'
    */
-  pool?: Omit<Pool, 'browser'>
+  pool?: Exclude<Pool, 'browser'>
 
   /**
    * Pool options
@@ -314,7 +314,7 @@ export interface InlineConfig {
    *   // ...
    * ]
    */
-  poolMatchGlobs?: [string, Omit<Pool, 'browser'>][]
+  poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
    * Update snapshot
@@ -704,7 +704,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
   mode: VitestRunMode
 
   base?: string
