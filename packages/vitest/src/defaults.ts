@@ -62,7 +62,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  pool: 'threads',
+  pool: 'threads' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
