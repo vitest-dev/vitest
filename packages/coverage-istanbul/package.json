@@ -42,7 +42,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.32.0 <1"
+    "vitest": "^1.0.0-0"
   },
   "dependencies": {
     "istanbul-lib-coverage": "^3.2.0",
