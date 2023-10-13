@@ -5,7 +5,7 @@ import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/c
 import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
 import libReport from 'istanbul-lib-report'
-import reports from 'istanbul-reports'
+import reports, { type ReportOptions } from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
@@ -143,7 +143,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter[0], {
+      reports.create(reporter[0] as keyof ReportOptions, {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
         ...reporter[1],

@@ -151,6 +151,13 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
   else
     delete argv.dir
 
+  argv.ui = {
+    enabled: argv.ui as boolean,
+    open: argv.open,
+  }
+
+  delete argv.open
+
   if (argv.coverage) {
     const coverage = argv.coverage
     if (coverage.exclude)

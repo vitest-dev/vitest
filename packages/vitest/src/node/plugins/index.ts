@@ -59,8 +59,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         let open: string | boolean | undefined = false
 
-        if (testConfig.ui && testConfig.open)
-          open = testConfig.uiBase ?? '/__vitest__/'
+        if (testConfig.ui && (testConfig.open || (typeof testConfig.ui === 'object' && testConfig.ui.open))) {
+          const uiConfig = typeof testConfig.ui === 'object'
+            ? testConfig.ui
+            : {
+                baseURL: testConfig.uiBase,
+              }
+          open = uiConfig.baseURL ?? '/__vitest__/'
+        }
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,

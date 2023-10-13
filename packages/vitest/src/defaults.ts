@@ -81,9 +81,12 @@ const config = {
   silent: false,
   hideSkippedTests: false,
   api: false,
-  ui: false,
-  uiBase: '/__vitest__/',
-  open: true,
+  ui: {
+    enabled: false,
+    baseURL: '/__vitest__/',
+    coverageProvider: 'html',
+    open: !isCI,
+  },
   css: {
     include: [],
   },
@@ -97,6 +100,6 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-}
+} satisfies UserConfig
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
