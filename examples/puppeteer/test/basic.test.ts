@@ -4,13 +4,15 @@ import type { PreviewServer } from 'vite'
 import { launch } from 'puppeteer'
 import type { Browser, Page } from 'puppeteer'
 
+const PORT = 3000
+
 describe('basic', async () => {
   let server: PreviewServer
   let browser: Browser
   let page: Page
 
   beforeAll(async () => {
-    server = await preview({ preview: { port: 3000 } })
+    server = await preview({ preview: { port: PORT } })
     browser = await launch({ headless: true })
     page = await browser.newPage()
   })
@@ -23,7 +25,7 @@ describe('basic', async () => {
   })
 
   test('should have the correct title', async () => {
-    await page.goto('http://localhost:3000')
+    await page.goto(`http://localhost:${PORT}`)
     const button = (await page.$<HTMLButtonElement>('#btn'))!
     expect(button).toBeDefined()
 
