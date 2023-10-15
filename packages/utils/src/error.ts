@@ -163,11 +163,8 @@ export function replaceAsymmetricMatcher(actual: any, expected: any, actualRepla
         actualReplaced,
         expectedReplaced,
       )
-      if (actualValue !== replaced.replacedActual)
-        actual[key] = replaced.replacedActual
-
-      if (expectedValue !== replaced.replacedExpected)
-        expected[key] = replaced.replacedExpected
+      actual[key] = replaced.replacedActual
+      expected[key] = replaced.replacedExpected
     }
   })
   return {

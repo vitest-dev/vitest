@@ -110,7 +110,7 @@ export function clone<T>(
       const descriptor = Object.getOwnPropertyDescriptor(val, k)
       if (!descriptor)
         continue
-      const cloned = clone((val as any)[k], seen)
+      const cloned = clone((val as any)[k], seen, options)
       if ('get' in descriptor) {
         Object.defineProperty(out, k, {
           ...descriptor,
