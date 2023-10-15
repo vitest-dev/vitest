@@ -46,7 +46,7 @@ Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vites
 
 ### Replace property
 
-If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](https://vitest.dev/api/vi.html#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest. 
+If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](https://vitest.dev/api/vi.html#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest.
 
 ### Done Callback
 
@@ -70,7 +70,7 @@ beforeEach(() => setActivePinia(createTestingPinia())) // [!code --]
 beforeEach(() => { setActivePinia(createTestingPinia()) }) // [!code ++]
 ```
 
-In Jest hooks are caled sequentially (one after another). By default, Vitest runs hooks in parallel. To use Jest's behavior, update [`sequence.hooks`](/config/#sequence-hooks) option:
+In Jest hooks are called sequentially (one after another). By default, Vitest runs hooks in parallel. To use Jest's behavior, update [`sequence.hooks`](/config/#sequence-hooks) option:
 
 ```ts
 export default defineConfig({
