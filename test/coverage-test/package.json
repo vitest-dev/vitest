@@ -11,6 +11,7 @@
     "test:types": "vitest --typecheck.only --run --reporter verbose"
   },
   "devDependencies": {
+    "@ampproject/remapping": "^2.2.1",
     "@types/istanbul-lib-coverage": "^2.0.4",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",

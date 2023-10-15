@@ -64,8 +64,9 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
 
   const originalOnAfterRun = testRunner.onAfterRunFiles
   testRunner.onAfterRunFiles = async (files) => {
+    const state = getWorkerState()
     const coverage = await takeCoverageInsideWorker(config.coverage, executor)
-    rpc().onAfterSuiteRun({ coverage })
+    rpc().onAfterSuiteRun({ coverage, transformMode: state.environment.transformMode })
     await originalOnAfterRun?.call(testRunner, files)
   }
 

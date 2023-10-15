@@ -6,7 +6,7 @@ import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
@@ -45,7 +45,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * If storing in memory causes issues, we can simply write these into fs in `onAfterSuiteRun`
    * and read them back when merging coverage objects in `onAfterAllFilesRun`.
    */
-  coverages: any[] = []
+  coverages: Record<AfterSuiteRunMeta['transformMode'], CoverageMapData[]> = { ssr: [], web: [] }
 
   initialize(ctx: Vitest) {
     const config: CoverageIstanbulOptions = ctx.config.coverage
@@ -106,36 +106,44 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     return { code, map }
   }
 
-  onAfterSuiteRun({ coverage }: AfterSuiteRunMeta) {
-    this.coverages.push(coverage)
+  /*
+   * Coverage and meta information passed from Vitest runners.
+   * Note that adding new entries here and requiring on those without
+   * backwards compatibility is a breaking change.
+   */
+  onAfterSuiteRun({ coverage, transformMode }: AfterSuiteRunMeta) {
+    if (transformMode !== 'web' && transformMode !== 'ssr')
+      throw new Error(`Invalid transform mode: ${transformMode}`)
+
+    this.coverages[transformMode].push(coverage as CoverageMapData)
   }
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
       await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
-    this.coverages = []
+    this.coverages = { ssr: [], web: [] }
   }
 
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
-    const mergedCoverage: CoverageMap = this.coverages.reduce((coverage, previousCoverageMap) => {
-      const map = libCoverage.createCoverageMap(coverage)
-      map.merge(previousCoverageMap)
-      return map
-    }, libCoverage.createCoverageMap({}))
+    const coverageMaps = await Promise.all([
+      mergeAndTransformCoverage(this.coverages.ssr),
+      mergeAndTransformCoverage(this.coverages.web),
+    ])
 
-    if (this.options.all && allTestsRun)
-      await this.includeUntestedFiles(mergedCoverage)
+    if (this.options.all && allTestsRun) {
+      const coveredFiles = coverageMaps.map(map => map.files()).flat()
+      const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
-    includeImplicitElseBranches(mergedCoverage)
+      coverageMaps.push(await mergeAndTransformCoverage([uncoveredCoverage]))
+    }
 
-    const sourceMapStore = libSourceMaps.createSourceMapStore()
-    const coverageMap: CoverageMap = await sourceMapStore.transformCoverage(mergedCoverage)
+    const coverageMap = mergeCoverageMaps(...coverageMaps)
 
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
-      sourceFinder: sourceMapStore.sourceFinder,
+      sourceFinder: libSourceMaps.createSourceMapStore().sourceFinder,
       watermarks: this.options.watermarks,
     })
 
@@ -181,18 +189,20 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     }
   }
 
-  async includeUntestedFiles(coverageMap: CoverageMap) {
+  async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
     // Load, instrument and collect empty coverages from all files which
     // are not already in the coverage map
     const includedFiles = await this.testExclude.glob(this.ctx.config.root)
     const uncoveredFiles = includedFiles
       .map(file => resolve(this.ctx.config.root, file))
-      .filter(file => !coverageMap.data[file])
+      .filter(file => !coveredFiles.includes(file))
 
     const transformResults = await Promise.all(uncoveredFiles.map(async (filename) => {
       const transformResult = await this.ctx.vitenode.transformRequest(filename)
       return { transformResult, filename }
     }))
+
+    const coverageMap = libCoverage.createCoverageMap({})
 
     for (const { transformResult, filename } of transformResults) {
       const sourceMap = transformResult?.map
@@ -209,7 +219,25 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
           coverageMap.addFileCoverage(lastCoverage)
       }
     }
+
+    return coverageMap.data
   }
+}
+
+async function mergeAndTransformCoverage(coverages: CoverageMapData[]) {
+  const mergedCoverage = mergeCoverageMaps(...coverages)
+  includeImplicitElseBranches(mergedCoverage)
+
+  const sourceMapStore = libSourceMaps.createSourceMapStore()
+  return await sourceMapStore.transformCoverage(mergedCoverage)
+}
+
+function mergeCoverageMaps(...coverageMaps: (CoverageMap | CoverageMapData)[]) {
+  return coverageMaps.reduce<CoverageMap>((coverage, previousCoverageMap) => {
+    const map = libCoverage.createCoverageMap(coverage)
+    map.merge(previousCoverageMap)
+    return map
+  }, libCoverage.createCoverageMap({}))
 }
 
 /**

@@ -1652,6 +1652,9 @@ importers:
 
   test/coverage-test:
     devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.2.1
+        version: 2.2.1
       '@types/istanbul-lib-coverage':
         specifier: ^2.0.4
         version: 2.0.4

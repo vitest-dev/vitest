@@ -43,6 +43,7 @@ class CustomCoverageProvider implements CoverageProvider {
 
   options!: ResolvedCoverageOptions
   calls: Set<string> = new Set()
+  coverageReports: Set<string> = new Set()
   transformedFiles: Set<string> = new Set()
 
   initialize(ctx: Vitest) {
@@ -56,7 +57,11 @@ class CustomCoverageProvider implements CoverageProvider {
   }
 
   onAfterSuiteRun(meta: AfterSuiteRunMeta) {
-    this.calls.add(`onAfterSuiteRun with ${JSON.stringify(meta)}`)
+    // Do not include coverage info here, as order of tests is not guaranteed
+    this.calls.add('onAfterSuiteRun')
+
+    // Keep coverage info separate from calls and ignore its order
+    this.coverageReports.add(JSON.stringify(meta))
   }
 
   reportCoverage(reportContext?: ReportContext) {
@@ -64,6 +69,7 @@ class CustomCoverageProvider implements CoverageProvider {
 
     const jsonReport = JSON.stringify({
       calls: Array.from(this.calls.values()),
+      coverageReports: Array.from(this.coverageReports.values()).sort(),
       transformedFiles: Array.from(this.transformedFiles.values()).sort(),
     }, null, 2)
 
