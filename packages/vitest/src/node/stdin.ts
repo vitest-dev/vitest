@@ -49,10 +49,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return
     }
 
-    // Other keys are for watch mode only
-    if (!ctx.config.watch)
-      return
-
     const name = key?.name
 
     if (ctx.runningPromise) {
