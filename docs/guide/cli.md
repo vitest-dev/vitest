@@ -69,12 +69,11 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |   
-| `--single-thread` | Run tests inside a single thread, requires --threads (default: `false`) |
-| `--experimental-vm-threads` | Run tests in a worker pool using VM isolation (default: `false`) |
-| `--experimental-vm-worker-memory-limit` | Set the maximum allowed memory for a worker. When reached, a new worker will be created instead |
+| `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`)  |
+| `--poolOptions <options>` | Specify pool options |
+| `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
+| `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
 | `--silent` | Silent console output from tests |
-| `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
