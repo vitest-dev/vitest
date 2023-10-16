@@ -288,6 +288,28 @@ export function createHotContext(
       addToMap(newListeners)
     },
 
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore added in vite 5
+    off<T extends string>(
+      event: T,
+      cb: (payload: InferCustomEventPayload<T>) => void,
+    ) {
+      const removeFromMap = (map: Map<string, any[]>) => {
+        const existing = map.get(event)
+        if (existing === undefined)
+          return
+
+        const pruned = existing.filter(l => l !== cb)
+        if (pruned.length === 0) {
+          map.delete(event)
+          return
+        }
+        map.set(event, pruned)
+      }
+      removeFromMap(maps.customListenersMap)
+      removeFromMap(newListeners)
+    },
+
     send<T extends string>(event: T, data?: InferCustomEventPayload<T>): void {
       maps.messageBuffer.push(JSON.stringify({ type: 'custom', event, data }))
       sendMessageBuffer(runner, emitter)
