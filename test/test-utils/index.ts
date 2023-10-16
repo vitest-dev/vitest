@@ -113,22 +113,22 @@ export async function runCli(command: string, _options?: Options | string, ...ar
       this.resetOutput()
       subprocess.stdin!.write(text)
     },
-    waitForStdout(expected: string) {
+    waitForStdout(expected: string, timeout = process.env.CI ? 20_000 : 4_000) {
       const error = new Error('Timeout error')
       Error.captureStackTrace(error, this.waitForStdout)
       return new Promise<void>((resolve, reject) => {
         if (this.stdout.includes(expected))
           return resolve()
 
-        const timeout = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           error.message = `Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout} \nStderr:\n${this.stderr}`
           reject(error)
-        }, process.env.CI ? 20_000 : 4_000)
+        }, timeout)
 
         const listener = () => {
           if (this.stdout.includes(expected)) {
-            if (timeout)
-              clearTimeout(timeout)
+            if (timeoutId)
+              clearTimeout(timeoutId)
 
             resolve()
           }
@@ -137,22 +137,22 @@ export async function runCli(command: string, _options?: Options | string, ...ar
         this.stdoutListeners.push(listener)
       })
     },
-    waitForStderr(expected: string) {
+    waitForStderr(expected: string, timeout = process.env.CI ? 20_000 : 4_000) {
       const error = new Error('Timeout')
       Error.captureStackTrace(error, this.waitForStderr)
       return new Promise<void>((resolve, reject) => {
         if (this.stderr.includes(expected))
           return resolve()
 
-        const timeout = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           error.message = `Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}\nStdout:\n${this.stdout}`
           reject(error)
-        }, process.env.CI ? 20_000 : 4_000)
+        }, timeout)
 
         const listener = () => {
           if (this.stderr.includes(expected)) {
-            if (timeout)
-              clearTimeout(timeout)
+            if (timeoutId)
+              clearTimeout(timeoutId)
 
             resolve()
           }
