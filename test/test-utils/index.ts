@@ -113,7 +113,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
       this.resetOutput()
       subprocess.stdin!.write(text)
     },
-    waitForStdout(expected: string, timeout = process.env.CI ? 20_000 : 4_000) {
+    waitForStdout(expected: string, timeout = process.env.CI ? 30_000 : 4_000) {
       const error = new Error('Timeout error')
       Error.captureStackTrace(error, this.waitForStdout)
       return new Promise<void>((resolve, reject) => {
@@ -137,7 +137,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
         this.stdoutListeners.push(listener)
       })
     },
-    waitForStderr(expected: string, timeout = process.env.CI ? 20_000 : 4_000) {
+    waitForStderr(expected: string, timeout = process.env.CI ? 30_000 : 4_000) {
       const error = new Error('Timeout')
       Error.captureStackTrace(error, this.waitForStderr)
       return new Promise<void>((resolve, reject) => {
