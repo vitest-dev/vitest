@@ -22,7 +22,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    // ...
+    // ... Specify options here.
   },
 })
 ```
@@ -34,7 +34,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    // ...
+    // ... Specify options here.
   },
 })
 ```
@@ -1007,7 +1007,7 @@ List of files included in coverage as glob patterns
 #### coverage.extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
@@ -1042,7 +1042,7 @@ List of files excluded from coverage as glob patterns.
 #### coverage.all
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true` (since Vitest `1.0.0`)
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 

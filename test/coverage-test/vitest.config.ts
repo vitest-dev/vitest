@@ -45,7 +45,6 @@ export default defineConfig({
       customProviderModule: provider === 'custom' ? 'custom-provider' : undefined,
       include: ['src/**'],
       clean: true,
-      all: true,
       reporter: [
         'text',
         ['html'],
