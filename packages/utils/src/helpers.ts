@@ -97,7 +97,7 @@ export function clone<T>(
   if (Array.isArray(val)) {
     out = Array((k = val.length))
     seen.set(val, out)
-    while (k--) out[k] = clone(val[k], seen)
+    while (k--) out[k] = clone(val[k], seen, options)
     return out as any
   }
 
