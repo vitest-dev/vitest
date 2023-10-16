@@ -11,7 +11,7 @@ import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, M
 import { fn, isMockFunction, spies, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
-interface VitestUtils {
+export interface VitestUtils {
   isFakeTimers(): boolean
   useFakeTimers(config?: FakeTimerInstallOpts): this
   useRealTimers(): this

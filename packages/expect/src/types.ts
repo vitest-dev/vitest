@@ -94,6 +94,7 @@ export interface AsymmetricMatchersContaining {
   objectContaining<T = any>(expected: T): any
   arrayContaining<T = unknown>(expected: Array<T>): any
   stringMatching(expected: string | RegExp): any
+  closeTo(expected: number, precision?: number): any
 }
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T> {

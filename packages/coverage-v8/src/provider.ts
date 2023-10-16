@@ -261,7 +261,7 @@ function removeViteHelpersFromSourceMaps(source: string | undefined, map: Encode
   sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
 
   const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
-    hires: true,
+    hires: 'boundary',
   })
 
   // A merged source map where the first one excludes helpers
