@@ -217,12 +217,10 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
-      test.result.error = error
       test.result.errors = [error]
     }
     else {
       test.result.state = 'pass'
-      test.result.error = undefined
       test.result.errors = undefined
     }
   }
@@ -248,7 +246,6 @@ function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
     : [err]
   for (const e of errors) {
     const error = processError(e, diffOptions)
-    result.error ??= error
     result.errors ??= []
     result.errors.push(error)
   }
@@ -333,9 +330,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     if (suite.mode === 'run') {
       if (!hasTests(suite)) {
         suite.result.state = 'fail'
-        if (!suite.result.error) {
+        if (!suite.result.errors?.length) {
           const error = processError(new Error(`No test found in suite ${suite.name}`))
-          suite.result.error = error
           suite.result.errors = [error]
         }
       }
@@ -370,7 +366,6 @@ export async function runFiles(files: File[], runner: VitestRunner) {
         const error = processError(new Error(`No test suite found in file ${file.filepath}`))
         file.result = {
           state: 'fail',
-          error,
           errors: [error],
         }
       }

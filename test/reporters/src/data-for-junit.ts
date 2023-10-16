@@ -45,7 +45,6 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
       file,
       result: {
         state: 'fail',
-        error: errorWithXml,
         errors: [errorWithXml],
         duration: 2.123123123,
       },
