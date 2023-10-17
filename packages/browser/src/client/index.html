@@ -25,9 +25,6 @@
   <body>
     <iframe id="vitest-ui" src=""></iframe>
     <script>
-      if (typeof globalThis === 'undefined')
-        window.globalThis = window
-
       const moduleCache = new Map()
 
       // this method receives a module object or "import" promise that it resolves and keeps track of
