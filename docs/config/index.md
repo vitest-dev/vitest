@@ -1646,6 +1646,15 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 Enable typechecking alongside your regular tests.
 
+#### typecheck.only
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck.only`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Run only typecheck tests, when typechecking is enabled. When using CLI, this option will automatically enable typechecking.
+
 #### typecheck.checker
 
 - **Type**: `'tsc' | 'vue-tsc' | string`

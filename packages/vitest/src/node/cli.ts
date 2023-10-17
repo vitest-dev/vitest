@@ -53,6 +53,7 @@ cli
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
   .option('--typecheck [options]', 'Custom options for typecheck pool')
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
+  .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
   .help()
 
 cli

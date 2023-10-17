@@ -635,7 +635,14 @@ export interface InlineConfig {
 }
 
 export interface TypecheckConfig {
+  /**
+   * Run typechecking tests alongisde regular tests.
+   */
   enabled?: boolean
+  /**
+   * When typechecking is enabled, only run typechecking tests.
+   */
+  only?: boolean
   /**
    * What tools to use for type checking.
    */

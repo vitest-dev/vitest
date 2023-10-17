@@ -159,7 +159,7 @@ export class WorkspaceProject {
     const typecheck = this.config.typecheck
 
     const [testFiles, typecheckTestFiles] = await Promise.all([
-      this.globAllTestFiles(this.config, dir),
+      typecheck.enabled && typecheck.only ? [] : this.globAllTestFiles(this.config, dir),
       typecheck.enabled ? this.globFiles(typecheck.include, typecheck.exclude, dir) : [],
     ])
 
