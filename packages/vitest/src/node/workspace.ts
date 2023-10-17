@@ -112,7 +112,7 @@ export class WorkspaceProject {
   async teardownGlobalSetup() {
     if (!this._globalSetupInit || !this._globalSetups.length)
       return
-    for (const globalSetupFile of this._globalSetups.reverse()) {
+    for (const globalSetupFile of [...this._globalSetups].reverse()) {
       try {
         await globalSetupFile.teardown?.()
       }
