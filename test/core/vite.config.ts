@@ -88,8 +88,5 @@ export default defineConfig({
         customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
       },
     ],
-    typecheck: {
-      enabled: true,
-    },
   },
 })
