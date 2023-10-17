@@ -310,6 +310,8 @@ export class Vitest {
   }
 
   async start(filters?: string[]) {
+    this._onClose = []
+
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)

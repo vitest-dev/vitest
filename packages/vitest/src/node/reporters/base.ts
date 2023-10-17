@@ -30,6 +30,7 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
+  private _offUnhandledRejection?: () => void
 
   constructor() {
     this.registerUnhandledRejection()
@@ -41,6 +42,9 @@ export abstract class BaseReporter implements Reporter {
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
+    ctx.onClose(() => {
+      this._offUnhandledRejection?.()
+    })
     ctx.logger.printBanner()
     this.start = performance.now()
   }
@@ -377,8 +381,8 @@ export abstract class BaseReporter implements Reporter {
       process.exit(1)
     }
     process.on('unhandledRejection', onUnhandledRejection)
-    this.ctx.onClose(() => {
+    this._offUnhandledRejection = () => {
       process.off('unhandledRejection', onUnhandledRejection)
-    })
+    }
   }
 }
