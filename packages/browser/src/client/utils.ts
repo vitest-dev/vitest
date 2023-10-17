@@ -1,10 +1,10 @@
-import type { ResolvedConfig } from 'vitest'
 import { createClient } from '@vitest/ws-client'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
 import { takeCoverageInsideWorker } from 'vitest/browser'
 import { createBrowserRunner } from './runner'
 import { createSafeRpc } from './rpc'
 import { VitestBrowserClientMocker } from './mocker'
+import type { ResolvedConfig } from '#types'
 
 export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')

@@ -92,6 +92,11 @@ async function runTests(
   await import(viteClientPath)
 
   const { channel, runner } = await instantiateRunner()
+
+  onCancel.then((reason) => {
+    runner?.onCancel?.(reason)
+  })
+
   if (listener) {
     channel.removeEventListener('message', listener)
     channel.addEventListener('message', listener)
@@ -105,10 +110,6 @@ async function runTests(
 
   window.removeEventListener('beforeunload', removeBrowserChannel)
   window.addEventListener('beforeunload', removeBrowserChannel)
-
-  onCancel.then((reason) => {
-    runner?.onCancel?.(reason)
-  })
 
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
