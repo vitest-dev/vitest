@@ -547,7 +547,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'typescript'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
