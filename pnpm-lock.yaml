@@ -1194,6 +1194,9 @@ importers:
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
+      '@iconify-json/logos':
+        specifier: ^1.1.37
+        version: 1.1.37
       '@testing-library/cypress':
         specifier: ^9.0.0
         version: 9.0.0(cypress@12.16.0)
@@ -2948,7 +2951,7 @@ packages:
     dependencies:
       '@babel/core': 7.22.5
       '@babel/helper-environment-visitor': 7.22.5
-      '@babel/helper-module-imports': 7.22.5
+      '@babel/helper-module-imports': 7.22.15
       '@babel/helper-simple-access': 7.22.5
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/helper-validator-identifier': 7.22.20
@@ -6262,6 +6265,12 @@ packages:
 
   /@iconify-json/carbon@1.1.18:
     resolution: {integrity: sha512-RbKET6KS9xUMeYVq1FUH3UUA7AYNcnApkHt2AccCwTWTQQs/O58ji4Of6z6PhRajGlbfvrJzT/Uqh19OKECRvA==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: true
+
+  /@iconify-json/logos@1.1.37:
+    resolution: {integrity: sha512-H2S8frTEznk6paX2kMzeUGn4KSiykghvO0b8UvEDd1fFFzt0WxCXpP1tBv67XaWK99e6JgA34hhv4lRGAm1hJg==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
@@ -18535,7 +18544,7 @@ packages:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.5
       '@types/node': 18.16.19
-      anymatch: 3.1.2
+      anymatch: 3.1.3
       fb-watchman: 2.0.1
       graceful-fs: 4.2.10
       jest-regex-util: 27.5.1
