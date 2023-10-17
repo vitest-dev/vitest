@@ -58,6 +58,9 @@ export async function assignVitestGlobals() {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    environment: {
+      name: 'browser',
+    },
     // @ts-expect-error untyped global for internal use
     moduleCache: globalThis.__vi_module_cache__,
     rpc: client.rpc,
