@@ -370,11 +370,15 @@ export abstract class BaseReporter implements Reporter {
   }
 
   registerUnhandledRejection() {
-    process.on('unhandledRejection', async (err) => {
+    const onUnhandledRejection = async (err: unknown) => {
       process.exitCode = 1
       await this.ctx.logger.printError(err, { fullStack: true, type: 'Unhandled Rejection' })
       this.ctx.logger.error('\n\n')
       process.exit(1)
+    }
+    process.on('unhandledRejection', onUnhandledRejection)
+    this.ctx.onClose(() => {
+      process.off('unhandledRejection', onUnhandledRejection)
     })
   }
 }

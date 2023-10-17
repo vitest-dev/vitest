@@ -72,6 +72,7 @@ export class Vitest {
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
@@ -739,7 +740,7 @@ export class Vitest {
 
   async close() {
     if (!this.closingPromise) {
-      const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
+      const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
       // close the core workspace server only once
       // it's possible that it's not initialized at all because it's not running any tests
       if (!this.coreWorkspaceProject || !this.projects.includes(this.coreWorkspaceProject))
@@ -747,6 +748,8 @@ export class Vitest {
 
       if (this.pool)
         closePromises.push(this.pool.close().then(() => this.pool = undefined))
+
+      closePromises.push(...this._onClose.map(fn => fn()))
 
       this.closingPromise = Promise.allSettled(closePromises).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
@@ -824,5 +827,9 @@ export class Vitest {
 
   onCancel(fn: (reason: CancelReason) => void) {
     this._onCancelListeners.push(fn)
+  }
+
+  onClose(fn: () => void) {
+    this._onClose.push(fn)
   }
 }
