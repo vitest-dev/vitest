@@ -80,6 +80,7 @@ export const config: UserConfig = {
   ],
   build: {
     outDir: './dist/client',
+    target: ['es2017'],
   },
   optimizeDeps: {
     include: [
