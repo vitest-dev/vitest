@@ -9,10 +9,7 @@ export interface GlobalSetupFile {
 }
 
 export async function loadGlobalSetupFiles(project: WorkspaceProject): Promise<GlobalSetupFile[]> {
-  const globalSetupFiles = [
-    ...toArray(project.config.globalSetup),
-    ...toArray(project.ctx.config.globalSetup),
-  ]
+  const globalSetupFiles = toArray(project.config.globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, project.runner)))
 }
 

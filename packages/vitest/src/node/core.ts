@@ -438,7 +438,12 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: WorkspaceSpec[]) {
-    await Promise.all(paths.map(async ([project]) => project.initializeGlobalSetup()))
+    const projects = new Set(paths.map(([project]) => project))
+    if (!projects.has(this.coreWorkspaceProject))
+      projects.add(this.coreWorkspaceProject)
+    await Promise.all(
+      Array.from(projects).map(project => project.initializeGlobalSetup()),
+    )
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
