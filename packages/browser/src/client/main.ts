@@ -79,7 +79,12 @@ ws.addEventListener('open', async () => {
   // resolve Vitest browser promise
   await client.rpc.initializeBrowser()
 
-  await handleRunTests(paths)
+  const config = await loadConfig()
+
+  // paths with the full path: filter tests that are not in the current project
+  // once added to the cache, external tests will be excluded by handleRunTests on ws message event
+  const root = config.root
+  await handleRunTests(paths.filter(path => path.startsWith(root)))
 })
 
 async function runTests(
