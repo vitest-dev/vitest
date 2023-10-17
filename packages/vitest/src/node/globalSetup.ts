@@ -1,6 +1,5 @@
 import { toArray } from '@vitest/utils'
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { WorkspaceProject } from './workspace'
 
 export interface GlobalSetupFile {
   file: string
@@ -8,9 +7,9 @@ export interface GlobalSetupFile {
   teardown?: Function
 }
 
-export async function loadGlobalSetupFiles(project: WorkspaceProject): Promise<GlobalSetupFile[]> {
-  const globalSetupFiles = toArray(project.config.globalSetup)
-  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, project.runner)))
+export async function loadGlobalSetupFiles(runner: ViteNodeRunner, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
+  const globalSetupFiles = toArray(globalSetup)
+  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
 
 async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promise<GlobalSetupFile> {
