@@ -2,12 +2,14 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    transformMode: {
-      web: [/web\.test\.ts/],
-      ssr: [/ssr\.test\.ts/],
-    },
-    deps: {
-      external: [/pkg-/],
+    environmentMatchGlobs: [
+      ['**/web.test.ts', 'happy-dom'],
+      ['**/ssr.test.ts', 'node'],
+    ],
+    server: {
+      deps: {
+        external: [/pkg-/],
+      },
     },
   },
 })

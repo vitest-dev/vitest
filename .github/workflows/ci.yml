@@ -23,7 +23,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -36,7 +36,7 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -66,7 +66,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -81,8 +81,11 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
-      - name: Test Single Thread
-        run: pnpm run test:ci:single-thread
+      - name: Test No Threads
+        run: pnpm run test:ci:no-threads
+
+      - name: Test Vm Threads
+        run: pnpm run test:ci:vm-threads
 
   test-ui:
     runs-on: ubuntu-latest
@@ -90,7 +93,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -113,7 +116,7 @@ jobs:
     env:
       BROWSER: ${{ matrix.browser[0] }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -153,7 +156,7 @@ jobs:
     env:
       BROWSER: ${{ matrix.browser[0] }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -184,7 +187,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:

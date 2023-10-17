@@ -28,6 +28,77 @@ function catchWindowErrors(window: Window) {
 
 export default <Environment>({
   name: 'jsdom',
+  transformMode: 'web',
+  async setupVM({ jsdom = {} }) {
+    const {
+      CookieJar,
+      JSDOM,
+      ResourceLoader,
+      VirtualConsole,
+    } = await importModule('jsdom') as typeof import('jsdom')
+    const {
+      html = '<!DOCTYPE html>',
+      userAgent,
+      url = 'http://localhost:3000',
+      contentType = 'text/html',
+      pretendToBeVisual = true,
+      includeNodeLocations = false,
+      runScripts = 'dangerously',
+      resources,
+      console = false,
+      cookieJar = false,
+      ...restOptions
+    } = jsdom as any
+    const dom = new JSDOM(
+      html,
+      {
+        pretendToBeVisual,
+        resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+        runScripts,
+        url,
+        virtualConsole: (console && globalThis.console) ? new VirtualConsole().sendTo(globalThis.console) : undefined,
+        cookieJar: cookieJar ? new CookieJar() : undefined,
+        includeNodeLocations,
+        contentType,
+        userAgent,
+        ...restOptions,
+      },
+    )
+    const clearWindowErrors = catchWindowErrors(dom.window as any)
+
+    // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
+    dom.window.Buffer = Buffer
+
+    // inject web globals if they missing in JSDOM but otherwise available in Nodejs
+    // https://nodejs.org/dist/latest/docs/api/globals.html
+    const globalNames = [
+      'structuredClone',
+      'fetch',
+      'Request',
+      'Response',
+      'BroadcastChannel',
+      'MessageChannel',
+      'MessagePort',
+    ] as const
+    for (const name of globalNames) {
+      const value = globalThis[name]
+      if (
+        typeof value !== 'undefined'
+        && typeof dom.window[name] === 'undefined'
+      )
+        dom.window[name] = value
+    }
+
+    return {
+      getVmContext() {
+        return dom.getInternalVMContext()
+      },
+      teardown() {
+        clearWindowErrors()
+        dom.window.close()
+      },
+    }
+  },
   async setup(global, { jsdom = {} }) {
     const {
       CookieJar,

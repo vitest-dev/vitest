@@ -102,6 +102,18 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  You can also skip test by calling `skip` on its [context](/guide/test-context) dynamically:
+
+  ```ts
+  import { assert, test } from 'vitest'
+
+  test('skipped test', (context) => {
+    context.skip()
+    // Test skipped, no error
+    assert.equal(Math.sqrt(4), 3)
+  })
+  ```
+
 ### test.skipIf
 
 - **Type:** `(condition: any) => Test`
@@ -559,7 +571,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   In some cases, you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
 
   ```ts
-  import { assert, test } from 'vitest'
+  import { describe, test } from 'vitest'
 
   const isDev = process.env.NODE_ENV === 'development'
 
@@ -638,6 +650,24 @@ When running concurrent tests, Snapshots and Assertions must use `expect` from t
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
+
+### describe.sequential
+
+- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+
+  `describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequential within `describe.concurrent` or with the `--sequence.concurrent` command option.
+
+  ```ts
+  describe.concurrent('suite', () => {
+    test('concurrent test 1', async () => { /* ... */ })
+    test('concurrent test 2', async () => { /* ... */ })
+
+    describe.sequential('', () => {
+      test('sequential test 1', async () => { /* ... */ })
+      test('sequential test 2', async () => { /* ... */ })
+    })
+  })
+  ```
 
 ### describe.shuffle
 

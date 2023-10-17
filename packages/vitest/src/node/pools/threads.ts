@@ -1,19 +1,14 @@
 import { MessageChannel } from 'node:worker_threads'
-import { cpus } from 'node:os'
-import { pathToFileURL } from 'node:url'
+import * as nodeos from 'node:os'
 import { createBirpc } from 'birpc'
-import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
-import { distDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
-
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
 function createWorkerChannel(project: WorkspaceProject) {
   const channel = new MessageChannel()
@@ -38,19 +33,24 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
-  const threadsCount = ctx.config.watch
-    ? Math.max(Math.floor(cpus().length / 2), 1)
-    : Math.max(cpus().length - 1, 1)
+export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: PoolProcessOptions): ProcessPool {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
 
-  const maxThreads = ctx.config.maxThreads ?? threadsCount
-  const minThreads = ctx.config.minThreads ?? threadsCount
+  const threadsCount = ctx.config.watch
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
+
+  const maxThreads = ctx.config.poolOptions?.threads?.maxThreads ?? threadsCount
+  const minThreads = ctx.config.poolOptions?.threads?.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.useAtomics ?? false,
+    useAtomics: ctx.config.poolOptions?.threads?.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -61,12 +61,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     terminateTimeout: ctx.config.teardownTimeout,
   }
 
-  if (ctx.config.isolate) {
+  if (ctx.config.poolOptions?.threads?.isolate ?? true) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
   }
 
-  if (ctx.config.singleThread) {
+  if (ctx.config.poolOptions?.threads?.singleThread) {
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1
@@ -142,14 +142,34 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       specs = await sequencer.sort(specs)
 
-      const singleThreads = specs.filter(([project]) => project.config.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.singleThread)
+      const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
+      const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)
-        const promises = Object.values(filesByEnv).flat()
-        const results = await Promise.allSettled(promises
-          .map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates)))
+        const files = Object.values(filesByEnv).flat()
+        const results: PromiseSettledResult<void>[] = []
+
+        if (ctx.config.poolOptions?.threads?.isolate ?? true) {
+          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
+            runFiles(project, getConfig(project), [file], environment, invalidates))))
+        }
+        else {
+          // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
+          // Tasks are still running parallel but environments are isolated between tasks.
+          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
+
+          for (const group of Object.values(grouped)) {
+            // Push all files to pool's queue
+            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
+              runFiles(project, getConfig(project), [file], environment, invalidates))))
+
+            // Once all tasks are running or finished, recycle worker for isolation.
+            // On-going workers will run in the previous environment.
+            await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
+            await pool.recycleWorkers()
+          }
+        }
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
@@ -162,7 +182,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
           Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
         )
 
-        // always run environments isolated between each other
         for (const env of envs) {
           const files = filesByEnv[env]
 
@@ -171,12 +190,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
 
-          const promises = Object.values(filesByOptions).map(async (files) => {
+          for (const files of Object.values(filesByOptions)) {
+            // Always run environments isolated between each other
+            await pool.recycleWorkers()
+
             const filenames = files.map(f => f.file)
             await runFiles(files[0].project, getConfig(files[0].project), filenames, files[0].environment, invalidates)
-          })
-
-          await Promise.all(promises)
+          }
         }
       }
     }

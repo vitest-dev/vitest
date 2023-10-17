@@ -7,7 +7,6 @@ type Configuration = NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>
 type Coverage = NonNullable<Configuration['coverage']>
 
 test('providers, built-in', () => {
-  assertType<Coverage>({ provider: 'c8' })
   assertType<Coverage>({ provider: 'v8' })
   assertType<Coverage>({ provider: 'istanbul' })
 
@@ -24,16 +23,6 @@ test('providers, custom', () => {
 
 test('provider options, generic', () => {
   assertType<Coverage>({
-    provider: 'c8',
-    enabled: true,
-    include: ['string'],
-    watermarks: {
-      functions: [80, 95],
-      lines: [80, 95],
-    },
-  })
-
-  assertType<Coverage>({
     provider: 'v8',
     enabled: true,
     include: ['string'],
@@ -41,6 +30,7 @@ test('provider options, generic', () => {
       functions: [80, 95],
       lines: [80, 95],
     },
+    100: true,
   })
 
   assertType<Coverage>({
@@ -50,31 +40,11 @@ test('provider options, generic', () => {
     watermarks: {
       statements: [80, 95],
     },
-  })
-})
-
-test('provider specific options, c8', () => {
-  assertType<Coverage>({
-    provider: 'c8',
-    src: ['string'],
     100: true,
-    excludeNodeModules: false,
-    allowExternal: true,
-  })
-
-  assertType<Coverage>({
-    provider: 'c8',
-    // @ts-expect-error -- Istanbul-only option is not allowed
-    ignoreClassMethods: ['string'],
   })
 })
 
 test('provider specific options, v8', () => {
-  assertType<Coverage>({
-    provider: 'v8',
-    100: true,
-  })
-
   assertType<Coverage>({
     provider: 'v8',
     // @ts-expect-error -- Istanbul-only option is not allowed
@@ -86,12 +56,6 @@ test('provider specific options, istanbul', () => {
   assertType<Coverage>({
     provider: 'istanbul',
     ignoreClassMethods: ['string'],
-  })
-
-  assertType<Coverage>({
-    provider: 'istanbul',
-    // @ts-expect-error -- V8-only option is not allowed
-    100: true,
   })
 })
 
@@ -130,6 +94,7 @@ test('provider module', () => {
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,
+            allowExternal: true,
           }
         },
         clean(_: boolean) {},

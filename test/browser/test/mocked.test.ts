@@ -25,6 +25,5 @@ test('imports are still the same', async () => {
   // @ts-expect-error typescript resolution
   await expect(import('../src/calculator')).resolves.toBe(calculatorModule)
   // @ts-expect-error typescript resolution
-  // eslint-disable-next-line @typescript-eslint/quotes
   await expect(import(`../src/calculator`)).resolves.toBe(calculatorModule)
 })

@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-env-mixed",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "happy-dom": "latest",
+    "vite": "latest",
+    "vitest": "workspace:*"
+  }
+}

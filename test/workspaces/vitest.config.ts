@@ -10,7 +10,6 @@ export default defineConfig({
   test: {
     coverage: {
       enabled: true,
-      all: true,
     },
     reporters: ['default', 'json'],
     outputFile: './results.json',

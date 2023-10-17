@@ -2,7 +2,6 @@ import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
@@ -48,8 +47,11 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
 
   if (api) {
-    if (!api.port)
+    if (!api.port && !api.middlewareMode)
       api.port = defaultPort
+  }
+  else {
+    api = { middlewareMode: true }
   }
 
   return api
@@ -88,7 +90,6 @@ export function resolveConfig(
 
   resolved.inspect = Boolean(resolved.inspect)
   resolved.inspectBrk = Boolean(resolved.inspectBrk)
-  resolved.singleThread = Boolean(resolved.singleThread)
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -111,35 +112,24 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    if (resolved.threads !== false && resolved.singleThread !== true) {
+    const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
+    const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
+
+    if (!isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+      throw new Error(`You cannot use ${inspectOption} without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
-  if (resolved.coverage.provider === 'c8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
-    throw new Error('@vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+  // @ts-expect-error -- check for removed API option
+  if (resolved.coverage.provider === 'c8')
+    throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 
-  resolved.deps = resolved.deps || {}
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
-    const ssrOptions = viteConfig.ssr
-
-    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
-      resolved.deps.inline = true
-    }
-    else {
-      resolved.deps.inline ??= []
-      resolved.deps.inline.push(...extraInlineDeps)
-    }
-  }
-  resolved.deps.moduleDirectories ??= ['/node_modules/']
+  resolved.deps ??= {}
+  resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
     if (!dir.startsWith('/'))
       dir = `/${dir}`
@@ -147,21 +137,85 @@ export function resolveConfig(
       dir += '/'
     return normalize(dir)
   })
+  if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
+    resolved.deps.moduleDirectories.push('/node_modules/')
+
+  resolved.deps.optimizer ??= {}
+  resolved.deps.optimizer.ssr ??= {}
+  resolved.deps.optimizer.ssr.enabled ??= true
+  resolved.deps.optimizer.web ??= {}
+  resolved.deps.optimizer.web.enabled ??= true
+
+  resolved.deps.web ??= {}
+  resolved.deps.web.transformAssets ??= true
+  resolved.deps.web.transformCss ??= true
+  resolved.deps.web.transformGlobPattern ??= []
+
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
+
+  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
+  deprecatedDepsOptions.forEach((option) => {
+    if (resolved.deps[option] === undefined)
+      return
+
+    if (option === 'fallbackCJS') {
+      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+    }
+    else {
+      const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
+        ),
+      )
+    }
+
+    if (resolved.server.deps![option] === undefined)
+      resolved.server.deps![option] = resolved.deps[option] as any
+  })
+
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  if (resolved.server.deps.inline !== true) {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
+    const ssrOptions = viteConfig.ssr
+    if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
+      resolved.server.deps.inline = true
+    }
+    else {
+      resolved.server.deps.inline ??= []
+      resolved.server.deps.inline.push(...extraInlineDeps)
+    }
+  }
+
+  resolved.server.deps.moduleDirectories ??= []
+  resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
   if (resolved.runner) {
     resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  // disable loader for Yarn PnP until Node implements chain loader
-  // https://github.com/nodejs/node/pull/43772
-  resolved.deps.registerNodeLoader ??= false
+  if (resolved.deps.registerNodeLoader) {
+    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
+    console.warn(
+      c.yellow(
+      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
+      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
+      ),
+    )
+  }
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
       : new RegExp(resolved.testNamePattern)
     : undefined
+
+  if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat)
+    (resolved.snapshotFormat as any).plugins = []
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
@@ -179,11 +233,53 @@ export function resolveConfig(
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
-  if (process.env.VITEST_MAX_THREADS)
-    resolved.maxThreads = Number.parseInt(process.env.VITEST_MAX_THREADS)
+  if (process.env.VITEST_MAX_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+    }
+  }
 
-  if (process.env.VITEST_MIN_THREADS)
-    resolved.minThreads = Number.parseInt(process.env.VITEST_MIN_THREADS)
+  if (process.env.VITEST_MIN_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MAX_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MIN_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
+    }
+  }
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -215,12 +311,19 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
     ...resolved.setupFiles,
   ]
+
+  if (resolved.diff) {
+    resolved.diff = normalize(
+      resolveModule(resolved.diff, { paths: [resolved.root] })
+        ?? resolve(resolved.root, resolved.diff))
+    resolved.forceRerunTriggers.push(resolved.diff)
+  }
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiServerConfig(options)
@@ -255,7 +358,7 @@ export function resolveConfig(
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
 
   resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
@@ -284,17 +387,17 @@ export function resolveConfig(
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= true
+  resolved.browser.isolate ??= true
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
   }
 
+  resolved.testTransformMode ??= {}
+
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser?.enabled)
-    return true
-
-  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+export function isBrowserEnabled(config: ResolvedConfig): boolean {
+  return Boolean(config.browser?.enabled)
 }

@@ -2,14 +2,15 @@
 
 import * as chai from 'chai'
 import './setup'
-import type { Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '@vitest/runner'
 import { getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getCurrentEnvironment, getFullName } from '../../utils'
+import { getFullName } from '../../utils/tasks'
+import { getCurrentEnvironment } from '../../utils/global'
 
-export function createExpect(test?: Test) {
+export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
@@ -39,7 +40,7 @@ export function createExpect(test?: Test) {
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
     testPath: test ? test.suite.file?.filepath : globalState.testPath,
-    currentTestName: test ? getFullName(test) : globalState.currentTestName,
+    currentTestName: test ? getFullName(test as Test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped
@@ -95,9 +96,3 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
-
-export function setupChaiConfig(config: ChaiConfig) {
-  Object.assign(chai.config, config)
-}
-
-export type ChaiConfig = Omit<Partial<typeof chai.config>, 'useProxy' | 'proxyExcludedKeys'>

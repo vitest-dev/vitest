@@ -3,6 +3,7 @@ import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
+import c from 'picocolors'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -23,6 +24,7 @@ interface TestExclude {
     exclude?: string | string[]
     extension?: string | string[]
     excludeNodeModules?: boolean
+    relativePath?: boolean
   }): {
     shouldInstrument(filePath: string): boolean
     glob(cwd: string): Promise<string[]>
@@ -59,6 +61,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       provider: 'istanbul',
       reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
       reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+      lines: config['100'] ? 100 : config.lines,
+      functions: config['100'] ? 100 : config.functions,
+      branches: config['100'] ? 100 : config.branches,
+      statements: config['100'] ? 100 : config.statements,
     }
 
     this.instrumenter = createInstrumenter({
@@ -79,6 +85,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: this.options.extension,
+      relativePath: !this.options.allowExternal,
     })
   }
 
@@ -131,6 +138,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       sourceFinder: sourceMapStore.sourceFinder,
       watermarks: this.options.watermarks,
     })
+
+    if (hasTerminalReporter(this.options.reporter))
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
       reports.create(reporter[0], {
@@ -250,4 +260,12 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
+}
+
+function hasTerminalReporter(reporters: Options['reporter']) {
+  return reporters.some(([reporter]) =>
+    reporter === 'text'
+    || reporter === 'text-summary'
+    || reporter === 'text-lcov'
+    || reporter === 'teamcity')
 }

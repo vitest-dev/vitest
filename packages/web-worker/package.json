@@ -1,7 +1,7 @@
 {
   "name": "@vitest/web-worker",
   "type": "module",
-  "version": "0.32.4",
+  "version": "1.0.0-beta.2",
   "description": "Web Worker support for testing in Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -41,7 +41,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "vitest": "*"
+    "vitest": "^1.0.0-0"
   },
   "dependencies": {
     "debug": "^4.3.4"

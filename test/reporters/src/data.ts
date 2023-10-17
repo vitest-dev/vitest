@@ -66,7 +66,6 @@ const innerTasks: Task[] = [
     file,
     result: {
       state: 'fail',
-      error,
       errors: [error],
       duration: 1.4422860145568848,
     },

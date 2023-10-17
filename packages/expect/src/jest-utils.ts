@@ -450,12 +450,12 @@ export function subsetEquality(object: unknown,
             seenReferences.set(subset[key], true)
           }
           const result
-          = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            iterableEquality,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            = object != null
+            && hasPropertyInObject(object, key)
+            && equals(object[key], subset[key], [
+              iterableEquality,
+              subsetEqualityWithContext(seenReferences),
+            ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -478,11 +478,21 @@ export function typeEquality(a: any, b: any): boolean | undefined {
 
 export function arrayBufferEquality(a: unknown,
   b: unknown): boolean | undefined {
-  if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
-    return undefined
+  let dataViewA = a as DataView
+  let dataViewB = b as DataView
 
-  const dataViewA = new DataView(a)
-  const dataViewB = new DataView(b)
+  if (!(a instanceof DataView && b instanceof DataView)) {
+    if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
+      return undefined
+
+    try {
+      dataViewA = new DataView(a)
+      dataViewB = new DataView(b)
+    }
+    catch {
+      return undefined
+    }
+  }
 
   // Buffers are not equal when they do not have the same byte length
   if (dataViewA.byteLength !== dataViewB.byteLength)
@@ -519,4 +529,8 @@ export function generateToBeMessage(deepEqualityName: string,
     return `${toBeMessage}\n\nIf it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\nExpected: ${expected}\nReceived: serializes to the same string\n`
 
   return toBeMessage
+}
+
+export function pluralize(word: string, count: number): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`
 }

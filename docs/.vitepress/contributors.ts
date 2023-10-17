@@ -21,11 +21,12 @@ function getAvatarUrl(name: string) {
   return import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 }
 
-export const contributors = (contributorNames as string[]).reduce((acc, name) => {
+export const contributors = (contributorNames).reduce<Contributor[]>((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
-}, [] as Contributor[])
+}, [])
+
 function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
   if (tm.mastodon)

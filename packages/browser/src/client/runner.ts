@@ -25,7 +25,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       this.vitestBC = options.vitestBC
     }
 
-    async onAfterRunTest(task: Test) {
+    async onAfterRunTask(task: Test) {
       await super.onAfterRunTest?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
@@ -42,10 +42,11 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRunSuite() {
-      await super.onAfterRunSuite?.()
+    async onAfterRunFiles() {
+      await super.onAfterRun?.()
       const coverage = await coverageModule?.takeCoverage?.()
-      await rpc().onAfterSuiteRun({ coverage })
+      if (coverage)
+        await rpc().onAfterSuiteRun({ coverage })
     }
 
     onCollected(files: File[]): unknown {

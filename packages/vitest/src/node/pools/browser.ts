@@ -41,12 +41,12 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const provider = project.browserProvider!
     providers.add(provider)
 
-    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
+    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser!.config.server.port}`
     const paths = files.map(file => relative(project.config.root, file))
 
     // TODO@browser: review this
     // const isolate = project.config.isolate
-    /* if (isolate) {
+    /* if (project.config.browser.isolate) {
       for (const path of paths) {
         if (isCancelled) {
           ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root)
@@ -57,10 +57,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         url.searchParams.append('path', path)
         url.searchParams.set('id', path)
         await provider.openPage(url.toString())
-        await waitForTest(path)
+        await waitForTest(provider, path)
       }
     }
-    else { */
+    else {
+      const url = new URL('/', origin)
+      url.searchParams.set('id', 'no-isolate')
+      paths.forEach(path => url.searchParams.append('path', path))
+      await provider.openPage(url.toString())
+      await waitForTest(provider, 'no-isolate')
+    } */
     const url = new URL('/', origin)
     url.searchParams.set('id', 'no-isolate')
     if (!provider.isOpen()) {

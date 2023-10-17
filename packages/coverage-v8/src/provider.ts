@@ -13,7 +13,8 @@ import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import { provider } from 'std-env'
-import type { EncodedSourceMap } from 'vite-node'
+import { cleanUrl } from 'vite-node/utils'
+import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import type { AfterSuiteRunMeta, CoverageProvider, CoverageV8Options, ReportContext, ResolvedCoverageOptions } from 'vitest'
@@ -29,6 +30,7 @@ interface TestExclude {
     exclude?: string | string[]
     extension?: string | string[]
     excludeNodeModules?: boolean
+    relativePath?: boolean
   }): {
     shouldInstrument(filePath: string): boolean
     glob(cwd: string): Promise<string[]>
@@ -36,6 +38,7 @@ interface TestExclude {
 }
 
 type Options = ResolvedCoverageOptions<'v8'>
+type TransformResults = Map<string, FetchResult>
 
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
@@ -77,6 +80,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: this.options.extension,
+      relativePath: !this.options.allowExternal,
     })
   }
 
@@ -99,18 +103,19 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     if (provider === 'stackblitz')
       this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-v8 does not work on Stackblitz. Report will be empty.'))
 
+    const transformResults = normalizeTransformResults(this.ctx.projects.map(project => project.vitenode.fetchCache))
     const merged = mergeProcessCovs(this.coverages)
     const scriptCoverages = merged.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))
 
     if (this.options.all && allTestsRun) {
       const coveredFiles = Array.from(scriptCoverages.map(r => r.url))
-      const untestedFiles = await this.getUntestedFiles(coveredFiles)
+      const untestedFiles = await this.getUntestedFiles(coveredFiles, transformResults)
 
       scriptCoverages.push(...untestedFiles)
     }
 
     const converted = await Promise.all(scriptCoverages.map(async ({ url, functions }) => {
-      const sources = await this.getSources(url, functions)
+      const sources = await this.getSources(url, transformResults, functions)
 
       // If no source map was found from vite-node we can assume this file was not run in the wrapper
       const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
@@ -137,6 +142,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       sourceFinder: sourceMapStore.sourceFinder,
       watermarks: this.options.watermarks,
     })
+
+    if (hasTerminalReporter(this.options.reporter))
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
       reports.create(reporter[0], {
@@ -177,14 +185,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<Profiler.ScriptCoverage[]> {
+  private async getUntestedFiles(testedFiles: string[], transformResults: TransformResults): Promise<Profiler.ScriptCoverage[]> {
     const includedFiles = await this.testExclude.glob(this.ctx.config.root)
     const uncoveredFiles = includedFiles
       .map(file => pathToFileURL(resolve(this.ctx.config.root, file)))
       .filter(file => !testedFiles.includes(file.href))
 
     return await Promise.all(uncoveredFiles.map(async (uncoveredFile) => {
-      const { source } = await this.getSources(uncoveredFile.href)
+      const { source } = await this.getSources(uncoveredFile.href, transformResults)
 
       return {
         url: uncoveredFile.href,
@@ -204,16 +212,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }))
   }
 
-  private async getSources(url: string, functions: Profiler.FunctionCoverage[] = []): Promise<{
+  private async getSources(url: string, transformResults: TransformResults, functions: Profiler.FunctionCoverage[] = []): Promise<{
     source: string
     originalSource?: string
     sourceMap?: { sourcemap: EncodedSourceMap }
   }> {
     const filePath = normalize(fileURLToPath(url))
-    const transformResult = this.ctx.projects
-      .map(project => project.vitenode.fetchCache.get(filePath)?.result)
-      .filter(Boolean)
-      .shift()
+
+    const transformResult = transformResults.get(filePath)
 
     const map = transformResult?.map
     const code = transformResult?.code
@@ -255,7 +261,7 @@ function removeViteHelpersFromSourceMaps(source: string | undefined, map: Encode
   sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
 
   const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
-    hires: true,
+    hires: 'boundary',
   })
 
   // A merged source map where the first one excludes helpers
@@ -276,4 +282,27 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 
     return Math.max(previous, maxEndOffset)
   }, 0)
+}
+
+function normalizeTransformResults(fetchCaches: Map<string, { result: FetchResult }>[]) {
+  const normalized: TransformResults = new Map()
+
+  for (const fetchCache of fetchCaches) {
+    for (const [key, value] of fetchCache.entries()) {
+      const cleanEntry = cleanUrl(key)
+
+      if (!normalized.has(cleanEntry))
+        normalized.set(cleanEntry, value.result)
+    }
+  }
+
+  return normalized
+}
+
+function hasTerminalReporter(reporters: Options['reporter']) {
+  return reporters.some(([reporter]) =>
+    reporter === 'text'
+    || reporter === 'text-summary'
+    || reporter === 'text-lcov'
+    || reporter === 'teamcity')
 }

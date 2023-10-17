@@ -29,8 +29,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    server: {
+      deps: {
+        external: [/src\/external/],
+      },
+    },
     deps: {
-      external: [/src\/external/],
       interopDefault: true,
       moduleDirectories: ['node_modules', 'projects'],
     },

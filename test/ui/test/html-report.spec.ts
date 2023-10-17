@@ -13,8 +13,7 @@ describe.skipIf(isWindows)('html report', () => {
     await runVitest({ root, reporters: 'html', outputFile: 'html/index.html' })
 
     const exit = await startServerCommand(
-      root,
-      `npx vite preview --outDir html --strict-port --port ${port}`,
+      `pnpm exec vite preview --outDir fixtures/html --strict-port --port ${port}`,
       `http://localhost:${port}/`,
     )
 

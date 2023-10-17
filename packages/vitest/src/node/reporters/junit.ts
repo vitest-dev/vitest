@@ -125,14 +125,17 @@ export class JUnitReporter implements Reporter {
     await this.logger.log(`</${name}>`)
   }
 
-  async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
+  async writeErrorDetails(task: Task, error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
     const errorDetails = `${errorName}: ${error.message}`
 
     // Be sure to escape any XML in the error Details
     await this.baseLog(escapeXML(errorDetails))
 
-    const stack = parseErrorStacktrace(error)
+    const project = this.ctx.getProjectByTaskId(task.id)
+    const stack = parseErrorStacktrace(error, {
+      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    })
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {
@@ -165,7 +168,7 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        classname: filename,
+        classname: process.env.VITEST_JUNIT_CLASSNAME ?? filename,
         name: task.name,
         time: getDuration(task),
       }, async () => {
@@ -176,7 +179,7 @@ export class JUnitReporter implements Reporter {
           await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const errors = task.result.errors?.length ? task.result.errors : [task.result.error]
+          const errors = task.result.errors || []
           for (const error of errors) {
             await this.writeElement('failure', {
               message: error?.message,
@@ -185,7 +188,7 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              await this.writeErrorDetails(error)
+              await this.writeErrorDetails(task, error)
             })
           }
         }
@@ -212,6 +215,23 @@ export class JUnitReporter implements Reporter {
           failures: 0,
           skipped: 0,
         })
+
+        // If there are no tests, but the file failed to load, we still want to report it as a failure
+        if (tasks.length === 0 && file.result?.state === 'fail') {
+          stats.failures = 1
+
+          tasks.push({
+            id: file.id,
+            type: 'test',
+            name: file.name,
+            mode: 'run',
+            result: file.result,
+            meta: {},
+            // NOTE: not used in JUnitReporter
+            context: null as any,
+            suite: null as any,
+          } satisfies Task)
+        }
 
         return {
           ...file,

@@ -69,9 +69,11 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |
+| `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`)  |
+| `--poolOptions <options>` | Specify pool options |
+| `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
+| `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
 | `--silent` | Silent console output from tests |
-| `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
@@ -88,7 +90,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
