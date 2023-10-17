@@ -37,7 +37,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+export type VitestRunMode = 'test' | 'benchmark'
 
 interface SequenceOptions {
   /**
@@ -635,6 +635,7 @@ export interface InlineConfig {
 }
 
 export interface TypecheckConfig {
+  enabled?: boolean
   /**
    * What tools to use for type checking.
    */
@@ -749,7 +750,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     seed: number
   }
 
-  typecheck: TypecheckConfig
+  typecheck: Omit<TypecheckConfig, 'enabled'> & {
+    enabled: boolean
+  }
   runner?: string
 }
 

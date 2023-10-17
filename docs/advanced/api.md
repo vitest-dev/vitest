@@ -52,7 +52,6 @@ Vitest instance requires the current test mode. It can be either:
 
 - `test` when running runtime tests
 - `benchmark` when running benchmarks
-- `typecheck` when running type tests
 
 ### mode
 
@@ -63,10 +62,6 @@ Test mode will only call functions inside `test` or `it`, and throws an error wh
 #### benchmark
 
 Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
-
-#### typecheck
-
-Typecheck mode doesn't _run_ tests. It only analyses types and gives a summary. This mode uses `typecheck.include` and `typecheck.exclude` options in the config to find files to analyze.
 
 ### start
 

@@ -114,9 +114,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
     const hints: string[] = []
-    // TODO typecheck doesn't support these for now
-    if (this.mode !== 'typecheck')
-      hints.push(HELP_HINT)
+    hints.push(HELP_HINT)
     if (failedSnap)
       hints.unshift(HELP_UPDATE_SNAP)
     else
@@ -258,19 +256,23 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
-    if (this.mode === 'typecheck') {
+    if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
       const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
       logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'))
     }
     if (errors.length)
       logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)))
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
-    if (this.watchFilters)
+    if (this.watchFilters) {
       logger.log(padTitle('Duration'), time(threadTime))
-    else if (this.mode === 'typecheck')
-      logger.log(padTitle('Duration'), time(executionTime))
-    else
-      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)})`))
+    }
+    else {
+      let timers = `transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)}`
+      const typecheck = this.ctx.projects.reduce((acc, c) => acc + (c.typechecker?.getResult().time || 0), 0)
+      if (typecheck)
+        timers += `, typecheck ${time(typecheck)}`
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (${timers})`))
+    }
 
     logger.log()
   }

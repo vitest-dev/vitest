@@ -93,7 +93,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch && this.mode !== 'typecheck')
+    if (this.config.watch)
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
@@ -308,16 +308,7 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  typecheck(filters?: string[]) {
-    return Promise.all(this.projects.map(project => project.typecheck(filters)))
-  }
-
   async start(filters?: string[]) {
-    if (this.mode === 'typecheck') {
-      await this.typecheck(filters)
-      return
-    }
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)

@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises'
+import { performance } from 'node:perf_hooks'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { basename, extname, resolve } from 'pathe'
@@ -21,35 +22,44 @@ export class TypeCheckError extends Error {
   }
 }
 
-interface ErrorsCache {
+export interface TypecheckResults {
   files: File[]
   sourceErrors: TypeCheckError[]
+  time: number
 }
 
 type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void>
 
 export class Typechecker {
   private _onParseStart?: Callback
-  private _onParseEnd?: Callback<[ErrorsCache]>
+  private _onParseEnd?: Callback<[TypecheckResults]>
   private _onWatcherRerun?: Callback
-  private _result: ErrorsCache = {
+  private _result: TypecheckResults = {
     files: [],
     sourceErrors: [],
+    time: 0,
   }
 
+  private _startTime = 0
   private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
   private process?: ExecaChildProcess
 
-  constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
+  protected files: string[] = []
+
+  constructor(protected ctx: WorkspaceProject) { }
+
+  public setFiles(files: string[]) {
+    this.files = files
+  }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
   }
 
-  public onParseEnd(fn: Callback<[ErrorsCache]>) {
+  public onParseEnd(fn: Callback<[TypecheckResults]>) {
     this._onParseEnd = fn
   }
 
@@ -165,6 +175,7 @@ export class Typechecker {
     return {
       files,
       sourceErrors,
+      time: performance.now() - this._startTime,
     }
   }
 
@@ -243,6 +254,7 @@ export class Typechecker {
     if (typecheck.allowJs)
       args.push('--allowJs', '--checkJs')
     this._output = ''
+    this._startTime = performance.now()
     const child = execa(typecheck.checker, args, {
       cwd: root,
       stdout: 'pipe',
@@ -257,6 +269,7 @@ export class Typechecker {
         return
       if (this._output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
+        this._startTime = performance.now()
         this._result.sourceErrors = []
         this._result.files = []
         this._tests = null // test structure might've changed

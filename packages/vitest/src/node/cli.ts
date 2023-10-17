@@ -51,6 +51,8 @@ cli
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
+  .option('--typecheck [options]', 'Custom options for typecheck pool')
+  .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .help()
 
 cli
@@ -72,10 +74,6 @@ cli
 cli
   .command('bench [...filters]')
   .action(benchmark)
-
-cli
-  .command('typecheck [...filters]')
-  .action(typecheck)
 
 cli
   .command('[...filters]')
@@ -128,11 +126,6 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
-}
-
-async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
-  console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
-  await start('typecheck', cliFilters, options)
 }
 
 function normalizeCliOptions(argv: CliOptions): CliOptions {
