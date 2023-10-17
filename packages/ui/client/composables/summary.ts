@@ -1,5 +1,5 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { Benchmark, Task, Test, TypeCheck } from 'vitest/src'
+import type { Custom, Task, Test } from 'vitest/src'
 import { files, testRunState } from '~/composables/client'
 
 type Nullable<T> = T | null | undefined
@@ -33,7 +33,7 @@ export const testsSkipped = computed(() => testsIgnore.value.filter(f => f.mode 
 export const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode === 'todo'))
 export const totalTests = computed(() => testsFailed.value.length + testsSuccess.value.length)
 export const time = computed(() => {
-  const t = getTests(tests.value).reduce((acc, t) => {
+  const t = files.value.reduce((acc, t) => {
     acc += Math.max(0, t.collectDuration || 0)
     acc += Math.max(0, t.setupDuration || 0)
     acc += Math.max(0, t.result?.duration || 0)
@@ -53,10 +53,25 @@ function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   return [array]
 }
 
-function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {
-  return (s.type === 'test' || s.type === 'benchmark' || s.type === 'typecheck')
+function isAtomTest(s: Task): s is Test | Custom {
+  return (s.type === 'test' || s.type === 'custom')
 }
 
-function getTests(suite: Arrayable<Task>): (Test | Benchmark | TypeCheck)[] {
-  return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
+function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
+  const tests: (Test | Custom)[] = []
+  const arraySuites = toArray(suite)
+  for (const s of arraySuites) {
+    if (isAtomTest(s)) {
+      tests.push(s)
+    }
+    else {
+      for (const task of s.tasks) {
+        if (isAtomTest(task))
+          tests.push(task)
+        else
+          tests.push(...getTests(task))
+      }
+    }
+  }
+  return tests
 }

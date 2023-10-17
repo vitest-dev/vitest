@@ -198,7 +198,14 @@ export class Typechecker {
         Error.stackTraceLimit = limit
         return {
           originalError: info,
-          error,
+          error: {
+            name: error.name,
+            nameStr: String(error.name),
+            message: info.errMsg,
+            stacks: error.stacks,
+            stack: '',
+            stackStr: '',
+          },
         }
       })
       typesErrors.set(filepath, suiteErrors)
@@ -303,6 +310,6 @@ export class Typechecker {
     return Object.values(this._tests || {})
       .map(({ file }) => getTasks(file))
       .flat()
-      .map<TaskResultPack>(i => [i.id, undefined, { typecheck: true }])
+      .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
   }
 }

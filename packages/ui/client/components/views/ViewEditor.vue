@@ -72,7 +72,7 @@ function createErrorElement(e: ErrorWithDiff) {
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
   pre.className = 'c-red-600 dark:c-red-400'
-  pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr}: ${e?.message}`
+  pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr || e.name}: ${e?.message || ''}`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
