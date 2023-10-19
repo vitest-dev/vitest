@@ -35,6 +35,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
+  isOpen() {
+    return !!this.cachedBrowser
+  }
+
   async openBrowser() {
     if (this.cachedBrowser)
       return this.cachedBrowser

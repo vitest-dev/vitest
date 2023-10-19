@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
-
 import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
+import { readFile } from 'node:fs/promises'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { injectVitestModule } from './esmInjector'
@@ -21,6 +21,42 @@ export default (project: any, base = '/'): Plugin[] => {
         viteConfig.esbuild.legalComments = 'inline'
       },
       async configureServer(server) {
+        const prefix = `${base}/__vitest_test__/`.replace('//', '/')
+        const testMatcher = new RegExp(`^${prefix}(.*)\\.html\\?browserv=(\\w+)$`)
+        const testerHtmlPromise = readFile(resolve(distRoot, 'client/tester.html'), 'utf-8')
+        const esmClientInjectorPromise = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf-8')
+        server.middlewares.use(async (req, res, next) => {
+          const match = req.url?.match(testMatcher)
+          if (match) {
+            const [testerHtml, esmClientInjector] = await Promise.all([
+              testerHtmlPromise,
+              esmClientInjectorPromise,
+            ])
+            const [, test, version] = match
+
+            res.setHeader('Content-Type', 'text/html; charset=utf-8')
+            res.write(
+              testerHtml.replace(
+                'href="favicon.svg"', `href="${base}/favicon.svg"`.replace('//', '/'),
+              ).replace(
+                '</title>', ` - ${test}</title>`,
+              ).replace(
+                '<script src="esm-client-injector.js"></script>', `<script>
+${esmClientInjector}
+</script>`,
+              ).replace(
+                '</body>', `<script type="module">
+await __vitest_browser_runner__.runTest('${test}', '${version}');
+</script></body>`,
+              ),
+              'utf-8',
+            )
+            res.end()
+          }
+          else {
+            next()
+          }
+        })
         server.middlewares.use(
           base,
           sirv(resolve(distRoot, 'client'), {

@@ -1,0 +1,22 @@
+{
+  "name": "@vitest/example-svelte-in-browser",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "test:stackblitz": "BROWSER_PROVIDER=none vitest"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "@vitest/browser": "latest",
+    "@vitest/ui": "latest",
+    "std-env": "^3.3.2",
+    "svelte": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "xstackblitz": {
+    "startCommand": "npm run test:stackblitz"
+  }
+}

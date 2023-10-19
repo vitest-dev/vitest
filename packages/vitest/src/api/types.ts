@@ -29,6 +29,7 @@ export interface WebSocketHandlers {
   removeSnapshotFile(id: string): Promise<void>
   snapshotSaved(snapshot: SnapshotResult): void
   rerun(files: string[]): Promise<void>
+  initializeBrowser(): void
   updateSnapshot(file?: File): Promise<void>
 }
 

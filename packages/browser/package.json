@@ -52,6 +52,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
+    "flatted": "^3.2.7",
     "periscopic": "^3.1.0",
     "vitest": "workspace:*"
   }

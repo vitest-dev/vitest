@@ -10,6 +10,7 @@ export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
   initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
+  isOpen(): boolean
   openPage(url: string): Awaitable<void>
   catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
   close(): Awaitable<void>
@@ -52,6 +53,15 @@ export interface BrowserConfigOptions {
    * The default port is 63315.
    */
   api?: ApiConfig | number
+
+  /**
+   * When running on browser, enable this flag if your tests include some UI.
+   *
+   * The test's UI will be available in the `Browser UI` tab.
+   *
+   * @default false
+   */
+  enableUI?: boolean
 
   /**
    * Update ESM imports so they can be spied/stubbed with vi.spyOn.

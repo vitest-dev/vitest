@@ -8,6 +8,7 @@ import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
+import { createDefer } from '@vitest/utils'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
@@ -38,6 +39,7 @@ export class Vitest {
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
   browserProvider: BrowserProvider | undefined
+  browserPromise = createDefer()
   logger: Logger
   pool: ProcessPool | undefined
 

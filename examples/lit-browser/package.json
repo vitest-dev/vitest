@@ -1,0 +1,26 @@
+{
+  "name": "@vitest/example-lit-browser",
+  "private": true,
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "coverage": "vitest run --coverage",
+    "dev": "vite",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "lit": "^2.2.5"
+  },
+  "devDependencies": {
+    "@vitest/browser": "latest",
+    "@vitest/ui": "latest",
+    "std-env": "^3.3.2",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
+  }
+}

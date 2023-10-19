@@ -1,183 +1,211 @@
-import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
-import type { CancelReason, VitestRunner } from '@vitest/runner'
-import type { VitestExecutor } from 'vitest/src/runtime/execute'
-import { createBrowserRunner } from './runner'
-import { importId } from './utils'
-import { setupConsoleLogSpy } from './logger'
-import { createSafeRpc, rpc, rpcDone } from './rpc'
-import { setupDialogsSpy } from './dialog'
+import { parse } from 'flatted'
+import {
+  assignVitestGlobals,
+  browserHashMap,
+  client,
+  instantiateRunner,
+  loadConfig,
+  onCancel,
+} from './utils'
+import { rpc, rpcDone } from './rpc'
 import { BrowserSnapshotEnvironment } from './snapshot'
-import { VitestBrowserClientMocker } from './mocker'
 
-export const PORT = import.meta.hot ? '51204' : location.port
-export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const ENTRY_URL = `${
-  location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_api__`
-
-let config: ResolvedConfig | undefined
-let runner: VitestRunner | undefined
-const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
+let currentModule: string | undefined
+let currentModuleLeftPosition: number | undefined
+const browserIFrames = new Map<string, HTMLIFrameElement>()
 
 const url = new URL(location.href)
-const testId = url.searchParams.get('id') || 'unknown'
-
-function getQueryPaths() {
-  return url.searchParams.getAll('path')
-}
-
-let setCancel = (_: CancelReason) => {}
-const onCancel = new Promise<CancelReason>((resolve) => {
-  setCancel = resolve
-})
-
-export const client = createClient(ENTRY_URL, {
-  handlers: {
-    onCancel: setCancel,
-  },
-})
 
 const ws = client.ws
+const testTitle = document.getElementById('vitest-browser-runner-tester') as HTMLDivElement
 
-async function loadConfig() {
-  let retries = 5
-  do {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 150))
-      config = await client.rpc.getConfig()
-      return
+function hideIFrames() {
+  for (const [, targetIFrame] of browserIFrames.entries())
+    targetIFrame.classList.remove('show')
+
+  currentModule = undefined
+  currentModuleLeftPosition = undefined
+}
+
+function activateIFrame(useCurrentModule: string, left?: number) {
+  const targetIFrame = browserIFrames.get(useCurrentModule)
+  if (targetIFrame && typeof left === 'number') {
+    targetIFrame.style.left = `${left + 14}px`
+    targetIFrame.style.width = `${window.innerWidth - left - 28}px`
+    if (!targetIFrame.classList.contains('show')) {
+      testTitle.innerText = `${useCurrentModule.replace(/^\/@fs\//, '')}`
+      requestAnimationFrame(() => targetIFrame.classList.add('show'))
     }
-    catch (_) {
-      // just ignore
-    }
   }
-  while (--retries > 0)
+}
+function normalizePaths(config: ResolvedConfig, paths: string[]) {
+  return paths
+    .map((path) => {
+      if (path.startsWith('/@fs/'))
+        return path
 
-  throw new Error('cannot load configuration after 5 retries')
+      if (path.startsWith(config.root))
+        return path
+
+      return `${config.root}/${path}`.replace(/\/+/g, '/')
+    })
 }
 
-function on(event: string, listener: (...args: any[]) => void) {
-  window.addEventListener(event, listener)
-  return () => window.removeEventListener(event, listener)
-}
+let listenToRun = false
 
-// we can't import "processError" yet because error might've been thrown before the module was loaded
-async function defaultErrorReport(type: string, unhandledError: any) {
-  const error = {
-    ...unhandledError,
-    name: unhandledError.name,
-    message: unhandledError.message,
-    stack: unhandledError.stack,
-  }
-  await client.rpc.onUnhandledError(error, type)
-  await client.rpc.onDone(testId)
-}
+ws.addEventListener('message', async (data) => {
+  if (!listenToRun)
+    return
 
-const stopErrorHandler = on('error', e => defaultErrorReport('Error', e.error))
-const stopRejectionHandler = on('unhandledrejection', e => defaultErrorReport('Unhandled Rejection', e.reason))
-
-let runningTests = false
-
-async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error: any) {
-  const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
-  await rpc.onUnhandledError(processError(error), type)
-  if (!runningTests)
-    await rpc.onDone(testId)
-}
-
-ws.addEventListener('open', async () => {
-  await loadConfig()
-
-  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
-  const safeRpc = createSafeRpc(client, getSafeTimers)
-
-  stopErrorHandler()
-  stopRejectionHandler()
-
-  on('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
-  on('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
-
-  // @ts-expect-error untyped global for internal use
-  globalThis.__vitest_browser__ = true
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_worker__ = {
-    config,
-    browserHashMap,
-    environment: {
-      name: 'browser',
-    },
-    // @ts-expect-error untyped global for internal use
-    moduleCache: globalThis.__vi_module_cache__,
-    rpc: client.rpc,
-    safeRpc,
-    durations: {
-      environment: 0,
-      prepare: 0,
-    },
-  }
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()
-
-  const paths = getQueryPaths()
-
-  const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
-  iFrame.setAttribute('src', '/__vitest__/')
-
-  await setupConsoleLogSpy()
-  setupDialogsSpy()
-  await runTests(paths, config!)
+  const { event, paths } = parse(data.data)
+  if (event === 'run' && paths?.length)
+    await handleRunTests(paths)
 })
 
-async function runTests(paths: string[], config: ResolvedConfig) {
+ws.addEventListener('open', async () => {
+  await assignVitestGlobals()
+
+  const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
+  iFrame.setAttribute('src', `${url.pathname}/__vitest__/`.replace('//', '/'))
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'vueuse-color-scheme')
+      document.documentElement.classList.toggle('dark', e.newValue === 'dark')
+  })
+
+  const paths = await client.rpc.getPaths()
+
+  // resolve Vitest browser promise
+  await client.rpc.initializeBrowser()
+
+  const config = await loadConfig()
+
+  // paths with the full path: filter tests that are not in the current project
+  // once added to the cache, external tests will be excluded by handleRunTests on ws message event
+  const root = config.root
+  await handleRunTests(paths.filter(path => path.startsWith(root)))
+})
+
+async function runTests(
+  paths: string[],
+  config: ResolvedConfig,
+  listener?: (ev: BroadcastChannelEventMap['message']) => void,
+) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  const {
-    startTests,
-    setupCommonEnv,
-    loadDiffConfig,
-    takeCoverageInsideWorker,
-  } = await importId('vitest/browser') as typeof import('vitest/browser')
-
-  const executor = {
-    executeId: (id: string) => importId(id),
-  }
-
-  if (!runner) {
-    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
-    runner = new BrowserRunner({ config, browserHashMap })
-  }
+  const { channel, runner } = await instantiateRunner()
 
   onCancel.then((reason) => {
     runner?.onCancel?.(reason)
   })
 
+  if (listener) {
+    channel.removeEventListener('message', listener)
+    channel.addEventListener('message', listener)
+  }
+
+  function removeBrowserChannel() {
+    listener && channel.removeEventListener('message', listener)
+    ws.close()
+    channel.close()
+  }
+
+  window.removeEventListener('beforeunload', removeBrowserChannel)
+  window.addEventListener('beforeunload', removeBrowserChannel)
+
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
-  try {
-    runner.config.diffOptions = await loadDiffConfig(config, executor as VitestExecutor)
+  const now = `${new Date().getTime()}`
+  const container = document.getElementById('vitest-browser-runner-container') as HTMLDivElement
 
-    await setupCommonEnv(config)
-    const files = paths.map((path) => {
-      return (`${config.root}/${path}`).replace(/\/+/g, '/')
-    })
+  const normalizedPaths = normalizePaths(config, paths)
 
-    const now = `${new Date().getTime()}`
-    files.forEach(i => browserHashMap.set(i, [true, now]))
+  const cleanup = normalizedPaths.filter(path => browserHashMap.has(path))
 
-    runningTests = true
+  if (cleanup.length)
+    cleanup.forEach(path => channel.postMessage({ type: 'disconnect', filename: path }))
 
-    for (const file of files)
-      await startTests([file], runner)
+  // isolate test on iframes
+  normalizedPaths.forEach((path) => {
+    // don't hide iframes here, we only need to reload changed tests modules
+    if (browserIFrames.has(path)) {
+      browserIFrames.get(path)!.classList.remove('show')
+      container.removeChild(browserIFrames.get(path)!)
+      browserIFrames.delete(path)
+    }
+    browserHashMap.set(path, [true, now])
+    const iFrame = document.createElement('iframe')
+    iFrame.setAttribute('loading', 'eager')
+    // requires Access-Control-Allow-Origin: '*' on every resource
+    // iFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms')
+    iFrame.classList.add('iframe-test')
+    iFrame.setAttribute(
+      'src',
+      `${url.pathname}/__vitest_test__/${path}.html?browserv=${now}`.replace('//', '/'),
+    )
+    browserIFrames.set(path, iFrame)
+    container.appendChild(iFrame)
+  })
+
+  if (currentModule) {
+    const savedCurrentModule = currentModule
+    const savedCurrentModuleLeftPosition = currentModuleLeftPosition
+    hideIFrames()
+    currentModule = savedCurrentModule
+    currentModuleLeftPosition = savedCurrentModuleLeftPosition
+    activateIFrame(savedCurrentModule, savedCurrentModuleLeftPosition)
   }
-  finally {
-    runningTests = false
+}
 
-    await rpcDone()
-    await rpc().onDone(testId)
-  }
+async function handleRunTests(paths: string[]) {
+  const config = await loadConfig()
+
+  const waitingPaths = normalizePaths(config, paths)
+
+  await runTests(paths, config!, async (e) => {
+    if (e.data.type === 'hide') {
+      hideIFrames()
+      return
+    }
+
+    if (e.data.type === 'done') {
+      const filename = e.data.filename
+      if (!filename)
+        return
+
+      const idx = waitingPaths.indexOf(filename)
+      if (idx === -1)
+        return
+
+      waitingPaths.splice(idx, 1)
+
+      if (!waitingPaths.length) {
+        // once we run all tests on initial run, we can start listening to run events from the ui
+        try {
+          await rpcDone()
+          await rpc().onDone('no-isolate')
+        }
+        finally {
+          listenToRun = true
+        }
+      }
+      return
+    }
+
+    if (e.data.type === 'navigate') {
+      if (!currentModule || !e.data.filename || currentModule !== e.data.filename)
+        hideIFrames()
+
+      currentModule = e.data.filename
+      if (!currentModule)
+        return
+
+      currentModuleLeftPosition = e.data.position
+      activateIFrame(currentModule, currentModuleLeftPosition)
+    }
+  })
 }

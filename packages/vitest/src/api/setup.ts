@@ -104,6 +104,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         async rerun(files) {
           await ctx.rerunFiles(files)
         },
+        initializeBrowser() {
+          ctx.browserPromise.resolve(undefined)
+        },
         getConfig() {
           return vitestOrWorkspace.config
         },
@@ -153,7 +156,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
   ctx.reporters.push(new WebSocketReporter(ctx, wss, clients))
 }
 
-class WebSocketReporter implements Reporter {
+export class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
