@@ -37,7 +37,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+export type VitestRunMode = 'test' | 'benchmark'
 
 interface SequenceOptions {
   /**
@@ -636,6 +636,14 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
+   * Run typechecking tests alongisde regular tests.
+   */
+  enabled?: boolean
+  /**
+   * When typechecking is enabled, only run typechecking tests.
+   */
+  only?: boolean
+  /**
    * What tools to use for type checking.
    */
   checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
@@ -749,7 +757,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     seed: number
   }
 
-  typecheck: TypecheckConfig
+  typecheck: Omit<TypecheckConfig, 'enabled'> & {
+    enabled: boolean
+  }
   runner?: string
 }
 

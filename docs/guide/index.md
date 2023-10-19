@@ -28,6 +28,9 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
   ```bash [pnpm]
   pnpm add -D vitest
   ```
+  ```bash [bun]
+  bun add -D vitest
+  ```
 :::
 
 :::tip
