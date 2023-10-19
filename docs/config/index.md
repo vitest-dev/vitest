@@ -1319,7 +1319,7 @@ Run all tests in a specific browser. Possible options in different providers:
 
 - **Type:** `boolean`
 - **Default:** `process.env.CI`
-- **CLI:** `--browser.headless`, `--brower.headless=false`
+- **CLI:** `--browser.headless`, `--browser.headless=false`
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
