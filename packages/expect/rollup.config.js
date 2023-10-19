@@ -19,7 +19,7 @@ const plugins = [
   }),
   copy({
     targets: [
-      { src: 'node_modules/@types/chai/index.d.ts', dest: 'dist', rename: 'chai.d.ts' },
+      { src: 'node_modules/@types/chai/index.d.ts', dest: 'dist', rename: 'chai.d.cts' },
     ],
   }),
 ]

@@ -1,3 +1,3 @@
-import './dist/chai'
+import './dist/chai.cjs'
 
-export * from './dist/index'
+export * from './dist/index.js'

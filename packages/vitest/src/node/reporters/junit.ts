@@ -179,7 +179,7 @@ export class JUnitReporter implements Reporter {
           await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const errors = task.result.errors?.length ? task.result.errors : [task.result.error]
+          const errors = task.result.errors || []
           for (const error of errors) {
             await this.writeElement('failure', {
               message: error?.message,
