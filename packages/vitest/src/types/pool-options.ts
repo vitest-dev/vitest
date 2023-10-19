@@ -1,4 +1,4 @@
-export type Pool = 'browser' | 'threads' | 'forks' | 'vmThreads' // | 'vmForks'
+export type Pool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'typescript' // | 'vmForks'
 
 export interface PoolOptions {
   /**

@@ -87,6 +87,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     rpc().onUnhandledError(error, type)
   }
 
+  process.setMaxListeners(25)
+
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 

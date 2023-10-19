@@ -65,10 +65,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     if (name === 'q')
       return ctx.exit(true)
 
-    // TODO typechecking doesn't support shortcuts this yet
-    if (ctx.mode === 'typecheck')
-      return
-
     // help
     if (name === 'h')
       return printShortcutsHelp()

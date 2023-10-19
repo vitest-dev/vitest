@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "vitest",
-    "types": "vitest typecheck --run",
+    "types": "vitest --typecheck --run",
     "tsc": "tsc --watch --pretty false --noEmit"
   },
   "dependencies": {

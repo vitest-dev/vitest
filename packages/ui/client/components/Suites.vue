@@ -23,6 +23,7 @@ async function onRunCurrent() {
     <TasksList :tasks="current.tasks" :nested="true">
       <template #header>
         <StatusIcon mx-1 :task="current" />
+        <div v-if="current.type === 'suite' && current.meta.typecheck" i-logos:typescript-icon flex-shrink-0 mr-1 />
         <span data-testid="filenames" font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
         <div class="flex text-lg">
           <IconButton
