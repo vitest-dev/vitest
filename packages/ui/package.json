@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -44,7 +44,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.30.1 <1"
+    "vitest": "^1.0.0-0"
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",

@@ -179,9 +179,6 @@ class WebSocketReporter implements Reporter {
         getSourceMap: file => project.getBrowserSourceMapModuleById(file),
       }
 
-      // TODO remove after "error" deprecation is removed
-      if (result?.error && !isPrimitive(result.error))
-        result.error.stacks = parseErrorStacktrace(result.error, parserOptions)
       result?.errors?.forEach((error) => {
         if (!isPrimitive(error))
           error.stacks = parseErrorStacktrace(error, parserOptions)
