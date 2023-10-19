@@ -135,6 +135,7 @@ export class JUnitReporter implements Reporter {
     const project = this.ctx.getProjectByTaskId(task.id)
     const stack = parseErrorStacktrace(error, {
       getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+      frameFilter: this.ctx.config.onStackTrace,
     })
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.

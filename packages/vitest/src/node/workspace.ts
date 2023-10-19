@@ -315,6 +315,7 @@ export class WorkspaceProject {
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
+      onStackTrace: undefined!,
       sequence: {
         ...this.ctx.config.sequence,
         sequencer: undefined!,
