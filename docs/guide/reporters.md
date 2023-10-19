@@ -21,7 +21,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   test: {
     reporters: ['verbose']
-  }
+  },
 });
 ```
 
@@ -40,7 +40,7 @@ export default defineConfig({
   test: {
     reporters: ['json'],
     outputFile: './test-output.json'
-  }
+  },
 });
 ```
 
@@ -57,11 +57,25 @@ export default defineConfig({
   test: {
     reporters: ['json', 'default'],
     outputFile: './test-output.json'
-  }
+  },
 });
 ```
 
 The above example will both print the test results to the terminal in the default style, and write them as JSON to the designated output file.
+
+When using multiple reporters, it's also possible to designate multiple output files, as follows:
+
+```ts
+export default defineConfig({
+  reporters: ["junit", "json", "verbose"],
+      outputFile: {
+        junit: "./junit-report.xml",
+        json: "./json-report.json",
+      },
+});
+```
+
+This example will write separate JSON and XML reports as well as printing a verbose report to the terminal.
 
 ## Built-in Reporters
 
@@ -393,7 +407,18 @@ export default defineConfig({
 
 ## Custom reporters
 
-You can define your own custom reporters and use them by specifying their file path:
+You can use third-party custom reporters installed from NPM by specifying their package name in the reporters option:
+
+```bash
+npx vitest --reporter=some-published-vitest-reporter
+```
+```ts
+test: {
+  reporters: ['some-published-vitest-reporter']
+}
+```
+
+Additionally, you can define your own custom reporters and use them by specifying their file path:
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts
