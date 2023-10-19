@@ -90,7 +90,7 @@ export class WorkspaceProject {
 
     this._globalSetupInit = true
 
-    this._globalSetups = await loadGlobalSetupFiles(this)
+    this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
     try {
       for (const globalSetupFile of this._globalSetups) {
@@ -112,7 +112,7 @@ export class WorkspaceProject {
   async teardownGlobalSetup() {
     if (!this._globalSetupInit || !this._globalSetups.length)
       return
-    for (const globalSetupFile of this._globalSetups.reverse()) {
+    for (const globalSetupFile of [...this._globalSetups].reverse()) {
       try {
         await globalSetupFile.teardown?.()
       }
@@ -246,12 +246,17 @@ export class WorkspaceProject {
     this.browser = await createBrowserServer(this, configFile)
   }
 
-  static async createCoreProject(ctx: Vitest) {
+  static createBasicProject(ctx: Vitest) {
     const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
     project.vitenode = ctx.vitenode
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    return project
+  }
+
+  static async createCoreProject(ctx: Vitest) {
+    const project = WorkspaceProject.createBasicProject(ctx)
     await project.initBrowserServer(ctx.server.config.configFile)
     return project
   }

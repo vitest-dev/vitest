@@ -152,6 +152,8 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
 
     this.projects = await this.resolveWorkspace(cliOptions)
+    if (!this.coreWorkspaceProject)
+      this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
@@ -162,8 +164,8 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
-  public getCoreWorkspaceProject(): WorkspaceProject | null {
-    return this.coreWorkspaceProject || null
+  public getCoreWorkspaceProject(): WorkspaceProject {
+    return this.coreWorkspaceProject
   }
 
   public getProjectByTaskId(taskId: string): WorkspaceProject {
@@ -432,7 +434,13 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: WorkspaceSpec[]) {
-    await Promise.all(paths.map(async ([project]) => project.initializeGlobalSetup()))
+    const projects = new Set(paths.map(([project]) => project))
+    const coreProject = this.getCoreWorkspaceProject()
+    if (!projects.has(coreProject))
+      projects.add(coreProject)
+    await Promise.all(
+      Array.from(projects).map(project => project.initializeGlobalSetup()),
+    )
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
@@ -745,8 +753,8 @@ export class Vitest {
       const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
       // close the core workspace server only once
       // it's possible that it's not initialized at all because it's not running any tests
-      if (!this.coreWorkspaceProject || !this.projects.includes(this.coreWorkspaceProject))
-        closePromises.push(this.server.close().then(() => this.server = undefined as any))
+      if (!this.projects.includes(this.coreWorkspaceProject))
+        closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
       if (this.pool)
         closePromises.push(this.pool.close().then(() => this.pool = undefined))
