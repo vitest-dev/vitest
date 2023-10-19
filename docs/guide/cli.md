@@ -96,6 +96,9 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
+| `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
+| `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
+| `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

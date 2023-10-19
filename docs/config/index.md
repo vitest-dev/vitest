@@ -547,7 +547,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'typescript'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -1636,6 +1636,24 @@ Changes the order in which setup files are executed.
 ### typecheck
 
 Options for configuring [typechecking](/guide/testing-types) test environment.
+
+#### typecheck.enabled
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck`, `--typecheck.enabled`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Enable typechecking alongside your regular tests.
+
+#### typecheck.only
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck.only`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Run only typecheck tests, when typechecking is enabled. When using CLI, this option will automatically enable typechecking.
 
 #### typecheck.checker
 

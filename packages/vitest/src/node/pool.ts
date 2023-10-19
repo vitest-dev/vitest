@@ -9,6 +9,7 @@ import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
+import { createTypecheckPool } from './pools/typecheck'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
@@ -35,11 +36,19 @@ export function createPool(ctx: Vitest): ProcessPool {
     threads: null,
     browser: null,
     vmThreads: null,
+    typescript: null,
   }
 
-  function getDefaultPoolName(project: WorkspaceProject): Pool {
+  function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
     if (project.config.browser.enabled)
       return 'browser'
+
+    if (project.config.typecheck.enabled) {
+      for (const glob of project.config.typecheck.include) {
+        if (mm.isMatch(file, glob, { cwd: project.config.root }))
+          return 'typescript'
+      }
+    }
 
     return project.config.pool
   }
@@ -51,7 +60,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (mm.isMatch(file, glob, { cwd: project.config.root }))
         return pool as Pool
     }
-    return getDefaultPoolName(project)
+    return getDefaultPoolName(project, file)
   }
 
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
@@ -93,6 +102,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       threads: [],
       browser: [],
       vmThreads: [],
+      typescript: [],
     }
 
     for (const spec of files) {
@@ -121,6 +131,11 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
         return pools.threads.runTests(files, invalidate)
+      }
+
+      if (pool === 'typescript') {
+        pools.typescript ??= createTypecheckPool(ctx)
+        return pools.typescript.runTests(files)
       }
 
       pools.forks ??= createChildProcessPool(ctx, options)
