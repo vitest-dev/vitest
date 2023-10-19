@@ -80,6 +80,27 @@ export default defineConfig({
   },
 });
 ```
+Example output for tests in progress:
+
+```bash
+✓ __tests__/file1.test.ts (2) 725ms
+✓ __tests__/file2.test.ts (5) 746ms
+  ✓ second test file (2) 746ms
+    ✓ 1 + 1 should equal 2
+    ✓ 2 - 1 should equal 1
+```
+
+Final output after tests have finished:
+
+```bash
+✓ __tests__/file1.test.ts (2) 725ms
+✓ __tests__/file2.test.ts (2) 746ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
 
 ### Basic reporter
 
@@ -95,6 +116,17 @@ export default defineConfig({
     reporters: ['basic']
   },
 });
+```
+
+Example output using basic reporter:
+```bash
+✓ __tests__/file1.test.ts (2) 725ms
+✓ __tests__/file2.test.ts (2) 746ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
 ### Verbose reporter
@@ -113,6 +145,24 @@ export default defineConfig({
 });
 ```
 
+Example of final terminal output for a passing test suite:
+
+```bash
+✓ __tests__/file1.test.ts (2) 725ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
+✓ __tests__/file2.test.ts (2) 746ms
+  ✓ second test file (2) 746ms
+    ✓ 1 + 1 should equal 2
+    ✓ 2 - 1 should equal 1
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
 ### Dot reporter
 
 Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
@@ -127,6 +177,17 @@ export default defineConfig({
     reporters: ['dot']
   },
 });
+```
+
+Example terminal output for a passing test suite:
+
+```bash
+....
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
 ### JUnit reporter
@@ -145,6 +206,22 @@ export default defineConfig({
 });
 ```
 
+Example of a JUnit XML report:
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="2" failures="1" errors="0" time="0.503">
+    <testsuite name="__tests__/test-file-1.test.ts" timestamp="2023-10-19T17:41:58.580Z" hostname="My-Computer.local" tests="2" failures="1" errors="0" skipped="0" time="0.013">
+        <testcase classname="__tests__/test-file-1.test.ts" name="first test file &gt; 2 + 2 should equal 4" time="0.01">
+            <failure message="expected 5 to be 4 // Object.is equality" type="AssertionError">
+AssertionError: expected 5 to be 4 // Object.is equality
+ ❯ __tests__/test-file-1.test.ts:20:28
+            </failure>
+        </testcase>
+        <testcase classname="__tests__/test-file-1.test.ts" name="first test file &gt; 4 - 2 should equal 2" time="0">
+        </testcase>
+    </testsuite>
+</testsuites>
+```
 The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively.
 
 ### JSON reporter
@@ -161,6 +238,52 @@ export default defineConfig({
     reporters: ['json']
   },
 });
+```
+Example of a JSON report:
+
+```json
+{
+  "numTotalTestSuites": 1,
+  "numPassedTestSuites": 0,
+  "numFailedTestSuites": 1,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 1,
+  "numPassedTests": 0,
+  "numFailedTests": 1,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "startTime": 1697737019307,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "first test file"
+          ],
+          "fullName": " first test file 2 + 2 should equal 4",
+          "status": "failed",
+          "title": "2 + 2 should equal 4",
+          "duration": 9,
+          "failureMessages": [
+            "expected 5 to be 4 // Object.is equality"
+          ],
+          "location": {
+            "line": 20,
+            "column": 28
+          }
+        },
+      ],
+      "startTime": 1697737019787,
+      "endTime": 1697737019797,
+      "status": "failed",
+      "message": "",
+      "name": "/root-directory/__tests__/test-file-1.test.ts"
+    }
+  ]
+}
+
 ```
 
 ### HTML reporter
@@ -197,6 +320,28 @@ export default defineConfig({
 });
 ```
 
+Example of a TAP report:
+```bash
+TAP version 13
+1..1
+not ok 1 - __tests__/test-file-1.test.ts # time=14.00ms {
+    1..1
+    not ok 1 - first test file # time=13.00ms {
+        1..2
+        not ok 1 - 2 + 2 should equal 4 # time=11.00ms
+            ---
+            error:
+                name: "AssertionError"
+                message: "expected 5 to be 4 // Object.is equality"
+            at: "/root-directory/__tests__/test-file-1.test.ts:20:28"
+            actual: "5"
+            expected: "4"
+            ...
+        ok 2 - 4 - 2 should equal 2 # time=1.00ms
+    }
+}
+```
+
 ### TAP flat reporter
 
 Outputs a TAP flat report. Like the `tap` reporter, test results are formatted to follow TAP standards, but test suites are formatted as a flat list rather than a nested hierarchy.
@@ -212,6 +357,23 @@ export default defineConfig({
   },
 });
 ```
+
+Example of a TAP flat report:
+```bash
+TAP version 13
+1..2
+not ok 1 - __tests__/test-file-1.test.ts > first test file > 2 + 2 should equal 4 # time=11.00ms
+    ---
+    error:
+        name: "AssertionError"
+        message: "expected 5 to be 4 // Object.is equality"
+    at: "/root-directory/__tests__/test-file-1.test.ts:20:28"
+    actual: "5"
+    expected: "4"
+    ...
+ok 2 - __tests__/test-file-1.test.ts > first test file > 4 - 2 should equal 2 # time=0.00ms
+```
+
 
 ### Hanging process reporter
 
