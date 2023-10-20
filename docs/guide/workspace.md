@@ -105,12 +105,12 @@ None of the configuration options are inherited from the root-level config file.
 
 :::code-group
 ```ts [packages/a/vitest.config.ts]
-import { defineProject, mergeConfig } from 'vitest/config'
+import { defineConfig, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
 
 export default mergeConfig(
   configShared,
-  defineProject({
+  defineConfig({
     test: {
       environment: 'jsdom',
     }
