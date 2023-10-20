@@ -40,12 +40,15 @@ interface TestExclude {
 type Options = ResolvedCoverageOptions<'v8'>
 type TransformResults = Map<string, FetchResult>
 type RawCoverage = Profiler.TakePreciseCoverageReturnType
+type CoverageByTransformMode = Record<AfterSuiteRunMeta['transformMode'], RawCoverage[]>
+type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
 
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
+const DEFAULT_PROJECT = Symbol.for('default-project')
 
 export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8'
@@ -53,7 +56,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   ctx!: Vitest
   options!: Options
   testExclude!: InstanceType<TestExclude>
-  coverages: Record<AfterSuiteRunMeta['transformMode'], RawCoverage[]> = { ssr: [], web: [] }
+  coverages = new Map<ProjectName, CoverageByTransformMode>()
 
   initialize(ctx: Vitest) {
     const config: CoverageV8Options = ctx.config.coverage
@@ -93,7 +96,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     if (clean && existsSync(this.options.reportsDirectory))
       await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
-    this.coverages = { ssr: [], web: [] }
+    this.coverages = new Map()
   }
 
   /*
@@ -101,21 +104,30 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode }: AfterSuiteRunMeta) {
+  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
     if (transformMode !== 'web' && transformMode !== 'ssr')
       throw new Error(`Invalid transform mode: ${transformMode}`)
 
-    this.coverages[transformMode].push(coverage as RawCoverage)
+    let entry = this.coverages.get(projectName || DEFAULT_PROJECT)
+
+    if (!entry) {
+      entry = { web: [], ssr: [] }
+      this.coverages.set(projectName || DEFAULT_PROJECT, entry)
+    }
+
+    entry[transformMode].push(coverage as RawCoverage)
   }
 
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
     if (provider === 'stackblitz')
       this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-v8 does not work on Stackblitz. Report will be empty.'))
 
-    const coverageMaps = await Promise.all([
-      this.mergeAndTransformCoverage(this.coverages.ssr, 'ssr'),
-      this.mergeAndTransformCoverage(this.coverages.web, 'web'),
-    ])
+    const coverageMaps = await Promise.all(
+      Array.from(this.coverages.entries()).map(([projectName, coverages]) => [
+        this.mergeAndTransformCoverage(coverages.ssr, projectName, 'ssr'),
+        this.mergeAndTransformCoverage(coverages.web, projectName, 'web'),
+      ]).flat(),
+    )
 
     if (this.options.all && allTestsRun) {
       const coveredFiles = coverageMaps.map(map => map.files()).flat()
@@ -130,7 +142,6 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
-      sourceFinder: libSourceMaps.createSourceMapStore().sourceFinder,
       watermarks: this.options.watermarks,
     })
 
@@ -177,7 +188,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<Profiler.ScriptCoverage[]> {
-    const transformResults = normalizeTransformResults([this.ctx.vitenode.fetchCache])
+    const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
 
     const includedFiles = await this.testExclude.glob(this.ctx.config.root)
     const uncoveredFiles = includedFiles
@@ -241,12 +252,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }
   }
 
-  private async mergeAndTransformCoverage(coverages: RawCoverage[], transformMode?: 'web' | 'ssr') {
-    const fetchCaches = transformMode
-      ? this.ctx.projects.map(project => project.vitenode.fetchCaches[transformMode])
-      : [this.ctx.vitenode.fetchCache]
-
-    const transformResults = normalizeTransformResults(fetchCaches)
+  private async mergeAndTransformCoverage(coverages: RawCoverage[], projectName?: ProjectName, transformMode?: 'web' | 'ssr') {
+    const viteNode = this.ctx.projects.find(project => project.getName() === projectName)?.vitenode || this.ctx.vitenode
+    const fetchCache = transformMode ? viteNode.fetchCaches[transformMode] : viteNode.fetchCache
+    const transformResults = normalizeTransformResults(fetchCache)
 
     const merged = mergeProcessCovs(coverages)
     const scriptCoverages = merged.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))
@@ -314,16 +323,14 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
   }, 0)
 }
 
-function normalizeTransformResults(fetchCaches: Map<string, { result: FetchResult }>[]) {
+function normalizeTransformResults(fetchCache: Map<string, { result: FetchResult }>) {
   const normalized: TransformResults = new Map()
 
-  for (const fetchCache of fetchCaches) {
-    for (const [key, value] of fetchCache.entries()) {
-      const cleanEntry = cleanUrl(key)
+  for (const [key, value] of fetchCache.entries()) {
+    const cleanEntry = cleanUrl(key)
 
-      if (!normalized.has(cleanEntry))
-        normalized.set(cleanEntry, value.result)
-    }
+    if (!normalized.has(cleanEntry))
+      normalized.set(cleanEntry, value.result)
   }
 
   return normalized

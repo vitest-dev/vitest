@@ -16,6 +16,8 @@ import _TestExclude from 'test-exclude'
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
+type CoverageByTransformMode = Record<AfterSuiteRunMeta['transformMode'], CoverageMapData[]>
+type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
 
 interface TestExclude {
   new(opts: {
@@ -31,6 +33,8 @@ interface TestExclude {
   }
 }
 
+const DEFAULT_PROJECT = Symbol.for('default-project')
+
 export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
@@ -45,7 +49,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * If storing in memory causes issues, we can simply write these into fs in `onAfterSuiteRun`
    * and read them back when merging coverage objects in `onAfterAllFilesRun`.
    */
-  coverages: Record<AfterSuiteRunMeta['transformMode'], CoverageMapData[]> = { ssr: [], web: [] }
+  coverages = new Map<ProjectName, CoverageByTransformMode>()
 
   initialize(ctx: Vitest) {
     const config: CoverageIstanbulOptions = ctx.config.coverage
@@ -111,25 +115,34 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode }: AfterSuiteRunMeta) {
+  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
     if (transformMode !== 'web' && transformMode !== 'ssr')
       throw new Error(`Invalid transform mode: ${transformMode}`)
 
-    this.coverages[transformMode].push(coverage as CoverageMapData)
+    let entry = this.coverages.get(projectName || DEFAULT_PROJECT)
+
+    if (!entry) {
+      entry = { web: [], ssr: [] }
+      this.coverages.set(projectName || DEFAULT_PROJECT, entry)
+    }
+
+    entry[transformMode].push(coverage as CoverageMapData)
   }
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
       await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
-    this.coverages = { ssr: [], web: [] }
+    this.coverages = new Map()
   }
 
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
-    const coverageMaps = await Promise.all([
-      mergeAndTransformCoverage(this.coverages.ssr),
-      mergeAndTransformCoverage(this.coverages.web),
-    ])
+    const coverageMaps = await Promise.all(
+      Array.from(this.coverages.values()).map(coverages => [
+        mergeAndTransformCoverage(coverages.ssr),
+        mergeAndTransformCoverage(coverages.web),
+      ]).flat(),
+    )
 
     if (this.options.all && allTestsRun) {
       const coveredFiles = coverageMaps.map(map => map.files()).flat()
@@ -143,7 +156,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
-      sourceFinder: libSourceMaps.createSourceMapStore().sourceFinder,
       watermarks: this.options.watermarks,
     })
 

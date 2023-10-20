@@ -61,7 +61,12 @@ class CustomCoverageProvider implements CoverageProvider {
     this.calls.add('onAfterSuiteRun')
 
     // Keep coverage info separate from calls and ignore its order
-    this.coverageReports.add(JSON.stringify(meta))
+    this.coverageReports.add(JSON.stringify({
+      ...meta,
+
+      // Project name keeps changing so let's simply check that its present
+      projectName: meta.projectName && typeof meta.projectName === 'string',
+    }))
   }
 
   reportCoverage(reportContext?: ReportContext) {
