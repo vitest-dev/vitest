@@ -44,6 +44,12 @@ export async function startVitest(
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
+  // running "vitest --coverage.all" or "vitest --coverage.100"
+  // @ts-expect-error Element implicitly has an any type for options.coverage["100"]
+  if (typeof options.coverage === 'object' && !('enabled' in options.coverage) && (options.coverage['100'] === true
+    || Object.keys(options.coverage).length > 1))
+    options.coverage.enabled = true
+
   // running "vitest --browser", assumes browser name is set in the config
   if (typeof options.browser === 'boolean')
     options.browser = { enabled: options.browser } as any
