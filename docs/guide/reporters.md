@@ -16,13 +16,13 @@ Using reporters via `vite.config.ts`:
 
 ```ts
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
     reporters: ['verbose']
   },
-});
+})
 ```
 
 ## Reporter Output
@@ -41,7 +41,7 @@ export default defineConfig({
     reporters: ['json'],
     outputFile: './test-output.json'
   },
-});
+})
 ```
 
 ## Combining Reporters
@@ -58,7 +58,7 @@ export default defineConfig({
     reporters: ['json', 'default'],
     outputFile: './test-output.json'
   },
-});
+})
 ```
 
 The above example will both print the test results to the terminal in the default style, and write them as JSON to the designated output file.
@@ -67,12 +67,12 @@ When using multiple reporters, it's also possible to designate multiple output f
 
 ```ts
 export default defineConfig({
-  reporters: ["junit", "json", "verbose"],
-      outputFile: {
-        junit: "./junit-report.xml",
-        json: "./json-report.json",
-      },
-});
+  reporters: ['junit', 'json', 'verbose'],
+  outputFile: {
+    junit: './junit-report.xml',
+    json: './json-report.json',
+  },
+})
 ```
 
 This example will write separate JSON and XML reports as well as printing a verbose report to the terminal.
@@ -92,7 +92,7 @@ export default defineConfig({
   test: {
     reporters: ['default']
   },
-});
+})
 ```
 Example output for tests in progress:
 
@@ -129,7 +129,7 @@ export default defineConfig({
   test: {
     reporters: ['basic']
   },
-});
+})
 ```
 
 Example output using basic reporter:
@@ -156,7 +156,7 @@ export default defineConfig({
   test: {
     reporters: ['verbose']
   },
-});
+})
 ```
 
 Example of final terminal output for a passing test suite:
@@ -190,7 +190,7 @@ export default defineConfig({
   test: {
     reporters: ['dot']
   },
-});
+})
 ```
 
 Example terminal output for a passing test suite:
@@ -217,7 +217,7 @@ export default defineConfig({
   test: {
     reporters: ['junit']
   },
-});
+})
 ```
 
 Example of a JUnit XML report:
@@ -251,7 +251,7 @@ export default defineConfig({
   test: {
     reporters: ['json']
   },
-});
+})
 ```
 Example of a JSON report:
 
@@ -287,7 +287,7 @@ Example of a JSON report:
             "line": 20,
             "column": 28
           }
-        },
+        }
       ],
       "startTime": 1697737019787,
       "endTime": 1697737019797,
@@ -297,7 +297,6 @@ Example of a JSON report:
     }
   ]
 }
-
 ```
 
 ### HTML reporter
@@ -315,7 +314,7 @@ export default defineConfig({
   test: {
     reporters: ['html']
   },
-});
+})
 ```
 
 ### TAP reporter
@@ -331,7 +330,7 @@ export default defineConfig({
   test: {
     reporters: ['tap']
   },
-});
+})
 ```
 
 Example of a TAP report:
@@ -369,7 +368,7 @@ export default defineConfig({
   test: {
     reporters: ['tap-flat']
   },
-});
+})
 ```
 
 Example of a TAP flat report:
@@ -402,7 +401,7 @@ export default defineConfig({
   test: {
     reporters: ['hanging-process']
   },
-});
+})
 ```
 
 ## Custom reporters
@@ -413,9 +412,11 @@ You can use third-party custom reporters installed from NPM by specifying their 
 npx vitest --reporter=some-published-vitest-reporter
 ```
 ```ts
-test: {
-  reporters: ['some-published-vitest-reporter']
-}
+export default defineConfig({
+  test: {
+    reporters: ['some-published-vitest-reporter']
+  }
+})
 ```
 
 Additionally, you can define your own custom reporters and use them by specifying their file path:
