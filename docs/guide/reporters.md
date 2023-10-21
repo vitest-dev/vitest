@@ -83,17 +83,6 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 By default (i.e. if no reporter is specified), Vitest will display results for each test suite hierarchically as they run, and then collapse after a suite passes. When all tests have finished running, the final terminal output will display a summary of results and details of any failed tests.
 
-```bash
-npx vitest --reporter=default
-```
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: ['default']
-  },
-})
-```
 Example output for tests in progress:
 
 ```bash
