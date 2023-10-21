@@ -406,7 +406,7 @@ export default defineConfig({
 
 ## Custom reporters
 
-You can use third-party custom reporters installed from NPM by specifying their package name in the reporters option:
+You can use third-party custom reporters installed from NPM by specifying their package name in the reporters' option:
 
 ```bash
 npx vitest --reporter=some-published-vitest-reporter
