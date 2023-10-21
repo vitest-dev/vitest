@@ -118,7 +118,7 @@ Final output after tests have finished:
 
 ### Basic reporter
 
-The `basic` reporter displays the tests files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail. 
+The `basic` reporter displays the test files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail. 
 
 ```bash
 npx vitest --reporter=basic
