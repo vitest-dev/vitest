@@ -46,7 +46,7 @@ export default defineConfig({
 
 ## Combining Reporters
 
-You can use multiple reporters simultaneously to print your tests results in different formats. For example:
+You can use multiple reporters simultaneously to print your test results in different formats. For example:
 
 ```bash
 npx vitest --reporter=json --reporter=default
