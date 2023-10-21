@@ -27,7 +27,7 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html`, or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](https://vitest.dev/config/#outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](https://vitest.dev/config/#outputfile) either in your Vite configuration file or via CLI.
 
 Command line:
 ```bash
