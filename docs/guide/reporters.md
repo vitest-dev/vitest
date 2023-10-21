@@ -61,7 +61,7 @@ export default defineConfig({
 })
 ```
 
-The above example will both print the test results to the terminal in the default style, and write them as JSON to the designated output file.
+The above example will both print the test results to the terminal in the default style and write them as JSON to the designated output file.
 
 When using multiple reporters, it's also possible to designate multiple output files, as follows:
 
