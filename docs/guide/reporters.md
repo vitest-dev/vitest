@@ -301,7 +301,7 @@ Example of a JSON report:
 
 ### HTML reporter
 
-Generates an HTML file to view tests results through an interactive GUI. After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
+Generates an HTML file to view test results through an interactive GUI. After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
 Output file can be specified using the [`outputFile`](##Reporter-Output) configuration option. If no `outputFile` option is provided, a new HTML file will be created. 
 
