@@ -9,9 +9,10 @@ test('hmr.accept works correctly', async () => {
 
   await viteNode.waitForStderr('Hello!')
 
+  const promise = viteNode.waitForStderr('Hello world!')
   editFile(scriptFile, content => content.replace('Hello!', 'Hello world!'))
 
-  await viteNode.waitForStderr('Hello world!', 40_000)
+  await promise
   await viteNode.waitForStderr('Accept')
   await viteNode.waitForStdout(`[vite-node] hot updated: ${scriptFile}`)
 })
