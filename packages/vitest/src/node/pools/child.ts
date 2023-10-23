@@ -100,6 +100,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
       }
       try {
         await pool.run(data, { name, channel })
