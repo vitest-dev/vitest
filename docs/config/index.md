@@ -601,17 +601,7 @@ Project root
 - **Default:** `'default'`
 - **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
-Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
-
-  - `'default'` - collapse suites when they pass
-  - `'basic'` - give a reporter like default reporter in ci
-  - `'verbose'` - keep the full task tree visible
-  - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
-  - `'json'` -  give a simple JSON summary
-  - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
-  - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
-  - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
+Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts), a string to select built-in reporters, or a path to a custom implementation (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
 
 ### outputFile<NonProjectOption />
 
