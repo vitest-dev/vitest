@@ -11,7 +11,7 @@ import type { JSDOMOptions } from './jsdom-options'
 import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
-import type { Arrayable } from './general'
+import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions } from './pool-options'
@@ -538,6 +538,14 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
+   * Enable stack trace filtering. If absent, all stack trace frames
+   * will be shown.
+   *
+   * Return `false` to omit the frame.
+   */
+  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
+
+  /**
    * Indicates if CSS files should be processed.
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
@@ -788,6 +796,7 @@ export type ProjectConfig = Omit<
   | 'resolveSnapshotPath'
   | 'passWithNoTests'
   | 'onConsoleLog'
+  | 'onStackTrace'
   | 'dangerouslyIgnoreUnhandledErrors'
   | 'slowTestThreshold'
   | 'inspect'

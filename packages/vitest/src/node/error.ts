@@ -49,6 +49,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
     getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    frameFilter: project.config.onStackTrace,
   }
 
   if (fullStack)
