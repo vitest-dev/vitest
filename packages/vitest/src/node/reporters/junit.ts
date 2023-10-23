@@ -135,6 +135,7 @@ export class JUnitReporter implements Reporter {
     const project = this.ctx.getProjectByTaskId(task.id)
     const stack = parseErrorStacktrace(error, {
       getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+      frameFilter: this.ctx.config.onStackTrace,
     })
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
@@ -179,7 +180,7 @@ export class JUnitReporter implements Reporter {
           await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const errors = task.result.errors?.length ? task.result.errors : [task.result.error]
+          const errors = task.result.errors || []
           for (const error of errors) {
             await this.writeElement('failure', {
               message: error?.message,

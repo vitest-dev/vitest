@@ -378,10 +378,11 @@ export function resolveConfig(
 
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
 
-  if (mode === 'typecheck') {
-    resolved.include = resolved.typecheck.include
-    resolved.exclude = resolved.typecheck.exclude
-  }
+  resolved.typecheck ??= {} as any
+  resolved.typecheck.enabled ??= false
+
+  if (resolved.typecheck.enabled)
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
@@ -398,9 +399,6 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser?.enabled)
-    return true
-
-  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+export function isBrowserEnabled(config: ResolvedConfig): boolean {
+  return Boolean(config.browser?.enabled)
 }

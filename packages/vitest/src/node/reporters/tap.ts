@@ -76,6 +76,7 @@ export class TapReporter implements Reporter {
           task.result.errors.forEach((error) => {
             const stacks = parseErrorStacktrace(error, {
               getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+              frameFilter: this.ctx.config.onStackTrace,
             })
             const stack = stacks[0]
 

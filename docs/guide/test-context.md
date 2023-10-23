@@ -66,7 +66,7 @@ it('math is hard', ({ skip }) => {
 
 ## Extend Test Context
 
-Vitest provides two diffident ways to help you extend the test context.
+Vitest provides two different ways to help you extend the test context.
 
 ### `test.extend`
 

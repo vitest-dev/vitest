@@ -5,7 +5,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import MagicString from 'magic-string'
@@ -39,12 +39,16 @@ interface TestExclude {
 
 type Options = ResolvedCoverageOptions<'v8'>
 type TransformResults = Map<string, FetchResult>
+type RawCoverage = Profiler.TakePreciseCoverageReturnType
+type CoverageByTransformMode = Record<AfterSuiteRunMeta['transformMode'], RawCoverage[]>
+type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
 
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
+const DEFAULT_PROJECT = Symbol.for('default-project')
 
 export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8'
@@ -52,7 +56,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   ctx!: Vitest
   options!: Options
   testExclude!: InstanceType<TestExclude>
-  coverages: Profiler.TakePreciseCoverageReturnType[] = []
+  coverages = new Map<ProjectName, CoverageByTransformMode>()
 
   initialize(ctx: Vitest) {
     const config: CoverageV8Options = ctx.config.coverage
@@ -92,54 +96,52 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     if (clean && existsSync(this.options.reportsDirectory))
       await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
-    this.coverages = []
+    this.coverages = new Map()
   }
 
-  onAfterSuiteRun({ coverage }: AfterSuiteRunMeta) {
-    this.coverages.push(coverage as Profiler.TakePreciseCoverageReturnType)
+  /*
+   * Coverage and meta information passed from Vitest runners.
+   * Note that adding new entries here and requiring on those without
+   * backwards compatibility is a breaking change.
+   */
+  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
+    if (transformMode !== 'web' && transformMode !== 'ssr')
+      throw new Error(`Invalid transform mode: ${transformMode}`)
+
+    let entry = this.coverages.get(projectName || DEFAULT_PROJECT)
+
+    if (!entry) {
+      entry = { web: [], ssr: [] }
+      this.coverages.set(projectName || DEFAULT_PROJECT, entry)
+    }
+
+    entry[transformMode].push(coverage as RawCoverage)
   }
 
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
     if (provider === 'stackblitz')
       this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-v8 does not work on Stackblitz. Report will be empty.'))
 
-    const transformResults = normalizeTransformResults(this.ctx.projects.map(project => project.vitenode.fetchCache))
-    const merged = mergeProcessCovs(this.coverages)
-    const scriptCoverages = merged.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))
+    const coverageMaps = await Promise.all(
+      Array.from(this.coverages.entries()).map(([projectName, coverages]) => [
+        this.mergeAndTransformCoverage(coverages.ssr, projectName, 'ssr'),
+        this.mergeAndTransformCoverage(coverages.web, projectName, 'web'),
+      ]).flat(),
+    )
 
     if (this.options.all && allTestsRun) {
-      const coveredFiles = Array.from(scriptCoverages.map(r => r.url))
-      const untestedFiles = await this.getUntestedFiles(coveredFiles, transformResults)
+      const coveredFiles = coverageMaps.map(map => map.files()).flat()
+      const untestedCoverage = await this.getUntestedFiles(coveredFiles)
+      const untestedCoverageResults = untestedCoverage.map(files => ({ result: [files] }))
 
-      scriptCoverages.push(...untestedFiles)
+      coverageMaps.push(await this.mergeAndTransformCoverage(untestedCoverageResults))
     }
 
-    const converted = await Promise.all(scriptCoverages.map(async ({ url, functions }) => {
-      const sources = await this.getSources(url, transformResults, functions)
-
-      // If no source map was found from vite-node we can assume this file was not run in the wrapper
-      const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
-
-      const converter = v8ToIstanbul(url, wrapperLength, sources)
-      await converter.load()
-
-      converter.applyCoverage(functions)
-      return converter.toIstanbul()
-    }))
-
-    const mergedCoverage = converted.reduce((coverage, previousCoverageMap) => {
-      const map = libCoverage.createCoverageMap(coverage)
-      map.merge(previousCoverageMap)
-      return map
-    }, libCoverage.createCoverageMap({}))
-
-    const sourceMapStore = libSourceMaps.createSourceMapStore()
-    const coverageMap: CoverageMap = await sourceMapStore.transformCoverage(mergedCoverage)
+    const coverageMap = mergeCoverageMaps(...coverageMaps)
 
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
-      sourceFinder: sourceMapStore.sourceFinder,
       watermarks: this.options.watermarks,
     })
 
@@ -185,11 +187,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }
   }
 
-  private async getUntestedFiles(testedFiles: string[], transformResults: TransformResults): Promise<Profiler.ScriptCoverage[]> {
+  private async getUntestedFiles(testedFiles: string[]): Promise<Profiler.ScriptCoverage[]> {
+    const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
+
     const includedFiles = await this.testExclude.glob(this.ctx.config.root)
     const uncoveredFiles = includedFiles
       .map(file => pathToFileURL(resolve(this.ctx.config.root, file)))
-      .filter(file => !testedFiles.includes(file.href))
+      .filter(file => !testedFiles.includes(file.pathname))
 
     return await Promise.all(uncoveredFiles.map(async (uncoveredFile) => {
       const { source } = await this.getSources(uncoveredFile.href, transformResults)
@@ -247,6 +251,41 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       },
     }
   }
+
+  private async mergeAndTransformCoverage(coverages: RawCoverage[], projectName?: ProjectName, transformMode?: 'web' | 'ssr') {
+    const viteNode = this.ctx.projects.find(project => project.getName() === projectName)?.vitenode || this.ctx.vitenode
+    const fetchCache = transformMode ? viteNode.fetchCaches[transformMode] : viteNode.fetchCache
+    const transformResults = normalizeTransformResults(fetchCache)
+
+    const merged = mergeProcessCovs(coverages)
+    const scriptCoverages = merged.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))
+
+    const converted = await Promise.all(scriptCoverages.map(async ({ url, functions }) => {
+      const sources = await this.getSources(url, transformResults, functions)
+
+      // If no source map was found from vite-node we can assume this file was not run in the wrapper
+      const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
+
+      const converter = v8ToIstanbul(url, wrapperLength, sources)
+      await converter.load()
+
+      converter.applyCoverage(functions)
+      return converter.toIstanbul()
+    }))
+
+    const mergedCoverage = mergeCoverageMaps(...converted)
+
+    const sourceMapStore = libSourceMaps.createSourceMapStore()
+    return sourceMapStore.transformCoverage(mergedCoverage)
+  }
+}
+
+function mergeCoverageMaps(...coverageMaps: (CoverageMap | CoverageMapData)[]) {
+  return coverageMaps.reduce<CoverageMap>((coverage, previousCoverageMap) => {
+    const map = libCoverage.createCoverageMap(coverage)
+    map.merge(previousCoverageMap)
+    return map
+  }, libCoverage.createCoverageMap({}))
 }
 
 /**
@@ -261,7 +300,7 @@ function removeViteHelpersFromSourceMaps(source: string | undefined, map: Encode
   sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
 
   const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
-    hires: true,
+    hires: 'boundary',
   })
 
   // A merged source map where the first one excludes helpers
@@ -284,16 +323,14 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
   }, 0)
 }
 
-function normalizeTransformResults(fetchCaches: Map<string, { result: FetchResult }>[]) {
+function normalizeTransformResults(fetchCache: Map<string, { result: FetchResult }>) {
   const normalized: TransformResults = new Map()
 
-  for (const fetchCache of fetchCaches) {
-    for (const [key, value] of fetchCache.entries()) {
-      const cleanEntry = cleanUrl(key)
+  for (const [key, value] of fetchCache.entries()) {
+    const cleanEntry = cleanUrl(key)
 
-      if (!normalized.has(cleanEntry))
-        normalized.set(cleanEntry, value.result)
-    }
+    if (!normalized.has(cleanEntry))
+      normalized.set(cleanEntry, value.result)
   }
 
   return normalized

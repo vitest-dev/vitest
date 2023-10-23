@@ -11,7 +11,7 @@ import type { JSDOMOptions } from './jsdom-options'
 import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
-import type { Arrayable } from './general'
+import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions } from './pool-options'
@@ -37,7 +37,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+export type VitestRunMode = 'test' | 'benchmark'
 
 interface SequenceOptions {
   /**
@@ -294,7 +294,7 @@ export interface InlineConfig {
    *
    * @default 'threads'
    */
-  pool?: Omit<Pool, 'browser'>
+  pool?: Exclude<Pool, 'browser'>
 
   /**
    * Pool options
@@ -314,7 +314,7 @@ export interface InlineConfig {
    *   // ...
    * ]
    */
-  poolMatchGlobs?: [string, Omit<Pool, 'browser'>][]
+  poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
    * Update snapshot
@@ -538,6 +538,14 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
+   * Enable stack trace filtering. If absent, all stack trace frames
+   * will be shown.
+   *
+   * Return `false` to omit the frame.
+   */
+  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
+
+  /**
    * Indicates if CSS files should be processed.
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
@@ -636,6 +644,14 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
+   * Run typechecking tests alongisde regular tests.
+   */
+  enabled?: boolean
+  /**
+   * When typechecking is enabled, only run typechecking tests.
+   */
+  only?: boolean
+  /**
    * What tools to use for type checking.
    */
   checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
@@ -704,7 +720,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
   mode: VitestRunMode
 
   base?: string
@@ -749,7 +765,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     seed: number
   }
 
-  typecheck: TypecheckConfig
+  typecheck: Omit<TypecheckConfig, 'enabled'> & {
+    enabled: boolean
+  }
   runner?: string
 }
 
@@ -778,6 +796,7 @@ export type ProjectConfig = Omit<
   | 'resolveSnapshotPath'
   | 'passWithNoTests'
   | 'onConsoleLog'
+  | 'onStackTrace'
   | 'dangerouslyIgnoreUnhandledErrors'
   | 'slowTestThreshold'
   | 'inspect'

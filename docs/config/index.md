@@ -547,7 +547,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'typescript'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -1319,7 +1319,7 @@ Run all tests in a specific browser. Possible options in different providers:
 
 - **Type:** `boolean`
 - **Default:** `process.env.CI`
-- **CLI:** `--browser.headless`, `--brower.headless=false`
+- **CLI:** `--browser.headless`, `--browser.headless=false`
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
@@ -1637,6 +1637,24 @@ Changes the order in which setup files are executed.
 
 Options for configuring [typechecking](/guide/testing-types) test environment.
 
+#### typecheck.enabled
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck`, `--typecheck.enabled`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Enable typechecking alongside your regular tests.
+
+#### typecheck.only
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck.only`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Run only typecheck tests, when typechecking is enabled. When using CLI, this option will automatically enable typechecking.
+
 #### typecheck.checker
 
 - **Type**: `'tsc' | 'vue-tsc' | string`
@@ -1761,6 +1779,34 @@ export default defineConfig({
   test: {
     onConsoleLog(log: string, type: 'stdout' | 'stderr'): boolean | void {
       if (log === 'message from third party library' && type === 'stdout')
+        return false
+    },
+  },
+})
+```
+
+### onStackTrace
+
+- **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Apply a filtering function to each frame of each stacktrace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
+
+Can be useful for filtering out stacktrace frames from third-party libraries.
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onStackTrace(error: Error, { file }: ParsedStack): boolean | void {
+      // If we've encountered a ReferenceError, show the whole stack.
+      if (error.name === 'ReferenceError')
+        return
+
+      // Reject all frames from third party libraries.
+      if (file.includes('node_modules'))
         return false
     },
   },

@@ -30,7 +30,7 @@ export class BaseCoverageProvider {
     const thresholdsToUpdate: [Threshold, number][] = []
 
     for (const key of THRESHOLD_KEYS) {
-      const threshold = thresholds[key] || 100
+      const threshold = thresholds[key] ?? 100
       const actual = Math.min(...summaries.map(summary => summary[key].pct))
 
       if (actual > threshold)
@@ -45,7 +45,7 @@ export class BaseCoverageProvider {
 
     for (const [threshold, newValue] of thresholdsToUpdate) {
       // Find the exact match from the configuration file and replace the value
-      const previousThreshold = (thresholds[threshold] || 100).toString()
+      const previousThreshold = (thresholds[threshold] ?? 100).toString()
       const pattern = new RegExp(`(${threshold}\\s*:\\s*)${previousThreshold.replace('.', '\\.')}`)
       const matches = originalConfig.match(pattern)
 

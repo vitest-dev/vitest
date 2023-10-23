@@ -303,6 +303,13 @@ describe('jest-expect', () => {
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
     }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
+
+    expect(() => {
+      const x = { a: { b: { c: 1 } } }
+      const y = { a: { b: { c: 2 } } }
+      Object.freeze(x.a)
+      expect(x).toEqual(y)
+    }).toThrowErrorMatchingInlineSnapshot(`"expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }"`)
   })
 
   it('assertions', () => {

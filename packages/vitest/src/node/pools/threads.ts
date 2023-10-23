@@ -88,6 +88,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
