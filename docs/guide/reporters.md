@@ -12,7 +12,7 @@ Using reporters via command line:
 npx vitest --reporter=verbose
 ```
 
-Using reporters via `vite.config.ts`:
+Using reporters via [`vitest.config.ts`](/config/):
 
 ```ts
 /// <reference types="vitest" />
@@ -29,13 +29,12 @@ export default defineConfig({
 
 By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](https://vitest.dev/config/#outputfile) either in your Vite configuration file or via CLI.
 
-Command line:
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=json --outputFile=./test-output.json
 ```
 
-`vite.config.ts`
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['json'],
@@ -43,6 +42,7 @@ export default defineConfig({
   },
 })
 ```
+:::
 
 ## Combining Reporters
 
@@ -109,17 +109,19 @@ Final output after tests have finished:
 
 The `basic` reporter displays the test files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail. 
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=basic
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['basic']
   },
 })
 ```
+:::
 
 Example output using basic reporter:
 ```bash
@@ -136,17 +138,19 @@ Example output using basic reporter:
 
 Follows the same hierarchical structure as the `default` reporter, but does not collapse sub-trees for passed test suites. The final terminal output displays all tests that have run, including those that have passed.
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=verbose
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['verbose']
   },
 })
 ```
+:::
 
 Example of final terminal output for a passing test suite:
 
@@ -170,17 +174,19 @@ Example of final terminal output for a passing test suite:
 
 Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=dot
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['dot']
   },
 })
 ```
+:::
 
 Example terminal output for a passing test suite:
 
@@ -197,17 +203,19 @@ Example terminal output for a passing test suite:
 
 Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](##Reporter-Output) configuration option. 
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=junit
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['junit']
   },
 })
 ```
+:::
 
 Example of a JUnit XML report:
 ```xml
@@ -231,17 +239,20 @@ The outputted XML contains nested `testsuites` and `testcase` tags. You can use 
 
 Outputs a report of the test results in JSON format. Can either be printed to the terminal or written to a file using the [`outputFile`](##Reporter-Output) configuration option. 
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=json
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['json']
   },
 })
 ```
+:::
+
 Example of a JSON report:
 
 ```json
@@ -290,37 +301,45 @@ Example of a JSON report:
 
 ### HTML reporter
 
-Generates an HTML file to view test results through an interactive GUI. After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
+Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
 Output file can be specified using the [`outputFile`](##Reporter-Output) configuration option. If no `outputFile` option is provided, a new HTML file will be created. 
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=html
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['html']
   },
 })
 ```
+:::
+
+::: tip
+This reporter requires installed [`@vitest/ui`](/guide/ui) package.
+:::
 
 ### TAP reporter
 
 Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP). 
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=tap
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['tap']
   },
 })
 ```
+:::
 
 Example of a TAP report:
 ```bash
@@ -348,17 +367,19 @@ not ok 1 - __tests__/test-file-1.test.ts # time=14.00ms {
 
 Outputs a TAP flat report. Like the `tap` reporter, test results are formatted to follow TAP standards, but test suites are formatted as a flat list rather than a nested hierarchy.
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=tap-flat
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['tap-flat']
   },
 })
 ```
+:::
 
 Example of a TAP flat report:
 ```bash
@@ -381,32 +402,37 @@ ok 2 - __tests__/test-file-1.test.ts > first test file > 4 - 2 should equal 2 # 
 
 Displays a list of hanging processes, if any are preventing Vitest from exiting safely. The `hanging-process` reporter does not itself display test results, but can be used in conjunction with another reporter to monitor processes while tests run. Using this reporter can be resource-intensive, so should generally be reserved for debugging purposes in situations where Vitest consistently cannot exit the process.
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=hanging-process
 ```
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['hanging-process']
   },
 })
 ```
+:::
 
 ## Custom reporters
 
 You can use third-party custom reporters installed from NPM by specifying their package name in the reporters' option:
 
-```bash
+:::code-group
+```bash [CLI]
 npx vitest --reporter=some-published-vitest-reporter
 ```
-```ts
+
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['some-published-vitest-reporter']
-  }
+  },
 })
 ```
+:::
 
 Additionally, you can define your own custom reporters and use them by specifying their file path:
 
