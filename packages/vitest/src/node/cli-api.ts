@@ -56,6 +56,15 @@ export async function startVitest(
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
+  if (typeof options.typecheck === 'boolean')
+    options.typecheck = { enabled: true }
+
+  if (typeof options.typecheck?.only === 'boolean') {
+    options.typecheck ??= {}
+    options.typecheck.only = true
+    options.typecheck.enabled = true
+  }
+
   const ctx = await createVitest(mode, options, viteOverrides)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
@@ -78,7 +87,7 @@ export async function startVitest(
   }
 
   let stdinCleanup
-  if (process.stdin.isTTY)
+  if (process.stdin.isTTY && ctx.config.watch)
     stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {

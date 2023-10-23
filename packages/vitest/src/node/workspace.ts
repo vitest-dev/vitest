@@ -8,8 +8,8 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge, hasFailed } from '../utils'
-import { Typechecker } from '../typecheck/typechecker'
+import { deepMerge } from '../utils'
+import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
@@ -90,7 +90,7 @@ export class WorkspaceProject {
 
     this._globalSetupInit = true
 
-    this._globalSetups = await loadGlobalSetupFiles(this)
+    this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
     try {
       for (const globalSetupFile of this._globalSetups) {
@@ -112,7 +112,7 @@ export class WorkspaceProject {
   async teardownGlobalSetup() {
     if (!this._globalSetupInit || !this._globalSetups.length)
       return
-    for (const globalSetupFile of this._globalSetups.reverse()) {
+    for (const globalSetupFile of [...this._globalSetups].reverse()) {
       try {
         await globalSetupFile.teardown?.()
       }
@@ -156,9 +156,14 @@ export class WorkspaceProject {
   async globTestFiles(filters: string[] = []) {
     const dir = this.config.dir || this.config.root
 
-    const testFiles = await this.globAllTestFiles(this.config, dir)
+    const typecheck = this.config.typecheck
 
-    return this.filterFiles(testFiles, filters, dir)
+    const [testFiles, typecheckTestFiles] = await Promise.all([
+      typecheck.enabled && typecheck.only ? [] : this.globAllTestFiles(this.config, dir),
+      typecheck.enabled ? this.globFiles(typecheck.include, typecheck.exclude, dir) : [],
+    ])
+
+    return this.filterFiles([...testFiles, ...typecheckTestFiles], filters, dir)
   }
 
   async globAllTestFiles(config: ResolvedConfig, cwd: string) {
@@ -241,12 +246,17 @@ export class WorkspaceProject {
     this.browser = await createBrowserServer(this, configFile)
   }
 
-  static async createCoreProject(ctx: Vitest) {
+  static createBasicProject(ctx: Vitest) {
     const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
     project.vitenode = ctx.vitenode
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    return project
+  }
+
+  static async createCoreProject(ctx: Vitest) {
+    const project = WorkspaceProject.createBasicProject(ctx)
     await project.initBrowserServer(ctx.server.config.configFile)
     return project
   }
@@ -273,68 +283,6 @@ export class WorkspaceProject {
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
     return this.ctx.report(name, ...args)
-  }
-
-  async typecheck(filters: string[] = []) {
-    const dir = this.config.dir || this.config.root
-    const { include, exclude } = this.config.typecheck
-
-    const testFiles = await this.globFiles(include, exclude, dir)
-    const testsFilesList = this.filterFiles(testFiles, filters, dir)
-
-    const checker = new Typechecker(this, testsFilesList)
-    this.typechecker = checker
-    checker.onParseEnd(async ({ files, sourceErrors }) => {
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-      const failedTests = hasFailed(files)
-      const exitCode = !failedTests && checker.getExitCode()
-      if (exitCode) {
-        const error = new Error(checker.getOutput())
-        error.stack = ''
-        this.ctx.state.catchError(error, 'Typecheck Error')
-      }
-      if (!files.length) {
-        this.ctx.logger.printNoTestFound()
-      }
-      else {
-        if (failedTests)
-          process.exitCode = 1
-        await this.report('onFinished', files)
-      }
-      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
-        process.exitCode = 1
-        await this.ctx.logger.printSourceTypeErrors(sourceErrors)
-      }
-      // if there are source errors, we are showing it, and then terminating process
-      if (!files.length) {
-        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
-        await this.close()
-        process.exit(exitCode)
-      }
-      if (this.config.watch) {
-        await this.report('onWatcherStart', files, [
-          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
-          ...this.ctx.state.getUnhandledErrors(),
-        ])
-      }
-    })
-    checker.onParseStart(async () => {
-      await this.report('onInit', this.ctx)
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onCollected')
-    })
-    checker.onWatcherRerun(async () => {
-      await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
-      await checker.collectTests()
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-    })
-    await checker.prepare()
-    await checker.collectTests()
-    await checker.start()
   }
 
   isBrowserEnabled() {

@@ -49,10 +49,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return
     }
 
-    // Other keys are for watch mode only
-    if (!ctx.config.watch)
-      return
-
     const name = key?.name
 
     if (ctx.runningPromise) {
@@ -64,10 +60,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // quit
     if (name === 'q')
       return ctx.exit(true)
-
-    // TODO typechecking doesn't support shortcuts this yet
-    if (ctx.mode === 'typecheck')
-      return
 
     // help
     if (name === 'h')

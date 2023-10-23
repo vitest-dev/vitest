@@ -191,7 +191,7 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
 
-  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+  Everything in JavaScript is truthy, except `false`, `null`, `undefined`, `NaN`, `0`, `-0`, `0n`, `""` and `document.all`.
 
 ## toBeFalsy
 
@@ -224,7 +224,7 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
 
-  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+  Everything in JavaScript is truthy, except `false`, `null`, `undefined`, `NaN`, `0`, `-0`, `0n`, `""` and `document.all`.
 
 ## toBeNull
 

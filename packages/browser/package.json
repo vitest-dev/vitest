@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "estree-walker": "^3.0.3",
-    "magic-string": "^0.30.4",
+    "magic-string": "^0.30.5",
     "sirv": "^2.0.3"
   },
   "devDependencies": {
