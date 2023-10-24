@@ -1329,7 +1329,7 @@ importers:
   packages/vitest:
     dependencies:
       '@types/node':
-        specifier: '>= 14'
+        specifier: '^18.0.0 || >=20.0.0'
         version: 18.16.19
       '@vitest/browser':
         specifier: '*'
