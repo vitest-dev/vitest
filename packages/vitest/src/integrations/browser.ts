@@ -1,4 +1,4 @@
-import { ensurePackageInstalled } from '../node/pkg'
+// import { ensurePackageInstalled } from '../node/pkg'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
 
 interface Loader {
@@ -8,7 +8,7 @@ interface Loader {
 
 export async function getBrowserProvider(options: ResolvedBrowserOptions, loader: Loader): Promise<BrowserProviderModule> {
   if (options.provider == null || options.provider === 'webdriverio' || options.provider === 'playwright') {
-    await ensurePackageInstalled('@vitest/browser', loader.root)
+    // await ensurePackageInstalled('@vitest/browser', loader.root)
     const providers = await loader.executeId('@vitest/browser/providers') as {
       webdriverio: BrowserProviderModule
       playwright: BrowserProviderModule

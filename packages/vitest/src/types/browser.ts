@@ -4,7 +4,7 @@ import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
-  options: unknown
+  options?: unknown
 }
 
 export interface BrowserProvider {
@@ -36,13 +36,22 @@ export interface BrowserConfigOptions {
   name: string
 
   /**
-   * browser provider
+   * Browser provider
    *
    * @default 'webdriverio'
    */
   provider?: 'webdriverio' | 'playwright' | (string & {})
 
-  // TODO: better documentation
+  /**
+   * Options that are passed down to a browser provider.
+   * To support type hinting, add one of the types to your tsconfig.json "compilerOptions.types" field:
+   *
+   * - for webdriverio: `@vitest/browser/providers/webdriverio`
+   * - for playwright: `@vitest/browser/providers/playwright`
+   *
+   * @example
+   * { playwright: { launch: { devtools: true } }
+   */
   providerOptions?: BrowserProviderOptions
 
   /**
