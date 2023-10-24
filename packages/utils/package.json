@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "diff-sequences": "^29.4.3",
-    "loupe": "^2.3.6",
+    "loupe": "^2.3.7",
     "pretty-format": "^29.5.0"
   },
   "devDependencies": {
