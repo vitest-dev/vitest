@@ -5,7 +5,7 @@ import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { setupChaiConfig } from '../integrations/chai/config'
-import { setupGlobalEnv, withEnv } from './setup.node'
+import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 

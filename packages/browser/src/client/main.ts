@@ -1,7 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
-import type { VitestExecutor } from 'vitest/src/runtime/execute'
+import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import type { HMRPayload, Update } from 'vite/types/hmrPayload'
-import type { CustomEventMap } from 'vite/types/customEvent'
+import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
+import type { CustomEventMap } from 'vite/types/customEvent.js'
 import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'

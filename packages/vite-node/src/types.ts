@@ -1,4 +1,4 @@
-import type { ViteHotContext } from 'vite/types/hot'
+import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
