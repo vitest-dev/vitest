@@ -2,8 +2,8 @@
   "name": "@vitest/example-solid",
   "private": true,
   "scripts": {
-    "test": "if-node-version \">14\" vitest",
-    "coverage": "if-node-version \">14\" vitest --coverage"
+    "test": "vitest",
+    "coverage": "vitest --coverage"
   },
   "dependencies": {
     "solid-js": "^1.4.3"

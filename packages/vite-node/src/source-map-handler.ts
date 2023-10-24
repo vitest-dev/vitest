@@ -102,7 +102,6 @@ function retrieveSourceMapURL(source: string) {
   // Keep executing the search to find the *last* sourceMappingURL to avoid
   // picking up sourceMappingURLs from comments, strings, etc.
   let lastMatch, match
-  // eslint-disable-next-line no-cond-assign
   while (match = re.exec(fileData)) lastMatch = match
   if (!lastMatch)
     return null

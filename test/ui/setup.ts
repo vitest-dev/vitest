@@ -2,7 +2,6 @@
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'fs-extra'
-import fetch from 'node-fetch-native'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
 import { expect } from 'vitest'
