@@ -198,12 +198,9 @@
     "mlly": "^1.4.0",
     "p-limit": "^4.0.0",
     "pkg-types": "^1.0.3",
-    "playwright": "^1.35.1",
     "pretty-format": "^29.5.0",
     "prompts": "^2.4.2",
-    "safaridriver": "^0.0.5",
     "strip-ansi": "^7.1.0",
-    "webdriverio": "^8.11.2",
     "ws": "^8.13.0"
   }
 }

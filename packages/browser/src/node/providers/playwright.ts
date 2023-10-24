@@ -1,13 +1,13 @@
 import type { Page } from 'playwright'
-import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
-import { ensurePackageInstalled } from '../pkg'
-import type { WorkspaceProject } from '../workspace'
-import type { Awaitable } from '../../types'
+import type { BrowserProvider, BrowserProviderInitializationOptions, BrowserProviderOptions, WorkspaceProject } from 'vitest/node'
+import { ensurePackageInstalled } from 'vitest/node'
+
+type Awaitable<T> = T | PromiseLike<T>
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = typeof playwrightBrowsers[number]
 
-export interface PlaywrightProviderOptions extends BrowserProviderOptions {
+export interface PlaywrightProviderOptions extends BrowserProviderInitializationOptions {
   browser: PlaywrightBrowser
 }
 
@@ -18,13 +18,16 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browser!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
+  private options?: BrowserProviderOptions['playwright']
+
   getSupportedBrowsers() {
     return playwrightBrowsers
   }
 
-  async initialize(ctx: WorkspaceProject, { browser }: PlaywrightProviderOptions) {
+  async initialize(ctx: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
     this.ctx = ctx
     this.browser = browser
+    this.options = options as any
 
     const root = this.ctx.config.root
 
@@ -40,8 +43,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const playwright = await import('playwright')
 
-    const playwrightInstance = await playwright[this.browser].launch({ headless: options.headless })
-    this.cachedBrowser = await playwrightInstance.newPage()
+    const playwrightInstance = await playwright[this.browser].launch({
+      ...this.options?.launch,
+      headless: options.headless,
+    })
+    this.cachedBrowser = await playwrightInstance.newPage(this.options?.page)
 
     this.cachedBrowser.on('close', () => {
       playwrightInstance.close()
