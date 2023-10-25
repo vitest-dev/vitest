@@ -75,8 +75,12 @@ async function init(ctx: ChildContext) {
     isChildProcess: true,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

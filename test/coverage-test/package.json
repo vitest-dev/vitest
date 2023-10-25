@@ -8,7 +8,7 @@
     "test:istanbul": "node ./testing.mjs --provider istanbul",
     "test:browser": "node ./testing.mjs --browser --provider istanbul",
     "test:options": "node ./testing-options.mjs",
-    "test:types": "vitest --typecheck.only --run --reporter verbose"
+    "test:types": "vitest --typecheck.only --typecheck.tsconfig ../../tsconfig.check.json --run --reporter verbose"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",

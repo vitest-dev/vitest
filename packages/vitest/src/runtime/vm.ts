@@ -86,7 +86,12 @@ export async function run(ctx: WorkerContext) {
   if (!isContext(context))
     throw new TypeError(`Environment ${ctx.environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
 
-  context.__vitest_worker__ = state
+  Object.defineProperty(context, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
   // this is unfortunately needed for our own dependencies
   // we need to find a way to not rely on this by default
   // because browser doesn't provide these globals

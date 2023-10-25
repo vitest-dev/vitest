@@ -1,7 +1,7 @@
 import { Parser } from 'acorn'
-import { injectVitestModule } from '@vitest/browser/src/node/esmInjector'
 import { expect, test } from 'vitest'
 import { transformWithEsbuild } from 'vite'
+import { injectVitestModule } from '../../../packages/browser/src/node/esmInjector'
 
 function parse(code: string, options: any) {
   return Parser.parse(code, options)

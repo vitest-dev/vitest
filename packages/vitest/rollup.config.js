@@ -26,7 +26,6 @@ const entries = [
   'src/runtime/worker.ts',
   'src/runtime/vm.ts',
   'src/runtime/child.ts',
-  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/runtime/entry-vm.ts',
   'src/integrations/spy.ts',
