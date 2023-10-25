@@ -57,12 +57,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18]
+        node_version: [18, 20]
         include:
           - os: macos-latest
-            node_version: 18
+            node_version: 20
           - os: windows-latest
-            node_version: 18
+            node_version: 20
       fail-fast: false
 
     steps:
@@ -97,7 +97,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install
         run: pnpm i
@@ -120,7 +120,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-firefox@v1
@@ -160,7 +160,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-edge@v1
@@ -191,7 +191,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install
         run: sudo pnpm i --frozen-lockfile
