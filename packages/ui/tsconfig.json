@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "jsx": "preserve",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "extends": "../../tsconfig.base.json",
   "include": [

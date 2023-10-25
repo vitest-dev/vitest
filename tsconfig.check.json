@@ -3,7 +3,7 @@
   "compilerOptions": {
     "types": [
       "node",
-      "vite/client",
+      "vite/client"
     ]
   },
   "exclude": [
