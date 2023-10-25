@@ -56,15 +56,13 @@ describe('waitFor', () => {
 
   test('stacktrace correctly', async () => {
     const check = () => {
-      const _a = 1
-      // @ts-expect-error test
-      _a += 1
+      throw new Error('Fail.')
     }
     try {
       await vi.waitFor(check, 100)
     }
     catch (error) {
-      expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
+      expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
   })
@@ -154,16 +152,13 @@ describe('waitUntil', () => {
 
   test('stacktrace correctly when callback throw error', async () => {
     const check = () => {
-      const _a = 1
-      // @ts-expect-error test
-      _a += 1
-      return true
+      throw new Error('Fail.')
     }
     try {
       await vi.waitUntil(check, 20)
     }
     catch (error) {
-      expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
+      expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
   })

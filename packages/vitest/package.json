@@ -98,7 +98,7 @@
     "*.cjs"
   ],
   "engines": {
-    "node": ">=v14.18.0"
+    "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -107,7 +107,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
-    "@types/node": ">= 14",
+    "@types/node": "^18.0.0 || >=20.0.0",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
@@ -157,7 +157,7 @@
     "chai": "^4.3.10",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.3",
-    "magic-string": "^0.30.4",
+    "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
     "std-env": "^3.3.3",

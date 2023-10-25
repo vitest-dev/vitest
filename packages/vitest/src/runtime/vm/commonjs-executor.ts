@@ -216,7 +216,6 @@ export class CommonjsExecutor {
     let currentExtension: string
     let index: number
     let startIndex = 0
-    // eslint-disable-next-line no-cond-assign
     while ((index = name.indexOf('.', startIndex)) !== -1) {
       startIndex = index + 1
       if (index === 0)

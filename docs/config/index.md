@@ -601,17 +601,7 @@ Project root
 - **Default:** `'default'`
 - **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
-Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
-
-  - `'default'` - collapse suites when they pass
-  - `'basic'` - give a reporter like default reporter in ci
-  - `'verbose'` - keep the full task tree visible
-  - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
-  - `'json'` -  give a simple JSON summary
-  - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
-  - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
-  - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
+Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts), a string to select built-in reporters, or a path to a custom implementation (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
 
 ### outputFile<NonProjectOption />
 
@@ -1779,6 +1769,34 @@ export default defineConfig({
   test: {
     onConsoleLog(log: string, type: 'stdout' | 'stderr'): boolean | void {
       if (log === 'message from third party library' && type === 'stdout')
+        return false
+    },
+  },
+})
+```
+
+### onStackTrace
+
+- **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Apply a filtering function to each frame of each stacktrace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
+
+Can be useful for filtering out stacktrace frames from third-party libraries.
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onStackTrace(error: Error, { file }: ParsedStack): boolean | void {
+      // If we've encountered a ReferenceError, show the whole stack.
+      if (error.name === 'ReferenceError')
+        return
+
+      // Reject all frames from third party libraries.
+      if (file.includes('node_modules'))
         return false
     },
   },

@@ -47,6 +47,7 @@ export interface ResolvedTestEnvironment {
 
 export interface ContextRPC {
   config: ResolvedConfig
+  projectName: string
   files: string[]
   invalidates?: string[]
   environment: ContextTestEnvironment

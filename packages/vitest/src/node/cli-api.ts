@@ -87,7 +87,7 @@ export async function startVitest(
   }
 
   let stdinCleanup
-  if (process.stdin.isTTY)
+  if (process.stdin.isTTY && ctx.config.watch)
     stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {

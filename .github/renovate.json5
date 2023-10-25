@@ -3,14 +3,9 @@
   "labels": ["dependencies"],
   "pin": false,
   "rangeStrategy": "bump",
-  "node": false,
   "packageRules": [
     {
       "depTypeList": ["peerDependencies"],
-      "enabled": false
-    },
-    {
-      "packageNames": ["node"],
       "enabled": false
     },
     {
@@ -40,6 +35,7 @@
     // wait for ecosystem to upgrade to React v18
     "@testing-library/react",
     "@testing-library/user-event",
+    "node",
     // user can install any version
     "vite"
   ]
