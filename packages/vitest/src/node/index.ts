@@ -9,5 +9,5 @@ export type { WorkspaceSpec } from './pool'
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'
 
-// export { ensurePackageInstalled } from './pkg'
-// export type { BrowserProviderInitializationOptions, BrowserProvider, BrowserProviderOptions } from '../types/browser'
+export { ensurePackageInstalled } from './pkg'
+export type { BrowserProviderInitializationOptions, BrowserProvider, BrowserProviderOptions } from '../types/browser'

@@ -80,8 +80,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       chrome: ['goog:chromeOptions', ['headless', 'disable-gpu']],
       firefox: ['moz:firefoxOptions', ['-headless']],
       edge: ['ms:edgeOptions', ['--headless']],
-      // just to support types, this will never be called
-      // safari: ['', []],
     } as const
 
     const options = this.ctx.config.browser
