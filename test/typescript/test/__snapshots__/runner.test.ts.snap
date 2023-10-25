@@ -92,7 +92,7 @@ exports[`should fail > typechecks empty "include" but with tests 1`] = `
 Breaking changes might not follow semver, please pin Vitest's version when using it.
 
 ⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
-Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**","./dist"]'.
+Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
 
 
 "

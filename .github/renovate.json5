@@ -18,17 +18,6 @@
       ],
       "groupName": "all non-major examples dependencies",
       "groupSlug": "all-minor-patch-examples"
-    },
-    {
-      "excludePackagePatterns": [
-        "@vitest/test-"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
     }
   ],
   "ignoreDeps": [
