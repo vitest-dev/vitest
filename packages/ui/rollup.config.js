@@ -16,48 +16,56 @@ const external = [
   'vitest/node',
   'vitest/config',
   'vite',
+  'vitest',
 ]
 
-export default () => [
+const entries = [
   'index',
   'reporter',
-].flatMap(entry => [
-  {
-    input: `./node/${entry}.ts`,
-    output: {
-      dir: 'dist',
-      format: 'esm',
+]
+
+export default () => {
+  const options = entries.flatMap(entry => [
+    {
+      input: `./node/${entry}.ts`,
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        alias({
+          entries: [
+            { find: /^node:(.+)$/, replacement: '$1' },
+          ],
+        }),
+        resolve({
+          preferBuiltins: true,
+        }),
+        json(),
+        commonjs(),
+        esbuild({
+          target: 'node14',
+        }),
+      ],
+      onwarn,
     },
-    external,
-    plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      resolve({
-        preferBuiltins: true,
-      }),
-      json(),
-      commonjs(),
-      esbuild({
-        target: 'node14',
-      }),
-    ],
-    onwarn,
-  },
-  {
-    input: `./node/${entry}.ts`,
-    output: {
-      file: `dist/${entry}.d.ts`,
-      format: 'esm',
+  ])
+  return [
+    ...options,
+    {
+      input: `./node/index.ts`,
+      output: {
+        file: `dist/index.d.ts`,
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        dts(),
+      ],
     },
-    external,
-    plugins: [
-      dts(),
-    ],
-  },
-])
+  ]
+}
 
 function onwarn(message) {
   if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))

@@ -1,6 +1,6 @@
+import type { File } from 'vitest'
 import { client, config, findById, testRunState } from './client'
 import { activeFileId } from './params'
-import type { File } from '#types'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)

@@ -21,6 +21,7 @@
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
       "@vitest/browser": ["./packages/browser/src/node/index.ts"],
+      "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/node": ["./packages/vitest/src/node/index.ts"],
