@@ -3,6 +3,8 @@
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
+    "strict": true
   },
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
