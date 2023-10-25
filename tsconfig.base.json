@@ -1,18 +1,14 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["esnext", "dom"],
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["esnext"],
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "strict": true,
-    "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
     "declaration": true,
-    "inlineSourceMap": true,
+    "noEmit": true,
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
@@ -25,7 +21,6 @@
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
       "@vitest/browser": ["./packages/browser/src/node/index.ts"],
-      "#types": ["./packages/vitest/src/index.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
@@ -39,23 +34,6 @@
       "vite-node/client": ["./packages/vite-node/src/client.ts"],
       "vite-node/server": ["./packages/vite-node/src/server.ts"],
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
-    },
-    "types": [
-      "node",
-      "vite/client"
-    ]
-  },
-  "exclude": [
-    "**/dist/**",
-    "./packages/vitest/dist/**",
-    "./packages/*/*.d.ts",
-    "./packages/*/*.d.cts",
-    "./packages/ui/client/**",
-    "./packages/ui/cypress/**",
-    "./examples/**/*.*",
-    "./bench/**",
-    "./test/typescript/**",
-    "./test/browser/**",
-    "./test/watch/fixtures/**"
-  ]
+    }
+  }
 }

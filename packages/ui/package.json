@@ -21,7 +21,7 @@
       "import": "./dist/index.js"
     },
     "./reporter": {
-      "types": "./dist/reporter.d.ts",
+      "types": "./reporter.d.ts",
       "import": "./dist/reporter.js"
     },
     "./*": "./*"
@@ -36,6 +36,7 @@
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
     "build:node": "rollup -c",
+    "typecheck": "tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node",
     "dev:ui": "run-p dev dev:client",

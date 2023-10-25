@@ -3,7 +3,6 @@ import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 import pkg from './package.json' assert { type: 'json' }
 
 const external = [
@@ -14,16 +13,13 @@ const external = [
 ]
 
 const plugins = [
-  alias({
-    entries: [{ find: /^node:(.+)$/, replacement: '$1' }],
-  }),
   resolve({
     preferBuiltins: true,
   }),
   json(),
   commonjs(),
   esbuild({
-    target: 'node14',
+    target: 'node18',
   }),
 ]
 

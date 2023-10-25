@@ -1,6 +1,6 @@
 import type { File, TaskResultPack, Test } from '@vitest/runner'
+import type { ResolvedConfig } from 'vitest'
 import { rpc } from './rpc'
-import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
