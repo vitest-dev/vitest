@@ -182,13 +182,6 @@ interface DepsOptions {
   fallbackCJS?: boolean
 
   /**
-   * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
-   * @default false
-   * @deprecated If you rely on aliases inside external packages, use `deps.optimizer.{web,ssr}.include` instead.
-   */
-  registerNodeLoader?: boolean
-
-  /**
    * A list of directories relative to the config file that should be treated as module directories.
    *
    * @default ['node_modules']
@@ -805,7 +798,7 @@ export type ProjectConfig = Omit<
   | 'coverage'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'registerNodeLoader' | 'moduleDirectories'>
+  deps?: Omit<DepsOptions, 'moduleDirectories'>
 }
 
 export type RuntimeConfig = Pick<

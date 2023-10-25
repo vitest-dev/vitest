@@ -1,7 +1,4 @@
-import { pathToFileURL } from 'node:url'
 import mm from 'micromatch'
-import { resolve } from 'pathe'
-import { distDir, rootDir } from '../paths'
 import type { Pool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
@@ -26,9 +23,6 @@ export interface PoolProcessOptions {
   execArgv: string[]
   env: Record<string, string>
 }
-
-const loaderPath = pathToFileURL(resolve(distDir, './loader.js')).href
-const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<Pool, ProcessPool | null> = {
@@ -74,19 +68,10 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     const options: PoolProcessOptions = {
       ...ctx.projectFiles,
-      execArgv: ctx.config.deps.registerNodeLoader
-        ? [
-            ...execArgv,
-            '--require',
-            suppressLoaderWarningsPath,
-            '--experimental-loader',
-            loaderPath,
-            ...conditions,
-          ]
-        : [
-            ...execArgv,
-            ...conditions,
-          ],
+      execArgv: [
+        ...execArgv,
+        ...conditions,
+      ],
       env: {
         TEST: 'true',
         VITEST: 'true',

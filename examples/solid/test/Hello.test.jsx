@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { fireEvent, render } from 'solid-testing-library'
+import { fireEvent, render } from '@solidjs/testing-library'
 import { Hello } from '../components/Hello'
 
 describe('<Hello />', () => {

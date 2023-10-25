@@ -192,7 +192,7 @@ Directory to save cache files.
 
 ### deps
 
-- **Type:** `{ optimizer?, registerNodeLoader?, ... }`
+- **Type:** `{ optimizer?, ... }`
 
 Handling for dependencies resolution.
 
@@ -277,15 +277,6 @@ By default, files inside `node_modules` are externalized and not transformed, un
 ::: warning
 At the moment, this option only works with [`vmThreads`](#vmthreads) pool.
 :::
-
-#### deps.registerNodeLoader<NonProjectOption />
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside externalized files, using Vite resolve algorithm.
-
-If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside externalized packages (by default, `node_modules`).
 
 #### deps.interopDefault
 

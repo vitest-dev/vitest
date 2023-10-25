@@ -198,16 +198,6 @@ export function resolveConfig(
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  if (resolved.deps.registerNodeLoader) {
-    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-    console.warn(
-      c.yellow(
-      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
-      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
-      ),
-    )
-  }
-
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
