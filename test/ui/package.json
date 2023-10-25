@@ -7,7 +7,7 @@
   "devDependencies": {
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
-    "playwright-chromium": "^1.27.0",
+    "playwright-chromium": "^1.39.0",
     "vitest": "workspace:*"
   }
 }

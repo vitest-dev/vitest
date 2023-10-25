@@ -111,10 +111,7 @@
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "playwright": "*",
-    "safaridriver": "*",
-    "webdriverio": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "@types/node": {
@@ -130,15 +127,6 @@
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "playwright": {
       "optional": true
     },
     "@edge-runtime/vm": {
