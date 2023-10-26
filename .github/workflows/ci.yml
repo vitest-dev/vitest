@@ -133,7 +133,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install
+        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -172,7 +172,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install
+        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -184,26 +184,3 @@ jobs:
         run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
-
-  test-browser-safari:
-    runs-on: macos-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - name: Install
-        run: sudo pnpm i --frozen-lockfile
-
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install
-
-      - name: Build
-        run: sudo pnpm run build
-
-      - name: Test Browser (playwright)
-        run: sudo BROWSER=webkit pnpm run test:browser:playwright
