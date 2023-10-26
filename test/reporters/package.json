@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-reporters",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "NO_COLOR=1 vitest run"
