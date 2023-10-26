@@ -47,7 +47,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     if (this.browser === 'safari') {
       if (options.headless)
-        throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it')
+        throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it.')
 
       const safaridriver = await import('safaridriver')
       safaridriver.start({ diagnose: true })
@@ -86,7 +86,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const browser = this.browser
     if (browser !== 'safari' && options.headless) {
       const [key, args] = headlessMap[browser]
-      const currentValues = (this.options?.capabilities as any)[key] || {}
+      const currentValues = (this.options?.capabilities as any)?.[key] || {}
       const newArgs = [...currentValues.args || [], ...args]
       capabilities[key] = { ...currentValues, args: newArgs as any }
     }

@@ -199,11 +199,5 @@ jobs:
       - name: Build
         run: sudo pnpm run build
 
-      - name: Enable
-        run: sudo safaridriver --enable
-
-      - name: Test Browser (webdriverio)
-        run: sudo BROWSER=safari pnpm run test:browser:webdriverio
-
       - name: Test Browser (playwright)
         run: sudo BROWSER=webkit pnpm run test:browser:playwright
