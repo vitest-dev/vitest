@@ -8,13 +8,6 @@ import type { BenchTask, Benchmark, BenchmarkResult } from '../../types/benchmar
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
 
-async function importTinybench() {
-  if (!globalThis.EventTarget)
-    await import('event-target-polyfill' as any)
-
-  return (await import('tinybench'))
-}
-
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
     name,
@@ -26,8 +19,9 @@ function createBenchmarkResult(name: string): BenchmarkResult {
 
 const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
 
-async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
-  const { Task, Bench } = await importTinybench()
+async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
+  const { Task, Bench } = await runner.importTinybench()
+
   const start = performance.now()
 
   const benchmarkGroup: Benchmark[] = []
@@ -131,6 +125,10 @@ export class NodeBenchmarkRunner implements VitestRunner {
   private __vitest_executor!: VitestExecutor
 
   constructor(public config: ResolvedConfig) {}
+
+  async importTinybench() {
+    return await import('tinybench')
+  }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
