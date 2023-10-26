@@ -359,8 +359,8 @@ importers:
   examples/playwright:
     devDependencies:
       '@playwright/test':
-        specifier: ^1.28.0
-        version: 1.28.0
+        specifier: ^1.39.0
+        version: 1.39.0
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -8135,13 +8135,12 @@ packages:
     dev: true
     optional: true
 
-  /@playwright/test@1.28.0:
-    resolution: {integrity: sha512-vrHs5DFTPwYox5SGKq/7TDn/S4q6RA1zArd7uhO6EyP9hj3XgZBBM12ktMbnDQNxh/fL1IUKsTNLxihmsU38lQ==}
-    engines: {node: '>=14'}
+  /@playwright/test@1.39.0:
+    resolution: {integrity: sha512-3u1iFqgzl7zr004bGPYiN/5EZpRUSFddQBra8Rqll5N0/vfpqlP9I9EXqAoGacuAbX6c9Ulg/Cjqglp5VkK6UQ==}
+    engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      '@types/node': 20.8.2
-      playwright-core: 1.28.0
+      playwright: 1.39.0
     dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin@0.5.7(react-refresh@0.11.0)(webpack@5.74.0):
@@ -23172,12 +23171,6 @@ packages:
     requiresBuild: true
     dependencies:
       playwright-core: 1.39.0
-    dev: true
-
-  /playwright-core@1.28.0:
-    resolution: {integrity: sha512-nJLknd28kPBiCNTbqpu6Wmkrh63OEqJSFw9xOfL9qxfNwody7h6/L3O2dZoWQ6Oxcm0VOHjWmGiCUGkc0X3VZA==}
-    engines: {node: '>=14'}
-    hasBin: true
     dev: true
 
   /playwright-core@1.39.0:

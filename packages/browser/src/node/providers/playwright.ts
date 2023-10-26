@@ -14,7 +14,7 @@ export interface PlaywrightProviderOptions extends BrowserProviderInitialization
 export class PlaywrightBrowserProvider implements BrowserProvider {
   public name = 'playwright'
 
-  private cachedBrowser: Page | null = null
+  private cachedPage: Page | null = null
   private browser!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
@@ -36,30 +36,30 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async openBrowser() {
-    if (this.cachedBrowser)
-      return this.cachedBrowser
+    if (this.cachedPage)
+      return this.cachedPage
 
     const options = this.ctx.config.browser
 
     const playwright = await import('playwright')
 
-    const playwrightInstance = await playwright[this.browser].launch({
+    const browser = await playwright[this.browser].launch({
       ...this.options?.launch,
       headless: options.headless,
     })
-    this.cachedBrowser = await playwrightInstance.newPage(this.options?.page)
+    this.cachedPage = await browser.newPage(this.options?.page)
 
-    this.cachedBrowser.on('close', () => {
-      playwrightInstance.close()
+    this.cachedPage.on('close', () => {
+      browser.close()
     })
 
-    return this.cachedBrowser
+    return this.cachedPage
   }
 
   catchError(cb: (error: Error) => Awaitable<void>) {
-    this.cachedBrowser?.on('pageerror', cb)
+    this.cachedPage?.on('pageerror', cb)
     return () => {
-      this.cachedBrowser?.off('pageerror', cb)
+      this.cachedPage?.off('pageerror', cb)
     }
   }
 
@@ -69,7 +69,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close() {
-    await this.cachedBrowser?.close()
+    await this.cachedPage?.close()
     // TODO: right now process can only exit with timeout, if we use browser
     // needs investigating
     process.exit()
