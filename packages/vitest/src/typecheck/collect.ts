@@ -43,10 +43,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request)
     return null
-  const ast = parseAst(request.code, {
-    ecmaVersion: 'latest',
-    allowAwaitOutsideFunction: true,
-  })
+  const ast = parseAst(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const file: ParsedFile = {
     filepath,
