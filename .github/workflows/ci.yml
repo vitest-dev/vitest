@@ -115,6 +115,7 @@ jobs:
 
     env:
       BROWSER: ${{ matrix.browser[0] }}
+      WDIO_DEBUG: 1
     steps:
       - uses: actions/checkout@v4
 
