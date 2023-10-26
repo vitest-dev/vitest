@@ -9,7 +9,7 @@
   "devDependencies": {
     "@playwright/test": "^1.28.0",
     "@vitest/ui": "latest",
-    "playwright": "^1.28.0",
+    "playwright": "^1.39.0",
     "vite": "latest",
     "vitest": "latest"
   }
