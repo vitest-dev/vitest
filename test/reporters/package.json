@@ -9,6 +9,6 @@
     "pkg-reporter": "./reportPkg/",
     "strip-ansi": "^7.0.1",
     "vitest": "workspace:*",
-    "vitest-sonar-reporter": "0.3.3"
+    "vitest-sonar-reporter": "0.4.1"
   }
 }

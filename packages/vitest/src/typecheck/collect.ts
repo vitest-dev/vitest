@@ -1,5 +1,5 @@
 import { relative } from 'pathe'
-import { parse as parseAst } from 'acorn'
+import { parseAst } from 'rollup/parseAst'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 

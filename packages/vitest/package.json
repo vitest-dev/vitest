@@ -139,7 +139,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn": "^8.9.0",
+
     "acorn-walk": "^8.2.0",
     "cac": "^6.7.14",
     "chai": "^4.3.10",

@@ -67,7 +67,7 @@
     "rollup-plugin-license": "^3.2.0",
     "simple-git-hooks": "^2.8.1",
     "typescript": "^5.1.6",
-    "vite": "^4.5.0",
+    "vite": "^5.0.0-beta.12",
     "vitest": "workspace:*"
   },
   "pnpm": {
