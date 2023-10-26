@@ -36,7 +36,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "playwright" package. Please install it manually.')
   }
 
-  async openBrowser() {
+  private async openBrowserPage() {
     if (this.cachedPage)
       return this.cachedPage
 
@@ -66,8 +66,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async openPage(url: string) {
-    const browserInstance = await this.openBrowser()
-    await browserInstance.goto(url)
+    const browserPage = await this.openBrowserPage()
+    await browserPage.goto(url)
   }
 
   async close() {
