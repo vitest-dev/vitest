@@ -1,4 +1,4 @@
-import type { Page } from 'playwright'
+import type { Browser, Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderInitializationOptions, BrowserProviderOptions, WorkspaceProject } from 'vitest/node'
 import { ensurePackageInstalled } from 'vitest/node'
 
@@ -14,6 +14,7 @@ export interface PlaywrightProviderOptions extends BrowserProviderInitialization
 export class PlaywrightBrowserProvider implements BrowserProvider {
   public name = 'playwright'
 
+  private cachedBrowser: Browser | null = null
   private cachedPage: Page | null = null
   private browser!: PlaywrightBrowser
   private ctx!: WorkspaceProject
@@ -47,6 +48,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ...this.options?.launch,
       headless: options.headless,
     })
+    this.cachedBrowser = browser
     this.cachedPage = await browser.newPage(this.options?.page)
 
     this.cachedPage.on('close', () => {
@@ -70,8 +72,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   async close() {
     await this.cachedPage?.close()
-    // TODO: right now process can only exit with timeout, if we use browser
-    // needs investigating
-    process.exit()
+    await this.cachedBrowser?.close()
   }
 }
