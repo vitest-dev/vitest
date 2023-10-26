@@ -1,5 +1,5 @@
-import type { Browser, Page } from 'playwright'
-import type { BrowserProvider, BrowserProviderInitializationOptions, BrowserProviderOptions, WorkspaceProject } from 'vitest/node'
+import type { Browser, LaunchOptions, Page } from 'playwright'
+import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
 import { ensurePackageInstalled } from 'vitest/node'
 
 type Awaitable<T> = T | PromiseLike<T>
@@ -19,7 +19,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browser!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
-  private options?: BrowserProviderOptions['playwright']
+  private options?: {
+    launch?: LaunchOptions
+    page?: Parameters<Browser['newPage']>[0]
+  }
 
   getSupportedBrowsers() {
     return playwrightBrowsers

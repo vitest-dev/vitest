@@ -4,7 +4,7 @@ import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
-  options?: unknown
+  options?: BrowserProviderOptions
 }
 
 export interface BrowserProvider {
