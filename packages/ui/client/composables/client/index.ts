@@ -11,6 +11,7 @@ import { createStaticClient } from './static'
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
 export const testRunState: Ref<RunState> = ref('idle')
+export const unhandledErrors: Ref<unknown[]> = ref([])
 
 export const client = (function createVitestClient() {
   if (isReport) {
@@ -23,8 +24,9 @@ export const client = (function createVitestClient() {
         onTaskUpdate() {
           testRunState.value = 'running'
         },
-        onFinished() {
+        onFinished(_files, errors) {
           testRunState.value = 'idle'
+          unhandledErrors.value = errors || []
         },
       },
     })
@@ -75,6 +77,7 @@ watch(
         client.rpc.getConfig(),
       ])
       client.state.collectFiles(files)
+      unhandledErrors.value = await client.rpc.getUnhandledErrors()
       config.value = _config
     })
 

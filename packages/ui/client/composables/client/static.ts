@@ -66,6 +66,7 @@ export function createStaticClient(): VitestClient {
     saveSnapshotFile: asyncNoop,
     readTestFile: asyncNoop,
     removeSnapshotFile: asyncNoop,
+    getUnhandledErrors: () => [],
   } as WebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers>

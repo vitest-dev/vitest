@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { files } from '../../composables/client'
+import { files, unhandledErrors } from '../../composables/client'
 import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../composables/summary'
 </script>
 
@@ -44,12 +44,33 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
       </div>
     </template>
 
+    <template v-if="unhandledErrors.length">
+      <div i-carbon-checkmark-outline-error />
+      <div>
+        Errors
+      </div>
+      <div class="number" text-red5>
+        {{ unhandledErrors.length }}
+      </div>
+    </template>
+
     <div i-carbon-timer />
     <div>Time</div>
     <div class="number" data-testid="run-time">
       {{ time }}
     </div>
   </div>
+  <template v-if="unhandledErrors.length">
+    <div bg="red500/10" text="red500" p="x3 y2" max-w-xl m-2 rounded>
+      <h3 text-center mb-2>
+        Unhandled Errors
+      </h3>
+      <p text="sm" font-thin>
+        Vitest caught {{ unhandledErrors.length }} errors during the test run.<br>
+        This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+      </p>
+    </div>
+  </template>
 </template>
 
 <style scoped>

@@ -131,6 +131,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
+        getUnhandledErrors() {
+          return ctx.state.getUnhandledErrors()
+        },
       },
       {
         post: msg => ws.send(msg),
@@ -190,9 +193,9 @@ class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files?: File[] | undefined) {
+  onFinished(files?: File[], errors?: unknown[]) {
     this.clients.forEach((client) => {
-      client.onFinished?.(files)
+      client.onFinished?.(files, errors)
     })
   }
 
