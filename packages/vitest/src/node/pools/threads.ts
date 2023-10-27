@@ -56,7 +56,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
     minThreads,
 
     env,
-    execArgv,
+    execArgv: [
+      ...ctx.config.poolOptions?.threads?.execArgv ?? [],
+      ...execArgv,
+    ],
 
     terminateTimeout: ctx.config.teardownTimeout,
   }

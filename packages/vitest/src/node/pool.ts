@@ -60,16 +60,9 @@ export function createPool(ctx: Vitest): ProcessPool {
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
     const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
-    // Instead of passing whole process.execArgv to the workers, pick allowed options.
-    // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
-    const execArgv = process.execArgv.filter(execArg =>
-      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
-    )
-
     const options: PoolProcessOptions = {
       ...ctx.projectFiles,
       execArgv: [
-        ...execArgv,
         ...conditions,
       ],
       env: {
