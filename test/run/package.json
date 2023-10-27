@@ -5,6 +5,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "execa": "^7.1.1",
     "vite": "latest",
     "vitest": "workspace:*"
   }
