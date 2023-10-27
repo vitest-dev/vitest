@@ -8,6 +8,8 @@ import pkg from './package.json' assert { type: 'json' }
 const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
+  'vitest/node',
+  'vitest',
   'worker_threads',
   'node:worker_threads',
 ]
@@ -23,11 +25,14 @@ const plugins = [
   }),
 ]
 
+const input = {
+  index: './src/node/index.ts',
+  providers: './src/node/providers/index.ts',
+}
+
 export default () => [
   {
-    input: [
-      './src/node/index.ts',
-    ],
+    input,
     output: {
       dir: 'dist',
       format: 'esm',
@@ -36,7 +41,7 @@ export default () => [
     plugins,
   },
   {
-    input: './src/node/index.ts',
+    input: input.index,
     output: {
       file: 'dist/index.d.ts',
       format: 'esm',
