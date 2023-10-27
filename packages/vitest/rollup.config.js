@@ -58,6 +58,7 @@ const external = [
   'node:fs',
   'rollup',
   'rollup/parseAst',
+  'acorn',
   'node:vm',
   'inspector',
   'vite-node/source-map',
