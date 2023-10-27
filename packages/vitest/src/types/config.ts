@@ -736,10 +736,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   api?: ApiConfig
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & {
-    outputFile?: BenchmarkUserOptions['outputFile']
-  }
-
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {
     index: number
     count: number
