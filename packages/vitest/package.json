@@ -111,10 +111,7 @@
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "playwright": "*",
-    "safaridriver": "*",
-    "webdriverio": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "@types/node": {
@@ -130,15 +127,6 @@
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "playwright": {
       "optional": true
     },
     "@edge-runtime/vm": {
@@ -184,7 +172,6 @@
     "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
-    "event-target-polyfill": "^0.0.3",
     "execa": "^7.1.1",
     "expect-type": "^0.16.0",
     "fast-glob": "^3.3.0",
@@ -198,12 +185,9 @@
     "mlly": "^1.4.0",
     "p-limit": "^4.0.0",
     "pkg-types": "^1.0.3",
-    "playwright": "^1.35.1",
     "pretty-format": "^29.5.0",
     "prompts": "^2.4.2",
-    "safaridriver": "^0.0.5",
     "strip-ansi": "^7.1.0",
-    "webdriverio": "^8.11.2",
     "ws": "^8.13.0"
   }
 }

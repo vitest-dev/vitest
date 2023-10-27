@@ -1332,7 +1332,7 @@ Path to a provider that will be used when running browser tests. Vitest provides
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
-  initialize(ctx: Vitest, options: { browser: string }): Awaitable<void>
+  initialize(ctx: Vitest, options: { browser: string; options?: BrowserProviderOptions }): Awaitable<void>
   openPage(url: string): Awaitable<void>
   close(): Awaitable<void>
 }
@@ -1340,6 +1340,42 @@ export interface BrowserProvider {
 
 ::: warning
 This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
+:::
+
+#### browser.providerOptions
+
+- **Type:** `BrowserProviderOptions`
+- **Version:** Since Vitest 1.0.0-beta.3
+
+Options that will be passed down to provider when calling `provider.initialize`.
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      providerOptions: {
+        launch: {
+          devtools: true,
+        }
+      }
+    }
+  }
+})
+```
+
+::: tip
+To have a better type safety when using built-in providers, you can add one of these types (for provider that you are using) to your tsconfig's `compilerOptions.types` field:
+
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/webdriverio",
+      "@vitest/browser/providers/playwright"
+    ]
+  }
+}
+```
 :::
 
 #### browser.slowHijackESM
