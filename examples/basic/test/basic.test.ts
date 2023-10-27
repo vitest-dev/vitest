@@ -1,5 +1,5 @@
 import { assert, expect, test } from 'vitest'
-import { squared } from '../src/basic'
+import { squared } from '../src/basic.js'
 
 // Edit an assertion and save to see HMR in action
 
