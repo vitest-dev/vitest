@@ -28165,6 +28165,11 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
+  /web-streams-polyfill@4.0.0-beta.3:
+    resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
+    engines: {node: '>= 14'}
+    dev: true
+
   /webdriver@8.16.20:
     resolution: {integrity: sha512-3Dynj9pfTqmbDadqmMmD/sQgGFwho92zQPGgpAqLUMebE/qEkraoIfRWdbi2tw1ityiThOJVPTXfwsY/bpvknw==}
     engines: {node: ^16.13 || >=18}
