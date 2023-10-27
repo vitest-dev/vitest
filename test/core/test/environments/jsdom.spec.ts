@@ -17,5 +17,7 @@ test.runIf(nodeMajor >= 18)('fetch, Request, Response, and BroadcastChannel are 
   expect(fetch).toBeDefined()
   expect(Request).toBeDefined()
   expect(Response).toBeDefined()
+  expect(TextEncoder).toBeDefined()
+  expect(TextDecoder).toBeDefined()
   expect(BroadcastChannel).toBeDefined()
 })
