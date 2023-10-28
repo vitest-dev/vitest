@@ -57,6 +57,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
     tasks: [],
     start: ast.start,
     end: ast.end,
+    projectName: ctx.getName(),
     meta: { typecheck: true },
   }
   const definitions: LocalCallDefinition[] = []
@@ -122,6 +123,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
         name: definition.name,
         end: definition.end,
         start: definition.start,
+        projectName: ctx.getName(),
         meta: {
           typecheck: true,
         },

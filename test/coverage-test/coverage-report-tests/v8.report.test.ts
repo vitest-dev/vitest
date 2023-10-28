@@ -29,3 +29,16 @@ test('ignored code is marked as covered in the report', async () => {
   const utils = await import('../src/utils')
   expect(utils[functionName]).toBeTypeOf('function')
 })
+
+test('tests with multiple suites are covered', async () => {
+  const coverageMap = await readCoverageJson()
+
+  const filename = '<process-cwd>/src/multi-suite.ts'
+  const fileCoverage = coverageMap[filename]
+
+  // Assert that all functions are covered
+  expect(fileCoverage.f).toMatchObject({
+    0: 1,
+    1: 1,
+  })
+})

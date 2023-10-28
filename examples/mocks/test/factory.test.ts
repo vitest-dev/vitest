@@ -75,7 +75,7 @@ describe('mocking with factory', () => {
     expect((example as any).then).toBe('a then export')
     expect((example as any).mocked).toBe(true)
     expect(example.square(2, 3)).toBe(5)
-    expect(example.asyncSquare(2, 3)).resolves.toBe(5)
+    await expect(example.asyncSquare(2, 3)).resolves.toBe(5)
   })
 
   test('successfully with actual', () => {

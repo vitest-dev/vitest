@@ -1,4 +1,3 @@
-import fetch from 'node-fetch-native'
 import { expect } from 'vitest'
 
 beforeEach(async () => {

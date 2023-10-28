@@ -82,7 +82,7 @@ import { vi } from 'vitest'
 
 ## vi.fn
 
-- **Type:** `(fn?: Function) => CallableMockInstance`
+- **Type:** `(fn?: Function) => Mock`
 
   Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
   If no function is given, mock will return `undefined`, when invoked.
@@ -162,7 +162,7 @@ import { vi } from 'vitest'
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can defined them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference inside `vi.mock`.
+  Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference them inside `vi.mock`.
 
   ::: warning
   `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
@@ -254,10 +254,10 @@ import { vi } from 'vitest'
   ```ts
   // increment.test.js
   import { vi } from 'vitest'
-  
+
   // axios is a default export from `__mocks__/axios.js`
   import axios from 'axios'
-  
+
   // increment is a named export from `src/__mocks__/increment.js`
   import { increment } from '../increment.js'
 
@@ -277,7 +277,7 @@ import { vi } from 'vitest'
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next import of the module will be mocked. This will not mock modules that were imported before this was called.
+  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked. This will not mock modules that were imported before this was called.
 
 ```ts
 // ./increment.js
@@ -304,7 +304,7 @@ test('importing the next module imports mocked one', async () => {
   // original import WAS NOT MOCKED, because vi.doMock is evaluated AFTER imports
   expect(increment(1)).toBe(2)
   const { increment: mockedIncrement } = await import('./increment.js')
-  // new import returns mocked module
+  // new dynamic import returns mocked module
   expect(mockedIncrement(1)).toBe(101)
   expect(mockedIncrement(1)).toBe(102)
   expect(mockedIncrement(1)).toBe(103)
@@ -371,7 +371,7 @@ test('importing the next module imports mocked one', async () => {
 
   ```ts
   import { vi } from 'vitest'
-  
+
   import { data } from './data.js' // Will not get reevaluated beforeEach test
 
   beforeEach(() => {
@@ -397,12 +397,6 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 ## vi.restoreAllMocks
 
   Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
-
-## vi.restoreCurrentDate
-
-- **Type:** `() => void`
-
-  Restores `Date` back to its native implementation.
 
 ## vi.stubEnv
 
@@ -431,12 +425,6 @@ You can also change the value by simply assigning it, but you won't be able to u
 ```ts
 import.meta.env.MODE = 'test'
 ```
-:::
-
-:::warning
-Vitest transforms all `import.meta.env` calls into `process.env`, so they can be easily changed at runtime. Node.js only supports string values as env parameters, while Vite supports several built-in envs as boolean (namely, `SSR`, `DEV`, `PROD`). To mimic Vite, set "truthy" values as env: `''` instead of `false`, and `'1'` instead of `true`.
-
-But beware that you cannot rely on `import.meta.env.DEV === false` in this case. Use `!import.meta.env.DEV`. This also affects simple assigning, not just `vi.stubEnv` method.
 :::
 
 ## vi.unstubAllEnvs
@@ -710,10 +698,109 @@ unmockedIncrement(30) === 31
 
   To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
+  Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
+
+  ::: tip
+  Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
+  It can still be mocked by specyfing the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+  :::
+
+## vi.isFakeTimers
+
+- **Type:** `() => boolean`
+- **Version:** Since Vitest 0.34.5
+
+  Returns `true` if fake timers are enabled.
 
 ## vi.useRealTimers
 
 - **Type:** `() => Vitest`
 
   When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
+
+## vi.waitFor
+
+- **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
+- **Version**: Since Vitest 0.34.5
+
+Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
+
+This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
+
+```ts
+import { expect, test, vi } from 'vitest'
+import { createServer } from './server.js'
+
+test('Server started successfully', async () => {
+  const server = createServer()
+
+  await vi.waitFor(
+    () => {
+      if (!server.isReady)
+        throw new Error('Server not started')
+
+      console.log('Server started')
+    }, {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+  expect(server.isReady).toBe(true)
+})
+```
+
+It also works for asynchronous callbacks
+
+```ts
+// @vitest-environment jsdom
+
+import { expect, test, vi } from 'vitest'
+import { getDOMElementAsync, populateDOMAsync } from './dom.js'
+
+test('Element exists in a DOM', async () => {
+  // start populating DOM
+  populateDOMAsync()
+
+  const element = await vi.waitFor(async () => {
+    // try to get the element until it exists
+    const element = await getDOMElementAsync() as HTMLElement | null
+    expect(element).toBeTruthy()
+    expect(element.dataset.initialized).toBeTruthy()
+    return element
+  }, {
+    timeout: 500, // default is 1000
+    interval: 20, // default is 50
+  })
+  expect(element).toBeInstanceOf(HTMLElement)
+})
+```
+
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
+
+## vi.waitUntil
+
+- **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
+- **Version**: Since Vitest 0.34.5
+
+This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
+
+Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('Element render correctly', async () => {
+  const element = await vi.waitUntil(
+    () => document.querySelector('.element'),
+    {
+      timeout: 500, // default is 1000
+      interval: 20, // default is 50
+    }
+  )
+
+  // do something with the element
+  expect(element.querySelector('.element-child')).toBeTruthy()
+})
+```

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task } from '#types'
+import type { Task } from 'vitest'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { isDescribeBlock, selectedTest, testIndex, viewMode } from '~/composables/params'
 

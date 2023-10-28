@@ -1,24 +1,18 @@
 import { createServer } from 'vite'
-import { resolve } from 'pathe'
-import { findUp } from 'find-up'
-import { configFiles, defaultBrowserPort } from '../../constants'
-import type { UserConfig } from '../../types/config'
+import { defaultBrowserPort } from '../../constants'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
 import { MocksPlugin } from '../../node/plugins/mocks'
+import { resolveFsAllow } from '../../node/plugins/utils'
 
-export async function createBrowserServer(project: WorkspaceProject, options: UserConfig) {
+export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
   const root = project.config.root
 
   await ensurePackageInstalled('@vitest/browser', root)
 
-  const configPath = options.config === false
-    ? false
-    : options.config
-      ? resolve(root, options.config)
-      : await findUp(configFiles, { cwd: root } as any)
+  const configPath = typeof configFile === 'string' ? configFile : false
 
   const server = await createServer({
     logLevel: 'error',
@@ -42,9 +36,18 @@ export async function createBrowserServer(project: WorkspaceProject, options: Us
             port: defaultBrowserPort,
           }
 
+          // browser never runs in middleware mode
+          server.middlewareMode = false
+
           config.server = server
           config.server.fs ??= {}
-          config.server.fs.strict = false
+          config.server.fs.allow = config.server.fs.allow || []
+          config.server.fs.allow.push(
+            ...resolveFsAllow(
+              project.ctx.config.root,
+              project.ctx.server.config.configFile,
+            ),
+          )
 
           return {
             resolve: {

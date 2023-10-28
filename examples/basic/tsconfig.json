@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "node16",
+    "target": "es2020",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules"]
+}

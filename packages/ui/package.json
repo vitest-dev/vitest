@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.33.0",
+  "version": "1.0.0-beta.3",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -21,7 +21,7 @@
       "import": "./dist/index.js"
     },
     "./reporter": {
-      "types": "./dist/reporter.d.ts",
+      "types": "./reporter.d.ts",
       "import": "./dist/reporter.js"
     },
     "./*": "./*"
@@ -36,6 +36,7 @@
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
     "build:node": "rollup -c",
+    "typecheck": "tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node",
     "dev:ui": "run-p dev dev:client",
@@ -44,7 +45,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.30.1 <1"
+    "vitest": "^1.0.0-0"
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
+    "@iconify-json/logos": "^1.1.37",
     "@testing-library/cypress": "^9.0.0",
     "@types/codemirror": "^5.60.8",
     "@types/d3-force": "^3.0.4",
@@ -69,7 +71,7 @@
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^10.2.1",
     "ansi-to-html": "^0.7.2",
-    "birpc": "0.2.12",
+    "birpc": "0.2.14",
     "codemirror": "^5.65.13",
     "codemirror-theme-vars": "^0.1.2",
     "cypress": "^12.16.0",
@@ -79,7 +81,7 @@
     "unocss": "^0.53.4",
     "unplugin-auto-import": "^0.16.4",
     "unplugin-vue-components": "^0.25.1",
-    "vite": "^4.0.0",
+    "vite": "^4.5.0",
     "vite-plugin-pages": "^0.31.0",
     "vue": "^3.3.4",
     "vue-router": "^4.2.2"

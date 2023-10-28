@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
-import type { File, Task } from '#types'
+import type { File, Task } from 'vitest'
 import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'

@@ -4,7 +4,8 @@ import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
 import type { ResolvedConfig } from './config'
-import type { ContextRPC, RuntimeRPC } from './rpc'
+import type { ContextRPC, RunnerRPC, RuntimeRPC } from './rpc'
+import type { Environment } from './general'
 
 export interface WorkerContext extends ContextRPC {
   workerId: number
@@ -15,14 +16,19 @@ export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteN
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown
+  transformMode: Environment['transformMode']
+  projectName?: string
 }
 
+export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
+
 export interface WorkerGlobalState {
-  ctx: WorkerContext
+  ctx: ContextRPC
   config: ResolvedConfig
-  rpc: BirpcReturn<RuntimeRPC>
+  rpc: WorkerRPC
   current?: Test
   filepath?: string
+  environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
@@ -31,4 +37,5 @@ export interface WorkerGlobalState {
     environment: number
     prepare: number
   }
+  isChildProcess?: boolean
 }

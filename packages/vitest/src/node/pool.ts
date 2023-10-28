@@ -1,13 +1,12 @@
-import { pathToFileURL } from 'node:url'
 import mm from 'micromatch'
-import { resolve } from 'pathe'
-import { distDir, rootDir } from '../paths'
-import type { VitestPool } from '../types'
+import type { Pool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
+import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
+import { createTypecheckPool } from './pools/typecheck'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
@@ -18,36 +17,44 @@ export interface ProcessPool {
 }
 
 export interface PoolProcessOptions {
+  workerPath: string
+  forksPath: string
+  vmPath: string
   execArgv: string[]
   env: Record<string, string>
 }
 
-const loaderPath = pathToFileURL(resolve(distDir, './loader.js')).href
-const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
-
 export function createPool(ctx: Vitest): ProcessPool {
-  const pools: Record<VitestPool, ProcessPool | null> = {
-    child_process: null,
+  const pools: Record<Pool, ProcessPool | null> = {
+    forks: null,
     threads: null,
     browser: null,
+    vmThreads: null,
+    typescript: null,
   }
 
-  function getDefaultPoolName(project: WorkspaceProject) {
+  function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
     if (project.config.browser.enabled)
       return 'browser'
-    if (project.config.threads)
-      return 'threads'
-    return 'child_process'
+
+    if (project.config.typecheck.enabled) {
+      for (const glob of project.config.typecheck.include) {
+        if (mm.isMatch(file, glob, { cwd: project.config.root }))
+          return 'typescript'
+      }
+    }
+
+    return project.config.pool
   }
 
   function getPoolName([project, file]: WorkspaceSpec) {
     for (const [glob, pool] of project.config.poolMatchGlobs || []) {
-      if (pool === 'browser')
+      if ((pool as Pool) === 'browser')
         throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
       if (mm.isMatch(file, glob, { cwd: project.config.root }))
-        return pool as VitestPool
+        return pool as Pool
     }
-    return getDefaultPoolName(project)
+    return getDefaultPoolName(project, file)
   }
 
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
@@ -60,18 +67,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     )
 
     const options: PoolProcessOptions = {
-      execArgv: ctx.config.deps.registerNodeLoader
-        ? [
-            ...execArgv,
-            '--require',
-            suppressLoaderWarningsPath,
-            '--experimental-loader',
-            loaderPath,
-          ]
-        : [
-            ...execArgv,
-            ...conditions,
-          ],
+      ...ctx.projectFiles,
+      execArgv: [
+        ...execArgv,
+        ...conditions,
+      ],
       env: {
         TEST: 'true',
         VITEST: 'true',
@@ -82,18 +82,24 @@ export function createPool(ctx: Vitest): ProcessPool {
       },
     }
 
-    const filesByPool = {
-      child_process: [] as WorkspaceSpec[],
-      threads: [] as WorkspaceSpec[],
-      browser: [] as WorkspaceSpec[],
+    const filesByPool: Record<Pool, WorkspaceSpec[]> = {
+      forks: [],
+      threads: [],
+      browser: [],
+      vmThreads: [],
+      typescript: [],
     }
 
     for (const spec of files) {
       const pool = getPoolName(spec)
+      if (!(pool in filesByPool))
+        throw new Error(`Unknown pool name "${pool}" for ${spec[1]}. Available pools: ${Object.keys(filesByPool).join(', ')}`)
       filesByPool[pool].push(spec)
     }
 
-    await Promise.all(Object.entries(filesByPool).map(([pool, files]) => {
+    await Promise.all(Object.entries(filesByPool).map((entry) => {
+      const [pool, files] = entry as [Pool, WorkspaceSpec[]]
+
       if (!files.length)
         return null
 
@@ -102,13 +108,23 @@ export function createPool(ctx: Vitest): ProcessPool {
         return pools.browser.runTests(files, invalidate)
       }
 
+      if (pool === 'vmThreads') {
+        pools.vmThreads ??= createVmThreadsPool(ctx, options)
+        return pools.vmThreads.runTests(files, invalidate)
+      }
+
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
         return pools.threads.runTests(files, invalidate)
       }
 
-      pools.child_process ??= createChildProcessPool(ctx, options)
-      return pools.child_process.runTests(files, invalidate)
+      if (pool === 'typescript') {
+        pools.typescript ??= createTypecheckPool(ctx)
+        return pools.typescript.runTests(files)
+      }
+
+      pools.forks ??= createChildProcessPool(ctx, options)
+      return pools.forks.runTests(files, invalidate)
     }))
   }
 

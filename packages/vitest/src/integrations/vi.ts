@@ -3,13 +3,16 @@ import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import type { MockFactoryWithHelper } from '../types/mocker'
+import { getWorkerState } from '../utils/global'
+import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
+import { waitFor, waitUntil } from './wait'
 
-interface VitestUtils {
+export interface VitestUtils {
+  isFakeTimers(): boolean
   useFakeTimers(config?: FakeTimerInstallOpts): this
   useRealTimers(): this
   runOnlyPendingTimers(): this
@@ -29,6 +32,8 @@ interface VitestUtils {
 
   spyOn: typeof spyOn
   fn: typeof fn
+  waitFor: typeof waitFor
+  waitUntil: typeof waitUntil
 
   /**
    * Run the factory before imports are evaluated. You can return a value from the factory
@@ -117,13 +122,13 @@ interface VitestUtils {
   /**
    * Makes value available on global namespace.
    * Useful, if you want to have global variables available, like `IntersectionObserver`.
-   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
+   * You can return it back to original value with `vi.unstubAllGlobals`, or by enabling `unstubGlobals` config option.
    */
   stubGlobal(name: string | symbol | number, value: unknown): this
 
   /**
    * Changes the value of `import.meta.env` and `process.env`.
-   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
   stubEnv(name: string, value: string): this
 
@@ -163,10 +168,10 @@ function createVitest(): VitestUtils {
     // @ts-expect-error injected by vite-nide
     ? __vitest_mocker__
     : new Proxy({}, {
-      get(name) {
+      get(_, name) {
         throw new Error(
           'Vitest mocker was not initialized in this environment. '
-          + `vi.${name}() is forbidden.`,
+          + `vi.${String(name)}() is forbidden.`,
         )
       },
     })
@@ -199,68 +204,80 @@ function createVitest(): VitestUtils {
     return stack?.file || ''
   }
 
-  return {
+  const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      if (config) {
-        _timers.configure(config)
+      const workerState = getWorkerState()
+
+      if (workerState.isChildProcess) {
+        if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
+          throw new Error(
+            'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
+          )
+        }
       }
-      else {
-        const workerState = getWorkerState()
+
+      if (config)
+        _timers.configure({ ...workerState.config.fakeTimers, ...config })
+      else
         _timers.configure(workerState.config.fakeTimers)
-      }
+
       _timers.useFakeTimers()
-      return this
+      return utils
+    },
+
+    isFakeTimers() {
+      return _timers.isFakeTimers()
     },
 
     useRealTimers() {
       _timers.useRealTimers()
       _mockedDate = null
-      return this
+      return utils
     },
 
     runOnlyPendingTimers() {
       _timers.runOnlyPendingTimers()
-      return this
+      return utils
     },
 
     async runOnlyPendingTimersAsync() {
       await _timers.runOnlyPendingTimersAsync()
-      return this
+      return utils
     },
 
     runAllTimers() {
       _timers.runAllTimers()
-      return this
+      return utils
     },
 
     async runAllTimersAsync() {
       await _timers.runAllTimersAsync()
-      return this
+      return utils
     },
 
     runAllTicks() {
       _timers.runAllTicks()
-      return this
+      return utils
     },
 
     advanceTimersByTime(ms: number) {
       _timers.advanceTimersByTime(ms)
-      return this
+      return utils
     },
 
     async advanceTimersByTimeAsync(ms: number) {
       await _timers.advanceTimersByTimeAsync(ms)
-      return this
+      return utils
     },
 
     advanceTimersToNextTimer() {
       _timers.advanceTimersToNextTimer()
-      return this
+      return utils
     },
 
     async advanceTimersToNextTimerAsync() {
       await _timers.advanceTimersToNextTimerAsync()
-      return this
+      return utils
     },
 
     getTimerCount() {
@@ -271,7 +288,7 @@ function createVitest(): VitestUtils {
       const date = time instanceof Date ? time : new Date(time)
       _mockedDate = date
       _timers.setSystemTime(date)
-      return this
+      return utils
     },
 
     getMockedSystemTime() {
@@ -284,14 +301,15 @@ function createVitest(): VitestUtils {
 
     clearAllTimers() {
       _timers.clearAllTimers()
-      return this
+      return utils
     },
 
     // mocks
 
     spyOn,
     fn,
-
+    waitFor,
+    waitUntil,
     hoisted<T>(factory: () => T): T {
       assertTypes(factory, '"vi.hoisted" factory', ['function'])
       return factory()
@@ -336,17 +354,17 @@ function createVitest(): VitestUtils {
 
     clearAllMocks() {
       spies.forEach(spy => spy.mockClear())
-      return this
+      return utils
     },
 
     resetAllMocks() {
       spies.forEach(spy => spy.mockReset())
-      return this
+      return utils
     },
 
     restoreAllMocks() {
       spies.forEach(spy => spy.mockRestore())
-      return this
+      return utils
     },
 
     stubGlobal(name: string | symbol | number, value: any) {
@@ -358,14 +376,14 @@ function createVitest(): VitestUtils {
         configurable: true,
         enumerable: true,
       })
-      return this
+      return utils
     },
 
     stubEnv(name: string, value: string) {
       if (!_stubsEnv.has(name))
         _stubsEnv.set(name, process.env[name])
       process.env[name] = value
-      return this
+      return utils
     },
 
     unstubAllGlobals() {
@@ -376,7 +394,7 @@ function createVitest(): VitestUtils {
           Object.defineProperty(globalThis, name, original)
       })
       _stubsGlobal.clear()
-      return this
+      return utils
     },
 
     unstubAllEnvs() {
@@ -387,13 +405,13 @@ function createVitest(): VitestUtils {
           process.env[name] = original
       })
       _stubsEnv.clear()
-      return this
+      return utils
     },
 
     resetModules() {
       const state = getWorkerState()
       resetModules(state.moduleCache)
-      return this
+      return utils
     },
 
     async dynamicImportSettled() {
@@ -413,8 +431,9 @@ function createVitest(): VitestUtils {
         Object.assign(state.config, _config)
       }
     },
-
   }
+
+  return utils
 }
 
 export const vitest = createVitest()

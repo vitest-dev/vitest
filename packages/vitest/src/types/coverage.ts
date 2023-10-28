@@ -78,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'exclude'
   | 'extension'
   | 'reportOnFailure'
+  | 'allowExternal'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -105,7 +106,7 @@ export interface BaseCoverageOptions {
   /**
     * Extensions for files to be included in coverage
     *
-    * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']
+    * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
     */
   extension?: string | string[]
 
@@ -216,6 +217,20 @@ export interface BaseCoverageOptions {
    * @default false
    */
   reportOnFailure?: boolean
+
+  /**
+   * Collect coverage of files outside the project `root`.
+   *
+   * @default false
+   */
+  allowExternal?: boolean
+
+  /**
+   * Shortcut for `{ lines: 100, functions: 100, branches: 100, statements: 100 }`
+   *
+   * @default false
+   */
+  100?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -227,14 +242,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
-   *
-   * @default false
-   */
-  100?: boolean
-}
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
   /** Name of the module or path to a file to load the custom provider from */

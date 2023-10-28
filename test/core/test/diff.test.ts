@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest'
 import { getDefaultColors, setupColors } from '@vitest/utils'
-import { displayDiff } from 'vitest/src/node/error'
 import { diff } from '@vitest/utils/diff'
+import { displayDiff } from '../../../packages/vitest/src/node/error'
 
 test('displays object diff', () => {
   const objectA = { a: 1, b: 2 }
@@ -15,9 +15,9 @@ test('displays object diff', () => {
     + Received
 
       Object {
-        \\"a\\": 1,
-    -   \\"b\\": 2,
-    +   \\"b\\": 3,
+        "a": 1,
+    -   "b": 2,
+    +   "b": 3,
       }
     "
   `)

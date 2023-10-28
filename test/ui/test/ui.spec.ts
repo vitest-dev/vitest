@@ -1,16 +1,13 @@
-import { resolve } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { browserErrors, isWindows, page, ports, startServerCommand, untilUpdated } from '../setup'
 
-const root = resolve(__dirname, '../fixtures')
 const port = ports.ui
 
 // TODO: fix flakyness on windows
 describe.skipIf(isWindows)('ui', () => {
   beforeAll(async () => {
     const exit = await startServerCommand(
-      root,
-    `npx vitest --ui --open false --api.port ${port} --watch --allowOnly`,
+    `pnpm exec vitest --root ./fixtures --ui --open false --api.port ${port} --watch --allowOnly`,
     `http://localhost:${port}/__vitest__/`,
     )
 

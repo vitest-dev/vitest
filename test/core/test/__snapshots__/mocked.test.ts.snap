@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`mocked function which fails on toReturnWith > just one call 1`] = `
-"expected \\"spy\\" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 
@@ -16,7 +16,7 @@ Number of calls: 1
 `;
 
 exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
-"expected \\"spy\\" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 
@@ -41,29 +41,29 @@ Number of calls: 3
 `;
 
 exports[`mocked function which fails on toReturnWith > oject type 1`] = `
-"expected \\"spy\\" to return with: { a: '4' } at least once
+"expected "spy" to return with: { a: '4' } at least once
 
 Received: 
 
   1st spy call return:
 
   Object {
--   \\"a\\": \\"4\\",
-+   \\"a\\": \\"1\\",
+-   "a": "4",
++   "a": "1",
   }
 
   2nd spy call return:
 
   Object {
--   \\"a\\": \\"4\\",
-+   \\"a\\": \\"1\\",
+-   "a": "4",
++   "a": "1",
   }
 
   3rd spy call return:
 
   Object {
--   \\"a\\": \\"4\\",
-+   \\"a\\": \\"1\\",
+-   "a": "4",
++   "a": "1",
   }
 
 
@@ -72,7 +72,7 @@ Number of calls: 3
 `;
 
 exports[`mocked function which fails on toReturnWith > zero call 1`] = `
-"expected \\"spy\\" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 

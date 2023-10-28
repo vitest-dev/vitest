@@ -1,12 +1,12 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
+import type { File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
-import type { File, ResolvedConfig } from '#types'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 

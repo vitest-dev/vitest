@@ -164,6 +164,25 @@ it('uses jsdom ArrayBuffer', async () => {
   expect(arraybuffer.constructor === ArrayBuffer).toBeTruthy()
 })
 
+it.each([
+  'Uint8Array',
+  'Uint16Array',
+  'Uint32Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Int32Array',
+  'Int8Array',
+  'Float32Array',
+  'Float64Array',
+] as const)('%s has buffer as ArrayBuffer', async (constructorName) => {
+  const Constructor = globalThis[constructorName]
+  const typedArray = new Constructor([1])
+  expect(typedArray.constructor.name).toBe(constructorName)
+  expect(typedArray instanceof Constructor).toBeTruthy()
+  expect(ArrayBuffer.isView(typedArray)).toBeTruthy()
+  expect(typedArray.buffer instanceof ArrayBuffer).toBeTruthy()
+})
+
 it('doesn\'t throw, if listening for error', () => {
   const spy = vi.fn((e: Event) => e.preventDefault())
   window.addEventListener('error', spy)

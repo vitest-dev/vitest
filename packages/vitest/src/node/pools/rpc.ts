@@ -6,7 +6,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
   return {
     async onWorkerExit(error, code) {
-      await ctx.logger.printError(error, { type: 'Unexpected Exit' })
+      await ctx.logger.printError(error, { type: 'Unexpected Exit', fullStack: true })
       process.exit(code || 1)
     },
     snapshotSaved(snapshot) {
@@ -29,6 +29,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     },
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)
+    },
+    transform(id, environment) {
+      return project.vitenode.transformModule(id, environment)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)

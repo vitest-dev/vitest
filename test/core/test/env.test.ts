@@ -47,3 +47,18 @@ test('custom env', () => {
 test('ignores import.meta.env in string literals', () => {
   expect('import.meta.env').toBe('import' + '.meta.env')
 })
+
+test('define process and using import.meta.env together', () => {
+  const process = {}
+  expect(process).toMatchObject({})
+  expect(import.meta.env.MODE).toEqual('test')
+})
+
+test('PROD, DEV, SSR should be boolean', () => {
+  expect(typeof import.meta.env.PROD).toEqual('boolean')
+  expect(typeof import.meta.env.DEV).toEqual('boolean')
+  expect(typeof import.meta.env.SSR).toEqual('boolean')
+
+  import.meta.env.SSR = false
+  expect(import.meta.env.SSR).toEqual(false)
+})

@@ -10,6 +10,7 @@ type TransformMode = 'web' | 'ssr'
 
 export interface RuntimeRPC {
   fetch: (id: string, environment: TransformMode) => Promise<FetchResult>
+  transform: (id: string, environment: TransformMode) => Promise<FetchResult>
   resolveId: (id: string, importer: string | undefined, environment: TransformMode) => Promise<ViteNodeResolveId | null>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
@@ -21,8 +22,8 @@ export interface RuntimeRPC {
   onCollected: (files: File[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
-  onCancel(reason: CancelReason): void
-  getCountOfFailedTests(): number
+  onCancel: (reason: CancelReason) => void
+  getCountOfFailedTests: () => number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
@@ -39,14 +40,14 @@ export interface ContextTestEnvironment {
   options: EnvironmentOptions | null
 }
 
-export interface ResolvedTestEnvironment extends ContextTestEnvironment {
-  name: VitestEnvironment
+export interface ResolvedTestEnvironment {
   environment: Environment
   options: EnvironmentOptions | null
 }
 
 export interface ContextRPC {
   config: ResolvedConfig
+  projectName: string
   files: string[]
   invalidates?: string[]
   environment: ContextTestEnvironment

@@ -1,6 +1,10 @@
 import type { Suite, Task, TaskResult } from 'vitest'
 import { expect, test } from 'vitest'
+import { resolve } from 'pathe'
+import { runVitest } from '../../test-utils'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
+
+const root = resolve(__dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
   const result: TaskResult = { state: 'pass', duration: 0 }
@@ -33,4 +37,17 @@ test('calc the duration used by junit', () => {
   expect(getDuration(task)).toBe('12')
   result.duration = 12001
   expect(getDuration(task)).toBe('12.001')
+})
+
+test('emits <failure> if a test has a syntax error', async () => {
+  const { stdout } = await runVitest({ reporters: 'junit', root }, ['with-syntax-error'])
+
+  let xml = stdout
+
+  // clear timestamp and hostname
+  xml = xml.replace(/timestamp="[^"]+"/, 'timestamp="TIMESTAMP"')
+  xml = xml.replace(/hostname="[^"]+"/, 'hostname="HOSTNAME"')
+
+  expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="TIMESTAMP" hostname="HOSTNAME" tests="1" failures="1" errors="0" skipped="0" time="0">')
+  expect(xml).toContain('<failure')
 })

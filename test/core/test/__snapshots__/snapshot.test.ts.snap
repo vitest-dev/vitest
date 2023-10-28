@@ -46,6 +46,20 @@ exports[`renders mock snapshot 2`] = `
 }
 `;
 
+exports[`single line snapshot 1`] = `"some string"`;
+
+exports[`single line snapshot 2`] = `"some "string""`;
+
+exports[`single line snapshot 3`] = `"some "string"`;
+
+exports[`single line snapshot 4`] = `"som\`e\` string"`;
+
+exports[`single line snapshot 5`] = `"some string\`"`;
+
+exports[`single line snapshot 6`] = `"some string'"`;
+
+exports[`single line snapshot 7`] = `"some 'string'"`;
+
 exports[`throwing 1`] = `"omega"`;
 
 exports[`throwing 2`] = `"omega"`;

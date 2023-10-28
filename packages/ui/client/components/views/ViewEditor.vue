@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import type CodeMirror from 'codemirror'
+import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'
 import { client } from '~/composables/client'
-import type { ErrorWithDiff, File } from '#types'
 import { isDescribeBlock, selectedTest, testIndex } from '~/composables/params'
 
 interface SplittedCode {
@@ -32,7 +32,7 @@ watch([() => props.file, isDescribeBlock, selectedTest, testIndex],
     }
 
     if (newFile?.filepath !== props.file.filepath || code.value === '') {
-      code.value = await client.rpc.readFile(props.file.filepath) || ''
+      code.value = await client.rpc.readTestFile(props.file.filepath) || ''
       serverCode.value = code.value
       draft.value = false
 
@@ -195,7 +195,7 @@ function createErrorElement(e: ErrorWithDiff) {
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
   pre.className = 'c-red-600 dark:c-red-400'
-  pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr}: ${e?.message}`
+  pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr || e.name}: ${e?.message || ''}`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
@@ -245,7 +245,7 @@ function handleCodeReset() {
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
-  await client.rpc.writeFile(props.file!.filepath, content)
+  await client.rpc.saveTestFile(props.file!.filepath, content)
   serverCode.value = content
   draft.value = false
 }

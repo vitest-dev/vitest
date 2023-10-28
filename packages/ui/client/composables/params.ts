@@ -6,7 +6,7 @@ export interface Params {
   testIndex: null | string
 }
 
-export const params = useUrlSearchParams<Params>('hash-params', {
+export const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     file: '',
     view: null,

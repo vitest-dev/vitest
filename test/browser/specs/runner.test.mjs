@@ -34,6 +34,8 @@ await test('tests are actually running', async () => {
 await test('correctly prints error', () => {
   assert.match(stderr, /expected 1 to be 2/, 'prints failing error')
   assert.match(stderr, /- 2\s+\+ 1/, 'prints failing diff')
+  assert.match(stderr, /Expected to be/, 'prints \`Expected to be\`')
+  assert.match(stderr, /But got/, 'prints \`But got\`')
 })
 
 await test('logs are redirected to stdout', async () => {
