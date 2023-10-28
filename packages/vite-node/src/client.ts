@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, createImportMetaEnvProxy, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -31,6 +31,8 @@ const clientStub = {
   updateStyle: () => {},
   removeStyle: () => {},
 }
+
+const env = createImportMetaEnvProxy()
 
 export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
   '/@vite/client': clientStub,
@@ -299,7 +301,7 @@ export class ViteNodeRunner {
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const href = pathToFileURL(modulePath).href
-    const meta = { url: href }
+    const meta = { url: href, env }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',

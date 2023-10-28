@@ -32,6 +32,17 @@ export class StateManager {
     else
       err = { type, message: err }
 
+    const _err = err as Record<string, any>
+    if (_err && typeof _err === 'object' && _err.code === 'VITEST_PENDING') {
+      const task = this.idMap.get(_err.taskId)
+      if (task) {
+        task.mode = 'skip'
+        task.result ??= { state: 'skip' }
+        task.result.state = 'skip'
+      }
+      return
+    }
+
     this.errorsSet.add(err)
   }
 
@@ -119,6 +130,9 @@ export class StateManager {
       if (task) {
         task.result = result
         task.meta = meta
+        // skipped with new PendingError
+        if (result?.state === 'skip')
+          task.mode = 'skip'
       }
     }
   }

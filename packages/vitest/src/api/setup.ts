@@ -21,7 +21,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
 
   const wss = new WebSocketServer({ noServer: true })
 
-  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents>>()
+  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
   ;(server || ctx.server).httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
@@ -40,6 +40,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
+        async onUnhandledError(error, type) {
+          ctx.state.catchError(error, type)
+        },
         async onDone(testId) {
           return ctx.state.browserTestPromises.get(testId)?.resolve(true)
         },
@@ -69,30 +72,40 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         resolveSnapshotRawPath(testPath, rawPath) {
           return ctx.snapshot.resolveRawPath(testPath, rawPath)
         },
-        removeFile(id) {
-          return fs.unlink(id)
+        async readSnapshotFile(snapshotPath) {
+          if (!ctx.snapshot.resolvedPaths.has(snapshotPath) || !existsSync(snapshotPath))
+            return null
+          return fs.readFile(snapshotPath, 'utf-8')
         },
-        createDirectory(id) {
-          return fs.mkdir(id, { recursive: true })
-        },
-        async readFile(id) {
-          if (!existsSync(id))
+        async readTestFile(id) {
+          if (!ctx.state.filesMap.has(id) || !existsSync(id))
             return null
           return fs.readFile(id, 'utf-8')
         },
+        async saveTestFile(id, content) {
+          if (!ctx.state.filesMap.has(id) || !existsSync(id))
+            throw new Error(`Test file "${id}" was not registered, so it cannot be updated using the API.`)
+          return fs.writeFile(id, content, 'utf-8')
+        },
+        async saveSnapshotFile(id, content) {
+          if (!ctx.snapshot.resolvedPaths.has(id))
+            throw new Error(`Snapshot file "${id}" does not exist.`)
+          await fs.mkdir(dirname(id), { recursive: true })
+          return fs.writeFile(id, content, 'utf-8')
+        },
+        async removeSnapshotFile(id) {
+          if (!ctx.snapshot.resolvedPaths.has(id) || !existsSync(id))
+            throw new Error(`Snapshot file "${id}" does not exist.`)
+          return fs.unlink(id)
+        },
         snapshotSaved(snapshot) {
           ctx.snapshot.add(snapshot)
-        },
-        async writeFile(id, content, ensureDir) {
-          if (ensureDir)
-            await fs.mkdir(dirname(id), { recursive: true })
-          return await fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
           await ctx.rerunFiles(files)
         },
         getConfig() {
-          return ctx.config
+          return vitestOrWorkspace.config
         },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
@@ -144,7 +157,7 @@ class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
-    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents>>,
+    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>,
   ) {}
 
   onCollected(files?: File[]) {
@@ -166,9 +179,6 @@ class WebSocketReporter implements Reporter {
         getSourceMap: file => project.getBrowserSourceMapModuleById(file),
       }
 
-      // TODO remove after "error" deprecation is removed
-      if (result?.error && !isPrimitive(result.error))
-        result.error.stacks = parseErrorStacktrace(result.error, parserOptions)
       result?.errors?.forEach((error) => {
         if (!isPrimitive(error))
           error.stacks = parseErrorStacktrace(error, parserOptions)

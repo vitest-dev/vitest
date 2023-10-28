@@ -1,5 +1,4 @@
 import { promises as fs } from 'node:fs'
-import { $fetch } from 'ohmyfetch'
 
 interface Contributor {
   login: string
@@ -7,12 +6,11 @@ interface Contributor {
 
 async function fetchContributors(page = 1) {
   const collaborators: string[] = []
-  const data = await $fetch<Contributor[]>(`https://api.github.com/repos/vitest-dev/vitest/contributors?per_page=100&page=${page}`, {
-    method: 'get',
+  const data = await (await fetch(`https://api.github.com/repos/vitest-dev/vitest/contributors?per_page=100&page=${page}`, {
     headers: {
       'content-type': 'application/json',
     },
-  }) || []
+  })).json() as Contributor[] || []
   collaborators.push(...data.map(i => i.login))
   if (data.length === 100)
     collaborators.push(...(await fetchContributors(page + 1)))

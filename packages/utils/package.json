@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.34.1",
+  "version": "1.0.0-beta.3",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "diff-sequences": "^29.4.3",
-    "loupe": "^2.3.6",
+    "loupe": "^2.3.7",
     "pretty-format": "^29.5.0"
   },
   "devDependencies": {

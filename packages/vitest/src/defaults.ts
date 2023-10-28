@@ -24,6 +24,7 @@ const defaultCoverageExcludes = [
   '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 
@@ -31,13 +32,15 @@ const defaultCoverageExcludes = [
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'v8',
   enabled: false,
+  all: true,
   clean: true,
   cleanOnRerun: true,
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
+  allowExternal: false,
 }
 
 export const fakeTimersDefaults = {
@@ -59,7 +62,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  threads: true,
+  pool: 'threads' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -68,7 +71,6 @@ const config = {
   testTimeout: 5000,
   hookTimeout: 10000,
   teardownTimeout: 10000,
-  isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
     '**/package.json/**',

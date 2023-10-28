@@ -6,7 +6,7 @@ title: Getting Started | Guide
 
 ## Overview
 
-Vitest is a blazing fast unit test framework powered by Vite.
+Vitest is a next generation testing framework powered by Vite.
 
 You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
 
@@ -27,6 +27,9 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
   ```
   ```bash [pnpm]
   pnpm add -D vitest
+  ```
+  ```bash [bun]
+  bun add -D vitest
   ```
 :::
 
@@ -71,7 +74,7 @@ Next, in order to execute the test, add the following section to your `package.j
 
 Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
-```log
+```txt
 ✓ sum.test.js (1)
   ✓ adds 1 + 2 to equal 3
 
@@ -109,9 +112,9 @@ export default defineConfig({
 Even if you do not use Vite yourself, Vitest relies heavily on it for its transformation pipeline. For that reason, you can also configure any property described in [Vite documentation](https://vitejs.dev/config/).
 :::
 
-If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts 
+```ts
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 

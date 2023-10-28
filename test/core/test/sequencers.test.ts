@@ -1,9 +1,9 @@
 import type { Vitest } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
-import { RandomSequencer } from 'vitest/src/node/sequencers/RandomSequencer'
-import { BaseSequencer } from 'vitest/src/node/sequencers/BaseSequencer'
-import type { VitestWorkspace } from 'vitest/node'
-import type { WorkspaceSpec } from 'vitest/src/node/pool'
+import type { WorkspaceProject } from 'vitest/node'
+import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
+import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
+import type { WorkspaceSpec } from '../../../packages/vitest/src/node/pool'
 
 function buildCtx() {
   return {
@@ -20,7 +20,7 @@ function buildCtx() {
 function buildWorkspace() {
   return {
     getName: () => 'test',
-  } as any as VitestWorkspace
+  } as any as WorkspaceProject
 }
 
 const workspace = buildWorkspace()

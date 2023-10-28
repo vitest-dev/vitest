@@ -5,7 +5,7 @@ import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { setupChaiConfig } from '../integrations/chai/config'
-import { setupGlobalEnv, withEnv } from './setup.node'
+import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 
@@ -20,6 +20,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
     setupChaiConfig(config.chaiConfig)
 
   const runner = await resolveTestRunner(config, executor)
+
   workerState.onCancel.then(reason => runner.onCancel?.(reason))
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
@@ -32,10 +33,10 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
     workerState.durations.environment = performance.now() - workerState.durations.environment
 
     for (const file of files) {
-      // it doesn't matter if running with --threads
-      // if running with --no-threads, we usually want to reset everything before running a test
-      // but we have --isolate option to disable this
-      if (config.isolate) {
+      const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
+      const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
+
+      if (isIsolatedThreads || isIsolatedForks) {
         workerState.mockMap.clear()
         resetModules(workerState.moduleCache, true)
       }

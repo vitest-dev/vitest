@@ -80,3 +80,17 @@ export function getRunnerOptions(): any {
     state,
   }
 }
+
+function stripProtocol(url: string | URL) {
+  return url.toString().replace(/^file:\/+/, '/')
+}
+
+export function getFileIdFromUrl(url: URL | string) {
+  if (typeof self === 'undefined')
+    return stripProtocol(url)
+  if (!(url instanceof URL))
+    url = new URL(url, self.location.origin)
+  if (url.protocol === 'http:' || url.protocol === 'https:')
+    return url.pathname
+  return stripProtocol(url)
+}

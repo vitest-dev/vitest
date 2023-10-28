@@ -1,4 +1,5 @@
-import type { File, SequenceHooks, SequenceSetupFiles, Suite, TaskResultPack, Test, TestContext } from './tasks'
+import type { DiffOptions } from '@vitest/utils/diff'
+import type { Custom, ExtendedContext, File, SequenceHooks, SequenceSetupFiles, Suite, TaskContext, TaskPopulated, TaskResultPack, Test } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -21,6 +22,7 @@ export interface VitestRunnerConfig {
   testTimeout: number
   hookTimeout: number
   retry: number
+  diffOptions?: DiffOptions
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -44,26 +46,26 @@ export interface VitestRunner {
   /**
    * Called when test runner should cancel next test runs.
    * Runner should listen for this method and mark tests and suites as skipped in
-   * "onBeforeRunSuite" and "onBeforeRunTest" when called.
+   * "onBeforeRunSuite" and "onBeforeRunTask" when called.
    */
   onCancel?(reason: CancelReason): unknown
 
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTest?(test: Test): unknown
+  onBeforeRunTask?(test: TaskPopulated): unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
+  onBeforeTryTask?(test: TaskPopulated, options: { retry: number; repeats: number }): unknown
   /**
    * Called after result and state are set.
    */
-  onAfterRunTest?(test: Test): unknown
+  onAfterRunTask?(test: TaskPopulated): unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTest?(test: Test, options: { retry: number; repeats: number }): unknown
+  onAfterTryTask?(test: TaskPopulated, options: { retry: number; repeats: number }): unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -83,7 +85,7 @@ export interface VitestRunner {
    * If defined, will be called instead of usual Vitest handling. Useful, if you have your custom test function.
    * "before" and "after" hooks will not be ignored.
    */
-  runTest?(test: Test): Promise<void>
+  runTask?(test: TaskPopulated): Promise<void>
 
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
@@ -93,16 +95,20 @@ export interface VitestRunner {
   /**
    * Called before running all tests in collected paths.
    */
-  onBeforeRun?(files: File[]): unknown
+  onBeforeRunFiles?(files: File[]): unknown
   /**
    * Called right after running all tests in collected paths.
    */
-  onAfterRun?(files: File[]): unknown
+  onAfterRunFiles?(files: File[]): unknown
   /**
    * Called when new context for a test is defined. Useful, if you want to add custom properties to the context.
    * If you only want to define custom context, consider using "beforeAll" in "setupFiles" instead.
+   *
+   * This method is called for both "test" and "custom" handlers.
+   *
+   * @see https://vitest.dev/advanced/runner.html#your-task-function
    */
-  extendTestContext?(context: TestContext): TestContext
+  extendTaskContext?<T extends Test | Custom>(context: TaskContext<T>): ExtendedContext<T>
   /**
    * Called, when files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */

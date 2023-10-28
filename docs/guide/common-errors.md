@@ -26,14 +26,14 @@ Or rewrite your path to not be relative to root:
 
 - 3. Make sure you don't have relative [aliases](/config/#alias). Vite treats them as relative to the file where the import is instead of the root.
 
-```diff
+```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     alias: {
--     '@/': './src/',
-+     '@/': new URL('./src/', import.meta.url).pathname,
+      '@/': './src/', // [!code --]
+      '@/': new URL('./src/', import.meta.url).pathname, // [!code ++]
     }
   }
 })

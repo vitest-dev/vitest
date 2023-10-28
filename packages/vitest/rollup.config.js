@@ -26,13 +26,13 @@ const entries = [
   'src/runtime/worker.ts',
   'src/runtime/vm.ts',
   'src/runtime/child.ts',
-  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/runtime/entry-vm.ts',
   'src/integrations/spy.ts',
   'src/coverage.ts',
   'src/public/utils.ts',
   'src/public/execute.ts',
+  'src/public/reporters.ts',
 ]
 
 const dtsEntries = {
@@ -45,6 +45,8 @@ const dtsEntries = {
   config: 'src/config.ts',
   coverage: 'src/coverage.ts',
   utils: 'src/public/utils.ts',
+  execute: 'src/public/execute.ts',
+  reporters: 'src/public/reporters.ts',
 }
 
 const external = [
@@ -57,9 +59,6 @@ const external = [
   'rollup',
   'node:vm',
   'inspector',
-  'webdriverio',
-  'safaridriver',
-  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
@@ -90,6 +89,7 @@ const plugins = [
 export default ({ watch }) => defineConfig([
   {
     input: entries,
+    treeshake: true,
     output: {
       dir: 'dist',
       format: 'esm',

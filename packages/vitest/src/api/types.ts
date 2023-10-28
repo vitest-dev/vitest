@@ -7,6 +7,7 @@ export interface TransformResultWithSource extends TransformResult {
 }
 
 export interface WebSocketHandlers {
+  onUnhandledError(error: unknown, type: string): Promise<void>
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void
@@ -21,10 +22,11 @@ export interface WebSocketHandlers {
   resolveSnapshotRawPath(testPath: string, rawPath: string): string
   getModuleGraph(id: string, workspaceName?: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
-  readFile(id: string): Promise<string | null>
-  writeFile(id: string, content: string, ensureDir?: boolean): Promise<void>
-  removeFile(id: string): Promise<void>
-  createDirectory(id: string): Promise<string | undefined>
+  readSnapshotFile(id: string): Promise<string | null>
+  readTestFile(id: string): Promise<string | null>
+  saveTestFile(id: string, content: string): Promise<void>
+  saveSnapshotFile(id: string, content: string): Promise<void>
+  removeSnapshotFile(id: string): Promise<void>
   snapshotSaved(snapshot: SnapshotResult): void
   rerun(files: string[]): Promise<void>
   updateSnapshot(file?: File): Promise<void>

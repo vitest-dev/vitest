@@ -1,6 +1,6 @@
+import type { File } from 'vitest'
 import { client, config, findById, testRunState } from './client'
 import { activeFileId } from './params'
-import type { File } from '#types'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -21,7 +21,15 @@ export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
     const url = `${window.location.protocol}//${window.location.hostname}:${config.value!.api!.port!}`
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
-    return `${url}/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
+    const htmlReporter = coverage.value!.reporter.find((reporter) => {
+      if (reporter[0] !== 'html')
+        return undefined
+
+      return reporter
+    })
+    return htmlReporter && 'subdir' in htmlReporter[1]
+      ? `${url}/${coverage.value!.reportsDirectory.slice(idx + 1)}/${htmlReporter[1].subdir}/index.html`
+      : `${url}/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
 
   return undefined

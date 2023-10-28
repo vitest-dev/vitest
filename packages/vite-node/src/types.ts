@@ -1,4 +1,4 @@
-import type { ViteHotContext } from 'vite/types/hot'
+import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
@@ -31,7 +31,7 @@ export interface StartOfSourceMap {
   sourceRoot?: string
 }
 
-export type { EncodedSourceMap, DecodedSourceMap } from '@jridgewell/trace-mapping'
+export type { EncodedSourceMap, DecodedSourceMap, SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface RawSourceMap extends StartOfSourceMap {
   version: string

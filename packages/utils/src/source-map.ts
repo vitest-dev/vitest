@@ -10,6 +10,7 @@ export type { SourceMapInput } from '@jridgewell/trace-mapping'
 export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
+  frameFilter?: (error: Error, frame: ParsedStack) => boolean | void
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m
@@ -127,6 +128,9 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   // normalize Windows path (\ -> /)
   file = resolve(file)
 
+  if (method)
+    method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+
   return {
     method,
     file,
@@ -176,7 +180,10 @@ export function parseErrorStacktrace(e: ErrorWithDiff, options: StackTraceParser
     return e.stacks
 
   const stackStr = e.stack || e.stackStr || ''
-  const stackFrames = parseStacktrace(stackStr, options)
+  let stackFrames = parseStacktrace(stackStr, options)
+
+  if (options.frameFilter)
+    stackFrames = stackFrames.filter(f => options.frameFilter!(e, f) !== false)
 
   e.stacks = stackFrames
   return stackFrames

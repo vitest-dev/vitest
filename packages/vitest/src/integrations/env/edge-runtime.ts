@@ -1,6 +1,7 @@
 import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
+import { KEYS } from './jsdom-keys'
 
 export default <Environment>({
   name: 'edge-runtime',
@@ -29,6 +30,10 @@ export default <Environment>({
       extend: (context) => {
         context.global = context
         context.Buffer = Buffer
+        KEYS.forEach((key) => {
+          if (key in global)
+            context[key] = global[key]
+        })
         return context
       },
     })

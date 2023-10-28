@@ -27,3 +27,4 @@ docs/public/user-avatars
 docs/public/sponsors
 .eslintcache
 docs/.vitepress/cache/
+!test/cwd/**/.cache

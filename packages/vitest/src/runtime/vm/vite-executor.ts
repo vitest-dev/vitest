@@ -58,7 +58,7 @@ export class ViteExecutor {
       return cached
     const result = await this.options.transform(fileUrl, 'web')
     if (!result.code)
-      throw new Error(`[vitest] Failed to transform ${fileUrl}. Does the file exists?`)
+      throw new Error(`[vitest] Failed to transform ${fileUrl}. Does the file exist?`)
     return this.esm.createEsModule(fileUrl, result.code)
   }
 

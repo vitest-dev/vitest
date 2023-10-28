@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-restricted",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "jsdom": "^22.1.0",
+    "vitest": "workspace:*"
+  }
+}

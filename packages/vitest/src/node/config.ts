@@ -1,4 +1,3 @@
-import { totalmem } from 'node:os'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
@@ -7,7 +6,6 @@ import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../ty
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, toArray } from '../utils'
-import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -49,8 +47,11 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
 
   if (api) {
-    if (!api.port)
+    if (!api.port && !api.middlewareMode)
       api.port = defaultPort
+  }
+  else {
+    api = { middlewareMode: true }
   }
 
   return api
@@ -89,7 +90,6 @@ export function resolveConfig(
 
   resolved.inspect = Boolean(resolved.inspect)
   resolved.inspectBrk = Boolean(resolved.inspectBrk)
-  resolved.singleThread = Boolean(resolved.singleThread)
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -112,9 +112,12 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    if (resolved.threads !== false && resolved.singleThread !== true) {
+    const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
+    const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
+
+    if (!isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+      throw new Error(`You cannot use ${inspectOption} without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
@@ -136,6 +139,12 @@ export function resolveConfig(
   })
   if (!resolved.deps.moduleDirectories.includes('/node_modules/'))
     resolved.deps.moduleDirectories.push('/node_modules/')
+
+  resolved.deps.optimizer ??= {}
+  resolved.deps.optimizer.ssr ??= {}
+  resolved.deps.optimizer.ssr.enabled ??= true
+  resolved.deps.optimizer.web ??= {}
+  resolved.deps.optimizer.web.enabled ??= true
 
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true
@@ -189,21 +198,14 @@ export function resolveConfig(
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  if (resolved.deps.registerNodeLoader) {
-    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-    console.warn(
-      c.yellow(
-      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
-      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
-      ),
-    )
-  }
-
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
       : new RegExp(resolved.testNamePattern)
     : undefined
+
+  if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat)
+    (resolved.snapshotFormat as any).plugins = []
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
@@ -218,30 +220,56 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
-  const memory = totalmem()
-  const limit = getWorkerMemoryLimit(resolved)
-
-  if (typeof memory === 'number') {
-    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-      limit,
-      resolved.watch ? memory / 2 : memory,
-    )
-  }
-  else if (limit > 1) {
-    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(limit)
-  }
-  else {
-    // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
-  }
-
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
-  if (process.env.VITEST_MAX_THREADS)
-    resolved.maxThreads = Number.parseInt(process.env.VITEST_MAX_THREADS)
+  if (process.env.VITEST_MAX_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+    }
+  }
 
-  if (process.env.VITEST_MIN_THREADS)
-    resolved.minThreads = Number.parseInt(process.env.VITEST_MIN_THREADS)
+  if (process.env.VITEST_MIN_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MAX_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MIN_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
+    }
+  }
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -273,12 +301,19 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
     ...resolved.setupFiles,
   ]
+
+  if (resolved.diff) {
+    resolved.diff = normalize(
+      resolveModule(resolved.diff, { paths: [resolved.root] })
+        ?? resolve(resolved.root, resolved.diff))
+    resolved.forceRerunTriggers.push(resolved.diff)
+  }
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiServerConfig(options)
@@ -313,7 +348,7 @@ export function resolveConfig(
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
 
   resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
@@ -333,15 +368,17 @@ export function resolveConfig(
 
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
 
-  if (mode === 'typecheck') {
-    resolved.include = resolved.typecheck.include
-    resolved.exclude = resolved.typecheck.exclude
-  }
+  resolved.typecheck ??= {} as any
+  resolved.typecheck.enabled ??= false
+
+  if (resolved.typecheck.enabled)
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= true
+  resolved.browser.isolate ??= true
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
@@ -352,9 +389,6 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser?.enabled)
-    return true
-
-  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+export function isBrowserEnabled(config: ResolvedConfig): boolean {
+  return Boolean(config.browser?.enabled)
 }

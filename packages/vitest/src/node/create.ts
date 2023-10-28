@@ -1,11 +1,12 @@
 import { resolve } from 'pathe'
-import { createServer, mergeConfig } from 'vite'
+import { mergeConfig } from 'vite'
 import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { findUp } from 'find-up'
 import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
+import { createViteServer } from './vite'
 
 export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest(mode)
@@ -17,6 +18,8 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
       ? resolve(root, options.config)
       : await findUp(configFiles, { cwd: root } as any)
 
+  options.config = configPath
+
   const config: ViteInlineConfig = {
     logLevel: 'error',
     configFile: configPath,
@@ -25,13 +28,10 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     plugins: await VitestPlugin(options, ctx),
   }
 
-  const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
+  const server = await createViteServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
-  // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || ctx.config.deps?.optimizer?.web?.enabled || ctx.config.deps?.optimizer?.ssr?.enabled)
+  if (ctx.config.api?.port)
     await server.listen()
-  else
-    await server.pluginContainer.buildStart({})
 
   return ctx
 }

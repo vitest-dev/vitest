@@ -2,7 +2,11 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    threads: false,
-    isolate: false,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        isolate: false,
+      },
+    },
   },
 })

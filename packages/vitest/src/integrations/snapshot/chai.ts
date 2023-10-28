@@ -1,16 +1,20 @@
 import type { ChaiPlugin } from '@vitest/expect'
+import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
+import { SnapshotClient, addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
 import type { Test } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
-import type { SnapshotClient } from '@vitest/snapshot'
-import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
 import { recordAsyncExpect } from '../../../../expect/src/utils'
-import { VitestSnapshotClient } from './client'
 
 let _client: SnapshotClient
 
 export function getSnapshotClient(): SnapshotClient {
-  if (!_client)
-    _client = new VitestSnapshotClient()
+  if (!_client) {
+    _client = new SnapshotClient({
+      isEqual: (received, expected) => {
+        return equals(received, expected, [iterableEquality, subsetEquality])
+      },
+    })
+  }
   return _client
 }
 

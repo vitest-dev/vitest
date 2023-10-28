@@ -3,14 +3,9 @@
   "labels": ["dependencies"],
   "pin": false,
   "rangeStrategy": "bump",
-  "node": false,
   "packageRules": [
     {
       "depTypeList": ["peerDependencies"],
-      "enabled": false
-    },
-    {
-      "packageNames": ["node"],
       "enabled": false
     },
     {
@@ -23,23 +18,13 @@
       ],
       "groupName": "all non-major examples dependencies",
       "groupSlug": "all-minor-patch-examples"
-    },
-    {
-      "excludePackagePatterns": [
-        "@vitest/test-"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
     }
   ],
   "ignoreDeps": [
     // wait for ecosystem to upgrade to React v18
     "@testing-library/react",
     "@testing-library/user-event",
+    "node",
     // user can install any version
     "vite"
   ]

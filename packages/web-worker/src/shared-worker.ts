@@ -1,7 +1,7 @@
 import { MessageChannel, type MessagePort as NodeMessagePort } from 'node:worker_threads'
 import type { InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
-import { debug, getRunnerOptions } from './utils'
+import { debug, getFileIdFromUrl, getRunnerOptions } from './utils'
 
 interface SharedInlineWorkerContext extends Omit<InlineWorkerContext, 'onmessage' | 'postMessage' | 'self' | 'global'> {
   onconnect: Procedure | null
@@ -101,7 +101,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
       const runner = new InlineWorkerRunner(runnerOptions, context)
 
-      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
+      const id = getFileIdFromUrl(url)
 
       this._vw_name = id
 

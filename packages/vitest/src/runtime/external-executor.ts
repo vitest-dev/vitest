@@ -112,7 +112,7 @@ export class ExternalModulesExecutor {
 
   private wrapCoreSynteticModule(identifier: string, exports: Record<string, unknown>) {
     const moduleKeys = Object.keys(exports)
-    const m: any = new SyntheticModule(
+    const m = new SyntheticModule(
       [...moduleKeys, 'default'],
       () => {
         for (const key of moduleKeys)
@@ -130,7 +130,7 @@ export class ExternalModulesExecutor {
   private wrapCommonJsSynteticModule(identifier: string, exports: Record<string, unknown>) {
     // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
     const { keys, moduleExports, defaultExport } = interopCommonJsModule(this.options.interopDefault, exports)
-    const m: any = new SyntheticModule(
+    const m = new SyntheticModule(
       [...keys, 'default'],
       () => {
         for (const key of keys)

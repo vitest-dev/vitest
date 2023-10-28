@@ -52,3 +52,17 @@ describe('stacktrace should print error frame source file correctly', async () =
     expect(stderr).toMatchSnapshot('error-in-deps')
   }, 30000)
 })
+
+describe('stacktrace filtering', async () => {
+  const root = resolve(__dirname, '../fixtures')
+  const testFile = resolve(root, './error-with-stack.test.js')
+
+  it('filters stacktraces', async () => {
+    const { stderr } = await runVitest({
+      root,
+      onStackTrace: (_error, { method }) => method !== 'b',
+    }, [testFile])
+
+    expect(stderr).toMatchSnapshot('stacktrace-filtering')
+  }, 30000)
+})

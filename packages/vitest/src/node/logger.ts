@@ -95,10 +95,21 @@ export class Logger {
     const comma = c.dim(', ')
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
-    if (config.include)
-      this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
-    if (config.exclude)
-      this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
+    this.ctx.projects.forEach((project) => {
+      const config = project.config
+      const name = project.getName()
+      const output = project.isCore() || !name ? '' : `[${name}]`
+      if (output)
+        this.console.error(c.bgCyan(`${output} Config`))
+      if (config.include)
+        this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
+      if (config.exclude)
+        this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
+      if (config.typecheck.enabled) {
+        this.console.error(c.dim('typecheck include: ') + c.yellow(config.typecheck.include.join(comma)))
+        this.console.error(c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)))
+      }
+    })
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
@@ -139,7 +150,7 @@ export class Logger {
 
     if (this.ctx.config.ui)
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
-    else if (this.ctx.config.api)
+    else if (this.ctx.config.api?.port)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
 
     if (this.ctx.coverageProvider)

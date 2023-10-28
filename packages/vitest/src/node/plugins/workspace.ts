@@ -4,14 +4,15 @@ import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
-import type { UserWorkspaceConfig } from '../../types'
+import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
+import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
+import { NormalizeURLPlugin } from './normalizeURL'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -27,7 +28,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         this.meta.watchMode = false
       },
       config(viteConfig) {
-        const env: Record<string, any> = deleteDefineConfig(viteConfig)
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
 
@@ -69,12 +70,20 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             open: false,
             hmr: false,
             preTransformRequests: false,
+            middlewareMode: true,
+            fs: {
+              allow: resolveFsAllow(
+                project.ctx.config.root,
+                project.ctx.server.config.configFile,
+              ),
+            },
           },
           test: {
-            env,
             name,
           },
         }
+
+        ;(config.test as ResolvedConfig).defines = defines
 
         const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
 
@@ -89,16 +98,10 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           }
         }
 
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
-        }
-
         return config
+      },
+      configResolved(viteConfig) {
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         try {
@@ -120,8 +123,9 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
-    GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
     VitestResolver(project.ctx),
+    VitestOptimizer(),
+    NormalizeURLPlugin(),
   ]
 }

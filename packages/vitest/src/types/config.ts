@@ -1,4 +1,4 @@
-import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'vite'
+import type { AliasOptions, DepOptimizationConfig, ServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -8,33 +8,36 @@ import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
+import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
-import type { Arrayable } from './general'
+import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { Pool, PoolOptions } from './pool-options'
 
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
-export type VitestPool = 'browser' | 'threads' | 'child_process' | 'experimentalVmThreads'
+export type { Pool, PoolOptions }
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
-export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
+export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'middlewareMode'>
 
-export { JSDOMOptions }
+export type { JSDOMOptions, HappyDOMOptions }
 
 export interface EnvironmentOptions {
   /**
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+export type VitestRunMode = 'test' | 'benchmark'
 
 interface SequenceOptions {
   /**
@@ -112,7 +115,7 @@ interface DepsOptions {
      *
      * These module will have a default export equal to the path to the asset, if no query is specified.
      *
-     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     * **At the moment, this option only works with `{ pool: 'vmThreads' }`.**
      *
      * @default true
      */
@@ -122,7 +125,7 @@ interface DepsOptions {
      *
      * If CSS files are disabled with `css` options, this option will just silence UNKNOWN_EXTENSION errors.
      *
-     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     * **At the moment, this option only works with `{ pool: 'vmThreads' }`.**
      *
      * @default true
      */
@@ -132,7 +135,7 @@ interface DepsOptions {
      *
      * By default, files inside `node_modules` are externalized and not transformed.
      *
-     * **At the moment, this option only works with `experimentalVmThreads` pool.**
+     * **At the moment, this option only works with `{ pool: 'vmThreads' }`.**
      *
      * @default []
      */
@@ -177,13 +180,6 @@ interface DepsOptions {
    * @deprecated Use `server.deps.fallbackCJS` instead.
    */
   fallbackCJS?: boolean
-
-  /**
-   * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
-   * @default false
-   * @deprecated If you rely on aliases inside external packages, use `deps.optimizer.{web,ssr}.include` instead.
-   */
-  registerNodeLoader?: boolean
 
   /**
    * A list of directories relative to the config file that should be treated as module directories.
@@ -285,19 +281,33 @@ export interface InlineConfig {
   environmentMatchGlobs?: [string, VitestEnvironment][]
 
   /**
+   * Pool used to run tests in.
+   *
+   * Supports 'threads', 'forks', 'vmThreads'
+   *
+   * @default 'threads'
+   */
+  pool?: Exclude<Pool, 'browser'>
+
+  /**
+   * Pool options
+   */
+  poolOptions?: PoolOptions
+
+  /**
    * Automatically assign pool based on globs. The first match will be used.
    *
    * Format: [glob, pool-name]
    *
    * @default []
    * @example [
-   *   // all tests in "child_process" directory will run using "child_process" API
-   *   ['tests/child_process/**', 'child_process'],
-   *   // all other tests will run based on "threads" option, if you didn't specify other globs
+   *   // all tests in "forks" directory will run using "poolOptions.forks" API
+   *   ['tests/forks/**', 'forks'],
+   *   // all other tests will run based on "poolOptions.threads" option, if you didn't specify other globs
    *   // ...
    * ]
    */
-  poolMatchGlobs?: [string, Omit<VitestPool, 'browser'>][]
+  poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
    * Update snapshot
@@ -331,51 +341,6 @@ export interface InlineConfig {
    * Also definable individually per reporter by using an object instead.
    */
   outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
-
-  /**
-   * Run tests using VM context in a worker pool.
-   *
-   * This makes tests run faster, but VM module is unstable. Your tests might leak memory.
-   */
-  experimentalVmThreads?: boolean
-
-  /**
-   * Specifies the memory limit for workers before they are recycled.
-   * If you see your worker leaking memory, try to tinker this value.
-   *
-   * This only has effect on workers that run tests in VM context.
-   */
-  experimentalVmWorkerMemoryLimit?: string | number
-
-  /**
-   * Enable multi-threading
-   *
-   * @default true
-   */
-  threads?: boolean
-
-  /**
-   * Maximum number of threads
-   *
-   * @default available CPUs
-   */
-  maxThreads?: number
-
-  /**
-   * Minimum number of threads
-   *
-   * @default available CPUs
-   */
-  minThreads?: number
-
-  /**
-   * Use Atomics to synchronize threads
-   *
-   * This can improve performance in some cases, but might cause segfault in older Node versions.
-   *
-   * @default false
-   */
-  useAtomics?: boolean
 
   /**
    * Default timeout of a test in milliseconds
@@ -435,20 +400,6 @@ export interface InlineConfig {
    * @default []
    */
   forceRerunTriggers?: string[]
-
-  /**
-   * Isolate environment for each test file
-   *
-   * @default true
-   */
-  isolate?: boolean
-
-  /**
-   * Run tests inside a single thread.
-   *
-   * @default false
-   */
-  singleThread?: boolean
 
   /**
    * Coverage options
@@ -528,14 +479,19 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method for all modules inported inside a test that matches the glob pattern.
+   * Determine the transform method for all modules imported inside a test that matches the glob pattern.
    */
   testTransformMode?: TransformModePatterns
 
   /**
    * Format options for snapshot testing.
    */
-  snapshotFormat?: PrettyFormatOptions
+  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins'>
+
+  /**
+   * Path to a module which has a default export of diff config.
+   */
+  diff?: string
 
   /**
    * Resolve custom snapshot path
@@ -573,6 +529,14 @@ export interface InlineConfig {
    * Return `false` to ignore the log.
    */
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * Enable stack trace filtering. If absent, all stack trace frames
+   * will be shown.
+   *
+   * Return `false` to omit the frame.
+   */
+  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
 
   /**
    * Indicates if CSS files should be processed.
@@ -639,14 +603,16 @@ export interface InlineConfig {
   /**
    * Debug tests by opening `node:inspector` in worker / child process.
    * Provides similar experience as `--inspect` Node CLI argument.
-   * Requires `singleThread: true` OR `threads: false`.
+   *
+   * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
   inspect?: boolean
 
   /**
    * Debug tests by opening `node:inspector` in worker / child process and wait for debugger to connect.
    * Provides similar experience as `--inspect-brk` Node CLI argument.
-   * Requires `singleThread: true` OR `threads: false`.
+   *
+   * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
   inspectBrk?: boolean
 
@@ -670,6 +636,14 @@ export interface InlineConfig {
 }
 
 export interface TypecheckConfig {
+  /**
+   * Run typechecking tests alongisde regular tests.
+   */
+  enabled?: boolean
+  /**
+   * When typechecking is enabled, only run typechecking tests.
+   */
+  only?: boolean
   /**
    * What tools to use for type checking.
    */
@@ -739,7 +713,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'experimentalVmWorkerMemoryLimit'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
   mode: VitestRunMode
 
   base?: string
@@ -753,6 +727,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   browser: ResolvedBrowserOptions
+  pool: Pool
+  poolOptions?: PoolOptions
 
   reporters: (Reporter | BuiltinReporters)[]
 
@@ -760,10 +736,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   api?: ApiConfig
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & {
-    outputFile?: BenchmarkUserOptions['outputFile']
-  }
-
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {
     index: number
     count: number
@@ -782,10 +755,10 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     seed: number
   }
 
-  typecheck: TypecheckConfig
+  typecheck: Omit<TypecheckConfig, 'enabled'> & {
+    enabled: boolean
+  }
   runner?: string
-
-  experimentalVmWorkerMemoryLimit?: number | null
 }
 
 export type ProjectConfig = Omit<
@@ -798,9 +771,8 @@ export type ProjectConfig = Omit<
   | 'update'
   | 'reporters'
   | 'outputFile'
-  | 'maxThreads'
-  | 'minThreads'
-  | 'useAtomics'
+  | 'pool'
+  | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
   | 'watchExclude'
@@ -814,6 +786,7 @@ export type ProjectConfig = Omit<
   | 'resolveSnapshotPath'
   | 'passWithNoTests'
   | 'onConsoleLog'
+  | 'onStackTrace'
   | 'dangerouslyIgnoreUnhandledErrors'
   | 'slowTestThreshold'
   | 'inspect'
@@ -822,7 +795,7 @@ export type ProjectConfig = Omit<
   | 'coverage'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'registerNodeLoader' | 'moduleDirectories'>
+  deps?: Omit<DepsOptions, 'moduleDirectories'>
 }
 
 export type RuntimeConfig = Pick<

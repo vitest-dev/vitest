@@ -103,7 +103,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 0)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
-    if (task.type === 'suite' && !task.meta?.typecheck) {
+    if (task.type === 'suite') {
       const tests = getTests(task)
       suffix += c.dim(` (${tests.length})`)
     }

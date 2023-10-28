@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { Task } from 'vitest'
 import { getProjectNameColor } from '../utils/task'
 import { isDark } from '../composables/dark'
-import type { Task } from '#types'
 
 const props = defineProps<{
   task: Task
@@ -24,6 +24,7 @@ const duration = computed(() => {
     hover="bg-active"
   >
     <StatusIcon :task="task" mr-2 />
+    <div v-if="task.type === 'suite' && task.meta.typecheck" i-logos:typescript-icon flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
       <span text-sm truncate font-light>
         <span v-if="task.type === 'suite' && task.projectName" :style="{ color: getProjectNameColor(task.projectName, isDark) }">|{{ task.projectName }}|  </span>

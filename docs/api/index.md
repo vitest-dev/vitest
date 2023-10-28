@@ -102,6 +102,18 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  You can also skip test by calling `skip` on its [context](/guide/test-context) dynamically:
+
+  ```ts
+  import { assert, test } from 'vitest'
+
+  test('skipped test', (context) => {
+    context.skip()
+    // Test skipped, no error
+    assert.equal(Math.sqrt(4), 3)
+  })
+  ```
+
 ### test.skipIf
 
 - **Type:** `(condition: any) => Test`

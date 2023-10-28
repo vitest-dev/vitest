@@ -1,8 +1,8 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.34.1",
-  "description": "A blazing fast unit test framework powered by Vite",
+  "version": "1.0.0-beta.3",
+  "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -77,6 +77,10 @@
     "./coverage": {
       "types": "./coverage.d.ts",
       "import": "./dist/coverage.js"
+    },
+    "./reporters": {
+      "types": "./dist/reporters.d.ts",
+      "import": "./dist/reporters.js"
     }
   },
   "main": "./dist/index.js",
@@ -94,7 +98,7 @@
     "*.cjs"
   ],
   "engines": {
-    "node": ">=v14.18.0"
+    "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -103,15 +107,16 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@types/node": "^18.0.0 || >=20.0.0",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "playwright": "*",
-    "safaridriver": "*",
-    "webdriverio": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
+    "@types/node": {
+      "optional": true
+    },
     "@vitest/ui": {
       "optional": true
     },
@@ -124,23 +129,11 @@
     "jsdom": {
       "optional": true
     },
-    "webdriverio": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "playwright": {
-      "optional": true
-    },
     "@edge-runtime/vm": {
       "optional": true
     }
   },
   "dependencies": {
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
-    "@types/node": "*",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
@@ -149,17 +142,17 @@
     "acorn": "^8.9.0",
     "acorn-walk": "^8.2.0",
     "cac": "^6.7.14",
-    "chai": "^4.3.7",
+    "chai": "^4.3.10",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.3",
-    "magic-string": "^0.30.1",
+    "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
     "std-env": "^3.3.3",
     "strip-literal": "^1.0.1",
     "tinybench": "^2.5.0",
-    "tinypool": "^0.7.0",
-    "vite": "^3.0.0 || ^4.0.0",
+    "tinypool": "^0.8.1",
+    "vite": "^3.1.0 || ^4.0.0 || ^5.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
   },
@@ -167,7 +160,7 @@
     "@ampproject/remapping": "^2.2.1",
     "@antfu/install-pkg": "^0.1.1",
     "@edge-runtime/vm": "3.0.3",
-    "@sinonjs/fake-timers": "^11.0.0",
+    "@sinonjs/fake-timers": "11.1.0",
     "@types/diff": "^5.0.3",
     "@types/estree": "^1.0.1",
     "@types/istanbul-lib-coverage": "^2.0.4",
@@ -176,10 +169,9 @@
     "@types/micromatch": "^4.0.2",
     "@types/prompts": "^2.4.4",
     "@types/sinonjs__fake-timers": "^8.1.2",
-    "birpc": "0.2.12",
+    "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
-    "event-target-polyfill": "^0.0.3",
     "execa": "^7.1.1",
     "expect-type": "^0.16.0",
     "fast-glob": "^3.3.0",
@@ -193,12 +185,9 @@
     "mlly": "^1.4.0",
     "p-limit": "^4.0.0",
     "pkg-types": "^1.0.3",
-    "playwright": "^1.35.1",
     "pretty-format": "^29.5.0",
     "prompts": "^2.4.2",
-    "safaridriver": "^0.0.5",
     "strip-ansi": "^7.1.0",
-    "webdriverio": "^8.11.2",
     "ws": "^8.13.0"
   }
 }

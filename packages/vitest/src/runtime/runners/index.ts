@@ -6,6 +6,7 @@ import { distDir } from '../../paths'
 import { getWorkerState } from '../../utils/global'
 import { rpc } from '../rpc'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
+import { loadDiffConfig } from '../setup-common'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
@@ -37,6 +38,8 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
   if (!testRunner.importFile)
     throw new Error('Runner must implement "importFile" method.')
 
+  testRunner.config.diffOptions = await loadDiffConfig(config, executor)
+
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
   testRunner.onTaskUpdate = async (task) => {
@@ -59,15 +62,21 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
     await originalOnCollected?.call(testRunner, files)
   }
 
-  const originalOnAfterRun = testRunner.onAfterRun
-  testRunner.onAfterRun = async (files) => {
+  const originalOnAfterRun = testRunner.onAfterRunFiles
+  testRunner.onAfterRunFiles = async (files) => {
+    const state = getWorkerState()
     const coverage = await takeCoverageInsideWorker(config.coverage, executor)
-    rpc().onAfterSuiteRun({ coverage })
+    rpc().onAfterSuiteRun({
+      coverage,
+      transformMode: state.environment.transformMode,
+      projectName: state.ctx.projectName,
+    })
+
     await originalOnAfterRun?.call(testRunner, files)
   }
 
-  const originalOnAfterRunTest = testRunner.onAfterRunTest
-  testRunner.onAfterRunTest = async (test) => {
+  const originalOnAfterRunTask = testRunner.onAfterRunTask
+  testRunner.onAfterRunTask = async (test) => {
     if (config.bail && test.result?.state === 'fail') {
       const previousFailures = await rpc().getCountOfFailedTests()
       const currentFailures = 1 + previousFailures
@@ -77,7 +86,7 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
         testRunner.onCancel?.('test-failure')
       }
     }
-    await originalOnAfterRunTest?.call(testRunner, test)
+    await originalOnAfterRunTask?.call(testRunner, test)
   }
 
   return testRunner
