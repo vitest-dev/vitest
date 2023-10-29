@@ -31,6 +31,7 @@ test('should not pass execArgv to workers when not specified in the config', asy
     reject: false,
     env: {
       VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+      NO_COLOR: '1',
     },
   })
 
