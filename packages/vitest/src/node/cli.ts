@@ -4,7 +4,6 @@ import c from 'picocolors'
 import { version } from '../../package.json'
 import { toArray } from '../utils'
 import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
-import { defaultExclude } from '../defaults'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -152,9 +151,6 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
     argv.dir = normalize(argv.dir)
   else
     delete argv.dir
-
-  if (argv.exclude)
-    argv.exclude = [...defaultExclude, ...toArray(argv.exclude)]
 
   if (argv.coverage) {
     const coverage = argv.coverage
