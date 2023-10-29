@@ -2,18 +2,18 @@
   "name": "@vitest/example-solid",
   "private": true,
   "scripts": {
-    "test": "if-node-version \">14\" vitest",
-    "coverage": "if-node-version \">14\" vitest --coverage"
+    "test": "vitest",
+    "coverage": "vitest --coverage"
   },
   "dependencies": {
-    "solid-js": "^1.4.3"
+    "solid-js": "^1.8.3"
   },
   "devDependencies": {
+    "@solidjs/testing-library": "^0.8.4",
     "@testing-library/jest-dom": "^5.16.4",
     "jsdom": "latest",
-    "solid-testing-library": "^0.5.0",
     "vite": "latest",
-    "vite-plugin-solid": "^2.5.0",
+    "vite-plugin-solid": "^2.7.2",
     "vitest": "latest"
   }
 }

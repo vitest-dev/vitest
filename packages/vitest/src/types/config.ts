@@ -11,7 +11,7 @@ import type { JSDOMOptions } from './jsdom-options'
 import type { HappyDOMOptions } from './happy-dom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
-import type { Arrayable } from './general'
+import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions } from './pool-options'
@@ -37,7 +37,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
+export type VitestRunMode = 'test' | 'benchmark'
 
 interface SequenceOptions {
   /**
@@ -180,13 +180,6 @@ interface DepsOptions {
    * @deprecated Use `server.deps.fallbackCJS` instead.
    */
   fallbackCJS?: boolean
-
-  /**
-   * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
-   * @default false
-   * @deprecated If you rely on aliases inside external packages, use `deps.optimizer.{web,ssr}.include` instead.
-   */
-  registerNodeLoader?: boolean
 
   /**
    * A list of directories relative to the config file that should be treated as module directories.
@@ -538,6 +531,14 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
+   * Enable stack trace filtering. If absent, all stack trace frames
+   * will be shown.
+   *
+   * Return `false` to omit the frame.
+   */
+  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
+
+  /**
    * Indicates if CSS files should be processed.
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
@@ -636,6 +637,14 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
+   * Run typechecking tests alongisde regular tests.
+   */
+  enabled?: boolean
+  /**
+   * When typechecking is enabled, only run typechecking tests.
+   */
+  only?: boolean
+  /**
    * What tools to use for type checking.
    */
   checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
@@ -727,10 +736,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   api?: ApiConfig
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & {
-    outputFile?: BenchmarkUserOptions['outputFile']
-  }
-
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {
     index: number
     count: number
@@ -749,7 +755,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     seed: number
   }
 
-  typecheck: TypecheckConfig
+  typecheck: Omit<TypecheckConfig, 'enabled'> & {
+    enabled: boolean
+  }
   runner?: string
 }
 
@@ -778,6 +786,7 @@ export type ProjectConfig = Omit<
   | 'resolveSnapshotPath'
   | 'passWithNoTests'
   | 'onConsoleLog'
+  | 'onStackTrace'
   | 'dangerouslyIgnoreUnhandledErrors'
   | 'slowTestThreshold'
   | 'inspect'
@@ -786,7 +795,7 @@ export type ProjectConfig = Omit<
   | 'coverage'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'registerNodeLoader' | 'moduleDirectories'>
+  deps?: Omit<DepsOptions, 'moduleDirectories'>
 }
 
 export type RuntimeConfig = Pick<

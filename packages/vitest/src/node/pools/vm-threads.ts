@@ -95,6 +95,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })

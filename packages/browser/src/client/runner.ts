@@ -1,6 +1,6 @@
 import type { File, TaskResultPack, Test } from '@vitest/runner'
+import type { ResolvedConfig } from 'vitest'
 import { rpc } from './rpc'
-import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
@@ -42,8 +42,14 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     async onAfterRunFiles() {
       await super.onAfterRun?.()
       const coverage = await coverageModule?.takeCoverage?.()
-      if (coverage)
-        await rpc().onAfterSuiteRun({ coverage })
+
+      if (coverage) {
+        await rpc().onAfterSuiteRun({
+          coverage,
+          transformMode: 'web',
+          projectName: this.config.name,
+        })
+      }
     }
 
     onCollected(files: File[]): unknown {

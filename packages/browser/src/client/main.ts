@@ -1,7 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
-import type { VitestExecutor } from 'vitest/src/runtime/execute'
+import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
@@ -70,6 +70,8 @@ async function defaultErrorReport(type: string, unhandledError: any) {
     message: unhandledError.message,
     stack: unhandledError.stack,
   }
+  if (testId !== 'no-isolate')
+    error.VITEST_TEST_PATH = testId
   await client.rpc.onUnhandledError(error, type)
   await client.rpc.onDone(testId)
 }
@@ -81,7 +83,10 @@ let runningTests = false
 
 async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error: any) {
   const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
-  await rpc.onUnhandledError(processError(error), type)
+  const processedError = processError(error)
+  if (testId !== 'no-isolate')
+    error.VITEST_TEST_PATH = testId
+  await rpc.onUnhandledError(processedError, type)
   if (!runningTests)
     await rpc.onDone(testId)
 }

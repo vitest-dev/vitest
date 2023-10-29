@@ -3,6 +3,11 @@ import { format } from './display'
 import { deepClone, getOwnProperties, getType } from './helpers'
 import { stringify } from './stringify'
 
+// utils is bundled for any environment and might not support `Element`
+declare class Element {
+  tagName: string
+}
+
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
 

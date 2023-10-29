@@ -4,7 +4,7 @@ import { workerId as poolId } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { getWorkerState } from '../utils/global'
-import { loadEnvironment } from '../integrations/env'
+import { loadEnvironment } from '../integrations/env/loader'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
 import { createSafeRpc, rpcDone } from './rpc'
@@ -60,8 +60,12 @@ async function init(ctx: WorkerContext) {
     rpc,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

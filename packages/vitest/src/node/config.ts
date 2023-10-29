@@ -201,16 +201,6 @@ export function resolveConfig(
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  if (resolved.deps.registerNodeLoader) {
-    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-    console.warn(
-      c.yellow(
-      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
-      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
-      ),
-    )
-  }
-
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
@@ -381,10 +371,11 @@ export function resolveConfig(
 
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
 
-  if (mode === 'typecheck') {
-    resolved.include = resolved.typecheck.include
-    resolved.exclude = resolved.typecheck.exclude
-  }
+  resolved.typecheck ??= {} as any
+  resolved.typecheck.enabled ??= false
+
+  if (resolved.typecheck.enabled)
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false

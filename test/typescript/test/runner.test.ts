@@ -13,10 +13,11 @@ describe('should fail', async () => {
       root,
       dir: './failing',
       typecheck: {
+        enabled: true,
         allowJs: true,
         include: ['**/*.test-d.*'],
       },
-    }, [], 'typecheck')
+    }, [])
 
     expect(stderr).toBeTruthy()
     const lines = String(stderr).split(/\n/g)
@@ -44,12 +45,12 @@ describe('should fail', async () => {
   it('typecheks with custom tsconfig', async () => {
     const { stderr } = await runVitestCli(
       { cwd: root, env: { ...process.env, CI: 'true' } },
-      'typecheck',
       '--run',
       '--dir',
       resolve(__dirname, '..', './failing'),
       '--config',
       resolve(__dirname, './vitest.custom.config.ts'),
+      '--typecheck.enabled',
     )
 
     expect(stderr).toBeTruthy()
@@ -85,12 +86,12 @@ describe('should fail', async () => {
           NO_COLOR: 'true',
         },
       },
-      'typecheck',
       '--run',
       '--dir',
       resolve(__dirname, '..', './failing'),
       '--config',
       resolve(__dirname, './vitest.empty.config.ts'),
+      '--typecheck.enabled',
     )
 
     expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()

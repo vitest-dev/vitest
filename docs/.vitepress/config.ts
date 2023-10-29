@@ -165,6 +165,10 @@ export default withPwa(defineConfig({
               link: '/guide/filtering',
             },
             {
+              text: 'Reporters',
+              link: '/guide/reporters',
+            },
+            {
               text: 'Coverage',
               link: '/guide/coverage',
             },

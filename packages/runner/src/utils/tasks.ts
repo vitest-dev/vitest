@@ -7,8 +7,8 @@ function isAtomTest(s: Task): s is Test | Custom {
 
 export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
   const tests: (Test | Custom)[] = []
-  const suite_arr = toArray(suite)
-  for (const s of suite_arr) {
+  const arraySuites = toArray(suite)
+  for (const s of arraySuites) {
     if (isAtomTest(s)) {
       tests.push(s)
     }
