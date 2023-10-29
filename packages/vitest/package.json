@@ -180,7 +180,7 @@
     "get-tsconfig": "^4.6.2",
     "happy-dom": "^9.20.3",
     "jsdom": "^22.1.0",
-    "log-update": "^5.0.1",
+    "log-update": "^6.0.0",
     "micromatch": "^4.0.5",
     "mlly": "^1.4.0",
     "p-limit": "^4.0.0",
