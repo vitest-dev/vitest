@@ -34,10 +34,10 @@ export interface StartOfSourceMap {
 export type { EncodedSourceMap, DecodedSourceMap, SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface RawSourceMap extends StartOfSourceMap {
-  version: string
+  version: number
   sources: string[]
   names: string[]
-  sourcesContent?: string[]
+  sourcesContent?: (string | null)[]
   mappings: string
 }
 
