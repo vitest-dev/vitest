@@ -59,6 +59,68 @@ test('template literal', () => {
   `)
 })
 
+test('custom serializer against thrown instance', async () => {
+  class ErrorWithDetails extends Error {
+    readonly details: unknown
+
+    constructor(message: string, options: ErrorOptions & { details: unknown }) {
+      super(message, options)
+      this.details = options.details
+    }
+  }
+
+  // without custom serializer
+  const error = new ErrorWithDetails('Example', { details: 'interesting detail' })
+  expect(error).toMatchInlineSnapshot(`[Error: Example]`)
+  expect(() => {
+    throw error
+  }).toThrowErrorMatchingInlineSnapshot(`"Example"`)
+
+  // with custom serializer
+  expect.addSnapshotSerializer({
+    serialize(val, config, indentation, depth, refs, printer) {
+      const error = val as ErrorWithDetails
+      return `${error.message}: ${printer(error.details, config, indentation, depth, refs)}`
+    },
+    test(val) {
+      return val && val instanceof ErrorWithDetails
+    },
+  })
+  expect(() => {
+    throw error
+  }).toThrowErrorMatchingInlineSnapshot(`"Example"`) // serializer not applied
+  expect(error).toMatchInlineSnapshot(`Example: "interesting detail"`) // serializer applied
+
+  //
+  // workaround 1 (for async error)
+  //   by unwrapping with `rejects, it can assert error instance via `toMatchInlineSnapshot`
+  //
+  await expect(async () => {
+    throw error
+  }).rejects.toMatchInlineSnapshot(`Example: "interesting detail"`)
+
+  //
+  // workaround 2
+  //   create a utility to catch error and use it to assert snapshot via `toMatchInlineSnapshot`
+  //
+  function wrapError<T>(f: () => T): { success: true; data: T } | { success: false; error: unknown } {
+    try {
+      return { success: true, data: f() }
+    }
+    catch (error) {
+      return { success: false, error }
+    }
+  }
+  expect(wrapError(() => {
+    throw error
+  })).toMatchInlineSnapshot(`
+    {
+      "error": Example: "interesting detail",
+      "success": false,
+    }
+  `)
+})
+
 test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error('omega')
