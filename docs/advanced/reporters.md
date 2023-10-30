@@ -58,7 +58,7 @@ export default defineConfig({
 
 ## Exported reporters
 
-`vitest` comes with a few built-in reporters that you can use out of the box.
+`vitest` comes with a few [built-in reporters](/guide/reporters) that you can use out of the box.
 
 ### Built-in reporters:
 

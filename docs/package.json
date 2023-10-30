@@ -13,25 +13,24 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "^10.2.1",
-    "jiti": "^1.18.2",
+    "@vueuse/core": "^10.5.0",
     "vue": "latest"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.18",
+    "@iconify-json/carbon": "^1.1.21",
     "@unocss/reset": "^0.53.4",
-    "@vite-pwa/assets-generator": "^0.0.3",
-    "@vite-pwa/vitepress": "^0.2.0",
+    "@vite-pwa/assets-generator": "^0.0.10",
+    "@vite-pwa/vitepress": "^0.2.3",
     "@vitejs/plugin-vue": "latest",
-    "esno": "^0.16.3",
-    "fast-glob": "^3.3.0",
+    "esno": "^0.17.0",
+    "fast-glob": "^3.3.1",
     "fs-extra": "^11.1.1",
     "https-localhost": "^4.7.1",
     "unocss": "^0.53.4",
-    "unplugin-vue-components": "^0.25.1",
+    "unplugin-vue-components": "^0.25.2",
     "vite": "^4.5.0",
-    "vite-plugin-pwa": "^0.16.4",
-    "vitepress": "1.0.0-beta.5",
+    "vite-plugin-pwa": "^0.16.6",
+    "vitepress": "^1.0.0-rc.24",
     "workbox-window": "^7.0.0"
   }
 }
