@@ -1,6 +1,6 @@
 import { Parser } from 'acorn'
-import { hoistMocks } from 'vitest/src/node/hoistMocks'
 import { expect, test } from 'vitest'
+import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
   return Parser.parse(code, options)

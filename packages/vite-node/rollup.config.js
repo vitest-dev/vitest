@@ -4,7 +4,6 @@ import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 import { defineConfig } from 'rollup'
 import pkg from './package.json' assert { type: 'json' }
 
@@ -65,16 +64,7 @@ export default defineConfig([
       chunkFileNames: 'chunk-[name].cjs',
     },
     external,
-    plugins: [
-      alias({
-        entries: [
-          // cjs in Node 14 doesn't support node: prefix
-          // can be dropped, when we drop support for Node 14
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      ...plugins,
-    ],
+    plugins,
     onwarn,
   },
   {

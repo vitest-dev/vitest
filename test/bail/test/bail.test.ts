@@ -6,7 +6,7 @@ const configs: UserConfig[] = []
 const pools: UserConfig[] = [{ pool: 'threads' }, { pool: 'forks' }, { pool: 'threads', poolOptions: { threads: { singleThread: true } } }]
 
 if (process.platform !== 'win32')
-  pools.push({ browser: { enabled: true, name: 'chrome' } })
+  pools.push({ browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
 
 for (const isolate of [true, false]) {
   for (const pool of pools) {

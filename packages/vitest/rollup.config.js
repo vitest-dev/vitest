@@ -26,7 +26,6 @@ const entries = [
   'src/runtime/worker.ts',
   'src/runtime/vm.ts',
   'src/runtime/child.ts',
-  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/runtime/entry-vm.ts',
   'src/integrations/spy.ts',
@@ -60,9 +59,6 @@ const external = [
   'rollup',
   'node:vm',
   'inspector',
-  'webdriverio',
-  'safaridriver',
-  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
@@ -93,6 +89,7 @@ const plugins = [
 export default ({ watch }) => defineConfig([
   {
     input: entries,
+    treeshake: true,
     output: {
       dir: 'dist',
       format: 'esm',

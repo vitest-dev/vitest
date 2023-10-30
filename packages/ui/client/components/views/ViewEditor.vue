@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import type CodeMirror from 'codemirror'
+import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'
 import { client } from '~/composables/client'
-import type { ErrorWithDiff, File } from '#types'
 
 const props = defineProps<{
   file?: File

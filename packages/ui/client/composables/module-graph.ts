@@ -1,6 +1,6 @@
 import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
 import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
-import type { ModuleGraphData } from 'vitest/src/types'
+import type { ModuleGraphData } from 'vitest'
 
 export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>

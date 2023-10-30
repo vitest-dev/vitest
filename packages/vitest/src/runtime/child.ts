@@ -8,7 +8,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
-import { loadEnvironment } from '../integrations/env'
+import { loadEnvironment } from '../integrations/env/loader'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
@@ -75,8 +75,12 @@ async function init(ctx: ChildContext) {
     isChildProcess: true,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

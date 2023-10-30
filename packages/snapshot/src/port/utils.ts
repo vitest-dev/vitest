@@ -10,7 +10,7 @@ import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
   format as prettyFormat,
 } from 'pretty-format'
-import { isObject } from '@vitest/utils'
+import { isObject } from '../../../utils/src/index'
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { getSerializers } from './plugins'

@@ -9,7 +9,7 @@ import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
 import { expect } from '../integrations/chai'
-import { setupCommonEnv } from './setup.common'
+import { setupCommonEnv } from './setup-common'
 
 // this should only be used in Node
 let globalSetup = false

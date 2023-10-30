@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import type Convert from 'ansi-to-html'
 import ViewReportError from './ViewReportError.vue'
-import type { ErrorWithDiff, File, Suite, Task } from '#types'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { config } from '~/composables/client'

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
+import type { File } from 'vitest'
 import ViewReport from './ViewReport.vue'
-import type { File } from '#types'
 import { config } from '~/composables/client'
 
 config.value.root = ''
