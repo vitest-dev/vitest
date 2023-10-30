@@ -74,7 +74,7 @@ test('custom serializer against thrown instance', async () => {
   expect(error).toMatchInlineSnapshot(`[Error: Example]`)
   expect(() => {
     throw error
-  }).toThrowErrorMatchingInlineSnapshot(`"Example"`)
+  }).toThrowErrorMatchingInlineSnapshot(`[Error: Example]`)
 
   // with custom serializer
   expect.addSnapshotSerializer({
@@ -88,7 +88,7 @@ test('custom serializer against thrown instance', async () => {
   })
   expect(() => {
     throw error
-  }).toThrowErrorMatchingInlineSnapshot(`"Example"`) // serializer not applied
+  }).toThrowErrorMatchingInlineSnapshot(`Example: "interesting detail"`) // serializer applied
   expect(error).toMatchInlineSnapshot(`Example: "interesting detail"`) // serializer applied
 
   //
@@ -124,7 +124,7 @@ test('custom serializer against thrown instance', async () => {
 test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error('omega')
-  }).toThrowErrorMatchingInlineSnapshot('"omega"')
+  }).toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
 
   expect(() => {
     // eslint-disable-next-line no-throw-literal

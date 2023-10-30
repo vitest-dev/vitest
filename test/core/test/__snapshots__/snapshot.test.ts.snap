@@ -60,7 +60,7 @@ exports[`single line snapshot 6`] = `"some string'"`;
 
 exports[`single line snapshot 7`] = `"some 'string'"`;
 
-exports[`throwing 1`] = `"omega"`;
+exports[`throwing 1`] = `[Error: omega]`;
 
 exports[`throwing 2`] = `"omega"`;
 

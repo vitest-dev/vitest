@@ -38,7 +38,7 @@ function getErrorString(expected: () => void | Error, promise: string | undefine
     expected()
   }
   catch (e) {
-    return getErrorMessage(e)
+    return e
   }
 
   throw new Error('snapshot function didn\'t throw')
