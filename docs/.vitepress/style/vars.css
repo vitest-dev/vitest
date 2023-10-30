@@ -5,8 +5,8 @@
 :root {
   --vp-c-accent: #dab40b;
   --vp-c-brand: #6da13f;
-  --vp-c-brand-1: var(--vp-c-brand);
-  --vp-c-brand-2: var(--vp-c-brand-dark);
+  --vp-c-brand-1: var(--vp-c-brand-dark);
+  --vp-c-brand-2: var(--vp-c-brand-darker);
   --vp-c-brand-light: #7ec242;
   --vp-c-brand-lighter: #93d31c;
   --vp-c-brand-dark: #668d11;
