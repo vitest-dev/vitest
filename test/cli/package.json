@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-cli",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "vitest": "workspace:*"
+  }
+}
