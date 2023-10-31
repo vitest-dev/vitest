@@ -7,7 +7,7 @@
   --vp-c-brand-2: #57791b;
   --vp-c-brand-3: #506e10;
   --vp-c-sponsor: #ca2971;
-  --vp-c-sponsor-hover: #c13071;
+  --vitest-c-sponsor-hover: #c13071;
 }
 
 .dark {
@@ -15,7 +15,7 @@
   --vp-c-brand-2: #a7cc66;
   --vp-c-brand-3: #acd268;
   --vp-c-sponsor: #ee4e95;
-  --vp-c-sponsor-hover: #e51370;
+  --vitest-c-sponsor-hover: #e51370;
 }
 
 
@@ -25,6 +25,8 @@
 :root {
   --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
   --vp-custom-block-danger-code-bg: #a79fa029;
+  --vitest-custom-block-tip-code-text: #4a680c;
+  --vitest-custom-block-info-code-text: #394f0c
 }
 
 .dark {

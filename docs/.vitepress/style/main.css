@@ -10,7 +10,7 @@ html:not(.dark) [img-dark] {
 
 .sp .sp-link.link:hover,
 .sp .sp-link.link:focus {
-  background-color: var(--vp-c-sponsor-hover) !important;
+  background-color: var(--vitest-c-sponsor-hover) !important;
 }
 
 /* outline styles for buttons and VPButton anchors */
@@ -31,10 +31,10 @@ button:focus:not(:focus-visible) {
 
 /* custom block styles */
 html:not(.dark) .custom-block.tip code {
-  color: #4a680c !important;
+  color: var(--vitest-custom-block-tip-code-text) !important;
 }
 html:not(.dark) .custom-block.info code {
-  color: #394f0c !important;
+  color: var(--vitest-custom-block-info-code-text) !important;
 }
 .custom-block.tip a:hover,
 .vp-doc .custom-block.tip a:hover > code {
@@ -48,7 +48,7 @@ html:not(.dark) .custom-block.info code {
 }
 html:not(.dark) .custom-block.info a:hover,
 html:not(.dark) .vp-doc .custom-block.info a:hover > code {
-  color: #394f0c !important;
+  color: var(--vitest-custom-block-info-code-text) !important;
   opacity: 1;
 }
 .custom-block.warning a:hover,
