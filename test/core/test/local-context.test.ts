@@ -36,3 +36,26 @@ describe('context expect', () => {
     expect(localExpect.getState().snapshotState).toBeDefined()
   })
 })
+
+describe('custom matcher inherited from global to local', () => {
+  expect.extend({
+    testCustomInheritance() {
+      return {
+        pass: true,
+        message: () => `foo`,
+      }
+    },
+  })
+
+  it('basic', ({ expect: localExpect }) => {
+    // as assertion
+    expect(expect('test')).toHaveProperty('testCustomInheritance')
+    expect(localExpect('test')).toHaveProperty('testCustomInheritance')
+
+    // as asymmetric matcher
+    expect(expect).toHaveProperty('testCustomInheritance')
+
+    // TODO: not working
+    // expect(localExpect).toHaveProperty('testCustomInheritance')
+  })
+})
