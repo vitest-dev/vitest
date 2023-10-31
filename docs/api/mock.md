@@ -314,7 +314,7 @@ fn.mock.results === [
 
 ## mock.invocationCallOrder
 
-The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
+The order of mock's execution. This returns an array of numbers that are shared between all defined mocks.
 
 ```js
 const fn1 = vi.fn()

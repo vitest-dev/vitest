@@ -115,15 +115,15 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    */
   getMockName(): string
   /**
-   * Sets internal mock name. Useful to see the name of the mock if assertion fails.
+   * Sets internal mock name. Useful to see the name of the mock if an assertion fails.
    */
   mockName(n: string): this
   /**
-   * Current context of the mock. It stores information about all invocation calls, instances and results.
+   * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
   mock: MockContext<TArgs, TReturns>
   /**
-   * Clears all information about every call. After calling it, all properties on `.mock` will return empty state. This method does not reset implementations.
+   * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
    *
    * It is useful if you need to clean up mock between different assertions.
    */
@@ -156,7 +156,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    */
   mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
   /**
-   * Accepts a function that will be used as mock's implementation during the next call. Can be chained so that multiple function calls produce different results.
+   * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
    * const fn = vi.fn(count => count).mockImplementationOnce(count => count + 1);
    * expect(fn(3)).toBe(4);
@@ -186,7 +186,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
-   * When there are no more `mockReturnValueOnce` values to use, mock will fallback to preivously defined implementation if there is one.
+   * When there are no more `mockReturnValueOnce` values to use, mock will fallback to the previously defined implementation if there is one.
    * @example
    * const myMockFn = vi
    *   .fn()

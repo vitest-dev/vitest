@@ -23,7 +23,7 @@ export interface VitestUtils {
    */
   useFakeTimers(config?: FakeTimerInstallOpts): VitestUtils
   /**
-   * Restores mocked timers to its original implementations. All timers that were scheduled before will be discarded.
+   * Restores mocked timers to their original implementations. All timers that were scheduled before will be discarded.
    */
   useRealTimers(): VitestUtils
   /**
@@ -37,12 +37,12 @@ export interface VitestUtils {
    */
   runOnlyPendingTimersAsync(): Promise<VitestUtils>
   /**
-   * This method will invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimers` will be fired.
-   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired.
+   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
    */
   runAllTimers(): VitestUtils
   /**
-   * This method will asynchronously invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
+   * This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
    * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
    */
   runAllTimersAsync(): Promise<VitestUtils>
@@ -89,7 +89,7 @@ export interface VitestUtils {
   clearAllTimers(): VitestUtils
 
   /**
-   * Creates a spy on a method or getter/setter of an object simillar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
+   * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
    *
    * @example
    * const cart = {
@@ -149,7 +149,7 @@ export interface VitestUtils {
   /**
    * This is similar to [`vi.waitFor`](https://vitest.dev/api/vi#vi-waitfor), but if the callback throws any errors, execution is immediately interrupted and an error message is received.
    *
-   * If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
+   * If the callback returns a falsy value, the next check will continue until a truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
    *
    * @example
    * const element = await vi.waitUntil(
@@ -174,7 +174,7 @@ export interface VitestUtils {
   hoisted<T>(factory: () => T): T
 
   /**
-   * Mocks every import call to module even if it was already statically imported.
+   * Mocks every import call to the module even if it was already statically imported.
    *
    * The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope
    * unless they are defined with [`vi.hoisted`](https://vitest.dev/api/vi#vi-hoisted) before this call.
@@ -186,7 +186,7 @@ export interface VitestUtils {
   mock(path: string, factory?: MockFactoryWithHelper): void
 
   /**
-   * Removes module from mocked registry. All calls to import will return original module even if it was mocked before.
+   * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
    *
    * This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
@@ -310,8 +310,8 @@ export interface VitestUtils {
   unstubAllEnvs(): VitestUtils
 
   /**
-   * Resets modules registry by clearing cache of all modules. This allows modules to be reevaluated when reimported.
-   * Top-level imports cannot be reevaluated. Might be useful to isolate modules where local state conflicts between tests.
+   * Resets modules registry by clearing the cache of all modules. This allows modules to be reevaluated when reimported.
+   * Top-level imports cannot be re-evaluated. Might be useful to isolate modules where local state conflicts between tests.
    *
    * This method does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock) or [`vi.doUnmock`](https://vitest.dev/api/vi#vi-dounmock).
    */

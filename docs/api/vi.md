@@ -12,7 +12,7 @@ import { vi } from 'vitest'
 
 ## Mock Modules
 
-This section describes API that you can use when [mocking a module](/guide/mocking#modules). Beware that Vitest doesn't support mocking modules imported using `require()`.
+This section describes the API that you can use when [mocking a module](/guide/mocking#modules). Beware that Vitest doesn't support mocking modules imported using `require()`.
 
 ### vi.mock
 
@@ -23,16 +23,16 @@ Substitutes all imported modules from provided `path` with another module. You c
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 
-Vitest statically analyzes your files to hoist `vi.mock`. It means that you cannot use `vi` that was not imported directly from `vitest` package (for example, from some utility file). To fix this, always use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
+In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates that `vi` that was not directly imported from the `vitest` package (for example, from some utility file) cannot be used. Use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
 
-Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all modules caches before running a test file.
+Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
 ::: warning
-Mocking modules is not currently supported in the [browser mode](/guide/browser). You can track this feature in the GitHub <a href="https://github.com/vitest-dev/vitest/issues/3046">issue</a>.
+The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub <a href="https://github.com/vitest-dev/vitest/issues/3046">issue</a>.
 :::
 
-If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches result for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
 Unlike in `jest`, the factory can be asynchronous, so you can use [`vi.importActual`](#vi-importactual) or a helper, received as the first argument, inside to get the original module.
 
@@ -94,7 +94,7 @@ expect(namedExport).toBe(mocks.namedExport)
 :::
 
 ::: warning
-If you are mocking a module with default export, you will need to provide a `default` key within the returned factory function object. This is an ES modules-specific caveat, therefore `jest` documentation may differ as `jest` uses CommonJS modules. For example,
+If you are mocking a module with default export, you will need to provide a `default` key within the returned factory function object. This is an ES module-specific caveat; therefore, `jest` documentation may differ as `jest` uses CommonJS modules. For example,
 
 ```ts
 vi.mock('./path/to/module.js', () => {
@@ -284,7 +284,7 @@ unmockedIncrement(30) === 31
 
 - **Type**: `() => Vitest`
 
-Resets modules registry by clearing cache of all modules. This allows modules to be reevaluated when reimported. Top-level imports cannot be reevaluated. Might be useful to isolate modules where local state conflicts between tests.
+Resets modules registry by clearing the cache of all modules. This allows modules to be reevaluated when reimported. Top-level imports cannot be re-evaluated. Might be useful to isolate modules where local state conflicts between tests.
 
 ```ts
 import { vi } from 'vitest'
@@ -664,7 +664,7 @@ vi.runAllTimers()
 
 - **Type:** `() => Promise<Vitest>`
 
-This method will asynchronously invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
+This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
 it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
 ```ts
@@ -860,9 +860,9 @@ test('Element render correctly', async () => {
 - **Type**: `<T>(factory: () => T) => T`
 - **Version**: Since Vitest 0.31.0
 
-All static `import` statements in ES modules are hoisted to top of the file, so any code that is define before the imports will actually be executed after imports are evaluated.
+All static `import` statements in ES modules are hoisted to the top of the file, so any code that is defined before the imports will actually be executed after imports are evaluated.
 
-Hovewer it can be useful to invoke some side effect like mocking dates before importing a module.
+However, it can be useful to invoke some side effects like mocking dates before importing a module.
 
 To bypass this limitation, you can rewrite static imports into dynamic ones like this:
 
@@ -880,7 +880,7 @@ import { value } from './some/module.ts'
 + vi.hoisted(() => callFunctionWithSideEffect())
 ```
 
-This method returns the value that was returned from the factory. You can use that value in your `vi.mock` factories if you need an easy access to locally defined variables:
+This method returns the value that was returned from the factory. You can use that value in your `vi.mock` factories if you need easy access to locally defined variables:
 
 ```ts
 import { expect, vi } from 'vitest'
