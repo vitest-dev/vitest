@@ -75,7 +75,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       env: {
         TEST: 'true',
         VITEST: 'true',
-        NODE_ENV: ctx.config.mode || 'test',
+        NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
         ...process.env,
         ...ctx.config.env,

@@ -28,7 +28,7 @@ export async function startVitest(
 ): Promise<Vitest | undefined> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= options.mode || 'test'
+  process.env.NODE_ENV ??= 'test'
 
   if (options.run)
     options.watch = false
