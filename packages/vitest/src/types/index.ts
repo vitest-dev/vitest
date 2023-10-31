@@ -15,7 +15,6 @@ export type * from './coverage'
 export type * from './benchmark'
 export type { DiffOptions } from '@vitest/utils/diff'
 export type {
-  EnhancedSpy,
   MockedFunction,
   MockedObject,
   SpyInstance,
