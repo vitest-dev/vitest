@@ -37,7 +37,7 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
       if (usedProps.length)
-        fixture.deps = context.fixtures!.filter(({ index, prop }) => index !== fixture.index && usedProps.includes(prop))
+        fixture.deps = context.fixtures!.filter(({ prop }) => prop !== fixture.prop && usedProps.includes(prop))
     }
   })
 
