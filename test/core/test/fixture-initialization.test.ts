@@ -144,4 +144,39 @@ describe('fixture initialization', () => {
       expect(b).toBe(2)
     })
   })
+
+  describe('fixture todos', () => {
+    const todos: number[] = []
+    const archive: number[] = []
+
+    const myTest = test.extend<{ todos: number[]; archive: number[] }>({
+      todos: async ({}, use) => {
+        // setup the fixture before each test function
+        todos.push(1, 2, 3)
+
+        // use the fixture value
+        await use(todos)
+
+        // cleanup the fixture after each test function
+        todos.length = 0
+      },
+      archive,
+    })
+
+    myTest('add items to todos', ({ todos }) => {
+      expect(todos.length).toBe(3)
+
+      todos.push(4)
+      expect(todos.length).toBe(4)
+    })
+
+    myTest('move items from todos to archive', ({ todos, archive }) => {
+      expect(todos.length).toBe(3)
+      expect(archive.length).toBe(0)
+
+      archive.push(todos.pop() as number)
+      expect(todos.length).toBe(2)
+      expect(archive.length).toBe(1)
+    })
+  })
 })
