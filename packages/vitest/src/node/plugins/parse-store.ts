@@ -7,7 +7,7 @@ export function ParseStorePlugin(): Plugin {
   return {
     name: 'vitest:parse-store',
     buildStart() {
-      _parse = this.parse
+      _parse ??= this.parse
     },
   }
 }
