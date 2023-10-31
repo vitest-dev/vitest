@@ -8,6 +8,40 @@ html:not(.dark) [img-dark] {
 
 /* Overrides */
 
+.sp .sp-link.link:hover,
+.sp .sp-link.link:focus {
+  background-color: var(--vp-c-sponsor-hover) !important;
+}
+
+/* outline styles for buttons and VPButton anchors */
+button:focus,
+button:focus-visible,
+.DocSearch-Button:focus,
+.DocSearch-Button:focus-visible,
+a:focus-visible,
+a:focus {
+  border-radius: 2px;
+  outline: 2px solid var(--vp-c-text-1);
+}
+
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* custom block styles */
+html:not(.dark) .custom-block.tip code {
+  color: #4a680c !important;
+}
+
+/* search # styles */
+:not(.dark) .title-icon {
+  opacity: 1 !important;
+}
+.dark .title-icon {
+  opacity: 0.67 !important;
+}
+
 .VPSocialLink {
   transform: scale(0.9);
 }
