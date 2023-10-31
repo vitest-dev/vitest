@@ -164,7 +164,7 @@ test('throwing inline snapshots', async () => {
 
   await expect(async () => {
     throw new Error('omega')
-  }).rejects.toThrowErrorMatchingInlineSnapshot('"omega"')
+  }).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
 })
 
 test('throwing expect should be a function', async () => {
