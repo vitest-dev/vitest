@@ -115,9 +115,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
       }
     }
 
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
-
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
@@ -138,14 +135,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         workspaceFiles.push(project)
         workspaceMap.set(file, workspaceFiles)
       }
-
-      // it's possible that project defines a file that is also defined by another project
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
 
       const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
       const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
@@ -208,6 +197,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
   }
 
   return {
+    name: 'threads',
     runTests: runWithFiles('run'),
     close: async () => {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition

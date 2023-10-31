@@ -153,6 +153,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
   }
 
   return {
+    name: 'vmThreads',
     runTests: runWithFiles('run'),
     close: async () => {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition

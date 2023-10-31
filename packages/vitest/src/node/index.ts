@@ -6,6 +6,7 @@ export { startVitest } from './cli-api'
 export { registerConsoleShortcuts } from './stdin'
 export type { WorkspaceSpec } from './pool'
 export type { GlobalSetupContext } from './globalSetup'
+export { createMethodsRPC } from './pools/rpc'
 
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'

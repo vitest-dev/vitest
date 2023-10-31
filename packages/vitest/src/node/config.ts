@@ -6,10 +6,12 @@ import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../ty
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
+import type { BuiltinPool } from '../types/pool-options'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
+import { builtinPools } from './pool'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -222,6 +224,8 @@ export function resolveConfig(
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
+  resolved.pool ??= 'threads'
+
   if (process.env.VITEST_MAX_THREADS) {
     resolved.poolOptions = {
       ...resolved.poolOptions,
@@ -269,6 +273,22 @@ export function resolveConfig(
       },
     }
   }
+
+  if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
+    resolved.pool = normalize(
+      resolveModule(resolved.pool, { paths: [resolved.root] })
+        ?? resolve(resolved.root, resolved.pool),
+    )
+  }
+  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(([glob, pool]) => {
+    if (!builtinPools.includes(pool as BuiltinPool)) {
+      pool = normalize(
+        resolveModule(pool, { paths: [resolved.root] })
+          ?? resolve(resolved.root, pool),
+      )
+    }
+    return [glob, pool]
+  })
 
   if (mode === 'benchmark') {
     resolved.benchmark = {

@@ -1,5 +1,5 @@
 import mm from 'micromatch'
-import type { Pool } from '../types'
+import type { BuiltinPool, Pool } from '../types/pool-options'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
@@ -12,8 +12,9 @@ export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
 
 export interface ProcessPool {
+  name: string
   runTests: RunWithFiles
-  close: () => Promise<void>
+  close?: () => Promise<void>
 }
 
 export interface PoolProcessOptions {
@@ -23,6 +24,8 @@ export interface PoolProcessOptions {
   execArgv: string[]
   env: Record<string, string>
 }
+
+export const builtinPools: BuiltinPool[] = ['forks', 'threads', 'browser', 'vmThreads', 'typescript']
 
 export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<Pool, ProcessPool | null> = {
@@ -48,7 +51,7 @@ export function createPool(ctx: Vitest): ProcessPool {
   }
 
   function getPoolName([project, file]: WorkspaceSpec) {
-    for (const [glob, pool] of project.config.poolMatchGlobs || []) {
+    for (const [glob, pool] of project.config.poolMatchGlobs) {
       if ((pool as Pool) === 'browser')
         throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
       if (mm.isMatch(file, glob, { cwd: project.config.root }))
@@ -82,6 +85,22 @@ export function createPool(ctx: Vitest): ProcessPool {
       },
     }
 
+    const customPools = new Map<string, ProcessPool>()
+    async function resolveCustomPool(filepath: string) {
+      if (customPools.has(filepath))
+        return customPools.get(filepath)!
+      const pool = await ctx.runner.executeId(filepath)
+      if (typeof pool.default !== 'function')
+        throw new Error(`Custom pool "${filepath}" must export a function as default export`)
+      const poolInstance = await pool.default(ctx, options)
+      if (typeof poolInstance?.name !== 'string')
+        throw new Error(`Custom pool "${filepath}" should return an object with "name" property`)
+      if (typeof poolInstance?.runTests !== 'function')
+        throw new Error(`Custom pool "${filepath}" should return an object with "runTests" method`)
+      customPools.set(filepath, poolInstance)
+      return poolInstance as ProcessPool
+    }
+
     const filesByPool: Record<Pool, WorkspaceSpec[]> = {
       forks: [],
       threads: [],
@@ -92,46 +111,62 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     for (const spec of files) {
       const pool = getPoolName(spec)
-      if (!(pool in filesByPool))
-        throw new Error(`Unknown pool name "${pool}" for ${spec[1]}. Available pools: ${Object.keys(filesByPool).join(', ')}`)
       filesByPool[pool].push(spec)
     }
 
-    await Promise.all(Object.entries(filesByPool).map((entry) => {
+    const Sequencer = ctx.config.sequence.sequencer
+    const sequencer = new Sequencer(ctx)
+
+    async function sortSpecs(specs: WorkspaceSpec[]) {
+      if (ctx.config.shard)
+        specs = await sequencer.shard(specs)
+      return sequencer.sort(specs)
+    }
+
+    await Promise.all(Object.entries(filesByPool).map(async (entry) => {
       const [pool, files] = entry as [Pool, WorkspaceSpec[]]
 
       if (!files.length)
         return null
 
+      const specs = await sortSpecs(files)
+
       if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
-        return pools.browser.runTests(files, invalidate)
+        return pools.browser.runTests(specs, invalidate)
       }
 
       if (pool === 'vmThreads') {
         pools.vmThreads ??= createVmThreadsPool(ctx, options)
-        return pools.vmThreads.runTests(files, invalidate)
+        return pools.vmThreads.runTests(specs, invalidate)
       }
 
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
-        return pools.threads.runTests(files, invalidate)
+        return pools.threads.runTests(specs, invalidate)
       }
 
       if (pool === 'typescript') {
         pools.typescript ??= createTypecheckPool(ctx)
-        return pools.typescript.runTests(files)
+        return pools.typescript.runTests(specs)
       }
 
-      pools.forks ??= createChildProcessPool(ctx, options)
-      return pools.forks.runTests(files, invalidate)
+      if (pool === 'forks') {
+        pools.forks ??= createChildProcessPool(ctx, options)
+        return pools.forks.runTests(specs, invalidate)
+      }
+
+      const poolHandler = await resolveCustomPool(pool)
+      pools[poolHandler.name] ??= poolHandler
+      return poolHandler.runTests(specs, invalidate)
     }))
   }
 
   return {
+    name: 'default',
     runTests,
     async close() {
-      await Promise.all(Object.values(pools).map(p => p?.close()))
+      await Promise.all(Object.values(pools).map(p => p?.close?.()))
     },
   }
 }
