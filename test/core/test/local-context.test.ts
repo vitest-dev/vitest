@@ -39,7 +39,7 @@ describe('context expect', () => {
 
 describe('custom matcher inherited from global to local', () => {
   expect.extend({
-    testCustomInheritance() {
+    toFooTest() {
       return {
         pass: true,
         message: () => `foo`,
@@ -49,13 +49,15 @@ describe('custom matcher inherited from global to local', () => {
 
   it('basic', ({ expect: localExpect }) => {
     // as assertion
-    expect(expect('test')).toHaveProperty('testCustomInheritance')
-    expect(localExpect('test')).toHaveProperty('testCustomInheritance')
+    expect(expect('test')).toHaveProperty('toFooTest')
+    expect(expect.soft('test')).toHaveProperty('toFooTest')
+    expect(localExpect('test')).toHaveProperty('toFooTest')
+    expect(localExpect.soft('test')).toHaveProperty('toFooTest')
 
     // as asymmetric matcher
-    expect(expect).toHaveProperty('testCustomInheritance')
-
-    // TODO: not working
-    // expect(localExpect).toHaveProperty('testCustomInheritance')
+    expect(expect).toHaveProperty('toFooTest')
+    expect(expect.not).toHaveProperty('toFooTest')
+    expect(localExpect).toHaveProperty('toFooTest')
+    expect(localExpect.not).toHaveProperty('toFooTest')
   })
 })

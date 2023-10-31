@@ -108,6 +108,13 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
         }
       }
 
+      Object.defineProperty(((globalThis as any).__hackAsymmetricMatchers), expectAssertionName, {
+        configurable: true,
+        enumerable: true,
+        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
+        writable: true,
+      })
+
       Object.defineProperty(expect, expectAssertionName, {
         configurable: true,
         enumerable: true,

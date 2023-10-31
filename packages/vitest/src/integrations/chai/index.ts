@@ -22,6 +22,9 @@ export function createExpect(test?: TaskPopulated) {
     else
       return assert
   }) as ExpectStatic
+
+  // quick and dirty way to share custom asymmetric matchers between global expect and local expect
+  Object.assign(expect, (globalThis as any).__hackAsymmetricMatchers ??= {})
   Object.assign(expect, chai.expect)
 
   expect.getState = () => getState<MatcherState>(expect)
