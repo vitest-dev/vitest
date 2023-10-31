@@ -1,5 +1,4 @@
 import { existsSync } from 'node:fs'
-import { isValidNodeImport } from 'mlly'
 import { join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
 import { isNodeBuiltin, slash } from './utils'
@@ -93,7 +92,7 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
-  if (isLibraryModule && await isValidNodeImport(id))
+  if (isLibraryModule)
     return id
 
   return false
