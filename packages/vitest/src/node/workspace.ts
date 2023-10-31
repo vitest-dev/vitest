@@ -41,8 +41,8 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     root,
     logLevel: 'error',
     configFile,
-    // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || ctx.config.mode || process.env.NODE_ENV,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.mode || ctx.config.mode,
     plugins: [
       ...options.plugins || [],
       WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
