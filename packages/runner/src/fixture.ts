@@ -44,7 +44,7 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
   return context
 }
 
-const fixtureValueMap = new Map<FixtureItem, any>()
+const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
 let cleanupFnArray = new Array<() => void | Promise<void>>()
 
 export async function callFixtureCleanup() {
@@ -67,6 +67,10 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     const usedProps = getUsedProps(fn)
     if (!usedProps.length)
       return fn(context)
+
+    if (!fixtureValueMaps.get(context))
+      fixtureValueMaps.set(context, new Map<FixtureItem, any>())
+    const fixtureValueMap: Map<FixtureItem, any> = fixtureValueMaps.get(context)!
 
     const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
     const pendingFixtures = resolveDeps(usedFixtures)
