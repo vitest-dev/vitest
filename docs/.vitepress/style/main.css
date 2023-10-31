@@ -33,6 +33,34 @@ button:focus:not(:focus-visible) {
 html:not(.dark) .custom-block.tip code {
   color: #4a680c !important;
 }
+html:not(.dark) .custom-block.info code {
+  color: #394f0c !important;
+}
+.custom-block.tip a:hover,
+.vp-doc .custom-block.tip a:hover > code {
+  color: var(--vp-c-brand-1) !important;
+  opacity: 1;
+}
+.custom-block.info a:hover,
+.vp-doc .custom-block.info a:hover > code {
+  color: var(--vp-c-brand-1) !important;
+  opacity: 1;
+}
+html:not(.dark) .custom-block.info a:hover,
+html:not(.dark) .vp-doc .custom-block.info a:hover > code {
+  color: #394f0c !important;
+  opacity: 1;
+}
+.custom-block.warning a:hover,
+.vp-doc .custom-block.warning a:hover > code {
+  color: var(--vp-c-warning-1) !important;
+  opacity: 1;
+}
+.custom-block.danger a:hover,
+.vp-doc .custom-block.danger a:hover > code {
+  color: var(--vp-c-danger-1) !important;
+  opacity: 1;
+}
 
 /* search # styles */
 :not(.dark) .title-icon {
@@ -49,6 +77,10 @@ html:not(.dark) .custom-block.tip code {
 .vp-doc a {
   text-decoration-style: dotted;
 }
+.custom-block a:focus,
+.custom-block a:active,
+.custom-block a:hover,
+.custom-block a:active,
 .vp-doc a:focus,
 .vp-doc a:active,
 .vp-doc a:hover,
