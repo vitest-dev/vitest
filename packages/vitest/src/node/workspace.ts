@@ -6,6 +6,7 @@ import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
+import type { RawSourceMap } from 'vite-node'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
@@ -40,8 +41,8 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     root,
     logLevel: 'error',
     configFile,
-    // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || ctx.config.mode || process.env.NODE_ENV,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.mode || ctx.config.mode,
     plugins: [
       ...options.plugins || [],
       WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
@@ -140,12 +141,12 @@ export class WorkspaceProject {
       || this.browser?.moduleGraph.getModuleById(id)
   }
 
-  getSourceMapModuleById(id: string) {
+  getSourceMapModuleById(id: string): RawSourceMap | null | undefined {
     const mod = this.server.moduleGraph.getModuleById(id)
     return mod?.ssrTransformResult?.map || mod?.transformResult?.map
   }
 
-  getBrowserSourceMapModuleById(id: string) {
+  getBrowserSourceMapModuleById(id: string): RawSourceMap | null | undefined {
     return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
