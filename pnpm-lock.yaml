@@ -1376,6 +1376,9 @@ importers:
       magic-string:
         specifier: ^0.30.5
         version: 0.30.5
+      mlly:
+        specifier: ^1.4.0
+        version: 1.4.0
       pathe:
         specifier: ^1.1.1
         version: 1.1.1
@@ -1479,9 +1482,6 @@ importers:
       micromatch:
         specifier: ^4.0.5
         version: 4.0.5
-      mlly:
-        specifier: ^1.4.0
-        version: 1.4.0
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
