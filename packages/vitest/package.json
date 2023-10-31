@@ -145,7 +145,6 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.3",
     "magic-string": "^0.30.5",
-    "mlly": "^1.4.0",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
     "std-env": "^3.3.3",

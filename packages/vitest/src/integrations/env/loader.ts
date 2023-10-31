@@ -1,5 +1,4 @@
 import { normalize, resolve } from 'pathe'
-import { resolvePath } from 'mlly'
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
@@ -28,7 +27,7 @@ export async function loadEnvironment(name: VitestEnvironment, options: ViteNode
   const root = loader.root
   const packageId = name[0] === '.' || name[0] === '/'
     ? resolve(root, name)
-    : await resolvePath(`vitest-environment-${name}`, { url: [root] }) ?? resolve(root, name)
+    : (await options.resolveId!(`vitest-environment-${name}`))?.id ?? resolve(root, name)
   const pkg = await loader.executeId(normalize(packageId))
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
