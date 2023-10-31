@@ -46,6 +46,16 @@ html:not(.dark) .custom-block.tip code {
   transform: scale(0.9);
 }
 
+.vp-doc a {
+  text-decoration-style: dotted;
+}
+.vp-doc a:focus,
+.vp-doc a:active,
+.vp-doc a:hover,
+.vp-doc a:active {
+  text-decoration: underline;
+}
+
 .vp-doc th, .vp-doc td {
   padding: 6px 10px;
   border: 1px solid #8882;
