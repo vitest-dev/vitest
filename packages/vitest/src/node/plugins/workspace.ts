@@ -13,6 +13,7 @@ import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './ut
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { ParseStorePlugin } from './parse-store'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -120,6 +121,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         await server.watcher.close()
       },
     },
+    ParseStorePlugin(),
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),

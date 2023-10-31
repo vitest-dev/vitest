@@ -56,7 +56,6 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
-  'rollup/parseAst',
   'node:vm',
   'inspector',
   'vite-node/source-map',
