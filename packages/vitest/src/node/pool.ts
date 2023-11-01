@@ -63,7 +63,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     // Instead of passing whole process.execArgv to the workers, pick allowed options.
     // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
     const execArgv = process.execArgv.filter(execArg =>
-      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
+      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof') || execArg.startsWith('--diagnostic-dir'),
     )
 
     const options: PoolProcessOptions = {
@@ -75,7 +75,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       env: {
         TEST: 'true',
         VITEST: 'true',
-        NODE_ENV: ctx.config.mode || 'test',
+        NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
         ...process.env,
         ...ctx.config.env,

@@ -108,7 +108,7 @@ Snapshot support and some other features depend on the runner. If you don't want
 
 ## Your task function
 
-You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.custom` method:
+You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
 ```js
 // ./utils/custom.js
@@ -116,24 +116,27 @@ import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
 
 export { describe, beforeAll, afterAll } from 'vitest'
 
-// this function will be called when Vitest collects tasks
-// createTaskCollector just provides all "todo"/"each"/... support, you don't have to use it
-// To support custom tasks, you just need to call "getCurrentSuite().task()"
-export const myCustomTask = createTaskCollector(function (name, fn, timeout) {
-  getCurrentSuite().task(name, {
-    ...this, // so "todo"/"skip" is tracked correctly
-    meta: {
-      customPropertyToDifferentiateTask: true
-    },
-    handler: fn,
-    timeout,
-  })
-})
+// this function will be called during collection phase:
+// don't call function handler here, add it to suite tasks
+// with "getCurrentSuite().task()" method
+// note: createTaskCollector provides support for "todo"/"each"/...
+export const myCustomTask = createTaskCollector(
+  function (name, fn, timeout) {
+    getCurrentSuite().task(name, {
+      ...this, // so "todo"/"skip"/... is tracked correctly
+      meta: {
+        customPropertyToDifferentiateTask: true
+      },
+      handler: fn,
+      timeout,
+    })
+  }
+)
 ```
 
 ```js
 // ./garden/tasks.test.js
-import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
+import { afterAll, beforeAll, describe, myCustomTask } from '../custom.js'
 import { gardener } from './gardener.js'
 
 describe('take care of the garden', () => {

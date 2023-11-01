@@ -66,6 +66,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       '--experimental-vm-modules',
       '--require',
       suppressWarningsPath,
+      ...ctx.config.poolOptions?.vmThreads?.execArgv ?? [],
       ...execArgv,
     ],
 

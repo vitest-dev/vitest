@@ -22,7 +22,7 @@ const environment = new NodeSnapshotEnvironment()
 // you need to implement this yourselves,
 // this depends on your runner
 function getCurrentFilepath() {
-  return '/file.spec.ts'
+  return '/file.spec.js'
 }
 function getCurrentTestName() {
   return 'test1'
