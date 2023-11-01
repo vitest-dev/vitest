@@ -226,7 +226,7 @@ For the following example test code:
 test('toThrowErrorMatchingSnapshot', () => {
   expect(() => {
     throw new Error('error')
-  }).toThrowErrorMatchingSnapshot()
+  }).toThrowErrorMatchingSnapshot('hint')
 })
 ```
 
