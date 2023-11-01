@@ -120,6 +120,7 @@ ws.addEventListener('open', async () => {
       environment: 0,
       prepare: 0,
     },
+    providedContext: await client.rpc.getProvidedContext(),
   }
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()

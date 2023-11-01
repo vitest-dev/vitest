@@ -19,7 +19,7 @@ const entryFile = pathToFileURL(resolve(distDir, 'entry-vm.js')).href
 export async function run(ctx: WorkerContext) {
   const moduleCache = new ModuleCacheMap()
   const mockMap = new Map()
-  const { config, port } = ctx
+  const { config, port, providedContext } = ctx
 
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
@@ -64,6 +64,7 @@ export async function run(ctx: WorkerContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
   }
 
   installSourcemapsSupport({

@@ -8,7 +8,7 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import type { RawSourceMap } from 'vite-node'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ArgumentsType, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -71,6 +71,7 @@ export class WorkspaceProject {
 
   private _globalSetupInit = false
   private _globalSetups: GlobalSetupFile[] = []
+  private _provided: ProvidedContext = {}
 
   constructor(
     public path: string | number,
@@ -85,6 +86,14 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
+  provide = (key: string, value: unknown) => {
+    (this._provided as any)[key] = value
+  }
+
+  getProvidedContext() {
+    return this._provided
+  }
+
   async initializeGlobalSetup() {
     if (this._globalSetupInit)
       return
@@ -95,7 +104,7 @@ export class WorkspaceProject {
 
     try {
       for (const globalSetupFile of this._globalSetups) {
-        const teardown = await globalSetupFile.setup?.()
+        const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
         if (teardown == null || !!globalSetupFile.teardown)
           continue
         if (typeof teardown !== 'function')

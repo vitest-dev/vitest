@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import type { ResolvedConfig, RuntimeConfig } from '../types'
+import type { ProvidedContext, ResolvedConfig, RuntimeConfig } from '../types'
 import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
@@ -333,6 +333,12 @@ export interface VitestUtils {
    * If config was changed with `vi.setConfig`, this will reset it to the original state.
    */
   resetConfig(): void
+
+  /**
+   * Access to injected context provided from the main thread.
+   * This usually returns a value provided by `globalSetup` or an external library.
+   */
+  inject<T extends keyof ProvidedContext>(key: T): ProvidedContext[T]
 }
 
 function createVitest(): VitestUtils {
@@ -608,6 +614,10 @@ function createVitest(): VitestUtils {
         const state = getWorkerState()
         Object.assign(state.config, _config)
       }
+    },
+
+    inject<T extends keyof ProvidedContext>(key: T): ProvidedContext[T] {
+      return workerState.providedContext[key]
     },
   }
 
