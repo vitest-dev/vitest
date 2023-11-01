@@ -2,7 +2,7 @@
   "name": "@vitest/test-cli",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest --exclude fixtures/exclude/**/string.test.ts"
   },
   "devDependencies": {
     "vite": "latest",
