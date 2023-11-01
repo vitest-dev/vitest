@@ -182,7 +182,6 @@
     "log-update": "^6.0.0",
     "micromatch": "^4.0.5",
     "p-limit": "^4.0.0",
-    "pkg-types": "^1.0.3",
     "pretty-format": "^29.5.0",
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",

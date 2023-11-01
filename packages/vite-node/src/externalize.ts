@@ -1,9 +1,14 @@
-import { existsSync } from 'node:fs'
-import { join } from 'pathe'
+import { existsSync, promises as fsp } from 'node:fs'
+import { readPackageJSON } from 'pkg-types'
+import { extname, join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
 import { isNodeBuiltin, slash } from './utils'
 import { KNOWN_ASSET_TYPES } from './constants'
 
+const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
+
+const ESM_SYNTAX_RE
+  = /([\s;]|^)(import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
@@ -47,19 +52,47 @@ export function guessCJSversion(id: string): string | undefined {
   }
 }
 
+// The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
+async function isValidNodeImport(id: string, code?: string) {
+  const extension = extname(id)
+
+  if (BUILTIN_EXTENSIONS.has(extension))
+    return true
+
+  if (extension !== '.js')
+    return false
+
+  const package_ = await readPackageJSON(id).catch(() => ({
+    type: undefined,
+  }))
+
+  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
+    return false
+
+  if (package_.type === 'module')
+    return true
+
+  if (typeof code === 'undefined')
+    code = await fsp.readFile(id, 'utf8').catch(() => '')
+
+  return !ESM_SYNTAX_RE.test(code)
+}
+
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
+  code?: string,
   options?: DepsHandlingOptions,
   cache = _defaultExternalizeCache,
 ) {
   if (!cache.has(id))
-    cache.set(id, _shouldExternalize(id, options))
+    cache.set(id, _shouldExternalize(id, code, options))
   return cache.get(id)!
 }
 
 async function _shouldExternalize(
   id: string,
+  code?: string,
   options?: DepsHandlingOptions,
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
@@ -92,7 +125,7 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
-  if (isLibraryModule)
+  if (isLibraryModule && await isValidNodeImport(id, code))
     return id
 
   return false
