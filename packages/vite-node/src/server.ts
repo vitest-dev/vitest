@@ -98,7 +98,7 @@ export class ViteNodeServer {
   }
 
   shouldExternalize(id: string) {
-    return shouldExternalize(id, this.options.deps, this.externalizeCache)
+    return shouldExternalize(id, this.fetchCache.get(id)?.result.code, this.options.deps, this.externalizeCache)
   }
 
   private async ensureExists(id: string): Promise<boolean> {
