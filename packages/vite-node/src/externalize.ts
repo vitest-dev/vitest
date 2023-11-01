@@ -72,8 +72,14 @@ async function isValidNodeImport(id: string, code?: string) {
   if (package_.type === 'module')
     return true
 
-  if (typeof code === 'undefined')
-    code = await fsp.readFile(id, 'utf8').catch(() => '')
+  if (typeof code === 'undefined') {
+    code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch((err) => {
+      // FIXME: test
+      // eslint-disable-next-line no-console
+      console.log('Failed to read file:', id, err)
+      return ''
+    })
+  }
 
   return !ESM_SYNTAX_RE.test(code)
 }
