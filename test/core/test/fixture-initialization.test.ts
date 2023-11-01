@@ -1,5 +1,5 @@
 import type { Use } from '@vitest/runner'
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
   a: number
@@ -177,6 +177,18 @@ describe('fixture initialization', () => {
       archive.push(todos.pop() as number)
       expect(todos.length).toBe(2)
       expect(archive.length).toBe(1)
+    })
+  })
+
+  describe('accessing non-fixture context', () => {
+    const myTest = test.extend({ a: 1 })
+
+    beforeEach(async ({ task }) => {
+      expect(task).toBeTruthy()
+    })
+
+    myTest('non-fixture context can be accessed without accessing fixtures', ({ task }) => {
+      expect(task).toBeTruthy()
     })
   })
 })

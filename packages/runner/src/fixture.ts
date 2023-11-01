@@ -74,6 +74,10 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
     const pendingFixtures = resolveDeps(usedFixtures)
+
+    if (!pendingFixtures.length)
+      return fn(context)
+
     let cursor = 0
 
     return new Promise((resolve, reject) => {
