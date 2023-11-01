@@ -5,8 +5,7 @@ import { runVitestCli } from '../../test-utils'
 test('should test nothing', async () => {
   const { stderr } = await runVitestCli(
     'run',
-    'fixtures/exclude/**.test.ts',
-    '-c',
+    '--config',
     'fixtures/exclude/vitest.exclude.config.ts',
     '--exclude',
     'fixtures/exclude/math.test.ts',
@@ -18,8 +17,7 @@ test('should test nothing', async () => {
 test('should still test math.test.ts', async () => {
   const { stderr, stdout } = await runVitestCli(
     'run',
-    'fixtures/exclude/**.test.ts',
-    '-c',
+    '--config',
     'fixtures/exclude/vitest.exclude.config.ts',
     '--exclude',
     'fixtures/exclude/string.test.ts',
