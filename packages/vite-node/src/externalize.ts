@@ -79,18 +79,16 @@ async function isValidNodeImport(id: string) {
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
-  processed: boolean,
   options?: DepsHandlingOptions,
   cache = _defaultExternalizeCache,
 ) {
   if (!cache.has(id))
-    cache.set(id, _shouldExternalize(id, processed, options))
+    cache.set(id, _shouldExternalize(id, options))
   return cache.get(id)!
 }
 
 async function _shouldExternalize(
   id: string,
-  processed: boolean,
   options?: DepsHandlingOptions,
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
@@ -123,7 +121,7 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
-  if (isLibraryModule && (processed || await isValidNodeImport(id)))
+  if (isLibraryModule && await isValidNodeImport(id))
     return id
 
   return false
