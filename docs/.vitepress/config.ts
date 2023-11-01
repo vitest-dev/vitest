@@ -131,8 +131,12 @@ export default withPwa(defineConfig({
               link: '/advanced/metadata',
             },
             {
-              text: 'Extending default reporters',
+              text: 'Extending Reporters',
               link: '/advanced/reporters',
+            },
+            {
+              text: 'Custom Pool',
+              link: '/advanced/pool',
             },
           ],
         },
