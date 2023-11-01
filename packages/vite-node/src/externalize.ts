@@ -62,24 +62,18 @@ async function isValidNodeImport(id: string, code?: string) {
   if (extension !== '.js')
     return false
 
+  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
+    return false
+
   const package_ = await readPackageJSON(id).catch(() => ({
     type: undefined,
   }))
 
-  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
-    return false
-
   if (package_.type === 'module')
     return true
 
-  if (typeof code === 'undefined') {
-    code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch((err) => {
-      // FIXME: test
-      // eslint-disable-next-line no-console
-      console.log('Failed to read file:', id, err)
-      return ''
-    })
-  }
+  if (typeof code === 'undefined')
+    code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch(() => '')
 
   return !ESM_SYNTAX_RE.test(code)
 }
