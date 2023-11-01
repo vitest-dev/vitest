@@ -80,7 +80,7 @@ export class Vitest {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
-    this.pool?.close()
+    this.pool?.close?.()
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
@@ -762,7 +762,7 @@ export class Vitest {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
         if (this.pool)
-          closePromises.push(this.pool.close().then(() => this.pool = undefined))
+          closePromises.push(this.pool.close?.().then(() => this.pool = undefined))
 
         closePromises.push(...this._onClose.map(fn => fn()))
 
