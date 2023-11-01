@@ -348,6 +348,7 @@ export class WorkspaceProject {
         this.typechecker?.stop(),
         this.browser?.close(),
         this.teardownGlobalSetup(),
+        () => this._provided = {},
       ].filter(Boolean))
     }
     return this.closingPromise
