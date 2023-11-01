@@ -53,7 +53,7 @@ export function guessCJSversion(id: string): string | undefined {
 }
 
 // The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
-async function isValidNodeImport(id: string, code?: string) {
+async function isValidNodeImport(id: string) {
   const extension = extname(id)
 
   if (BUILTIN_EXTENSIONS.has(extension))
@@ -72,8 +72,7 @@ async function isValidNodeImport(id: string, code?: string) {
   if (package_.type === 'module')
     return true
 
-  if (typeof code === 'undefined')
-    code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch(() => '')
+  const code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch(() => '')
 
   return !ESM_SYNTAX_RE.test(code)
 }
@@ -81,18 +80,18 @@ async function isValidNodeImport(id: string, code?: string) {
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
-  code?: string,
+  processed: boolean,
   options?: DepsHandlingOptions,
   cache = _defaultExternalizeCache,
 ) {
   if (!cache.has(id))
-    cache.set(id, _shouldExternalize(id, code, options))
+    cache.set(id, _shouldExternalize(id, processed, options))
   return cache.get(id)!
 }
 
 async function _shouldExternalize(
   id: string,
-  code?: string,
+  processed: boolean,
   options?: DepsHandlingOptions,
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
@@ -125,7 +124,7 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, depsExternal))
     return id
 
-  if (isLibraryModule && await isValidNodeImport(id, code))
+  if (isLibraryModule && (processed || await isValidNodeImport(id)))
     return id
 
   return false
