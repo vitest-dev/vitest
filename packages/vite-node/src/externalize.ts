@@ -1,8 +1,7 @@
 import { existsSync, promises as fsp } from 'node:fs'
-import { readPackageJSON } from 'pkg-types'
-import { extname, join } from 'pathe'
+import { dirname, extname, join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
-import { isNodeBuiltin, slash } from './utils'
+import { findNearestPackageData, isNodeBuiltin, slash } from './utils'
 import { KNOWN_ASSET_TYPES } from './constants'
 
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
@@ -65,14 +64,14 @@ async function isValidNodeImport(id: string) {
   if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
     return false
 
-  const package_ = await readPackageJSON(id).catch(() => ({
-    type: undefined,
-  }))
+  id = id.replace('file:///', '')
+
+  const package_ = await findNearestPackageData(dirname(id))
 
   if (package_.type === 'module')
     return true
 
-  const code = await fsp.readFile(id.replace('file:///', ''), 'utf8').catch(() => '')
+  const code = await fsp.readFile(id, 'utf8').catch(() => '')
 
   return !ESM_SYNTAX_RE.test(code)
 }
