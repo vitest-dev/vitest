@@ -1,4 +1,5 @@
 import mm from 'micromatch'
+import type { Awaitable } from '@vitest/utils'
 import type { BuiltinPool, Pool } from '../types/pool-options'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
@@ -9,12 +10,12 @@ import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
-export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
+export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Awaitable<void>
 
 export interface ProcessPool {
   name: string
   runTests: RunWithFiles
-  close?: () => Promise<void>
+  close?: () => Awaitable<void>
 }
 
 export interface PoolProcessOptions {
@@ -111,6 +112,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     for (const spec of files) {
       const pool = getPoolName(spec)
+      filesByPool[pool] ??= []
       filesByPool[pool].push(spec)
     }
 

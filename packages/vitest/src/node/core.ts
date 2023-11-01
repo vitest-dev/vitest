@@ -761,8 +761,12 @@ export class Vitest {
         if (!this.projects.includes(this.coreWorkspaceProject))
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
-        if (this.pool)
-          closePromises.push(this.pool.close?.().then(() => this.pool = undefined))
+        if (this.pool) {
+          closePromises.push(async () => {
+            await this.pool?.close?.()
+            this.pool = undefined
+          })
+        }
 
         closePromises.push(...this._onClose.map(fn => fn()))
 
