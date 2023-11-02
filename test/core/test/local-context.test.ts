@@ -37,7 +37,7 @@ describe('context expect', () => {
   })
 })
 
-describe('custom matcher inherited from global to local', () => {
+describe('custom matcher are inherited by local context', () => {
   expect.extend({
     toFooTest() {
       return {
