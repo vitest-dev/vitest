@@ -1043,6 +1043,7 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
   '**/virtual:*',
