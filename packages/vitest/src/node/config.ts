@@ -5,7 +5,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { isCI, toArray } from '../utils'
+import { isCI, stdProvider, toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -379,6 +379,9 @@ export function resolveConfig(
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= true
   resolved.browser.isolate ??= true
+
+  if (resolved.browser.enabled && stdProvider === 'stackblitz')
+    resolved.browser.provider = 'none'
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
