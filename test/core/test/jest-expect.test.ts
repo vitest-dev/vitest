@@ -167,7 +167,7 @@ describe('jest-expect', () => {
       }).toEqual({
         sum: expect.closeTo(0.4),
       })
-    }).toThrowErrorMatchingInlineSnapshot(`"expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }"`)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }]`)
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
@@ -302,14 +302,14 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
 
     expect(() => {
       const x = { a: { b: { c: 1 } } }
       const y = { a: { b: { c: 2 } } }
       Object.freeze(x.a)
       expect(x).toEqual(y)
-    }).toThrowErrorMatchingInlineSnapshot(`"expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }"`)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
   })
 
   it('assertions', () => {
@@ -406,14 +406,14 @@ describe('jest-expect', () => {
       expect(() => {
         expect(() => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
 
     it('async wasn\'t awaited', () => {
       expect(() => {
         expect(async () => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
   })
 })

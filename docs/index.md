@@ -28,11 +28,15 @@ hero:
 
 features:
   - title: Vite Powered
+    icon: <span class="i-logos:vitejs"></span>
     details: Reuse Vite's config and plugins - consistent across your app and tests. But it's not required to use Vitest!
   - title: Jest Compatible
+    icon: <span class="i-logos:jest"></span>
     details: Expect, snapshot, coverage, and more - migrating from Jest is straightforward.
   - title: Smart & instant watch mode
+    icon: ⚡
     details: Only rerun the related changes, just like HMR for tests!
   - title: ESM, TypeScript, JSX
+    icon: <span class="i-logos:typescript-icon"></span>
     details: Out-of-box ESM, TypeScript and JSX support powered by esbuild.
 ---

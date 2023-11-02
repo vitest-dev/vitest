@@ -54,8 +54,8 @@ export default withPwa(defineConfig({
   lastUpdated: true,
   markdown: {
     theme: {
-      light: 'vitesse-light',
-      dark: 'vitesse-dark',
+      light: 'github-light',
+      dark: 'github-dark',
     },
   },
   themeConfig: {
