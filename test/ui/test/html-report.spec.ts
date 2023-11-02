@@ -20,8 +20,18 @@ describe.skipIf(isWindows)('html report', () => {
     return exit
   })
 
-  it('dashboard', async () => {
-    await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
+  describe('dashboard', async () => {
+    it('summary', async () => {
+      await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
+    })
+
+    it('unhandled errors', async () => {
+      await untilUpdated(
+        () => page.textContent('[data-testid=unhandled-errors]'),
+        'Vitest caught 1 error during the test run. This might cause false positive tests. '
+        + 'Resolve unhandled errors to make sure your tests are not affected.',
+      )
+    })
   })
 
   describe('file detail', async () => {

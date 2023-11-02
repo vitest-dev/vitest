@@ -65,8 +65,8 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
       <h3 text-center mb-2>
         Unhandled Errors
       </h3>
-      <p text="sm" font-thin>
-        Vitest caught {{ unhandledErrors.length }} errors during the test run.<br>
+      <p text="sm" font-thini data-testid="unhandled-errors">
+        Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
         This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
       </p>
     </div>
