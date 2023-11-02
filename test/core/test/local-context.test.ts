@@ -64,7 +64,14 @@ describe('custom matcher are inherited by local context', () => {
     (expect(0) as any).not.toEqual_testCustom(1);
     (localExpect(0) as any).toEqual_testCustom(0);
     (localExpect(0) as any).not.toEqual_testCustom(1)
-    expect(0).toEqual((expect as any).not.toEqual_testCustom(1))
-    localExpect(0).toEqual((localExpect as any).not.toEqual_testCustom(1))
+
+    expect(0).toEqual((expect as any).toEqual_testCustom(0))
+    localExpect(0).toEqual((localExpect as any).toEqual_testCustom(0))
+    expect(0).toEqual((expect.not as any).toEqual_testCustom(1))
+    localExpect(0).toEqual((localExpect.not as any).toEqual_testCustom(1))
+
+    // asymmetric matcher function is identical
+    expect((expect as any).toEqual_testCustom).toBe((localExpect as any).toEqual_testCustom)
+    expect((expect.not as any).toEqual_testCustom).toBe((localExpect.not as any).toEqual_testCustom)
   })
 })

@@ -108,10 +108,12 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
         }
       }
 
+      const customMatcher = (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample)
+
       Object.defineProperty(expect, expectAssertionName, {
         configurable: true,
         enumerable: true,
-        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
+        value: customMatcher,
         writable: true,
       })
 
@@ -127,7 +129,7 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
       Object.defineProperty(((globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT]), expectAssertionName, {
         configurable: true,
         enumerable: true,
-        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
+        value: customMatcher,
         writable: true,
       })
     })
