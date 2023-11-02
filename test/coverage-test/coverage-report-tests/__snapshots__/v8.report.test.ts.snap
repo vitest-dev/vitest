@@ -1231,7 +1231,7 @@ exports[`v8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/dynamic-file-cjs.ignore.js": {
+  "<process-cwd>/src/dynamic-file-cjs.ignore.cjs": {
     "all": false,
     "b": {
       "0": [
@@ -1349,7 +1349,7 @@ exports[`v8 json report 1`] = `
         "name": "uncovered",
       },
     },
-    "path": "<process-cwd>/src/dynamic-file-cjs.ignore.js",
+    "path": "<process-cwd>/src/dynamic-file-cjs.ignore.cjs",
     "s": {
       "0": 1,
     },
@@ -1366,7 +1366,7 @@ exports[`v8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/dynamic-file-esm.ignore.mjs": {
+  "<process-cwd>/src/dynamic-file-esm.ignore.js": {
     "all": false,
     "b": {
       "0": [
@@ -1455,7 +1455,7 @@ exports[`v8 json report 1`] = `
         "name": "uncovered",
       },
     },
-    "path": "<process-cwd>/src/dynamic-file-esm.ignore.mjs",
+    "path": "<process-cwd>/src/dynamic-file-esm.ignore.js",
     "s": {
       "0": 1,
       "1": 1,
@@ -2003,7 +2003,7 @@ exports[`v8 json report 1`] = `
       },
       "27": {
         "end": {
-          "column": 90,
+          "column": 91,
           "line": 28,
         },
         "start": {
@@ -2223,7 +2223,7 @@ exports[`v8 json report 1`] = `
       },
       "5": {
         "end": {
-          "column": 91,
+          "column": 90,
           "line": 6,
         },
         "start": {
