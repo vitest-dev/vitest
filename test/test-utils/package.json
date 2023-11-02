@@ -2,6 +2,7 @@
   "name": "@vitest/test-utils",
   "private": true,
   "main": "./index.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"No tests\""
   },

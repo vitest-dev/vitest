@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-graphql",
+  "type": "module",
   "private": true,
   "files": [
     "dist",

@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-cjs",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

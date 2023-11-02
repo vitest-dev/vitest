@@ -1,5 +1,6 @@
 {
   "name": "@vitest/benchmark",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "node --test specs/ && echo '1'",

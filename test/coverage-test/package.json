@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-coverage",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:options && pnpm test:types",
