@@ -120,7 +120,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         await server.watcher.close()
       },
     },
-    ParseStorePlugin(),
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
