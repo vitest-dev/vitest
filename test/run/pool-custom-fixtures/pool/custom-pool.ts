@@ -13,7 +13,7 @@ export default (ctx: Vitest): ProcessPool => {
       for await (const [project, file] of specs) {
         ctx.state.clearFiles(project)
         const methods = createMethodsRPC(project)
-        console.warn('[pool] running tests for', project.getName(), 'in', file.replace(process.cwd(), ''))
+        console.warn('[pool] running tests for', project.getName(), 'in', file.toLowerCase().replace(process.cwd().toLowerCase(), ''))
         const path = relative(project.config.root, file)
         const taskFile: File = {
           id: `${path}${project.getName()}`,
