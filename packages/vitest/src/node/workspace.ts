@@ -90,7 +90,7 @@ export class WorkspaceProject {
       structuredClone(value)
     }
     catch (err) {
-      throw new Error(`Cannot provide value because it's not serializable.`, {
+      throw new Error(`Cannot provide "${key}" because it's not serializable.`, {
         cause: err,
       })
     }

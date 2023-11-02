@@ -301,6 +301,12 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    normalize(
+      resolveModule(file, { paths: [resolved.root] })
+        ?? resolve(resolved.root, file),
+    ),
+  )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [

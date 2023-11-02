@@ -3,14 +3,14 @@ import type { ViteNodeRunner } from 'vite-node/client'
 import type { ProvidedContext } from '../types/general'
 import type { ResolvedConfig } from '../types/config'
 
-interface GlobalSetupUtilities {
+export interface GlobalSetupContext {
   config: ResolvedConfig
   provide<T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]): void
 }
 
 export interface GlobalSetupFile {
   file: string
-  setup?: (utilities: GlobalSetupUtilities) => Promise<Function | void> | void
+  setup?: (utilities: GlobalSetupContext) => Promise<Function | void> | void
   teardown?: Function
 }
 
