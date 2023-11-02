@@ -70,7 +70,7 @@ export class WorkspaceProject {
   testFilesList: string[] = []
 
   private _globalSetups: GlobalSetupFile[] | undefined
-  private _provided: ProvidedContext = {}
+  private _provided: ProvidedContext = {} as any
 
   constructor(
     public path: string | number,
