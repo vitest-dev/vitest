@@ -972,7 +972,7 @@ import { inject } from 'vitest'
 inject('wsPort') === 3000
 ```
 
-If you are using TypeScript with `provide/inject` methods, you can extend `ProvidedContext` type to have type safe access:
+If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
 
 ```ts
 declare module 'vitest' {
