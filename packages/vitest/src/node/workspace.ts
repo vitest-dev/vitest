@@ -359,7 +359,7 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
-        () => this._provided = {},
+        () => this._provided = ({} as any),
       ].filter(Boolean))
     }
     return this.closingPromise

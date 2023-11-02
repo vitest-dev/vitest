@@ -133,7 +133,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         },
         // browser should have a separate RPC in the future, UI doesn't care for provided context
         getProvidedContext() {
-          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : {}
+          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
         },
       },
       {
