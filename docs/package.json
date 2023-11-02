@@ -29,7 +29,7 @@
     "https-localhost": "^4.7.1",
     "unocss": "^0.53.4",
     "unplugin-vue-components": "^0.25.2",
-    "vite": "^5.0.0-beta.12",
+    "vite": "^5.0.0-beta.15",
     "vite-plugin-pwa": "^0.16.6",
     "vitepress": "^1.0.0-rc.24",
     "workbox-window": "^7.0.0"
