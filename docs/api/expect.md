@@ -748,15 +748,11 @@ Note that since file system operation is async, you need to use `await` with `to
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
-If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
-
 ## toThrowErrorMatchingInlineSnapshot
 
 - **Type:** `(snapshot?: string, message?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
-
-If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
 ## toHaveBeenCalled
 
