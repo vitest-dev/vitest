@@ -78,6 +78,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               [Circular],
             ],
@@ -153,6 +154,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               [Circular],
               {
@@ -181,6 +183,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               {
                 "file": [Circular],
