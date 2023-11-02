@@ -8,8 +8,84 @@ html:not(.dark) [img-dark] {
 
 /* Overrides */
 
+.sp .sp-link.link:hover,
+.sp .sp-link.link:focus {
+  background-color: var(--vitest-c-sponsor-hover) !important;
+}
+
+/* outline styles for buttons and VPButton anchors */
+button:focus,
+button:focus-visible,
+.DocSearch-Button:focus,
+.DocSearch-Button:focus-visible,
+a:focus-visible,
+a:focus {
+  border-radius: 2px;
+  outline: 2px solid var(--vp-c-text-1);
+}
+
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* custom block styles */
+html:not(.dark) .custom-block.tip code {
+  color: var(--vitest-custom-block-tip-code-text) !important;
+}
+html:not(.dark) .custom-block.info code {
+  color: var(--vitest-custom-block-info-code-text) !important;
+}
+.custom-block.tip a:hover,
+.vp-doc .custom-block.tip a:hover > code {
+  color: var(--vp-c-brand-1) !important;
+  opacity: 1;
+}
+.custom-block.info a:hover,
+.vp-doc .custom-block.info a:hover > code {
+  color: var(--vp-c-brand-1) !important;
+  opacity: 1;
+}
+html:not(.dark) .custom-block.info a:hover,
+html:not(.dark) .vp-doc .custom-block.info a:hover > code {
+  color: var(--vitest-custom-block-info-code-text) !important;
+  opacity: 1;
+}
+.custom-block.warning a:hover,
+.vp-doc .custom-block.warning a:hover > code {
+  color: var(--vp-c-warning-1) !important;
+  opacity: 1;
+}
+.custom-block.danger a:hover,
+.vp-doc .custom-block.danger a:hover > code {
+  color: var(--vp-c-danger-1) !important;
+  opacity: 1;
+}
+
+/* search # styles */
+:not(.dark) .title-icon {
+  opacity: 1 !important;
+}
+.dark .title-icon {
+  opacity: 0.67 !important;
+}
+
 .VPSocialLink {
   transform: scale(0.9);
+}
+
+.vp-doc a {
+  text-decoration-style: dotted;
+}
+.custom-block a:focus,
+.custom-block a:active,
+.custom-block a:hover,
+.custom-block a:active,
+.vp-doc a:focus,
+.vp-doc a:active,
+.vp-doc a:hover,
+.vp-doc a:active {
+  text-decoration: underline;
 }
 
 .vp-doc th, .vp-doc td {
