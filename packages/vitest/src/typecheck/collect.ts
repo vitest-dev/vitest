@@ -1,11 +1,11 @@
 import { relative } from 'pathe'
+import { parseAstAsync } from 'vite'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '@vitest/runner/utils'
 import type { File, Suite, Test } from '../types'
 import type { WorkspaceProject } from '../node/workspace'
-import { parseAst } from '../node/plugins/parse-store'
 
 interface ParsedFile extends File {
   start: number
@@ -43,7 +43,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request)
     return null
-  const ast = parseAst(request.code)
+  const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const file: ParsedFile = {
     filepath,

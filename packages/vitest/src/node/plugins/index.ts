@@ -15,7 +15,6 @@ import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './ut
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { ParseStorePlugin } from './parse-store'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -178,7 +177,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    ParseStorePlugin(),
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
