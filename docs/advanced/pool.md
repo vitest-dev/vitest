@@ -8,7 +8,7 @@ Vitest runs tests in pools. By default, there are several pools:
 
 - `threads` to run tests using `node:worker_threads` (isolation is provided with a new worker context)
 - `forks` to run tests using `node:child_process` (isolation is provided with a new `child_process.fork` process)
-- `vmThreafs` to run tests using `node:worker_threads` (but isolation is provided with `vm` module instead of a new worker context)
+- `vmThreads` to run tests using `node:worker_threads` (but isolation is provided with `vm` module instead of a new worker context)
 - `browser` to run tests using browser providers
 - `typescript` to run typechecking on tests
 
