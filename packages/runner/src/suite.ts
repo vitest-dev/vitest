@@ -154,7 +154,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       shuffle,
       tasks: [],
       meta: Object.create(null),
-      projectName: runner.config.name,
+      projectName: '',
     }
 
     setHooks(suite, createSuiteHooks())
