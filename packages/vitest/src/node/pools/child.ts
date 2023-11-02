@@ -116,7 +116,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root)
+          ctx.state.cancelFiles(files, ctx.config.root, project.getName())
 
         else
           throw error

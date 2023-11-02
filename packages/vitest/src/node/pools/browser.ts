@@ -44,7 +44,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     if (project.config.browser.isolate) {
       for (const path of paths) {
         if (isCancelled) {
-          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root)
+          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root, project.getName())
           break
         }
 
