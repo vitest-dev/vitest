@@ -8,7 +8,6 @@ import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
 import type { ResolvedConfig, ResolvedTestEnvironment, RuntimeRPC, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
-import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 import { ExternalModulesExecutor } from './external-executor'
 import { FileMap } from './vm/file-map'
@@ -64,7 +63,8 @@ export interface ContextExecutorOptions {
 }
 
 export async function startVitestExecutor(options: ContextExecutorOptions) {
-  const state = () => getWorkerState() || options.state
+  // @ts-expect-error injected untyped global
+  const state = () => globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
   const processExit = process.exit
@@ -203,7 +203,8 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   get state() {
-    return getWorkerState() || this.options.state
+    // @ts-expect-error injected untyped global
+    return globalThis.__vitest_worker__ || this.options.state
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {

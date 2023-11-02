@@ -1,7 +1,7 @@
-import { expect, test, vi } from 'vitest'
+import { expect, inject, test } from 'vitest'
 
 test('global setup provides data correctly', () => {
-  expect(vi.inject('globalSetup')).toBe(true)
-  expect(vi.inject('globalSetupOverriden')).toBe(true)
-  expect(vi.inject('invalidValue')).toBe(undefined)
+  expect(inject('globalSetup')).toBe(true)
+  expect(inject('globalSetupOverriden')).toBe(true)
+  expect(inject('invalidValue')).toBe(undefined)
 })

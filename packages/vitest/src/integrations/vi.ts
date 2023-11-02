@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import type { ProvidedContext, ResolvedConfig, RuntimeConfig } from '../types'
+import type { ResolvedConfig, RuntimeConfig } from '../types'
 import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
@@ -333,12 +333,6 @@ export interface VitestUtils {
    * If config was changed with `vi.setConfig`, this will reset it to the original state.
    */
   resetConfig(): void
-
-  /**
-   * Access to injected context provided from the main thread.
-   * This usually returns a value provided by `globalSetup` or an external library.
-   */
-  inject<T extends keyof ProvidedContext>(key: T): ProvidedContext[T]
 }
 
 function createVitest(): VitestUtils {
@@ -359,15 +353,6 @@ function createVitest(): VitestUtils {
 
   const workerState = getWorkerState()
 
-  if (!workerState) {
-    const errorMsg = 'Vitest failed to access its internal state.'
-      + '\n\nOne of the following is possible:'
-      + '\n- "vitest" is imported directly without running "vitest" command'
-      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
-    throw new Error(errorMsg)
-  }
-
   const _timers = new FakeTimers({
     global: globalThis,
     config: workerState.config.fakeTimers,
@@ -385,8 +370,6 @@ function createVitest(): VitestUtils {
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      const workerState = getWorkerState()
-
       if (workerState.isChildProcess) {
         if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
           throw new Error(
@@ -593,8 +576,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      const state = getWorkerState()
-      resetModules(state.moduleCache)
+      resetModules(workerState.moduleCache)
       return utils
     },
 
@@ -603,21 +585,14 @@ function createVitest(): VitestUtils {
     },
 
     setConfig(config: RuntimeConfig) {
-      const state = getWorkerState()
       if (!_config)
-        _config = { ...state.config }
-      Object.assign(state.config, config)
+        _config = { ...workerState.config }
+      Object.assign(workerState.config, config)
     },
 
     resetConfig() {
-      if (_config) {
-        const state = getWorkerState()
-        Object.assign(state.config, _config)
-      }
-    },
-
-    inject<T extends keyof ProvidedContext>(key: T): ProvidedContext[T] {
-      return workerState.providedContext[key]
+      if (_config)
+        Object.assign(workerState.config, _config)
     },
   }
 
