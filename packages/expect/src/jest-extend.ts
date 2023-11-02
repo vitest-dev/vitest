@@ -123,7 +123,7 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
       })
 
       // keep track of asymmetric matchers on global so that it can be copied over to local context's `expect`.
-      // note that the negated variant is automatically shared since it's directly assigned on single `expect.not` object.
+      // note that the negated variant is automatically shared since it's assigned on the single `expect.not` object.
       Object.defineProperty(((globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT]), expectAssertionName, {
         configurable: true,
         enumerable: true,

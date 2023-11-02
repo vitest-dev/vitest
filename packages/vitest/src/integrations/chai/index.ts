@@ -22,7 +22,6 @@ export function createExpect(test?: TaskPopulated) {
     else
       return assert
   }) as ExpectStatic
-
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
