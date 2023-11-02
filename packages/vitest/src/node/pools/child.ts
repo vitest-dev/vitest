@@ -69,7 +69,10 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
     minThreads,
 
     env,
-    execArgv,
+    execArgv: [
+      ...ctx.config.poolOptions?.forks?.execArgv ?? [],
+      ...execArgv,
+    ],
 
     terminateTimeout: ctx.config.teardownTimeout,
   }

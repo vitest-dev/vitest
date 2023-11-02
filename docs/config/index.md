@@ -723,6 +723,17 @@ This can improve performance in some cases, but might cause segfault in older No
 
 Isolate environment for each test file.
 
+##### poolOptions.threads.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` in the threads. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
+:::
+
 #### poolOptions.forks<NonProjectOption />
 
 Options for `forks` pool.
@@ -774,6 +785,17 @@ Run all tests with the same environment inside a single child process. This will
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses child processes not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
 This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+:::
+
+##### poolOptions.forks.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` process in the child processes. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
 #### poolOptions.vmThreads<NonProjectOption />
@@ -845,6 +867,17 @@ Percentage based memory limit [does not work on Linux CircleCI](https://github.c
 Use Atomics to synchronize threads.
 
 This can improve performance in some cases, but might cause segfault in older Node versions.
+
+##### poolOptions.vmThreads.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` process in the VM context. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
+:::
 
 ### testTimeout
 

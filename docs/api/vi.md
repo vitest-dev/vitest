@@ -650,7 +650,6 @@ const interval = setInterval(() => {
   console.log(++i)
   if (i === 3)
     clearInterval(interval)
-
 }, 50)
 
 vi.runAllTimers()
@@ -868,15 +867,15 @@ To bypass this limitation, you can rewrite static imports into dynamic ones like
 
 ```diff
 callFunctionWithSideEffect()
-- import { value } from './some/module.ts'
-+ const { value } = await import('./some/module.ts')
+- import { value } from './some/module.js'
++ const { value } = await import('./some/module.js')
 ```
 
 When running `vitest`, you can do this automatically by using `vi.hoisted` method.
 
 ```diff
 - callFunctionWithSideEffect()
-import { value } from './some/module.ts'
+import { value } from './some/module.js'
 + vi.hoisted(() => callFunctionWithSideEffect())
 ```
 

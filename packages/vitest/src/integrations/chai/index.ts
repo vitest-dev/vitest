@@ -4,7 +4,7 @@ import * as chai from 'chai'
 import './setup'
 import type { TaskPopulated, Test } from '@vitest/runner'
 import { getCurrentTest } from '@vitest/runner'
-import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
+import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
 import { getFullName } from '../../utils/tasks'
@@ -23,6 +23,7 @@ export function createExpect(test?: TaskPopulated) {
       return assert
   }) as ExpectStatic
   Object.assign(expect, chai.expect)
+  Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
   expect.getState = () => getState<MatcherState>(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)

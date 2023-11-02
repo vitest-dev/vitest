@@ -62,7 +62,7 @@ test('template literal', () => {
 test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error('omega')
-  }).toThrowErrorMatchingInlineSnapshot('"omega"')
+  }).toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
 
   expect(() => {
     // eslint-disable-next-line no-throw-literal
@@ -102,7 +102,7 @@ test('throwing inline snapshots', async () => {
 
   await expect(async () => {
     throw new Error('omega')
-  }).rejects.toThrowErrorMatchingInlineSnapshot('"omega"')
+  }).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
 })
 
 test('throwing expect should be a function', async () => {

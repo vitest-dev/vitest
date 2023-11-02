@@ -13,11 +13,6 @@
   to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
   status = 302
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
 [[headers]]
   for = "/manifest.webmanifest"
   [headers.values]

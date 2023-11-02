@@ -81,6 +81,19 @@ interface WorkerContextOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+  * Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.
+  *
+  * See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+  *
+  * Set to `process.execArgv` to pass all arguments of the current process.
+  *
+  * Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103
+  *
+  * @default [] // no execution arguments are passed
+  */
+  execArgv?: string[]
 }
 
 interface VmOptions {
@@ -92,4 +105,17 @@ interface VmOptions {
 
   /** Isolation is always enabled */
   isolate?: true
+
+  /**
+  * Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.
+  *
+  * See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+  *
+  * Set to `process.execArgv` to pass all arguments of the current process.
+  *
+  * Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103
+  *
+  * @default [] // no execution arguments are passed
+  */
+  execArgv?: string[]
 }
