@@ -69,8 +69,7 @@ export class WorkspaceProject {
 
   testFilesList: string[] = []
 
-  private _globalSetupInit = false
-  private _globalSetups: GlobalSetupFile[] = []
+  private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {}
 
   constructor(
@@ -87,18 +86,31 @@ export class WorkspaceProject {
   }
 
   provide = (key: string, value: unknown) => {
+    try {
+      structuredClone(value)
+    }
+    catch (err) {
+      throw new Error(`Cannot provide value because it's not serializable.`, {
+        cause: err,
+      })
+    }
     (this._provided as any)[key] = value
   }
 
-  getProvidedContext() {
-    return this._provided
+  getProvidedContext(): ProvidedContext {
+    if (this.isCore())
+      return this._provided
+    // globalSetup can run even if core workspace is not part of the test run
+    // so we need to inherit its provided context
+    return {
+      ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
+      ...this._provided,
+    }
   }
 
   async initializeGlobalSetup() {
-    if (this._globalSetupInit)
+    if (this._globalSetups)
       return
-
-    this._globalSetupInit = true
 
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
@@ -120,7 +132,7 @@ export class WorkspaceProject {
   }
 
   async teardownGlobalSetup() {
-    if (!this._globalSetupInit || !this._globalSetups.length)
+    if (!this._globalSetups)
       return
     for (const globalSetupFile of [...this._globalSetups].reverse()) {
       try {
@@ -347,7 +359,6 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
-        this.teardownGlobalSetup(),
         () => this._provided = {},
       ].filter(Boolean))
     }
