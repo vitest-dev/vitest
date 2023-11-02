@@ -79,10 +79,12 @@ To make sure every test is collected, you would call `ctx.state.collectFiles` an
 
 ```ts
 async function runTests(project: WorkspaceProject, tests: string[]) {
-  // ... running tests, put into "results" and "tasks"
+  // ... running tests, put into "files" and "tasks"
   const methods = createMethodsRPC(project)
-  await methods.onCollected(results)
-  // UI reporter relies on results being updated in "onTaskUpdate"
+  await methods.onCollected(files)
+  // most reporters rely on results being updated in "onTaskUpdate"
   await methods.onTaskUpdate(tasks)
 }
 ```
+
+You can see a simple example in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/feat/custom-pool/test/run/pool-custom-fixtures/pool/custom-pool.ts).

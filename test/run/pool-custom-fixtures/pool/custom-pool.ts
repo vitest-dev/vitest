@@ -1,6 +1,8 @@
-import type { File, TaskResultPack, Test } from 'vitest'
+import type { File, Test } from 'vitest'
 import type { ProcessPool, Vitest } from 'vitest/node'
 import { createMethodsRPC } from 'vitest/node'
+import { getTasks } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 
 export default (ctx: Vitest): ProcessPool => {
   const options = ctx.config.poolOptions?.custom as any
@@ -12,11 +14,13 @@ export default (ctx: Vitest): ProcessPool => {
         ctx.state.clearFiles(project)
         const methods = createMethodsRPC(project)
         console.warn('[pool] running tests for', project.getName(), 'in', file.replace(process.cwd(), ''))
+        const path = relative(project.config.root, file)
         const taskFile: File = {
-          id: 'custom-test-file',
-          name: 'custom test file',
+          id: `${path}${project.getName()}`,
+          name: path,
           mode: 'run',
           meta: {},
+          projectName: project.getName(),
           filepath: file,
           type: 'suite',
           tasks: [],
@@ -36,14 +40,9 @@ export default (ctx: Vitest): ProcessPool => {
             state: 'pass',
           },
         }
-        const taskPack: TaskResultPack = [
-          taskTest.id,
-          taskTest.result,
-          taskTest.meta,
-        ]
         taskFile.tasks.push(taskTest)
         await methods.onCollected([taskFile])
-        await methods.onTaskUpdate([taskPack])
+        await methods.onTaskUpdate(getTasks(taskFile).map(task => [task.id, task.result, task.meta]))
       }
     },
     close() {
