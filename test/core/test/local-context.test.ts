@@ -39,25 +39,32 @@ describe('context expect', () => {
 
 describe('custom matcher are inherited by local context', () => {
   expect.extend({
-    toFooTest() {
+    toEqualTestLocalMatcher(received, expected) {
       return {
-        pass: true,
-        message: () => `foo`,
+        pass: received === expected,
+        message: () => `test`,
       }
     },
   })
 
   it('basic', ({ expect: localExpect }) => {
     // as assertion
-    expect(expect('test')).toHaveProperty('toFooTest')
-    expect(expect.soft('test')).toHaveProperty('toFooTest')
-    expect(localExpect('test')).toHaveProperty('toFooTest')
-    expect(localExpect.soft('test')).toHaveProperty('toFooTest')
+    expect(expect('test')).toHaveProperty('toEqualTestLocalMatcher')
+    expect(expect.soft('test')).toHaveProperty('toEqualTestLocalMatcher')
+    expect(localExpect('test')).toHaveProperty('toEqualTestLocalMatcher')
+    expect(localExpect.soft('test')).toHaveProperty('toEqualTestLocalMatcher')
 
     // as asymmetric matcher
-    expect(expect).toHaveProperty('toFooTest')
-    expect(expect.not).toHaveProperty('toFooTest')
-    expect(localExpect).toHaveProperty('toFooTest')
-    expect(localExpect.not).toHaveProperty('toFooTest')
+    expect(expect).toHaveProperty('toEqualTestLocalMatcher')
+    expect(expect.not).toHaveProperty('toEqualTestLocalMatcher')
+    expect(localExpect).toHaveProperty('toEqualTestLocalMatcher')
+    expect(localExpect.not).toHaveProperty('toEqualTestLocalMatcher');
+
+    (expect(0) as any).toEqualTestLocalMatcher(0);
+    (expect(0) as any).not.toEqualTestLocalMatcher(1);
+    (localExpect(0) as any).toEqualTestLocalMatcher(0);
+    (localExpect(0) as any).not.toEqualTestLocalMatcher(1)
+    expect(0).toEqual((expect as any).not.toEqualTestLocalMatcher(1))
+    localExpect(0).toEqual((localExpect as any).not.toEqualTestLocalMatcher(1))
   })
 })
