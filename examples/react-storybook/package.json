@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-react-storybook",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite",

@@ -62,11 +62,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
-            watch: {
-              ignored: ['**/*'],
-              depth: 0,
-              persistent: false,
-            },
+            watch: null,
             open: false,
             hmr: false,
             preTransformRequests: false,

@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-env-custom-file",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

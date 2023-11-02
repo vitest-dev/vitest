@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-mocks",
+  "type": "module",
   "private": true,
   "files": [
     "dist",
