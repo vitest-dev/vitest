@@ -7,7 +7,7 @@ export class NoneBrowserProvider implements BrowserProvider {
   private open = false
 
   getSupportedBrowsers() {
-    // `none` supports any browser
+    // `none` is not restricted to certain browsers.
     return []
   }
 

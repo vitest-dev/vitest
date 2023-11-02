@@ -1,10 +1,10 @@
 {
-  "compilerOptions": {    
+  "compilerOptions": {
     "module": "node16",
     "target": "es2020",
     "moduleResolution": "Node16",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": true
   }
 }
