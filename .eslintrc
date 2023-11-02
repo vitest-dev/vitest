@@ -14,6 +14,7 @@
         "paths": ["path"]
       }
     ],
+    "no-empty-pattern": "off",
     "import/no-named-as-default": "off",
     "no-cond-assign": "off"
   },
@@ -44,7 +45,8 @@
     {
       "files": ["docs/**", "packages/web-worker/**", "test/web-worker/**"],
       "rules": {
-        "no-restricted-globals": "off"
+        "no-restricted-globals": "off",
+        "import/first": "off"
       }
     },
     {

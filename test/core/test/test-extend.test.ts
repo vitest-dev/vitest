@@ -47,6 +47,7 @@ describe('test.extend()', () => {
       string: string
       any: any
       boolean: boolean
+      func: (a: number, b: string) => void
     }
 
     const typesTest = test.extend<TypesContext>({
@@ -59,6 +60,9 @@ describe('test.extend()', () => {
         await use({})
       },
       boolean: true,
+      func: async ({}, use): Promise<void> => {
+        await use(() => undefined)
+      },
     })
 
     expectTypeOf(typesTest).toEqualTypeOf<TestAPI<InferFixturesTypes<typeof typesTest>>>()

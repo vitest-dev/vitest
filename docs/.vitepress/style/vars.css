@@ -5,17 +5,14 @@
 :root {
   --vp-c-accent: #dab40b;
   --vp-c-brand: #6da13f;
+  --vp-c-brand-1: var(--vp-c-brand-dark);
+  --vp-c-brand-2: var(--vp-c-brand-darker);
   --vp-c-brand-light: #7ec242;
   --vp-c-brand-lighter: #93d31c;
   --vp-c-brand-dark: #668d11;
   --vp-c-brand-darker: #52730d;
   --vp-c-text-code: #5d6f5d;
   --vp-code-block-bg: rgba(125,125,125,0.04);
-  /* fix TIP on light: the default one is too light (2 in contrast) */
-  --vp-custom-block-tip-text: rgb(12, 124, 108);
-  --vp-custom-block-tip-border: rgba(12, 124, 108, 0.5);
-  --vp-custom-block-tip-bg: rgba(18, 181, 157, 0.1);
-  /* fix contrast on gray cards: used by --vp-c-text-2 */
   --vp-c-text-light-2: rgba(56 56 56 / 70%);
   /* fix contrast: lang name on gray code block */
   --vp-c-text-dark-3: rgba(180, 180, 180, 0.7);
@@ -27,10 +24,6 @@
 .dark {
   --vp-code-block-bg: rgba(0,0,0,0.2);
   --vp-c-text-code: #c0cec0;
-  /* fix TIP: check the same above (these are the defaults) */
-  --vp-custom-block-tip-text: rgb(18, 181, 157);
-  --vp-custom-block-tip-border: rgba(18, 181, 157, 0.5);
-  --vp-custom-block-tip-bg: rgba(18, 181, 157, 0.1);
   /* fix contrast on gray cards: check the same above (this is the default) */
   --vp-c-text-dark-2: rgba(235, 235, 235, 0.60);
   /* fix lang name: check the same above (this is the default) */
