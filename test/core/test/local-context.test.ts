@@ -39,7 +39,7 @@ describe('context expect', () => {
 
 describe('custom matcher are inherited by local context', () => {
   expect.extend({
-    toEqualTestLocalMatcher(received, expected) {
+    toEqual_testCustom(received, expected) {
       return {
         pass: received === expected,
         message: () => `test`,
@@ -49,22 +49,22 @@ describe('custom matcher are inherited by local context', () => {
 
   it('basic', ({ expect: localExpect }) => {
     // as assertion
-    expect(expect('test')).toHaveProperty('toEqualTestLocalMatcher')
-    expect(expect.soft('test')).toHaveProperty('toEqualTestLocalMatcher')
-    expect(localExpect('test')).toHaveProperty('toEqualTestLocalMatcher')
-    expect(localExpect.soft('test')).toHaveProperty('toEqualTestLocalMatcher')
+    expect(expect('test')).toHaveProperty('toEqual_testCustom')
+    expect(expect.soft('test')).toHaveProperty('toEqual_testCustom')
+    expect(localExpect('test')).toHaveProperty('toEqual_testCustom')
+    expect(localExpect.soft('test')).toHaveProperty('toEqual_testCustom')
 
     // as asymmetric matcher
-    expect(expect).toHaveProperty('toEqualTestLocalMatcher')
-    expect(expect.not).toHaveProperty('toEqualTestLocalMatcher')
-    expect(localExpect).toHaveProperty('toEqualTestLocalMatcher')
-    expect(localExpect.not).toHaveProperty('toEqualTestLocalMatcher');
+    expect(expect).toHaveProperty('toEqual_testCustom')
+    expect(expect.not).toHaveProperty('toEqual_testCustom')
+    expect(localExpect).toHaveProperty('toEqual_testCustom')
+    expect(localExpect.not).toHaveProperty('toEqual_testCustom');
 
-    (expect(0) as any).toEqualTestLocalMatcher(0);
-    (expect(0) as any).not.toEqualTestLocalMatcher(1);
-    (localExpect(0) as any).toEqualTestLocalMatcher(0);
-    (localExpect(0) as any).not.toEqualTestLocalMatcher(1)
-    expect(0).toEqual((expect as any).not.toEqualTestLocalMatcher(1))
-    localExpect(0).toEqual((localExpect as any).not.toEqualTestLocalMatcher(1))
+    (expect(0) as any).toEqual_testCustom(0);
+    (expect(0) as any).not.toEqual_testCustom(1);
+    (localExpect(0) as any).toEqual_testCustom(0);
+    (localExpect(0) as any).not.toEqual_testCustom(1)
+    expect(0).toEqual((expect as any).not.toEqual_testCustom(1))
+    localExpect(0).toEqual((localExpect as any).not.toEqual_testCustom(1))
   })
 })
