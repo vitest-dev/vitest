@@ -42,6 +42,12 @@ TypeError: failure"
 
 exports[`should fail test-extend/circular-dependency.test.ts > test-extend/circular-dependency.test.ts 1`] = `"Error: circular fixture dependency"`;
 
+exports[`should fail test-extend/fixture-error.test.ts > test-extend/fixture-error.test.ts 1`] = `
+"Error: Error thrown in test fixture
+Error: Error thrown in afterEach fixture
+Error: Error thrown in beforeEach fixture"
+`;
+
 exports[`should fail test-extend/fixture-rest-params.test.ts > test-extend/fixture-rest-params.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
 
 exports[`should fail test-extend/fixture-rest-props.test.ts > test-extend/fixture-rest-props.test.ts 1`] = `"Error: Rest parameters are not supported"`;
