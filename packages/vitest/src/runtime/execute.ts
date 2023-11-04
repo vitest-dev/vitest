@@ -1,26 +1,22 @@
-import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
+import { pathToFileURL } from 'node:url'
 import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalize, relative, resolve } from 'pathe'
+import { normalize, relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
-import type { MockMap } from '../types/mocker'
-import type { ResolvedConfig, ResolvedTestEnvironment, RuntimeRPC, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
+import type { MockMap } from '../types/mocker'
+import type { WorkerGlobalState } from '../types'
 import { VitestMocker } from './mocker'
-import { ExternalModulesExecutor } from './external-executor'
-import { FileMap } from './vm/file-map'
-
-const entryUrl = pathToFileURL(resolve(distDir, 'entry.js')).href
+import type { ExternalModulesExecutor } from './external-executor'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
-  packageCache: Map<string, string>
   moduleDirectories?: string[]
-  context?: vm.Context
   state: WorkerGlobalState
-  transform: RuntimeRPC['transform']
+  context?: vm.Context
+  externalModulesExecutor?: ExternalModulesExecutor
 }
 
 export async function createVitestExecutor(options: ExecuteOptions) {
@@ -32,15 +28,10 @@ export async function createVitestExecutor(options: ExecuteOptions) {
   return runner
 }
 
-let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor) => Promise<void>
-  executor: VitestExecutor
-}
+let _viteNode: VitestExecutor
 
-export const packageCache = new Map<string, any>()
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
-export const fileMap = new FileMap()
 const externalizeMap = new Map<string, string>()
 
 export async function startViteNode(options: ContextExecutorOptions) {
@@ -49,9 +40,7 @@ export async function startViteNode(options: ContextExecutorOptions) {
 
   const executor = await startVitestExecutor(options)
 
-  const { run } = await import(entryUrl)
-
-  _viteNode = { run, executor }
+  _viteNode = executor
 
   return _viteNode
 }
@@ -60,6 +49,7 @@ export interface ContextExecutorOptions {
   mockMap?: MockMap
   moduleCache?: ModuleCacheMap
   context?: vm.Context
+  externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
 }
 
@@ -117,10 +107,6 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
-    transform(id) {
-      return rpc().transform(id, 'web')
-    },
-    packageCache,
     moduleCache,
     mockMap,
     get interopDefault() { return state().config.deps.interopDefault },
@@ -157,6 +143,24 @@ function removeStyle(id: string) {
     document.head.removeChild(sheet)
 }
 
+export function getDefaultRequestStubs(context?: vm.Context) {
+  if (!context) {
+    const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle, removeStyle }
+    return {
+      '/@vite/client': clientStub,
+      '@vite/client': clientStub,
+    }
+  }
+  const clientStub = vm.runInContext(
+    `(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
+    context,
+  )(DEFAULT_REQUEST_STUBS['@vite/client'])
+  return {
+    '/@vite/client': clientStub,
+    '@vite/client': clientStub,
+  }
+}
+
 export class VitestExecutor extends ViteNodeRunner {
   public mocker: VitestMocker
   public externalModules?: ExternalModulesExecutor
@@ -176,39 +180,29 @@ export class VitestExecutor extends ViteNodeRunner {
 
     this.mocker = new VitestMocker(this)
 
+    this.options.requestStubs = {
+      ...this.options.requestStubs,
+      ...getDefaultRequestStubs(options.context),
+    }
+
     if (!options.context) {
       Object.defineProperty(globalThis, '__vitest_mocker__', {
         value: this.mocker,
         writable: true,
         configurable: true,
       })
-      const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle, removeStyle }
-      this.options.requestStubs = {
-        '/@vite/client': clientStub,
-        '@vite/client': clientStub,
-      }
       this.primitives = {
         Object,
         Reflect,
         Symbol,
       }
     }
-    else {
-      const clientStub = vm.runInContext(
-        `(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
-        options.context,
-      )(DEFAULT_REQUEST_STUBS['@vite/client'])
-      this.options.requestStubs = {
-        '/@vite/client': clientStub,
-        '@vite/client': clientStub,
-      }
+    else if (options.externalModulesExecutor) {
       this.primitives = vm.runInContext('({ Object, Reflect, Symbol })', options.context)
-      this.externalModules = new ExternalModulesExecutor({
-        ...options,
-        fileMap,
-        context: options.context,
-        packageCache: options.packageCache,
-      })
+      this.externalModules = options.externalModulesExecutor
+    }
+    else {
+      throw new Error('When context is provided, externalModulesExecutor must be provided as well.')
     }
   }
 

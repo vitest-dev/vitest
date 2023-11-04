@@ -59,11 +59,7 @@ export class Vitest {
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
-  projectFiles!: {
-    workerPath: string
-    forksPath: string
-    vmPath: string
-  }
+  public distPath!: string
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -102,11 +98,7 @@ export class Vitest {
     // if Vitest is running globally, then we should still import local vitest if possible
     const projectVitestPath = await this.vitenode.resolveId('vitest')
     const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.projectFiles = {
-      workerPath: join(vitestDir, 'dist/worker.js'),
-      forksPath: join(vitestDir, 'dist/child.js'),
-      vmPath: join(vitestDir, 'dist/vm.js'),
-    }
+    this.distPath = join(vitestDir, 'dist')
 
     const node = this.vitenode
     this.runner = new ViteNodeRunner({

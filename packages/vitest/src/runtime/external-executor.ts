@@ -6,6 +6,7 @@ import { dirname } from 'node:path'
 import { statSync } from 'node:fs'
 import { extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import type { RuntimeRPC } from '../types/rpc'
 import type { ExecuteOptions } from './execute'
 import type { VMModule, VMSyntheticModule } from './vm/types'
 import { CommonjsExecutor } from './vm/commonjs-executor'
@@ -18,10 +19,12 @@ const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 
 const nativeResolve = import.meta.resolve!
 
-export interface ExternalModulesExecutorOptions extends ExecuteOptions {
+export interface ExternalModulesExecutorOptions extends Pick<ExecuteOptions, 'interopDefault' | 'requestStubs'> {
   context: vm.Context
   fileMap: FileMap
   packageCache: Map<string, any>
+  transform: RuntimeRPC['transform']
+  viteClientModule: Record<string, unknown>
 }
 
 interface ModuleInformation {
@@ -55,7 +58,7 @@ export class ExternalModulesExecutor {
       esmExecutor: this.esm,
       context: this.context,
       transform: options.transform,
-      viteClientModule: options.requestStubs!['/@vite/client'],
+      viteClientModule: options.viteClientModule,
     })
     this.resolvers = [this.vite.resolve]
   }

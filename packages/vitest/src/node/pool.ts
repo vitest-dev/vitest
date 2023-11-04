@@ -2,10 +2,10 @@ import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
 import type { BuiltinPool, Pool } from '../types/pool-options'
 import type { Vitest } from './core'
-import { createChildProcessPool } from './pools/child'
+import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
-import { createVmThreadsPool } from './pools/vm-threads'
+import { createVmThreadsPool } from './pools/vmThreads'
 import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 
@@ -19,9 +19,6 @@ export interface ProcessPool {
 }
 
 export interface PoolProcessOptions {
-  workerPath: string
-  forksPath: string
-  vmPath: string
   execArgv: string[]
   env: Record<string, string>
 }
@@ -61,17 +58,16 @@ export function createPool(ctx: Vitest): ProcessPool {
     return getDefaultPoolName(project, file)
   }
 
+  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
+
+  // Instead of passing whole process.execArgv to the workers, pick allowed options.
+  // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
+  const execArgv = process.execArgv.filter(execArg =>
+    execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof') || execArg.startsWith('--diagnostic-dir'),
+  )
+
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
-    const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
-
-    // Instead of passing whole process.execArgv to the workers, pick allowed options.
-    // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
-    const execArgv = process.execArgv.filter(execArg =>
-      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof') || execArg.startsWith('--diagnostic-dir'),
-    )
-
     const options: PoolProcessOptions = {
-      ...ctx.projectFiles,
       execArgv: [
         ...execArgv,
         ...conditions,
@@ -154,8 +150,8 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
 
       if (pool === 'forks') {
-        pools.forks ??= createChildProcessPool(ctx, options)
-        return pools.forks.runTests(specs, invalidate)
+        pools.forks ??= createForksPool(ctx, options)
+        return pools.forks.runTests(files, invalidate)
       }
 
       const poolHandler = await resolveCustomPool(pool)

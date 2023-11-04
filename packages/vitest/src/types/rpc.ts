@@ -1,6 +1,6 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { CancelReason } from '@vitest/runner'
-import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
+import type { EnvironmentOptions, Pool, ResolvedConfig, VitestEnvironment } from './config'
 import type { Environment, UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
 import type { File, TaskResultPack } from './tasks'
@@ -34,7 +34,6 @@ export interface RunnerRPC {
 
 export interface ContextTestEnvironment {
   name: VitestEnvironment
-  environment?: Environment
   transformMode?: TransformMode
   options: EnvironmentOptions | null
 }
@@ -45,10 +44,13 @@ export interface ResolvedTestEnvironment {
 }
 
 export interface ContextRPC {
+  pool: Pool
+  runner: string
+  workerId: number
   config: ResolvedConfig
   projectName: string
   files: string[]
-  invalidates?: string[]
   environment: ContextTestEnvironment
   providedContext: Record<string, any>
+  invalidates?: string[]
 }

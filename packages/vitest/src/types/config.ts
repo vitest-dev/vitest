@@ -298,6 +298,9 @@ export interface InlineConfig {
    */
   pool?: Exclude<Pool, 'browser'>
 
+  // maxWorkers?: number
+  // minWorkers?: number
+
   /**
    * Pool options
    */

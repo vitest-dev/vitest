@@ -38,7 +38,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: PoolProcessOptions): ProcessPool {
+export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -53,8 +53,10 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
   const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
+  const runner = resolve(ctx.distPath, 'workers/vmThreads.js')
+
   const options: TinypoolOptions = {
-    filename: vmPath,
+    filename: resolve(ctx.distPath, 'worker.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -92,6 +94,8 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
+        pool: 'vmThreads',
+        runner,
         port: workerPort,
         config,
         files,
