@@ -191,11 +191,7 @@ export class VitestExecutor extends ViteNodeRunner {
         writable: true,
         configurable: true,
       })
-      this.primitives = {
-        Object,
-        Reflect,
-        Symbol,
-      }
+      this.primitives = { Object, Reflect, Symbol }
     }
     else if (options.externalModulesExecutor) {
       this.primitives = vm.runInContext('({ Object, Reflect, Symbol })', options.context)
