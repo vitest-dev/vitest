@@ -30,6 +30,8 @@ const entries = {
   'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
+  // TODO: advanced docs
+  'workers': 'src/workers.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
