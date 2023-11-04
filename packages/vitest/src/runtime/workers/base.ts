@@ -55,8 +55,4 @@ export abstract class BaseVitestWorker implements VitestWorker {
       executor,
     )
   }
-
-  getWorkerStateContext() {
-    return globalThis
-  }
 }

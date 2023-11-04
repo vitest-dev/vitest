@@ -93,10 +93,4 @@ export abstract class VmVitestWorker implements VitestWorker {
       state.environmentTeardownRun = true
     }
   }
-
-  getWorkerStateContext() {
-    if (!this.context)
-      throw new Error('Worker state context is not available')
-    return this.context
-  }
 }
