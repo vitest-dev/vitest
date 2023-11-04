@@ -131,6 +131,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
+        // browser should have a separate RPC in the future, UI doesn't care for provided context
+        getProvidedContext() {
+          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
+        },
       },
       {
         post: msg => ws.send(msg),

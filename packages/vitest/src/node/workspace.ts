@@ -8,7 +8,7 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import type { RawSourceMap } from 'vite-node'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ArgumentsType, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -69,8 +69,8 @@ export class WorkspaceProject {
 
   testFilesList: string[] = []
 
-  private _globalSetupInit = false
-  private _globalSetups: GlobalSetupFile[] = []
+  private _globalSetups: GlobalSetupFile[] | undefined
+  private _provided: ProvidedContext = {} as any
 
   constructor(
     public path: string | number,
@@ -85,17 +85,38 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  async initializeGlobalSetup() {
-    if (this._globalSetupInit)
-      return
+  provide = (key: string, value: unknown) => {
+    try {
+      structuredClone(value)
+    }
+    catch (err) {
+      throw new Error(`Cannot provide "${key}" because it's not serializable.`, {
+        cause: err,
+      })
+    }
+    (this._provided as any)[key] = value
+  }
 
-    this._globalSetupInit = true
+  getProvidedContext(): ProvidedContext {
+    if (this.isCore())
+      return this._provided
+    // globalSetup can run even if core workspace is not part of the test run
+    // so we need to inherit its provided context
+    return {
+      ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
+      ...this._provided,
+    }
+  }
+
+  async initializeGlobalSetup() {
+    if (this._globalSetups)
+      return
 
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
     try {
       for (const globalSetupFile of this._globalSetups) {
-        const teardown = await globalSetupFile.setup?.()
+        const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
         if (teardown == null || !!globalSetupFile.teardown)
           continue
         if (typeof teardown !== 'function')
@@ -111,7 +132,7 @@ export class WorkspaceProject {
   }
 
   async teardownGlobalSetup() {
-    if (!this._globalSetupInit || !this._globalSetups.length)
+    if (!this._globalSetups)
       return
     for (const globalSetupFile of [...this._globalSetups].reverse()) {
       try {
@@ -338,7 +359,7 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
-        this.teardownGlobalSetup(),
+        () => this._provided = ({} as any),
       ].filter(Boolean))
     }
     return this.closingPromise

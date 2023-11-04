@@ -957,7 +957,30 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Also, since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed, for example (the test file will wait for global setup to finish before running).
+Since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
+
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Hovewer, since 1.0.0 you can pass down serializable data to tests via `provide` method:
+
+```ts
+// globalSetup.js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+// example.test.js
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
+```
+
+If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
+
+```ts
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
 :::
 
 

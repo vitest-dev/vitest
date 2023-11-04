@@ -438,9 +438,8 @@ export class Vitest {
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject))
       projects.add(coreProject)
-    await Promise.all(
-      Array.from(projects).map(project => project.initializeGlobalSetup()),
-    )
+    for await (const project of projects)
+      await project.initializeGlobalSetup()
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
@@ -750,22 +749,28 @@ export class Vitest {
 
   async close() {
     if (!this.closingPromise) {
-      const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
-      // close the core workspace server only once
-      // it's possible that it's not initialized at all because it's not running any tests
-      if (!this.projects.includes(this.coreWorkspaceProject))
-        closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
+      this.closingPromise = (async () => {
+        // do teardown before closing the server
+        for await (const project of [...this.projects].reverse())
+          await project.teardownGlobalSetup()
 
-      if (this.pool)
-        closePromises.push(this.pool.close().then(() => this.pool = undefined))
+        const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
+        // close the core workspace server only once
+        // it's possible that it's not initialized at all because it's not running any tests
+        if (!this.projects.includes(this.coreWorkspaceProject))
+          closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
-      closePromises.push(...this._onClose.map(fn => fn()))
+        if (this.pool)
+          closePromises.push(this.pool.close().then(() => this.pool = undefined))
 
-      this.closingPromise = Promise.allSettled(closePromises).then((results) => {
-        results.filter(r => r.status === 'rejected').forEach((err) => {
-          this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+        closePromises.push(...this._onClose.map(fn => fn()))
+
+        return Promise.allSettled(closePromises).then((results) => {
+          results.filter(r => r.status === 'rejected').forEach((err) => {
+            this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+          })
         })
-      })
+      })()
     }
     return this.closingPromise
   }
