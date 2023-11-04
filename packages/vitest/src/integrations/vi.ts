@@ -370,7 +370,7 @@ function createVitest(): VitestUtils {
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      if (workerState.isChildProcess) {
+      if (process.send) {
         if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
           throw new Error(
             'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',

@@ -134,8 +134,7 @@ export class FakeTimers {
         // Do not mock nextTick by default. It can still be mocked through userConfig.
         .filter(timer => timer !== 'nextTick') as (keyof FakeTimerWithContext['timers'])[]
 
-      // @ts-expect-error -- untyped internal
-      if (this._userConfig?.toFake?.includes('nextTick') && globalThis.__vitest_worker__.isChildProcess)
+      if (this._userConfig?.toFake?.includes('nextTick') && process.send)
         throw new Error('process.nextTick cannot be mocked inside child_process')
 
       this._clock = this._fakeTimers.install({

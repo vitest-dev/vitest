@@ -37,5 +37,4 @@ export interface WorkerGlobalState {
     environment: number
     prepare: number
   }
-  isChildProcess?: boolean
 }
