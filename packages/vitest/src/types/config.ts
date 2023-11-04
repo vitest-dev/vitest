@@ -633,6 +633,11 @@ export interface InlineConfig {
    * @default 0
   */
   retry?: number
+
+  /**
+   * Show full diff when snapshot fails instead of a patch.
+   */
+  expandSnapshotDiff?: boolean
 }
 
 export interface TypecheckConfig {
@@ -711,11 +716,6 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
-
-  /**
-   * Show full diff when snapshot fails instead of a patch.
-   */
-  expandSnapshotDiff?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
