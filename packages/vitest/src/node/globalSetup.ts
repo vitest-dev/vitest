@@ -10,7 +10,7 @@ export interface GlobalSetupContext {
 
 export interface GlobalSetupFile {
   file: string
-  setup?: (utilities: GlobalSetupContext) => Promise<Function | void> | void
+  setup?: (context: GlobalSetupContext) => Promise<Function | void> | void
   teardown?: Function
 }
 
