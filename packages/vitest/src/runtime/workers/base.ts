@@ -1,8 +1,24 @@
+import { ModuleCacheMap } from 'vite-node/client'
 import type { ContextRPC } from '../../types/rpc'
 import type { WorkerGlobalState } from '../../types/worker'
 import { provideWorkerState } from '../../utils/global'
-import { mockMap, moduleCache, startViteNode } from '../execute'
+import type { ContextExecutorOptions, VitestExecutor } from '../execute'
+import { startVitestExecutor } from '../execute'
+import type { MockMap } from '../../types/mocker'
 import type { VitestWorker, WorkerRpcOptions } from './types'
+
+let _viteNode: VitestExecutor
+
+const moduleCache = new ModuleCacheMap()
+const mockMap: MockMap = new Map()
+
+async function startViteNode(options: ContextExecutorOptions) {
+  if (_viteNode)
+    return _viteNode
+
+  _viteNode = await startVitestExecutor(options)
+  return _viteNode
+}
 
 export abstract class BaseVitestWorker implements VitestWorker {
   constructor(protected ctx: ContextRPC) {}

@@ -1,6 +1,7 @@
 import vm from 'node:vm'
 import { pathToFileURL } from 'node:url'
-import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
+import type { ModuleCacheMap } from 'vite-node/client'
+import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative } from 'pathe'
@@ -28,22 +29,7 @@ export async function createVitestExecutor(options: ExecuteOptions) {
   return runner
 }
 
-let _viteNode: VitestExecutor
-
-export const moduleCache = new ModuleCacheMap()
-export const mockMap: MockMap = new Map()
 const externalizeMap = new Map<string, string>()
-
-export async function startViteNode(options: ContextExecutorOptions) {
-  if (_viteNode)
-    return _viteNode
-
-  const executor = await startVitestExecutor(options)
-
-  _viteNode = executor
-
-  return _viteNode
-}
 
 export interface ContextExecutorOptions {
   mockMap?: MockMap
@@ -107,8 +93,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
-    moduleCache,
-    mockMap,
+    get moduleCache() { return state().moduleCache },
+    get mockMap() { return state().mockMap },
     get interopDefault() { return state().config.deps.interopDefault },
     get moduleDirectories() { return state().config.deps.moduleDirectories },
     get root() { return state().config.root },
