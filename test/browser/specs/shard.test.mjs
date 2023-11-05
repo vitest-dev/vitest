@@ -5,7 +5,7 @@ import { execa } from 'execa'
 
 const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
 
-await execa('npx', ['vitest', '--run', '--shard=1/2', `--browser.name=${browser}`, '--browser.headless', '--outputFile=browser-shard.json'], {
+await execa('npx', ['vitest', '--run', '--shard=1/2', `--browser.name=${browser}`, '--browser.headless', '--outputFile=./browser-shard.json'], {
   env: {
     ...process.env,
     CI: 'true',
@@ -18,5 +18,5 @@ const browserResult = await readFile('./browser-shard.json', 'utf-8')
 const browserResultJson = JSON.parse(browserResult)
 
 await test('shard option runs portion of tests', async () => {
-  assert.strictEqual(browserResultJson.numTotalTests, 12)
+  assert.strictEqual(browserResultJson.testResults.length, 4)
 })

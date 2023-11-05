@@ -1,7 +1,7 @@
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { Vitest } from '../core'
-import type { ProcessPool } from '../pool'
+import type { ProcessPool, WorkspaceSpec } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import type { BrowserProvider } from '../../types/browser'
 
@@ -27,6 +27,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
+  const Sequencer = ctx.config.sequence.sequencer
+  const sequencer = new Sequencer(ctx)
+
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
 
@@ -39,7 +42,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     providers.add(provider)
 
     const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser!.config.server.port}`
-    const paths = files.map(file => relative(project.config.root, file))
+
+    let specs: Array<WorkspaceSpec> = files.map(file => [project, file])
+    if (ctx.config.shard)
+      specs = await sequencer.shard(specs)
+    specs = await sequencer.sort(specs)
+
+    const paths = specs.map(([,file]) => relative(project.config.root, file))
 
     if (project.config.browser.isolate) {
       for (const path of paths) {
