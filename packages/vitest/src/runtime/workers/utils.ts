@@ -1,5 +1,7 @@
 import type { MessagePort } from 'node:worker_threads'
 import type { TinypoolWorkerMessage } from 'tinypool'
+import { parseRegexp } from '@vitest/utils'
+import type { ResolvedConfig } from '../../types/config'
 import type { WorkerRpcOptions } from './types'
 
 export function createThreadsRpcOptions(port: MessagePort): WorkerRpcOptions {
@@ -24,4 +26,17 @@ export function createForksRpcOptions(v8: typeof import('v8')): WorkerRpcOptions
       })
     },
   }
+}
+
+function parsePossibleRegexp(str: string | RegExp) {
+  const prefix = '$$vitest:'
+  if (typeof str === 'string' && str.startsWith(prefix))
+    return parseRegexp(str.slice(prefix.length))
+  return str
+}
+
+export function unwrapForksConfig(config: ResolvedConfig) {
+  if (config.testNamePattern)
+    config.testNamePattern = parsePossibleRegexp(config.testNamePattern) as RegExp
+  return config
 }
