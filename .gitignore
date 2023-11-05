@@ -17,6 +17,7 @@ ltex*
 bench/test/*/*/
 **/benchmark/bench.json
 **/browser/browser.json
+**/browser/browser-shard.json
 cypress/videos
 cypress/downloads
 cypress/screenshots
