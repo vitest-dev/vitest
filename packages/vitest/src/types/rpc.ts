@@ -45,7 +45,7 @@ export interface ResolvedTestEnvironment {
 
 export interface ContextRPC {
   pool: Pool
-  runner: string
+  worker: string
   workerId: number
   config: ResolvedConfig
   projectName: string

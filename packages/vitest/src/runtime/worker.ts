@@ -16,9 +16,9 @@ export async function run(ctx: ContextRPC) {
   process.env.VITEST_POOL_ID = String(poolId)
 
   try {
-    if (ctx.runner[0] === '.')
-      throw new Error(`Path to the test runner cannot be relative, received "${ctx.runner}"`)
-    const testRunnerModule = await import(ctx.runner)
+    if (ctx.worker[0] === '.')
+      throw new Error(`Path to the test runner cannot be relative, received "${ctx.worker}"`)
+    const testRunnerModule = await import(ctx.worker)
     if (typeof testRunnerModule.default !== 'function')
       throw new Error(`Test runner constructor should be exposed as a default export. Received "${typeof testRunnerModule.default}"`)
     const WorkerConstructor = testRunnerModule.default as VitestWorkerConstructor

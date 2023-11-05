@@ -49,7 +49,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
-  const runner = resolve(ctx.distPath, 'workers/threads.js')
+  const worker = resolve(ctx.distPath, 'workers/threads.js')
 
   const options: TinypoolOptions = {
     filename: resolve(ctx.distPath, 'worker.js'),
@@ -91,7 +91,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',
-        runner,
+        worker,
         port: workerPort,
         config,
         files,

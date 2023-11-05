@@ -62,7 +62,7 @@ export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptio
   const maxThreads = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
 
-  const runner = resolve(ctx.distPath, 'workers/forks.js')
+  const worker = resolve(ctx.distPath, 'workers/forks.js')
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
@@ -102,7 +102,7 @@ export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptio
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
-        runner,
+        worker,
         config,
         files,
         invalidates,
