@@ -27,8 +27,8 @@ importers:
         specifier: ^0.21.8
         version: 0.21.8
       '@rollup/plugin-commonjs':
-        specifier: ^25.0.4
-        version: 25.0.4(rollup@3.29.4)
+        specifier: ^25.0.7
+        version: 25.0.7(rollup@3.29.4)
       '@rollup/plugin-json':
         specifier: ^6.0.0
         version: 6.0.0(rollup@3.29.4)
@@ -8323,21 +8323,21 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-commonjs@25.0.4(rollup@3.29.4):
-    resolution: {integrity: sha512-L92Vz9WUZXDnlQQl3EwbypJR4+DM2EbsO+/KOcEkP4Mc6Ct453EeDB2uH9lgRwj4w5yflgNpq9pHOiY8aoUXBQ==}
+  /@rollup/plugin-commonjs@25.0.7(rollup@3.29.4):
+    resolution: {integrity: sha512-nEvcR+LRjEjsaSsc4x3XZfCCvZIaSMenZu/OiwOKGN2UhQpAYI7ru7czFvyWbErlpoGjnSX3D5Ch5FcMA3kRWQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^2.68.0||^3.0.0
+      rollup: ^2.68.0||^3.0.0||^4.0.0
     peerDependenciesMeta:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.4(rollup@3.29.4)
+      '@rollup/pluginutils': 5.0.5(rollup@3.29.4)
       commondir: 1.0.1
       estree-walker: 2.0.2
       glob: 8.1.0
       is-reference: 1.2.1
-      magic-string: 0.27.0
+      magic-string: 0.30.5
       rollup: 3.29.4
     dev: true
 
@@ -8467,7 +8467,7 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@types/estree': 1.0.1
+      '@types/estree': 1.0.3
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.29.4
@@ -14790,7 +14790,7 @@ packages:
     resolution: {integrity: sha512-kVwJELqiILQyG5aeuyKFbdsI1fmQy1Cmf7dQ8eGmVuJoaRVdwey7WaMknr2ZFeVSYSKT0rExsa8EGw0aoI/1QQ==}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
-      '@types/estree': 1.0.1
+      '@types/estree': 1.0.3
       acorn: 8.9.0
       estree-walker: 3.0.3
       periscopic: 3.1.0
@@ -19863,13 +19863,13 @@ packages:
   /is-reference@1.2.1:
     resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
     dependencies:
-      '@types/estree': 1.0.1
+      '@types/estree': 1.0.3
     dev: true
 
   /is-reference@3.0.1:
     resolution: {integrity: sha512-baJJdQLiYaJdvFbJqXrcGv3WU3QCzBlUcI5QhbesIm6/xPsvmO+2CDoi/GMOFBQEQm+PXkwOPrp9KK5ozZsp2w==}
     dependencies:
-      '@types/estree': 1.0.1
+      '@types/estree': 1.0.3
     dev: true
 
   /is-regex@1.1.4:
