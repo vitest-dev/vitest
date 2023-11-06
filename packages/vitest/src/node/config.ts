@@ -209,6 +209,7 @@ export function resolveConfig(
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
+    expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'

@@ -51,6 +51,7 @@ cli
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
+  .option('--expand-snapshot-diff', 'Show full diff when snapshot fails')
   .option('--typecheck [options]', 'Custom options for typecheck pool')
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')

@@ -106,7 +106,7 @@ export function processError(err: any, diffOptions?: DiffOptions) {
     const clonedExpected = deepClone(err.expected, { forceWritable: true })
 
     const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
-    err.diff = diff(replacedExpected, replacedActual, diffOptions)
+    err.diff = diff(replacedExpected, replacedActual, { ...diffOptions, ...err.diffOptions })
   }
 
   if (typeof err.expected !== 'string')
