@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { ContextRPC } from '../types/rpc'
@@ -18,7 +19,8 @@ export async function run(ctx: ContextRPC) {
   try {
     if (ctx.worker[0] === '.')
       throw new Error(`Path to the test runner cannot be relative, received "${ctx.worker}"`)
-    const testRunnerModule = await import(ctx.worker)
+    const file = ctx.worker.startsWith('file:') ? ctx.worker : pathToFileURL(ctx.worker).toString()
+    const testRunnerModule = await import(file)
     if (typeof testRunnerModule.default !== 'function')
       throw new Error(`Test runner constructor should be exposed as a default export. Received "${typeof testRunnerModule.default}"`)
     const WorkerConstructor = testRunnerModule.default as VitestWorkerConstructor
