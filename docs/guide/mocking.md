@@ -277,7 +277,7 @@ You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
-import { graphql, rest } from 'msw'
+import { graphql, http } from 'msw'
 
 const posts = [
   {
@@ -290,7 +290,7 @@ const posts = [
 ]
 
 export const restHandlers = [
-  rest.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
+  http.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
     return res(ctx.status(200), ctx.json(posts))
   }),
 ]
