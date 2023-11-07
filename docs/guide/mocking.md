@@ -291,13 +291,17 @@ const posts = [
 
 export const restHandlers = [
   http.get('https://rest-endpoint.example/path/to/posts', () => {
-    return HttpResponse.json(posts)
+    return HttpResponse.json(posts, { status: 200 })
   }),
 ]
 
 const graphqlHandlers = [
   graphql.query('https://graphql-endpoint.example/api/v1/posts', () => {
-    return HttpResponse.json(posts)
+    return HttpResponse.json(
+      {
+        data: { posts }
+      },
+    )
   }),
 ]
 
