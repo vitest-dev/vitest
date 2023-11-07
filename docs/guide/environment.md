@@ -16,7 +16,7 @@ When setting `environment` option in your config, it will apply to all the test 
 ```ts
 // @vitest-environment jsdom
 
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 
 test('test', () => {
   expect(typeof window).not.toBe('undefined')
