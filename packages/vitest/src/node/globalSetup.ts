@@ -1,9 +1,16 @@
 import { toArray } from '@vitest/utils'
 import type { ViteNodeRunner } from 'vite-node/client'
+import type { ProvidedContext } from '../types/general'
+import type { ResolvedConfig } from '../types/config'
+
+export interface GlobalSetupContext {
+  config: ResolvedConfig
+  provide<T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]): void
+}
 
 export interface GlobalSetupFile {
   file: string
-  setup?: () => Promise<Function | void> | void
+  setup?: (context: GlobalSetupContext) => Promise<Function | void> | void
   teardown?: Function
 }
 

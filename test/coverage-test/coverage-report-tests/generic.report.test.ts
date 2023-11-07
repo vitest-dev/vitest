@@ -35,6 +35,11 @@ test('all includes untested files', () => {
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('untested-file.ts.html')
+
+  // Directories starting with dot should be excluded
+  expect(files).not.toContain('.should-be-excluded-from-coverage/excluded-from-coverage.ts.html')
+  expect(files).not.toContain('.should-be-excluded-from-coverage')
+  expect(files).not.toContain('excluded-from-coverage.ts.html')
 })
 
 test('files should not contain query parameters', () => {

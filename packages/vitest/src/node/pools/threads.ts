@@ -92,6 +92,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         environment,
         workerId,
         projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
