@@ -13,10 +13,10 @@ it('Should return posts when clicking fetch button', async () => {
 
   await userEvent.click(screen.getByRole('button', { name: 'Fetch Posts' }))
 
-  posts.forEach((post) => {
-    expect(screen.getByRole('heading', { name: post.title, level: 2 })).toBeDefined()
+  for (const post of posts) {
+    expect(await screen.findByRole('heading', { name: post.title, level: 2 })).toBeDefined()
     expect(screen.getByText(post.body)).toBeDefined()
-  })
+  }
 })
 
 it('Should return posts when clicking fetch with graphql button', async () => {
@@ -28,8 +28,8 @@ it('Should return posts when clicking fetch with graphql button', async () => {
 
   await userEvent.click(screen.getByRole('button', { name: 'Fetch Posts GraphQL' }))
 
-  posts.forEach((post) => {
-    expect(screen.getByRole('heading', { name: post.title, level: 2 })).toBeDefined()
+  for (const post of posts) {
+    expect(await screen.findByRole('heading', { name: post.title, level: 2 })).toBeDefined()
     expect(screen.getByText(post.body)).toBeDefined()
-  })
+  }
 })
