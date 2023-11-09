@@ -79,7 +79,7 @@
     "floating-vue": "^2.0.0-y.0",
     "splitpanes": "^3.1.5",
     "unocss": "^0.53.4",
-    "unplugin-auto-import": "^0.16.4",
+    "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "^0.25.1",
     "vite": "^5.0.0-beta.15",
     "vite-plugin-pages": "^0.31.0",
