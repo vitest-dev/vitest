@@ -42,8 +42,7 @@ runs:
       shell: bash
       if: |
         contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.CYPRESS_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PUPPETEER_VERSION)
+        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
       run: echo "Failed to resolve package versions. See log above." && exit 1
 
     - name: Cache Cypress v${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
