@@ -56,6 +56,6 @@
     "pretty-format": "^29.7.0"
   },
   "devDependencies": {
-    "@jridgewell/trace-mapping": "^0.3.18"
+    "@jridgewell/trace-mapping": "^0.3.20"
   }
 }

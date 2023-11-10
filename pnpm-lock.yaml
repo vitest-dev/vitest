@@ -1206,8 +1206,8 @@ importers:
         version: 29.7.0
     devDependencies:
       '@jridgewell/trace-mapping':
-        specifier: ^0.3.18
-        version: 0.3.18
+        specifier: ^0.3.20
+        version: 0.3.20
 
   packages/vite-node:
     dependencies:
@@ -1228,8 +1228,8 @@ importers:
         version: 5.0.0-beta.17(@types/node@18.18.9)(less@4.1.3)
     devDependencies:
       '@jridgewell/trace-mapping':
-        specifier: ^0.3.18
-        version: 0.3.18
+        specifier: ^0.3.20
+        version: 0.3.20
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -2390,7 +2390,7 @@ packages:
     dependencies:
       '@babel/types': 7.23.0
       '@jridgewell/gen-mapping': 0.3.2
-      '@jridgewell/trace-mapping': 0.3.18
+      '@jridgewell/trace-mapping': 0.3.20
       jsesc: 2.5.2
 
   /@babel/generator@7.23.3:
