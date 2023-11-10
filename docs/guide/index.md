@@ -34,7 +34,7 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 :::
 
 :::tip
-Vitest requires Vite >=v5.0.0 and Node >=v18.00
+Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).

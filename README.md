@@ -47,7 +47,7 @@ Next generation testing framework powered by Vite.
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
 
-> Vitest requires Vite >=v5.0.0 and Node >=v18.00
+> Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
 
 
 ```ts
