@@ -71,7 +71,7 @@
     "sirv": "^2.0.3"
   },
   "devDependencies": {
-    "@types/estree": "^1.0.1",
+    "@types/estree": "^1.0.5",
     "@types/ws": "^8.5.5",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",

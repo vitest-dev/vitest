@@ -24,14 +24,13 @@
     "@vite-pwa/vitepress": "^0.2.3",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.17.0",
-    "fast-glob": "^3.3.1",
-    "fs-extra": "^11.1.1",
+    "fast-glob": "^3.3.2",
     "https-localhost": "^4.7.1",
     "unocss": "^0.53.4",
     "unplugin-vue-components": "^0.25.2",
     "vite": "^5.0.0-beta.15",
-    "vite-plugin-pwa": "^0.16.6",
-    "vitepress": "^1.0.0-rc.24",
+    "vite-plugin-pwa": "^0.16.7",
+    "vitepress": "^1.0.0-rc.25",
     "workbox-window": "^7.0.0"
   }
 }

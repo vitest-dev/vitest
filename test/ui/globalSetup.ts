@@ -1,6 +1,6 @@
 import os from 'node:os'
 import path from 'node:path'
-import fs from 'fs-extra'
+import fs from 'node:fs/promises'
 import type { BrowserServer } from 'playwright-chromium'
 import { chromium } from 'playwright-chromium'
 
@@ -11,7 +11,7 @@ let browserServer: BrowserServer | undefined
 export async function setup(): Promise<void> {
   browserServer = await chromium.launchServer()
 
-  await fs.mkdirp(DIR)
+  await fs.mkdir(DIR)
   await fs.writeFile(path.join(DIR, 'wsEndpoint'), browserServer.wsEndpoint())
 }
 
