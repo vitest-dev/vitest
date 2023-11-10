@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "esnext",
+    "jsx": "preserve",
     "module": "esnext",
     "moduleResolution": "node",
-    "jsx": "preserve",
     "types": ["vitest/globals"]
   }
 }

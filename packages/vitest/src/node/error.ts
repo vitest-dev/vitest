@@ -189,7 +189,8 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
       }
     }
   }
-}\n`)))
+}\n`),
+  ))
 }
 
 function printModuleWarningForSourceCode(logger: Logger, path: string) {

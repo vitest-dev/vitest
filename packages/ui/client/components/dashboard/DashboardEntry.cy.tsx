@@ -25,7 +25,7 @@ describe('DashboardEntry', () => {
   // })
 
   it('renders the body and header slots', () => {
-    cy.mount(<DashboardEntry v-slots={{ body, header }}/>)
+    cy.mount(<DashboardEntry v-slots={{ body, header }} />)
       .get(bodySelector)
       .should('be.visible')
       .get(headerSelector)

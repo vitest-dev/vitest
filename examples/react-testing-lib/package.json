@@ -24,7 +24,7 @@
     "@vitest/coverage-v8": "latest",
     "@vitest/ui": "latest",
     "jsdom": "latest",
-    "typescript": "^4.8.4",
+    "typescript": "^5.2.2",
     "vite": "latest",
     "vitest": "latest"
   },

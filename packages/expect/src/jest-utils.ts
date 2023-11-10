@@ -295,10 +295,7 @@ function hasIterator(object: any) {
   return !!(object != null && object[IteratorSymbol])
 }
 
-export function iterableEquality(a: any,
-  b: any,
-  aStack: Array<any> = [],
-  bStack: Array<any> = []): boolean | undefined {
+export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack: Array<any> = []): boolean | undefined {
   if (
     typeof a !== 'object'
     || typeof b !== 'object'
@@ -324,8 +321,7 @@ export function iterableEquality(a: any,
   aStack.push(a)
   bStack.push(b)
 
-  const iterableEqualityWithStack = (a: any, b: any) =>
-    iterableEquality(a, b, [...aStack], [...bStack])
+  const iterableEqualityWithStack = (a: any, b: any) => iterableEquality(a, b, [...aStack], [...bStack])
 
   if (a.size !== undefined) {
     if (a.size !== b.size) {
@@ -431,8 +427,7 @@ function isObjectWithKeys(a: any) {
   && !(a instanceof Date)
 }
 
-export function subsetEquality(object: unknown,
-  subset: unknown): boolean | undefined {
+export function subsetEquality(object: unknown, subset: unknown): boolean | undefined {
   // subsetEquality needs to keep track of the references
   // it has already visited to avoid infinite loops in case
   // there are circular references in the subset passed to it.
@@ -476,8 +471,7 @@ export function typeEquality(a: any, b: any): boolean | undefined {
   return false
 }
 
-export function arrayBufferEquality(a: unknown,
-  b: unknown): boolean | undefined {
+export function arrayBufferEquality(a: unknown, b: unknown): boolean | undefined {
   let dataViewA = a as DataView
   let dataViewB = b as DataView
 
@@ -507,8 +501,7 @@ export function arrayBufferEquality(a: unknown,
   return true
 }
 
-export function sparseArrayEquality(a: unknown,
-  b: unknown): boolean | undefined {
+export function sparseArrayEquality(a: unknown, b: unknown): boolean | undefined {
   if (!Array.isArray(a) || !Array.isArray(b))
     return undefined
 
@@ -520,9 +513,7 @@ export function sparseArrayEquality(a: unknown,
   )
 }
 
-export function generateToBeMessage(deepEqualityName: string,
-  expected = '#{this}',
-  actual = '#{exp}') {
+export function generateToBeMessage(deepEqualityName: string, expected = '#{this}', actual = '#{exp}') {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))

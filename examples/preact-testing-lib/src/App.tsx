@@ -9,7 +9,10 @@ export default function App() {
       <header>
         <h1>Hello Vite & Preact!</h1>
         <p>
-          <button onClick={inc}>Count is: {count}</button>
+          <button onClick={inc}>
+            Count is:
+            {count}
+          </button>
         </p>
         <p>
           <a

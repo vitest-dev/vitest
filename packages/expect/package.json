@@ -26,8 +26,8 @@
   "module": "./dist/index.js",
   "types": "./index.d.ts",
   "files": [
-    "dist",
-    "*.d.ts"
+    "*.d.ts",
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",

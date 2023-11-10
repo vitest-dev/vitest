@@ -25,13 +25,13 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": {
-        "types": "./index.d.cts",
-        "default": "./index.cjs"
-      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
       }
     },
     "./*": "./*",
@@ -71,8 +71,8 @@
     },
     "./config": {
       "types": "./config.d.ts",
-      "require": "./dist/config.cjs",
-      "import": "./dist/config.js"
+      "import": "./dist/config.js",
+      "require": "./dist/config.cjs"
     },
     "./coverage": {
       "types": "./coverage.d.ts",
@@ -90,12 +90,12 @@
     "vitest": "./vitest.mjs"
   },
   "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
+    "*.cjs",
     "*.d.cts",
+    "*.d.ts",
     "*.mjs",
-    "*.cjs"
+    "bin",
+    "dist"
   ],
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -148,7 +148,7 @@
     "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
-    "std-env": "^3.3.3",
+    "std-env": "^3.4.3",
     "strip-literal": "^1.3.0",
     "tinybench": "^2.5.1",
     "tinypool": "^0.8.1",
