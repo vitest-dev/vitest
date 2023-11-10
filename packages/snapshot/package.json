@@ -45,7 +45,7 @@
   "dependencies": {
     "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
-    "pretty-format": "^29.5.0"
+    "pretty-format": "^29.7.0"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",

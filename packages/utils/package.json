@@ -51,9 +51,9 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "diff-sequences": "^29.4.3",
+    "diff-sequences": "^29.6.3",
     "loupe": "^2.3.7",
-    "pretty-format": "^29.5.0"
+    "pretty-format": "^29.7.0"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.18"
