@@ -675,7 +675,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               const _error = new AssertionError(
                 `promise rejected "${utils.inspect(err)}" instead of resolving`,
                 { showDiff: false },
-              )
+              ) as Error
+              _error.cause = err
               _error.stack = (error.stack as string).replace(error.message, _error.message)
               throw _error
             },
@@ -712,8 +713,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             (value: any) => {
               const _error = new AssertionError(
                 `promise resolved "${utils.inspect(value)}" instead of rejecting`,
-                { showDiff: false },
-              )
+                { showDiff: true, expected: new Error('rejected promise'), actual: value },
+              ) as any
               _error.stack = (error.stack as string).replace(error.message, _error.message)
               throw _error
             },
