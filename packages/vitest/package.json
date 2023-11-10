@@ -171,7 +171,7 @@
     "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",
-    "expect-type": "^0.16.0",
+    "expect-type": "^0.17.3",
     "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.2.9",

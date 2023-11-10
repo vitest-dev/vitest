@@ -42,6 +42,7 @@ Next generation testing framework powered by Vite.
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
 - [Workspace](https://vitest.dev/guide/workspace) support
+- [expect-type](https://github.com/mmkal/expect-type) for type-level testing
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests

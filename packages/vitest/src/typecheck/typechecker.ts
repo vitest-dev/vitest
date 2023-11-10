@@ -187,7 +187,9 @@ export class Typechecker {
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
-        const error = new TypeCheckError(info.errMsg, [
+        // Some expect-type errors have the most useful information on the second line e.g. `This expression is not callable.\n  Type 'ExpectString<number>' has no call signatures.`
+        const errMsg = info.errMsg.replace(/\r?\n\s*(Type .* has no call signatures)/g, ' $1')
+        const error = new TypeCheckError(errMsg, [
           {
             file: filepath,
             line: info.line,
@@ -201,7 +203,7 @@ export class Typechecker {
           error: {
             name: error.name,
             nameStr: String(error.name),
-            message: info.errMsg,
+            message: errMsg,
             stacks: error.stacks,
             stack: '',
             stackStr: '',
