@@ -1,6 +1,5 @@
 import type { Browser, LaunchOptions, Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
-import { ensurePackageInstalled } from 'vitest/node'
 
 type Awaitable<T> = T | PromiseLike<T>
 
@@ -32,11 +31,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.ctx = ctx
     this.browser = browser
     this.options = options as any
-
-    const root = this.ctx.config.root
-
-    if (!await ensurePackageInstalled('playwright', root))
-      throw new Error('Cannot find "playwright" package. Please install it manually.')
   }
 
   private async openBrowserPage() {

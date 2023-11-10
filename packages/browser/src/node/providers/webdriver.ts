@@ -1,6 +1,5 @@
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
-import { ensurePackageInstalled } from 'vitest/node'
-import type { Browser, RemoteOptions } from 'webdriverio'
+import type { RemoteOptions } from 'webdriverio'
 
 type Awaitable<T> = T | PromiseLike<T>
 
@@ -14,7 +13,7 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio'
 
-  private cachedBrowser: Browser | null = null
+  private cachedBrowser: WebdriverIO.Browser | null = null
   private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
   private ctx!: WorkspaceProject
@@ -29,14 +28,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.ctx = ctx
     this.browser = browser
     this.options = options as RemoteOptions
-
-    const root = this.ctx.config.root
-
-    if (!await ensurePackageInstalled('webdriverio', root))
-      throw new Error('Cannot find "webdriverio" package. Please install it manually.')
-
-    if (browser === 'safari' && !await ensurePackageInstalled('safaridriver', root))
-      throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
   async openBrowser() {
