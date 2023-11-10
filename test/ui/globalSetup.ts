@@ -12,7 +12,7 @@ export async function setup(): Promise<void> {
   browserServer = await chromium.launchServer()
 
   if (!existsSync(DIR))
-    await fsp.mkdir(DIR)
+    await fsp.mkdir(DIR, { recursive: true })
   await fsp.writeFile(path.join(DIR, 'wsEndpoint'), browserServer.wsEndpoint())
 }
 

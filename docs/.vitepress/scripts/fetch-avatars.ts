@@ -23,7 +23,7 @@ async function download(url: string, fileName: string) {
 
 async function fetchAvatars() {
   if (!existsSync(dirAvatars))
-    await fsp.mkdir(dirAvatars)
+    await fsp.mkdir(dirAvatars, { recursive: true })
   contributors = JSON.parse(await fsp.readFile(pathContributors, { encoding: 'utf-8' }))
 
   await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size=100`, join(dirAvatars, `${name}.png`))))
@@ -31,7 +31,7 @@ async function fetchAvatars() {
 
 async function fetchSponsors() {
   if (!existsSync(dirSponsors))
-    await fsp.mkdir(dirSponsors)
+    await fsp.mkdir(dirSponsors, { recursive: true })
   await Promise.all([
     download('https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg', join(dirSponsors, 'antfu.svg')),
     download('https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg', join(dirSponsors, 'patak-dev.svg')),
