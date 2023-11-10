@@ -49,7 +49,8 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return seen.get(val)
 
   if (Array.isArray(val)) {
-    const clone: any[] = Array.from({ length: val.length })
+    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparce arrays ([1,,3])
+    const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
       try {
