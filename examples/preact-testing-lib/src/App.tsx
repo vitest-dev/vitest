@@ -5,7 +5,7 @@ export default function App() {
   const { count, inc } = useCount()
 
   return (
-    <div class="app">
+    <div className="app">
       <header>
         <h1>Hello Vite & Preact!</h1>
         <p>
