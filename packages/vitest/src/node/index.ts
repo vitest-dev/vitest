@@ -10,5 +10,4 @@ export type { GlobalSetupContext } from './globalSetup'
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'
 
-export { ensurePackageInstalled } from './pkg'
 export type { BrowserProviderInitializationOptions, BrowserProvider, BrowserProviderOptions } from '../types/browser'

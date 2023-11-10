@@ -9,11 +9,11 @@
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
     "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
-    "prefetch": "esno .vitepress/scripts/fetch-avatars.ts",
+    "prefetch": "tsx .vitepress/scripts/fetch-avatars.ts",
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "^10.5.0",
+    "@vueuse/core": "^10.6.0",
     "vue": "latest"
   },
   "devDependencies": {
@@ -23,7 +23,6 @@
     "@vite-pwa/assets-generator": "^0.0.10",
     "@vite-pwa/vitepress": "^0.2.3",
     "@vitejs/plugin-vue": "latest",
-    "esno": "^0.17.0",
     "fast-glob": "^3.3.2",
     "https-localhost": "^4.7.1",
     "unocss": "^0.53.4",

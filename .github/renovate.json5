@@ -29,6 +29,8 @@
     "vite",
     // we patch these packages
     "@types/chai",
-    "@sinonjs/fake-timers"
+    "@sinonjs/fake-timers",
+    // TODO: update when chai is updated to 5.0
+    "loupe"
   ]
 }
