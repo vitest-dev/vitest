@@ -91,6 +91,6 @@
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.18",
-    "@types/debug": "^4.1.8"
+    "@types/debug": "^4.1.12"
   }
 }

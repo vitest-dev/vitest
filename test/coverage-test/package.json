@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
-    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@types/istanbul-lib-coverage": "^2.0.6",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",

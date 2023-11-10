@@ -26,6 +26,9 @@
     "@testing-library/user-event",
     "node",
     // user can install any version
-    "vite"
+    "vite",
+    // we patch these packages
+    "@types/chai",
+    "@sinonjs/fake-timers"
   ]
 }

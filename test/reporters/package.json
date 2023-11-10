@@ -6,7 +6,7 @@
     "test": "NO_COLOR=1 vitest run"
   },
   "devDependencies": {
-    "flatted": "^3.2.7",
+    "flatted": "^3.2.9",
     "pkg-reporter": "./reportPkg/",
     "strip-ansi": "^7.0.1",
     "vitest": "workspace:*",

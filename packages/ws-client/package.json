@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "birpc": "0.2.14",
-    "flatted": "^3.2.7",
+    "flatted": "^3.2.9",
     "ws": "^8.13.0"
   },
   "devDependencies": {
