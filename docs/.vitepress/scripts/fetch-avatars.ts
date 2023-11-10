@@ -22,14 +22,16 @@ async function download(url: string, fileName: string) {
 }
 
 async function fetchAvatars() {
-  await fsp.mkdir(dirAvatars)
+  if (!existsSync(dirAvatars))
+    await fsp.mkdir(dirAvatars)
   contributors = JSON.parse(await fsp.readFile(pathContributors, { encoding: 'utf-8' }))
 
   await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size=100`, join(dirAvatars, `${name}.png`))))
 }
 
 async function fetchSponsors() {
-  await fsp.mkdir(dirSponsors)
+  if (!existsSync(dirSponsors))
+    await fsp.mkdir(dirSponsors)
   await Promise.all([
     download('https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg', join(dirSponsors, 'antfu.svg')),
     download('https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg', join(dirSponsors, 'patak-dev.svg')),
