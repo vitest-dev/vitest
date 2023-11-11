@@ -31,6 +31,18 @@ const testCases = [
       include: ['coverage-report-tests/allow-external.test.ts'],
     },
   },
+  {
+    testConfig: {
+      name: 'thresholds.100',
+      include: ['option-tests/threshold-100.test.ts'],
+      coverage: {
+        thresholds: {
+          100: true,
+        },
+      },
+    },
+    assertionConfig: null,
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
@@ -51,6 +63,9 @@ for (const provider of ['v8', 'istanbul']) {
     })
 
     checkExit()
+
+    if (!assertionConfig)
+      continue
 
     // Check generated coverage report
     await startVitest('test', ['coverage-report-tests'], {

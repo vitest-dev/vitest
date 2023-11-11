@@ -30,7 +30,20 @@ test('provider options, generic', () => {
       functions: [80, 95],
       lines: [80, 95],
     },
-    100: true,
+    thresholds: {
+      '100': true,
+      'lines': 1,
+      'autoUpdate': true,
+      'perFile': true,
+      'statements': 100,
+
+      '**/some-file.ts': {
+        lines: 12,
+        branches: 12,
+        functions: 12,
+        statements: 12,
+      },
+    },
   })
 
   assertType<Coverage>({
@@ -40,7 +53,16 @@ test('provider options, generic', () => {
     watermarks: {
       statements: [80, 95],
     },
-    100: true,
+    thresholds: {
+      '100': true,
+
+      '**/some-file.ts': {
+        lines: 12,
+        branches: 12,
+        functions: 12,
+        statements: 12,
+      },
+    },
   })
 })
 

@@ -1,9 +1,10 @@
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, promises as fs, writeFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
+import { parseModule } from 'magicast'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage'
@@ -65,10 +66,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       provider: 'istanbul',
       reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
       reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
-      lines: config['100'] ? 100 : config.lines,
-      functions: config['100'] ? 100 : config.functions,
-      branches: config['100'] ? 100 : config.branches,
-      statements: config['100'] ? 100 : config.statements,
+
+      thresholds: config.thresholds && {
+        ...config.thresholds,
+        lines: config.thresholds['100'] ? 100 : config.thresholds.lines,
+        branches: config.thresholds['100'] ? 100 : config.thresholds.branches,
+        functions: config.thresholds['100'] ? 100 : config.thresholds.functions,
+        statements: config.thresholds['100'] ? 100 : config.thresholds.statements,
+      },
     }
 
     this.instrumenter = createInstrumenter({
@@ -170,34 +175,36 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       }).execute(context)
     }
 
-    if (this.options.branches
-      || this.options.functions
-      || this.options.lines
-      || this.options.statements) {
-      this.checkThresholds({
+    if (this.options.thresholds) {
+      const resolvedThresholds = this.resolveThresholds({
         coverageMap,
-        thresholds: {
-          branches: this.options.branches,
-          functions: this.options.functions,
-          lines: this.options.lines,
-          statements: this.options.statements,
-        },
-        perFile: this.options.perFile,
+        thresholds: this.options.thresholds,
+        createCoverageMap: () => libCoverage.createCoverageMap({}),
       })
-    }
 
-    if (this.options.thresholdAutoUpdate && allTestsRun) {
-      this.updateThresholds({
-        coverageMap,
-        thresholds: {
-          branches: this.options.branches,
-          functions: this.options.functions,
-          lines: this.options.lines,
-          statements: this.options.statements,
-        },
-        perFile: this.options.perFile,
-        configurationFile: this.ctx.server.config.configFile,
+      this.checkThresholds({
+        thresholds: resolvedThresholds,
+        perFile: this.options.thresholds.perFile,
       })
+
+      if (this.options.thresholds.autoUpdate && allTestsRun) {
+        if (!this.ctx.server.config.configFile)
+          throw new Error('Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.')
+
+        const configFilePath = this.ctx.server.config.configFile
+        const configModule = parseModule(await fs.readFile(configFilePath, 'utf8'))
+
+        this.updateThresholds({
+          thresholds: resolvedThresholds,
+          perFile: this.options.thresholds.perFile,
+          configurationFile: {
+            write: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
+            read: () => configModule.exports.default.$type === 'function-call'
+              ? configModule.exports.default.$args[0]
+              : configModule.exports.default,
+          },
+        })
+      }
     }
   }
 

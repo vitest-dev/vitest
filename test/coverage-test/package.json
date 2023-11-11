@@ -21,6 +21,7 @@
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
     "istanbul-lib-coverage": "^3.2.0",
+    "magicast": "^0.3.2",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "latest",
