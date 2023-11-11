@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 
 export async function runDynamicFileESM() {
-  const filename = fileURLToPath(new URL('./dynamic-file-esm.ignore.mjs', import.meta.url))
+  const filename = fileURLToPath(new URL('./dynamic-file-esm.ignore.js', import.meta.url))
 
   if (existsSync(filename))
     rmSync(filename)
@@ -25,7 +25,7 @@ function uncovered() {}
 }
 
 export async function runDynamicFileCJS() {
-  const filename = fileURLToPath(new URL('./dynamic-file-cjs.ignore.js', import.meta.url))
+  const filename = fileURLToPath(new URL('./dynamic-file-cjs.ignore.cjs', import.meta.url))
 
   if (existsSync(filename))
     rmSync(filename)

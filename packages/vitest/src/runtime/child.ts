@@ -14,7 +14,7 @@ import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
 async function init(ctx: ChildContext) {
-  const { config, workerId } = ctx
+  const { config, workerId, providedContext } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -72,6 +72,7 @@ async function init(ctx: ChildContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
     isChildProcess: true,
   }
 

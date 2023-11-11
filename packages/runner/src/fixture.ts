@@ -118,7 +118,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           return isFn ? value(context, use) : use(value)
       }
 
-      const setupFixturePromise = next()
+      const setupFixturePromise = next().catch(reject)
       cleanupFnArray.unshift(() => setupFixturePromise)
     })
   }

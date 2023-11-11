@@ -353,15 +353,6 @@ function createVitest(): VitestUtils {
 
   const workerState = getWorkerState()
 
-  if (!workerState) {
-    const errorMsg = 'Vitest failed to access its internal state.'
-      + '\n\nOne of the following is possible:'
-      + '\n- "vitest" is imported directly without running "vitest" command'
-      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
-    throw new Error(errorMsg)
-  }
-
   const _timers = new FakeTimers({
     global: globalThis,
     config: workerState.config.fakeTimers,
@@ -379,8 +370,6 @@ function createVitest(): VitestUtils {
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      const workerState = getWorkerState()
-
       if (workerState.isChildProcess) {
         if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
           throw new Error(
@@ -587,8 +576,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      const state = getWorkerState()
-      resetModules(state.moduleCache)
+      resetModules(workerState.moduleCache)
       return utils
     },
 
@@ -597,17 +585,14 @@ function createVitest(): VitestUtils {
     },
 
     setConfig(config: RuntimeConfig) {
-      const state = getWorkerState()
       if (!_config)
-        _config = { ...state.config }
-      Object.assign(state.config, config)
+        _config = { ...workerState.config }
+      Object.assign(workerState.config, config)
     },
 
     resetConfig() {
-      if (_config) {
-        const state = getWorkerState()
-        Object.assign(state.config, _config)
-      }
+      if (_config)
+        Object.assign(workerState.config, _config)
     },
   }
 

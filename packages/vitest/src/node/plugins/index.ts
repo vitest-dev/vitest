@@ -145,13 +145,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           process.env[name] ??= envs[name]
 
         // don't watch files in run mode
-        if (!options.watch) {
-          viteConfig.server.watch = {
-            persistent: false,
-            depth: 0,
-            ignored: ['**/*'],
-          }
-        }
+        if (!options.watch)
+          viteConfig.server.watch = null
 
         hijackVitePluginInject(viteConfig)
       },

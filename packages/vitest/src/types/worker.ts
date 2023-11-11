@@ -33,6 +33,7 @@ export interface WorkerGlobalState {
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  providedContext: Record<string, any>
   durations: {
     environment: number
     prepare: number

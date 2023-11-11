@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -71,17 +71,17 @@
     "sirv": "^2.0.3"
   },
   "devDependencies": {
-    "@types/estree": "^1.0.1",
-    "@types/ws": "^8.5.5",
+    "@types/estree": "^1.0.5",
+    "@types/ws": "^8.5.9",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^8.18.0",
-    "periscopic": "^3.1.0",
+    "periscopic": "^4.0.2",
     "playwright": "^1.39.0",
     "playwright-core": "^1.39.0",
     "safaridriver": "^0.1.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.20.0"
+    "webdriverio": "^8.21.1"
   }
 }

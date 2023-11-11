@@ -957,7 +957,30 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Also, since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed, for example (the test file will wait for global setup to finish before running).
+Since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
+
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Hovewer, since 1.0.0 you can pass down serializable data to tests via `provide` method:
+
+```ts
+// globalSetup.js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+// example.test.js
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
+```
+
+If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
+
+```ts
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
 :::
 
 
@@ -1043,6 +1066,7 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
   '**/virtual:*',
@@ -1424,15 +1448,14 @@ To have a better type safety when using built-in providers, you can add one of t
 #### browser.slowHijackESM
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false`
 - **Version:** Since Vitest 0.31.0
 
 When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
 
 This option has no effect on tests running inside Node.js.
 
-This options is enabled by default when running in the browser. If you don't rely on spying on ES modules with `vi.spyOn` and don't use `vi.mock`, you can disable this to get a slight boost to performance.
-
+If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
 
 ### clearMocks
 

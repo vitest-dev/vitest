@@ -51,4 +51,5 @@ export interface ContextRPC {
   files: string[]
   invalidates?: string[]
   environment: ContextTestEnvironment
+  providedContext: Record<string, any>
 }

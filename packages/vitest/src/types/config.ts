@@ -633,6 +633,11 @@ export interface InlineConfig {
    * @default 0
   */
   retry?: number
+
+  /**
+   * Show full diff when snapshot fails instead of a patch.
+   */
+  expandSnapshotDiff?: boolean
 }
 
 export interface TypecheckConfig {

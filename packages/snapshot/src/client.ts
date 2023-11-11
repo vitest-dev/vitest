@@ -3,7 +3,7 @@ import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 
-function createMismatchError(message: string, actual: unknown, expected: unknown) {
+function createMismatchError(message: string, expand: boolean | undefined, actual: unknown, expected: unknown) {
   const error = new Error(message)
   Object.defineProperty(error, 'actual', {
     value: actual,
@@ -17,6 +17,7 @@ function createMismatchError(message: string, actual: unknown, expected: unknown
     configurable: true,
     writable: true,
   })
+  Object.defineProperty(error, 'diffOptions', { value: { expand } })
   return error
 }
 
@@ -109,7 +110,7 @@ export class SnapshotClient {
         const pass = this.options.isEqual?.(received, properties) ?? false
         // const pass = equals(received, properties, [iterableEquality, subsetEquality])
         if (!pass)
-          throw createMismatchError('Snapshot properties mismatched', received, properties)
+          throw createMismatchError('Snapshot properties mismatched', this.snapshotState?.expand, received, properties)
         else
           received = deepMergeSnapshot(received, properties)
       }
@@ -136,7 +137,7 @@ export class SnapshotClient {
     })
 
     if (!pass)
-      throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, actual?.trim(), expected?.trim())
+      throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {

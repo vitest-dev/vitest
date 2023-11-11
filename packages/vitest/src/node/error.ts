@@ -126,6 +126,7 @@ const skipErrorProperties = new Set([
   'diff',
   'actual',
   'expected',
+  'diffOptions',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',

@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-react-storybook",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -16,7 +17,7 @@
     "react-query": "^3.39.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.2",
+    "@babel/core": "^7.23.3",
     "@storybook/addon-actions": "^6.5.5",
     "@storybook/addon-essentials": "^6.5.5",
     "@storybook/addon-links": "^6.5.5",
@@ -31,7 +32,7 @@
     "@testing-library/react": "^12.1.5",
     "@types/react": "^17.0.45",
     "@types/react-dom": "^17.0.17",
-    "@vitejs/plugin-react": "^4.0.1",
+    "@vitejs/plugin-react": "^4.1.0",
     "@vitest/ui": "latest",
     "babel-loader": "^8.2.5",
     "jsdom": "latest",

@@ -814,6 +814,8 @@ describe('async expect', () => {
     }
     catch (err: any) {
       expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+      expect(err.cause).toBeDefined()
+      expect(err.cause.message).toMatchInlineSnapshot(`"some error"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
   })

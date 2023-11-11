@@ -62,7 +62,7 @@ export default withPwa(defineConfig({
     logo: '/logo.svg',
 
     editLink: {
-      pattern: 'https://github.com/vitest-dev/vitest/tree/main/docs/:path',
+      pattern: 'https://github.com/vitest-dev/vitest/edit/main/docs/:path',
       text: 'Suggest changes to this page',
     },
 

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-v8",
   "type": "module",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "V8 coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -47,21 +47,21 @@
   "dependencies": {
     "@ampproject/remapping": "^2.2.1",
     "@bcoe/v8-coverage": "^0.2.3",
-    "istanbul-lib-coverage": "^3.2.0",
+    "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^4.0.1",
-    "istanbul-reports": "^3.1.5",
+    "istanbul-reports": "^3.1.6",
     "magic-string": "^0.30.5",
     "picocolors": "^1.0.0",
-    "std-env": "^3.3.3",
+    "std-env": "^3.4.3",
     "test-exclude": "^6.0.0",
-    "v8-to-istanbul": "^9.1.0"
+    "v8-to-istanbul": "^9.1.3"
   },
   "devDependencies": {
-    "@types/istanbul-lib-coverage": "^2.0.4",
-    "@types/istanbul-lib-report": "^3.0.0",
-    "@types/istanbul-lib-source-maps": "^4.0.1",
-    "@types/istanbul-reports": "^3.0.1",
+    "@types/istanbul-lib-coverage": "^2.0.6",
+    "@types/istanbul-lib-report": "^3.0.3",
+    "@types/istanbul-lib-source-maps": "^4.0.4",
+    "@types/istanbul-reports": "^3.0.4",
     "pathe": "^1.1.1",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"

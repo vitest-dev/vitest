@@ -17,7 +17,7 @@ async function init(ctx: WorkerContext) {
   if (isInitialized && isIsolatedThreads)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  const { config, port, workerId } = ctx
+  const { config, port, workerId, providedContext } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -58,6 +58,7 @@ async function init(ctx: WorkerContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
   }
 
   Object.defineProperty(globalThis, '__vitest_worker__', {
