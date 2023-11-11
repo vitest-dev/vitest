@@ -20,7 +20,7 @@
     "@types/react": "latest",
     "@vitejs/plugin-react": "latest",
     "jsdom": "latest",
-    "typescript": "^4.8.4",
+    "typescript": "^5.2.2",
     "vitest": "latest"
   }
 }

@@ -791,7 +791,8 @@ test('Server started successfully', async () => {
         throw new Error('Server not started')
 
       console.log('Server started')
-    }, {
+    },
+    {
       timeout: 500, // default is 1000
       interval: 20, // default is 50
     }

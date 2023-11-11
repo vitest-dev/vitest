@@ -143,15 +143,13 @@ export class ViteNodeServer {
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
-      promiseMap.set(moduleId,
-        this._fetchModule(moduleId, mode)
-          .then((r) => {
-            return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-          })
-          .finally(() => {
-            promiseMap.delete(moduleId)
-          }),
-      )
+      promiseMap.set(moduleId, this._fetchModule(moduleId, mode)
+        .then((r) => {
+          return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+        })
+        .finally(() => {
+          promiseMap.delete(moduleId)
+        }))
     }
     return promiseMap.get(moduleId)!
   }
@@ -162,12 +160,10 @@ export class ViteNodeServer {
     const promiseMap = this.transformPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(id)) {
-      promiseMap.set(id,
-        this._transformRequest(id, filepath, mode)
-          .finally(() => {
-            promiseMap.delete(id)
-          }),
-      )
+      promiseMap.set(id, this._transformRequest(id, filepath, mode)
+        .finally(() => {
+          promiseMap.delete(id)
+        }))
     }
     return promiseMap.get(id)!
   }

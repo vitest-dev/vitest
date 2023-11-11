@@ -15,6 +15,6 @@ it('vitest resolves url to installed url package, but node:url to internal Node 
   expect(nodeUrl).toHaveProperty('URLSearchParams')
   expect(nodeUrl).toHaveProperty('fileURLToPath')
 
-  // eslint-disable-next-line n/no-deprecated-api
+  // eslint-disable-next-line node/no-deprecated-api
   expect(packageUrl.parse !== nodeUrl.parse).toBe(true)
 })

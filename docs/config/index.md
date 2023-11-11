@@ -966,6 +966,9 @@ Beware that the global setup is running in a different global scope, so your tes
 export default function setup({ provide }) {
   provide('wsPort', 3000)
 }
+```
+
+```ts
 // example.test.js
 import { inject } from 'vitest'
 

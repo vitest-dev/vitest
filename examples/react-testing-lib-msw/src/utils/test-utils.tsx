@@ -1,4 +1,3 @@
-/* eslint-disable import/export */
 import { render } from '@testing-library/react'
 
 function customRender(ui: React.ReactElement, options = {}) {

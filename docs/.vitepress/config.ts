@@ -11,7 +11,8 @@ import {
   ogUrl,
   releases,
   twitter,
-  vitestDescription, vitestName,
+  vitestDescription,
+  vitestName,
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'

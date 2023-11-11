@@ -104,15 +104,15 @@ export interface BaseCoverageOptions {
   include?: string[]
 
   /**
-    * Extensions for files to be included in coverage
-    *
-    * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
-    */
+   * Extensions for files to be included in coverage
+   *
+   * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
+   */
   extension?: string | string[]
 
   /**
-    * List of files excluded from coverage as glob patterns
-    */
+   * List of files excluded from coverage as glob patterns
+   */
   exclude?: string[]
 
   /**

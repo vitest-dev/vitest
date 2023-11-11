@@ -31,6 +31,8 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     // TODO: update when chai is updated to 5.0
-    "loupe"
+    "loupe",
+    // we update types for node when we bump the minimal version
+    "@types/node"
   ]
 }
