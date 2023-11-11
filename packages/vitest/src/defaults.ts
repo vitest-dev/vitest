@@ -84,7 +84,7 @@ const config = {
   api: false,
   ui: false,
   uiBase: '/__vitest__/',
-  open: true,
+  open: !isCI,
   css: {
     include: [],
   },
