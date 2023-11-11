@@ -199,7 +199,7 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.sequence, this.shuffle, this.each, options)
+    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.sequential, this.shuffle, this.each, options)
   }
 
   suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {

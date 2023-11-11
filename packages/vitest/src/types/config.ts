@@ -813,6 +813,11 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
-> & { sequence?: { hooks?: SequenceHooks } }
+> & {
+  sequence?: {
+    concurrent?: boolean
+    hooks?: SequenceHooks
+  }
+}
 
 export type { UserWorkspaceConfig } from '../config'
