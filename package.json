@@ -58,7 +58,7 @@
     "npm-run-all": "^4.1.5",
     "pathe": "^1.1.1",
     "rimraf": "^5.0.5",
-    "rollup": "^4.3.0",
+    "rollup": "^4.4.0",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-esbuild": "^6.1.0",
     "rollup-plugin-license": "^3.2.0",
