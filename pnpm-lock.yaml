@@ -891,8 +891,8 @@ importers:
         specifier: workspace:*
         version: link:../ws-client
       '@wdio/protocols':
-        specifier: ^8.18.0
-        version: 8.18.0
+        specifier: ^8.22.0
+        version: 8.22.0
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2
@@ -909,7 +909,7 @@ importers:
         specifier: workspace:*
         version: link:../vitest
       webdriverio:
-        specifier: ^8.21.1
+        specifier: ^8.22.1
         version: 8.22.1(typescript@5.2.2)
 
   packages/coverage-istanbul:
@@ -10945,10 +10945,6 @@ packages:
     resolution: {integrity: sha512-u9I57hIqmcOgrDH327ZCc2GTXv2YFN5bg6UaA3OUoJU7eJgGYHFB6RrjiNjLXer68iIx07wwVM70V/1xzijd3Q==}
     dev: true
 
-  /@wdio/protocols@8.18.0:
-    resolution: {integrity: sha512-TABA0mksHvu5tE8qNYYDR0fDyo90NCANeghbGAtsI8TUsJzgH0dwpos3WSSiB97J9HRSZuWIMa7YuABEkBIjWQ==}
-    dev: true
-
   /@wdio/protocols@8.22.0:
     resolution: {integrity: sha512-2y5lTYAAzQWvExL1FGCe6gujVpOpTxk+czT0Qx0j0iUlfdOwp9gWVLYl8ochTJHzfeM45GHvuZ/ndT52grsTtg==}
     dev: true
@@ -11450,12 +11446,12 @@ packages:
       acorn: 8.10.0
     dev: true
 
-  /acorn-import-assertions@1.9.0(acorn@8.10.0):
+  /acorn-import-assertions@1.9.0(acorn@8.11.2):
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
     peerDependencies:
       acorn: ^8
     dependencies:
-      acorn: 8.10.0
+      acorn: 8.11.2
     dev: true
 
   /acorn-jsx@5.3.2(acorn@7.4.1):
@@ -19272,7 +19268,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.10.0
+      acorn: 8.11.2
       acorn-globals: 6.0.0
       cssom: 0.4.4
       cssstyle: 2.3.0
@@ -25061,7 +25057,7 @@ packages:
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.10.0
+      acorn: 8.11.2
       commander: 2.20.3
       source-map-support: 0.5.21
     dev: true
@@ -27021,8 +27017,8 @@ packages:
       '@webassemblyjs/ast': 1.11.6
       '@webassemblyjs/wasm-edit': 1.11.6
       '@webassemblyjs/wasm-parser': 1.11.6
-      acorn: 8.10.0
-      acorn-import-assertions: 1.9.0(acorn@8.10.0)
+      acorn: 8.11.2
+      acorn-import-assertions: 1.9.0(acorn@8.11.2)
       browserslist: 4.22.1
       chrome-trace-event: 1.0.3
       enhanced-resolve: 5.15.0
