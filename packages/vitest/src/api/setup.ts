@@ -40,6 +40,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
+        async onUnhandledError(error, type) {
+          ctx.state.catchError(error, type)
+        },
         async onDone(testId) {
           return ctx.state.browserTestPromises.get(testId)?.resolve(true)
         },
@@ -128,6 +131,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
+        // browser should have a separate RPC in the future, UI doesn't care for provided context
+        getProvidedContext() {
+          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
+        },
       },
       {
         post: msg => ws.send(msg),
@@ -176,9 +183,6 @@ class WebSocketReporter implements Reporter {
         getSourceMap: file => project.getBrowserSourceMapModuleById(file),
       }
 
-      // TODO remove after "error" deprecation is removed
-      if (result?.error && !isPrimitive(result.error))
-        result.error.stacks = parseErrorStacktrace(result.error, parserOptions)
       result?.errors?.forEach((error) => {
         if (!isPrimitive(error))
           error.stacks = parseErrorStacktrace(error, parserOptions)

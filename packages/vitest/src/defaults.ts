@@ -13,6 +13,7 @@ export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outpu
 const defaultCoverageExcludes = [
   'coverage/**',
   'dist/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
   '**/virtual:*',
@@ -32,13 +33,14 @@ const defaultCoverageExcludes = [
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'v8',
   enabled: false,
+  all: true,
   clean: true,
   cleanOnRerun: true,
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
 }
 
@@ -61,7 +63,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  pool: 'threads',
+  pool: 'threads' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -82,7 +84,7 @@ const config = {
   api: false,
   ui: false,
   uiBase: '/__vitest__/',
-  open: true,
+  open: !isCI,
   css: {
     include: [],
   },

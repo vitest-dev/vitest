@@ -1,4 +1,4 @@
-export type Pool = 'browser' | 'threads' | 'forks' | 'vmThreads' // | 'vmForks'
+export type Pool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'typescript' // | 'vmForks'
 
 export interface PoolOptions {
   /**
@@ -81,15 +81,41 @@ interface WorkerContextOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.
+   *
+   * See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+   *
+   * Set to `process.execArgv` to pass all arguments of the current process.
+   *
+   * Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103
+   *
+   * @default [] // no execution arguments are passed
+   */
+  execArgv?: string[]
 }
 
 interface VmOptions {
   /**
-   * Specifies the memory limit for `worker_thread` or `child_processe` before they are recycled.
+   * Specifies the memory limit for `worker_thread` or `child_process` before they are recycled.
    * If you see memory leaks, try to tinker this value.
    */
   memoryLimit?: string | number
 
   /** Isolation is always enabled */
   isolate?: true
+
+  /**
+   * Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.
+   *
+   * See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+   *
+   * Set to `process.execArgv` to pass all arguments of the current process.
+   *
+   * Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103
+   *
+   * @default [] // no execution arguments are passed
+   */
+  execArgv?: string[]
 }

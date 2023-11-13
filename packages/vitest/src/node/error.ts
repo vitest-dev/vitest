@@ -49,6 +49,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
     getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    frameFilter: project.config.onStackTrace,
   }
 
   if (fullStack)
@@ -125,6 +126,7 @@ const skipErrorProperties = new Set([
   'diff',
   'actual',
   'expected',
+  'diffOptions',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',
@@ -187,7 +189,8 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
       }
     }
   }
-}\n`)))
+}\n`),
+  ))
 }
 
 function printModuleWarningForSourceCode(logger: Logger, path: string) {

@@ -66,6 +66,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       '--experimental-vm-modules',
       '--require',
       suppressWarningsPath,
+      ...ctx.config.poolOptions?.vmThreads?.execArgv ?? [],
       ...execArgv,
     ],
 
@@ -95,6 +96,8 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })

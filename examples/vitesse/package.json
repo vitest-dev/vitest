@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-vitesse",
+  "type": "module",
   "private": true,
   "scripts": {
     "coverage": "vitest run --coverage",
@@ -12,7 +13,7 @@
     "@vitejs/plugin-vue": "latest",
     "@vue/test-utils": "^2.0.2",
     "jsdom": "latest",
-    "unplugin-auto-import": "latest",
+    "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "latest",
     "vite": "latest",
     "vitest": "latest"

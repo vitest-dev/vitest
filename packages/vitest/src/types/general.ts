@@ -48,3 +48,5 @@ export interface ModuleGraphData {
 }
 
 export type OnServerRestartHandler = (reason?: string) => Promise<void> | void
+
+export interface ProvidedContext {}

@@ -10,7 +10,7 @@ export function SsrReplacerPlugin(): Plugin {
     name: 'vitest:ssr-replacer',
     enforce: 'pre',
     transform(code, id) {
-      if (!/\bimport\.meta\.env\b/.test(code) && !/\bimport\.meta\.url\b/.test(code))
+      if (!/\bimport\.meta\.env\b/.test(code))
         return null
 
       let s: MagicString | null = null
@@ -30,7 +30,7 @@ export function SsrReplacerPlugin(): Plugin {
         return {
           code: s.toString(),
           map: s.generateMap({
-            hires: true,
+            hires: 'boundary',
 
             // Remove possible query parameters, e.g. vue's "?vue&type=script&src=true&lang.ts"
             source: cleanUrl(id),

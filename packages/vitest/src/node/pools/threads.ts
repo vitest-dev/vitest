@@ -56,7 +56,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
     minThreads,
 
     env,
-    execArgv,
+    execArgv: [
+      ...ctx.config.poolOptions?.threads?.execArgv ?? [],
+      ...execArgv,
+    ],
 
     terminateTimeout: ctx.config.teardownTimeout,
   }
@@ -88,6 +91,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })

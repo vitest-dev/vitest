@@ -1,9 +1,9 @@
-import { Parser } from 'acorn'
-import { hoistMocks } from 'vitest/src/node/hoistMocks'
+import { parseAst } from 'rollup/parseAst'
 import { expect, test } from 'vitest'
+import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
-  return Parser.parse(code, options)
+  return parseAst(code, options)
 }
 
 function hoistSimpleCode(code: string) {

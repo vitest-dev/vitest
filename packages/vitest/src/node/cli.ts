@@ -25,7 +25,7 @@ cli
   .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--reporter <name>', 'Specify reporters')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
-  .option('--coverage', 'Enable coverage report')
+  .option('--coverage', 'Enable coverage report', { default: { 100: false } })
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
@@ -51,6 +51,10 @@ cli
   .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
   .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
+  .option('--expand-snapshot-diff', 'Show full diff when snapshot fails')
+  .option('--typecheck [options]', 'Custom options for typecheck pool')
+  .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
+  .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
   .help()
 
 cli
@@ -73,9 +77,12 @@ cli
   .command('bench [...filters]')
   .action(benchmark)
 
+// TODO: remove in Vitest 2.0
 cli
   .command('typecheck [...filters]')
-  .action(typecheck)
+  .action(() => {
+    throw new Error(`Running typecheck via "typecheck" command is removed. Please use "--typecheck" to run your regular tests alongside typechecking, or "--typecheck.only" to run only typecheck tests.`)
+  })
 
 cli
   .command('[...filters]')
@@ -128,11 +135,6 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
-}
-
-async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
-  console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
-  await start('typecheck', cliFilters, options)
 }
 
 function normalizeCliOptions(argv: CliOptions): CliOptions {

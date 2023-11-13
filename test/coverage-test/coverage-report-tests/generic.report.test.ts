@@ -35,6 +35,11 @@ test('all includes untested files', () => {
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('untested-file.ts.html')
+
+  // Directories starting with dot should be excluded
+  expect(files).not.toContain('.should-be-excluded-from-coverage/excluded-from-coverage.ts.html')
+  expect(files).not.toContain('.should-be-excluded-from-coverage')
+  expect(files).not.toContain('excluded-from-coverage.ts.html')
 })
 
 test('files should not contain query parameters', () => {
@@ -75,12 +80,14 @@ test('thresholdAutoUpdate updates thresholds', async () => {
     const match = configContents.match(new RegExp(`${threshold}: (?<coverage>[\\d|\\.]+)`))
     const coverage = match?.groups?.coverage || '0'
 
-    // Configuration has fixed value of 1.01 set for each threshold
+    // Configuration has fixed value of 1.01 and 0 set for each threshold
     expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
   }
 
   // Update thresholds back to fixed values
-  const updatedConfig = configContents.replace(/(branches|functions|lines|statements): ([\d|\.])+/g, '$1: 1.01')
+  const updatedConfig = configContents
+    .replace(/(branches|statements): ([\d|\.])+/g, '$1: 1.01')
+    .replace(/(functions|lines): ([\d|\.])+/g, '$1: 0')
   fs.writeFileSync(configFilename, updatedConfig)
 })
 
@@ -116,4 +123,26 @@ test('virtual files should be excluded', () => {
     // Vitest browser
     expect(file).not.toContain('\x00')
   }
+})
+
+test('multi environment coverage is merged correctly', async () => {
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/multi-environment.ts')
+  const lineCoverage = fileCoverage.getLineCoverage()
+
+  // Condition not covered by any test
+  expect(lineCoverage[13]).toBe(0)
+
+  // Condition covered by SSR test but not by Web
+  expect(lineCoverage[18]).toBe(1)
+
+  // Condition not covered by any test
+  expect(lineCoverage[22]).toBe(0)
+
+  // Condition covered by Web test but not by SSR
+  expect(lineCoverage[26]).toBe(1)
+
+  // Condition covered by both tests
+  expect(lineCoverage[30]).toBe(2)
 })

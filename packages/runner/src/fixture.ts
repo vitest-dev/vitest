@@ -37,25 +37,20 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
       if (usedProps.length)
-        fixture.deps = context.fixtures!.filter(({ index, prop }) => index !== fixture.index && usedProps.includes(prop))
+        fixture.deps = context.fixtures!.filter(({ prop }) => prop !== fixture.prop && usedProps.includes(prop))
     }
   })
 
   return context
 }
 
-const fixtureValueMap = new Map<FixtureItem, any>()
-const fixtureCleanupFnMap = new Map<string, Array<() => void | Promise<void>>>()
+const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
+let cleanupFnArray = new Array<() => void | Promise<void>>()
 
-export async function callFixtureCleanup(id: string) {
-  const cleanupFnArray = fixtureCleanupFnMap.get(id)
-  if (!cleanupFnArray)
-    return
-
+export async function callFixtureCleanup() {
   for (const cleanup of cleanupFnArray.reverse())
     await cleanup()
-
-  fixtureCleanupFnMap.delete(id)
+  cleanupFnArray = []
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
@@ -65,12 +60,6 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     if (!context)
       return fn({})
 
-    let cleanupFnArray = fixtureCleanupFnMap.get(context.task.suite.id)!
-    if (!cleanupFnArray) {
-      cleanupFnArray = []
-      fixtureCleanupFnMap.set(context.task.suite.id, cleanupFnArray)
-    }
-
     const fixtures = getFixture(context)
     if (!fixtures?.length)
       return fn(context)
@@ -79,8 +68,16 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     if (!usedProps.length)
       return fn(context)
 
+    if (!fixtureValueMaps.get(context))
+      fixtureValueMaps.set(context, new Map<FixtureItem, any>())
+    const fixtureValueMap: Map<FixtureItem, any> = fixtureValueMaps.get(context)!
+
     const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
     const pendingFixtures = resolveDeps(usedFixtures)
+
+    if (!pendingFixtures.length)
+      return fn(context)
+
     let cursor = 0
 
     return new Promise((resolve, reject) => {
@@ -121,7 +118,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           return isFn ? value(context, use) : use(value)
       }
 
-      const setupFixturePromise = next()
+      const setupFixturePromise = next().catch(reject)
       cleanupFnArray.unshift(() => setupFixturePromise)
     })
   }

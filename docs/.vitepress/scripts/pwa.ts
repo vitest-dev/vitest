@@ -65,7 +65,9 @@ export const pwa: PwaOptions = {
   },
   workbox: {
     navigateFallbackDenylist: [/^\/new$/],
-    globPatterns: ['**/*.{css,js,html,png,svg,ico,txt,woff2}'],
+    // warning: sponsors/antfu.svg is 2.51 MB, and won't be precached
+    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // <== 3MB
+    globPatterns: ['**/*.{css,js,html,png,svg,ico,txt,woff2,json}'],
     runtimeCaching: [
       {
         urlPattern: pwaFontsRegex,
@@ -110,5 +112,8 @@ export const pwa: PwaOptions = {
         },
       },
     ],
+  },
+  experimental: {
+    includeAllowlist: true,
   },
 }

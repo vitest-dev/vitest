@@ -32,7 +32,7 @@ Alias to `vitest watch`.
 
 ### `vitest related`
 
-Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.ts')` or `import index from './index.ts`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.js')` or `import index from './index.js`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
 
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
@@ -69,12 +69,11 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: `true`) |   
-| `--single-thread` | Run tests inside a single thread, requires --threads (default: `false`) |
-| `--experimental-vm-threads` | Run tests in a worker pool using VM isolation (default: `false`) |
-| `--experimental-vm-worker-memory-limit` | Set the maximum allowed memory for a worker. When reached, a new worker will be created instead |
+| `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`)  |
+| `--poolOptions <options>` | Specify pool options |
+| `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
+| `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
 | `--silent` | Silent console output from tests |
-| `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
@@ -97,6 +96,10 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
+| `--expand-snapshot-diff` | Show full diff when snapshot fails |
+| `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
+| `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
+| `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

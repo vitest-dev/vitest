@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserConsoleLog } from '#types'
+import type { UserConsoleLog } from 'vitest'
 
 defineProps<{
   taskName: string

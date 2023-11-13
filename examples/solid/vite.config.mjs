@@ -13,6 +13,13 @@ export default defineConfig({
         isolate: false,
       },
     },
+    deps: {
+      optimizer: {
+        web: {
+          exclude: ['solid-js'],
+        },
+      },
+    },
   },
   plugins: [solid()],
   resolve: {

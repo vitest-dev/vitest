@@ -5,7 +5,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { isCI, toArray } from '../utils'
+import { isCI, stdProvider, toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -178,8 +178,6 @@ export function resolveConfig(
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr
     if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
       resolved.server.deps.inline = true
@@ -198,16 +196,6 @@ export function resolveConfig(
       ?? resolve(resolved.root, resolved.runner)
   }
 
-  if (resolved.deps.registerNodeLoader) {
-    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-    console.warn(
-      c.yellow(
-      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
-      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
-      ),
-    )
-  }
-
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
@@ -219,6 +207,7 @@ export function resolveConfig(
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
+    expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
@@ -311,6 +300,12 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    normalize(
+      resolveModule(file, { paths: [resolved.root] })
+        ?? resolve(resolved.root, file),
+    ),
+  )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
   resolved.forceRerunTriggers = [
@@ -321,7 +316,8 @@ export function resolveConfig(
   if (resolved.diff) {
     resolved.diff = normalize(
       resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
+        ?? resolve(resolved.root, resolved.diff),
+    )
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 
@@ -378,16 +374,20 @@ export function resolveConfig(
 
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
 
-  if (mode === 'typecheck') {
-    resolved.include = resolved.typecheck.include
-    resolved.exclude = resolved.typecheck.exclude
-  }
+  resolved.typecheck ??= {} as any
+  resolved.typecheck.enabled ??= false
+
+  if (resolved.typecheck.enabled)
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.slowHijackESM ??= true
+  resolved.browser.slowHijackESM ??= false
   resolved.browser.isolate ??= true
+
+  if (resolved.browser.enabled && stdProvider === 'stackblitz')
+    resolved.browser.provider = 'none'
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
@@ -398,9 +398,6 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser?.enabled)
-    return true
-
-  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+export function isBrowserEnabled(config: ResolvedConfig): boolean {
+  return Boolean(config.browser?.enabled)
 }

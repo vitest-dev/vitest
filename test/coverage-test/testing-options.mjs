@@ -44,6 +44,7 @@ for (const provider of ['v8', 'istanbul']) {
       coverage: {
         enabled: true,
         clean: true,
+        all: false,
         provider,
         ...testConfig.coverage,
       },

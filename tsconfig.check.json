@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vite/client"
+    ]
+  },
+  "exclude": [
+    "**/dist/**",
+    "./packages/vitest/dist/**",
+    "./packages/*/*.d.ts",
+    "./packages/*/*.d.cts",
+    "./packages/ui/client/**",
+    "./packages/ui/cypress/**",
+    "./examples/**/*.*",
+    "./bench/**",
+    "./test/typescript/**",
+    "./test/browser/**",
+    "./test/watch/fixtures/**"
+  ]
+}

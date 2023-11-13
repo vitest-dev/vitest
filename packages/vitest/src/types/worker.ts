@@ -16,6 +16,8 @@ export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteN
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown
+  transformMode: Environment['transformMode']
+  projectName?: string
 }
 
 export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
@@ -31,6 +33,7 @@ export interface WorkerGlobalState {
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   mockMap: MockMap
+  providedContext: Record<string, any>
   durations: {
     environment: number
     prepare: number

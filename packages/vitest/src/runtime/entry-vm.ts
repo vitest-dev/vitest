@@ -1,5 +1,7 @@
 import { isatty } from 'node:tty'
 import { createRequire } from 'node:module'
+import util from 'node:util'
+import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
 import { startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
@@ -11,7 +13,7 @@ import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments
 import * as VitestIndex from '../index'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
-import { setupCommonEnv } from './setup.common'
+import { setupCommonEnv } from './setup-common'
 
 export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
@@ -34,6 +36,12 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     _require.extensions['.scss'] = () => ({})
     _require.extensions['.sass'] = () => ({})
     _require.extensions['.less'] = () => ({})
+  }
+
+  // @ts-expect-error not typed global for patched timers
+  globalThis.__vitest_required__ = {
+    util,
+    timers,
   }
 
   await startCoverageInsideWorker(config.coverage, executor)

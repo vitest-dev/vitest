@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-core",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

@@ -79,6 +79,8 @@ export default <Environment>({
       'BroadcastChannel',
       'MessageChannel',
       'MessagePort',
+      'TextEncoder',
+      'TextDecoder',
     ] as const
     for (const name of globalNames) {
       const value = globalThis[name]

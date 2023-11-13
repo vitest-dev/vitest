@@ -1,7 +1,7 @@
 {
   "name": "@vitest/web-worker",
   "type": "module",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.4",
   "description": "Web Worker support for testing in Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -31,8 +31,8 @@
   "module": "./dist/index.js",
   "types": "./index.d.ts",
   "files": [
-    "dist",
-    "*.d.ts"
+    "*.d.ts",
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -41,14 +41,14 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "vitest": ">=0.34.0"
+    "vitest": "^1.0.0-0"
   },
   "dependencies": {
     "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.8",
-    "@types/ungap__structured-clone": "^0.3.0",
+    "@types/debug": "^4.1.12",
+    "@types/ungap__structured-clone": "^0.3.2",
     "@ungap/structured-clone": "^1.2.0"
   }
 }

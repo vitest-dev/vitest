@@ -21,7 +21,7 @@ declare module 'vitest' {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R
@@ -143,6 +143,31 @@ describe('jest-expect', () => {
 
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.closeTo(0.3, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).not.toEqual({
+      sum: expect.closeTo(0.4, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.not.closeTo(0.4, 5),
+    })
+
+    expect(() => {
+      expect({
+        sum: 0.1 + 0.2,
+      }).toEqual({
+        sum: expect.closeTo(0.4),
+      })
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }]`)
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
@@ -277,7 +302,14 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property "a-b" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
+
+    expect(() => {
+      const x = { a: { b: { c: 1 } } }
+      const y = { a: { b: { c: 2 } } }
+      Object.freeze(x.a)
+      expect(x).toEqual(y)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
   })
 
   it('assertions', () => {
@@ -374,14 +406,14 @@ describe('jest-expect', () => {
       expect(() => {
         expect(() => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
 
     it('async wasn\'t awaited', () => {
       expect(() => {
         expect(async () => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
   })
 })
@@ -782,6 +814,8 @@ describe('async expect', () => {
     }
     catch (err: any) {
       expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+      expect(err.cause).toBeDefined()
+      expect(err.cause.message).toMatchInlineSnapshot(`"some error"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
   })

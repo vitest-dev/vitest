@@ -4,7 +4,7 @@ import { workerId as poolId } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { getWorkerState } from '../utils/global'
-import { loadEnvironment } from '../integrations/env'
+import { loadEnvironment } from '../integrations/env/loader'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
 import { createSafeRpc, rpcDone } from './rpc'
@@ -17,7 +17,7 @@ async function init(ctx: WorkerContext) {
   if (isInitialized && isIsolatedThreads)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  const { config, port, workerId } = ctx
+  const { config, port, workerId, providedContext } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -58,10 +58,15 @@ async function init(ctx: WorkerContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

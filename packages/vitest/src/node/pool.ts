@@ -1,7 +1,4 @@
-import { pathToFileURL } from 'node:url'
 import mm from 'micromatch'
-import { resolve } from 'pathe'
-import { distDir, rootDir } from '../paths'
 import type { Pool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
@@ -9,6 +6,7 @@ import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vm-threads'
 import type { WorkspaceProject } from './workspace'
+import { createTypecheckPool } from './pools/typecheck'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
@@ -26,32 +24,37 @@ export interface PoolProcessOptions {
   env: Record<string, string>
 }
 
-const loaderPath = pathToFileURL(resolve(distDir, './loader.js')).href
-const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
-
 export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<Pool, ProcessPool | null> = {
     forks: null,
     threads: null,
     browser: null,
     vmThreads: null,
+    typescript: null,
   }
 
-  function getDefaultPoolName(project: WorkspaceProject): Pool {
+  function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
     if (project.config.browser.enabled)
       return 'browser'
+
+    if (project.config.typecheck.enabled) {
+      for (const glob of project.config.typecheck.include) {
+        if (mm.isMatch(file, glob, { cwd: project.config.root }))
+          return 'typescript'
+      }
+    }
 
     return project.config.pool
   }
 
   function getPoolName([project, file]: WorkspaceSpec) {
     for (const [glob, pool] of project.config.poolMatchGlobs || []) {
-      if (pool === 'browser')
+      if ((pool as Pool) === 'browser')
         throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
       if (mm.isMatch(file, glob, { cwd: project.config.root }))
         return pool as Pool
     }
-    return getDefaultPoolName(project)
+    return getDefaultPoolName(project, file)
   }
 
   async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
@@ -60,28 +63,19 @@ export function createPool(ctx: Vitest): ProcessPool {
     // Instead of passing whole process.execArgv to the workers, pick allowed options.
     // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
     const execArgv = process.execArgv.filter(execArg =>
-      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
+      execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof') || execArg.startsWith('--diagnostic-dir'),
     )
 
     const options: PoolProcessOptions = {
       ...ctx.projectFiles,
-      execArgv: ctx.config.deps.registerNodeLoader
-        ? [
-            ...execArgv,
-            '--require',
-            suppressLoaderWarningsPath,
-            '--experimental-loader',
-            loaderPath,
-            ...conditions,
-          ]
-        : [
-            ...execArgv,
-            ...conditions,
-          ],
+      execArgv: [
+        ...execArgv,
+        ...conditions,
+      ],
       env: {
         TEST: 'true',
         VITEST: 'true',
-        NODE_ENV: ctx.config.mode || 'test',
+        NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
         ...process.env,
         ...ctx.config.env,
@@ -93,6 +87,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       threads: [],
       browser: [],
       vmThreads: [],
+      typescript: [],
     }
 
     for (const spec of files) {
@@ -121,6 +116,11 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
         return pools.threads.runTests(files, invalidate)
+      }
+
+      if (pool === 'typescript') {
+        pools.typescript ??= createTypecheckPool(ctx)
+        return pools.typescript.runTests(files)
       }
 
       pools.forks ??= createChildProcessPool(ctx, options)

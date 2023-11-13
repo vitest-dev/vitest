@@ -1,0 +1,23 @@
+{
+  "name": "@vitest/example-marko",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@marko/compiler": "latest",
+    "@marko/testing-library": "latest",
+    "@marko/vite": "latest",
+    "@vitest/ui": "latest",
+    "jsdom": "latest",
+    "marko": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
+  }
+}

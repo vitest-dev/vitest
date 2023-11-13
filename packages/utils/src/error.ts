@@ -3,6 +3,11 @@ import { format } from './display'
 import { deepClone, getOwnProperties, getType } from './helpers'
 import { stringify } from './stringify'
 
+// utils is bundled for any environment and might not support `Element`
+declare class Element {
+  tagName: string
+}
+
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
 
@@ -44,6 +49,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return seen.get(val)
 
   if (Array.isArray(val)) {
+    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparce arrays ([1,,3])
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
@@ -101,7 +107,7 @@ export function processError(err: any, diffOptions?: DiffOptions) {
     const clonedExpected = deepClone(err.expected, { forceWritable: true })
 
     const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
-    err.diff = diff(replacedExpected, replacedActual, diffOptions)
+    err.diff = diff(replacedExpected, replacedActual, { ...diffOptions, ...err.diffOptions })
   }
 
   if (typeof err.expected !== 'string')

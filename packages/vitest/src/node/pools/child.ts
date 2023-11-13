@@ -69,7 +69,10 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
     minThreads,
 
     env,
-    execArgv,
+    execArgv: [
+      ...ctx.config.poolOptions?.forks?.execArgv ?? [],
+      ...execArgv,
+    ],
 
     terminateTimeout: ctx.config.teardownTimeout,
   }
@@ -100,6 +103,8 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { name, channel })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from '#types'
+import type { ErrorWithDiff } from 'vitest'
 import { openInEditor, shouldOpenInEditor } from '~/composables/error'
 
 const props = defineProps<{

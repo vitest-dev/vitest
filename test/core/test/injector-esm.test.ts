@@ -1,10 +1,10 @@
-import { Parser } from 'acorn'
-import { injectVitestModule } from '@vitest/browser/src/node/esmInjector'
+import { parseAst } from 'rollup/parseAst'
 import { expect, test } from 'vitest'
 import { transformWithEsbuild } from 'vite'
+import { injectVitestModule } from '../../../packages/browser/src/node/esmInjector'
 
 function parse(code: string, options: any) {
-  return Parser.parse(code, options)
+  return parseAst(code, options)
 }
 
 function injectSimpleCode(code: string) {

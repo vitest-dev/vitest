@@ -1,5 +1,5 @@
 import { relative } from 'pathe'
-import { parse as parseAst } from 'acorn'
+import { parseAstAsync } from 'vite'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
@@ -43,10 +43,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request)
     return null
-  const ast = parseAst(request.code, {
-    ecmaVersion: 'latest',
-    allowAwaitOutsideFunction: true,
-  })
+  const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const file: ParsedFile = {
     filepath,
@@ -57,6 +54,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
     tasks: [],
     start: ast.start,
     end: ast.end,
+    projectName: ctx.getName(),
     meta: { typecheck: true },
   }
   const definitions: LocalCallDefinition[] = []
@@ -122,6 +120,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
         name: definition.name,
         end: definition.end,
         start: definition.start,
+        projectName: ctx.getName(),
         meta: {
           typecheck: true,
         },

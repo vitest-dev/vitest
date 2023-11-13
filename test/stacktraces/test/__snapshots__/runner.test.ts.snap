@@ -1,5 +1,26 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`stacktrace filtering > filters stacktraces > stacktrace-filtering 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  error-with-stack.test.js > error in deps
+Error: Something truly horrible has happened!
+ ❯ d error-with-stack.test.js:20:9
+     18| 
+     19| function d() {
+     20|   throw new Error('Something truly horrible has happened!')
+       |         ^
+     21| }
+     22| 
+ ❯ c error-with-stack.test.js:16:3
+ ❯ a error-with-stack.test.js:8:3
+ ❯ error-with-stack.test.js:4:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+"
+`;
+
 exports[`stacktrace should print error frame source file correctly > error-in-deps > error-in-deps 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
@@ -69,6 +90,17 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-i
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
 "
+`;
+
+exports[`stacktraces should respect sourcemaps > error-with-stack.test.js > error-with-stack.test.js 1`] = `
+" ❯ d error-with-stack.test.js:20:9
+     18| 
+     19| function d() {
+     20|   throw new Error('Something truly horrible has happened!')
+       |         ^
+     21| }
+     22| 
+ ❯ c error-with-stack.test.js:16:3"
 `;
 
 exports[`stacktraces should respect sourcemaps > mocked-global.test.js > mocked-global.test.js 1`] = `

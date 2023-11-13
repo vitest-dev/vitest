@@ -24,7 +24,7 @@ describe('waitFor', () => {
           timeout: 60,
           interval: 30,
         }),
-      ).rejects.toThrowErrorMatchingInlineSnapshot('"interval error"')
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: interval error]`)
 
       expect(callback).toHaveBeenCalledTimes(2)
     })
@@ -56,15 +56,13 @@ describe('waitFor', () => {
 
   test('stacktrace correctly', async () => {
     const check = () => {
-      const _a = 1
-      // @ts-expect-error test
-      _a += 1
+      throw new Error('Fail.')
     }
     try {
       await vi.waitFor(check, 100)
     }
     catch (error) {
-      expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
+      expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
   })
@@ -127,7 +125,7 @@ describe('waitUntil', () => {
           timeout: 60,
           interval: 30,
         }),
-      ).rejects.toThrowErrorMatchingInlineSnapshot('"Timed out in waitUntil!"')
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
 
       expect(callback).toHaveBeenCalledTimes(2)
     })
@@ -154,16 +152,13 @@ describe('waitUntil', () => {
 
   test('stacktrace correctly when callback throw error', async () => {
     const check = () => {
-      const _a = 1
-      // @ts-expect-error test
-      _a += 1
-      return true
+      throw new Error('Fail.')
     }
     try {
       await vi.waitUntil(check, 20)
     }
     catch (error) {
-      expect((error as Error).message).toMatchInlineSnapshot('"Assignment to constant variable."')
+      expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
   })

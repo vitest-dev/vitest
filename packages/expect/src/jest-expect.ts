@@ -1,6 +1,6 @@
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
-import type { EnhancedSpy } from '@vitest/spy'
+import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
@@ -344,7 +344,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   const getSpy = (assertion: any) => {
     assertIsMock(assertion)
-    return assertion._obj as EnhancedSpy
+    return assertion._obj as MockInstance
   }
   const ordinalOf = (i: number) => {
     const j = i % 10
@@ -361,7 +361,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return `${i}th`
   }
-  const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
+  const formatCalls = (spy: MockInstance, msg: string, actualCall?: any) => {
     if (spy.mock.calls) {
       msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
         let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
@@ -377,7 +377,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
-  const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
+  const formatReturns = (spy: MockInstance, msg: string, actualReturn?: any) => {
     msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
       let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
@@ -675,7 +675,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               const _error = new AssertionError(
                 `promise rejected "${utils.inspect(err)}" instead of resolving`,
                 { showDiff: false },
-              )
+              ) as Error
+              _error.cause = err
               _error.stack = (error.stack as string).replace(error.message, _error.message)
               throw _error
             },
@@ -712,8 +713,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             (value: any) => {
               const _error = new AssertionError(
                 `promise resolved "${utils.inspect(value)}" instead of rejecting`,
-                { showDiff: false },
-              )
+                { showDiff: true, expected: new Error('rejected promise'), actual: value },
+              ) as any
               _error.stack = (error.stack as string).replace(error.message, _error.message)
               throw _error
             },

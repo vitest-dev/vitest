@@ -72,6 +72,7 @@ export class Vitest {
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
@@ -93,7 +94,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch && this.mode !== 'typecheck')
+    if (this.config.watch)
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
@@ -151,6 +152,8 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
 
     this.projects = await this.resolveWorkspace(cliOptions)
+    if (!this.coreWorkspaceProject)
+      this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
@@ -161,8 +164,8 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
-  public getCoreWorkspaceProject(): WorkspaceProject | null {
-    return this.coreWorkspaceProject || null
+  public getCoreWorkspaceProject(): WorkspaceProject {
+    return this.coreWorkspaceProject
   }
 
   public getProjectByTaskId(taskId: string): WorkspaceProject {
@@ -256,6 +259,7 @@ export class Vitest {
       'pool',
       'globals',
       'mode',
+      'expandSnapshotDiff',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -308,15 +312,8 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  typecheck(filters?: string[]) {
-    return Promise.all(this.projects.map(project => project.typecheck(filters)))
-  }
-
   async start(filters?: string[]) {
-    if (this.mode === 'typecheck') {
-      await this.typecheck(filters)
-      return
-    }
+    this._onClose = []
 
     try {
       await this.initCoverageProvider()
@@ -438,7 +435,12 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: WorkspaceSpec[]) {
-    await Promise.all(paths.map(async ([project]) => project.initializeGlobalSetup()))
+    const projects = new Set(paths.map(([project]) => project))
+    const coreProject = this.getCoreWorkspaceProject()
+    if (!projects.has(coreProject))
+      projects.add(coreProject)
+    for await (const project of projects)
+      await project.initializeGlobalSetup()
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
@@ -748,20 +750,28 @@ export class Vitest {
 
   async close() {
     if (!this.closingPromise) {
-      const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
-      // close the core workspace server only once
-      // it's possible that it's not initialized at all because it's not running any tests
-      if (!this.coreWorkspaceProject || !this.projects.includes(this.coreWorkspaceProject))
-        closePromises.push(this.server.close().then(() => this.server = undefined as any))
+      this.closingPromise = (async () => {
+        // do teardown before closing the server
+        for await (const project of [...this.projects].reverse())
+          await project.teardownGlobalSetup()
 
-      if (this.pool)
-        closePromises.push(this.pool.close().then(() => this.pool = undefined))
+        const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
+        // close the core workspace server only once
+        // it's possible that it's not initialized at all because it's not running any tests
+        if (!this.projects.includes(this.coreWorkspaceProject))
+          closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
-      this.closingPromise = Promise.allSettled(closePromises).then((results) => {
-        results.filter(r => r.status === 'rejected').forEach((err) => {
-          this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+        if (this.pool)
+          closePromises.push(this.pool.close().then(() => this.pool = undefined))
+
+        closePromises.push(...this._onClose.map(fn => fn()))
+
+        return Promise.allSettled(closePromises).then((results) => {
+          results.filter(r => r.status === 'rejected').forEach((err) => {
+            this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+          })
         })
-      })
+      })()
     }
     return this.closingPromise
   }
@@ -833,5 +843,9 @@ export class Vitest {
 
   onCancel(fn: (reason: CancelReason) => void) {
     this._onCancelListeners.push(fn)
+  }
+
+  onClose(fn: () => void) {
+    this._onClose.push(fn)
   }
 }

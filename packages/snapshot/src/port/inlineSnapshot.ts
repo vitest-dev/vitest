@@ -1,5 +1,5 @@
 import type MagicString from 'magic-string'
-import { getCallLastIndex, lineSplitRE, offsetToLineNumber, positionToOffset } from '@vitest/utils'
+import { getCallLastIndex, lineSplitRE, offsetToLineNumber, positionToOffset } from '../../../utils/src/index'
 import type { SnapshotEnvironment } from '../types'
 
 export interface InlineSnapshot {

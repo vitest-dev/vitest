@@ -22,7 +22,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    // ...
+    // ... Specify options here.
   },
 })
 ```
@@ -34,7 +34,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    // ...
+    // ... Specify options here.
   },
 })
 ```
@@ -87,6 +87,16 @@ export default defineConfig(configEnv => mergeConfig(
 
 :::tip
 In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+
+_All_ listed options here are located on a `test` property inside the config:
+
+```ts
+export default defineConfig({
+  test: {
+    exclude: [],
+  },
+})
+```
 :::
 
 ::: tip
@@ -192,7 +202,7 @@ Directory to save cache files.
 
 ### deps
 
-- **Type:** `{ optimizer?, registerNodeLoader?, ... }`
+- **Type:** `{ optimizer?, ... }`
 
 Handling for dependencies resolution.
 
@@ -277,15 +287,6 @@ By default, files inside `node_modules` are externalized and not transformed, un
 ::: warning
 At the moment, this option only works with [`vmThreads`](#vmthreads) pool.
 :::
-
-#### deps.registerNodeLoader<NonProjectOption />
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside externalized files, using Vite resolve algorithm.
-
-If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside externalized packages (by default, `node_modules`).
 
 #### deps.interopDefault
 
@@ -400,7 +401,7 @@ Define custom aliases when running inside tests. They will be merged with aliase
 By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -424,7 +425,7 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 import AutoImport from 'unplugin-auto-import/vite'
 
@@ -547,7 +548,7 @@ export default defineConfig({
 
 ### poolMatchGlobs
 
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'typescript'][]`
 - **Default:** `[]`
 - **Version:** Since Vitest 0.29.4
 
@@ -601,17 +602,7 @@ Project root
 - **Default:** `'default'`
 - **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
-Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
-
-  - `'default'` - collapse suites when they pass
-  - `'basic'` - give a reporter like default reporter in ci
-  - `'verbose'` - keep the full task tree visible
-  - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable, and `classname` tag property with `VITEST_JUNIT_CLASSNAME`)
-  - `'json'` -  give a simple JSON summary
-  - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
-  - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
-  - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
+Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts), a string to select built-in reporters, or a path to a custom implementation (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
 
 ### outputFile<NonProjectOption />
 
@@ -732,6 +723,17 @@ This can improve performance in some cases, but might cause segfault in older No
 
 Isolate environment for each test file.
 
+##### poolOptions.threads.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` in the threads. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
+:::
+
 #### poolOptions.forks<NonProjectOption />
 
 Options for `forks` pool.
@@ -783,6 +785,17 @@ Run all tests with the same environment inside a single child process. This will
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses child processes not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
 This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+:::
+
+##### poolOptions.forks.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` process in the child processes. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
 #### poolOptions.vmThreads<NonProjectOption />
@@ -854,6 +867,17 @@ Percentage based memory limit [does not work on Linux CircleCI](https://github.c
 Use Atomics to synchronize threads.
 
 This can improve performance in some cases, but might cause segfault in older Node versions.
+
+##### poolOptions.vmThreads.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` process in the VM context. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
+:::
 
 ### testTimeout
 
@@ -933,7 +957,33 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Also, since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed, for example (the test file will wait for global setup to finish before running).
+Since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
+
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Hovewer, since 1.0.0 you can pass down serializable data to tests via `provide` method:
+
+```ts
+// globalSetup.js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+```
+
+```ts
+// example.test.js
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
+```
+
+If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
+
+```ts
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
 :::
 
 
@@ -1007,7 +1057,7 @@ List of files included in coverage as glob patterns
 #### coverage.extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
@@ -1019,6 +1069,7 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
   '**/virtual:*',
@@ -1042,7 +1093,7 @@ List of files excluded from coverage as glob patterns.
 #### coverage.all
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true` (since Vitest `1.0.0`)
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 
@@ -1319,7 +1370,7 @@ Run all tests in a specific browser. Possible options in different providers:
 
 - **Type:** `boolean`
 - **Default:** `process.env.CI`
-- **CLI:** `--browser.headless`, `--brower.headless=false`
+- **CLI:** `--browser.headless`, `--browser.headless=false`
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
@@ -1351,7 +1402,7 @@ Path to a provider that will be used when running browser tests. Vitest provides
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
-  initialize(ctx: Vitest, options: { browser: string }): Awaitable<void>
+  initialize(ctx: Vitest, options: { browser: string; options?: BrowserProviderOptions }): Awaitable<void>
   openPage(url: string): Awaitable<void>
   close(): Awaitable<void>
 }
@@ -1361,18 +1412,53 @@ export interface BrowserProvider {
 This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
 :::
 
+#### browser.providerOptions
+
+- **Type:** `BrowserProviderOptions`
+- **Version:** Since Vitest 1.0.0-beta.3
+
+Options that will be passed down to provider when calling `provider.initialize`.
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      providerOptions: {
+        launch: {
+          devtools: true,
+        }
+      }
+    }
+  }
+})
+```
+
+::: tip
+To have a better type safety when using built-in providers, you can add one of these types (for provider that you are using) to your tsconfig's `compilerOptions.types` field:
+
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/webdriverio",
+      "@vitest/browser/providers/playwright"
+    ]
+  }
+}
+```
+:::
+
 #### browser.slowHijackESM
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false`
 - **Version:** Since Vitest 0.31.0
 
 When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
 
 This option has no effect on tests running inside Node.js.
 
-This options is enabled by default when running in the browser. If you don't rely on spying on ES modules with `vi.spyOn` and don't use `vi.mock`, you can disable this to get a slight boost to performance.
-
+If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
 
 ### clearMocks
 
@@ -1637,6 +1723,24 @@ Changes the order in which setup files are executed.
 
 Options for configuring [typechecking](/guide/testing-types) test environment.
 
+#### typecheck.enabled
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck`, `--typecheck.enabled`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Enable typechecking alongside your regular tests.
+
+#### typecheck.only
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--typecheck.only`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Run only typecheck tests, when typechecking is enabled. When using CLI, this option will automatically enable typechecking.
+
 #### typecheck.checker
 
 - **Type**: `'tsc' | 'vue-tsc' | string`
@@ -1767,6 +1871,34 @@ export default defineConfig({
 })
 ```
 
+### onStackTrace
+
+- **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
+- **Version**: Since Vitest 1.0.0-beta.3
+
+Apply a filtering function to each frame of each stacktrace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
+
+Can be useful for filtering out stacktrace frames from third-party libraries.
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onStackTrace(error: Error, { file }: ParsedStack): boolean | void {
+      // If we've encountered a ReferenceError, show the whole stack.
+      if (error.name === 'ReferenceError')
+        return
+
+      // Reject all frames from third party libraries.
+      if (file.includes('node_modules'))
+        return false
+    },
+  },
+})
+```
+
 ### diff
 
 - **Type:** `string`
@@ -1797,3 +1929,54 @@ export default defineConfig({
 })
 ```
 :::
+
+### fakeTimers
+
+- **Type:** `FakeTimerInstallOpts`
+
+Options that Vitest will pass down to [`@sinon/fake-timers`](https://www.npmjs.com/package/@sinonjs/fake-timers) when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers).
+
+#### fakeTimers.now
+
+- **Type:** `number | Date`
+- **Default:** `Date.now()`
+
+Installs fake timers with the specified unix epoch.
+
+#### fakeTimers.toFake
+
+- **Type:** `FakeMethod[]`
+
+An array with names of global methods and APIs to fake. By default, Vitest does not replace `nextTick()` and `queueMicrotask()`.
+
+To only mock `setTimeout()` and `nextTick()`, specify this property as `['setTimeout', 'nextTick']`.
+
+Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+
+#### fakeTimers.loopLimit
+
+- **Type:** `number`
+- **Default:** `10_000`
+
+The maximum number of timers that will be run when calling [`vi.runAllTimers()`](/api/vi#vi-runalltimers).
+
+#### fakeTimers.shouldAdvanceTime
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Tells @sinonjs/fake-timers to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time).
+
+#### fakeTimers.advanceTimeDelta
+
+- **Type:** `number`
+- **Default:** `20`
+
+Relevant only when using with `shouldAdvanceTime: true`. increment mocked time by advanceTimeDelta ms every advanceTimeDelta ms change in the real system time.
+
+#### fakeTimers.shouldClearNativeTimers
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
