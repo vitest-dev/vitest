@@ -6,7 +6,7 @@ import { loadEnvironment } from '../integrations/env/loader'
 import type { WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
-import type { VitestWorkerConstructor } from './workers/types'
+import type { VitestWorker } from './workers/types'
 
 export async function run(ctx: ContextRPC) {
   const prepareStart = performance.now()
@@ -23,9 +23,8 @@ export async function run(ctx: ContextRPC) {
     const testRunnerModule = await import(file)
     if (typeof testRunnerModule.default !== 'function')
       throw new Error(`Test runner constructor should be exposed as a default export. Received "${typeof testRunnerModule.default}"`)
-    const WorkerConstructor = testRunnerModule.default as VitestWorkerConstructor
-    const worker = new WorkerConstructor(ctx)
-    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions())
+    const worker = testRunnerModule.default as VitestWorker
+    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
 
     const beforeEnvironmentTime = performance.now()
     const environment = await loadEnvironment(ctx, rpc)

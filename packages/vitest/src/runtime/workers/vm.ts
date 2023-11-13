@@ -1,4 +1,4 @@
-import { type Context, isContext } from 'node:vm'
+import { isContext } from 'node:vm'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
 import type { WorkerGlobalState } from '../../types/worker'
@@ -7,90 +7,78 @@ import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { ExternalModulesExecutor } from '../external-executor'
 import { FileMap } from '../vm/file-map'
-import type { ContextRPC } from '../../types/rpc'
 import { provideWorkerState } from '../../utils'
-import type { VitestWorker, WorkerRpcOptions } from './types'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export abstract class VmVitestWorker implements VitestWorker {
-  protected context: Context | null = null
+export async function runVmTests(state: WorkerGlobalState) {
+  const { environment, ctx, rpc } = state
 
-  constructor(protected ctx: ContextRPC) {}
-
-  getRpcOptions(): WorkerRpcOptions {
-    throw new Error('Should be implemented in a subclass')
+  if (!environment.setupVM) {
+    const envName = ctx.environment.name
+    const packageId = envName[0] === '.' ? envName : `vitest-environment-${envName}`
+    throw new TypeError(
+    `Environment "${ctx.environment.name}" is not a valid environment. `
+  + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
+    )
   }
 
-  async runTests(state: WorkerGlobalState) {
-    const { environment, ctx, rpc } = state
+  const vm = await environment.setupVM(ctx.environment.options || ctx.config.environmentOptions || {})
 
-    if (!environment.setupVM) {
-      const envName = ctx.environment.name
-      const packageId = envName[0] === '.' ? envName : `vitest-environment-${envName}`
-      throw new TypeError(
-      `Environment "${ctx.environment.name}" is not a valid environment. `
-    + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
-      )
-    }
+  state.durations.environment = performance.now() - state.durations.environment
 
-    const vm = await environment.setupVM(ctx.environment.options || ctx.config.environmentOptions || {})
+  process.env.VITEST_VM_POOL = '1'
 
-    state.durations.environment = performance.now() - state.durations.environment
+  if (!vm.getVmContext)
+    throw new TypeError(`Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
 
-    process.env.VITEST_VM_POOL = '1'
+  const context = vm.getVmContext()
 
-    if (!vm.getVmContext)
-      throw new TypeError(`Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
+  if (!isContext(context))
+    throw new TypeError(`Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
 
-    const context = vm.getVmContext()
+  provideWorkerState(context, state)
 
-    if (!isContext(context))
-      throw new TypeError(`Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
+  // this is unfortunately needed for our own dependencies
+  // we need to find a way to not rely on this by default
+  // because browser doesn't provide these globals
+  context.process = process
+  context.global = context
+  context.console = createCustomConsole(state)
+  // TODO: don't hardcode setImmediate in fake timers defaults
+  context.setImmediate = setImmediate
+  context.clearImmediate = clearImmediate
 
-    provideWorkerState(context, state)
+  const stubs = getDefaultRequestStubs(context)
 
-    // this is unfortunately needed for our own dependencies
-    // we need to find a way to not rely on this by default
-    // because browser doesn't provide these globals
-    context.process = process
-    context.global = context
-    context.console = createCustomConsole(state)
-    // TODO: don't hardcode setImmediate in fake timers defaults
-    context.setImmediate = setImmediate
-    context.clearImmediate = clearImmediate
+  const externalModulesExecutor = new ExternalModulesExecutor({
+    context,
+    fileMap,
+    packageCache,
+    transform: rpc.transform,
+    viteClientModule: stubs['/@vite/client'],
+  })
 
-    const stubs = getDefaultRequestStubs(context)
+  const executor = await startVitestExecutor({
+    context,
+    moduleCache: state.moduleCache,
+    mockMap: state.mockMap,
+    state,
+    externalModulesExecutor,
+  })
 
-    const externalModulesExecutor = new ExternalModulesExecutor({
-      context,
-      fileMap,
-      packageCache,
-      transform: (path, environment) => rpc.transform(path, environment),
-      viteClientModule: stubs['/@vite/client'],
-    })
+  context.__vitest_mocker__ = executor.mocker
 
-    const executor = await startVitestExecutor({
-      context,
-      moduleCache: state.moduleCache,
-      mockMap: state.mockMap,
-      state,
-      externalModulesExecutor,
-    })
+  const { run } = await executor.importExternalModule(entryFile) as typeof import('../runVmTests')
 
-    context.__vitest_mocker__ = executor.mocker
-
-    const { run } = await executor.importExternalModule(entryFile) as typeof import('../runVmTests')
-
-    try {
-      await run(ctx.files, ctx.config, executor)
-    }
-    finally {
-      await vm.teardown?.()
-      state.environmentTeardownRun = true
-    }
+  try {
+    await run(ctx.files, ctx.config, executor)
+  }
+  finally {
+    await vm.teardown?.()
+    state.environmentTeardownRun = true
   }
 }

@@ -1,14 +1,16 @@
-import type { WorkerContext } from '../../types/worker'
-import type { WorkerRpcOptions } from './types'
+import type { WorkerContext, WorkerGlobalState } from '../../types/worker'
+import type { VitestWorker, WorkerRpcOptions } from './types'
 import { createThreadsRpcOptions } from './utils'
-import { VmVitestWorker } from './vm'
+import { runVmTests } from './vm'
 
-export default class VmThreadsVitestWorker extends VmVitestWorker {
-  constructor(protected ctx: WorkerContext) {
-    super(ctx)
+class ThreadsVmWorker implements VitestWorker {
+  getRpcOptions(ctx: WorkerContext): WorkerRpcOptions {
+    return createThreadsRpcOptions(ctx)
   }
 
-  getRpcOptions(): WorkerRpcOptions {
-    return createThreadsRpcOptions(this.ctx.port)
+  runTests(state: WorkerGlobalState): unknown {
+    return runVmTests(state)
   }
 }
+
+export default new ThreadsVmWorker()

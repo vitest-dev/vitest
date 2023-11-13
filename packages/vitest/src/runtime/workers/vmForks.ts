@@ -1,22 +1,19 @@
 import v8 from 'node:v8'
-import type { ContextRPC } from '../../types/rpc'
 import type { WorkerGlobalState } from '../../types/worker'
-import type { WorkerRpcOptions } from './types'
 import { createForksRpcOptions, unwrapForksConfig } from './utils'
-import { VmVitestWorker } from './vm'
+import type { VitestWorker } from './types'
+import { runVmTests } from './vm'
 
-export default class VmForksVitestWorker extends VmVitestWorker {
-  constructor(protected ctx: ContextRPC) {
-    super(ctx)
-  }
-
-  getRpcOptions(): WorkerRpcOptions {
+class ForksVmWorker implements VitestWorker {
+  getRpcOptions() {
     return createForksRpcOptions(v8)
   }
 
-  runTests(state: WorkerGlobalState): Promise<void> {
+  runTests(state: WorkerGlobalState) {
     state.ctx.config = unwrapForksConfig(state.ctx.config)
 
-    return super.runTests(state)
+    return runVmTests(state)
   }
 }
+
+export default new ForksVmWorker()

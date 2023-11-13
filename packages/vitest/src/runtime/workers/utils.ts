@@ -1,10 +1,10 @@
-import type { MessagePort } from 'node:worker_threads'
 import type { TinypoolWorkerMessage } from 'tinypool'
 import { parseRegexp } from '@vitest/utils'
+import type { WorkerContext } from '../../types/worker'
 import type { ResolvedConfig } from '../../types/config'
 import type { WorkerRpcOptions } from './types'
 
-export function createThreadsRpcOptions(port: MessagePort): WorkerRpcOptions {
+export function createThreadsRpcOptions({ port }: WorkerContext): WorkerRpcOptions {
   return {
     post: (v) => { port.postMessage(v) },
     on: (fn) => { port.addListener('message', fn) },
