@@ -67,7 +67,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           esbuild: viteConfig.esbuild === false
             ? false
             : {
-                ...viteConfig.esbuild,
                 sourcemap: 'external',
 
                 // Enables using ignore hint for coverage providers with @preserve keyword
