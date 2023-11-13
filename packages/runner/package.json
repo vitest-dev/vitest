@@ -34,8 +34,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "*.d.ts"
+    "*.d.ts",
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "p-limit": "^4.0.0",
+    "p-limit": "^5.0.0",
     "pathe": "^1.1.1"
   }
 }

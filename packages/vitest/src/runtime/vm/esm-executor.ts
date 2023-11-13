@@ -26,8 +26,7 @@ export class EsmExecutor {
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
-        m.link((identifier, referencer) =>
-          this.executor.resolveModule(identifier, referencer.identifier),
+        m.link((identifier, referencer) => this.executor.resolveModule(identifier, referencer.identifier),
         ),
       )
     }

@@ -1,7 +1,7 @@
 import MagicString from 'magic-string'
 import type { CallExpression, Identifier, ImportDeclaration, ImportNamespaceSpecifier, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
-import type { AcornNode } from 'rollup'
+import type { PluginContext } from 'rollup'
 
 export type Positioned<T> = T & {
   start: number
@@ -49,7 +49,7 @@ const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
 const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
 const hashbangRE = /^#!.*\n/
 
-export function hoistMocks(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
+export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
   const hasMocks = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
   if (!hasMocks)
@@ -59,11 +59,7 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
 
   let ast: any
   try {
-    ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-      locations: true,
-    })
+    ast = parse(code)
   }
   catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)

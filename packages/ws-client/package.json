@@ -25,9 +25,9 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
     "*.d.ts",
-    "*.mjs"
+    "*.mjs",
+    "dist"
   ],
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "birpc": "0.2.14",
-    "flatted": "^3.2.7",
-    "ws": "^8.13.0"
+    "flatted": "^3.2.9",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*"

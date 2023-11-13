@@ -20,7 +20,7 @@ function makeTextStack() {
 }
 
 // 5 Stacks
-const textStacks = Array.from(new Array(5)).map(makeTextStack)
+const textStacks = Array.from(Array.from({ length: 5 })).map(makeTextStack)
 
 const diff = `
   \x1B[32m- Expected\x1B[39m
@@ -58,7 +58,7 @@ const fileWithTextStacks = {
 describe('ViewReport', () => {
   describe('File where stacks are in text', () => {
     beforeEach(() => {
-      cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report"/>)
+      cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report" />)
     })
 
     it('renders all of the stacks', () => {

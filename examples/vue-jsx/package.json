@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-vue-jsx",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {

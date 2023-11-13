@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-coverage",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:options && pnpm test:types",
@@ -12,7 +13,7 @@
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
-    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@types/istanbul-lib-coverage": "^2.0.6",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",

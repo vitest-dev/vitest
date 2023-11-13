@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-related",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "pnpm test:related && pnpm test:rerun",

@@ -21,7 +21,7 @@
     "jsdom": "latest",
     "vite": "latest",
     "vitest": "latest",
-    "webdriverio": "^8.21.0"
+    "webdriverio": "^8.21.1"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"

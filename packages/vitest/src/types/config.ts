@@ -199,7 +199,7 @@ export interface InlineConfig {
    * Benchmark options.
    *
    * @default {}
-  */
+   */
   benchmark?: BenchmarkUserOptions
 
   /**
@@ -241,10 +241,10 @@ export interface InlineConfig {
   dir?: string
 
   /**
-  * Register apis globally
-  *
-  * @default false
-  */
+   * Register apis globally
+   *
+   * @default false
+   */
   globals?: boolean
 
   /**
@@ -452,7 +452,7 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
-   * @internal WIP
+   * @internal
    */
   ui?: boolean
 
@@ -592,7 +592,7 @@ export interface InlineConfig {
    * The number of milliseconds after which a test is considered slow and reported as such in the results.
    *
    * @default 300
-  */
+   */
   slowTestThreshold?: number
 
   /**
@@ -619,7 +619,7 @@ export interface InlineConfig {
   /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
-  */
+   */
   chaiConfig?: ChaiConfig
 
   /**
@@ -631,7 +631,7 @@ export interface InlineConfig {
    * Retry the test specific number of times if it fails.
    *
    * @default 0
-  */
+   */
   retry?: number
 
   /**

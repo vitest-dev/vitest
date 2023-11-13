@@ -308,9 +308,10 @@ function formatTitle(template: string, items: any[], idx: number) {
   const count = template.split('%').length - 1
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
-    formatted = formatted.replace(/\$([$\w_.]+)/g,
+    formatted = formatted.replace(
+      /\$([$\w_.]+)/g,
+      // https://github.com/chaijs/chai/pull/1490
       (_, key) => objDisplay(objectAttr(items[0], key), { truncate: runner?.config?.chaiConfig?.truncateThreshold }) as unknown as string,
-    // https://github.com/chaijs/chai/pull/1490
     )
   }
   return formatted

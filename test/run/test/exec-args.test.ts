@@ -34,8 +34,10 @@ test.each([
 
 test('should not pass execArgv to workers when not specified in the config', async () => {
   const { stdout, stderr } = await execa('node', [
-    '--title', 'this-works-only-on-main-thread',
-    '../node_modules/vitest/vitest.mjs', '--run',
+    '--title',
+    'this-works-only-on-main-thread',
+    '../node_modules/vitest/vitest.mjs',
+    '--run',
   ], {
     cwd: `${process.cwd()}/no-exec-args-fixtures`,
     reject: false,
@@ -52,9 +54,13 @@ test('should not pass execArgv to workers when not specified in the config', asy
 
 test('should let allowed args pass to workers', async () => {
   const { stdout, stderr } = await execa('node', [
-    '--cpu-prof', '--heap-prof', '--diagnostic-dir=/tmp/vitest-diagnostics',
-    '--cpu-prof-name=cpu.prof', '--heap-prof-name=heap.prof',
-    '../node_modules/vitest/vitest.mjs', '--run',
+    '--cpu-prof',
+    '--heap-prof',
+    '--diagnostic-dir=/tmp/vitest-diagnostics',
+    '--cpu-prof-name=cpu.prof',
+    '--heap-prof-name=heap.prof',
+    '../node_modules/vitest/vitest.mjs',
+    '--run',
   ], {
     cwd: `${process.cwd()}/allowed-exec-args-fixtures`,
     reject: false,
