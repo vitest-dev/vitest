@@ -72,12 +72,13 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      const [files, _config] = await Promise.all([
+      const [files, _config, errors] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
+        client.rpc.getUnhandledErrors(),
       ])
       client.state.collectFiles(files)
-      unhandledErrors.value = await client.rpc.getUnhandledErrors()
+      unhandledErrors.value = errors
       config.value = _config
     })
 
