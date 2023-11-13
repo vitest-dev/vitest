@@ -28,11 +28,10 @@ export function keyToTestName(key: string): string {
   return key.replace(/ \d+$/, '')
 }
 
-export function getSnapshotData(content: string | null,
-  options: SnapshotStateOptions): {
-    data: SnapshotData
-    dirty: boolean
-  } {
+export function getSnapshotData(content: string | null, options: SnapshotStateOptions): {
+  data: SnapshotData
+  dirty: boolean
+} {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
@@ -91,9 +90,7 @@ export function removeExtraLineBreaks(string: string): string {
 const escapeRegex = true
 const printFunctionName = false
 
-export function serialize(val: unknown,
-  indent = 2,
-  formatOverrides: PrettyFormatOptions = {}): string {
+export function serialize(val: unknown, indent = 2, formatOverrides: PrettyFormatOptions = {}): string {
   return normalizeNewlines(
     prettyFormat(val, {
       escapeRegex,

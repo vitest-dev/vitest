@@ -76,12 +76,12 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.18.0",
+    "@wdio/protocols": "^8.22.0",
     "periscopic": "^4.0.2",
     "playwright": "^1.39.0",
     "playwright-core": "^1.39.0",
     "safaridriver": "^0.1.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.21.1"
+    "webdriverio": "^8.22.1"
   }
 }

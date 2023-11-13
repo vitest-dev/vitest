@@ -3,7 +3,7 @@
     "jsx": "react",
     "module": "node16",
     "moduleResolution": "node16",
-    "esModuleInterop": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "esModuleInterop": true
   }
 }

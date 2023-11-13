@@ -52,7 +52,7 @@ If you want to modify the object, you will use [replaceProperty API](https://jes
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
-```ts
+```
 it('should work', (done) => {  // [!code --]
 it('should work', () => new Promise(done => { // [!code ++]
   // ...

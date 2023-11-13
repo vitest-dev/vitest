@@ -1,14 +1,9 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
     "lib": ["esnext"],
+    "module": "ESNext",
     "moduleResolution": "Bundler",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "strict": true,
-    "declaration": true,
-    "noEmit": true,
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
@@ -34,6 +29,11 @@
       "vite-node/client": ["./packages/vite-node/src/client.ts"],
       "vite-node/server": ["./packages/vite-node/src/server.ts"],
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
-    }
+    },
+    "strict": true,
+    "declaration": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   }
 }

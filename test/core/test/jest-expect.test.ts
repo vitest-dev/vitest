@@ -21,7 +21,7 @@ declare module 'vitest' {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R

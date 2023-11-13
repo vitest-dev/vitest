@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
     "target": "esnext",
+    "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "types": ["vitest/globals"],
+    "allowJs": false,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "types": ["vitest/globals"]
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": ["./src", "./.storybook"]
 }

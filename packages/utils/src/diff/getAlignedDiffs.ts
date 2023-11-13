@@ -12,9 +12,7 @@ import type { DiffOptionsColor } from './types'
 // * include common strings
 // * include change strings which have argument op with changeColor
 // * exclude change strings which have opposite op
-function concatenateRelevantDiffs(op: number,
-  diffs: Array<Diff>,
-  changeColor: DiffOptionsColor): string {
+function concatenateRelevantDiffs(op: number, diffs: Array<Diff>, changeColor: DiffOptionsColor): string {
   return diffs.reduce(
     (reduced: string, diff: Diff): string =>
       reduced
@@ -208,8 +206,7 @@ class CommonBuffer {
 // Assume the function is not called:
 // * if either expected or received is empty string
 // * if neither expected nor received is multiline string
-function getAlignedDiffs(diffs: Array<Diff>,
-  changeColor: DiffOptionsColor): Array<Diff> {
+function getAlignedDiffs(diffs: Array<Diff>, changeColor: DiffOptionsColor): Array<Diff> {
   const deleteBuffer = new ChangeBuffer(DIFF_DELETE, changeColor)
   const insertBuffer = new ChangeBuffer(DIFF_INSERT, changeColor)
   const commonBuffer = new CommonBuffer(deleteBuffer, insertBuffer)

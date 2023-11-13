@@ -184,8 +184,6 @@ export function resolveConfig(
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr
     if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
       resolved.server.deps.inline = true
@@ -324,7 +322,8 @@ export function resolveConfig(
   if (resolved.diff) {
     resolved.diff = normalize(
       resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
+        ?? resolve(resolved.root, resolved.diff),
+    )
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 

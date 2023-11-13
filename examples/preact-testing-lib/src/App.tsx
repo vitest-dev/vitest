@@ -5,11 +5,14 @@ export default function App() {
   const { count, inc } = useCount()
 
   return (
-    <div class="app">
+    <div className="app">
       <header>
         <h1>Hello Vite & Preact!</h1>
         <p>
-          <button onClick={inc}>Count is: {count}</button>
+          <button onClick={inc}>
+            Count is:
+            {count}
+          </button>
         </p>
         <p>
           <a
