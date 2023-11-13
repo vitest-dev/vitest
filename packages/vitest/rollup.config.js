@@ -16,6 +16,7 @@ const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = [
+  'src/paths.ts',
   'src/index.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
