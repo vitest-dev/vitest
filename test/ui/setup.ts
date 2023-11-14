@@ -1,7 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import path from 'node:path'
 import os from 'node:os'
-import fs from 'fs-extra'
+import { readFileSync } from 'node:fs'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
 import { expect } from 'vitest'
@@ -68,7 +68,7 @@ export async function killProcess(
 }
 
 export async function startChromium() {
-  const wsEndpoint = fs.readFileSync(path.join(DIR, 'wsEndpoint'), 'utf-8')
+  const wsEndpoint = readFileSync(path.join(DIR, 'wsEndpoint'), 'utf-8')
   if (!wsEndpoint)
     throw new Error('wsEndpoint not found')
 

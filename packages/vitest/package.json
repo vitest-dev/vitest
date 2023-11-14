@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -25,13 +25,13 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": {
-        "types": "./index.d.cts",
-        "default": "./index.cjs"
-      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
       }
     },
     "./*": "./*",
@@ -90,12 +90,12 @@
     "vitest": "./vitest.mjs"
   },
   "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
+    "*.cjs",
     "*.d.cts",
+    "*.d.ts",
     "*.mjs",
-    "*.cjs"
+    "bin",
+    "dist"
   ],
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -139,55 +139,51 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn": "^8.9.0",
-    "acorn-walk": "^8.2.0",
+    "acorn-walk": "^8.3.0",
     "cac": "^6.7.14",
     "chai": "^4.3.10",
     "debug": "^4.3.4",
-    "local-pkg": "^0.4.3",
+    "execa": "^8.0.1",
+    "local-pkg": "^0.5.0",
     "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
-    "std-env": "^3.3.3",
-    "strip-literal": "^1.0.1",
-    "tinybench": "^2.5.0",
+    "std-env": "^3.4.3",
+    "strip-literal": "^1.3.0",
+    "tinybench": "^2.5.1",
     "tinypool": "^0.8.1",
-    "vite": "^3.1.0 || ^4.0.0 || ^5.0.0-0",
+    "vite": "^5.0.0-beta.15 || ^5.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
     "@antfu/install-pkg": "^0.1.1",
-    "@edge-runtime/vm": "3.0.3",
+    "@edge-runtime/vm": "^3.1.7",
     "@sinonjs/fake-timers": "11.1.0",
-    "@types/diff": "^5.0.3",
-    "@types/estree": "^1.0.1",
-    "@types/istanbul-lib-coverage": "^2.0.4",
-    "@types/istanbul-reports": "^3.0.1",
-    "@types/jsdom": "^21.1.1",
-    "@types/micromatch": "^4.0.2",
-    "@types/prompts": "^2.4.4",
-    "@types/sinonjs__fake-timers": "^8.1.2",
+    "@types/estree": "^1.0.5",
+    "@types/istanbul-lib-coverage": "^2.0.6",
+    "@types/istanbul-reports": "^3.0.4",
+    "@types/jsdom": "^21.1.5",
+    "@types/micromatch": "^4.0.5",
+    "@types/prompts": "^2.4.8",
+    "@types/sinonjs__fake-timers": "^8.1.5",
     "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
-    "cli-truncate": "^3.1.0",
-    "execa": "^7.1.1",
-    "expect-type": "^0.16.0",
-    "fast-glob": "^3.3.0",
+    "cli-truncate": "^4.0.0",
+    "expect-type": "^0.17.3",
+    "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
-    "flatted": "^3.2.7",
-    "get-tsconfig": "^4.6.2",
-    "happy-dom": "^9.20.3",
+    "flatted": "^3.2.9",
+    "get-tsconfig": "^4.7.2",
+    "happy-dom": "^12.10.3",
     "jsdom": "^22.1.0",
     "log-update": "^6.0.0",
     "micromatch": "^4.0.5",
-    "mlly": "^1.4.0",
-    "p-limit": "^4.0.0",
-    "pkg-types": "^1.0.3",
-    "pretty-format": "^29.5.0",
+    "p-limit": "^5.0.0",
+    "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",
-    "ws": "^8.13.0"
+    "ws": "^8.14.2"
   }
 }

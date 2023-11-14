@@ -171,7 +171,7 @@ export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, 
 
 declare global {
   // support augmenting jest.Matchers by other libraries
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
 
     // eslint-disable-next-line unused-imports/no-unused-vars

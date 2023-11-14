@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -19,38 +19,38 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     },
     "./client": {
       "types": "./dist/client.d.ts",
-      "require": "./dist/client.cjs",
-      "import": "./dist/client.mjs"
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.cjs"
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "require": "./dist/server.cjs",
-      "import": "./dist/server.mjs"
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.cjs"
     },
     "./utils": {
       "types": "./dist/utils.d.ts",
-      "require": "./dist/utils.cjs",
-      "import": "./dist/utils.mjs"
+      "import": "./dist/utils.mjs",
+      "require": "./dist/utils.cjs"
     },
     "./hmr": {
       "types": "./dist/hmr.d.ts",
-      "require": "./dist/hmr.cjs",
-      "import": "./dist/hmr.mjs"
+      "import": "./dist/hmr.mjs",
+      "require": "./dist/hmr.cjs"
     },
     "./source-map": {
       "types": "./dist/source-map.d.ts",
-      "require": "./dist/source-map.cjs",
-      "import": "./dist/source-map.mjs"
+      "import": "./dist/source-map.mjs",
+      "require": "./dist/source-map.cjs"
     },
     "./constants": {
       "types": "./dist/constants.d.ts",
-      "require": "./dist/constants.cjs",
-      "import": "./dist/constants.mjs"
+      "import": "./dist/constants.mjs",
+      "require": "./dist/constants.cjs"
     },
     "./*": "./*"
   },
@@ -69,9 +69,9 @@
     "vite-node": "./vite-node.mjs"
   },
   "files": [
-    "dist",
     "*.d.ts",
-    "*.mjs"
+    "*.mjs",
+    "dist"
   ],
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -85,13 +85,12 @@
   "dependencies": {
     "cac": "^6.7.14",
     "debug": "^4.3.4",
-    "mlly": "^1.4.0",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
-    "vite": "^3.0.0 || ^4.0.0 || ^5.0.0-0"
+    "vite": "^5.0.0-beta.15 || ^5.0.0"
   },
   "devDependencies": {
-    "@jridgewell/trace-mapping": "^0.3.18",
-    "@types/debug": "^4.1.8"
+    "@jridgewell/trace-mapping": "^0.3.20",
+    "@types/debug": "^4.1.12"
   }
 }

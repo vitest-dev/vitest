@@ -64,21 +64,20 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
-          esbuild: {
-            sourcemap: 'external',
+          esbuild: viteConfig.esbuild === false
+            ? false
+            : {
+                sourcemap: 'external',
 
-            // Enables using ignore hint for coverage providers with @preserve keyword
-            legalComments: 'inline',
-          },
+                // Enables using ignore hint for coverage providers with @preserve keyword
+                legalComments: 'inline',
+              },
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
             conditions: ['node'],
-            // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-            // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
-            browserField: false,
           },
           server: {
             ...testConfig.api,
@@ -145,13 +144,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           process.env[name] ??= envs[name]
 
         // don't watch files in run mode
-        if (!options.watch) {
-          viteConfig.server.watch = {
-            persistent: false,
-            depth: 0,
-            ignored: ['**/*'],
-          }
-        }
+        if (!options.watch)
+          viteConfig.server.watch = null
 
         hijackVitePluginInject(viteConfig)
       },

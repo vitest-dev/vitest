@@ -20,7 +20,9 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   async resolvePath(filepath: string): Promise<string> {
     return join(
       join(
-        dirname(filepath), '__snapshots__'),
+        dirname(filepath),
+        '__snapshots__',
+      ),
       `${basename(filepath)}.snap`,
     )
   }

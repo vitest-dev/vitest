@@ -26,6 +26,13 @@
     "@testing-library/user-event",
     "node",
     // user can install any version
-    "vite"
+    "vite",
+    // we patch these packages
+    "@types/chai",
+    "@sinonjs/fake-timers",
+    // TODO: update when chai is updated to 5.0
+    "loupe",
+    // we update types for node when we bump the minimal version
+    "@types/node"
   ]
 }

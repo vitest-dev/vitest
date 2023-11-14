@@ -1,7 +1,7 @@
 import { existsSync, rmSync } from 'node:fs'
-import test from 'node:test'
 import * as assert from 'node:assert'
 import { readFile } from 'node:fs/promises'
+import test from 'node:test'
 import { startVitest } from 'vitest/node'
 
 if (existsSync('./bench.json'))

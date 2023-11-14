@@ -1,7 +1,7 @@
 {
   "name": "@vitest/snapshot",
   "type": "module",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Vitest snapshot manager",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -34,8 +34,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "*.d.ts"
+    "*.d.ts",
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -45,10 +45,10 @@
   "dependencies": {
     "magic-string": "^0.30.5",
     "pathe": "^1.1.1",
-    "pretty-format": "^29.5.0"
+    "pretty-format": "^29.7.0"
   },
   "devDependencies": {
-    "@types/natural-compare": "^1.4.1",
+    "@types/natural-compare": "^1.4.3",
     "@vitest/utils": "workspace:*",
     "natural-compare": "^1.4.0"
   }

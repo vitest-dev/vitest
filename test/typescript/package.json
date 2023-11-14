@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "test": "vitest",
     "types": "vitest --typecheck --run",

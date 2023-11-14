@@ -34,12 +34,13 @@ if (import.meta.vitest) {
 Update the `includeSource` config for Vitest to grab the files under `src/`:
 
 ```ts
-// vitest.config.ts
-import { defineConfig } from 'vitest/config'
+// vite.config.ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    includeSource: ['src/**/*.{js,ts}'],
+    includeSource: ['src/**/*.{js,ts}'], // [!code ++]
   },
 })
 ```
@@ -55,16 +56,17 @@ $ npx vitest
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
 ```ts
-// vitest.config.ts
-import { defineConfig } from 'vitest/config'
+// vite.config.ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
 
 export default defineConfig({
+  test: {
+    includeSource: ['src/**/*.{js,ts}'],
+  },
   define: { // [!code ++]
     'import.meta.vitest': 'undefined', // [!code ++]
   }, // [!code ++]
-  test: {
-    includeSource: ['src/**/*.{js,ts}']
-  },
 })
 ```
 

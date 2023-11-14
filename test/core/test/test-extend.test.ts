@@ -1,5 +1,5 @@
 /* eslint-disable prefer-rest-params */
-/* eslint-disable no-empty-pattern */
+
 import type { InferFixturesTypes } from '@vitest/runner'
 import type { TestAPI } from 'vitest'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'

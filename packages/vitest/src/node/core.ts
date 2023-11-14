@@ -259,6 +259,7 @@ export class Vitest {
       'pool',
       'globals',
       'mode',
+      'expandSnapshotDiff',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {

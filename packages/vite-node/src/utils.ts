@@ -1,7 +1,7 @@
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { builtinModules } from 'node:module'
-import { existsSync } from 'node:fs'
-import { dirname, resolve } from 'pathe'
+import { existsSync, promises as fsp } from 'node:fs'
+import { dirname, join, resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -234,4 +234,32 @@ export function createImportMetaEnvProxy() {
       return true
     },
   })
+}
+
+const packageCache = new Map<string, { type?: 'module' | 'commonjs' }>()
+
+export async function findNearestPackageData(basedir: string): Promise<{ type?: 'module' | 'commonjs' }> {
+  const originalBasedir = basedir
+  while (basedir) {
+    const cached = getCachedData(packageCache, basedir, originalBasedir)
+    if (cached)
+      return cached
+
+    const pkgPath = join(basedir, 'package.json')
+    if ((await fsp.stat(pkgPath).catch(() => {}))?.isFile()) {
+      const pkgData = JSON.parse(await fsp.readFile(pkgPath, 'utf8'))
+
+      if (packageCache)
+        setCacheData(packageCache, pkgData, basedir, originalBasedir)
+
+      return pkgData
+    }
+
+    const nextBasedir = dirname(basedir)
+    if (nextBasedir === basedir)
+      break
+    basedir = nextBasedir
+  }
+
+  return {}
 }

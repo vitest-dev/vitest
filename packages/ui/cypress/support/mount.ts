@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
-
 import { mount } from 'cypress/vue'
 import type { Component } from 'vue'
 import { directives, plugins } from '../../client/global-setup'
@@ -24,6 +22,7 @@ export function registerMount() {
 }
 
 declare global {
+  // eslint-disable-next-line ts/no-namespace
   namespace Cypress {
     interface Chainable {
       /**
