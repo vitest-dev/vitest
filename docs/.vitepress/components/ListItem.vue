@@ -16,7 +16,7 @@ function reset() {
 
 const color = computed(() => {
   return {
-    '--vp-c-brand': state.value === 1
+    '--vp-c-brand-1': state.value === 1
       ? '#66ba1c'
       : state.value === 2
         ? 'rgba(248, 113, 113)'
@@ -51,7 +51,7 @@ onMounted(async () => {
         <div i-carbon:circle-dash animate-spin animate-2s text-yellow4 />
       </div>
       <div absolute transition duration-300 :class="state === 1 ? '' : 'flip'">
-        <div i-carbon:checkmark-outline class="text-$vp-c-brand" />
+        <div i-carbon:checkmark-outline class="text-$vp-c-brand-1" />
       </div>
       <div absolute transition duration-300 :class="state === 2 ? '' : 'flip'">
         <div i-carbon:close-outline text-red4 />
