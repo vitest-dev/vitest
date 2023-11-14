@@ -2,7 +2,7 @@
 import { computed, effectScope, onMounted, ref } from 'vue'
 import { until, useElementVisibility } from '@vueuse/core'
 
-const el = ref()
+const el = ref<HTMLDivElement>()
 const state = ref(0)
 
 function reset() {
