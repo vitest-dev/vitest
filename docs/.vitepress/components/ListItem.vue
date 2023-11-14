@@ -50,11 +50,11 @@ onMounted(async () => {
       <div absolute transition duration-300 :class="state ? 'flip' : ''">
         <div i-carbon:circle-dash animate-spin animate-2s text-yellow4 />
       </div>
-      <div absolute transition duration-300 :class="state === 1 ? '' : 'flip'">
-        <div i-carbon:checkmark-outline class="text-$vp-c-brand-1" />
-      </div>
       <div absolute transition duration-300 :class="state === 2 ? '' : 'flip'">
         <div i-carbon:close-outline text-red4 />
+      </div>
+      <div absolute transition duration-300 :class="state === 1 ? '' : 'flip'">
+        <div i-carbon:checkmark-outline class="text-$vp-c-brand-1" />
       </div>
     </div>
     <div>
@@ -63,8 +63,3 @@ onMounted(async () => {
   </li>
 </template>
 
-<style>
-.flip {
-  transform: rotateY(90deg);
-}
-</style>

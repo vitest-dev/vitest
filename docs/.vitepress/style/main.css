@@ -23,6 +23,9 @@ html:not(.dark) [img-dark] {
 .vp-doc ul.features-list li div:first-of-type div {
   position: absolute;
 }
+.vp-doc ul.features-list li div:first-of-type div.flip {
+  transform: rotateY(90deg);
+}
 .vp-doc ul.features-list li div:first-of-type div div {
   position: unset;
 }
