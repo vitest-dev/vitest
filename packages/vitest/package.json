@@ -43,44 +43,44 @@
     },
     "./node": {
       "types": "./dist/node.d.ts",
-      "import": "./dist/node.js"
+      "default": "./dist/node.js"
     },
     "./execute": {
       "types": "./dist/execute.d.ts",
-      "import": "./dist/execute.js"
+      "default": "./dist/execute.js"
     },
     "./browser": {
       "types": "./dist/browser.d.ts",
-      "import": "./dist/browser.js"
+      "default": "./dist/browser.js"
     },
     "./runners": {
       "types": "./dist/runners.d.ts",
-      "import": "./dist/runners.js"
+      "default": "./dist/runners.js"
     },
     "./suite": {
       "types": "./dist/suite.d.ts",
-      "import": "./dist/suite.js"
+      "default": "./dist/suite.js"
     },
     "./environments": {
       "types": "./dist/environments.d.ts",
-      "import": "./dist/environments.js"
+      "default": "./dist/environments.js"
     },
     "./utils": {
       "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.js"
+      "default": "./dist/utils.js"
     },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
-      "import": "./dist/config.js"
+      "default": "./dist/config.js"
     },
     "./coverage": {
       "types": "./coverage.d.ts",
-      "import": "./dist/coverage.js"
+      "default": "./dist/coverage.js"
     },
     "./reporters": {
       "types": "./dist/reporters.d.ts",
-      "import": "./dist/reporters.js"
+      "default": "./dist/reporters.js"
     }
   },
   "main": "./dist/index.js",

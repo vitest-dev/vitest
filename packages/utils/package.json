@@ -18,23 +18,23 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./diff": {
       "types": "./dist/diff.d.ts",
-      "import": "./dist/diff.js"
+      "default": "./dist/diff.js"
     },
     "./error": {
       "types": "./dist/error.d.ts",
-      "import": "./dist/error.js"
+      "default": "./dist/error.js"
     },
     "./helpers": {
       "types": "./dist/helpers.d.ts",
-      "import": "./dist/helpers.js"
+      "default": "./dist/helpers.js"
     },
     "./source-map": {
       "types": "./dist/source-map.d.ts",
-      "import": "./dist/source-map.js"
+      "default": "./dist/source-map.js"
     },
     "./*": "./*"
   },

@@ -18,15 +18,15 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./environment": {
       "types": "./dist/environment.d.ts",
-      "import": "./dist/environment.js"
+      "default": "./dist/environment.js"
     },
     "./manager": {
       "types": "./dist/manager.d.ts",
-      "import": "./dist/manager.js"
+      "default": "./dist/manager.js"
     },
     "./*": "./*"
   },
