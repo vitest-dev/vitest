@@ -18,6 +18,8 @@ export class NoneBrowserProvider implements BrowserProvider {
   async initialize(ctx: WorkspaceProject) {
     this.ctx = ctx
     this.open = false
+    if (ctx.config.browser.headless)
+      throw new Error('You\'ve enabled headless mode for "none" provider but it doesn\'t support it.')
   }
 
   catchError(_cb: (error: Error) => Awaitable<void>) {
