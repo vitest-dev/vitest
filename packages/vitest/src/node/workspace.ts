@@ -66,7 +66,7 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
 
-  testFilesList: string[] = []
+  testFilesList: string[] | null = null
 
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
@@ -177,22 +177,24 @@ export class WorkspaceProject {
   async globTestFiles(filters: string[] = []) {
     const dir = this.config.dir || this.config.root
 
+    const { include, exclude, includeSource } = this.config
     const typecheck = this.config.typecheck
 
     const [testFiles, typecheckTestFiles] = await Promise.all([
-      typecheck.enabled && typecheck.only ? [] : this.globAllTestFiles(this.config, dir),
+      typecheck.enabled && typecheck.only ? [] : this.globAllTestFiles(include, exclude, includeSource, dir),
       typecheck.enabled ? this.globFiles(typecheck.include, typecheck.exclude, dir) : [],
     ])
 
     return this.filterFiles([...testFiles, ...typecheckTestFiles], filters, dir)
   }
 
-  async globAllTestFiles(config: ResolvedConfig, cwd: string) {
-    const { include, exclude, includeSource } = config
+  async globAllTestFiles(include: string[], exclude: string[], includeSource: string[] | undefined, cwd: string) {
+    if (this.testFilesList)
+      return this.testFilesList
 
     const testFiles = await this.globFiles(include, exclude, cwd)
 
-    if (includeSource) {
+    if (includeSource?.length) {
       const files = await this.globFiles(includeSource, exclude, cwd)
 
       await Promise.all(files.map(async (file) => {
@@ -213,7 +215,7 @@ export class WorkspaceProject {
   }
 
   isTestFile(id: string) {
-    return this.testFilesList.includes(id)
+    return this.testFilesList && this.testFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {

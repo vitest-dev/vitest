@@ -4,10 +4,11 @@ import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import { defaultExclude, defaultInclude } from 'vitest/config'
+import type { WorkspaceProject } from 'vitest/node'
 import { injectVitestModule } from './esmInjector'
 
-// don't expose type to not bundle it here
-export default (project: any, base = '/'): Plugin[] => {
+export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
@@ -35,9 +36,20 @@ export default (project: any, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
-      config() {
+      async config(config) {
+        const {
+          include = defaultInclude,
+          exclude = defaultExclude,
+          includeSource,
+          dir,
+          root,
+        } = config.test || {}
+        const projectRoot = dir || root || config.root
+        const resolvedRoot = projectRoot ? resolve(projectRoot) : process.cwd()
+        const entries = await project.globAllTestFiles(include, exclude, includeSource, resolvedRoot)
         return {
           optimizeDeps: {
+            entries,
             exclude: [
               ...builtinModules,
               'vitest',

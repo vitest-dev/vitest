@@ -9,7 +9,7 @@
   "scripts": {
     "coverage": "vitest run --coverage",
     "dev": "vite",
-    "test": "DEBUG=connect:* vitest",
+    "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
