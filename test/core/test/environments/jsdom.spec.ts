@@ -55,14 +55,14 @@ test('toContain correctly handles DOM nodes', () => {
 
   expect(() => {
     expect(wrapper).toContain('some-element')
-  }).toThrowErrorMatchingInlineSnapshot(`"toContain() expected a DOM node as the argument, but got string"`)
+  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toContain() expected a DOM node as the argument, but got string]`)
 
   expect(() => {
     expect(wrapper.classList).toContain('flex-row')
-  }).toThrowErrorMatchingInlineSnapshot(`"expected "flex flex-col" to contain "flex-row""`)
+  }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected "flex flex-col" to contain "flex-row"]`)
   expect(() => {
     expect(wrapper.classList).toContain(2)
-  }).toThrowErrorMatchingInlineSnapshot(`"class name value must be string, received "number""`)
+  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: class name value must be string, received "number"]`)
 
   setupColors(getDefaultColors())
 
