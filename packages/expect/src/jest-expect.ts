@@ -10,6 +10,15 @@ import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
+// polyfill globals because expect can be used in node environment
+declare class Node {
+  contains(item: unknown): boolean
+}
+declare class DOMTokenList {
+  value: string
+  contains(item: unknown): boolean
+}
+
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
