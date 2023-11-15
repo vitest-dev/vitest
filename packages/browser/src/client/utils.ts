@@ -1,4 +1,5 @@
-// TODO: throw error with more information for better debugging
+// TODO: use this in case debugging doesn't help and throw error with more information for better debugging
+// eslint-disable-next-line unused-imports/no-unused-vars
 async function tryImport(id: string, tries = 5): Promise<any> {
   try {
     return await import(id)
@@ -17,5 +18,5 @@ export async function importId(id: string) {
   // TODO: this import _should_ always work, but sometimes it doesn't
   // this is a workaround until we can properly debug it - maybe server is not ready?
   // @ts-expect-error mocking vitest apis
-  return __vi_wrap_module__(tryImport(name))
+  return __vi_wrap_module__(import(name))
 }
