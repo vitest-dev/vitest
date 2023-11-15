@@ -178,6 +178,16 @@ export interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Whether tests run concurrently.
+   * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
+   */
+  concurrent?: boolean
+  /**
+   * Whether tests run sequentially.
+   * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
+   */
+  sequential?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {
