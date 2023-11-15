@@ -17,8 +17,10 @@ export default (project: any, base = '/'): Plugin[] => {
       name: 'vitest:browser',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
+        }
       },
       async configureServer(server) {
         server.middlewares.use(
