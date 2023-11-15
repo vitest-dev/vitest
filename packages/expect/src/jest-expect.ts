@@ -164,7 +164,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return this.match(expected)
   })
   def('toContain', function (item) {
-    const actual = this._obj
+    const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
 
     if (typeof Node !== 'undefined' && actual instanceof Node) {
       if (!(item instanceof Node))
@@ -191,7 +191,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         actual.value,
       )
     }
-
+    // make "actual" indexable to have compatibility with jest
+    if (actual != null && typeof actual !== 'string')
+      utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {

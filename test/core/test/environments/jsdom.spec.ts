@@ -34,6 +34,17 @@ test('toContain correctly handles DOM nodes', () => {
   const external = document.createElement('div')
   wrapper.appendChild(child)
 
+  const parent = document.createElement('div')
+  parent.appendChild(wrapper)
+  parent.appendChild(external)
+
+  document.body.appendChild(parent)
+  const divs = document.querySelectorAll('div')
+
+  expect(divs).toContain(wrapper)
+  expect(divs).toContain(parent)
+  expect(divs).toContain(external)
+
   expect(wrapper).toContain(child)
   expect(wrapper).not.toContain(external)
 
