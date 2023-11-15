@@ -309,10 +309,6 @@ export class WorkspaceProject {
     await this.initBrowserServer(this.server.config.configFile)
   }
 
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.ctx.report(name, ...args)
-  }
-
   isBrowserEnabled() {
     return isBrowserEnabled(this.config)
   }
