@@ -36,8 +36,7 @@ export async function runBaseTests(state: WorkerGlobalState) {
 
   const [executor, { run }] = await Promise.all([
     startViteNode({ state }),
-    // TODO: check the bundle before merging PR!
-    import('../runScopeTests'),
+    import('../runBaseTests'),
   ])
   await run(
     ctx.files,
