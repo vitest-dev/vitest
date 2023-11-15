@@ -18,12 +18,10 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./pure": {
       "types": "./pure.d.ts",
-      "import": "./dist/pure.js",
       "default": "./dist/pure.js"
     }
   },

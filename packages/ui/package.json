@@ -18,11 +18,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./reporter": {
       "types": "./reporter.d.ts",
-      "import": "./dist/reporter.js"
+      "default": "./dist/reporter.js"
     },
     "./*": "./*"
   },
