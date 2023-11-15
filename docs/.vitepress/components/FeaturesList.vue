@@ -28,7 +28,7 @@
   </ul>
 </template>
 
-<style scoped>
+<style>
 .features-list li {
   list-style: none;
   display: flex;
