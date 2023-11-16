@@ -16,6 +16,8 @@ export async function run(ctx: ContextRPC) {
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  let state: WorkerGlobalState | null = null
+
   try {
     if (ctx.worker[0] === '.')
       throw new Error(`Path to the test runner cannot be relative, received "${ctx.worker}"`)
@@ -33,7 +35,7 @@ export async function run(ctx: ContextRPC) {
     if (ctx.environment.transformMode)
       environment.transformMode = ctx.environment.transformMode
 
-    const state: WorkerGlobalState = {
+    state = {
       ctx,
       // create a new one, workers can reassign this if they need to
       moduleCache: new ModuleCacheMap(),
@@ -57,5 +59,9 @@ export async function run(ctx: ContextRPC) {
   finally {
     await rpcDone().catch(() => {})
     inspectorCleanup()
+    if (state) {
+      state.environment = null as any
+      state = null
+    }
   }
 }

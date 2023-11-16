@@ -36,8 +36,8 @@ export default <Environment>({
   // this is largely copied from jest's node environment
   async setupVM() {
     const vm = await import('node:vm')
-    const context = vm.createContext()
-    const global = vm.runInContext(
+    let context = vm.createContext()
+    let global = vm.runInContext(
       'this',
       context,
     )
@@ -108,7 +108,8 @@ export default <Environment>({
         return context
       },
       teardown() {
-        //
+        context = undefined as any
+        global = undefined
       },
     }
   },
