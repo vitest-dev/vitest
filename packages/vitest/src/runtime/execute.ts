@@ -37,6 +37,7 @@ export interface ContextExecutorOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
+  requestStubs: Record<string, any>
 }
 
 const bareVitestRegexp = /^@?vitest(\/|$)/
@@ -165,11 +166,6 @@ export class VitestExecutor extends ViteNodeRunner {
     })
 
     this.mocker = new VitestMocker(this)
-
-    this.options.requestStubs = {
-      ...this.options.requestStubs,
-      ...getDefaultRequestStubs(options.context),
-    }
 
     if (!options.context) {
       Object.defineProperty(globalThis, '__vitest_mocker__', {

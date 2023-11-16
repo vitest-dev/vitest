@@ -2,7 +2,7 @@ import { ModuleCacheMap } from 'vite-node/client'
 import type { WorkerGlobalState } from '../../types/worker'
 import { provideWorkerState } from '../../utils/global'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
-import { startVitestExecutor } from '../execute'
+import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import type { MockMap } from '../../types/mocker'
 
 let _viteNode: VitestExecutor
@@ -35,7 +35,7 @@ export async function runBaseTests(state: WorkerGlobalState) {
   ctx.files.forEach(i => state.moduleCache.delete(i))
 
   const [executor, { run }] = await Promise.all([
-    startViteNode({ state }),
+    startViteNode({ state, requestStubs: getDefaultRequestStubs() }),
     import('../runBaseTests'),
   ])
   await run(

@@ -68,6 +68,7 @@ export async function runVmTests(state: WorkerGlobalState) {
     mockMap: state.mockMap,
     state,
     externalModulesExecutor,
+    requestStubs: stubs,
   })
 
   context.__vitest_mocker__ = executor.mocker
