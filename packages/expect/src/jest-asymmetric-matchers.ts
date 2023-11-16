@@ -26,6 +26,7 @@ export abstract class AsymmetricMatcher<
       ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
+      customTesters: [],
       utils: {
         ...getMatcherUtils(),
         diff,
