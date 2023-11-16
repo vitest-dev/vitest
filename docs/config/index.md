@@ -14,7 +14,7 @@ outline: deep
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
-using `defineConfig` from `vite` you should follow this:
+Using `defineConfig` from `vite` you should follow this:
 
 ```ts
 /// <reference types="vitest" />
@@ -27,7 +27,7 @@ export default defineConfig({
 })
 ```
 
-using `defineConfig` from `vitest/config` you should follow this:
+Using `defineConfig` from `vitest/config` you should follow this:
 
 ```ts
 import { defineConfig } from 'vitest/config'
