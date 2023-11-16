@@ -94,8 +94,16 @@ async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error
 ws.addEventListener('open', async () => {
   await loadConfig()
 
-  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
-  const safeRpc = createSafeRpc(client, getSafeTimers)
+  let safeRpc: typeof client.rpc
+  try {
+    // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
+    const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+    safeRpc = createSafeRpc(client, getSafeTimers)
+  }
+  catch (err) {
+    location.reload()
+    return
+  }
 
   stopErrorHandler()
   stopRejectionHandler()
