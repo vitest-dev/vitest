@@ -135,7 +135,7 @@ ws.addEventListener('open', async () => {
   await runTests(paths, config!)
 })
 
-async function runTests(paths: string[], config: ResolvedConfig) {
+async function prepareTestEnvironment(config: ResolvedConfig) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
@@ -156,6 +156,28 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
+
+  return {
+    startTests,
+    setupCommonEnv,
+    loadDiffConfig,
+    executor,
+    runner,
+  }
+}
+
+async function runTests(paths: string[], config: ResolvedConfig) {
+  let preparedData: Awaited<ReturnType<typeof prepareTestEnvironment>> | undefined
+  // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
+  try {
+    preparedData = await prepareTestEnvironment(config)
+  }
+  catch (err) {
+    location.reload()
+    return
+  }
+
+  const { startTests, setupCommonEnv, loadDiffConfig, executor, runner } = preparedData!
 
   onCancel.then((reason) => {
     runner?.onCancel?.(reason)

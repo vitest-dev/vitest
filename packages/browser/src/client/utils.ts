@@ -1,5 +1,5 @@
 // it's possible that import was not optimized yet
-async function tryImport(id: string, tries = 10): Promise<any> {
+async function tryImport(id: string, tries = 20): Promise<any> {
   try {
     return await import(id)
   }
