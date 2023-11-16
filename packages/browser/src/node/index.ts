@@ -47,7 +47,12 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         const entries = await project.globAllTestFiles(include, exclude, includeSource, projectRoot)
         return {
           optimizeDeps: {
-            entries,
+            entries: [
+              ...entries,
+              'vitest/utils',
+              'vitest/browser',
+              'vitest/runners',
+            ],
             exclude: [
               ...builtinModules,
               'vitest',
