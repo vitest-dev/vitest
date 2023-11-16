@@ -75,19 +75,19 @@ $ npx vitest
 
 ## Sponsors
 
-### Anthony Fu Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
-  </a>
-</p>
-
 ### Vladimir Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+  </a>
+</p>
+
+### Anthony Fu Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
   </a>
 </p>
 
