@@ -33,6 +33,8 @@ function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expec
 
   const matcherState: MatcherState = {
     ...getState(expect),
+    // TODO: implement via expect.addEqualityTesters
+    customTesters: [],
     isNot,
     utils: jestUtils,
     promise,
