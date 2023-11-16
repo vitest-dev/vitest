@@ -224,6 +224,30 @@ test.concurrent('test 2', async ({ expect }) => {
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
 
+### test.sequential
+
+- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
+
+`test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
+
+```ts
+// with config option { sequence: { concurrent: true } }
+test('concurrent test 1', async () => { /* ... */ })
+test('concurrent test 2', async () => { /* ... */ })
+
+test.sequential('sequential test 1', async () => { /* ... */ })
+test.sequential('sequential test 2', async () => { /* ... */ })
+
+// within concurrent suite
+describe.concurrent('suite', () => {
+  test('concurrent test 1', async () => { /* ... */ })
+  test('concurrent test 2', async () => { /* ... */ })
+
+  test.sequential('sequential test 1', async () => { /* ... */ })
+  test.sequential('sequential test 2', async () => { /* ... */ })
+})
+```
+
 ### test.todo
 
 - **Type:** `(name: string | Function) => void`
