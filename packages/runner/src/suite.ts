@@ -280,7 +280,7 @@ export function createTaskCollector(
   }
 
   const _test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
   ) as CustomAPI
 

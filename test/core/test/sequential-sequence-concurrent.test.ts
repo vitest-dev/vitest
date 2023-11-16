@@ -22,3 +22,14 @@ describe.sequential('running sequential suite when sequence.concurrent is true',
     expect(++count).toBe(2)
   })
 })
+
+test.sequential('third test completes third', async ({ task }) => {
+  await delay(50)
+  expect(task.concurrent).toBeFalsy()
+  expect(++count).toBe(3)
+})
+
+test.sequential('fourth test completes fourth', ({ task }) => {
+  expect(task.concurrent).toBeFalsy()
+  expect(++count).toBe(4)
+})

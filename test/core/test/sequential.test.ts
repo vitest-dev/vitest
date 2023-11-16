@@ -41,6 +41,17 @@ function assertConcurrent() {
     expect(task.concurrent).toBe(true)
     expect(++count).toBe(1)
   })
+
+  test.sequential('third test completes third', async ({ task }) => {
+    await delay(50)
+    expect(task.concurrent).toBeFalsy()
+    expect(++count).toBe(3)
+  })
+
+  test.sequential('fourth test completes fourth', ({ task }) => {
+    expect(task.concurrent).toBeFalsy()
+    expect(++count).toBe(4)
+  })
 }
 
 assertSequential()
