@@ -74,7 +74,7 @@ const plainTeamMembers: CoreTeam[] = [
     name: 'Ari Perkkiö',
     github: 'AriPerkkio',
     title: 'A fullstack developer, working',
-    desc: 'Team member of Vitest',
+    desc: 'Core team member of Vitest',
     org: 'Cloudamite',
     orgLink: 'https://cloudamite.com/',
   },
