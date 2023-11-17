@@ -44,6 +44,8 @@ export default defineConfig({
     port: 3022,
   },
   test: {
+    retry: 3,
+    bail: 4,
     name: 'core',
     exclude: ['**/fixtures/**', '**/vm-wasm.test.ts', ...defaultExclude],
     slowTestThreshold: 1000,
