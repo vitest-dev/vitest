@@ -50,6 +50,7 @@
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^4.0.1",
     "istanbul-reports": "^3.1.6",
+    "magicast": "^0.3.2",
     "picocolors": "^1.0.0",
     "test-exclude": "^6.0.0"
   },

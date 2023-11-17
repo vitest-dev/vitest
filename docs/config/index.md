@@ -1181,70 +1181,109 @@ Collect coverage of files outside the [project `root`](https://vitest.dev/config
 
 Do not show files with 100% statement, branch, and function coverage.
 
-#### coverage.perFile
+#### coverage.thresholds
+
+Options for coverage thresholds
+
+##### coverage.thresholds.lines
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.lines=<number>`
+
+Global threshold for lines.
+See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
+
+##### coverage.thresholds.functions
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.functions=<number>`
+
+Global threshold for functions.
+See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
+
+##### coverage.thresholds.branches
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.branches=<number>`
+
+Global threshold for branches.
+See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
+
+##### coverage.thresholds.statements
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.statements=<number>`
+
+Global threshold for statements.
+See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
+
+##### coverage.thresholds.perFile
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.perFile`, `--coverage.perFile=false`
+- **CLI:** `--coverage.thresholds.perFile`, `--coverage.thresholds.perFile=false`
 
 Check thresholds per file.
-See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
-#### coverage.thresholdAutoUpdate
+##### coverage.thresholds.autoUpdate
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.thresholdAutoUpdate=<boolean>`
+- **CLI:** `--coverage.thresholds.autoUpdate=<boolean>`
 
-Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
+Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
-#### coverage.lines
-
-- **Type:** `number`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.lines=<number>`
-
-Threshold for lines.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
-
-#### coverage.functions
-
-- **Type:** `number`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.functions=<number>`
-
-Threshold for functions.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
-
-#### coverage.branches
-
-- **Type:** `number`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.branches=<number>`
-
-Threshold for branches.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
-
-#### coverage.statements
-
-- **Type:** `number`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.statements=<number>`
-
-Threshold for statements.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
-
-#### coverage.100
+##### coverage.thresholds.100
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.100`, `--coverage.100=false`
+- **CLI:** `--coverage.thresholds.100`, `--coverage.thresholds.100=false`
 
-Shortcut for `--coverage.lines 100 --coverage.functions 100 --coverage.branches 100 --coverage.statements 100`.
+Sets global thresholds to 100.
+Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 100 --coverage.thresholds.branches 100 --coverage.thresholds.statements 100`.
+
+##### coverage.thresholds[glob-pattern]
+
+- **Type:** `{ statements?: number functions?: number branches?: number lines?: number }`
+- **Default:** `undefined`
+- **Available for providers:** `'v8' | 'istanbul'`
+
+Sets thresholds for files matching the glob pattern.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Thresholds for all files
+      functions: 95,
+      branches: 70,
+
+      // Thresholds for matching glob pattern
+      'src/utils/**.ts': {
+        statements: 95,
+        functions: 90,
+        branches: 85,
+        lines: 80,
+      },
+
+      // Files matching this pattern will only have lines thresholds set.
+      // Global thresholds are not inherited.
+      '**/math.ts': {
+        lines: 100,
+      }
+    }
+  }
+}
+```
 
 #### coverage.ignoreClassMethods
 
