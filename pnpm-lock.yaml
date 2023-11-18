@@ -1800,6 +1800,9 @@ importers:
 
   test/run:
     devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../packages/runner
       execa:
         specifier: ^7.1.1
         version: 7.1.1

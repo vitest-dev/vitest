@@ -52,7 +52,7 @@ export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
   filepath?: string
-  projectName?: string
+  projectName: string
 }
 
 export interface File extends Suite {

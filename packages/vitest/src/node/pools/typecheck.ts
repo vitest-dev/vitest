@@ -114,6 +114,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   return {
+    name: 'typescript',
     runTests,
     async close() {
       const promises = ctx.projects.map(project => project.typechecker?.stop())
