@@ -123,18 +123,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           delete viteConfigTest.alias
 
         // viteConfig.test is final now, merge it for real
-
-        function debug(obj: object) {
-          return Object.fromEntries(Object.entries(obj).filter(([k, _v]) => ['retry', 'bail', 'segfaultRetry'].includes(k)))
-        }
-        console.log('== configResolved (before)', [debug(options), debug(viteConfigTest)])
         options = deepMerge(
           {},
           configDefaults,
           viteConfigTest,
           options,
         )
-        console.log('== configResolved (after)', [debug(options)])
         options.api = resolveApiServerConfig(options)
 
         // we replace every "import.meta.env" with "process.env"
