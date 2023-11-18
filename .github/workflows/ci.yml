@@ -108,8 +108,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
     timeout-minutes: 30
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -128,6 +126,10 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
+
+      - run: ls -alh $WEBDRIVER_CACHE_DIR
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
