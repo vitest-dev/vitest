@@ -8,7 +8,6 @@ inputs:
 
 runs:
   using: composite
-
   steps:
     - name: Install pnpm
       uses: pnpm/action-setup@v2
@@ -22,17 +21,15 @@ runs:
       id: resolve-package-versions
       shell: bash
       run: >
-        echo "$(
-          node -e "
-            const fs = require('fs');
-            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
-            const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
-            const cypressVersion = lockfile.match(pattern('cypress'))[1];
-            const playwrightVersion = lockfile.match(pattern('playwright'))[1];
-            console.log('CYPRESS_VERSION=' + cypressVersion);
-            console.log('PLAYWRIGHT_VERSION=' + playwrightVersion);
-          "
-        )" >> $GITHUB_OUTPUT
+        node -e "
+          const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+          const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
+          const getVersion = (name) => lockfile.match(pattern(name))[1];
+          const setOutput = (name, value) => fs.appendFileSync(process.env.GITHUB_OUTPUT, name + '=' + value + '\n');
+          setOutput('CYPRESS_VERSION', getVersion('cypress'));
+          setOutput('PLAYWRIGHT_VERSION', getVersion('playwright'));
+          setOutput('WEBDRIVERIO_VERSION', getVersion('webdriverio'));
+        "
 
     - name: Print versions
       shell: bash
@@ -62,3 +59,12 @@ runs:
         key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-
+
+    - name: Cache WebdriverIO v${{ steps.resolve-package-versions.outputs.WEBDRIVERIO_VERSION }}
+      uses: actions/cache@v3
+      id: webdriverio-cache
+      with:
+        path: ${{ env.WEBDRIVER_CACHE_DIR }}
+        key: ${{ runner.os }}-webdriverio-${{ steps.resolve-package-versions.outputs.WEBDRIVERIO_VERSION }}
+        restore-keys: |
+          ${{ runner.os }}-webdriverio-

@@ -17,6 +17,7 @@ env:
   VITEST_SEGFAULT_RETRY: 3
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
+  WEBDRIVER_CACHE_DIR: ${{ github.workspace }}/.cache/webdriverio
 
 jobs:
   lint:
@@ -30,7 +31,7 @@ jobs:
         run: pnpm i
 
       - name: Lint
-        run: pnpm run lint
+        run: pnpm exec eslint .
 
   typecheck:
     runs-on: ubuntu-latest
@@ -50,9 +51,7 @@ jobs:
 
   test:
     runs-on: ${{ matrix.os }}
-
     timeout-minutes: 30
-
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -63,7 +62,6 @@ jobs:
           - os: windows-latest
             node_version: 20
       fail-fast: false
-
     steps:
       - uses: actions/checkout@v4
 
@@ -88,9 +86,7 @@ jobs:
 
   test-ui:
     runs-on: ubuntu-latest
-
     timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
 
@@ -105,13 +101,13 @@ jobs:
         run: pnpm run ui:test
 
   test-browser:
-    runs-on: ubuntu-latest
+    name: test-browser (${{ matrix.os }}, ${{ matrix.browser[0] }})
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
-
     timeout-minutes: 30
-
     env:
       BROWSER: ${{ matrix.browser[0] }}
     steps:
@@ -121,57 +117,11 @@ jobs:
         with:
           node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
-      - uses: browser-actions/setup-edge@v1
-        id: setup-edge
-        with:
-          edge-version: stable
-
       - name: Install
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-        env:
-          EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
-
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
-
-  test-browser-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        browser: [[chrome, chromium], [edge, webkit]]
-
-    timeout-minutes: 30
-
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-edge@v1
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
+        run: pnpm --filter "@vitest/browser" exec playwright install --with-deps ${{ matrix.browser[1] }}
 
       - name: Build
         run: pnpm run build

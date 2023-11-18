@@ -9,7 +9,6 @@ jobs:
   bench:
     runs-on: ubuntu-latest
     if: ${{ github.event.issue.pull_request && (github.event.comment.body == '/bench' || github.event.comment.body == '/benchmark') }}
-
     steps:
       - uses: actions/checkout@v4
 

@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest'
-import * as actions from '../src/actions'
-import { calculator } from '../src/calculator'
-import * as calculatorModule from '../src/calculator'
+import * as actions from '../src/actions.js'
+import { calculator } from '../src/calculator.js'
+import * as calculatorModule from '../src/calculator.js'
 
 test('spyOn works on ESM', () => {
   vi.spyOn(actions, 'plus').mockReturnValue(30)
@@ -22,8 +22,6 @@ test('exports are correct', () => {
 })
 
 test('imports are still the same', async () => {
-  // @ts-expect-error typescript resolution
-  await expect(import('../src/calculator')).resolves.toBe(calculatorModule)
-  // @ts-expect-error typescript resolution
-  await expect(import(`../src/calculator`)).resolves.toBe(calculatorModule)
+  await expect(import('../src/calculator.js')).resolves.toBe(calculatorModule)
+  await expect(import(`../src/calculator.js`)).resolves.toBe(calculatorModule)
 })

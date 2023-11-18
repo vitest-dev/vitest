@@ -1,4 +1,4 @@
-import { plus } from './actions'
+import { plus } from './actions.js'
 
 export function calculator(operation: 'plus', a: number, b: number) {
   if (operation === 'plus')
