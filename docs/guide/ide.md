@@ -4,7 +4,7 @@ title: IDE Integrations | Guide
 
 # IDE Integrations
 
-## VS Code <sup><code>Official</code></sup>
+## VS Code <Badge>Offical</Badge>
 
 <p text-center>
 <img src="https://raw.githubusercontent.com/vitest-dev/vscode/main/img/cover.png" w-60>
@@ -26,7 +26,7 @@ WebStorm, PhpStorm, IntelliJ IDEA Ultimate, and other JetBrains IDEs come with b
 
 ![Vitest WebStorm Demo](https://raw.githubusercontent.com/kricact/WS-info/main/gifs/vitest-run-all.gif)
 
-## Wallaby.js <sup><code>Paid (free for OSS)</code></sup>
+## Wallaby.js <Badge>Paid (free for OSS)</Badge>
 
 Created by [The Wallaby Team](https://wallabyjs.com)
 

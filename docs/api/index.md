@@ -370,7 +370,7 @@ test.each`
 If you want to have access to `TestContext`, use `describe.each` with a single test.
 
 ::: tip
-Vitest processes `$values` with chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
+Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
 :::
 
 ::: warning

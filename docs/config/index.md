@@ -65,10 +65,10 @@ export default mergeConfig(viteConfig, defineConfig({
 ```
 
 ::: warning
-`mergeConfig` helper is availabe in Vitest since v0.30.0. You can import it from `vite` directly, if you use lower version.
+`mergeConfig` helper is available in Vitest since v0.30.0. You can import it from `vite` directly, if you use lower version.
 :::
 
-If your vite config is defined as a function, you can define the config like this:
+If your Vite config is defined as a function, you can define the config like this:
 ```ts
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
@@ -138,7 +138,7 @@ Vite-Node server options.
 - **Type:** `'inline' | boolean`
 - **Default:** `'inline'`
 
-Inject inline sourcemap to modules.
+Inject inline source map to modules.
 
 #### server.debug
 
@@ -623,7 +623,7 @@ Pool used to run tests in.
 
 #### threads<NonProjectOption />
 
-Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). When using threads you are unable to use process related APIs such as `process.chdir()`. Some libraries written in native languages, such as Prisma, `bcrypt` and `canvas`, have problems when running in multiple threads and run into segfaults. In these cases it is adviced to use `forks` pool instead.
+Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). When using threads you are unable to use process related APIs such as `process.chdir()`. Some libraries written in native languages, such as Prisma, `bcrypt` and `canvas`, have problems when running in multiple threads and run into segfaults. In these cases it is advised to use `forks` pool instead.
 
 #### forks<NonProjectOption />
 
@@ -959,7 +959,7 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 ::: warning
 Since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
 
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. Hovewer, since 1.0.0 you can pass down serializable data to tests via `provide` method:
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, since 1.0.0 you can pass down serializable data to tests via `provide` method:
 
 ```ts
 // globalSetup.js
@@ -1383,7 +1383,7 @@ Read more about testing in a real browser in the [guide page](/guide/browser).
 :::
 
 ::: warning
-This is an experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+This is an experimental feature. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 #### browser.enabled
@@ -1392,7 +1392,7 @@ This is an experimental feature. Breaking changes might not follow semver, pleas
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser.enabled=false`
 
-Run all tests inside a browser by default. Can be overriden with [`poolMatchGlobs`](/config/#poolmatchglobs) option.
+Run all tests inside a browser by default. Can be overridden with [`poolMatchGlobs`](/config/#poolmatchglobs) option.
 
 #### browser&#46;name
 
@@ -1878,7 +1878,7 @@ This config option affects truncating values in `test.each` titles and inside th
 
 Stop test execution when given number of tests have failed.
 
-By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occured.
+By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occurred.
 
 ### retry
 
@@ -1915,9 +1915,9 @@ export default defineConfig({
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
 - **Version**: Since Vitest 1.0.0-beta.3
 
-Apply a filtering function to each frame of each stacktrace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
+Apply a filtering function to each frame of each stack trace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
 
-Can be useful for filtering out stacktrace frames from third-party libraries.
+Can be useful for filtering out stack trace frames from third-party libraries.
 
 ```ts
 import type { ParsedStack } from 'vitest'
@@ -1980,7 +1980,7 @@ Options that Vitest will pass down to [`@sinon/fake-timers`](https://www.npmjs.c
 - **Type:** `number | Date`
 - **Default:** `Date.now()`
 
-Installs fake timers with the specified unix epoch.
+Installs fake timers with the specified Unix epoch.
 
 #### fakeTimers.toFake
 

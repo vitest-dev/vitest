@@ -41,7 +41,7 @@ If you still want to see how your tests are running in real time in the terminal
 :::
 
 ::: tip
-To preview your HTML report, you can use [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
+To preview your HTML report, you can use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
 npx vite preview --outDir ./html
