@@ -135,7 +135,7 @@ const plainTeamMembers: CoreTeam[] = [
   },
   {
     avatar: contributorsAvatars.Dunqing,
-    name: 'DengQing',
+    name: 'Dunqing',
     github: 'Dunqing',
     twitter: '@Dunqingg',
     title: 'A passionate enthusiast of open source contributions',
