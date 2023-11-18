@@ -141,6 +141,14 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
   },
+  {
+    avatar: contributorsAvatars.dammy001,
+    name: 'Damilare Anjorin',
+    github: 'dammy001',
+    twitter: 'laravel00',
+    title: 'Software Engineer',
+    desc: 'Team member of Vitest',
+  },
 ]
 
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
