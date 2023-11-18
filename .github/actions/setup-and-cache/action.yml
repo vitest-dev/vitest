@@ -28,7 +28,6 @@ runs:
           const setOutput = (name, value) => fs.appendFileSync(process.env.GITHUB_OUTPUT, name + '=' + value + '\n');
           setOutput('CYPRESS_VERSION', getVersion('cypress'));
           setOutput('PLAYWRIGHT_VERSION', getVersion('playwright'));
-          setOutput('WEBDRIVERIO_VERSION', getVersion('webdriverio'));
         "
 
     - name: Print versions
@@ -59,12 +58,3 @@ runs:
         key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-
-
-    - name: Cache WebdriverIO v${{ steps.resolve-package-versions.outputs.WEBDRIVERIO_VERSION }}
-      uses: actions/cache@v3
-      id: webdriverio-cache
-      with:
-        path: ${{ env.WEBDRIVER_CACHE_DIR }}
-        key: ${{ runner.os }}-webdriverio-${{ steps.resolve-package-versions.outputs.WEBDRIVERIO_VERSION }}
-        restore-keys: |
-          ${{ runner.os }}-webdriverio-

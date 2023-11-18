@@ -17,7 +17,6 @@ env:
   VITEST_SEGFAULT_RETRY: 3
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
-  WEBDRIVER_CACHE_DIR: ${{ github.workspace }}/.cache/webdriverio
 
 jobs:
   lint:
@@ -119,7 +118,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm --filter "@vitest/browser" exec playwright install --with-deps ${{ matrix.browser[1] }}
+        run: pnpm --filter "@vitest/browser" exec playwright install
 
       - name: Build
         run: pnpm run build
@@ -128,8 +127,6 @@ jobs:
         run: pnpm run test:browser:webdriverio
         env:
           BROWSER: ${{ matrix.browser[0] }}
-
-      - run: ls -alh $WEBDRIVER_CACHE_DIR
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
