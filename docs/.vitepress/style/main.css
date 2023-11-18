@@ -8,28 +8,6 @@ html:not(.dark) [img-dark] {
 
 /* Overrides */
 
-.vp-doc ul.features-list {
-  padding: 0;
-}
-.vp-doc ul.features-list li {
-  list-style: none;
-  display: flex;
-  gap: 0.4rem;
-  margin: 0;
-}
-.vp-doc ul.features-list li div:first-of-type {
-  position: relative;
-}
-.vp-doc ul.features-list li div:first-of-type div {
-  position: absolute;
-}
-.vp-doc ul.features-list li div:first-of-type div.flip {
-  transform: rotateY(90deg);
-}
-.vp-doc ul.features-list li div:first-of-type div div {
-  position: unset;
-}
-
 .sp .sp-link.link:hover,
 .sp .sp-link.link:focus {
   background-color: var(--vitest-c-sponsor-hover) !important;
