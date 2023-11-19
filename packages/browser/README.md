@@ -2,7 +2,7 @@
 
 Browser runner for Vitest.
 
-> ⚠️ This package is **experimental**. While this package will be released along with other packages, it will not follow semver for breaking changes until we mark it as ready.
+> ⚠️ This package is **experimental**. While this package will be released along with other packages, it will not follow SemVer for breaking changes until we mark it as ready.
 
 ## Progress
 
