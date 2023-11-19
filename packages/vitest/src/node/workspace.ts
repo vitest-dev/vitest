@@ -254,7 +254,8 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t)
         return filters.some((f) => {
-          return testFile.includes(f) || testFile.includes(relative(dir, f))
+          const relativePath = f.endsWith('/') ? `${relative(dir, f)}/` : relative(dir, f)
+          return testFile.includes(f) || testFile.includes(relativePath)
         })
       })
     }
