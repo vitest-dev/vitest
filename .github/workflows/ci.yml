@@ -54,19 +54,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18, 20]
+        node-version: [18, 20]
         include:
           - os: macos-latest
-            node_version: 20
+            node-version: 20
           - os: windows-latest
-            node_version: 20
+            node-version: 20
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: ${{ matrix.node-version }}
 
       - name: Install
         run: pnpm i

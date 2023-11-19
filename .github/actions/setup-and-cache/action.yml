@@ -9,52 +9,55 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-
     - name: Set node version to ${{ inputs.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
 
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+
+    - name: Get pnpm store directory
+      id: pnpm-cache-dir
+      shell: bash
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.pnpm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
     - name: Resolve package versions
-      id: resolve-package-versions
-      shell: bash
-      run: >
-        node -e "
+      id: package-versions
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const packages = ['cypress', 'playwright'];
           const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
-          const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
-          const getVersion = (name) => lockfile.match(pattern(name))[1];
-          const setOutput = (name, value) => fs.appendFileSync(process.env.GITHUB_OUTPUT, name + '=' + value + '\n');
-          setOutput('CYPRESS_VERSION', getVersion('cypress'));
-          setOutput('PLAYWRIGHT_VERSION', getVersion('playwright'));
-        "
+          for (const package of packages) {
+            const pattern = new RegExp(`${package}:\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)`);
+            const version = lockfile.match(pattern(name))?.[1];
+            if (!version) throw new Error(`Couldn't get version for ${package}, received ${version}`);
+            core.setOutput(package, version);
+          }
 
-    - name: Print versions
-      shell: bash
-      run: echo "${{ toJson(steps.resolve-package-versions.outputs) }}"
-
-    - name: Check resolved package versions
-      shell: bash
-      if: |
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.CYPRESS_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
-      run: echo "Failed to resolve package versions. See log above." && exit 1
-
-    - name: Cache Cypress v${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
+    - name: Cache Cypress v${{ steps.package-versions.outputs.cypress }}
       uses: actions/cache@v3
       id: cypress-cache
       with:
         path: ${{ env.CYPRESS_CACHE_FOLDER }}
-        key: ${{ runner.os }}-cypress-${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
+        key: ${{ runner.os }}-cypress-${{ steps.package-versions.outputs.cypress }}
         restore-keys: |
           ${{ runner.os }}-cypress-
 
-    - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+    - name: Cache Playwright v${{ steps.package-versions.outputs.playwright }}
       uses: actions/cache@v3
       id: playwright-cache
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-        key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+        key: ${{ runner.os }}-playwright-${{ steps.package-versions.outputs.playwright }}
         restore-keys: |
           ${{ runner.os }}-playwright-
