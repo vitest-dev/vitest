@@ -15,7 +15,6 @@ concurrency:
 
 env:
   VITEST_SEGFAULT_RETRY: 3
-  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 
 jobs:
@@ -24,10 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
+      - uses: ./.github/actions/setup
 
       - name: Lint
         run: pnpm exec eslint .
@@ -37,13 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
+      - uses: ./.github/actions/setup
+        with:
+          build: true
 
       - name: Typecheck
         run: pnpm run typecheck
@@ -64,15 +56,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
+          build: true
 
       - name: Test
         run: pnpm run test:ci
@@ -86,15 +73,17 @@ jobs:
   test-ui:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+      - uses: ./.github/actions/setup
 
-      - name: Install
-        run: pnpm i
+      - uses: ./.github/actions/package-assets-cache
+        with:
+          package: cypress
+          path: ${{ env.CYPRESS_CACHE_FOLDER }}
 
       - name: Test UI
         run: pnpm run ui:test
@@ -107,21 +96,22 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
     timeout-minutes: 30
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: ./.github/actions/setup
         with:
-          node-version: 20
+          build: true
 
-      - name: Install
-        run: pnpm i
+      - uses: ./.github/actions/package-assets-cache
+        with:
+          package: playwright
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
       - name: Install Playwright Dependencies
         run: pnpm --filter "@vitest/browser" exec playwright install --with-deps
-
-      - name: Build
-        run: pnpm run build
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio

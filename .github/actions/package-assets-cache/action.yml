@@ -1,0 +1,34 @@
+name: Package Assets Cache
+description: Setup cache for assets coming from a specific package
+inputs:
+  package:
+    required: true
+    description: Name of the package
+  path:
+    required: true
+    description: Path for the cache
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve package version
+      id: package-version
+      uses: actions/github-script@v7
+      env:
+        PACKAGE: ${{ inputs.package }}
+      with:
+        script: |
+          const package = process.env.PACKAGE;
+          const lockfile = (require('node:fs')).readFileSync('pnpm-lock.yaml', 'utf8');
+          const pattern = new RegExp(`${package}:\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)`);
+          const version = lockfile.match(pattern)?.[1];
+          if (!version) throw new Error(`Couldn't get version for "${package}", received "${version}"`);
+          core.setOutput('version', version);
+
+    - name: Cache ${{ inputs.package }} v${{ steps.package-versions.outputs.cypress }}
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ runner.os }}-${{ inputs.package }}-${{ steps.package-version.outputs.version }}
+        restore-keys: |
+          ${{ runner.os }}-${{ inputs.package }}-

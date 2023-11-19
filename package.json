@@ -9,7 +9,6 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
-    "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "build": "pnpm -r --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
@@ -20,7 +19,7 @@
     "docs:examples": "tsx scripts/update-examples.ts",
     "docs:contributors": "tsx scripts/update-contributors.ts",
     "lint": "eslint --cache .",
-    "lint:fix": "nr lint --fix",
+    "lint:fix": "pnpm run lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public",
     "release:beta": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public --tag beta",
     "test": "vitest --api -r test/core",
@@ -33,13 +32,12 @@
     "typecheck:why": "tsc -p tsconfig.check.json --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
-    "ui:test": "npm -C packages/ui run test:run",
+    "ui:test": "pnpm -C packages/ui run test:run",
     "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^1.1.1",
-    "@antfu/ni": "^0.21.9",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",

@@ -1,0 +1,43 @@
+name: Setup
+description: Setup for node and pnpm
+inputs:
+  node-version:
+    required: false
+    description: Node version for setup-node
+    default: 20.x
+  build:
+    required: false
+    description: Run the build command
+
+runs:
+  using: composite
+  steps:
+    - name: Set node version to ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+
+    - name: Get pnpm store directory
+      id: pnpm-cache-dir
+      shell: bash
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.pnpm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install
+
+    - name: Build
+      shell: bash
+      if: inputs.build == 'true'
+      run: pnpm run build
