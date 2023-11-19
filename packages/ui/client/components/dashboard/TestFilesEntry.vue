@@ -65,10 +65,14 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
       <h3 text-center mb-2>
         Unhandled Errors
       </h3>
-      <p text="sm" font-thin data-testid="unhandled-errors">
+      <p text="sm" font-thin mb-2 data-testid="unhandled-errors">
         Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
         This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
       </p>
+      <details text="sm" font-thin pe-2.5 open:max-h-52 overflow-auto class="scrolls unhandled-errors">
+        <summary font-bold cursor-pointer>Errors</summary>
+        <ErrorEntry v-for="e in unhandledErrors" :error="e" />
+      </details>
     </div>
   </template>
 </template>
@@ -77,5 +81,13 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
 .number {
   font-weight: 400;
   text-align: right;
+}
+
+.unhandled-errors {
+  --cm-ttc-c-thumb: #CCC;
+}
+
+html.dark .unhandled-errors {
+  --cm-ttc-c-thumb: #444;
 }
 </style>

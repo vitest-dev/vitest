@@ -13,6 +13,7 @@ declare module 'vue' {
     Dashboard: typeof import('./components/Dashboard.vue')['default']
     DashboardEntry: typeof import('./components/dashboard/DashboardEntry.vue')['default']
     DetailsPanel: typeof import('./components/DetailsPanel.vue')['default']
+    ErrorEntry: typeof import('./components/dashboard/ErrorEntry.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
     Modal: typeof import('./components/Modal.vue')['default']
