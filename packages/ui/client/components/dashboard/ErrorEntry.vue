@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  export function isPrimitive(value: unknown) {
+  function isPrimitive(value: unknown) {
     return value === null || (typeof value !== 'function' && typeof value !== 'object')
   }
 
