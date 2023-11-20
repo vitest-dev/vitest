@@ -127,8 +127,8 @@ importers:
         specifier: ^0.57.4
         version: 0.57.4
       '@vite-pwa/assets-generator':
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.11
+        version: 0.0.11
       '@vite-pwa/vitepress':
         specifier: ^0.2.3
         version: 0.2.3(vite-plugin-pwa@0.16.7)
@@ -10171,8 +10171,8 @@ packages:
       - rollup
     dev: true
 
-  /@vite-pwa/assets-generator@0.0.10:
-    resolution: {integrity: sha512-Ya3iE0EWIV+0g0XFXIjqSU8ZnhpJeLi9/xx+VfbSyXThKjk168GUYqd1z+SOuRO03bSRFDeK8wGixtwWuedjqg==}
+  /@vite-pwa/assets-generator@0.0.11:
+    resolution: {integrity: sha512-fm2aRHYM3O8wmsOPq04g/xcmlkyvvcI+SaKbAHyrIS+gP4fEESa8/UadxMqV531QW6Xe1ECQNSxFKffmNS7yQg==}
     engines: {node: '>=16.14.0'}
     hasBin: true
     dependencies:
@@ -20284,10 +20284,6 @@ packages:
       brace-expansion: 2.0.1
     dev: true
 
-  /minimist@1.2.7:
-    resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
-    dev: true
-
   /minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
     dev: true
@@ -20383,7 +20379,7 @@ packages:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /mkdirp@1.0.4:
