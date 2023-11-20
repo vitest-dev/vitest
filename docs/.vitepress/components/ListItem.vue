@@ -63,3 +63,8 @@ onMounted(async () => {
   </li>
 </template>
 
+<style>
+.flip {
+  transform: rotateY(90deg);
+}
+</style>

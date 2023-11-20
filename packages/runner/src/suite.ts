@@ -80,7 +80,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       meta: options.meta ?? Object.create(null),
     }
     const handler = options.handler
-    if (options.concurrent || (!sequential && (concurrent || runner.config.sequence.concurrent)))
+    if (options.concurrent || (!options.sequential && runner.config.sequence.concurrent))
       task.concurrent = true
     if (shuffle)
       task.shuffle = true
@@ -104,13 +104,17 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     return task
   }
 
-  const test = createTest(function (name: string | Function, fn = noop, options) {
+  const test = createTest(function (name: string | Function, fn = noop, options = {}) {
     if (typeof options === 'number')
       options = { timeout: options }
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object')
       options = Object.assign({}, suiteOptions, options)
+
+    // inherit concurrent / sequential from suite
+    options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
+    options.sequential = this.sequential || (!this.concurrent && options?.sequential)
 
     const test = task(
       formatName(name),
@@ -150,6 +154,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       shuffle,
       tasks: [],
       meta: Object.create(null),
+      projectName: '',
     }
 
     setHooks(suite, createSuiteHooks())
@@ -188,7 +193,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 }
 
 function createSuite() {
-  function suiteFn(this: Record<string, boolean | undefined>, name: string | Function, factory?: SuiteFactory, options?: number | TestOptions) {
+  function suiteFn(this: Record<string, boolean | undefined>, name: string | Function, factory?: SuiteFactory, options: number | TestOptions = {}) {
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     const currentSuite = getCurrentSuite()
 
@@ -199,7 +204,11 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.sequence, this.shuffle, this.each, options)
+    // inherit concurrent / sequential from current suite
+    options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
+    options.sequential = this.sequential || (!this.concurrent && options?.sequential)
+
+    return createSuiteCollector(formatName(name), factory, mode, this.concurrent, this.sequential, this.shuffle, this.each, options)
   }
 
   suiteFn.each = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
@@ -272,7 +281,7 @@ export function createTaskCollector(
   }
 
   const _test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
   ) as CustomAPI
 

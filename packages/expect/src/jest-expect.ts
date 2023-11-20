@@ -10,6 +10,15 @@ import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
+// polyfill globals because expect can be used in node environment
+declare class Node {
+  contains(item: unknown): boolean
+}
+declare class DOMTokenList {
+  value: string
+  contains(item: unknown): boolean
+}
+
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
@@ -164,6 +173,36 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return this.match(expected)
   })
   def('toContain', function (item) {
+    const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
+
+    if (typeof Node !== 'undefined' && actual instanceof Node) {
+      if (!(item instanceof Node))
+        throw new TypeError(`toContain() expected a DOM node as the argument, but got ${typeof item}`)
+
+      return this.assert(
+        actual.contains(item),
+        'expected #{this} to contain element #{exp}',
+        'expected #{this} not to contain element #{exp}',
+        item,
+        actual,
+      )
+    }
+
+    if (typeof DOMTokenList !== 'undefined' && actual instanceof DOMTokenList) {
+      assertTypes(item, 'class name', ['string'])
+      const isNot = utils.flag(this, 'negate') as boolean
+      const expectedClassList = isNot ? actual.value.replace(item, '').trim() : `${actual.value} ${item}`
+      return this.assert(
+        actual.contains(item),
+        `expected "${actual.value}" to contain "${item}"`,
+        `expected "${actual.value}" not to contain "${item}"`,
+        expectedClassList,
+        actual.value,
+      )
+    }
+    // make "actual" indexable to have compatibility with jest
+    if (actual != null && typeof actual !== 'string')
+      utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {
@@ -200,7 +239,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -213,7 +252,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -226,7 +265,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -239,7 +278,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(

@@ -4,6 +4,7 @@
 
 import fs from 'node:fs'
 import { resolve } from 'pathe'
+import { parseModule } from 'magicast'
 import { expect, test } from 'vitest'
 import libCoverage from 'istanbul-lib-coverage'
 
@@ -72,23 +73,46 @@ test('files should not contain a setup file', () => {
   expect(srcFiles).not.toContain('another-setup.ts.html')
 })
 
-test('thresholdAutoUpdate updates thresholds', async () => {
+test('thresholds.autoUpdate updates thresholds', async () => {
   const configFilename = resolve('./vitest.config.ts')
-  const configContents = fs.readFileSync(configFilename, 'utf-8')
+  const mod = parseModule(fs.readFileSync(configFilename, 'utf-8'))
+  const thresholds = mod.exports.default.$args[0].test.coverage.thresholds
 
-  for (const threshold of ['functions', 'branches', 'lines', 'statements']) {
-    const match = configContents.match(new RegExp(`${threshold}: (?<coverage>[\\d|\\.]+)`))
-    const coverage = match?.groups?.coverage || '0'
+  // Configuration has fixed value of 1.01 and 0 set for each threshold
+  expect(Number.parseInt(thresholds.functions)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.branches)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.lines)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.statements)).toBeGreaterThan(1.01)
 
-    // Configuration has fixed value of 1.01 and 0 set for each threshold
-    expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
+  // Check file coverage for glob
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/function-count.ts')
+  const summary = fileCoverage.toSummary()
+  expect(summary.branches.pct).toBe(100)
+  expect(summary.functions.pct).toBe(60)
+
+  if (process.env.COVERAGE_PROVIDER === 'v8') {
+    expect(summary.statements.pct).toBe(86.11)
+    expect(summary.lines.pct).toBe(86.11)
+  }
+  else {
+    expect(summary.statements.pct).toBe(71.42)
+    expect(summary.lines.pct).toBe(71.42)
   }
 
   // Update thresholds back to fixed values
-  const updatedConfig = configContents
-    .replace(/(branches|statements): ([\d|\.])+/g, '$1: 1.01')
-    .replace(/(functions|lines): ([\d|\.])+/g, '$1: 0')
-  fs.writeFileSync(configFilename, updatedConfig)
+  thresholds.functions = 0
+  thresholds.lines = 0
+  thresholds.branches = 1.01
+  thresholds.statements = 1.01
+  thresholds['**/function-count.ts'].statements = 50
+  thresholds['**/function-count.ts'].branches = 99
+  thresholds['**/function-count.ts'].functions = 59
+  thresholds['**/function-count.ts'].lines = 50
+
+  fs.writeFileSync(configFilename, mod.generate().code, 'utf-8')
 })
 
 test('function count is correct', async () => {

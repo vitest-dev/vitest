@@ -28,6 +28,7 @@ export interface MatcherHintOptions {
 }
 
 export interface MatcherState {
+  customTesters: Array<Tester>
   assertionCalls: number
   currentTestName?: string
   dontThrow?: () => void

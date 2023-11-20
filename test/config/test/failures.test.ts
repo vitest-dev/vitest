@@ -81,6 +81,29 @@ test('boolean coverage flag without dot notation, with more dot notation options
   expect(stderr).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
 })
 
+test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+      thresholds: {
+        autoUpdate: true,
+        lines: 0,
+      },
+    },
+  })
+
+  expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Cannot read properties of undefined')
+})
+
+test('boolean flag 100 should not crash CLI', async () => {
+  const { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+
+  expect(stderr).toMatch('ERROR: Coverage for lines (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for statements (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for branches (0%) does not meet global threshold (100%)')
+})
+
 test('boolean browser flag without dot notation, with more dot notation options', async () => {
   const { stderr } = await runVitestCli('run', '--browser', '--browser.name', 'chrome')
 
