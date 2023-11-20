@@ -1,5 +1,7 @@
 <script setup lang="ts">
-  import { isPrimitive } from 'vitest/utils'
+  export function isPrimitive(value: unknown) {
+    return value === null || (typeof value !== 'function' && typeof value !== 'object')
+  }
 
   const props = defineProps<{
     error: unkown
