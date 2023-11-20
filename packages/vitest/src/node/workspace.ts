@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
+import { dirname, join, relative, resolve, toNamespacedPath } from 'pathe'
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -254,7 +254,7 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t)
         return filters.some((f) => {
-          const relativePath = f.endsWith('/') ? `${relative(dir, f)}/` : relative(dir, f)
+          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f) || testFile.includes(relativePath)
         })
       })
