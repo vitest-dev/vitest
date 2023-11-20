@@ -36,7 +36,6 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
-      { find: '$', replacement: 'src' },
       { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
       { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
     ],

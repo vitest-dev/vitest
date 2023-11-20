@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -18,11 +18,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./providers": {
       "types": "./providers.d.ts",
-      "import": "./dist/providers.js"
+      "default": "./dist/providers.js"
     },
     "./providers/webdriverio": {
       "types": "./dist/providers/webdriverio.d.ts"

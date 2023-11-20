@@ -53,6 +53,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             resolve: {
               alias: config.test?.alias,
             },
+            server: {
+              watch: null,
+            },
           }
         },
       },
@@ -61,7 +64,6 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   })
 
   await server.listen()
-  await server.watcher.close()
 
   ;(await import('../../api/setup')).setup(project, server)
 

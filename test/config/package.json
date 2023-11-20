@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run --typecheck"
   },
   "devDependencies": {
     "vite": "latest",
