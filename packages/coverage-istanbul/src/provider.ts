@@ -216,27 +216,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       .map(file => resolve(this.ctx.config.root, file))
       .filter(file => !coveredFiles.includes(file))
 
-    const transformResults = await Promise.all(uncoveredFiles.map(async (filename) => {
-      const transformResult = await this.ctx.vitenode.transformRequest(filename)
-      return { transformResult, filename }
-    }))
-
     const coverageMap = libCoverage.createCoverageMap({})
 
-    for (const { transformResult, filename } of transformResults) {
-      const sourceMap = transformResult?.map
+    for (const filename of uncoveredFiles) {
+      await this.ctx.vitenode.transformRequest(filename)
 
-      if (sourceMap) {
-        this.instrumenter.instrumentSync(
-          transformResult.code,
-          filename,
-          sourceMap as any,
-        )
-
-        const lastCoverage = this.instrumenter.lastFileCoverage()
-        if (lastCoverage)
-          coverageMap.addFileCoverage(lastCoverage)
-      }
+      const lastCoverage = this.instrumenter.lastFileCoverage()
+      coverageMap.addFileCoverage(lastCoverage)
     }
 
     return coverageMap.data
