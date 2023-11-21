@@ -6,7 +6,7 @@ vi.mock('../src/mockedE')
 
 // TODO: move to mocked.test.ts
 
-test('should not delete the prototype', () => {
+test('mock each instance method separately', () => {
   expect(MockedE).toBeTypeOf('function')
 
   const instance1 = new MockedE()
@@ -18,4 +18,5 @@ test('should not delete the prototype', () => {
   instance1.doSomething()
   expect(instance1.doSomething).toBeCalledTimes(1)
   expect(instance2.doSomething).toBeCalledTimes(0)
+  expect(MockedE.prototype.doSomething).toBeCalledTimes(0)
 })
