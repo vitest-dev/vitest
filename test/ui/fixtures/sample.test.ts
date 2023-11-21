@@ -6,5 +6,8 @@ it('add', () => {
   setTimeout(() => {
     throw new Error('error')
   })
+  setTimeout(() => {
+    throw 1
+  })
   expect(1 + 1).toEqual(2)
 })

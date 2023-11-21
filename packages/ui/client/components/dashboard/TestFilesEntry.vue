@@ -69,7 +69,11 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
         Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
         This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
       </p>
-      <details text="sm" font-thin pe-2.5 open:max-h-52 overflow-auto class="scrolls unhandled-errors">
+      <details
+        data-testid="unhandled-errors-details"
+        class="scrolls unhandled-errors"
+        text="sm" font-thin pe-2.5 open:max-h-52 overflow-auto
+      >
         <summary font-bold cursor-pointer>Errors</summary>
         <ErrorEntry v-for="e in unhandledErrors" :error="e" />
       </details>

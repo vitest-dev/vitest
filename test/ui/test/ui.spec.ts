@@ -22,9 +22,11 @@ describe.skipIf(isWindows)('ui', () => {
     it('unhandled errors', async () => {
       await untilUpdated(
         () => page.textContent('[data-testid=unhandled-errors]'),
-        'Vitest caught 1 error during the test run. This might cause false positive tests. '
+        'Vitest caught 2 errors during the test run. This might cause false positive tests. '
         + 'Resolve unhandled errors to make sure your tests are not affected.',
       )
+      await untilUpdated(() => page.textContent('[data-testid=unhandled-errors-details]'), 'Error: error')
+      await untilUpdated(() => page.textContent('[data-testid=unhandled-errors-details]'), 'Unknown Error: 1')
     })
   })
 
