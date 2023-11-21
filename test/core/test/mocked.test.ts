@@ -76,8 +76,7 @@ describe('mocked classes', () => {
     expect(instance.doSomething).toBeTypeOf('function')
     expect(instance.doSomething()).not.toBe('A')
 
-    // TODO: check what jest does
-    expect(MockedC.prototype.doSomething).not.toHaveBeenCalledOnce()
+    expect(MockedC.prototype.doSomething).toHaveBeenCalledOnce()
     expect(MockedC.prototype.doSomething).not.toHaveReturnedWith('A')
   })
 
