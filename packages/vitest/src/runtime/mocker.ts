@@ -328,7 +328,21 @@ export class VitestMocker {
           const spyModule = this.spyModule
           if (!spyModule)
             throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
+
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: any) {
+            // do similar to ject? https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691
+            // check constructor call
+            if (this instanceof newContainer[property]) {
+              // mock each class instance's method
+              // TODO: more sound way to loop prorotype methods?
+              for (const key in this) {
+                if (typeof this[key] === 'function') {
+                  // TODO: ability to restore?
+                  spyModule.spyOn(this, key).mockImplementation(() => undefined)
+                }
+              }
+            }
+          })
           mock.mockRestore = () => {
             mock.mockReset()
             mock.mockImplementation(() => undefined)
