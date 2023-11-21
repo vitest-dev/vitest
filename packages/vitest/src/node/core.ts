@@ -152,6 +152,9 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
 
     this.projects = await this.resolveWorkspace(cliOptions)
+    const filteredProjects = toArray(resolved.project)
+    if (filteredProjects.length)
+      this.projects = this.projects.filter(p => filteredProjects.includes(p.getName()))
     if (!this.coreWorkspaceProject)
       this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
 
