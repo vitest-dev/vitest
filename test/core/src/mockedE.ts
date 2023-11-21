@@ -1,5 +1,5 @@
 export class MockedE {
-  public doSomething(arg: string) {
+  public testFn(arg: string) {
     return arg.repeat(2)
   }
 }
