@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -18,7 +18,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "main": "./dist/index.js",

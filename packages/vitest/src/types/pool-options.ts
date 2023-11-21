@@ -1,6 +1,7 @@
-export type Pool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'typescript' // | 'vmForks'
+export type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'typescript' // | 'vmForks'
+export type Pool = BuiltinPool | (string & {})
 
-export interface PoolOptions {
+export interface PoolOptions extends Record<string, unknown> {
   /**
    * Run tests in `node:worker_threads`.
    *

@@ -150,7 +150,7 @@ export class StateManager {
     return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
   }
 
-  cancelFiles(files: string[], root: string) {
+  cancelFiles(files: string[], root: string, projectName: string) {
     this.collectFiles(files.map(filepath => ({
       filepath,
       name: relative(root, filepath),
@@ -163,6 +163,7 @@ export class StateManager {
       meta: {},
       // Cancelled files have not yet collected tests
       tasks: [],
+      projectName,
     })))
   }
 }

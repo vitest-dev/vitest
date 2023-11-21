@@ -116,7 +116,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root)
+          ctx.state.cancelFiles(files, ctx.config.root, project.getName())
 
         else
           throw error
@@ -125,9 +125,6 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
         cleanup()
       }
     }
-
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
@@ -158,14 +155,6 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
         workspaceFiles.push(project)
         workspaceMap.set(file, workspaceFiles)
       }
-
-      // it's possible that project defines a file that is also defined by another project
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
 
       const singleFork = specs.filter(([project]) => project.config.poolOptions?.forks?.singleFork)
       const multipleForks = specs.filter(([project]) => !project.config.poolOptions?.forks?.singleFork)
@@ -228,6 +217,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
   }
 
   return {
+    name: 'forks',
     runTests: runWithFiles('run'),
     close: async () => {
       await pool.destroy()

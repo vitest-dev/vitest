@@ -52,7 +52,7 @@ export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
   filepath?: string
-  projectName?: string
+  projectName: string
 }
 
 export interface File extends Suite {
@@ -150,7 +150,7 @@ interface TestEachFunction {
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
-  'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
+  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
@@ -178,6 +178,16 @@ export interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Whether tests run concurrently.
+   * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
+   */
+  concurrent?: boolean
+  /**
+   * Whether tests run sequentially.
+   * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
+   */
+  sequential?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {

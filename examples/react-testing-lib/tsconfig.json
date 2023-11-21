@@ -17,5 +17,5 @@
     "isolatedModules": true,
     "skipLibCheck": false
   },
-  "include": ["./src"]
+  "include": ["./src", ".src/test/setup.ts"]
 }

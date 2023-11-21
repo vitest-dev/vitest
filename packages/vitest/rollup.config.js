@@ -16,6 +16,7 @@ const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = [
+  'src/paths.ts',
   'src/index.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
@@ -103,9 +104,9 @@ export default ({ watch }) => defineConfig([
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+            return `chunks/${parts.slice(-2).join('-')}.[hash].js`
         }
-        return 'vendor-[name].[hash].js'
+        return 'vendor/[name].[hash].js'
       },
     },
     external,

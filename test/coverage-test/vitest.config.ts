@@ -82,11 +82,21 @@ export default defineConfig({
       ],
 
       // These will be updated by tests and reseted back by generic.report.test.ts
-      thresholdAutoUpdate: true,
-      functions: 0,
-      branches: 1.01,
-      lines: 0,
-      statements: 1.01,
+      thresholds: {
+        'autoUpdate': true,
+        'functions': 0,
+        'branches': 1.01,
+        'lines': 0,
+        'statements': 1.01,
+
+        // These need to pass both V8 and istanbul
+        '**/function-count.ts': {
+          statements: 50,
+          branches: 99,
+          functions: 59,
+          lines: 50,
+        },
+      },
     },
     setupFiles: [
       resolve(__dirname, './setup.ts'),

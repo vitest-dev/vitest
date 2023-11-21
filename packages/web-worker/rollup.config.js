@@ -43,7 +43,7 @@ export default () => [
     input: 'src/pure.ts',
     output: {
       dir: process.cwd(),
-      entryFileNames: '[name].d.ts',
+      entryFileNames: 'dist/[name].d.ts',
       format: 'esm',
     },
     external,

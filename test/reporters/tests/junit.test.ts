@@ -15,6 +15,7 @@ test('calc the duration used by junit', () => {
     mode: 'run',
     tasks: [],
     meta: {},
+    projectName: '',
   }
   const task: Task = {
     id: '1',
