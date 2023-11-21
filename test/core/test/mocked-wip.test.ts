@@ -13,6 +13,7 @@ test('mock each instance method separately', () => {
   const instance2 = new MockedE()
   expect(instance1).not.toBe(instance2)
   expect(instance1.doSomething).not.toBe(instance2.doSomething)
+  expect(instance1.doSomething).not.toBe(MockedE.prototype.doSomething)
   expect(vi.mocked(instance1.doSomething).mock).not.toBe(vi.mocked(instance2.doSomething).mock)
 
   instance1.doSomething()
