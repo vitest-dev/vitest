@@ -328,20 +328,26 @@ export class VitestMocker {
           const spyModule = this.spyModule
           if (!spyModule)
             throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: any) {
+
+          const primitives = this.primitives
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: unknown) {
             // jest reference
             // https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691
 
             // check constructor call
             if (this instanceof newContainer[property]) {
+              const instance = this as any
               // mock each class instance's method
-              // TODO: more sound way to loop prorotype methods?
-              for (const key in this) {
-                if (typeof this[key] === 'function') {
+              for (const { key } of getAllMockableProperties(instance, false, primitives)) {
+                const value = instance[key]
+                const type = getType(value)
+                const isFunction = type.includes('Function') && typeof value === 'function'
+                if (isFunction) {
                   // TODO: ability to restore?
-                  // mock by delegating calls to original prototype method, which should be also mocked already
-                  const original = this[key]
-                  const _mockInner = spyModule.spyOn(this, key).mockImplementation((...args: any[]) => original.apply(this, args))
+                  // mock and delegate calls to original prototype method, which should be also mocked already
+                  const original = instance[key]
+                  // TODO: fix type error for symbol key?
+                  spyModule.spyOn(instance, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
                 }
               }
             }

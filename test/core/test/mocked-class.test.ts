@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
 
-import { MockedE } from '../src/mockedE'
+import { MockedE, symbolFn } from '../src/mockedE'
 
 vi.mock('../src/mockedE')
 
@@ -84,6 +84,31 @@ test(`each instance's methods of mocked class should have independent mock funct
       ],
       [
         "c",
+      ],
+    ]
+  `)
+
+  // test same things for symbol key method
+  expect(instance1[symbolFn]).not.toBe(instance2[symbolFn])
+  expect(instance1[symbolFn]).not.toBe(MockedE.prototype[symbolFn])
+  expect(vi.mocked(instance1[symbolFn]).mock).not.toBe(vi.mocked(instance2[symbolFn]).mock)
+
+  instance1[symbolFn]('d')
+  expect(instance1[symbolFn]).toBeCalledTimes(1)
+  expect(instance2[symbolFn]).toBeCalledTimes(0)
+  expect(MockedE.prototype[symbolFn]).toBeCalledTimes(1)
+  expect(vi.mocked(instance1[symbolFn]).mock.calls).toMatchInlineSnapshot(`
+    [
+      [
+        "d",
+      ],
+    ]
+  `)
+  expect(vi.mocked(instance2[symbolFn]).mock.calls).toMatchInlineSnapshot(`[]`)
+  expect(vi.mocked(MockedE.prototype[symbolFn]).mock.calls).toMatchInlineSnapshot(`
+    [
+      [
+        "d",
       ],
     ]
   `)
