@@ -330,24 +330,23 @@ export class VitestMocker {
             throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
 
           const primitives = this.primitives
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: unknown) {
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: any) {
             // jest reference
             // https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691
 
             // check constructor call
             if (this instanceof newContainer[property]) {
-              const instance = this as any
-              // mock each class instance's method
-              for (const { key } of getAllMockableProperties(instance, false, primitives)) {
-                const value = instance[key]
+              // mock each mothod of mocked class instance
+              for (const { key } of getAllMockableProperties(this, false, primitives)) {
+                const value = this[key]
                 const type = getType(value)
                 const isFunction = type.includes('Function') && typeof value === 'function'
                 if (isFunction) {
                   // TODO: ability to restore?
                   // mock and delegate calls to original prototype method, which should be also mocked already
-                  const original = instance[key]
+                  const original = this[key]
                   // TODO: fix type error for symbol key?
-                  spyModule.spyOn(instance, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
+                  spyModule.spyOn(this, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
                 }
               }
             }
