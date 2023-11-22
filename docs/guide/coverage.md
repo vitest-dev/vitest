@@ -153,11 +153,11 @@ Beware that these ignore hints may now be included in final production build as 
 if (condition) {
 ```
 
-For `v8` this does not cause any issues. You can use `c8 ignore` comments with Typescript as usual:
+For `v8` this does not cause any issues. You can use `v8 ignore` comments with Typescript as usual:
 
 <!-- eslint-skip -->
 ```ts
-/* c8 ignore next 3 */
+/* v8 ignore next 3 */
 if (condition) {
 ```
 
