@@ -4,9 +4,7 @@ import { MockedE } from '../src/mockedE'
 
 vi.mock('../src/mockedE')
 
-test(`each instance's method of mocked class should have independent mock function state`, () => {
-  expect(MockedE).toBeTypeOf('function')
-
+test(`each instance's methods of mocked class should have independent mock function state`, () => {
   const instance1 = new MockedE()
   const instance2 = new MockedE()
   expect(instance1).not.toBe(instance2)
