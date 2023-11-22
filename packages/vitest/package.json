@@ -41,6 +41,9 @@
     "./importMeta": {
       "types": "./importMeta.d.ts"
     },
+    "./import-meta": {
+      "types": "./import-meta.d.ts"
+    },
     "./node": {
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
