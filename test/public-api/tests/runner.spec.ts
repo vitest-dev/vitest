@@ -4,8 +4,8 @@ import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
 
 it.each([
-  { name: 'threads are enabled', threads: true },
-  { name: 'threads are disabled', threads: false },
+  { name: 'threads are enabled', pool: 'threads' },
+  { name: 'threads are disabled', pool: 'forks' },
   {
     name: 'running in the browser',
     browser: {
@@ -18,7 +18,7 @@ it.each([
 ] as UserConfig[])('passes down metadata when $name', async (config) => {
   const taskUpdate: TaskResultPack[] = []
   const finishedFiles: File[] = []
-  const { vitest, stdout } = await runVitest({
+  const { vitest, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures'),
     include: ['**/*.spec.ts'],
     reporters: [
@@ -34,6 +34,8 @@ it.each([
     ],
     ...config,
   })
+
+  expect(stderr).toBe('')
 
   expect(stdout).toContain('custom.spec.ts > custom')
 

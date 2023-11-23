@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-vm-threads",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "latest",
+    "vitest": "workspace:*"
+  }
+}

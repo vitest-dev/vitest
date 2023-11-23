@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Hello.marko > mounts 1`] = `"<div>4 x 2 = 8</div><button>x1</button>"`;

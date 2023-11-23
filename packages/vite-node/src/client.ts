@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, createImportMetaEnvProxy, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -17,7 +17,7 @@ const debugNative = createDebug('vite-node:client:native')
 
 const clientStub = {
   injectQuery: (id: string) => id,
-  createHotContext() {
+  createHotContext: () => {
     return {
       accept: () => {},
       prune: () => {},
@@ -28,24 +28,13 @@ const clientStub = {
       send: () => {},
     }
   },
-  updateStyle(id: string, css: string) {
-    if (typeof document === 'undefined')
-      return
-
-    const element = document.getElementById(id)
-    if (element)
-      element.remove()
-
-    const head = document.querySelector('head')
-    const style = document.createElement('style')
-    style.setAttribute('type', 'text/css')
-    style.id = id
-    style.innerHTML = css
-    head?.appendChild(style)
-  },
+  updateStyle: () => {},
+  removeStyle: () => {},
 }
 
-export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
+const env = createImportMetaEnvProxy()
+
+export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }
@@ -232,11 +221,6 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
-    // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
-    // should be checked before normalization, because it removes this prefix
-    // TODO: this is a hack, we should find a better way to handle this
-    if (importer && id.startsWith(VALID_ID_PREFIX))
-      importer = undefined
     const dep = normalizeRequestId(id, this.options.base)
     if (!this.shouldResolveId(dep))
       return [dep, dep]
@@ -244,17 +228,17 @@ export class ViteNodeRunner {
     if (!this.options.resolveId || exists)
       return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
-    // TODO: we need to better handle module resolution when different urls point to the same module
-    // if (!resolved) {
-    //   const error = new Error(
-    //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
-    //     + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-    //     + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
-    //   )
-    //   Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
-    //   Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
-    //   throw error
-    // }
+    // supported since Vite 5-beta.19
+    if (resolved?.meta?.['vite:alias']?.noResolved) {
+      const error = new Error(
+        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+        + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
+        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+      )
+      Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
+      throw error
+    }
     const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
     return [resolvedId, resolvedId]
   }
@@ -295,7 +279,6 @@ export class ViteNodeRunner {
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
-
     let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
@@ -308,10 +291,12 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
+    const { Object, Reflect, Symbol } = this.getContextPrimitives()
+
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const href = pathToFileURL(modulePath).href
-    const meta = { url: href }
+    const meta = { url: href, env }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
@@ -372,7 +357,7 @@ export class ViteNodeRunner {
       Object.defineProperty(meta, 'hot', {
         enumerable: true,
         get: () => {
-          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          hotContext ||= this.options.createHotContext?.(this, moduleId)
           return hotContext
         },
         set: (value) => {
@@ -407,18 +392,27 @@ export class ViteNodeRunner {
     if (transformed[0] === '#')
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
+    await this.runModule(context, transformed)
+
+    return exports
+  }
+
+  protected getContextPrimitives() {
+    return { Object, Reflect, Symbol }
+  }
+
+  protected async runModule(context: Record<string, any>, transformed: string) {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
-    const fn = vm.runInThisContext(code, {
-      filename: __filename,
+    const options = {
+      filename: context.__filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
-    })
+    }
 
+    const fn = vm.runInThisContext(code, options)
     await fn(...Object.values(context))
-
-    return exports
   }
 
   prepareContext(context: Record<string, any>) {
@@ -437,11 +431,15 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
+  protected importExternalModule(path: string) {
+    return import(path)
+  }
+
   /**
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const importedModule = await import(path)
+    const importedModule = await this.importExternalModule(path)
 
     if (!this.shouldInterop(path, importedModule))
       return importedModule

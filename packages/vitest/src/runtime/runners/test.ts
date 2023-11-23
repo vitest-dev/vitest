@@ -1,4 +1,4 @@
-import type { CancelReason, Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -23,12 +23,12 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
-  onBeforeRun() {
+  onBeforeRunFiles() {
     this.snapshotClient.clear()
   }
 
-  async onAfterRun() {
-    const result = await this.snapshotClient.resetCurrent()
+  async onAfterRunFiles() {
+    const result = await this.snapshotClient.finishCurrentRun()
     if (result)
       await rpc().snapshotSaved(result)
   }
@@ -38,7 +38,7 @@ export class VitestTestRunner implements VitestRunner {
       suite.result!.heap = process.memoryUsage().heapUsed
   }
 
-  onAfterRunTest(test: Test) {
+  onAfterRunTask(test: Test) {
     this.snapshotClient.clearTest()
 
     if (this.config.logHeapUsage && typeof process !== 'undefined')
@@ -51,7 +51,7 @@ export class VitestTestRunner implements VitestRunner {
     this.cancelRun = true
   }
 
-  async onBeforeRunTest(test: Test) {
+  async onBeforeRunTask(test: Test) {
     const name = getNames(test).slice(1).join(' > ')
 
     if (this.cancelRun)
@@ -63,7 +63,7 @@ export class VitestTestRunner implements VitestRunner {
     }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.setTest(test.file!.filepath, name, this.workerState.config.snapshotOptions)
+    await this.snapshotClient.startCurrentRun(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }
@@ -73,7 +73,7 @@ export class VitestTestRunner implements VitestRunner {
       suite.mode = 'skip'
   }
 
-  onBeforeTryTest(test: Test) {
+  onBeforeTryTask(test: Test) {
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -86,7 +86,7 @@ export class VitestTestRunner implements VitestRunner {
     }, (globalThis as any)[GLOBAL_EXPECT])
   }
 
-  onAfterTryTest(test: Test) {
+  onAfterTryTask(test: Test) {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -103,12 +103,12 @@ export class VitestTestRunner implements VitestRunner {
       throw isExpectingAssertionsError
   }
 
-  extendTestContext(context: TestContext): TestContext {
+  extendTaskContext<T extends Test | Custom>(context: TaskContext<T>): ExtendedContext<T> {
     let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
         if (!_expect)
-          _expect = createExpect(context.meta)
+          _expect = createExpect(context.task)
         return _expect
       },
     })
@@ -117,7 +117,7 @@ export class VitestTestRunner implements VitestRunner {
         return _expect != null
       },
     })
-    return context
+    return context as ExtendedContext<T>
   }
 }
 

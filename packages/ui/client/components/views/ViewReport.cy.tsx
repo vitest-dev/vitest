@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
+import type { File } from 'vitest'
 import ViewReport from './ViewReport.vue'
-import type { File } from '#types'
 import { config } from '~/composables/client'
 
 config.value.root = ''
@@ -20,12 +20,24 @@ function makeTextStack() {
 }
 
 // 5 Stacks
-const textStacks = Array.from(new Array(5)).map(makeTextStack)
+const textStacks = Array.from(Array.from({ length: 5 })).map(makeTextStack)
+
+const diff = `
+  \x1B[32m- Expected\x1B[39m
+  \x1B[31m+ Received\x1B[39m
+  
+  \x1B[2m  Object {\x1B[22m
+  \x1B[2m    "a": 1,\x1B[22m
+  \x1B[32m-   "b": 2,\x1B[39m
+  \x1B[31m+   "b": 3,\x1B[39m
+  \x1B[2m  }\x1B[22m
+`
 
 const error = {
   name: 'Do some test',
   stacks: textStacks,
   message: 'Error: Transform failed with 1 error:',
+  diff,
 }
 
 const fileWithTextStacks = {
@@ -34,6 +46,7 @@ const fileWithTextStacks = {
   type: 'suite',
   mode: 'run',
   filepath: 'test/plain-stack-trace.ts',
+  meta: {},
   result: {
     state: 'fail',
     error,
@@ -45,7 +58,7 @@ const fileWithTextStacks = {
 describe('ViewReport', () => {
   describe('File where stacks are in text', () => {
     beforeEach(() => {
-      cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report"/>)
+      cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report" />)
     })
 
     it('renders all of the stacks', () => {
@@ -73,12 +86,14 @@ describe('ViewReport', () => {
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      meta: {},
       result: {
         state: 'fail',
         errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: 'Error: Transform failed with 1 error:',
+          diff,
         }],
       },
       tasks: [],
@@ -110,18 +125,20 @@ describe('ViewReport', () => {
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      meta: {},
       result: {
         state: 'fail',
         errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
+          diff,
         }],
       },
       tasks: [],
     }
-    const container = cy.mount(<ViewReport file={file} />)
-      .get(taskErrorSelector)
+    const component = cy.mount(<ViewReport file={file} />)
+    const container = component.get(taskErrorSelector)
     container.should('exist')
     container.children('pre').then((c) => {
       expect(c.text(), 'error has the correct plain text').equals('Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts')
@@ -144,5 +161,16 @@ describe('ViewReport', () => {
         }
       })
     })
+  })
+
+  it('test diff display', () => {
+    const component = cy.mount(<ViewReport file={fileWithTextStacks as File} />)
+
+    const diffElement = component.get('[data-testid="diff"]')
+    diffElement.should('exist')
+    diffElement
+      .should('contain.text', 'Expected')
+      .and('contain.text', 'Received')
+      .and('not.contain.text', '\x1B')
   })
 })

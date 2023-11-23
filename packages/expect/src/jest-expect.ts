@@ -1,7 +1,6 @@
-import { AssertionError } from 'chai'
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
-import type { EnhancedSpy } from '@vitest/spy'
+import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
@@ -11,8 +10,18 @@ import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
+// polyfill globals because expect can be used in node environment
+declare class Node {
+  contains(item: unknown): boolean
+}
+declare class DOMTokenList {
+  value: string
+  contains(item: unknown): boolean
+}
+
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
+  const { AssertionError } = chai
   const c = () => getColors()
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
@@ -164,6 +173,36 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return this.match(expected)
   })
   def('toContain', function (item) {
+    const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
+
+    if (typeof Node !== 'undefined' && actual instanceof Node) {
+      if (!(item instanceof Node))
+        throw new TypeError(`toContain() expected a DOM node as the argument, but got ${typeof item}`)
+
+      return this.assert(
+        actual.contains(item),
+        'expected #{this} to contain element #{exp}',
+        'expected #{this} not to contain element #{exp}',
+        item,
+        actual,
+      )
+    }
+
+    if (typeof DOMTokenList !== 'undefined' && actual instanceof DOMTokenList) {
+      assertTypes(item, 'class name', ['string'])
+      const isNot = utils.flag(this, 'negate') as boolean
+      const expectedClassList = isNot ? actual.value.replace(item, '').trim() : `${actual.value} ${item}`
+      return this.assert(
+        actual.contains(item),
+        `expected "${actual.value}" to contain "${item}"`,
+        `expected "${actual.value}" not to contain "${item}"`,
+        expectedClassList,
+        actual.value,
+      )
+    }
+    // make "actual" indexable to have compatibility with jest
+    if (actual != null && typeof actual !== 'string')
+      utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {
@@ -200,7 +239,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -213,7 +252,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -226,7 +265,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -239,7 +278,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -344,7 +383,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   const getSpy = (assertion: any) => {
     assertIsMock(assertion)
-    return assertion._obj as EnhancedSpy
+    return assertion._obj as MockInstance
   }
   const ordinalOf = (i: number) => {
     const j = i % 10
@@ -361,7 +400,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return `${i}th`
   }
-  const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
+  const formatCalls = (spy: MockInstance, msg: string, actualCall?: any) => {
     if (spy.mock.calls) {
       msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
         let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
@@ -377,7 +416,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
-  const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
+  const formatReturns = (spy: MockInstance, msg: string, actualReturn?: any) => {
     msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
       let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
@@ -436,11 +475,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (called && isNot)
       msg = formatCalls(spy, msg)
 
-    if ((called && isNot) || (!called && !isNot)) {
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((called && isNot) || (!called && !isNot))
+      throw new AssertionError(msg)
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
@@ -448,7 +484,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
     const isNot = utils.flag(this, 'negate') as boolean
 
-    let msg = utils.getMessage(
+    const msg = utils.getMessage(
       this,
       [
         pass,
@@ -458,12 +494,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
 
-    if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatCalls(spy, msg, args)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((pass && isNot) || (!pass && !isNot))
+      throw new AssertionError(formatCalls(spy, msg, args))
   })
   def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function (times: number, ...args: any[]) {
     const spy = getSpy(this)
@@ -519,11 +551,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       }
     }
     else {
+      let isThrow = false
       try {
         obj()
       }
       catch (err) {
+        isThrow = true
         thrown = err
+      }
+
+      if (!isThrow && !isNot) {
+        const message = utils.flag(this, 'message') || 'expected function to throw an error, but it didn\'t'
+        const error = {
+          showDiff: false,
+        }
+        throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
       }
     }
 
@@ -595,7 +637,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
     const isNot = utils.flag(this, 'negate') as boolean
 
-    let msg = utils.getMessage(
+    const msg = utils.getMessage(
       this,
       [
         pass,
@@ -605,12 +647,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
 
-    if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatReturns(spy, msg, value)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
+    if ((pass && isNot) || (!pass && !isNot))
+      throw new AssertionError(formatReturns(spy, msg, value))
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
     const spy = getSpy(this)
@@ -650,8 +688,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
+    const error = new Error('resolves')
     utils.flag(this, 'promise', 'resolves')
-    utils.flag(this, 'error', new Error('resolves'))
+    utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
@@ -672,7 +711,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected "${String(err)}" instead of resolving`)
+              const _error = new AssertionError(
+                `promise rejected "${utils.inspect(err)}" instead of resolving`,
+                { showDiff: false },
+              ) as Error
+              _error.cause = err
+              _error.stack = (error.stack as string).replace(error.message, _error.message)
+              throw _error
             },
           )
 
@@ -685,8 +730,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
+    const error = new Error('rejects')
     utils.flag(this, 'promise', 'rejects')
-    utils.flag(this, 'error', new Error('rejects'))
+    utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
@@ -704,7 +750,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async (...args: any[]) => {
           const promise = wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
+              const _error = new AssertionError(
+                `promise resolved "${utils.inspect(value)}" instead of rejecting`,
+                { showDiff: true, expected: new Error('rejected promise'), actual: value },
+              ) as any
+              _error.stack = (error.stack as string).replace(error.message, _error.message)
+              throw _error
             },
             (err: any) => {
               utils.flag(this, 'object', err)

@@ -1,10 +1,13 @@
 {
   "name": "@vitest/test-run",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/runner": "workspace:*",
+    "execa": "^7.1.1",
     "vite": "latest",
     "vitest": "workspace:*"
   }

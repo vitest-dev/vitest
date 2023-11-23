@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-react-testing-lib-msw",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",
@@ -11,19 +12,18 @@
   },
   "dependencies": {
     "@apollo/client": "^3.6.6",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@testing-library/react": "^12.1.5",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/react": "^17.0.45",
-    "@types/react-dom": "^17.0.17",
-    "@vitejs/plugin-react": "^4.0.1",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/react": "^18.2.33",
+    "@types/react-dom": "^18.2.14",
+    "@vitejs/plugin-react": "latest",
     "@vitest/ui": "latest",
-    "cross-fetch": "^3.1.5",
     "jsdom": "latest",
-    "msw": "^1.2.1",
+    "msw": "^2.0.0",
     "vite": "latest",
     "vitest": "latest"
   },

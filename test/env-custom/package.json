@@ -1,11 +1,14 @@
 {
   "name": "@vitest/test-env-custom",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "debug": "^4.3.4",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom"
   }

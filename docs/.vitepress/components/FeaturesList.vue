@@ -7,7 +7,7 @@
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins.</ListItem>
     <ListItem>Use the same setup from your app to run the tests!</ListItem>
     <ListItem><a target="_blank" href="https://twitter.com/antfu7/status/1468233216939245579" rel="noopener noreferrer">Smart & instant watch mode, like HMR for tests!</a></ListItem>
-    <ListItem>Component testing for Vue, React, Svelte, Lit and more</ListItem>
+    <ListItem>Component testing for Vue, React, Svelte, Lit, Marko and more</ListItem>
     <ListItem>Out-of-the-box TypeScript / JSX support</ListItem>
     <ListItem>ESM first, top level await</ListItem>
     <ListItem>Workers multi-threading via <a target="_blank" href="https://github.com/tinylibs/tinypool" rel="noopener noreferrer">Tinypool</a></ListItem>
@@ -28,7 +28,7 @@
   </ul>
 </template>
 
-<style scoped>
+<style>
 .features-list li {
   list-style: none;
   display: flex;

@@ -1,6 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
+import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
@@ -56,11 +57,59 @@ async function loadConfig() {
   throw new Error('cannot load configuration after 5 retries')
 }
 
+function on(event: string, listener: (...args: any[]) => void) {
+  window.addEventListener(event, listener)
+  return () => window.removeEventListener(event, listener)
+}
+
+// we can't import "processError" yet because error might've been thrown before the module was loaded
+async function defaultErrorReport(type: string, unhandledError: any) {
+  const error = {
+    ...unhandledError,
+    name: unhandledError.name,
+    message: unhandledError.message,
+    stack: unhandledError.stack,
+  }
+  if (testId !== 'no-isolate')
+    error.VITEST_TEST_PATH = testId
+  await client.rpc.onUnhandledError(error, type)
+  await client.rpc.onDone(testId)
+}
+
+const stopErrorHandler = on('error', e => defaultErrorReport('Error', e.error))
+const stopRejectionHandler = on('unhandledrejection', e => defaultErrorReport('Unhandled Rejection', e.reason))
+
+let runningTests = false
+
+async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error: any) {
+  const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
+  const processedError = processError(error)
+  if (testId !== 'no-isolate')
+    error.VITEST_TEST_PATH = testId
+  await rpc.onUnhandledError(processedError, type)
+  if (!runningTests)
+    await rpc.onDone(testId)
+}
+
 ws.addEventListener('open', async () => {
   await loadConfig()
 
-  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
-  const safeRpc = createSafeRpc(client, getSafeTimers)
+  let safeRpc: typeof client.rpc
+  try {
+    // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
+    const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+    safeRpc = createSafeRpc(client, getSafeTimers)
+  }
+  catch (err) {
+    location.reload()
+    return
+  }
+
+  stopErrorHandler()
+  stopRejectionHandler()
+
+  on('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
+  on('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
 
   // @ts-expect-error untyped global for internal use
   globalThis.__vitest_browser__ = true
@@ -68,6 +117,9 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    environment: {
+      name: 'browser',
+    },
     // @ts-expect-error untyped global for internal use
     moduleCache: globalThis.__vi_module_cache__,
     rpc: client.rpc,
@@ -76,6 +128,7 @@ ws.addEventListener('open', async () => {
       environment: 0,
       prepare: 0,
     },
+    providedContext: await client.rpc.getProvidedContext(),
   }
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()
@@ -90,7 +143,7 @@ ws.addEventListener('open', async () => {
   await runTests(paths, config!)
 })
 
-async function runTests(paths: string[], config: ResolvedConfig) {
+async function prepareTestEnvironment(config: ResolvedConfig) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
@@ -98,6 +151,7 @@ async function runTests(paths: string[], config: ResolvedConfig) {
   const {
     startTests,
     setupCommonEnv,
+    loadDiffConfig,
     takeCoverageInsideWorker,
   } = await importId('vitest/browser') as typeof import('vitest/browser')
 
@@ -111,6 +165,28 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     runner = new BrowserRunner({ config, browserHashMap })
   }
 
+  return {
+    startTests,
+    setupCommonEnv,
+    loadDiffConfig,
+    executor,
+    runner,
+  }
+}
+
+async function runTests(paths: string[], config: ResolvedConfig) {
+  let preparedData: Awaited<ReturnType<typeof prepareTestEnvironment>> | undefined
+  // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
+  try {
+    preparedData = await prepareTestEnvironment(config)
+  }
+  catch (err) {
+    location.reload()
+    return
+  }
+
+  const { startTests, setupCommonEnv, loadDiffConfig, executor, runner } = preparedData!
+
   onCancel.then((reason) => {
     runner?.onCancel?.(reason)
   })
@@ -119,6 +195,8 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
+    runner.config.diffOptions = await loadDiffConfig(config, executor as VitestExecutor)
+
     await setupCommonEnv(config)
     const files = paths.map((path) => {
       return (`${config.root}/${path}`).replace(/\/+/g, '/')
@@ -127,10 +205,14 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     const now = `${new Date().getTime()}`
     files.forEach(i => browserHashMap.set(i, [true, now]))
 
+    runningTests = true
+
     for (const file of files)
       await startTests([file], runner)
   }
   finally {
+    runningTests = false
+
     await rpcDone()
     await rpc().onDone(testId)
   }

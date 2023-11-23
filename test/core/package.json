@@ -1,15 +1,16 @@
 {
   "name": "@vitest/test-core",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",
+    "dev": "vite",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn": "^8.8.2",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
     "vitest": "workspace:*"

@@ -19,7 +19,7 @@ describe('setup files with forceRerunTrigger', () => {
   })
 
   // Note that this test will fail locally if you have uncommitted changes
-  it('should run no tests if setup file is not changed', async () => {
+  it.runIf(process.env.GITHUB_ACTIONS)('should run no tests if setup file is not changed', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   }, 60_000)

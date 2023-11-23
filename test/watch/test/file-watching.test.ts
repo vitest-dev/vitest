@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { afterEach, describe, expect, test } from 'vitest'
 
-import { runVitestCli } from '../../test-utils'
+import * as testUtils from '../../test-utils'
 
 const sourceFile = 'fixtures/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
@@ -12,8 +12,18 @@ const testFileContent = readFileSync(testFile, 'utf-8')
 const configFile = 'fixtures/vitest.config.ts'
 const configFileContent = readFileSync(configFile, 'utf-8')
 
+const forceTriggerFile = 'fixtures/force-watch/trigger.js'
+const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
+
 const cliArgs = ['--root', 'fixtures', '--watch']
 const cleanups: (() => void)[] = []
+
+async function runVitestCli(...args: string[]) {
+  const vitest = await testUtils.runVitestCli(...args)
+  if (args.includes('--watch'))
+    vitest.resetOutput()
+  return vitest
+}
 
 function editFile(fileContent: string) {
   return `// Modified by file-watching.test.ts
@@ -26,8 +36,13 @@ afterEach(() => {
   writeFileSync(sourceFile, sourceFileContent, 'utf8')
   writeFileSync(testFile, testFileContent, 'utf8')
   writeFileSync(configFile, configFileContent, 'utf8')
+  writeFileSync(forceTriggerFile, forceTriggerFileContent, 'utf8')
   cleanups.splice(0).forEach(cleanup => cleanup())
 })
+
+// TODO: Fix flakiness and enable on CI
+if (process.env.GITHUB_ACTIONS)
+  test.only('skip tests on CI', () => {})
 
 test('editing source file triggers re-run', async () => {
   const vitest = await runVitestCli(...cliArgs)
@@ -37,6 +52,30 @@ test('editing source file triggers re-run', async () => {
   await vitest.waitForStdout('New code running')
   await vitest.waitForStdout('RERUN  ../math.ts')
   await vitest.waitForStdout('1 passed')
+})
+
+test('editing file that was imported with a query reruns suite', async () => {
+  const vitest = await runVitestCli(...cliArgs)
+
+  testUtils.editFile(
+    testUtils.resolvePath(import.meta.url, '../fixtures/42.txt'),
+    file => `${file}\n`,
+  )
+
+  await vitest.waitForStdout('RERUN  ../42.txt')
+  await vitest.waitForStdout('1 passed')
+})
+
+test('editing force rerun trigger reruns all tests', async () => {
+  const vitest = await runVitestCli(...cliArgs)
+
+  writeFileSync(forceTriggerFile, editFile(forceTriggerFileContent), 'utf8')
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  await vitest.waitForStdout('RERUN  ../force-watch/trigger.js')
+  await vitest.waitForStdout('example.test.ts')
+  await vitest.waitForStdout('math.test.ts')
+  await vitest.waitForStdout('2 passed')
 })
 
 test('editing test file triggers re-run', async () => {
@@ -98,9 +137,12 @@ test('editing source file generates new test report to file system', async () =>
 
   const vitest = await runVitestCli(
     ...cliArgs,
-    '--reporter', 'verbose',
-    '--reporter', 'junit',
-    '--output-file', 'test-results/junit.xml',
+    '--reporter',
+    'verbose',
+    '--reporter',
+    'junit',
+    '--output-file',
+    'test-results/junit.xml',
   )
 
   // Test report should be generated on initial test run

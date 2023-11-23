@@ -193,7 +193,9 @@ function mapSourcePosition(position: OriginalMapping) {
     // location in the original file.
     if (originalPosition.source !== null) {
       originalPosition.source = supportRelativeURL(
-        sourceMap.url, originalPosition.source)
+        sourceMap.url,
+        originalPosition.source,
+      )
       return originalPosition
     }
   }

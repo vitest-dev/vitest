@@ -10,7 +10,7 @@ exports[`should fail expect.test.ts > expect.test.ts 1`] = `"AssertionError: exp
 
 exports[`should fail expect-soft.test.ts > expect-soft.test.ts 1`] = `"Error: expect.soft() can only be used inside a test"`;
 
-exports[`should fail expect-unreachable.test.ts > expect-unreachable.test.ts 1`] = `"AssertionError: expected \\"hi\\" not to be reached"`;
+exports[`should fail expect-unreachable.test.ts > expect-unreachable.test.ts 1`] = `"AssertionError: expected "hi" not to be reached"`;
 
 exports[`should fail hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
@@ -41,6 +41,12 @@ TypeError: failure"
 `;
 
 exports[`should fail test-extend/circular-dependency.test.ts > test-extend/circular-dependency.test.ts 1`] = `"Error: circular fixture dependency"`;
+
+exports[`should fail test-extend/fixture-error.test.ts > test-extend/fixture-error.test.ts 1`] = `
+"Error: Error thrown in test fixture
+Error: Error thrown in afterEach fixture
+Error: Error thrown in beforeEach fixture"
+`;
 
 exports[`should fail test-extend/fixture-rest-params.test.ts > test-extend/fixture-rest-params.test.ts 1`] = `"Error: the first argument must use object destructuring pattern"`;
 

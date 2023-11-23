@@ -5,13 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
   format as prettyFormat,
 } from 'pretty-format'
-import { isObject } from '@vitest/utils'
+import { isObject } from '../../../utils/src/index'
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { getSerializers } from './plugins'
@@ -29,11 +28,10 @@ export function keyToTestName(key: string): string {
   return key.replace(/ \d+$/, '')
 }
 
-export function getSnapshotData(content: string | null,
-  options: SnapshotStateOptions): {
-    data: SnapshotData
-    dirty: boolean
-  } {
+export function getSnapshotData(content: string | null, options: SnapshotStateOptions): {
+  data: SnapshotData
+  dirty: boolean
+} {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
@@ -92,9 +90,7 @@ export function removeExtraLineBreaks(string: string): string {
 const escapeRegex = true
 const printFunctionName = false
 
-export function serialize(val: unknown,
-  indent = 2,
-  formatOverrides: PrettyFormatOptions = {}): string {
+export function serialize(val: unknown, indent = 2, formatOverrides: PrettyFormatOptions = {}): string {
   return normalizeNewlines(
     prettyFormat(val, {
       escapeRegex,
@@ -128,13 +124,6 @@ function printBacktickString(str: string): string {
   return `\`${escapeBacktickString(str)}\``
 }
 
-export async function ensureDirectoryExists(environment: SnapshotEnvironment, filePath: string) {
-  try {
-    await environment.prepareDirectory(join(dirname(filePath)))
-  }
-  catch { }
-}
-
 export function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
@@ -157,7 +146,6 @@ export async function saveSnapshotFile(
   if (skipWriting)
     return
 
-  await ensureDirectoryExists(environment, snapshotPath)
   await environment.saveSnapshotFile(
     snapshotPath,
     content,
@@ -175,7 +163,6 @@ export async function saveSnapshotFileRaw(
   if (skipWriting)
     return
 
-  await ensureDirectoryExists(environment, snapshotPath)
   await environment.saveSnapshotFile(
     snapshotPath,
     content,

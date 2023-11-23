@@ -1,3 +1,4 @@
+import { getFixture } from './map'
 import type { TestContext } from './types'
 
 export interface FixtureItem {
@@ -36,39 +37,91 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
       if (usedProps.length)
-        fixture.deps = context.fixtures!.filter(({ index, prop }) => index !== fixture.index && usedProps.includes(prop))
+        fixture.deps = context.fixtures!.filter(({ prop }) => prop !== fixture.prop && usedProps.includes(prop))
     }
   })
 
   return context
 }
 
-export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
-  if (!fixtures.length)
-    return () => fn(context)
+const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
+let cleanupFnArray = new Array<() => void | Promise<void>>()
 
-  const usedProps = getUsedProps(fn)
-  if (!usedProps.length)
-    return () => fn(context)
+export async function callFixtureCleanup() {
+  for (const cleanup of cleanupFnArray.reverse())
+    await cleanup()
+  cleanupFnArray = []
+}
 
-  const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
-  const pendingFixtures = resolveDeps(usedFixtures)
-  let cursor = 0
+export function withFixtures(fn: Function, testContext?: TestContext) {
+  return (hookContext?: TestContext) => {
+    const context: TestContext & { [key: string]: any } | undefined = hookContext || testContext
 
-  async function use(fixtureValue: any) {
-    const { prop } = pendingFixtures[cursor++]
-    context[prop] = fixtureValue
-    if (cursor < pendingFixtures.length)
-      await next()
-    else await fn(context)
+    if (!context)
+      return fn({})
+
+    const fixtures = getFixture(context)
+    if (!fixtures?.length)
+      return fn(context)
+
+    const usedProps = getUsedProps(fn)
+    if (!usedProps.length)
+      return fn(context)
+
+    if (!fixtureValueMaps.get(context))
+      fixtureValueMaps.set(context, new Map<FixtureItem, any>())
+    const fixtureValueMap: Map<FixtureItem, any> = fixtureValueMaps.get(context)!
+
+    const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
+    const pendingFixtures = resolveDeps(usedFixtures)
+
+    if (!pendingFixtures.length)
+      return fn(context)
+
+    let cursor = 0
+
+    return new Promise((resolve, reject) => {
+      async function use(fixtureValue: any) {
+        const fixture = pendingFixtures[cursor++]
+        context![fixture.prop] = fixtureValue
+
+        if (!fixtureValueMap.has(fixture)) {
+          fixtureValueMap.set(fixture, fixtureValue)
+          cleanupFnArray.unshift(() => {
+            fixtureValueMap.delete(fixture)
+          })
+        }
+
+        if (cursor < pendingFixtures.length) {
+          await next()
+        }
+        else {
+          // When all fixtures setup, call the test function
+          try {
+            resolve(await fn(context))
+          }
+          catch (err) {
+            reject(err)
+          }
+          return new Promise<void>((resolve) => {
+            cleanupFnArray.push(resolve)
+          })
+        }
+      }
+
+      async function next() {
+        const fixture = pendingFixtures[cursor]
+        const { isFn, value } = fixture
+        if (fixtureValueMap.has(fixture))
+          return use(fixtureValueMap.get(fixture))
+        else
+          return isFn ? value(context, use) : use(value)
+      }
+
+      const setupFixturePromise = next().catch(reject)
+      cleanupFnArray.unshift(() => setupFixturePromise)
+    })
   }
-
-  async function next() {
-    const { value } = pendingFixtures[cursor]
-    typeof value === 'function' ? await value(context, use) : await use(value)
-  }
-
-  return () => next()
 }
 
 function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {

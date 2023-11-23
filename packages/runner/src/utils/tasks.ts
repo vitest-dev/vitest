@@ -1,12 +1,27 @@
 import { type Arrayable, toArray } from '@vitest/utils'
-import type { Suite, Task, TaskCustom, Test } from '../types'
+import type { Custom, Suite, Task, Test } from '../types'
 
-function isAtomTest(s: Task): s is Test | TaskCustom {
+function isAtomTest(s: Task): s is Test | Custom {
   return s.type === 'test' || s.type === 'custom'
 }
 
-export function getTests(suite: Arrayable<Task>): (Test | TaskCustom)[] {
-  return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
+export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
+  const tests: (Test | Custom)[] = []
+  const arraySuites = toArray(suite)
+  for (const s of arraySuites) {
+    if (isAtomTest(s)) {
+      tests.push(s)
+    }
+    else {
+      for (const task of s.tasks) {
+        if (isAtomTest(task))
+          tests.push(task)
+        else
+          tests.push(...getTests(task))
+      }
+    }
+  }
+  return tests
 }
 
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {

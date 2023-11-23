@@ -42,25 +42,6 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
           "name": "should fail",
           "result": {
             "duration": 0,
-            "error": {
-              "actual": "2",
-              "constructor": "Function<AssertionError>",
-              "diff": "- Expected
-+ Received
-
-- 1
-+ 2",
-              "expected": "1",
-              "message": "expected 2 to deeply equal 1",
-              "name": "AssertionError",
-              "nameStr": "AssertionError",
-              "operator": "strictEqual",
-              "showDiff": true,
-              "stack": "AssertionError: expected 2 to deeply equal 1",
-              "stackStr": "AssertionError: expected 2 to deeply equal 1",
-              "toJSON": "Function<anonymous>",
-              "toString": "Function<toString>",
-            },
             "errors": [
               {
                 "actual": "2",
@@ -97,6 +78,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               [Circular],
             ],
@@ -172,6 +154,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               [Circular],
               {
@@ -200,6 +183,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "meta": {},
             "mode": "run",
             "name": "",
+            "projectName": "",
             "tasks": [
               {
                 "file": [Circular],

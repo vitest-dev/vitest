@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { loadConfigFromFile } from 'vite'
@@ -20,8 +21,11 @@ export class VitestCache {
     return this.stats.getStats(key)
   }
 
-  static resolveCacheDir(root: string, dir: string | undefined) {
-    return resolve(root, slash(dir || 'node_modules/.vitest'))
+  static resolveCacheDir(root: string, dir: string | undefined, projectName: string | undefined) {
+    const baseDir = slash(dir || 'node_modules/.vitest')
+    return projectName
+      ? resolve(root, baseDir, crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'))
+      : resolve(root, baseDir)
   }
 
   static async clearCache(options: CliOptions) {
@@ -38,11 +42,12 @@ export class VitestCache {
       : undefined
 
     const cache = config?.test?.cache
+    const projectName = config?.test?.name
 
     if (cache === false)
       throw new Error('Cache is disabled')
 
-    const cachePath = VitestCache.resolveCacheDir(root, cache?.dir)
+    const cachePath = VitestCache.resolveCacheDir(root, cache?.dir, projectName)
 
     let cleared = false
 

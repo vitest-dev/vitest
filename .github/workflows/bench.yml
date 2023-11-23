@@ -11,13 +11,13 @@ jobs:
     if: ${{ github.event.issue.pull_request && (github.event.comment.body == '/bench' || github.event.comment.body == '/benchmark') }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
 
       - name: Install node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           cache: pnpm
 

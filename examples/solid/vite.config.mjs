@@ -7,8 +7,19 @@ import solid from 'vite-plugin-solid'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    threads: false,
-    isolate: false,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        isolate: false,
+      },
+    },
+    deps: {
+      optimizer: {
+        web: {
+          exclude: ['solid-js'],
+        },
+      },
+    },
   },
   plugins: [solid()],
   resolve: {

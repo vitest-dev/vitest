@@ -3,19 +3,34 @@ import { type UserConfig, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const configs: UserConfig[] = []
-const pools: UserConfig[] = [{ threads: true }, { threads: false }, { singleThread: true }]
+const pools: UserConfig[] = [{ pool: 'threads' }, { pool: 'forks' }, { pool: 'threads', poolOptions: { threads: { singleThread: true } } }]
 
 if (process.platform !== 'win32')
-  pools.push({ browser: { enabled: true, name: 'chrome' } })
+  pools.push({ browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
 
 for (const isolate of [true, false]) {
-  for (const pool of pools)
-    configs.push({ isolate, ...pool })
+  for (const pool of pools) {
+    configs.push({
+      ...pool,
+      poolOptions: {
+        threads: {
+          ...pool.poolOptions?.threads,
+          isolate,
+        },
+        forks: { isolate },
+      },
+    })
+  }
 }
 
 for (const config of configs) {
   test(`should bail with "${JSON.stringify(config)}"`, async () => {
-    process.env.THREADS = config?.threads ? 'true' : 'false'
+    const isParallel
+      = (config.pool === 'threads' && config.poolOptions?.threads?.singleThread !== true)
+      || (config.pool === 'forks' && config.poolOptions?.forks?.singleFork !== true)
+
+    // THREADS here means that multiple tests are run parallel
+    process.env.THREADS = isParallel ? 'true' : 'false'
 
     const { exitCode, stdout } = await runVitest({
       root: './fixtures',

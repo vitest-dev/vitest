@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { Tooltip as VueTooltip } from 'floating-vue'
+import type { File, Task } from 'vitest'
 import {
   coverageConfigured,
   coverageEnabled,
@@ -12,7 +13,6 @@ import {
   showDashboard,
 } from '../composables/navigation'
 import { client, findById } from '../composables/client'
-import type { File, Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
 import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'

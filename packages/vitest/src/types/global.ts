@@ -5,6 +5,18 @@ import type { UserConsoleLog } from './general'
 import type { VitestEnvironment } from './config'
 import type { BenchmarkResult } from './benchmark'
 
+declare global {
+  // eslint-disable-next-line ts/no-namespace
+  namespace Chai {
+    interface Assertion {
+      containSubset(expected: any): Assertion
+    }
+    interface Assert {
+      containSubset(val: any, exp: any, msg?: string): void
+    }
+  }
+}
+
 declare module '@vitest/expect' {
   interface MatcherState {
     environment: VitestEnvironment

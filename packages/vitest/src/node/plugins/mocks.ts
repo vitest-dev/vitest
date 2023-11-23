@@ -3,7 +3,7 @@ import { hoistMocks } from '../hoistMocks'
 
 export function MocksPlugin(): Plugin {
   return {
-    name: 'vite:mocks',
+    name: 'vitest:mocks',
     enforce: 'post',
     transform(code, id) {
       return hoistMocks(code, id, this.parse)

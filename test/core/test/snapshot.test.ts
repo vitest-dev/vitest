@@ -1,3 +1,5 @@
+/* eslint-disable style/quotes */
+
 import { expect, test, vi } from 'vitest'
 import { testOutsideInlineSnapshot } from './snapshots-outside'
 
@@ -5,6 +7,26 @@ test('object', () => {
   expect({
     this: { is: new Set(['of', 'snapshot']) },
   }).toMatchSnapshot()
+})
+
+test('single line inline', () => {
+  expect('some string').toMatchInlineSnapshot(`"some string"`)
+  expect('some "string"').toMatchInlineSnapshot(`"some "string""`)
+  expect('some "string').toMatchInlineSnapshot(`"some "string"`)
+  expect('som`e` string').toMatchInlineSnapshot(`"som\`e\` string"`)
+  expect('some string`').toMatchInlineSnapshot(`"some string\`"`)
+  expect("some string'").toMatchInlineSnapshot(`"some string'"`)
+  expect("some 'string'").toMatchInlineSnapshot(`"some 'string'"`)
+})
+
+test('single line snapshot', () => {
+  expect('some string').toMatchSnapshot()
+  expect('some "string"').toMatchSnapshot()
+  expect('some "string').toMatchSnapshot()
+  expect('som`e` string').toMatchSnapshot()
+  expect('some string`').toMatchSnapshot()
+  expect("some string'").toMatchSnapshot()
+  expect("some 'string'").toMatchSnapshot()
 })
 
 test('multiline', () => {
@@ -20,13 +42,13 @@ test('from outside', () => {
 
 test('with big array', () => {
   expect({
-    this: { is: new Set(['one', new Array(30).fill({})]) },
+    this: { is: new Set(['one', Array.from({ length: 30 }).fill({})]) },
   }).toMatchSnapshot()
 })
 
 test('with big string', () => {
   expect({
-    this: { is: new Set(['one', new Array(30).fill('zoo').join()]) },
+    this: { is: new Set(['one', Array.from({ length: 30 }).fill('zoo').join()]) },
   }).toMatchSnapshot()
 })
 

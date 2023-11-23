@@ -30,6 +30,20 @@ test('provider options, generic', () => {
       functions: [80, 95],
       lines: [80, 95],
     },
+    thresholds: {
+      '100': true,
+      'lines': 1,
+      'autoUpdate': true,
+      'perFile': true,
+      'statements': 100,
+
+      '**/some-file.ts': {
+        lines: 12,
+        branches: 12,
+        functions: 12,
+        statements: 12,
+      },
+    },
   })
 
   assertType<Coverage>({
@@ -39,15 +53,20 @@ test('provider options, generic', () => {
     watermarks: {
       statements: [80, 95],
     },
+    thresholds: {
+      '100': true,
+
+      '**/some-file.ts': {
+        lines: 12,
+        branches: 12,
+        functions: 12,
+        statements: 12,
+      },
+    },
   })
 })
 
 test('provider specific options, v8', () => {
-  assertType<Coverage>({
-    provider: 'v8',
-    100: true,
-  })
-
   assertType<Coverage>({
     provider: 'v8',
     // @ts-expect-error -- Istanbul-only option is not allowed
@@ -59,12 +78,6 @@ test('provider specific options, istanbul', () => {
   assertType<Coverage>({
     provider: 'istanbul',
     ignoreClassMethods: ['string'],
-  })
-
-  assertType<Coverage>({
-    provider: 'istanbul',
-    // @ts-expect-error -- V8-only option is not allowed
-    100: true,
   })
 })
 
@@ -103,6 +116,7 @@ test('provider module', () => {
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,
+            allowExternal: true,
           }
         },
         clean(_: boolean) {},

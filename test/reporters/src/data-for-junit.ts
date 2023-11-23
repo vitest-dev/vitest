@@ -11,6 +11,7 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
     filepath: '/vitest/test/core/test/basic.test.ts',
     result: { state: 'fail', duration: 145.99284195899963 },
     tasks: [],
+    projectName: '',
   }
 
   const suite: Suite = {
@@ -22,6 +23,7 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
     file,
     result: { state: 'pass', duration: 1.90183687210083 },
     tasks: [],
+    projectName: '',
   }
 
   const errorWithXml = new AssertionError({
@@ -45,7 +47,6 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
       file,
       result: {
         state: 'fail',
-        error: errorWithXml,
         errors: [errorWithXml],
         duration: 2.123123123,
       },

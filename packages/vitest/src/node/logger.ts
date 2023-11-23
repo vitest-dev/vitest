@@ -15,6 +15,12 @@ interface ErrorOptions {
   project?: WorkspaceProject
 }
 
+const ESC = '\x1B['
+const ERASE_DOWN = `${ESC}J`
+const ERASE_SCROLLBACK = `${ESC}3J`
+const CURSOR_TO_START = `${ESC}1;1H`
+const CLEAR_SCREEN = '\x1Bc'
+
 export class Logger {
   outputStream = process.stdout
   errorStream = process.stderr
@@ -50,7 +56,7 @@ export class Logger {
       return
     }
 
-    this.console.log(`\x1Bc${message}`)
+    this.console.log(`${ERASE_SCROLLBACK}${CLEAR_SCREEN}${message}`)
   }
 
   clearScreen(message: string, force = false) {
@@ -70,9 +76,7 @@ export class Logger {
 
     const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    // equivalent to ansi-escapes:
-    // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
-    this.console.log(`\u001B[1;1H\u001B[J${log}`)
+    this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
   printError(err: unknown, options: ErrorOptions = {}) {
@@ -91,17 +95,33 @@ export class Logger {
     const comma = c.dim(', ')
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
-    if (config.include)
-      this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
-    if (config.exclude)
-      this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
+    this.ctx.projects.forEach((project) => {
+      const config = project.config
+      const name = project.getName()
+      const output = project.isCore() || !name ? '' : `[${name}]`
+      if (output)
+        this.console.error(c.bgCyan(`${output} Config`))
+      if (config.include)
+        this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
+      if (config.exclude)
+        this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
+      if (config.typecheck.enabled) {
+        this.console.error(c.dim('typecheck include: ') + c.yellow(config.typecheck.include.join(comma)))
+        this.console.error(c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)))
+      }
+    })
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
-    if (config.passWithNoTests)
-      this.log(`No ${config.mode} files found, exiting with code 0\n`)
-    else
-      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else {
+      if (config.passWithNoTests)
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      else
+        this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
+    }
   }
 
   printBanner() {
@@ -130,7 +150,7 @@ export class Logger {
 
     if (this.ctx.config.ui)
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
-    else if (this.ctx.config.api)
+    else if (this.ctx.config.api?.port)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
 
     if (this.ctx.coverageProvider)

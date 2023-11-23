@@ -1,5 +1,3 @@
-import type { use as chaiUse } from 'chai'
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
@@ -12,8 +10,7 @@ import type { Formatter } from 'picocolors/types'
 import type { Constructable } from '@vitest/utils'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
-export type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
-export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
+export type ChaiPlugin = Chai.ChaiPlugin
 
 export type Tester = (a: any, b: any) => boolean | undefined
 
@@ -31,6 +28,7 @@ export interface MatcherHintOptions {
 }
 
 export interface MatcherState {
+  customTesters: Array<Tester>
   assertionCalls: number
   currentTestName?: string
   dontThrow?: () => void
@@ -97,6 +95,7 @@ export interface AsymmetricMatchersContaining {
   objectContaining<T = any>(expected: T): any
   arrayContaining<T = unknown>(expected: Array<T>): any
   stringMatching(expected: string | RegExp): any
+  closeTo(expected: number, precision?: number): any
 }
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
@@ -173,7 +172,7 @@ export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, 
 
 declare global {
   // support augmenting jest.Matchers by other libraries
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
 
     // eslint-disable-next-line unused-imports/no-unused-vars

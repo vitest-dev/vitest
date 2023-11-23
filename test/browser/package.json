@@ -1,7 +1,7 @@
 {
   "name": "@vitest/test-browser",
+  "type": "module",
   "private": true,
-  "module": "true",
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
     "test:webdriverio": "PROVIDER=webdriverio node --test specs/",

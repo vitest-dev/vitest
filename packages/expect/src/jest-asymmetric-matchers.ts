@@ -3,7 +3,7 @@ import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
 import { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
-import { equals, isA, iterableEquality, subsetEquality } from './jest-utils'
+import { equals, isA, iterableEquality, pluralize, subsetEquality } from './jest-utils'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean
@@ -26,6 +26,7 @@ export abstract class AsymmetricMatcher<
       ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
+      customTesters: [],
       utils: {
         ...getMatcherUtils(),
         diff,
@@ -266,6 +267,56 @@ export class StringMatching extends AsymmetricMatcher<RegExp> {
   }
 }
 
+class CloseTo extends AsymmetricMatcher<number> {
+  private readonly precision: number
+
+  constructor(sample: number, precision = 2, inverse = false) {
+    if (!isA('Number', sample))
+      throw new Error('Expected is not a Number')
+
+    if (!isA('Number', precision))
+      throw new Error('Precision is not a Number')
+
+    super(sample)
+    this.inverse = inverse
+    this.precision = precision
+  }
+
+  asymmetricMatch(other: number) {
+    if (!isA('Number', other))
+      return false
+
+    let result = false
+    if (other === Number.POSITIVE_INFINITY && this.sample === Number.POSITIVE_INFINITY) {
+      result = true // Infinity - Infinity is NaN
+    }
+    else if (other === Number.NEGATIVE_INFINITY && this.sample === Number.NEGATIVE_INFINITY) {
+      result = true // -Infinity - -Infinity is NaN
+    }
+    else {
+      result
+        = Math.abs(this.sample - other) < 10 ** -this.precision / 2
+    }
+    return this.inverse ? !result : result
+  }
+
+  toString() {
+    return `Number${this.inverse ? 'Not' : ''}CloseTo`
+  }
+
+  override getExpectedType() {
+    return 'number'
+  }
+
+  override toAsymmetricMatcher(): string {
+    return [
+      this.toString(),
+      this.sample,
+      `(${pluralize('digit', this.precision)})`,
+    ].join(' ')
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
@@ -303,11 +354,18 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     (expected: any) => new StringMatching(expected),
   )
 
+  utils.addMethod(
+    chai.expect,
+    'closeTo',
+    (expected: any, precision?: number) => new CloseTo(expected, precision),
+  )
+
   // defineProperty does not work
   ;(chai.expect as any).not = {
     stringContaining: (expected: string) => new StringContaining(expected, true),
     objectContaining: (expected: any) => new ObjectContaining(expected, true),
     arrayContaining: <T = unknown>(expected: Array<T>) => new ArrayContaining<T>(expected, true),
     stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
+    closeTo: (expected: any, precision?: number) => new CloseTo(expected, precision, true),
   }
 }

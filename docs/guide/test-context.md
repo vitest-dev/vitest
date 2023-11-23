@@ -27,11 +27,46 @@ A readonly object containing metadata about the test.
 
 #### `context.expect`
 
-The `expect` API bound to the current test.
+The `expect` API bound to the current test:
+
+```ts
+import { it } from 'vitest'
+
+it('math is easy', ({ expect }) => {
+  expect(2 + 2).toBe(4)
+})
+```
+
+This API is useful for running snapshot tests concurrently because global expect cannot track them:
+
+```ts
+import { it } from 'vitest'
+
+it.concurrent('math is easy', ({ expect }) => {
+  expect(2 + 2).toMatchInlineSnapshot()
+})
+
+it.concurrent('math is hard', ({ expect }) => {
+  expect(2 * 2).toMatchInlineSnapshot()
+})
+```
+
+#### `context.skip`
+
+Skips subsequent test execution and marks test as skipped:
+
+```ts
+import { expect, it } from 'vitest'
+
+it('math is hard', ({ skip }) => {
+  skip()
+  expect(2 + 2).toBe(5)
+})
+```
 
 ## Extend Test Context
 
-Vitest provides two diffident ways to help you extend the test context.
+Vitest provides two different ways to help you extend the test context.
 
 ### `test.extend`
 
@@ -51,7 +86,7 @@ const todos = []
 const archive = []
 
 export const myTest = test.extend({
-  todos: async ({ task }, use) => {
+  todos: async ({}, use) => {
     // setup the fixture before each test function
     todos.push(1, 2, 3)
 
@@ -69,12 +104,12 @@ Then we can import and use it.
 
 ```ts
 import { expect } from 'vitest'
-import { myTest } from './my-test.ts'
+import { myTest } from './my-test.js'
 
 myTest('add items to todos', ({ todos }) => {
   expect(todos.length).toBe(3)
 
-  todos.add(4)
+  todos.push(4)
   expect(todos.length).toBe(4)
 })
 

@@ -7,6 +7,7 @@ import { toArray } from '../../utils'
 const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
 const cssLangRE = new RegExp(cssLangs)
 const cssModuleRE = new RegExp(`\\.module${cssLangs}`)
+const cssInlineRE = /[?&]inline(&|$)/
 
 function isCSS(id: string) {
   return cssLangRE.test(id)
@@ -14,6 +15,12 @@ function isCSS(id: string) {
 
 function isCSSModule(id: string) {
   return cssModuleRE.test(id)
+}
+
+// inline css requests are expected to just return the
+// string content directly and not the proxy module
+function isInline(id: string) {
+  return cssInlineRE.test(id)
 }
 
 function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
@@ -55,7 +62,7 @@ export function CSSEnablerPlugin(ctx: { config: ResolvedConfig }): VitePlugin[] 
         if (!isCSS(id) || shouldProcessCSS(id))
           return
 
-        if (isCSSModule(id)) {
+        if (isCSSModule(id) && !isInline(id)) {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty

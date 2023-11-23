@@ -78,6 +78,7 @@ type FieldsWithDefaultValues =
   | 'exclude'
   | 'extension'
   | 'reportOnFailure'
+  | 'allowExternal'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -103,15 +104,15 @@ export interface BaseCoverageOptions {
   include?: string[]
 
   /**
-    * Extensions for files to be included in coverage
-    *
-    * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']
-    */
+   * Extensions for files to be included in coverage
+   *
+   * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
+   */
   extension?: string | string[]
 
   /**
-    * List of files excluded from coverage as glob patterns
-    */
+   * List of files excluded from coverage as glob patterns
+   */
   exclude?: string[]
 
   /**
@@ -156,40 +157,27 @@ export interface BaseCoverageOptions {
   skipFull?: boolean
 
   /**
-   * Check thresholds per file.
-   * See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
+   * Configurations for thresholds
    *
-   * @default false
-   */
-  perFile?: boolean
-
-  /**
-   * Threshold for lines
+   * @example
    *
-   * @default undefined
-   */
-  lines?: number
-
-  /**
-   * Threshold for functions
+   * ```ts
+   * {
+   *   // Thresholds for all files
+   *   functions: 95,
+   *   branches: 70,
+   *   perFile: true,
+   *   autoUpdate: true,
    *
-   * @default undefined
+   *   // Thresholds for utilities
+   *   'src/utils/**.ts': {
+   *     lines: 100,
+   *     statements: 95,
+   *   }
+   * }
+   * ```
    */
-  functions?: number
-
-  /**
-   * Threshold for branches
-   *
-   * @default undefined
-   */
-  branches?: number
-
-  /**
-   * Threshold for statements
-   *
-   * @default undefined
-   */
-  statements?: number
+  thresholds?: Thresholds | ({ [glob: string]: Pick<Thresholds, 'statements' | 'functions' | 'branches' | 'lines'> } & Thresholds)
 
   /**
    * Watermarks for statements, lines, branches and functions.
@@ -204,18 +192,18 @@ export interface BaseCoverageOptions {
   }
 
   /**
-   * Update threshold values automatically when current coverage is higher than earlier thresholds
-   *
-   * @default false
-   */
-  thresholdAutoUpdate?: boolean
-
-  /**
    * Generate coverage report even when tests fail.
    *
    * @default false
    */
   reportOnFailure?: boolean
+
+  /**
+   * Collect coverage of files outside the project `root`.
+   *
+   * @default false
+   */
+  allowExternal?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -227,16 +215,36 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
-   *
-   * @default false
-   */
-  100?: boolean
-}
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
   /** Name of the module or path to a file to load the custom provider from */
   customProviderModule: string
+}
+
+interface Thresholds {
+  /** Set global thresholds to `100` */
+  100?: boolean
+
+  /** Check thresholds per file. */
+  perFile?: boolean
+
+  /**
+   * Update threshold values automatically when current coverage is higher than earlier thresholds
+   *
+   * @default false
+   */
+  autoUpdate?: boolean
+
+  /** Thresholds for statements */
+  statements?: number
+
+  /** Thresholds for functions */
+  functions?: number
+
+  /** Thresholds for branches */
+  branches?: number
+
+  /** Thresholds for lines */
+  lines?: number
 }

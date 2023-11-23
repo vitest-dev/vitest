@@ -1,7 +1,7 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
 import type { Expression, ImportDeclaration } from 'estree'
-import type { AcornNode } from 'rollup'
+import type { PluginContext } from 'rollup'
 import type { Node, Positioned } from './esmWalker'
 import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
 
@@ -18,7 +18,7 @@ const skipHijack = [
 // this is basically copypaste from Vite SSR
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
-export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
+export function injectVitestModule(code: string, id: string, parse: PluginContext['parse']) {
   if (skipHijack.some(skip => id.match(skip)))
     return
 
@@ -26,11 +26,7 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
 
   let ast: any
   try {
-    ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-      locations: true,
-    })
+    ast = parse(code)
   }
   catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
@@ -268,6 +264,6 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   return {
     ast,
     code: s.toString(),
-    map: s.generateMap({ hires: true, source: id }),
+    map: s.generateMap({ hires: 'boundary', source: id }),
   }
 }

@@ -295,10 +295,7 @@ function hasIterator(object: any) {
   return !!(object != null && object[IteratorSymbol])
 }
 
-export function iterableEquality(a: any,
-  b: any,
-  aStack: Array<any> = [],
-  bStack: Array<any> = []): boolean | undefined {
+export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack: Array<any> = []): boolean | undefined {
   if (
     typeof a !== 'object'
     || typeof b !== 'object'
@@ -324,8 +321,7 @@ export function iterableEquality(a: any,
   aStack.push(a)
   bStack.push(b)
 
-  const iterableEqualityWithStack = (a: any, b: any) =>
-    iterableEquality(a, b, [...aStack], [...bStack])
+  const iterableEqualityWithStack = (a: any, b: any) => iterableEquality(a, b, [...aStack], [...bStack])
 
   if (a.size !== undefined) {
     if (a.size !== b.size) {
@@ -431,8 +427,7 @@ function isObjectWithKeys(a: any) {
   && !(a instanceof Date)
 }
 
-export function subsetEquality(object: unknown,
-  subset: unknown): boolean | undefined {
+export function subsetEquality(object: unknown, subset: unknown): boolean | undefined {
   // subsetEquality needs to keep track of the references
   // it has already visited to avoid infinite loops in case
   // there are circular references in the subset passed to it.
@@ -450,12 +445,12 @@ export function subsetEquality(object: unknown,
             seenReferences.set(subset[key], true)
           }
           const result
-          = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            iterableEquality,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            = object != null
+            && hasPropertyInObject(object, key)
+            && equals(object[key], subset[key], [
+              iterableEquality,
+              subsetEqualityWithContext(seenReferences),
+            ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -476,8 +471,7 @@ export function typeEquality(a: any, b: any): boolean | undefined {
   return false
 }
 
-export function arrayBufferEquality(a: unknown,
-  b: unknown): boolean | undefined {
+export function arrayBufferEquality(a: unknown, b: unknown): boolean | undefined {
   let dataViewA = a as DataView
   let dataViewB = b as DataView
 
@@ -485,8 +479,13 @@ export function arrayBufferEquality(a: unknown,
     if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
       return undefined
 
-    dataViewA = new DataView(a)
-    dataViewB = new DataView(b)
+    try {
+      dataViewA = new DataView(a)
+      dataViewB = new DataView(b)
+    }
+    catch {
+      return undefined
+    }
   }
 
   // Buffers are not equal when they do not have the same byte length
@@ -502,8 +501,7 @@ export function arrayBufferEquality(a: unknown,
   return true
 }
 
-export function sparseArrayEquality(a: unknown,
-  b: unknown): boolean | undefined {
+export function sparseArrayEquality(a: unknown, b: unknown): boolean | undefined {
   if (!Array.isArray(a) || !Array.isArray(b))
     return undefined
 
@@ -515,13 +513,15 @@ export function sparseArrayEquality(a: unknown,
   )
 }
 
-export function generateToBeMessage(deepEqualityName: string,
-  expected = '#{this}',
-  actual = '#{exp}') {
+export function generateToBeMessage(deepEqualityName: string, expected = '#{this}', actual = '#{exp}') {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))
     return `${toBeMessage}\n\nIf it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\nExpected: ${expected}\nReceived: serializes to the same string\n`
 
   return toBeMessage
+}
+
+export function pluralize(word: string, count: number): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`
 }

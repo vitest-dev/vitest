@@ -1,5 +1,6 @@
 import { getNames, getTests } from '@vitest/runner/utils'
-import type { Arrayable, Suite, Task } from '../types'
+import type { Suite, Task } from '@vitest/runner'
+import type { Arrayable } from '../types/general'
 import { toArray } from './base'
 
 export { getTasks, getTests, getSuites, hasTests, hasFailed, getNames } from '@vitest/runner/utils'

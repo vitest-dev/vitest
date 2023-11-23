@@ -41,7 +41,9 @@ function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean)
     + 'uDAFF[\\uDFFE\\uDFFF])|(?:\\uDB3F[\\uDFFE\\uDFFF])|(?:\\uDB7F[\\uDFFE\\uDFFF])|(?:\\uDBBF'
     + '[\\uDFFE\\uDFFF])|(?:\\uDBFF[\\uDFFE\\uDFFF])(?:[\\0-\\t\\x0B\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
     + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
-    + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))', 'g')
+    + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
+      'g',
+    )
 
     value = value.replace(regex, '')
   }
@@ -57,7 +59,8 @@ function escapeXML(value: any): string {
       .replace(/'/g, '&apos;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;'),
-    true)
+    true,
+  )
 }
 
 function executionTime(durationMS: number) {
@@ -135,6 +138,7 @@ export class JUnitReporter implements Reporter {
     const project = this.ctx.getProjectByTaskId(task.id)
     const stack = parseErrorStacktrace(error, {
       getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+      frameFilter: this.ctx.config.onStackTrace,
     })
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
@@ -168,7 +172,7 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        classname: filename,
+        classname: process.env.VITEST_JUNIT_CLASSNAME ?? filename,
         name: task.name,
         time: getDuration(task),
       }, async () => {
@@ -179,7 +183,7 @@ export class JUnitReporter implements Reporter {
           await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const errors = task.result.errors?.length ? task.result.errors : [task.result.error]
+          const errors = task.result.errors || []
           for (const error of errors) {
             await this.writeElement('failure', {
               message: error?.message,
@@ -209,12 +213,28 @@ export class JUnitReporter implements Reporter {
             failures: stats.failures + Number(task.result?.state === 'fail'),
             skipped: stats.skipped + Number(task.mode === 'skip' || task.mode === 'todo'),
           }
-        },
-        {
+        }, {
           passed: 0,
           failures: 0,
           skipped: 0,
         })
+
+        // If there are no tests, but the file failed to load, we still want to report it as a failure
+        if (tasks.length === 0 && file.result?.state === 'fail') {
+          stats.failures = 1
+
+          tasks.push({
+            id: file.id,
+            type: 'test',
+            name: file.name,
+            mode: 'run',
+            result: file.result,
+            meta: {},
+            // NOTE: not used in JUnitReporter
+            context: null as any,
+            suite: null as any,
+          } satisfies Task)
+        }
 
         return {
           ...file,

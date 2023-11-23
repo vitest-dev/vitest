@@ -49,6 +49,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
     getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    frameFilter: project.config.onStackTrace,
   }
 
   if (fullStack)
@@ -125,6 +126,7 @@ const skipErrorProperties = new Set([
   'diff',
   'actual',
   'expected',
+  'diffOptions',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',
@@ -179,13 +181,16 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 + '\n'
 + c.green(`export default {
   test: {
-    deps: {
-      inline: [
-        ${c.yellow(c.bold(`"${name}"`))}
-      ]
+    server: {
+      deps: {
+        inline: [
+          ${c.yellow(c.bold(`"${name}"`))}
+        ]
+      }
     }
   }
-}\n`)))
+}\n`),
+  ))
 }
 
 function printModuleWarningForSourceCode(logger: Logger, path: string) {
@@ -251,6 +256,7 @@ export function generateCodeFrame(
   const start = positionToOffset(source, lineNumber, columnNumber)
   const end = start
   const lines = source.split(lineSplitRE)
+  const nl = /\r\n/.test(source) ? 2 : 1
   let count = 0
   let res: string[] = []
 
@@ -261,7 +267,7 @@ export function generateCodeFrame(
   }
 
   for (let i = 0; i < lines.length; i++) {
-    count += lines[i].length + 1
+    count += lines[i].length + nl
     if (count >= start) {
       for (let j = i - range; j <= i + range || end > count; j++) {
         if (j < 0 || j >= lines.length)
@@ -277,7 +283,7 @@ export function generateCodeFrame(
 
         if (j === i) {
           // push underline
-          const pad = start - (count - lineLength)
+          const pad = start - (count - lineLength) + (nl - 1)
           const length = Math.max(1, end > count ? lineLength - pad : end - start)
           res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
         }

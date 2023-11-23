@@ -44,7 +44,7 @@ Learn more about [Test Filtering](./filtering.md).
 
 ## Running tests concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel. 
+Use `.concurrent` in consecutive tests to run them in parallel.
 
 ```ts
 import { describe, it } from 'vitest'
@@ -129,7 +129,7 @@ $ npm i -D jsdom
 After that, change the `environment` option in your config file:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({

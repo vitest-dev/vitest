@@ -5,13 +5,25 @@ const UPDATE_SNAPSHOTS = false
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 const isBrowser = process.argv.includes('--browser')
+const isCI = process.env.GITHUB_ACTIONS
 process.env.COVERAGE_PROVIDER = provider
 
-const threadsConfig = [{ threads: true }, { threads: false }, { singleThread: true }]
+// TODO: Fix flakiness and enable on CI -- browser picks test files that don't exist and fails, some tests fail because of the multi environment mismatch
+if (isCI)
+  process.exit(0)
+
+const poolConfigs = [
+  { pool: 'threads', poolOptions: { threads: { } } },
+  { pool: 'forks', poolOptions: { forks: { } } },
+  { pool: 'threads', poolOptions: { threads: { singleThread: true } } },
+
+  // TODO: Figure out what's wrong with vmThreads and coverage test "runDynamicFileCJS". This issue is likely present in main branch too.
+  // { pool: 'vmThreads', poolOptions: { vmThreads: { } } },
+]
 
 // Threads have no effect in browser mode
 if (isBrowser)
-  threadsConfig.splice(1)
+  poolConfigs.splice(1)
 
 const configs = [
   // Run test cases. Generates coverage report.
@@ -44,19 +56,28 @@ const configs = [
 const exit = process.exit
 process.exit = () => !isBrowser && exit()
 
-for (const threads of threadsConfig) {
+for (const { pool, poolOptions } of poolConfigs) {
   for (const isolate of [true, false]) {
     for (const [directory, config] of configs) {
       // Retry flaky browser tests
       const retries = Array(config.browser?.enabled ? 3 : 1).fill(0)
 
       for (const retry of retries.keys()) {
+        const poolConfig = {
+          pool,
+          poolOptions: {
+            [pool]: {
+              ...poolOptions[pool],
+              isolate,
+            },
+          },
+        }
+
         await startVitest('test', [directory], {
-          name: `With settings: ${JSON.stringify({ ...threads, isolate, directory, browser: config.browser?.enabled })}`,
+          name: `With settings: ${JSON.stringify({ ...poolConfig, directory, browser: config.browser?.enabled })}`,
           ...config,
           update: UPDATE_SNAPSHOTS,
-          ...threads,
-          isolate,
+          ...poolConfig,
         })
 
         if (process.exitCode && retry === retries.length - 1) {

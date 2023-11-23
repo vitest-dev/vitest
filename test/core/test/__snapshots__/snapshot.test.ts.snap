@@ -46,7 +46,21 @@ exports[`renders mock snapshot 2`] = `
 }
 `;
 
-exports[`throwing 1`] = `"omega"`;
+exports[`single line snapshot 1`] = `"some string"`;
+
+exports[`single line snapshot 2`] = `"some "string""`;
+
+exports[`single line snapshot 3`] = `"some "string"`;
+
+exports[`single line snapshot 4`] = `"som\`e\` string"`;
+
+exports[`single line snapshot 5`] = `"some string\`"`;
+
+exports[`single line snapshot 6`] = `"some string'"`;
+
+exports[`single line snapshot 7`] = `"some 'string'"`;
+
+exports[`throwing 1`] = `[Error: omega]`;
 
 exports[`throwing 2`] = `"omega"`;
 
@@ -56,7 +70,7 @@ exports[`throwing 3`] = `
 }
 `;
 
-exports[`throwing 4`] = `"omega"`;
+exports[`throwing 4`] = `[Error: omega]`;
 
 exports[`with big array 1`] = `
 {

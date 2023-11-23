@@ -1,11 +1,12 @@
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
-import pkg from './package.json' assert { type: 'json' }
+
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 const external = [
   ...builtinModules,
@@ -13,51 +14,52 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   'worker_threads',
   'node:worker_threads',
-  'vitest/node',
-  'vitest/config',
+  /^@?vitest(\/|$)/,
   'vite',
 ]
 
-export default () => [
+const entries = [
   'index',
   'reporter',
-].map(entry => [
-  {
-    input: `./node/${entry}.ts`,
-    output: {
-      dir: 'dist',
-      format: 'esm',
+]
+
+export default () => {
+  const options = entries.flatMap(entry => [
+    {
+      input: `./node/${entry}.ts`,
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        resolve({
+          preferBuiltins: true,
+        }),
+        json(),
+        commonjs(),
+        esbuild({
+          target: 'node18',
+        }),
+      ],
+      onwarn,
     },
-    external,
-    plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      resolve({
-        preferBuiltins: true,
-      }),
-      json(),
-      commonjs(),
-      esbuild({
-        target: 'node14',
-      }),
-    ],
-    onwarn,
-  },
-  {
-    input: `./node/${entry}.ts`,
-    output: {
-      file: `dist/${entry}.d.ts`,
-      format: 'esm',
+  ])
+  return [
+    ...options,
+    {
+      input: `./node/index.ts`,
+      output: {
+        file: `dist/index.d.ts`,
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        dts(),
+      ],
     },
-    external,
-    plugins: [
-      dts(),
-    ],
-  },
-]).flat()
+  ]
+}
 
 function onwarn(message) {
   if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))

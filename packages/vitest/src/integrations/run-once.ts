@@ -1,4 +1,4 @@
-import { getWorkerState } from '../utils'
+import { getWorkerState } from '../utils/global'
 
 const filesCount = new Map<string, number>()
 const cache = new Map<string, any>()
@@ -7,7 +7,7 @@ const cache = new Map<string, any>()
  * This utils allows computational intensive tasks to only be ran once
  * across test reruns to improve the watch mode performance.
  *
- * Currently only works with `isolate: false`
+ * Currently only works with `poolOptions.<pool>.isolate: false`
  *
  * @experimental
  */

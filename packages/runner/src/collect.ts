@@ -65,7 +65,6 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
       const error = processError(e)
       file.result = {
         state: 'fail',
-        error,
         errors: [error],
       }
     }
