@@ -111,7 +111,7 @@ assertType<string>(answr) //
 
 ## Run typechecking
 
-To enabled typechecking, just add `--typecheck` flag to your Vitest command in `package.json`:
+Since Vitest 1.0, to enabled typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 
 ```json
 {
@@ -123,15 +123,19 @@ To enabled typechecking, just add `--typecheck` flag to your Vitest command in `
 
 Now you can run typecheck:
 
-```sh
-# npm
+::: code-group
+```bash [npm]
 npm run test
-
-# yarn
+```
+```bash [yarn]
 yarn test
-
-# pnpm
+```
+```bash [pnpm]
 pnpm run test
 ```
+```bash [bun]
+bun test
+```
+:::
 
 Vitest uses `tsc --noEmit` or `vue-tsc --noEmit`, depending on your configuration, so you can remove these scripts from your pipeline.
