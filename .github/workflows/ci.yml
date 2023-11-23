@@ -122,10 +122,8 @@ jobs:
         with:
           edge-version: stable
 
-      - name: Install Playwright Webkit Dependencies
-        shell: bash
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: pnpx playwright install-deps
+      - name: Install Playwright
+        run: pnpx playwright install
 
       - name: Build
         run: pnpm run build
@@ -161,10 +159,8 @@ jobs:
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-edge@v1
 
-      - name: Install Playwright Webkit Dependencies
-        shell: bash
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: pnpx playwright install-deps
+      - name: Install Playwright
+        run: pnpx playwright install
 
       - name: Build
         run: pnpm run build

@@ -89,5 +89,4 @@ runs:
 
     - name: Install Playwright Dependencies
       shell: bash
-      if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
-      run: pnpx playwright install --with-deps
+      run: pnpx playwright install-deps
