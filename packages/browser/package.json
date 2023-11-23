@@ -30,6 +30,9 @@
     "./providers/playwright": {
       "types": "./dist/providers/playwright.d.ts"
     },
+    "./providers/puppeteer": {
+      "types": "./dist/providers/puppeteer.d.ts"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -50,6 +53,7 @@
   },
   "peerDependencies": {
     "playwright": "*",
+    "puppeteer": "*",
     "safaridriver": "*",
     "vitest": "^1.0.0-0",
     "webdriverio": "*"
@@ -62,6 +66,9 @@
       "optional": true
     },
     "playwright": {
+      "optional": true
+    },
+    "puppeteer": {
       "optional": true
     }
   },
@@ -80,6 +87,7 @@
     "periscopic": "^4.0.2",
     "playwright": "^1.40.0",
     "playwright-core": "^1.40.0",
+    "puppeteer": "^21.5.2",
     "safaridriver": "^0.1.0",
     "vitest": "workspace:*",
     "webdriverio": "^8.22.1"

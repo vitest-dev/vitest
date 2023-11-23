@@ -3,9 +3,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "pnpm run test:webdriverio && pnpm run test:playwright",
+    "test": "pnpm run test:webdriverio && pnpm run test:playwright && pnpm run test:puppeteer",
     "test:webdriverio": "PROVIDER=webdriverio node --test specs/",
     "test:playwright": "PROVIDER=playwright node --test specs/",
+    "test:puppeteer": "PROVIDER=puppeteer node --test specs/",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
   "devDependencies": {

@@ -40,7 +40,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'webdriverio'
    */
-  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'puppetee' | 'none' | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
@@ -48,6 +48,7 @@ export interface BrowserConfigOptions {
    *
    * - for webdriverio: `@vitest/browser/providers/webdriverio`
    * - for playwright: `@vitest/browser/providers/playwright`
+   * - for puppeteer: `@vitest/browser/providers/puppeteer`
    *
    * @example
    * { playwright: { launch: { devtools: true } }

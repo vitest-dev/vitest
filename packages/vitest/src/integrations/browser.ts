@@ -6,7 +6,7 @@ interface Loader {
   executeId: (id: string) => any
 }
 
-const builtinProviders = ['webdriverio', 'playwright', 'none']
+const builtinProviders = ['webdriverio', 'playwright', 'puppeteer', 'none']
 
 export async function getBrowserProvider(options: ResolvedBrowserOptions, loader: Loader): Promise<BrowserProviderModule> {
   if (options.provider == null || builtinProviders.includes(options.provider)) {
@@ -14,9 +14,10 @@ export async function getBrowserProvider(options: ResolvedBrowserOptions, loader
     const providers = await loader.executeId('@vitest/browser/providers') as {
       webdriverio: BrowserProviderModule
       playwright: BrowserProviderModule
+      puppeteer: BrowserProviderModule
       none: BrowserProviderModule
     }
-    const provider = (options.provider || 'webdriverio') as 'webdriverio' | 'playwright' | 'none'
+    const provider = (options.provider || 'webdriverio') as 'webdriverio' | 'puppeteer' | 'playwright' | 'none'
     return providers[provider]
   }
 
