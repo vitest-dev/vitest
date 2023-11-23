@@ -88,5 +88,6 @@ runs:
       run: pnpm i --frozen-lockfile
 
     - name: Install Playwright Dependencies
+      if: ${{ inputs.install-deps != 'false' }}
       shell: bash
       run: pnpx playwright install-deps
