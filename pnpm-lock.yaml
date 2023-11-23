@@ -121,8 +121,8 @@ importers:
         specifier: ^1.1.21
         version: 1.1.21
       '@iconify-json/logos':
-        specifier: ^1.1.37
-        version: 1.1.37
+        specifier: ^1.1.38
+        version: 1.1.38
       '@unocss/reset':
         specifier: ^0.57.4
         version: 0.57.4
@@ -1118,8 +1118,8 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@iconify-json/logos':
-        specifier: ^1.1.37
-        version: 1.1.37
+        specifier: ^1.1.38
+        version: 1.1.38
       '@testing-library/cypress':
         specifier: ^10.0.1
         version: 10.0.1(cypress@13.5.0)
@@ -5658,8 +5658,8 @@ packages:
       '@iconify/types': 2.0.0
     dev: true
 
-  /@iconify-json/logos@1.1.37:
-    resolution: {integrity: sha512-H2S8frTEznk6paX2kMzeUGn4KSiykghvO0b8UvEDd1fFFzt0WxCXpP1tBv67XaWK99e6JgA34hhv4lRGAm1hJg==}
+  /@iconify-json/logos@1.1.38:
+    resolution: {integrity: sha512-26sPSWn/Y3nY4Kx3kbHOPU8zzEFaDMeuStFhDbW2SpLy6grusqTAgf0o4r4irNAPkdI1gPF8kuSyGDKeSPFzZw==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
