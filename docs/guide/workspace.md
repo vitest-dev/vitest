@@ -101,7 +101,7 @@ export default defineProject({
 
 ## Running tests
 
-To run tests in your workspace, define a script in your root `package.json`:
+To run tests inside the workspace, define a script in your root `package.json`:
 
 ```json
 {
@@ -111,7 +111,7 @@ To run tests in your workspace, define a script in your root `package.json`:
 }
 ```
 
-Now you can run tests using your package manager:
+Now tests can be run using your package manager:
 
 ::: code-group
 ```bash [npm]
