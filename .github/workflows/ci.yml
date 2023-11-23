@@ -24,29 +24,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-
       - name: Install
         run: pnpm i
 
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
+  cache:
+    runs-on: ${{ matrix.os }}
+    outputs:
+      edge-version: ${{ steps.setup-edge.outputs.edge-version }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node_version: [18, 20]
+        include:
+          - os: macos-latest
+            node_version: 20
+          - os: windows-latest
+            node_version: 20
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
 
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
+      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-edge@v1
+        id: setup-edge
+        with:
+          edge-version: stable
 
   test:
     runs-on: ${{ matrix.os }}
@@ -66,10 +78,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
 
       - name: Install
         run: pnpm i
@@ -94,10 +102,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
       - name: Install
         run: pnpm i
 
@@ -117,17 +121,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
-      - uses: browser-actions/setup-edge@v1
-        id: setup-edge
-        with:
-          edge-version: stable
-
       - name: Install
         run: pnpm i
 
@@ -139,8 +132,6 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        env:
-          EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -159,13 +150,6 @@ jobs:
       BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-edge@v1
 
       - name: Install
         run: pnpm i
