@@ -19,39 +19,12 @@ env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 
 jobs:
-  cache:
-    runs-on: ${{ matrix.os }}
-    outputs:
-      edge-version: ${{ steps.setup-edge.outputs.edge-version }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        node_version: [20]
-      fail-fast: false
-
+  lint:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
-
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
-      - uses: browser-actions/setup-edge@v1
-        id: setup-edge
-        with:
-          edge-version: stable
-
-  lint:
-    runs-on: ubuntu-latest
-    needs: cache
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
 
       - name: Install
         run: pnpm i
@@ -59,9 +32,24 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+
+      - name: Install
+        run: pnpm i
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
   test:
     runs-on: ${{ matrix.os }}
-    needs: cache
 
     timeout-minutes: 30
 
@@ -79,11 +67,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - uses: browser-actions/setup-chrome@v1
 
       - name: Install
         run: pnpm i
+
+      - name: Install Playwright Dependencies
+        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -99,15 +93,15 @@ jobs:
 
   test-ui:
     runs-on: ubuntu-latest
-    needs: cache
 
     timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
 
       - name: Install
         run: pnpm i
@@ -117,7 +111,6 @@ jobs:
 
   test-browser:
     runs-on: ubuntu-latest
-    needs: cache
     strategy:
       matrix:
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
@@ -129,8 +122,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
+
+      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-edge@v1
+        id: setup-edge
+        with:
+          edge-version: stable
 
       - name: Install
         run: pnpm i
@@ -143,6 +144,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -151,7 +154,6 @@ jobs:
 
   test-browser-windows:
     runs-on: windows-latest
-    needs: cache
     strategy:
       matrix:
         browser: [[chrome, chromium], [edge, webkit]]
@@ -163,8 +165,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
+
+      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-edge@v1
 
       - name: Install
         run: pnpm i
