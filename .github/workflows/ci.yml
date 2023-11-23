@@ -26,13 +26,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        node_version: [18, 20]
-        include:
-          - os: macos-latest
-            node_version: 20
-          - os: windows-latest
-            node_version: 20
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node_version: [20]
       fail-fast: false
 
     steps:
