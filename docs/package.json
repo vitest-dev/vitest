@@ -13,7 +13,7 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "^10.6.0",
+    "@vueuse/core": "^10.6.1",
     "vue": "latest"
   },
   "devDependencies": {
