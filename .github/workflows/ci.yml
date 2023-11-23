@@ -19,8 +19,22 @@ env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 
 jobs:
+  cache:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          install-deps: false
+
   lint:
     runs-on: ubuntu-latest
+    needs: cache
     steps:
       - uses: actions/checkout@v4
 
@@ -29,21 +43,9 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     runs-on: ${{ matrix.os }}
+    needs: cache
 
     timeout-minutes: 30
 
@@ -81,6 +83,7 @@ jobs:
 
   test-ui:
     runs-on: ubuntu-latest
+    needs: cache
 
     timeout-minutes: 10
 
@@ -96,6 +99,7 @@ jobs:
 
   test-browser:
     runs-on: ubuntu-latest
+    needs: cache
     strategy:
       matrix:
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
@@ -133,6 +137,7 @@ jobs:
 
   test-browser-windows:
     runs-on: windows-latest
+    needs: cache
     strategy:
       matrix:
         browser: [[chrome, chromium], [edge, webkit]]
