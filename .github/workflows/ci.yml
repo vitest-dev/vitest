@@ -26,9 +26,6 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
 
-      - name: Install
-        run: pnpm i
-
       - name: Lint
         run: pnpm run lint
 
@@ -38,9 +35,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
 
       - name: Build
         run: pnpm run build
@@ -73,12 +67,6 @@ jobs:
 
       - uses: browser-actions/setup-chrome@v1
 
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
-
       - name: Build
         run: pnpm run build
 
@@ -102,9 +90,6 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 20
-
-      - name: Install
-        run: pnpm i
 
       - name: Test UI
         run: pnpm run ui:test
@@ -132,12 +117,6 @@ jobs:
         id: setup-edge
         with:
           edge-version: stable
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -171,12 +150,6 @@ jobs:
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-edge@v1
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build

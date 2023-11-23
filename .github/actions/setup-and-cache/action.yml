@@ -10,13 +10,29 @@ runs:
   using: composite
 
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-
     - name: Set node version to ${{ inputs.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        run_install: false
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - uses: actions/cache@v3
+      name: Setup pnpm cache
+      if: ${{ ! startsWith(github.ref_name, 'renovate') }}
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
     - name: Resolve package versions
       id: resolve-package-versions
@@ -32,33 +48,40 @@ runs:
             console.log('CYPRESS_VERSION=' + cypressVersion);
             console.log('PLAYWRIGHT_VERSION=' + playwrightVersion);
           "
-        )" >> $GITHUB_OUTPUT
+        )" >> $GITHUB_ENV
 
     - name: Print versions
       shell: bash
-      run: echo "${{ toJson(steps.resolve-package-versions.outputs) }}"
+      run: echo "CYPRESS_VERSION=${{ env.CYPRESS_VERSION }} PLAYWRIGHT_VERSION=${{ env.PLAYWRIGHT_VERSION }}"
 
     - name: Check resolved package versions
       shell: bash
       if: |
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.CYPRESS_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
+        contains(fromJSON('[null, "", "undefined"]'), env.CYPRESS_VERSION) ||
+        contains(fromJSON('[null, "", "undefined"]'), env.PLAYWRIGHT_VERSION)
       run: echo "Failed to resolve package versions. See log above." && exit 1
 
-    - name: Cache Cypress v${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
+    - name: Cache Cypress v${{ env.CYPRESS_VERSION }}
       uses: actions/cache@v3
       id: cypress-cache
       with:
         path: ${{ env.CYPRESS_CACHE_FOLDER }}
-        key: ${{ runner.os }}-cypress-${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
+        key: ${{ runner.os }}-cypress-${{ env.CYPRESS_VERSION }}
         restore-keys: |
           ${{ runner.os }}-cypress-
 
-    - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+    - name: Cache Playwright v${{ env.PLAYWRIGHT_VERSION }}
       uses: actions/cache@v3
       id: playwright-cache
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-        key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+        key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-
+
+    - name: Install
+      run: pnpm i --frozen-lockfile
+
+    - name: Install Playwright Dependencies
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpx playwright install --with-deps
