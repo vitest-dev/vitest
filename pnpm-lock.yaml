@@ -991,8 +991,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       std-env:
-        specifier: ^3.4.3
-        version: 3.4.3
+        specifier: ^3.5.0
+        version: 3.5.0
       test-exclude:
         specifier: ^6.0.0
         version: 6.0.0
@@ -1294,8 +1294,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       std-env:
-        specifier: ^3.4.3
-        version: 3.4.3
+        specifier: ^3.5.0
+        version: 3.5.0
       strip-literal:
         specifier: ^1.3.0
         version: 1.3.0
@@ -24068,8 +24068,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /std-env@3.4.3:
-    resolution: {integrity: sha512-f9aPhy8fYBuMN+sNfakZV18U39PbalgjXG3lLB9WkaYTxijru61wb57V9wxxNthXM5Sd88ETBWi29qLAsHO52Q==}
+  /std-env@3.5.0:
+    resolution: {integrity: sha512-JGUEaALvL0Mf6JCfYnJOTcobY+Nc7sG/TemDRBqCA0wEr4DER7zDchaaixTlmOxAjG1uRJmX82EQcxwTQTkqVA==}
     dev: false
 
   /stop-iteration-iterator@1.0.0:
