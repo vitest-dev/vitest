@@ -83,11 +83,11 @@ runs:
           ${{ runner.os }}-playwright-
 
     - name: Install
-      if: inputs.install-deps != false
+      if: ${{ inputs.install-deps != 'false' }}
       shell: bash
       run: pnpm i --frozen-lockfile
 
     - name: Install Playwright Dependencies
       shell: bash
-      if: steps.playwright-cache.outputs.cache-hit != 'true' && inputs.install-deps != false
+      if: steps.playwright-cache.outputs.cache-hit != 'true' && inputs.install-deps != 'false'
       run: pnpx playwright install --with-deps
