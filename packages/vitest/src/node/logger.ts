@@ -97,7 +97,7 @@ export class Logger {
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
     const projectsFilter = toArray(config.project)
-    if (!projectsFilter.length)
+    if (projectsFilter.length)
       this.console.error(c.dim('projects: ') + c.yellow(projectsFilter.join(comma)))
     this.ctx.projects.forEach((project) => {
       const config = project.config

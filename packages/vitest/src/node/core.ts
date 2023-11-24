@@ -526,7 +526,7 @@ export class Vitest {
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestFiles()).map(([, file]) => file)
-    await this.rerunFiles(files, `change project filter`)
+    await this.rerunFiles(files, 'change project filter')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {

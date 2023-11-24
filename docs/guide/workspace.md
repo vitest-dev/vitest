@@ -128,7 +128,7 @@ bun test
 ```
 :::
 
-If you need to run tests only inside a single project, use `--project` CLI option:
+If you need to run tests only inside a single project, use the `--project` CLI option:
 
 ```bash
 npm run test --project e2e
