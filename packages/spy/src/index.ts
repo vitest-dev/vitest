@@ -94,9 +94,9 @@ export interface MockContext<TArgs, TReturns> {
 
 type Procedure = (...args: any[]) => any
 
-type Methods<T> = {
-  [K in keyof T]: T[K] extends Procedure ? K : never
-}[keyof T] & (string | symbol)
+type Methods<T> = keyof {
+  [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
+}
 type Properties<T> = {
   [K in keyof T]: T[K] extends Procedure ? never : K
 }[keyof T] & (string | symbol)
