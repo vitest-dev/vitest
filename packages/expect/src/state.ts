@@ -1,4 +1,5 @@
-import type { ExpectStatic, MatcherState } from './types'
+import { getType } from '@vitest/utils'
+import type { ExpectStatic, MatcherState, Tester } from './types'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, JEST_MATCHERS_OBJECT, MATCHERS_OBJECT } from './constants'
 
 if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
@@ -32,4 +33,19 @@ export function setState<State extends MatcherState = MatcherState>(
   const current = map.get(expect) || {}
   Object.assign(current, state)
   map.set(expect, current)
+}
+
+export function getCustomEqualityTesters(): Array<Tester> {
+  const { customTesters } = getState((globalThis as any)[GLOBAL_EXPECT])
+  return customTesters || []
+}
+
+export function addCustomEqualityTesters(testers: Array<Tester>): void {
+  if (!Array.isArray(testers)) {
+    throw new TypeError(
+      `expect.customEqualityTesters should receive array type, but got: ${getType(testers)}`,
+    )
+  }
+
+  setState({ customTesters: [...testers] }, (globalThis as any)[GLOBAL_EXPECT])
 }

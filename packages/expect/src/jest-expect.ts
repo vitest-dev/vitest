@@ -9,6 +9,7 @@ import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
+import { getCustomEqualityTesters } from './state'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -80,7 +81,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const equal = jestEquals(
       actual,
       expected,
-      [iterableEquality],
+      [...getCustomEqualityTesters(), iterableEquality],
     )
 
     return this.assert(

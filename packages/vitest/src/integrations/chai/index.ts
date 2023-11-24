@@ -4,7 +4,7 @@ import * as chai from 'chai'
 import './setup'
 import type { TaskPopulated, Test } from '@vitest/runner'
 import { getCurrentTest } from '@vitest/runner'
-import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
+import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
 import { getFullName } from '../../utils/tasks'
@@ -58,6 +58,8 @@ export function createExpect(test?: TaskPopulated) {
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
   }
+
+  expect.addEqualityTesters = addCustomEqualityTesters
 
   function assertions(expected: number) {
     const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)

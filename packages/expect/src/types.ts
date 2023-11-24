@@ -88,6 +88,7 @@ export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersConta
   getState(): MatcherState
   setState(state: Partial<MatcherState>): void
   not: AsymmetricMatchersContaining
+  addEqualityTesters(tester: Array<Tester>): void
 }
 
 export interface AsymmetricMatchersContaining {

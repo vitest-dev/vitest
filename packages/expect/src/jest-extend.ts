@@ -8,7 +8,7 @@ import type {
 } from './types'
 import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { getState } from './state'
+import { getCustomEqualityTesters, getState } from './state'
 
 import { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
@@ -33,8 +33,7 @@ function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expec
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    // TODO: implement via expect.addEqualityTesters
-    customTesters: [],
+    customTesters: getCustomEqualityTesters(),
     isNot,
     utils: jestUtils,
     promise,

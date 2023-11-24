@@ -1407,3 +1407,83 @@ Don't forget to include the ambient declaration file in your `tsconfig.json`.
 :::tip
 If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
 :::
+
+## expect.addEqualityTesters
+
+- **Type:** `(tester: Array<Tester>) => void`
+
+You can use this method to define custom matcher to test if two object equals or not. And this function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
+
+```ts
+class Duration {
+  public time: number
+  public unit: 'H' | 'M' | 'S'
+
+  constructor(time: number, unit: 'H' | 'M' | 'S') {
+    this.time = time
+    this.unit = unit
+  }
+
+  toString(): string {
+    return `[Duration: ${this.time.toString()}${this.unit}]`
+  }
+
+  equals(other: Duration): boolean {
+    if (this.unit === other.unit)
+      return this.time === other.time
+
+    else if (
+      (this.unit === 'H' && other.unit === 'M')
+        || (this.unit === 'M' && other.unit === 'S')
+    )
+      return (this.time * 60) === other.time
+
+    else if (
+      (other.unit === 'H' && this.unit === 'M')
+        || (other.unit === 'M' && this.unit === 'S')
+    )
+      return (other.time * 60) === this.time
+
+    return (this.time * 60 * 60) === other.time
+  }
+}
+```
+
+```ts
+function isDurationMatch(a: Duration, b: Duration) {
+  const isDurationA = a instanceof Duration
+  const isDurationB = b instanceof Duration
+
+  if (isDurationA && isDurationB)
+    return a.equals(b)
+
+  else if (isDurationA === isDurationB)
+    return undefined
+
+  return false
+}
+
+expect.addEqualityTesters([isDurationMatch])
+```
+
+```ts
+it('basic test case', () => {
+  expect(new Duration(1, 'H')).toEqual(new Duration(3600, 'S'))
+})
+```
+
+For custom matchers function, you can combine it with `expect.extend`, For example:
+
+```ts
+expect.extend({
+  toEqualDuration(received: Duration, expected: Duration) {
+    const result = equals(received, expected, this.customTesters)
+    return {
+      message: () => `Expected object: ${received.toString()}. But expectedly got: ${expected.toString()}`,
+      pass: result,
+    }
+  },
+})
+
+expect(new Duration(1, 'H')).toEqualDuration(new Duration(3600, 'S'))
+```

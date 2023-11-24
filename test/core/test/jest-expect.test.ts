@@ -1,7 +1,7 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { equals, generateToBeMessage, setupColors } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { getDefaultColors } from '@vitest/utils'
 
@@ -9,6 +9,7 @@ class TestError extends Error {}
 
 // For expect.extend
 interface CustomMatchers<R = unknown> {
+  toEqualDuration(duration: R): R
   toBeDividedBy(divisor: number): R
   toBeTestedAsync(): Promise<R>
   toBeTestedSync(): R
@@ -892,3 +893,87 @@ it('correctly prints diff with asymmetric matchers', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+
+describe.only('custom equality testers', () => {
+  class Duration {
+    public time: number
+    public unit: 'H' | 'M' | 'S'
+
+    constructor(time: number, unit: 'H' | 'M' | 'S') {
+      this.time = time
+      this.unit = unit
+    }
+
+    toString(): string {
+      return `[Duration: ${this.time.toString()}${this.unit}]`
+    }
+
+    equals(other: Duration): boolean {
+      if (this.unit === other.unit)
+        return this.time === other.time
+
+      else if (
+        (this.unit === 'H' && other.unit === 'M')
+        || (this.unit === 'M' && other.unit === 'S')
+      )
+        return (this.time * 60) === other.time
+
+      else if (
+        (other.unit === 'H' && this.unit === 'M')
+        || (other.unit === 'M' && this.unit === 'S')
+      )
+        return (other.time * 60) === this.time
+
+      return (this.time * 60 * 60) === other.time
+    }
+  }
+
+  function isDurationMatch(a: Duration, b: Duration) {
+    const isDurationA = a instanceof Duration
+    const isDurationB = b instanceof Duration
+
+    if (isDurationA && isDurationB)
+      return a.equals(b)
+
+    else if (isDurationA === isDurationB)
+      return undefined
+
+    return false
+  }
+
+  expect.addEqualityTesters([isDurationMatch])
+
+  it('basic', () => {
+    const duration1 = new Duration(1, 'S')
+    const duration2 = new Duration(2, 'M')
+    const duration3 = new Duration(120, 'S')
+
+    expect(duration1).toEqual(duration1)
+    expect(duration1).not.equal(duration2)
+    expect([duration1]).not.toContain(duration2)
+    expect(duration2).toEqual(duration3)
+  })
+
+  it('with custom testers', () => {
+    expect.extend({
+      toEqualDuration(received: Duration, expected: Duration) {
+        const result = equals(received, expected, this.customTesters)
+        return {
+          message: () => `Expected object: ${received.toString()}. But expectedly got: ${expected.toString()}`,
+          pass: result,
+        }
+      },
+    })
+    expect(new Duration(1, 'H')).toEqualDuration(new Duration(3600, 'S'))
+    expect(new Duration(2, 'H')).toEqualDuration(new Duration(2, 'H'))
+    expect(new Duration(2, 'H')).toEqualDuration(new Duration(120, 'M'))
+    expect(new Duration(1, 'H')).not.toEqualDuration(new Duration(360, 'S'))
+    expect(new Duration(2, 'H')).not.toEqualDuration(new Duration(1, 'H'))
+    expect(new Duration(2, 'H')).not.toEqualDuration(new Duration(110, 'M'))
+
+    expect(new Duration(60, 'M')).toEqualDuration(new Duration(1, 'H'))
+    expect(new Duration(180, 'S')).toEqualDuration(new Duration(3, 'M'))
+    expect(new Duration(60, 'S')).not.toEqualDuration(new Duration(2, 'H'))
+    expect(new Duration(80, 'M')).not.toEqualDuration(new Duration(1, 'H'))
+  })
+})
