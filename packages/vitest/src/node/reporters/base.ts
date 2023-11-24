@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
+import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath, toArray } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { UNKNOWN_TEST_ID } from '../../runtime/console'
@@ -169,16 +169,17 @@ export abstract class BaseReporter implements Reporter {
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
     const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.configOverride.testNamePattern))}\n` : ''
+    const PROJECT_FILTER = this.ctx.configOverride.project ? `${BADGE_PADDING} ${c.dim('Project name: ')}${c.blue(toArray(this.ctx.configOverride.project).join(', '))}\n` : ''
 
-    if (files.length > 1) {
+    if (files.length > 1 || !files.length) {
       // we need to figure out how to handle rerun all from stdin
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${PROJECT_FILTER}${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
       this._lastRunCount = 0
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
       this._lastRunCount = rerun
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${PROJECT_FILTER}${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
     }
 
     this._timeStart = new Date()

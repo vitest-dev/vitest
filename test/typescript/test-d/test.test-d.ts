@@ -1,4 +1,5 @@
-import { describe, expectTypeOf, test } from 'vitest'
+import { google, type sheets_v4 } from 'googleapis'
+import { describe, expectTypeOf, test, vi } from 'vitest'
 
 describe('test', () => {
   test('some-test', () => {
@@ -31,6 +32,17 @@ describe('test', () => {
   test('expected error', () => {
     // @ts-expect-error 45 is not a string
     expectTypeOf(45).toEqualTypeOf<string>()
+  })
+
+  test('spyOn googleapis compiles', () => {
+    vi.spyOn(google, 'sheets').mockReturnValue({
+      spreadsheets: {
+        values: {
+          get: vi.fn().mockResolvedValue({ data: { values: [['', '']] } }),
+          update: vi.fn().mockResolvedValue({}),
+        } as Partial<sheets_v4.Resource$Spreadsheets$Values> as sheets_v4.Resource$Spreadsheets$Values,
+      } as sheets_v4.Resource$Spreadsheets,
+    } as sheets_v4.Sheets)
   })
 })
 
