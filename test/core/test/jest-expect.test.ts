@@ -894,7 +894,7 @@ it('correctly prints diff with asymmetric matchers', () => {
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
 
-describe.only('custom equality testers', () => {
+describe('custom equality testers', () => {
   class Duration {
     public time: number
     public unit: 'H' | 'M' | 'S'
