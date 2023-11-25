@@ -41,7 +41,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
 
   let hasInjected = false
 
-  // this will tranfrom import statements into dynamic ones, if there are imports
+  // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
