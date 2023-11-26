@@ -269,8 +269,12 @@ export function createTaskCollector(
     }
   }
 
-  taskFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
-  taskFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
+  taskFn.skipIf = function (this: TestAPI, condition: any) {
+    return condition ? this.skip : this
+  }
+  taskFn.runIf = function (this: TestAPI, condition: any) {
+    return condition ? this : this.skip
+  }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
     const _context = mergeContextFixtures(fixtures, context)
