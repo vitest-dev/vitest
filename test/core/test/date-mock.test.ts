@@ -33,4 +33,10 @@ describe('testing date mock functionality', () => {
 
     expect(Date.now()).toBe(timeStrMs)
   })
+
+  test('date prototype is correct', () => {
+    vi.setSystemTime(new Date(2000, 1, 1))
+
+    expect(new Date()).toBeInstanceOf(Date)
+  })
 })

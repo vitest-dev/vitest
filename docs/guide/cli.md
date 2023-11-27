@@ -100,6 +100,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
 | `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
+| `--project` | The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2` |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

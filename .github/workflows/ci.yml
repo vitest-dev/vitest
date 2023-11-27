@@ -71,8 +71,13 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
+      - uses: browser-actions/setup-chrome@v1
+
       - name: Install
         run: pnpm i
+
+      - name: Install Playwright Dependencies
+        run: pnpx playwright install --with-deps
 
       - name: Build
         run: pnpm run build

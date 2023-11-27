@@ -19,18 +19,18 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 <CourseLink href="https://vueschool.io/lessons/how-to-install-vitest?friend=vueuse">Learn how to install by Video</CourseLink>
 
 ::: code-group
-  ```bash [npm]
-  npm install -D vitest
-  ```
-  ```bash [yarn]
-  yarn add -D vitest
-  ```
-  ```bash [pnpm]
-  pnpm add -D vitest
-  ```
-  ```bash [bun]
-  bun add -D vitest
-  ```
+```bash [npm]
+npm install -D vitest
+```
+```bash [yarn]
+yarn add -D vitest
+```
+```bash [pnpm]
+pnpm add -D vitest
+```
+```bash [bun]
+bun add -D vitest
+```
 :::
 
 :::tip
