@@ -82,6 +82,14 @@ describe('fixture initialization', () => {
     })
   })
 
+  myTest.runIf(true)('fixtures work with runIf', ({ a }) => {
+    expect(a).toBe(1)
+  })
+
+  myTest.skipIf(false)('fixtures work with skipIf', ({ a }) => {
+    expect(a).toBe(1)
+  })
+
   describe('fixture dependency', () => {
     myTest2('b => a', ({ b }) => {
       expect(b).toBe('2')

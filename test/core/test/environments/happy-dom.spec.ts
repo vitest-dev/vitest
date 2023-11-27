@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { afterEach, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -8,4 +8,10 @@ afterEach(() => {
 
 test('fake timers don\'t fail when using empty config', () => {
   vi.useFakeTimers({})
+})
+
+test('global CSS is injected correctly', () => {
+  expect(CSS).toBeDefined()
+  expect(CSS.escape).toBeDefined()
+  expect(CSS.supports).toBeDefined()
 })

@@ -63,6 +63,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
+              'vitest > @vitest/snapshot > pretty-format',
               'vitest > diff-sequences',
               'vitest > loupe',
               'vitest > pretty-format',
