@@ -117,6 +117,7 @@ test('provider module', () => {
             reportsDirectory: 'string',
             reportOnFailure: true,
             allowExternal: true,
+            processingConcurrency: 1,
           }
         },
         clean(_: boolean) {},

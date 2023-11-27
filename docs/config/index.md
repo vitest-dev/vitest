@@ -1323,6 +1323,15 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
+#### coverage.processingConcurrency
+
+- **Type:** `boolean`
+- **Default:** `Math.min(20, os.cpu().length)`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.processingConcurrency=<number>`
+
+Concurrency limit used when processing the coverage results.
+
 #### coverage.customProviderModule
 
 - **Type:** `string`
