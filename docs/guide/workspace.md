@@ -99,6 +99,49 @@ export default defineProject({
 ```
 :::
 
+## Running tests
+
+To run tests inside the workspace, define a script in your root `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "vitest"
+  }
+}
+```
+
+Now tests can be run using your package manager:
+
+::: code-group
+```bash [npm]
+npm run test
+```
+```bash [yarn]
+yarn test
+```
+```bash [pnpm]
+pnpm run test
+```
+```bash [bun]
+bun test
+```
+:::
+
+If you need to run tests only inside a single project, use the `--project` CLI option:
+
+```bash
+npm run test --project e2e
+```
+
+::: tip
+CLI option `--project` can be used multiple times to filter out several projects:
+
+```bash
+npm run test --project e2e --project unit
+```
+:::
+
 ## Configuration
 
 None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:

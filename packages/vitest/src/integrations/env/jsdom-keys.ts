@@ -181,6 +181,8 @@ const LIVING_KEYS = [
   'Image',
   'Audio',
   'Option',
+
+  'CSS',
 ]
 
 const OTHER_KEYS = [
