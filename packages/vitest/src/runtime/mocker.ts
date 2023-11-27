@@ -345,7 +345,7 @@ export class VitestMocker {
                   // TODO: ability to restore?
                   // mock and delegate calls to original prototype method, which should be also mocked already
                   const original = this[key]
-                  // TODO: fix type error for symbol key?
+                  // mocking "symbol" method works but uses "string" cast to silence type-error
                   spyModule.spyOn(this, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
                 }
               }
