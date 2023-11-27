@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
-    "@iconify-json/logos": "^1.1.38",
+    "@iconify-json/logos": "^1.1.39",
     "@testing-library/cypress": "^10.0.1",
     "@types/codemirror": "^5.60.13",
     "@types/d3-force": "^3.0.9",
