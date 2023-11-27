@@ -41,6 +41,9 @@
     "./importMeta": {
       "types": "./importMeta.d.ts"
     },
+    "./import-meta": {
+      "types": "./import-meta.d.ts"
+    },
     "./node": {
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
@@ -164,7 +167,7 @@
     "@types/estree": "^1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",
     "@types/istanbul-reports": "^3.0.4",
-    "@types/jsdom": "^21.1.5",
+    "@types/jsdom": "^21.1.6",
     "@types/micromatch": "^4.0.5",
     "@types/prompts": "^2.4.8",
     "@types/sinonjs__fake-timers": "^8.1.5",
