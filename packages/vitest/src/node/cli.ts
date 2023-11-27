@@ -56,6 +56,7 @@ cli
   .option('--typecheck [options]', 'Custom options for typecheck pool')
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
+  .option('--project <name>', 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2')
   .help()
 
 cli
