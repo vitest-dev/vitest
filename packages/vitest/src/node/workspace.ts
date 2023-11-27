@@ -289,7 +289,7 @@ export class WorkspaceProject {
     this.config = resolveConfig(this.ctx.mode, options, server.config)
     this.server = server
 
-    this.vitenode = new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config.server)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
