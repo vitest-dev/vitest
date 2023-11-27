@@ -1,7 +1,7 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { equals, generateToBeMessage, setupColors } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { getDefaultColors } from '@vitest/utils'
 
@@ -957,7 +957,7 @@ describe('custom equality testers', () => {
   it('with custom testers', () => {
     expect.extend({
       toEqualDuration(received: Duration, expected: Duration) {
-        const result = this.equals(received, expected, this.customTesters)
+        const result = equals(received, expected, this.customTesters)
         return {
           message: () => `Expected object: ${received.toString()}. But expectedly got: ${expected.toString()}`,
           pass: result,
