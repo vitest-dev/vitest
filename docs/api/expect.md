@@ -1411,6 +1411,7 @@ If you want to know more, checkout [guide on extending matchers](/guide/extendin
 ## expect.addEqualityTesters
 
 - **Type:** `(tester: Array<Tester>) => void`
+- **Version:** Since Vitest 1.0.0
 
 You can use this method to define custom matcher to test if two object equals or not. And this function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
@@ -1477,7 +1478,7 @@ For custom matchers function, you can combine it with `expect.extend`, For examp
 ```ts
 expect.extend({
   toEqualDuration(received: Duration, expected: Duration) {
-    const result = equals(received, expected, this.customTesters)
+    const result = this.equals(received, expected, this.customTesters)
     return {
       message: () => `Expected object: ${received.toString()}. But expectedly got: ${expected.toString()}`,
       pass: result,
