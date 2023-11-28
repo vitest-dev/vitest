@@ -26,6 +26,21 @@ test(`mocked class method not restorable`, () => {
 
   // restoring instance method
   vi.mocked(instance1.testFn).mockRestore()
+  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
+    [
+      [
+        "a",
+      ],
+    ]
+  `)
+  expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`
+    [
+      [
+        "a",
+      ],
+    ]
+  `)
+
   expect(instance1.testFn('b')).toMatchInlineSnapshot(`undefined`)
   expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
     [
@@ -50,6 +65,9 @@ test(`mocked class method not restorable`, () => {
 
   // restoring prototype doesn't restore instance
   vi.mocked(MockedE.prototype.testFn).mockRestore()
+  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
+  expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
+
   expect(instance1.testFn('c')).toMatchInlineSnapshot(`undefined`)
   expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
     [
