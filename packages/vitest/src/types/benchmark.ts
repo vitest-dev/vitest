@@ -52,13 +52,14 @@ export interface BenchmarkResult extends TinybenchResult {
 }
 
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void
-export type BenchmarkAPI = ChainableFunction<
-'skip' | 'only' | 'todo',
-[name: string | Function, fn?: BenchFunction, options?: BenchOptions],
-void
-> & {
-  skipIf(condition: any): BenchmarkAPI
-  runIf(condition: any): BenchmarkAPI
+type ChainableBenchmarkAPI = ChainableFunction<
+  'skip' | 'only' | 'todo',
+  [name: string | Function, fn?: BenchFunction, options?: BenchOptions],
+  void
+>
+export type BenchmarkAPI = ChainableBenchmarkAPI & {
+  skipIf(condition: any): ChainableBenchmarkAPI
+  runIf(condition: any): ChainableBenchmarkAPI
 }
 
 export {

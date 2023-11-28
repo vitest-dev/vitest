@@ -81,7 +81,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--mode` | Override Vite mode (default: `test`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
-| `--dom` | Mock browser api with happy-dom |
+| `--dom` | Mock browser API with happy-dom |
 | `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |

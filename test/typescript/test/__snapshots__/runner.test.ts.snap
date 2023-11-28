@@ -89,7 +89,7 @@ TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string,
 
 exports[`should fail > typechecks empty "include" but with tests 1`] = `
 "Testing types with tsc and vue-tsc is an experimental feature.
-Breaking changes might not follow semver, please pin Vitest's version when using it.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 
 ⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
 Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
