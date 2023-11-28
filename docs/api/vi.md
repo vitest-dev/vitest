@@ -150,7 +150,7 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
 
-The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked. 
+The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
 ::: warning
 This will not mock modules that were imported before this was called. Don't forget that all static imports in ESM are always [hoisted](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#hoisting), so putting this before static import will not force it to be called before the import:
@@ -333,7 +333,7 @@ test('operations are resolved', async () => {
 ```
 
 ::: tip
-If during a dynamic import another dynamic import is initiated, this method will wait unti all of them are resolved.
+If during a dynamic import another dynamic import is initiated, this method will wait until all of them are resolved.
 
 This method will also wait for the next `setTimeout` tick after the import is resolved so all synchronous operations should be completed by the time it's resolved.
 :::
@@ -386,7 +386,7 @@ Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clea
 
 - **Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
 
-Creates a spy on a method or getter/setter of an object simillar to [`vi.fn()`](/#vi-fn). It returns a [mock function](/api/mock).
+Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](/#vi-fn). It returns a [mock function](/api/mock).
 
 ```ts
 let apples = 0
@@ -724,7 +724,7 @@ await vi.runOnlyPendingTimersAsync()
 
 If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` calls.
 
-Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
+Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
 ```ts
 const date = new Date(1998, 11, 19)
@@ -749,7 +749,7 @@ The implementation is based internally on [`@sinonjs/fake-timers`](https://githu
 
 ::: tip
 Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
-It can still be mocked by specyfing the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
 ### vi.isFakeTimers

@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-empty-test",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

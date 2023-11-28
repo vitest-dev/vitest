@@ -29,7 +29,7 @@ cli
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
-  .option('--dom', 'Mock browser api with happy-dom')
+  .option('--dom', 'Mock browser API with happy-dom')
   .option('--browser [options]', 'Run tests in the browser (default: false)')
   .option('--pool <pool>', 'Specify pool, if not running in the browser (default: threads)')
   .option('--poolOptions <options>', 'Specify pool options')
@@ -134,7 +134,7 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
-  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
+  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
 

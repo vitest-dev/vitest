@@ -1618,6 +1618,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/empty-test:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/env-custom:
     devDependencies:
       '@types/debug':
