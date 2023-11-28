@@ -12,7 +12,7 @@ test(`each instance's methods of mocked class should have independent mock funct
   expect(instance1.testFn).not.toBe(MockedE.prototype.testFn)
   expect(vi.mocked(instance1.testFn).mock).not.toBe(vi.mocked(instance2.testFn).mock)
 
-  instance1.testFn('a')
+  expect(instance1.testFn('a')).toMatchInlineSnapshot(`undefined`)
   expect(instance1.testFn).toBeCalledTimes(1)
   expect(instance2.testFn).toBeCalledTimes(0)
   expect(MockedE.prototype.testFn).toBeCalledTimes(1)
@@ -31,7 +31,7 @@ test(`each instance's methods of mocked class should have independent mock funct
     ]
   `)
 
-  instance2.testFn('b')
+  expect(instance2.testFn('b')).toMatchInlineSnapshot(`undefined`)
   expect(instance1.testFn).toBeCalledTimes(1)
   expect(instance2.testFn).toBeCalledTimes(1)
   expect(MockedE.prototype.testFn).toBeCalledTimes(2)
@@ -53,7 +53,7 @@ test(`each instance's methods of mocked class should have independent mock funct
     ]
   `)
 
-  instance1.testFn('c')
+  expect(instance1.testFn('c')).toMatchInlineSnapshot(`undefined`)
   expect(instance1.testFn).toBeCalledTimes(2)
   expect(instance2.testFn).toBeCalledTimes(1)
   expect(MockedE.prototype.testFn).toBeCalledTimes(3)
@@ -93,7 +93,7 @@ test(`each instance's methods of mocked class should have independent mock funct
   expect(instance1[symbolFn]).not.toBe(MockedE.prototype[symbolFn])
   expect(vi.mocked(instance1[symbolFn]).mock).not.toBe(vi.mocked(instance2[symbolFn]).mock)
 
-  instance1[symbolFn]('d')
+  expect(instance1[symbolFn]('d')).toMatchInlineSnapshot(`undefined`)
   expect(instance1[symbolFn]).toBeCalledTimes(1)
   expect(instance2[symbolFn]).toBeCalledTimes(0)
   expect(MockedE.prototype[symbolFn]).toBeCalledTimes(1)

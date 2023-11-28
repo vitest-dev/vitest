@@ -342,10 +342,9 @@ export class VitestMocker {
                 const type = getType(value)
                 const isFunction = type.includes('Function') && typeof value === 'function'
                 if (isFunction) {
-                  // TODO: ability to restore?
                   // mock and delegate calls to original prototype method, which should be also mocked already
                   const original = this[key]
-                  // mocking "symbol" method works but uses "string" cast to silence type-error
+                  // mocking "symbol" method works but casts to "string" to silence type-error
                   spyModule.spyOn(this, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
                 }
               }
