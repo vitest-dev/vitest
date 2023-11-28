@@ -1,3 +1,7 @@
+---
+title: Common Errors | Guide
+---
+
 # Common Errors
 
 ## Cannot find module './relative-path'

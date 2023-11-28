@@ -63,7 +63,7 @@ test/test.ts:999:999 - error TS2349: This expression is not callable.
 
 The `This expression is not callable` part isn't all that helpful - the meaningful error is the next line, `Type 'ExpectString<number> has no call signatures`. This essentially means you passed a number but asserted it should be a string.
 
-If TypeScript added support for ["throw" types](https://github.com/microsoft/TypeScript/pull/40468) these error messagess could be improved significantly. Until then they will take a certain amount of squinting.
+If TypeScript added support for ["throw" types](https://github.com/microsoft/TypeScript/pull/40468) these error messages could be improved significantly. Until then they will take a certain amount of squinting.
 
 #### Concrete "expected" objects vs typeargs
 
@@ -109,7 +109,7 @@ assertType<string>(answr) //
 ```
 :::
 
-## Run typechecking
+## Run Typechecking
 
 Since Vitest 1.0, to enabled typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 

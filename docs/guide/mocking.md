@@ -156,9 +156,9 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/vi#vi-mock) for a more in-depth detailed API description.
+See the [`vi.mock()` API section](/api/vi#vi-mock) for a more in-depth detailed API description.
 
-### Automocking algorithm
+### Automocking Algorithm
 
 If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
@@ -330,7 +330,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 When we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout, we can speed up our tests by using "fake" timers that mock calls to `setTimeout` and `setInterval`.
 
-See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
+See the [`vi.useFakeTimers` API section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 
