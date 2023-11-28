@@ -624,19 +624,19 @@ import { expect, test } from 'vitest'
 
 function getFruitStock(type) {
   if (type === 'pineapples')
-    throw new DiabetesError('Pineapples are not good for people with diabetes')
+    throw new Error('Pineapples are not in stock')
 
   // Do some other stuff
 }
 
 test('throws on pineapples', () => {
-  // Test that the error message says "diabetes" somewhere: these are equivalent
-  expect(() => getFruitStock('pineapples')).toThrowError(/diabetes/)
-  expect(() => getFruitStock('pineapples')).toThrowError('diabetes')
+  // Test that the error message says "stock" somewhere: these are equivalent
+  expect(() => getFruitStock('pineapples')).toThrowError(/stock/)
+  expect(() => getFruitStock('pineapples')).toThrowError('stock')
 
   // Test the exact error message
   expect(() => getFruitStock('pineapples')).toThrowError(
-    /^Pineapples are not good for people with diabetes$/,
+    /^Pineapples are not in stock$/,
   )
 })
 ```
