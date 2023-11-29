@@ -56,6 +56,8 @@ describe('jest-expect', () => {
 
     expect(new URL('https://example.org')).toEqual(new URL('https://example.org'))
     expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
+    expect(new URL('https://example.org?query=value')).toEqual(new URL('https://example.org?query=value'))
+    expect(new URL('https://example.org?query=one')).not.toEqual(new URL('https://example.org?query=two'))
 
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
