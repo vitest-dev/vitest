@@ -58,6 +58,10 @@ describe('jest-expect', () => {
     expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
     expect(new URL('https://example.org?query=value')).toEqual(new URL('https://example.org?query=value'))
     expect(new URL('https://example.org?query=one')).not.toEqual(new URL('https://example.org?query=two'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).toEqual(new URL('https://subdomain.example.org/path?query=value#fragment-identifier'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).not.toEqual(new URL('https://subdomain.example.org/path?query=value#different-fragment-identifier'))
+    expect(new URL('https://example.org/path')).toEqual(new URL('/path', 'https://example.org'))
+    expect(new URL('https://example.org/path')).not.toEqual(new URL('/path', 'https://example.com'))
 
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
