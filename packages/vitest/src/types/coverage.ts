@@ -79,6 +79,7 @@ type FieldsWithDefaultValues =
   | 'extension'
   | 'reportOnFailure'
   | 'allowExternal'
+  | 'processingConcurrency'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
@@ -204,6 +205,12 @@ export interface BaseCoverageOptions {
    * @default false
    */
   allowExternal?: boolean
+
+  /**
+   * Concurrency limit used when processing the coverage results.
+   * Defaults to `Math.min(20, os.cpu().length)`
+   */
+  processingConcurrency?: number
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
