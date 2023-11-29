@@ -52,6 +52,18 @@ describe('jest-expect', () => {
     expect(new Date(0)).toEqual(new Date(0))
     expect(new Date('inValId')).toEqual(new Date('inValId'))
 
+    expect(new Error('message')).toEqual(new Error('message'))
+    expect(new Error('message')).not.toEqual(new Error('different message'))
+
+    expect(new URL('https://example.org')).toEqual(new URL('https://example.org'))
+    expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
+    expect(new URL('https://example.org?query=value')).toEqual(new URL('https://example.org?query=value'))
+    expect(new URL('https://example.org?query=one')).not.toEqual(new URL('https://example.org?query=two'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).toEqual(new URL('https://subdomain.example.org/path?query=value#fragment-identifier'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).not.toEqual(new URL('https://subdomain.example.org/path?query=value#different-fragment-identifier'))
+    expect(new URL('https://example.org/path')).toEqual(new URL('/path', 'https://example.org'))
+    expect(new URL('https://example.org/path')).not.toEqual(new URL('/path', 'https://example.com'))
+
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
     expect(BigInt(1)).toBeGreaterThan(0)
