@@ -325,18 +325,15 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          const spyModule = this.spyModule
-          if (!spyModule)
+          if (!this.spyModule)
             throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
-
+          const spyModule = this.spyModule
           const primitives = this.primitives
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(function (this: any) {
-            // jest reference
-            // https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691
-
-            // check constructor call
+          function mockFunction(this: any) {
+            // detect constructor call and mock each instance's methods
+            // so that mock states between prototype/instances don't affect each other
+            // (jest reference https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691)
             if (this instanceof newContainer[property]) {
-              // mock each mothod of mocked class instance
               for (const { key } of getAllMockableProperties(this, false, primitives)) {
                 const value = this[key]
                 const type = getType(value)
@@ -344,15 +341,20 @@ export class VitestMocker {
                 if (isFunction) {
                   // mock and delegate calls to original prototype method, which should be also mocked already
                   const original = this[key]
-                  // mocking "symbol" method works but casts to "string" to silence type-error
-                  spyModule.spyOn(this, key as string).mockImplementation((...args: any[]) => original.apply(this, args))
+                  const mock = spyModule.spyOn(this, key as string).mockImplementation(original)
+                  mock.mockRestore = () => {
+                    mock.mockReset()
+                    mock.mockImplementation(original)
+                    return mock
+                  }
                 }
               }
             }
-          })
+          }
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(mockFunction)
           mock.mockRestore = () => {
             mock.mockReset()
-            mock.mockImplementation(() => undefined)
+            mock.mockImplementation(mockFunction)
             return mock
           }
           // tinyspy retains length, but jest doesn't.

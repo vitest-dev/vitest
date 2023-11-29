@@ -26,13 +26,7 @@ test(`mocked class methods are not restorable by explicit mockRestore calls`, ()
 
   // restoring instance method
   vi.mocked(instance1.testFn).mockRestore()
-  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
-    [
-      [
-        "a",
-      ],
-    ]
-  `)
+  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
   expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`
     [
       [
@@ -45,9 +39,6 @@ test(`mocked class methods are not restorable by explicit mockRestore calls`, ()
   expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
     [
       [
-        "a",
-      ],
-      [
         "b",
       ],
     ]
@@ -63,14 +54,23 @@ test(`mocked class methods are not restorable by explicit mockRestore calls`, ()
     ]
   `)
 
-  // restoring prototype doesn't restore instance
+  // restoring prototype method
   vi.mocked(MockedE.prototype.testFn).mockRestore()
-  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
+  expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
+    [
+      [
+        "b",
+      ],
+    ]
+  `)
   expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
 
   expect(instance1.testFn('c')).toMatchInlineSnapshot(`undefined`)
   expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`
     [
+      [
+        "b",
+      ],
       [
         "c",
       ],
