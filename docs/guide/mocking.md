@@ -168,6 +168,62 @@ The following principles apply
 * All objects will be deeply cloned
 * All instances of classes and their prototypes will be deeply cloned
 
+### Mocking Pitfalls
+
+Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
+
+```ts
+export function foo() {
+  return 'foo'
+}
+
+export function foobar() {
+  return `${foo()}bar`
+}
+```
+
+It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
+
+```ts
+import { vi } from 'vitest'
+import * as mod from './foobar.js'
+
+// this will only affect "foo" outside of the original module
+vi.spyOn(mod, 'foo')
+vi.mock('./foobar.js', async (importOriginal) => {
+  return {
+    ...await importOriginal(),
+    // this will only affect "foo" outside of the original module
+    foo: () => 'mocked'
+  }
+})
+```
+
+You can confirm this behaviour by providing the implementation to the `foobar` method directly:
+
+```ts
+// foobar.test.js
+import * as mod from './foobar.js'
+
+vi.spyOn(mod, 'foo')
+
+// exported foo references mocked method
+mod.foobar(mod.foo)
+```
+
+```ts
+// foobar.js
+export function foo() {
+  return 'foo'
+}
+
+export function foobar(injectedFoo) {
+  return injectedFoo !== foo // false
+}
+```
+
+This is the intended behaviour. It is usually a sign of bad code when mocking is involved in such a manner. Consider refactoring your code into multiple files or improving your application architecture by using techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection).
+
 ### Example
 
 ```js
