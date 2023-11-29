@@ -182,7 +182,7 @@ export function foobar() {
 }
 ```
 
-It is not possible to mock `foo` method from the outside because it is referenced directly. So this code will have no effect on `foo` call inside `foobar` (but it will affect `foo` call in other modules):
+It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
 
 ```ts
 import { vi } from 'vitest'
@@ -222,7 +222,7 @@ export function foobar(injectedFoo) {
 }
 ```
 
-This is intended behaviour. It is usually a sign of bad code when mocking is involved in such manner. Consider refactoring your code into multiple files or improve your application architecture by using techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection).
+This is the intended behaviour. It is usually a sign of bad code when mocking is involved in such a manner. Consider refactoring your code into multiple files or improving your application architecture by using techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection).
 
 ### Example
 
