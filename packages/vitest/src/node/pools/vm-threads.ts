@@ -5,7 +5,14 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
+import type {
+  ContextTestEnvironment,
+  ResolvedConfig,
+  RunnerRPC,
+  RuntimeRPC,
+  Vitest,
+  WorkerContext,
+} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
@@ -20,25 +27,25 @@ function createWorkerChannel(project: WorkspaceProject) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-    createMethodsRPC(project),
-    {
-      eventNames: ['onCancel'],
-      post(v) {
-        port.postMessage(v)
-      },
-      on(fn) {
-        port.on('message', fn)
-      },
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+    eventNames: ['onCancel'],
+    post(v) {
+      port.postMessage(v)
     },
-  )
+    on(fn) {
+      port.on('message', fn)
+    },
+  })
 
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 
   return { workerPort, port }
 }
 
-export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: PoolProcessOptions): ProcessPool {
+export function createVmThreadsPool(
+  ctx: Vitest,
+  { execArgv, env, vmPath }: PoolProcessOptions,
+): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -48,8 +55,10 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.poolOptions?.vmThreads?.maxThreads ?? threadsCount
-  const minThreads = ctx.config.poolOptions?.vmThreads?.minThreads ?? threadsCount
+  const maxThreads
+    = ctx.config.poolOptions?.vmThreads?.maxThreads ?? threadsCount
+  const minThreads
+    = ctx.config.poolOptions?.vmThreads?.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: vmPath,
@@ -66,7 +75,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       '--experimental-vm-modules',
       '--require',
       suppressWarningsPath,
-      ...ctx.config.poolOptions?.vmThreads?.execArgv ?? [],
+      ...(ctx.config.poolOptions?.vmThreads?.execArgv ?? []),
       ...execArgv,
     ],
 
@@ -85,7 +94,13 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(project: WorkspaceProject, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    async function runFiles(
+      project: WorkspaceProject,
+      config: ResolvedConfig,
+      files: string[],
+      environment: ContextTestEnvironment,
+      invalidates: string[] = [],
+    ) {
       ctx.state.clearFiles(project, files)
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
@@ -104,24 +119,27 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       }
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
-        if (error instanceof Error && /Failed to terminate worker/.test(error.message))
-          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}.`)
-
+        if (
+          error instanceof Error
+          && /Failed to terminate worker/.test(error.message)
+        ) {
+          ctx.state.addProcessTimeoutCause(
+            `Failed to terminate worker while running ${files.join(', ')}.`,
+          )
+        }
         // Intentionally cancelled
-        else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root, project.getName())
-
-        else
-          throw error
+        else if (
+          ctx.isCancelling
+          && error instanceof Error
+          && /The task has been cancelled/.test(error.message)
+        ) { ctx.state.cancelFiles(files, ctx.config.root, project.getName()) }
+        else { throw error }
       }
       finally {
         port.close()
         workerPort.close()
       }
     }
-
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
 
     return async (specs, invalidates) => {
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
@@ -134,21 +152,29 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         return config
       }
 
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
-
       const filesByEnv = await groupFilesByEnv(specs)
       const promises = Object.values(filesByEnv).flat()
-      const results = await Promise.allSettled(promises
-        .map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates)))
+      const results = await Promise.allSettled(
+        promises.map(({ file, environment, project }) =>
+          runFiles(
+            project,
+            getConfig(project),
+            [file],
+            environment,
+            invalidates,
+          ),
+        ),
+      )
 
-      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-      if (errors.length > 0)
-        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      const errors = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map(r => r.reason)
+      if (errors.length > 0) {
+        throw new AggregateError(
+          errors,
+          'Errors occurred while running tests. For more information, see serialized error.',
+        )
+      }
     }
   }
 
@@ -157,7 +183,9 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     runTests: runWithFiles('run'),
     close: async () => {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
+      const nodeVersion = Number(
+        process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1),
+      )
       if (nodeVersion >= 16.17)
         await pool.destroy()
     },
@@ -168,12 +196,8 @@ function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
   const limit = getWorkerMemoryLimit(config)
 
-  if (typeof memory === 'number') {
-    return stringToBytes(
-      limit,
-      config.watch ? memory / 2 : memory,
-    )
-  }
+  if (typeof memory === 'number')
+    return stringToBytes(limit, config.watch ? memory / 2 : memory)
 
   if (limit && limit > 1)
     return stringToBytes(limit)
