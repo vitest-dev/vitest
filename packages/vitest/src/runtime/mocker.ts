@@ -207,7 +207,7 @@ export class VitestMocker {
   return {
     ...actual,
     // your mocked methods
-  },
+  }
 })`)}\n`,
           )
         }
