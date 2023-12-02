@@ -13,6 +13,8 @@ outline: deep
 
 Vitest 1.0 requires Vite 5.0 and Node.js 18 or higher.
 
+All `@vitest/*` sub packages require Vitest version 1.0.
+
 ### Snapshots Update
 
 Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
@@ -136,6 +138,14 @@ A few types were removed in favor of Jest-style "Mock" naming.
 ::: warning
 `SpyInstance` is deprecated in favor of `MockInstance` and will be removed in the next major release.
 :::
+
+
+### Timer mocks
+
+`vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
+It's still possible to mock `process.nextTick` by explicitly specifying it by using `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+
+However mocking `process.nextTick` is not possible when using `--pool=forks`. Use different `--pool` option if you need `process.nextTick` mocking.
 
 ## Migrating from Jest
 
