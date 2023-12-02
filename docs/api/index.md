@@ -598,13 +598,33 @@ import { describe, test } from 'vitest'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-describe.skipIf(isDev)('prod only test', () => {
-  // this test only runs in production
+describe.skipIf(isDev)('prod only test suite', () => {
+  // this test suite only runs in production
 })
 ```
 
 ::: warning
 You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
+:::
+
+### describe.runIf
+
+- **Type:** `(condition: any) => void`
+
+Opposite of [describe.skipIf](#describe-skipif).
+
+```ts
+import { assert, test } from 'vitest'
+
+const isDev = process.env.NODE_ENV === 'development'
+
+describe.runIf(isDev)('dev only test suite', () => {
+  // this test suite only runs in development
+})
+```
+
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
