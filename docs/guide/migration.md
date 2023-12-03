@@ -15,7 +15,7 @@ Vitest 1.0 requires Vite 5.0 and Node.js 18 or higher.
 
 All `@vitest/*` sub packages require Vitest version 1.0.
 
-### Snapshots Update
+### Snapshots Update [#3961](https://github.com/vitest-dev/vitest/pull/3961)
 
 Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
 
@@ -39,7 +39,7 @@ expect({ foo: 'bar' }).toMatchInlineSnapshot(`
 ```
 
 
-### Pools are Standardized
+### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
 
 We removed a lot of configuration options to make it easier to configure the runner to your needs. Please, have a look at migration examples if you rely on `--threads` or other related flags.
 
@@ -95,7 +95,7 @@ We removed a lot of configuration options to make it easier to configure the run
 }
 ```
 
-### Changes to Coverage
+### Changes to Coverage [#4265](https://github.com/vitest-dev/vitest/pull/4265), [#4442](https://github.com/vitest-dev/vitest/pull/4442)
 
 Option `coverage.all` is now enabled by default. This means that all project files matching `coverage.include` pattern will be processed even if they are not executed.
 
@@ -126,7 +126,7 @@ export default defineConfig({
 })
 ```
 
-### Mock Types
+### Mock Types [#4400](https://github.com/vitest-dev/vitest/pull/4400)
 
 A few types were removed in favor of Jest-style "Mock" naming.
 
@@ -140,7 +140,7 @@ A few types were removed in favor of Jest-style "Mock" naming.
 :::
 
 
-### Timer mocks
+### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
 
 `vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
 It's still possible to mock `process.nextTick` by explicitly specifying it by using `vi.useFakeTimers({ toFake: ['nextTick'] })`.
