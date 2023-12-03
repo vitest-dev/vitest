@@ -13,16 +13,16 @@ import { mockMap, moduleCache, startViteNode } from './execute'
 import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
+try {
+  process.title = `node (vitest ${poolId})`
+}
+catch {}
+
 async function init(ctx: ChildContext) {
   const { config, workerId, providedContext } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
-
-  try {
-    process.title = `node (vitest ${poolId})`
-  }
-  catch {}
 
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
