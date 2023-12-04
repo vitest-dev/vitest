@@ -1,4 +1,4 @@
-import { cpus } from 'node:os'
+import os from 'node:os'
 import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
@@ -43,7 +43,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
-  processingConcurrency: Math.min(20, cpus().length),
+  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
 }
 
 export const fakeTimersDefaults = {
