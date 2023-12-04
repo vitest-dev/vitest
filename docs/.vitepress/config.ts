@@ -43,10 +43,10 @@ export default withPwa(defineConfig({
     ['meta', { property: 'og:description', content: vitestDescription }],
     ['meta', { property: 'og:url', content: ogUrl }],
     ['meta', { property: 'og:image', content: ogImage }],
-    ['meta', { name: 'twitter:title', content: vitestName }],
-    ['meta', { name: 'twitter:description', content: vitestDescription }],
-    ['meta', { name: 'twitter:image', content: ogImage }],
-    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'x:title', content: vitestName }],
+    ['meta', { name: 'x:description', content: vitestDescription }],
+    ['meta', { name: 'x:image', content: ogImage }],
+    ['meta', { name: 'x:card', content: 'summary_large_image' }],
     ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
     ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
     ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
@@ -82,7 +82,7 @@ export default withPwa(defineConfig({
 
     socialLinks: [
       { icon: 'mastodon', link: mastodon },
-      { icon: 'twitter', link: twitter },
+      { icon: 'x', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
     ],

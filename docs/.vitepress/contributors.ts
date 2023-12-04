@@ -39,7 +39,7 @@ function createLinks(tm: CoreTeam): CoreTeam {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
 
   if (tm.twitter)
-    tm.links.push({ icon: 'twitter', link: `https://twitter.com/${tm.twitter}` })
+    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
 
   return tm
 }

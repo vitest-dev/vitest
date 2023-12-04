@@ -13,13 +13,13 @@ We recommend installing [ni](https://github.com/antfu/ni) to help switching betw
 
 To develop and test `vitest` package:
 
-1. Run `pnpm install` in `vitest`'s root folder
+1. [ ]Run `pnpm install` in `vitest`'s root folder
+2. [ ]Run `pnpm run dev` to build sources in watch mode
+3. [ ]Run
 
-2. Run `pnpm run dev` to build sources in watch mode
 
-3. Run
-   - `pnpm run test` to run core tests
-   - `pnpm run test:all` to run all the suite
+   - [ ] `pnpm run test` to run core tests
+   - [ ] `pnpm run test:all` to run all the suite
 
 > 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
 
@@ -30,13 +30,9 @@ To develop and test `vitest` package:
 If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/editor/debugging) feature from vscode.
 
 1. Add a `debugger` statement where you want to stop the code execution.
-
 2. Click on the "Run and Debug" icon in the activity bar of the editor.
-
 3. Click on the "Javascript Debug Terminal" button.
-
 4. It will open a terminal, then type the test command: `pnpm run test`
-
 5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) to continue, step over, restart the process...
 
 ## Testing Vitest against external packages
@@ -67,24 +63,18 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 ## Pull Request Guidelines
 
 - Checkout a topic branch from a base branch, e.g. `main`, and merge back against that branch.
-
 - If adding a new feature:
 
   - Add accompanying test case.
   - Provide a convincing reason to add this feature. Ideally, you should open a suggestion issue first and have it approved before working on it.
-
 - If fixing bug:
 
   - If you are resolving a special issue, add `(fix #xxxx[,#xxxx])` (#xxxx is the issue id) in your PR title for a better release log, e.g. `fix: update entities encoding/decoding (fix #3899)`.
   - Provide a detailed description of the bug in the PR. Live demo preferred.
   - Add appropriate test coverage if applicable.
-
 - It's OK to have multiple small commits as you work on the PR - GitHub can automatically squash them before merging.
-
 - Make sure tests pass!
-
 - Commit messages must follow the [commit message convention](./.github/commit-convention.md) so that changelogs can be automatically generated.
-
 - Use `pnpm run lint:fix` to format files according to the project guidelines.
 
 ## Notes on Dependencies
