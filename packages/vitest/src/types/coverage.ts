@@ -208,7 +208,7 @@ export interface BaseCoverageOptions {
 
   /**
    * Concurrency limit used when processing the coverage results.
-   * Defaults to `Math.min(20, os.cpu().length)`
+   * Defaults to `Math.min(20, os.cpus().length)`
    */
   processingConcurrency?: number
 }
