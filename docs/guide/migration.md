@@ -38,6 +38,12 @@ expect({ foo: 'bar' }).toMatchInlineSnapshot(`
 + expect('some string').toMatchInlineSnapshot(`"some string"`)
 ```
 
+There were also [changes](https://github.com/vitest-dev/vitest/pull/4076) to `@vitest/snapshot` package. If you are not using it directly, you don't need to change anything.
+
+- You no longer need to extend `SnapshotClient` just to override `equalityCheck` method: just pass it down as `isEqual` when initiating an instance
+- `client.setTest` was renamed to `client.startCurrentRun`
+- `client.resetCurrent` was renamed to `client.finishCurrentRun`
+
 
 ### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
 
