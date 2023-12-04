@@ -17,7 +17,7 @@
     "vue": "latest"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.22",
+    "@iconify-json/carbon": "^1.1.24",
     "@iconify-json/logos": "^1.1.39",
     "@unocss/reset": "^0.57.4",
     "@vite-pwa/assets-generator": "^0.0.11",

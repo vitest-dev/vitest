@@ -118,8 +118,8 @@ importers:
         version: 3.3.8(typescript@5.2.2)
     devDependencies:
       '@iconify-json/carbon':
-        specifier: ^1.1.22
-        version: 1.1.22
+        specifier: ^1.1.24
+        version: 1.1.24
       '@iconify-json/logos':
         specifier: ^1.1.39
         version: 1.1.39
@@ -5502,8 +5502,8 @@ packages:
     resolution: {integrity: sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==}
     dev: true
 
-  /@iconify-json/carbon@1.1.22:
-    resolution: {integrity: sha512-kQqCxiRkXtT7RO612GosIgvmQ8M8Ltgwl8LZZ4LKO8jip77W4rLK2PFjuS1uXRM1Lu879uzH73mMUClqFLsA0Q==}
+  /@iconify-json/carbon@1.1.24:
+    resolution: {integrity: sha512-Sx4vj3HfQj3yP6a4QzWc1BymDO5uTOGTHeb5it/xaMa196C6+RegNUv1F+Y1h8AJ2Sv93GMI+PyMH0HyqTHEmg==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
