@@ -1258,7 +1258,7 @@ importers:
         specifier: ^18.0.0 || >=20.0.0
         version: 18.16.19
       '@vitest/browser':
-        specifier: '*'
+        specifier: ^1.0.0
         version: link:../browser
       '@vitest/expect':
         specifier: workspace:*
@@ -1273,7 +1273,7 @@ importers:
         specifier: workspace:*
         version: link:../spy
       '@vitest/ui':
-        specifier: '*'
+        specifier: ^1.0.0
         version: link:../ui
       '@vitest/utils':
         specifier: workspace:*

@@ -45,7 +45,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": "^1.0.0-0"
+    "vitest": "^1.0.0"
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
