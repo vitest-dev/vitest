@@ -1,4 +1,5 @@
 import url from 'node:url'
+import { createRequire } from 'node:module'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { EXIT_CODE_RESTART } from '../constants'
@@ -10,6 +11,16 @@ export async function ensurePackageInstalled(
   dependency: string,
   root: string,
 ) {
+  if (process.versions.pnp) {
+    const targetRequire = createRequire(__dirname)
+    try {
+      targetRequire.resolve(dependency, { paths: [root, __dirname] })
+      return true
+    }
+    catch (error) {
+    }
+  }
+
   if (isPackageExists(dependency, { paths: [root, __dirname] }))
     return true
 
