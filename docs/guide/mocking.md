@@ -168,6 +168,42 @@ The following principles apply
 * All objects will be deeply cloned
 * All instances of classes and their prototypes will be deeply cloned
 
+### Virtual Modules
+
+Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention). It works differently from how virtual modules are treated in Jest. Instead of passing down `virtual: true` to a `vi.mock` function, you need to tell Vite that module exists otherwise it will fail during parsing. You can do that in several ways:
+
+1. Provide an alias
+
+```ts
+// vitest.config.js
+export default {
+  test: {
+    alias: {
+      '$app/forms': resolve('./mocks/forms.js')
+    }
+  }
+}
+```
+
+2. Provide a plugin that resolves a virtual module
+
+```ts
+// vitest.config.js
+export default {
+  plugins: [
+    {
+      name: 'virtual-modules',
+      resolveId(id) {
+        if (id === '$app/forms')
+          return 'virtual:$app/forms'
+      }
+    }
+  ]
+}
+```
+
+The benefit of the second approach is that you can dynamically create different virtual entrypoints. If you redirect several virtual modules into a single file, then all of them will be affected by `vi.mock`, so make sure to use unique identifiers.
+
 ### Mocking Pitfalls
 
 Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
