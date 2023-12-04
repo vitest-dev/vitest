@@ -15,9 +15,9 @@ test('hoists mock, unmock, hoisted', async () => {
     vi.unmock('path')
     vi.hoisted(() => {})
 
-
-
-
+      
+      
+      
       "
   `)
 })
@@ -35,9 +35,9 @@ test('always hoists import from vitest', async () => {
     vi.hoisted(() => {})
 
       import { vi } from 'vitest'
-
-
-
+      
+      
+      
       import { test } from 'vitest'
       "
   `)
@@ -60,9 +60,9 @@ test('always hoists all imports but they are under mocks', async () => {
       import { vi } from 'vitest'
       import { someValue } from './path.js'
       import { someValue2 } from './path2.js'
-
-
-
+      
+      
+      
       import { test } from 'vitest'
       "
   `)
@@ -78,7 +78,7 @@ test('correctly mocks namespaced', async () => {
 
       import { vi } from 'vitest'
       import add, * as AddModule from '../src/add'
-
+      
       "
   `)
 })
