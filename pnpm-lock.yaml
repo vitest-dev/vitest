@@ -24,8 +24,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest)
       '@antfu/ni':
-        specifier: ^0.21.10
-        version: 0.21.10
+        specifier: ^0.21.12
+        version: 0.21.12
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
         version: 25.0.7(rollup@4.4.0)
@@ -2228,8 +2228,8 @@ packages:
       find-up: 5.0.0
     dev: true
 
-  /@antfu/ni@0.21.10:
-    resolution: {integrity: sha512-EHIUsdIKeBYSoo4rtLNl0Myzp0aMaaJHnx0i5OK9Q4HoYd82z21CyOghz7HAOQOxYVPy+zzLOUmM+L4SA5V/tQ==}
+  /@antfu/ni@0.21.12:
+    resolution: {integrity: sha512-2aDL3WUv8hMJb2L3r/PIQWsTLyq7RQr3v9xD16fiz6O8ys1xEyLhhTOv8gxtZvJiTzjTF5pHoArvRdesGL1DMQ==}
     hasBin: true
     dev: true
 
