@@ -117,7 +117,6 @@ export async function hoistMocks(code: string) {
   }
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateDecodedMap({ hires: 'boundary' }),
   }
