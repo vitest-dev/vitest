@@ -325,13 +325,36 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          const spyModule = this.spyModule
-          if (!spyModule)
+          if (!this.spyModule)
             throw this.createError('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
+          const spyModule = this.spyModule
+          const primitives = this.primitives
+          function mockFunction(this: any) {
+            // detect constructor call and mock each instance's methods
+            // so that mock states between prototype/instances don't affect each other
+            // (jest reference https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691)
+            if (this instanceof newContainer[property]) {
+              for (const { key } of getAllMockableProperties(this, false, primitives)) {
+                const value = this[key]
+                const type = getType(value)
+                const isFunction = type.includes('Function') && typeof value === 'function'
+                if (isFunction) {
+                  // mock and delegate calls to original prototype method, which should be also mocked already
+                  const original = this[key]
+                  const mock = spyModule.spyOn(this, key as string).mockImplementation(original)
+                  mock.mockRestore = () => {
+                    mock.mockReset()
+                    mock.mockImplementation(original)
+                    return mock
+                  }
+                }
+              }
+            }
+          }
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(mockFunction)
           mock.mockRestore = () => {
             mock.mockReset()
-            mock.mockImplementation(() => undefined)
+            mock.mockImplementation(mockFunction)
             return mock
           }
           // tinyspy retains length, but jest doesn't.

@@ -15,3 +15,8 @@ test('global CSS is injected correctly', () => {
   expect(CSS.escape).toBeDefined()
   expect(CSS.supports).toBeDefined()
 })
+
+test('atob and btoa are available', () => {
+  expect(atob('aGVsbG8gd29ybGQ=')).toBe('hello world')
+  expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
+})
