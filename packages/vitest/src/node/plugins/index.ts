@@ -10,7 +10,6 @@ import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
-import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
@@ -177,7 +176,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     options.ui
       ? await UIPlugin()
       : null,
-    MocksPlugin(),
     VitestResolver(ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),

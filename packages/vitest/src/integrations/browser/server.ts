@@ -4,7 +4,6 @@ import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
-import { MocksPlugin } from '../../node/plugins/mocks'
 import { resolveFsAllow } from '../../node/plugins/utils'
 
 export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
@@ -62,7 +61,6 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           }
         },
       },
-      MocksPlugin(),
     ],
   })
 

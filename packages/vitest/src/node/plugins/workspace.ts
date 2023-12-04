@@ -8,7 +8,6 @@ import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
@@ -116,7 +115,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
-    MocksPlugin(),
     VitestResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),

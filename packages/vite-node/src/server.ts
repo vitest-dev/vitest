@@ -251,7 +251,7 @@ export class ViteNodeServer {
     })
   }
 
-  private async _transformRequest(id: string, filepath: string, transformMode: 'web' | 'ssr') {
+  protected async _transformRequest(id: string, filepath: string, transformMode: 'web' | 'ssr') {
     debugRequest(id)
 
     let result: TransformResult | null = null
