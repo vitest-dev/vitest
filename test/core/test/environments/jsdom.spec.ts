@@ -28,6 +28,11 @@ test.runIf(nodeMajor >= 18)('fetch, Request, Response, and BroadcastChannel are 
   expect(BroadcastChannel).toBeDefined()
 })
 
+test('atob and btoa are available', () => {
+  expect(atob('aGVsbG8gd29ybGQ=')).toBe('hello world')
+  expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
+})
+
 test('toContain correctly handles DOM nodes', () => {
   const wrapper = document.createElement('div')
   const child = document.createElement('div')

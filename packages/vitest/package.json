@@ -180,7 +180,7 @@
     "flatted": "^3.2.9",
     "get-tsconfig": "^4.7.2",
     "happy-dom": "^12.10.3",
-    "jsdom": "^22.1.0",
+    "jsdom": "^23.0.1",
     "log-update": "^6.0.0",
     "micromatch": "^4.0.5",
     "p-limit": "^5.0.0",
