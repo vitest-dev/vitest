@@ -39,14 +39,15 @@ describe('error thrown in test fixtures', () => {
   myTest('fixture errors', ({ a }) => {})
 })
 
-// describe('correctly fails when test times out', () => {
-//   const myTest = test.extend<{ a: number }>({
-//     a: async ({}, use) => {
-//       await use(2)
-//     },
-//   })
-//   myTest('test times out', async ({ a }) => {
-//     await new Promise((resolve) => setTimeout(resolve, 1000))
-//     expect(a).toBe(2)
-//   }, 20)
-// })
+// TODO: enable when #4669 is fixed
+describe.skip('correctly fails when test times out', () => {
+  const myTest = test.extend<{ a: number }>({
+    a: async ({}, use) => {
+      await use(2)
+    },
+  })
+  myTest('test times out', async ({ a }) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    expect(a).toBe(2)
+  }, 20)
+})
