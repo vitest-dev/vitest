@@ -154,6 +154,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
 
+      if (inlineSnapshot)
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+
       getSnapshotClient().assert({
         received: getError(expected, promise),
         message,
