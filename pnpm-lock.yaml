@@ -1331,8 +1331,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       '@antfu/install-pkg':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.3.1
+        version: 0.3.1
       '@edge-runtime/vm':
         specifier: ^3.1.7
         version: 3.1.7
@@ -2226,6 +2226,12 @@ packages:
     dependencies:
       execa: 5.1.1
       find-up: 5.0.0
+    dev: true
+
+  /@antfu/install-pkg@0.3.1:
+    resolution: {integrity: sha512-A3zWY9VeTPnxlMiZtsGHw2lSd3ghwvL8s9RiGOtqvDxhhFfZ781ynsGBa/iUnDJ5zBrmTFQrJDud3TGgRISaxw==}
+    dependencies:
+      execa: 8.0.1
     dev: true
 
   /@antfu/ni@0.21.12:

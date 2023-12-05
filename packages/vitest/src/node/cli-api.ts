@@ -36,11 +36,6 @@ export async function startVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  if (!await ensurePackageInstalled('vite', root)) {
-    process.exitCode = 1
-    return
-  }
-
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
