@@ -13,7 +13,7 @@ export const suite = createSuite()
 export const test = createTest(
   function (name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
     if (getCurrentTest())
-      throw new Error('Calling the "test" or "it" function inside another "test" or "it" function is not allowed. Please, put it inside "describe" so it can be properly collected.')
+      throw new Error('Calling the "test" or "it" function inside another "test" or "it" function is not allowed. Please put it inside "describe" so it can be properly collected.')
 
     getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
   },
