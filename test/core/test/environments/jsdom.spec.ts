@@ -99,3 +99,9 @@ test('toContain correctly handles DOM nodes', () => {
     `)
   }
 })
+
+test('request doesn\'t support absolute URL because jsdom doesn\'t provide compatible Request so Vitest is using Node.js Request', () => {
+  expect(() => {
+    const _r = new Request('/api', { method: 'GET' })
+  }).toThrow(/Failed to parse URL/)
+})
