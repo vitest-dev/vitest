@@ -54,8 +54,8 @@ test('always hoists all imports but they are under mocks', () => {
     vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})
-    const { someValue } = await import('./path.js')
-    const { someValue2 } = await import('./path2.js')"
+    const __vi_import_0__ = await import('./path.js')
+    const __vi_import_1__ = await import('./path2.js')"
   `)
 })
 
@@ -67,7 +67,6 @@ test('correctly mocks namespaced', () => {
   `)).toMatchInlineSnapshot(`
     "const { vi } = await import('vitest')
     vi.mock('../src/add', () => {})
-    const AddModule = await import('../src/add')
-    const { default: add } = AddModule"
+    const __vi_import_0__ = await import('../src/add')"
   `)
 })

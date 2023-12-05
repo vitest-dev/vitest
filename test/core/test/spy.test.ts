@@ -1,5 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import * as mock from './fixtures/hello-mock'
+import * as squaredModule from './fixtures/squared'
+import { squared } from './fixtures/squared'
 
 /**
  * @vitest-environment happy-dom
@@ -28,5 +30,11 @@ describe('spyOn', () => {
     vi.spyOn(hw, 'hello').mockImplementationOnce(() => 'hello world')
 
     expect(hw.hello()).toEqual('hello world')
+  })
+
+  test('with mock', () => {
+    vi.mock('any')
+    vi.spyOn(squaredModule, 'squared')
+    expect(squared).not.toHaveBeenCalled()
   })
 })
