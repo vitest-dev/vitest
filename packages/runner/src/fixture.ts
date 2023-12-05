@@ -133,7 +133,7 @@ function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), p
       return
     }
     if (depSet.has(fixture))
-      throw new Error('circular fixture dependency')
+      throw new Error(`Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet].reverse().map(d => d.prop).join(' <- ')}`)
 
     depSet.add(fixture)
     resolveDeps(fixture.deps, depSet, pendingFixtures)
@@ -155,7 +155,7 @@ function getUsedProps(fn: Function) {
 
   const first = args[0]
   if (!(first.startsWith('{') && first.endsWith('}')))
-    throw new Error('the first argument must use object destructuring pattern')
+    throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
 
   const _first = first.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
@@ -164,7 +164,7 @@ function getUsedProps(fn: Function) {
 
   const last = props.at(-1)
   if (last && last.startsWith('...'))
-    throw new Error('Rest parameters are not supported')
+    throw new Error(`Rest parameters are not supported in fixtures, received "${last}".`)
 
   return props
 }
