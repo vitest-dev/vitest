@@ -66,12 +66,11 @@
     }
   },
   "dependencies": {
-    "estree-walker": "^3.0.3",
+    "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.5",
     "sirv": "^2.0.3"
   },
   "devDependencies": {
-    "@types/estree": "^1.0.5",
     "@types/ws": "^8.5.9",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",

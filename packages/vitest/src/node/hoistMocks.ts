@@ -1,7 +1,8 @@
 import MagicString from 'magic-string'
-import type { CallExpression, Identifier, ImportDeclaration, ImportNamespaceSpecifier, VariableDeclaration, Node as _Node } from 'estree'
+import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
+import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from '@vitest/utils/ast'
 
 export type Positioned<T> = T & {
   start: number
@@ -71,47 +72,42 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   let hoistedCode = ''
   let hoistedVitestImports = ''
 
-  // this will tranfrom import statements into dynamic ones, if there are imports
+  let uid = 0
+  const idToImportMap = new Map<string, string>()
+
+  // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
   const transformImportDeclaration = (node: ImportDeclaration) => {
     const source = node.source.value as string
 
-    const namespace = node.specifiers.find(specifier => specifier.type === 'ImportNamespaceSpecifier') as ImportNamespaceSpecifier | undefined
-
-    let code = ''
-    if (namespace)
-      code += `const ${namespace.local.name} = await import('${source}')\n`
-
-    // if we don't hijack ESM and process this file, then we definetly have mocks,
-    // so we need to transform imports into dynamic ones, so "vi.mock" can be executed before
-    const specifiers = transformImportSpecifiers(node)
-
-    if (specifiers) {
-      if (namespace)
-        code += `const ${specifiers} = ${namespace.local.name}\n`
-      else
-        code += `const ${specifiers} = await import('${source}')\n`
+    const importId = `__vi_import_${uid++}__`
+    const hasSpecifiers = node.specifiers.length > 0
+    const code = hasSpecifiers
+      ? `const ${importId} = await import('${source}')\n`
+      : `await import('${source}')\n`
+    return {
+      code,
+      id: importId,
     }
-    else if (!namespace) {
-      code += `await import('${source}')\n`
-    }
-    return code
   }
 
-  function hoistImport(node: Positioned<ImportDeclaration>) {
+  function defineImport(node: Positioned<ImportDeclaration>) {
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    s.remove(node.start, node.end)
-
     if (node.source.value === 'vitest') {
       const code = `const ${transformImportSpecifiers(node)} = await import('vitest')\n`
       hoistedVitestImports += code
+      s.remove(node.start, node.end)
       return
     }
-    const code = transformImportDeclaration(node)
-    s.appendLeft(hoistIndex, code)
+
+    const declaration = transformImportDeclaration(node)
+    if (!declaration)
+      return null
+    s.appendLeft(hoistIndex, declaration.code)
+    return declaration.id
   }
 
   // 1. check all import statements and record id -> importName map
@@ -119,9 +115,70 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     // import foo from 'foo' --> foo -> __import_foo__.default
     // import { baz } from 'foo' --> baz -> __import_foo__.baz
     // import * as ok from 'foo' --> ok -> __import_foo__
-    if (node.type === 'ImportDeclaration')
-      hoistImport(node)
+    if (node.type === 'ImportDeclaration') {
+      const importId = defineImport(node)
+      if (!importId)
+        continue
+      s.remove(node.start, node.end)
+      for (const spec of node.specifiers) {
+        if (spec.type === 'ImportSpecifier') {
+          idToImportMap.set(
+            spec.local.name,
+            `${importId}.${spec.imported.name}`,
+          )
+        }
+        else if (spec.type === 'ImportDefaultSpecifier') {
+          idToImportMap.set(spec.local.name, `${importId}.default`)
+        }
+        else {
+          // namespace specifier
+          idToImportMap.set(spec.local.name, importId)
+        }
+      }
+    }
   }
+
+  const declaredConst = new Set<string>()
+
+  esmWalker(ast, {
+    onIdentifier(id, parent, parentStack) {
+      const grandparent = parentStack[1]
+      const binding = idToImportMap.get(id.name)
+      if (!binding)
+        return
+
+      if (isStaticProperty(parent) && parent.shorthand) {
+        // let binding used in a property shorthand
+        // { foo } -> { foo: __import_x__.foo }
+        // skip for destructuring patterns
+        if (
+          !isNodeInPattern(parent)
+            || isInDestructuringAssignment(parent, parentStack)
+        )
+          s.appendLeft(id.end, `: ${binding}`)
+      }
+      else if (
+        (parent.type === 'PropertyDefinition'
+            && grandparent?.type === 'ClassBody')
+          || (parent.type === 'ClassDeclaration' && id === parent.superClass)
+      ) {
+        if (!declaredConst.has(id.name)) {
+          declaredConst.add(id.name)
+          // locate the top-most node containing the class declaration
+          const topNode = parentStack[parentStack.length - 2]
+          s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
+        }
+      }
+      else if (
+        // don't transform class name identifier
+        !(parent.type === 'ClassExpression' && id === parent.id)
+      ) {
+        s.update(id.start, id.end, binding)
+      }
+    },
+    onDynamicImport() {},
+    onImportMeta() {},
+  })
 
   simpleWalk(ast, {
     CallExpression(_node) {

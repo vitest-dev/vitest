@@ -865,9 +865,9 @@ importers:
 
   packages/browser:
     dependencies:
-      estree-walker:
-        specifier: ^3.0.3
-        version: 3.0.3
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       magic-string:
         specifier: ^0.30.5
         version: 0.30.5
@@ -875,9 +875,6 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
     devDependencies:
-      '@types/estree':
-        specifier: ^1.0.5
-        version: 1.0.5
       '@types/ws':
         specifier: ^8.5.9
         version: 8.5.9
@@ -1216,6 +1213,9 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
       loupe:
         specifier: ^2.3.7
         version: 2.3.7
@@ -1226,6 +1226,9 @@ importers:
       '@jridgewell/trace-mapping':
         specifier: ^0.3.20
         version: 0.3.20
+      '@types/estree':
+        specifier: ^1.0.5
+        version: 1.0.5
 
   packages/vite-node:
     dependencies:
@@ -1319,7 +1322,7 @@ importers:
         version: 0.8.1
       vite:
         specifier: ^5.0.0-beta.19
-        version: 5.0.0-beta.19(@types/node@18.18.9)(less@4.1.3)
+        version: 5.0.0-beta.19(@types/node@18.16.19)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -24843,14 +24846,14 @@ packages:
   /tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
     dependencies:
-      punycode: 2.3.0
+      punycode: 2.3.1
     dev: true
 
   /tr46@2.1.0:
     resolution: {integrity: sha512-15Ih7phfcdP5YxqiB+iDtLoaTz4Nd35+IiAv0kQ5FNKHzXgdWqPoTIqEDDJmXceQt4JZk6lVPT8lnDlPpGDppw==}
     engines: {node: '>=8'}
     dependencies:
-      punycode: 2.3.0
+      punycode: 2.3.1
     dev: true
 
   /tr46@3.0.0:
@@ -25831,6 +25834,42 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /vite@5.0.0-beta.19(@types/node@18.16.19):
+    resolution: {integrity: sha512-Huoj7XUlkhSLHhIOf4FgDrxmHJMKgfvG9ocB4kJmTKSeWfLgHIQ86xYC8+eA/RBxFo9zRQXX81VUgW8l7Wri3Q==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 18.16.19
+      esbuild: 0.19.5
+      postcss: 8.4.31
+      rollup: 4.4.0
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: false
 
   /vite@5.0.0-beta.19(@types/node@18.18.9)(less@4.1.3):
     resolution: {integrity: sha512-Huoj7XUlkhSLHhIOf4FgDrxmHJMKgfvG9ocB4kJmTKSeWfLgHIQ86xYC8+eA/RBxFo9zRQXX81VUgW8l7Wri3Q==}

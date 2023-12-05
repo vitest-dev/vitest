@@ -24,6 +24,10 @@
       "types": "./dist/diff.d.ts",
       "default": "./dist/diff.js"
     },
+    "./ast": {
+      "types": "./dist/ast.d.ts",
+      "default": "./dist/ast.js"
+    },
     "./error": {
       "types": "./dist/error.d.ts",
       "default": "./dist/error.js"
@@ -52,10 +56,12 @@
   },
   "dependencies": {
     "diff-sequences": "^29.6.3",
+    "estree-walker": "^3.0.3",
     "loupe": "^2.3.7",
     "pretty-format": "^29.7.0"
   },
   "devDependencies": {
-    "@jridgewell/trace-mapping": "^0.3.20"
+    "@jridgewell/trace-mapping": "^0.3.20",
+    "@types/estree": "^1.0.5"
   }
 }

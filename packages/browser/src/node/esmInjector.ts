@@ -1,9 +1,8 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
-import type { Expression, ImportDeclaration } from 'estree'
 import type { PluginContext } from 'rollup'
-import type { Node, Positioned } from './esmWalker'
-import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
+import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from '@vitest/utils/ast'
+import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/utils/ast'
 
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
