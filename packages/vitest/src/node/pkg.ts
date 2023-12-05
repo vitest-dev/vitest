@@ -15,7 +15,7 @@ export async function ensurePackageInstalled(
 
   const promptInstall = !isCI && process.stdout.isTTY
 
-  process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
+  process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEPENDENCY '))} Cannot find dependency '${dependency}'\n\n`))
 
   if (!promptInstall)
     return false
