@@ -17,7 +17,6 @@ it.each(files)('should fail %s', async (file) => {
     .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
     .map(i => i.trim().replace(root, '<rootDir>'),
     ).join('\n')
-  // console.log(stderr)
   expect(msg).toMatchSnapshot(file)
 }, 30_000)
 
