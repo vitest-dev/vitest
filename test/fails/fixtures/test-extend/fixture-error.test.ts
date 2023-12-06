@@ -50,3 +50,16 @@ describe('correctly fails when test times out', () => {
     expect(a).toBe(2)
   }, 20)
 })
+
+describe('error thrown during fixture teardown', () => {
+  const myTest = test.extend<{ a: string }>({
+    a: async ({}, use) => {
+      await use("hello");
+      throw new Error('Error fixture teardown')
+    },
+  })
+
+  myTest('fixture errors', ({ a }) => {
+    expect(a).toBe("hello");
+  })
+})
