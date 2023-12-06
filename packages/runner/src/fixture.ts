@@ -93,8 +93,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
                 })
               })
               if (fixtureReturn instanceof Promise) {
-                // TODO: this rejection can also happen the cleanup code after "use",
-                //       which is not desired?
+                // TODO: this rejection can also happen during the cleanup code after "use", which is probably not desired?
                 fixtureReturn.catch(rejectUseArg)
               }
               else {
