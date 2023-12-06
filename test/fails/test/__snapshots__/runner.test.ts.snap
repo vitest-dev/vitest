@@ -43,7 +43,8 @@ TypeError: failure"
 exports[`should fail test-extend/circular-dependency.test.ts > test-extend/circular-dependency.test.ts 1`] = `"Error: circular fixture dependency"`;
 
 exports[`should fail test-extend/fixture-error.test.ts > test-extend/fixture-error.test.ts 1`] = `
-"Error: Error thrown in test fixture
+"Error: Test timed out in 20ms.
+Error: Error thrown in test fixture
 Error: Error thrown in afterEach fixture
 Error: Error thrown in beforeEach fixture"
 `;

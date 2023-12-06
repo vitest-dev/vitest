@@ -78,6 +78,44 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     if (!pendingFixtures.length)
       return fn(context)
 
+    async function resolveFixtures() {
+      for (const fixture of pendingFixtures) {
+        // fixture could be already initialized during "before" hook
+        if (!fixtureValueMap.has(fixture)) {
+          if (fixture.isFn) {
+            // wait for `use` call to extract fixture value
+            const useArg = await new Promise((resolveUseArg, rejectUseArg) => {
+              const fixtureReturn = fixture.value(context, (useArg: unknown) => {
+                resolveUseArg(useArg)
+                // continue fixture function during cleanup
+                return new Promise<void>((resolveUseReturn) => {
+                  cleanupFnArray.push(resolveUseReturn)
+                })
+              })
+              if (fixtureReturn instanceof Promise) {
+                // TODO: this rejection can also happen the cleanup code after "use",
+                //       which is not desired?
+                fixtureReturn.catch(rejectUseArg)
+              }
+              else {
+                throw new TypeError('fixture function must be asynchronous')
+              }
+            })
+            fixtureValueMap.set(fixture, useArg)
+          }
+          else {
+            fixtureValueMap.set(fixture, fixture.value)
+          }
+          cleanupFnArray.unshift(() => {
+            fixtureValueMap.delete(fixture)
+          })
+        }
+        context![fixture.prop] = fixtureValueMap.get(fixture)!
+      }
+    }
+
+    return resolveFixtures().then(() => fn(context))
+
     let cursor = 0
 
     return new Promise((resolve, reject) => {
