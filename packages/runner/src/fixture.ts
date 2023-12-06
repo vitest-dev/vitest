@@ -100,7 +100,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
               // re-throw if error is thrown during fixture teardown
               if (isFixtureTeardown)
                 throw e
-              // otherwise treat as test failure which called this fixture
+              // otherwise it as a failure of a test calling this fixture
               rejectUseArg(e)
             })
           })
@@ -108,8 +108,8 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         else {
           fixtureValue = fixture.value
         }
-        fixtureValueMap.set(fixture, fixtureValue)
         context![fixture.prop] = fixtureValue
+        fixtureValueMap.set(fixture, fixtureValue)
         cleanupFnArray.unshift(() => {
           fixtureValueMap.delete(fixture)
         })
