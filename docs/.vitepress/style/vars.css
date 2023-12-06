@@ -82,3 +82,19 @@
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand) !important;
 }
+
+.vp-sponsor-grid.big .vp-sponsor-grid-image {
+  max-height: 96px;
+}
+
+.vp-sponsor-grid.mini .vp-sponsor-grid-image[alt='Bit'] {
+  max-height: 48px;
+}
+
+.vp-sponsor-grid.big .vp-sponsor-grid-image[alt='Vite'] {
+  max-height: 65px;
+}
+
+.vp-sponsor-grid.big .vp-sponsor-grid-image[alt='Zammad'] {
+  max-height: 74px;
+}
