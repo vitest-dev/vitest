@@ -122,50 +122,6 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     }
 
     return resolveFixtures().then(() => fn(context))
-
-    let cursor = 0
-
-    return new Promise((resolve, reject) => {
-      async function use(fixtureValue: any) {
-        const fixture = pendingFixtures[cursor++]
-        context![fixture.prop] = fixtureValue
-
-        if (!fixtureValueMap.has(fixture)) {
-          fixtureValueMap.set(fixture, fixtureValue)
-          cleanupFnArray.unshift(() => {
-            fixtureValueMap.delete(fixture)
-          })
-        }
-
-        if (cursor < pendingFixtures.length) {
-          await next()
-        }
-        else {
-          // When all fixtures setup, call the test function
-          try {
-            resolve(await fn(context))
-          }
-          catch (err) {
-            reject(err)
-          }
-          return new Promise<void>((resolve) => {
-            cleanupFnArray.push(resolve)
-          })
-        }
-      }
-
-      async function next() {
-        const fixture = pendingFixtures[cursor]
-        const { isFn, value } = fixture
-        if (fixtureValueMap.has(fixture))
-          return use(fixtureValueMap.get(fixture))
-        else
-          return isFn ? value(context, use) : use(value)
-      }
-
-      const setupFixturePromise = next().catch(reject)
-      cleanupFnArray.unshift(() => setupFixturePromise)
-    })
   }
 }
 
