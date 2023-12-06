@@ -84,17 +84,25 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         if (!fixtureValueMap.has(fixture)) {
           if (fixture.isFn) {
             // wait for `use` call to extract fixture value
+            let isFixtureTeardown = false
             const useArg = await new Promise((resolveUseArg, rejectUseArg) => {
               const fixtureReturn = fixture.value(context, (useArg: unknown) => {
                 resolveUseArg(useArg)
+                isFixtureTeardown = true
                 // continue fixture function during cleanup
                 return new Promise<void>((resolveUseReturn) => {
                   cleanupFnArray.push(resolveUseReturn)
                 })
               })
               if (fixtureReturn instanceof Promise) {
-                // TODO: this rejection can also happen during the cleanup code after "use", which is probably not desired?
-                fixtureReturn.catch(rejectUseArg)
+                fixtureReturn.catch((e) => {
+                  // re-throw if error is thrown during fixture teardown
+                  if (isFixtureTeardown)
+                    throw e
+
+                  // otherwise treat as test failure which called this fixture
+                  rejectUseArg(e)
+                })
               }
               else {
                 throw new TypeError('fixture function must be asynchronous')
