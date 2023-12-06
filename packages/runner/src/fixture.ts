@@ -87,22 +87,14 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         let fixtureValue: unknown
         if (fixture.isFn) {
           // wait for `use` call to extract fixture value
-          let isFixtureTeardown = false
           fixtureValue = await new Promise((resolveUseArg, rejectUseArg) => {
             fixture.value(context, (useArg: unknown) => {
               resolveUseArg(useArg)
-              isFixtureTeardown = true
               // suspend fixture function until cleanup
               return new Promise<void>((resolveUseReturn) => {
                 cleanupFnArray.push(resolveUseReturn)
               })
-            }).catch((e: unknown) => {
-              // re-throw if error is thrown during fixture teardown
-              if (isFixtureTeardown)
-                throw e
-              // otherwise treat it as a test failure which calls this fixture
-              rejectUseArg(e)
-            })
+            }).catch(rejectUseArg)
           })
         }
         else {
