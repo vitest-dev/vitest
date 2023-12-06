@@ -72,7 +72,7 @@ export interface BrowserConfigOptions {
    * Update ESM imports so they can be spied/stubbed with vi.spyOn.
    * Enabled by default when running in browser.
    *
-   * @default true
+   * @default false
    * @experimental
    */
   slowHijackESM?: boolean
