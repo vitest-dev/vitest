@@ -334,7 +334,11 @@ export class VitestMocker {
             // so that mock states between prototype/instances don't affect each other
             // (jest reference https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691)
             if (this instanceof newContainer[property]) {
-              for (const { key } of getAllMockableProperties(this, false, primitives)) {
+              for (const { key, descriptor } of getAllMockableProperties(this, false, primitives)) {
+                // skip getter since it's not mocked on prototype as well
+                if (descriptor.get)
+                  continue
+
                 const value = this[key]
                 const type = getType(value)
                 const isFunction = type.includes('Function') && typeof value === 'function'

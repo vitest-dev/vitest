@@ -20,6 +20,10 @@ export class MockedC {
   }
 
   set getSetProp(_val: number) {}
+
+  get getExpectNotCalled(): number {
+    throw new Error('automocked constructor should not call this getter')
+  }
 }
 
 export async function asyncFunc(): Promise<string> {
