@@ -92,7 +92,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
             fixture.value(context, (useArg: unknown) => {
               resolveUseArg(useArg)
               isFixtureTeardown = true
-              // continue fixture function during cleanup
+              // suspend fixture function until cleanup
               return new Promise<void>((resolveUseReturn) => {
                 cleanupFnArray.push(resolveUseReturn)
               })
@@ -100,7 +100,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
               // re-throw if error is thrown during fixture teardown
               if (isFixtureTeardown)
                 throw e
-              // otherwise it as a failure of a test calling this fixture
+              // otherwise treat it as a test failure which calls this fixture
               rejectUseArg(e)
             })
           })
