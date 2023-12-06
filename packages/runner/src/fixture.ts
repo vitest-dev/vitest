@@ -81,43 +81,38 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     async function resolveFixtures() {
       for (const fixture of pendingFixtures) {
         // fixture could be already initialized during "before" hook
-        if (!fixtureValueMap.has(fixture)) {
-          if (fixture.isFn) {
-            // wait for `use` call to extract fixture value
-            let isFixtureTeardown = false
-            const useArg = await new Promise((resolveUseArg, rejectUseArg) => {
-              const fixtureReturn = fixture.value(context, (useArg: unknown) => {
-                resolveUseArg(useArg)
-                isFixtureTeardown = true
-                // continue fixture function during cleanup
-                return new Promise<void>((resolveUseReturn) => {
-                  cleanupFnArray.push(resolveUseReturn)
-                })
-              })
-              if (fixtureReturn instanceof Promise) {
-                fixtureReturn.catch((e) => {
-                  // re-throw if error is thrown during fixture teardown
-                  if (isFixtureTeardown)
-                    throw e
+        if (fixtureValueMap.has(fixture))
+          continue
 
-                  // otherwise treat as test failure which called this fixture
-                  rejectUseArg(e)
-                })
-              }
-              else {
-                throw new TypeError('fixture function must be asynchronous')
-              }
+        let fixtureValue: unknown
+        if (fixture.isFn) {
+          // wait for `use` call to extract fixture value
+          let isFixtureTeardown = false
+          fixtureValue = await new Promise((resolveUseArg, rejectUseArg) => {
+            fixture.value(context, (useArg: unknown) => {
+              resolveUseArg(useArg)
+              isFixtureTeardown = true
+              // continue fixture function during cleanup
+              return new Promise<void>((resolveUseReturn) => {
+                cleanupFnArray.push(resolveUseReturn)
+              })
+            }).catch((e: unknown) => {
+              // re-throw if error is thrown during fixture teardown
+              if (isFixtureTeardown)
+                throw e
+              // otherwise treat as test failure which called this fixture
+              rejectUseArg(e)
             })
-            fixtureValueMap.set(fixture, useArg)
-          }
-          else {
-            fixtureValueMap.set(fixture, fixture.value)
-          }
-          cleanupFnArray.unshift(() => {
-            fixtureValueMap.delete(fixture)
           })
         }
-        context![fixture.prop] = fixtureValueMap.get(fixture)!
+        else {
+          fixtureValue = fixture.value
+        }
+        fixtureValueMap.set(fixture, fixtureValue)
+        context![fixture.prop] = fixtureValue
+        cleanupFnArray.unshift(() => {
+          fixtureValueMap.delete(fixture)
+        })
       }
     }
 
