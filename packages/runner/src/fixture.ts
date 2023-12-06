@@ -94,7 +94,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
               return new Promise<void>((resolveUseReturn) => {
                 cleanupFnArray.push(resolveUseReturn)
               })
-            }).catch(rejectUseArg)
+            }).catch(rejectUseArg) // treat fixture function error (before `use` call) as test failure
           })
         }
         else {
