@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import cjsDefault from '@vitest/cjs-lib'
+import cjsDefault, { a as cjsNamed } from '@vitest/cjs-lib'
 import * as cjsNamespace from '@vitest/cjs-lib'
 
 test('cjs namespace import', () => {
@@ -10,6 +10,10 @@ test('cjs namespace import', () => {
       h: 'h',
     },
   })
+})
+
+test('cjs named import', () => {
+  expect(cjsNamed).toEqual('a')
 })
 
 test('cjs default import not supported when slowHijackESM', () => {
