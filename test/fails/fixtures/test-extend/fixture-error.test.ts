@@ -39,8 +39,7 @@ describe('error thrown in test fixtures', () => {
   myTest('fixture errors', ({ a }) => {})
 })
 
-// TODO: enable when #4669 is fixed
-describe.skip('correctly fails when test times out', () => {
+describe('correctly fails when test times out', () => {
   const myTest = test.extend<{ a: number }>({
     a: async ({}, use) => {
       await use(2)
