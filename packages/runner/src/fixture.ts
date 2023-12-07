@@ -1,3 +1,4 @@
+import { createDefer } from '@vitest/utils'
 import { getFixture } from './map'
 import type { TestContext } from './types'
 
@@ -84,32 +85,34 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         if (fixtureValueMap.has(fixture))
           continue
 
-        let fixtureValue: unknown
+        let resolvedValue: unknown
         if (fixture.isFn) {
           // wait for `use` call to extract fixture value
+          const useFnArgPromise = createDefer()
           let isFixtureTeardown = false
-          fixtureValue = await new Promise((resolveUseArg, rejectUseArg) => {
-            fixture.value(context, (useArg: unknown) => {
-              resolveUseArg(useArg)
-              isFixtureTeardown = true
-              // suspend fixture function until cleanup
-              return new Promise<void>((resolveUseReturn) => {
-                cleanupFnArray.push(resolveUseReturn)
-              })
-            }).catch((e: unknown) => {
-              // re-throw if error is thrown during fixture teardown
-              if (isFixtureTeardown)
-                throw e
-              // otherwise treat it as a test failure which calls this fixture
-              rejectUseArg(e)
-            })
+          fixture.value(context, async (useFnArg: unknown) => {
+            useFnArgPromise.resolve(useFnArg)
+            // suspend fixture teardown until cleanup
+            const teardownPromise = createDefer<void>()
+            cleanupFnArray.push(teardownPromise.resolve)
+            await teardownPromise
+            isFixtureTeardown = true
+          }).catch((e: unknown) => {
+            // treat fixture setup error as test failure
+            if (!isFixtureTeardown) {
+              useFnArgPromise.reject(e)
+              return
+            }
+            // re-throw if fixture teardown error
+            throw e
           })
+          resolvedValue = await useFnArgPromise
         }
         else {
-          fixtureValue = fixture.value
+          resolvedValue = fixture.value
         }
-        context![fixture.prop] = fixtureValue
-        fixtureValueMap.set(fixture, fixtureValue)
+        context![fixture.prop] = resolvedValue
+        fixtureValueMap.set(fixture, resolvedValue)
         cleanupFnArray.unshift(() => {
           fixtureValueMap.delete(fixture)
         })

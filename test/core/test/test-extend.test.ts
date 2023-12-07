@@ -177,6 +177,28 @@ describe('test.extend()', () => {
     })
   })
 
+  describe('fixture only in beforeEach', () => {
+    beforeEach<Fixtures>(({ todoList }) => {
+      expect(todoList).toEqual([1, 2, 3])
+      expect(todoFn).toBeCalledTimes(1)
+    })
+
+    myTest('no fixture in test', () => {
+      expect(todoFn).toBeCalledTimes(1)
+    })
+  })
+
+  describe('fixture only in afterEach', () => {
+    afterEach<Fixtures>(({ todoList }) => {
+      expect(todoList).toEqual([1, 2, 3])
+      expect(todoFn).toBeCalledTimes(1)
+    })
+
+    myTest('no fixture in test', () => {
+      expect(todoFn).toBeCalledTimes(0)
+    })
+  })
+
   describe('fixture call times', () => {
     const apiFn = vi.fn(() => true)
     const serviceFn = vi.fn(() => true)
@@ -203,6 +225,8 @@ describe('test.extend()', () => {
     beforeEach<APIFixture>(({ api, service }) => {
       expect(api).toBe(true)
       expect(service).toBe(true)
+      expect(apiFn).toBeCalledTimes(1)
+      expect(serviceFn).toBeCalledTimes(1)
     })
 
     testAPI('Should init 1 time', ({ api }) => {
