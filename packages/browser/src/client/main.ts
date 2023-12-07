@@ -3,7 +3,7 @@ import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
 import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
-import { importId } from './utils'
+import { importId as importIdImpl } from './utils'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
 import { setupDialogsSpy } from './dialog'
@@ -23,6 +23,10 @@ const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 const reloadTries = Number(url.searchParams.get('reloadTries') || '0')
+
+const basePath = () => config!.base! || '/'
+const importId = (id: string) => importIdImpl(id, basePath())
+const viteClientPath = () => `${basePath()}@vite/client`
 
 function getQueryPaths() {
   return url.searchParams.getAll('path')
@@ -181,15 +185,14 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  await setupConsoleLogSpy()
+  await setupConsoleLogSpy(basePath())
   setupDialogsSpy()
   await runTests(paths, config!)
 })
 
 async function prepareTestEnvironment(config: ResolvedConfig) {
   // need to import it before any other import, otherwise Vite optimizer will hang
-  const viteClientPath = '/@vite/client'
-  await import(viteClientPath)
+  await import(viteClientPath())
 
   const {
     startTests,
@@ -204,7 +207,7 @@ async function prepareTestEnvironment(config: ResolvedConfig) {
 
   if (!runner) {
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
+    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) }, basePath())
     runner = new BrowserRunner({ config, browserHashMap })
   }
 
