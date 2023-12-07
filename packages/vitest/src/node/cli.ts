@@ -26,6 +26,7 @@ cli
   .option('--reporter <name>', 'Specify reporters')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
+  .option('--coverage.all', 'Whether to include all files, including the untested ones into report', { default: true })
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
