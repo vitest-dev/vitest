@@ -9,4 +9,4 @@ it('related correctly runs only related tests', async () => {
   expect(stdout).toContain('1 passed')
   expect(stdout).toContain('related.test.ts')
   expect(stdout).not.toContain('not-related.test.ts')
-}, 60_000)
+})
