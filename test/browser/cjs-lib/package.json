@@ -1,7 +1,7 @@
 {
   "name": "@vitest/cjs-lib",
   "type": "commonjs",
-	"exports": {
-		"default": "./index.js"
-	}
+  "exports": {
+    "default": "./index.js"
+  }
 }

@@ -9,8 +9,8 @@
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
   "devDependencies": {
-    "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/browser": "workspace:*",
+    "@vitest/cjs-lib": "link:./cjs-lib",
     "execa": "^7.1.1",
     "safaridriver": "^0.0.4",
     "vitest": "workspace:*"

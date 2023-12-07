@@ -8,7 +8,7 @@ function noop() {}
 
 export default defineConfig({
   optimizeDeps: {
-    include: ["@vitest/cjs-lib"]
+    include: ['@vitest/cjs-lib'],
   },
   test: {
     include: ['test/**.test.{ts,js}'],
