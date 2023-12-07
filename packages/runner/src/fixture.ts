@@ -1,3 +1,4 @@
+import { createDefer } from '@vitest/utils'
 import { getFixture } from './map'
 import type { TestContext } from './types'
 
@@ -87,15 +88,15 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         let resolvedValue: unknown
         if (fixture.isFn) {
           // wait for `use` call to extract fixture value
-          resolvedValue = await new Promise((resolveUseArg, rejectUseArg) => {
-            fixture.value(context, (useArg: unknown) => {
-              resolveUseArg(useArg)
-              // suspend fixture function until cleanup
-              return new Promise<void>((resolveUseReturn) => {
-                cleanupFnArray.push(resolveUseReturn)
-              })
-            }).catch(rejectUseArg) // treat fixture function error (until `use` call) as test failure
-          })
+          const useFnArgPromise = createDefer()
+          fixture.value(context, async (useFnArg: unknown) => {
+            useFnArgPromise.resolve(useFnArg)
+            // suspend fixture teardown until cleanup
+            const teardownPromise = createDefer<void>()
+            cleanupFnArray.push(teardownPromise.resolve)
+            await teardownPromise
+          }).catch(useFnArgPromise.reject) // treat fixture function error (until `use` call) as test failure
+          resolvedValue = await useFnArgPromise
         }
         else {
           resolvedValue = fixture.value
