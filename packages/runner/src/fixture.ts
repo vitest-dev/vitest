@@ -84,24 +84,24 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         if (fixtureValueMap.has(fixture))
           continue
 
-        let fixtureValue: unknown
+        let resolvedValue: unknown
         if (fixture.isFn) {
           // wait for `use` call to extract fixture value
-          fixtureValue = await new Promise((resolveUseArg, rejectUseArg) => {
+          resolvedValue = await new Promise((resolveUseArg, rejectUseArg) => {
             fixture.value(context, (useArg: unknown) => {
               resolveUseArg(useArg)
               // suspend fixture function until cleanup
               return new Promise<void>((resolveUseReturn) => {
                 cleanupFnArray.push(resolveUseReturn)
               })
-            }).catch(rejectUseArg) // treat fixture function error (before `use` call) as test failure
+            }).catch(rejectUseArg) // treat fixture function error (until `use` call) as test failure
           })
         }
         else {
-          fixtureValue = fixture.value
+          resolvedValue = fixture.value
         }
-        context![fixture.prop] = fixtureValue
-        fixtureValueMap.set(fixture, fixtureValue)
+        context![fixture.prop] = resolvedValue
+        fixtureValueMap.set(fixture, resolvedValue)
         cleanupFnArray.unshift(() => {
           fixtureValueMap.delete(fixture)
         })
