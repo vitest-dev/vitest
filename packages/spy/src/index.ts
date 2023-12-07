@@ -152,7 +152,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * Accepts a function that will be used as an implementation of the mock.
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
-   * expect(fincrementn(3)).toBe(4);
+   * expect(increment(3)).toBe(4);
    */
   mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
   /**
