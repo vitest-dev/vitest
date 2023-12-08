@@ -38,7 +38,7 @@
     "build:node": "rollup -c",
     "typecheck": "tsc --noEmit",
     "dev:client": "vite",
-    "dev": "rollup -c --watch --watch.include=node",
+    "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "run-p dev dev:client",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component",
