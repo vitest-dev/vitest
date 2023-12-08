@@ -354,3 +354,33 @@ test('teardown should be called once time', () => {
   expect(numbers).toHaveLength(0)
   expect(teardownFn).toBeCalledTimes(1)
 })
+
+describe('asynchonous setup/teardown', () => {
+  const trackFn = vi.fn()
+
+  const myTest = test.extend<{ a: string }>({
+    a: async ({}, use) => {
+      trackFn('setup-sync')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      trackFn('setup-async')
+      await use('ok')
+      trackFn('teardown-sync')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      trackFn('teardown-async')
+    },
+  })
+
+  myTest('quick test', ({ a }) => {
+    expect(a).toBe('ok')
+    expect(trackFn.mock.calls).toEqual([['setup-sync'], ['setup-async']])
+  })
+
+  afterAll(() => {
+    expect(trackFn.mock.calls).toEqual([
+      ['setup-sync'],
+      ['setup-async'],
+      ['teardown-sync'],
+      ['teardown-async'],
+    ])
+  })
+})
