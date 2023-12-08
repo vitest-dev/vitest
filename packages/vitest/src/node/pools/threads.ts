@@ -43,34 +43,36 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.poolOptions?.threads?.maxThreads ?? threadsCount
-  const minThreads = ctx.config.poolOptions?.threads?.minThreads ?? threadsCount
+  const poolOptions = ctx.config.poolOptions?.threads ?? {}
+
+  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.poolOptions?.threads?.useAtomics ?? false,
+    useAtomics: poolOptions.useAtomics ?? false,
 
     maxThreads,
     minThreads,
 
     env,
     execArgv: [
-      ...ctx.config.poolOptions?.threads?.execArgv ?? [],
+      ...poolOptions.execArgv ?? [],
       ...execArgv,
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
+    concurrentTasksPerWorker: 1,
   }
 
-  if (ctx.config.poolOptions?.threads?.isolate ?? true) {
+  const isolated = poolOptions.isolate ?? true
+
+  if (isolated)
     options.isolateWorkers = true
-    options.concurrentTasksPerWorker = 1
-  }
 
-  if (ctx.config.poolOptions?.threads?.singleThread) {
-    options.concurrentTasksPerWorker = 1
+  if (poolOptions.singleThread || !ctx.config.parallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -144,7 +146,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (ctx.config.poolOptions?.threads?.isolate ?? true) {
+        if (isolated) {
           results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
         }

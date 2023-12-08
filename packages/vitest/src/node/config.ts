@@ -113,13 +113,21 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  resolved.parallelism ??= true
+
+  if (!resolved.parallelism) {
+    // ignore user config, parallelism cannot be implemented without limiting workers
+    resolved.maxWorkers = 1
+    resolved.minWorkers = 1
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
     const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
-    if (!isSingleThread && !isSingleFork) {
+    if (resolved.parallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
+      throw new Error(`You cannot use ${inspectOption} without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 

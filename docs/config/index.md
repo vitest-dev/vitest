@@ -879,6 +879,28 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
+### parallelism
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Version:** Since Vitest 1.1
+
+Should all test files run in parallel. Doesn't affect tests running in the same file. This will override `maxWorkers` and `minWorkers` options.
+
+### maxWorkers
+
+- **Type:** `number`
+- **Version:** Since Vitest 1.1
+
+Maximum number of workers to run tests in. `poolOptions.<pool>.maxWorkers` has higher priority.
+
+### minWorkers
+
+- **Type:** `number`
+- **Version:** Since Vitest 1.1
+
+Minimum number of workers to run tests in. `poolOptions.<pool>.minWorkers` has higher priority.
+
 ### testTimeout
 
 - **Type:** `number`

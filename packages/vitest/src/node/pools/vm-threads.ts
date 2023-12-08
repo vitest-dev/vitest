@@ -48,14 +48,16 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.poolOptions?.vmThreads?.maxThreads ?? threadsCount
-  const minThreads = ctx.config.poolOptions?.vmThreads?.minThreads ?? threadsCount
+  const poolOptions = ctx.config.poolOptions?.vmThreads ?? {}
+
+  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: vmPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.poolOptions?.vmThreads?.useAtomics ?? false,
+    useAtomics: poolOptions.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -66,16 +68,16 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       '--experimental-vm-modules',
       '--require',
       suppressWarningsPath,
-      ...ctx.config.poolOptions?.vmThreads?.execArgv ?? [],
+      ...poolOptions.execArgv ?? [],
       ...execArgv,
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
+    concurrentTasksPerWorker: 1,
     maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
 
-  if (ctx.config.poolOptions?.vmThreads?.singleThread) {
-    options.concurrentTasksPerWorker = 1
+  if (poolOptions.singleThread || !ctx.config.parallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }

@@ -58,8 +58,10 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.poolOptions?.forks?.maxForks ?? threadsCount
-  const minThreads = ctx.config.poolOptions?.forks?.minForks ?? threadsCount
+  const poolOptions = ctx.config.poolOptions?.forks ?? {}
+
+  const maxThreads = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
@@ -70,20 +72,20 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
 
     env,
     execArgv: [
-      ...ctx.config.poolOptions?.forks?.execArgv ?? [],
+      ...poolOptions.execArgv ?? [],
       ...execArgv,
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
+    concurrentTasksPerWorker: 1,
   }
 
-  if (ctx.config.poolOptions?.forks?.isolate ?? true) {
+  const isolated = poolOptions.isolate ?? true
+
+  if (isolated)
     options.isolateWorkers = true
-    options.concurrentTasksPerWorker = 1
-  }
 
-  if (ctx.config.poolOptions?.forks?.singleFork) {
-    options.concurrentTasksPerWorker = 1
+  if (poolOptions.singleFork || !ctx.config.parallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -164,7 +166,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (ctx.config.poolOptions?.forks?.isolate ?? true) {
+        if (isolated) {
           results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
         }
