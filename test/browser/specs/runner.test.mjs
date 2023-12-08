@@ -4,8 +4,12 @@ import test from 'node:test'
 import { execa } from 'execa'
 
 const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
+const argv = ['vitest', '--run', `--browser.name=${browser}`]
 
-const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.name=${browser}`, '--browser.headless'], {
+if (browser !== 'safari')
+  argv.push('--browser.headless')
+
+const { stderr, stdout } = await execa('npx', argv, {
   env: {
     ...process.env,
     CI: 'true',
