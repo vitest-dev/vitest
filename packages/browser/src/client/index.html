@@ -63,6 +63,14 @@
         }
       }
 
+      // blindly load all code before mocker arrives
+      window.__vitest_mocker__ = {
+        import: async (src) => {
+          const out = await import(src)
+          return out?.default?.__esModule ? out?.default : out
+        }
+      }
+
       window.__vi_export_all__ = exportAll
 
       // TODO: allow easier rewriting of import.meta.env

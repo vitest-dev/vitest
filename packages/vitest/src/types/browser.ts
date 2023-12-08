@@ -78,6 +78,16 @@ export interface BrowserConfigOptions {
   slowHijackESM?: boolean
 
   /**
+   * Update ESM imports with a Proxy so they can be spied/stubbed with vi.spyOn.
+   *
+   * This is an alternative design to `slowHijackESM` and should not be set at the same time.
+   *
+   * @default false
+   * @experimental
+   */
+  proxyHijackESM?: boolean
+
+  /**
    * Isolate test environment after each test
    *
    * @default true

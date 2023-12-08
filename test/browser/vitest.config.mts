@@ -18,7 +18,7 @@ export default defineConfig({
       headless: false,
       provider: process.env.PROVIDER || 'webdriverio',
       isolate: false,
-      slowHijackESM: true,
+      proxyHijackESM: true,
     },
     alias: {
       '#src': resolve(dir, './src'),

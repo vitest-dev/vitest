@@ -88,6 +88,8 @@ export class VitestMocker {
     this.spyModule = await this.executor.executeId(spyModulePath)
   }
 
+  public resetModules() {}
+
   private deleteCachedItem(id: string) {
     const mockId = this.getMockPath(id)
     if (this.moduleCache.has(mockId))

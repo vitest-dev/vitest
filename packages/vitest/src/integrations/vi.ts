@@ -576,6 +576,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
+      _mocker.resetModules()
       resetModules(workerState.moduleCache)
       return utils
     },

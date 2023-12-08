@@ -3,7 +3,7 @@ import { normalizeRequestId } from 'vite-node/utils'
 
 import type { Vitest } from '../core'
 
-export function CoverageTransform(ctx: Vitest): VitePlugin | null {
+export function CoverageTransform(ctx: Vitest): VitePlugin {
   return {
     name: 'vitest:coverage-transform',
     transform(srcCode, id) {

@@ -6,8 +6,9 @@ import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import type { WorkspaceProject } from 'vitest/node'
 import { injectVitestModule } from './esmInjector'
+import { insertEsmProxy } from './esmProxy'
 
-export default (project: WorkspaceProject, base = '/'): Plugin[] => {
+export default (existingPlugins: Plugin[], project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
@@ -88,6 +89,47 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         return useId
       },
     },
+    // {
+    //   name: 'vitest:browser:isolate-tests',
+    //   enforce: 'pre',
+    //   async resolveId(id, importer, options) {
+    //     if (importer?.startsWith('/@test/')) {
+    //       console.debug('got importer', { id, importer })
+    //       // TODO
+
+    //       const testId = importer.slice(7).split('~', 1)[0]
+    //       return `/@test/${testId}~${id}`
+    //     }
+
+    //     if (!id.startsWith('/@test/'))
+    //       return
+
+    //     // match /@test/<testId>~<import>
+    //     let useId = id.slice(7)
+    //     const testId = useId.split('~', 1)[0]
+    //     useId = useId.slice(testId.length + 1)
+
+    //     console.debug('got @test prefixed', { testId, useId, id, importer, options })
+
+    //     return id // still use this to load
+    //   },
+    //   // async load(id) {
+    //   //   if (!id.startsWith('/@test/'))
+    //   //     return undefined
+
+    //   //   let useId = id.slice(7)
+    //   //   const testId = useId.split('~', 1)[0]
+    //   //   useId = useId.slice(testId.length + 1)
+    //   //   console.debug('load direct', { id, useId })
+
+    //   //   const internalLoad = await this.load({ id: useId })
+    //   //   console.debug('got load', internalLoad)
+    //   //   return { ast: internalLoad.ast!, code: '' }
+    //   //   // return {
+    //   //   //   code: internalLoad.code,
+    //   //   // }
+    //   // },
+    // },
     {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
@@ -96,6 +138,20 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         if (!hijackESM)
           return
         return injectVitestModule(source, id, this.parse)
+      },
+    },
+
+    // MocksPlugin needs to be placed here for proxyHijackESM to work
+    ...existingPlugins,
+
+    {
+      name: 'vitest:browser:esm-proxy',
+      enforce: 'post',
+      async transform(source, id) {
+        const proxyHijackESM = project.config.browser.proxyHijackESM ?? false
+        if (!proxyHijackESM)
+          return
+        return insertEsmProxy(source, id, this.parse, this.resolve.bind(this))
       },
     },
   ]
