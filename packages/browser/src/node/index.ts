@@ -89,47 +89,6 @@ export default (existingPlugins: Plugin[], project: WorkspaceProject, base = '/'
         return useId
       },
     },
-    // {
-    //   name: 'vitest:browser:isolate-tests',
-    //   enforce: 'pre',
-    //   async resolveId(id, importer, options) {
-    //     if (importer?.startsWith('/@test/')) {
-    //       console.debug('got importer', { id, importer })
-    //       // TODO
-
-    //       const testId = importer.slice(7).split('~', 1)[0]
-    //       return `/@test/${testId}~${id}`
-    //     }
-
-    //     if (!id.startsWith('/@test/'))
-    //       return
-
-    //     // match /@test/<testId>~<import>
-    //     let useId = id.slice(7)
-    //     const testId = useId.split('~', 1)[0]
-    //     useId = useId.slice(testId.length + 1)
-
-    //     console.debug('got @test prefixed', { testId, useId, id, importer, options })
-
-    //     return id // still use this to load
-    //   },
-    //   // async load(id) {
-    //   //   if (!id.startsWith('/@test/'))
-    //   //     return undefined
-
-    //   //   let useId = id.slice(7)
-    //   //   const testId = useId.split('~', 1)[0]
-    //   //   useId = useId.slice(testId.length + 1)
-    //   //   console.debug('load direct', { id, useId })
-
-    //   //   const internalLoad = await this.load({ id: useId })
-    //   //   console.debug('got load', internalLoad)
-    //   //   return { ast: internalLoad.ast!, code: '' }
-    //   //   // return {
-    //   //   //   code: internalLoad.code,
-    //   //   // }
-    //   // },
-    // },
     {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
