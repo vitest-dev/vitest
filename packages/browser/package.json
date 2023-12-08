@@ -51,7 +51,6 @@
   },
   "peerDependencies": {
     "playwright": "*",
-    "safaridriver": "*",
     "vitest": "^1.0.0",
     "webdriverio": "*"
   },
