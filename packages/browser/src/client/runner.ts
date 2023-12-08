@@ -14,6 +14,7 @@ interface CoverageHandler {
 export function createBrowserRunner(
   original: { new(config: ResolvedConfig): VitestRunner },
   coverageModule: CoverageHandler | null,
+  basePath: string,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
@@ -71,9 +72,9 @@ export function createBrowserRunner(
       }
 
       // on Windows we need the unit to resolve the test file
-      const importpath = /^\w:/.test(filepath)
-        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
-        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+      const prefix = `${basePath}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)
     }
   }
