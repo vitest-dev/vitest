@@ -51,4 +51,13 @@ export default () => [
     external,
     plugins: [dts()],
   },
+  {
+    input: input.providers,
+    output: {
+      file: 'dist/providers.d.ts',
+      format: 'esm',
+    },
+    external,
+    plugins: [dts()],
+  },
 ]

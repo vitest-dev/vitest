@@ -25,10 +25,10 @@
       "default": "./dist/providers.js"
     },
     "./providers/webdriverio": {
-      "types": "./dist/providers/webdriverio.d.ts"
+      "types": "./providers/webdriverio.d.ts"
     },
     "./providers/playwright": {
-      "types": "./dist/providers/playwright.d.ts"
+      "types": "./providers/playwright.d.ts"
     },
     "./*": "./*"
   },
@@ -36,6 +36,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "*.d.ts",
     "dist",
     "providers"
   ],
