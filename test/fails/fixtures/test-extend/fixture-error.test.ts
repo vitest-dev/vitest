@@ -59,7 +59,7 @@ describe('error thrown during fixture teardown', () => {
     },
   })
 
-  myTest('fixture errors', ({ a }) => {
+  myTest('no error in test', ({ a }) => {
     expect(a).toBe("hello");
   })
 })
