@@ -33,19 +33,19 @@ test('shard index must be smaller than count', async () => {
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('inspect cannot be used with multi-threading', async () => {
   const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('inspect-brk cannot be used with multi processing', async () => {
   const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('c8 coverage provider is not supported', async () => {
