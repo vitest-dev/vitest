@@ -28,6 +28,11 @@ test.runIf(nodeMajor >= 18)('fetch, Request, Response, and BroadcastChannel are 
   expect(BroadcastChannel).toBeDefined()
 })
 
+test('atob and btoa are available', () => {
+  expect(atob('aGVsbG8gd29ybGQ=')).toBe('hello world')
+  expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
+})
+
 test('toContain correctly handles DOM nodes', () => {
   const wrapper = document.createElement('div')
   const child = document.createElement('div')
@@ -93,4 +98,10 @@ test('toContain correctly handles DOM nodes', () => {
       + flex flex-col"
     `)
   }
+})
+
+test('request doesn\'t support absolute URL because jsdom doesn\'t provide compatible Request so Vitest is using Node.js Request', () => {
+  expect(() => {
+    const _r = new Request('/api', { method: 'GET' })
+  }).toThrow(/Failed to parse URL/)
 })

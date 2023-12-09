@@ -120,9 +120,6 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
       }
     }
 
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
-
     return async (specs, invalidates) => {
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
@@ -133,13 +130,6 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         configs.set(project, config)
         return config
       }
-
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
 
       const filesByEnv = await groupFilesByEnv(specs)
       const promises = Object.values(filesByEnv).flat()

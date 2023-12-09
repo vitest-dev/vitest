@@ -1,8 +1,157 @@
 ---
 title: Migration Guide | Guide
+outline: deep
 ---
 
 # Migration Guide
+
+## Migrating from Vitest 0.34.6
+
+<!-- introduction -->
+
+### Minimum Requirements
+
+Vitest 1.0 requires Vite 5.0 and Node.js 18 or higher.
+
+All `@vitest/*` sub packages require Vitest version 1.0.
+
+### Snapshots Update [#3961](https://github.com/vitest-dev/vitest/pull/3961)
+
+Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
+
+
+1. Quotes are no longer escaped:
+
+```diff
+expect({ foo: 'bar' }).toMatchInlineSnapshot(`
+  Object {
+-    \\"foo\\": \\"bar\\",
++    "foo": "bar",
+  }
+`)
+```
+
+2. One-line snapshots now use "`" quotes instead of ':
+
+```diff
+- expect('some string').toMatchInlineSnapshot('"some string"')
++ expect('some string').toMatchInlineSnapshot(`"some string"`)
+```
+
+There were also [changes](https://github.com/vitest-dev/vitest/pull/4076) to `@vitest/snapshot` package. If you are not using it directly, you don't need to change anything.
+
+- You no longer need to extend `SnapshotClient` just to override `equalityCheck` method: just pass it down as `isEqual` when initiating an instance
+- `client.setTest` was renamed to `client.startCurrentRun`
+- `client.resetCurrent` was renamed to `client.finishCurrentRun`
+
+
+### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
+
+We removed a lot of configuration options to make it easier to configure the runner to your needs. Please, have a look at migration examples if you rely on `--threads` or other related flags.
+
+- `--threads` is now `--pool=threads`
+- `--no-threads` is now `--pool=forks`
+- `--single-thread` is now `--poolOptions.threads.singleThread`
+- `--experimental-vm-threads` is now `--pool=vmThreads`
+- `--experimental-vm-worker-memory-limit` is now `--poolOptions.vmThreads.memoryLimit`
+- `--isolate` is now `--poolOptions.<pool-name>.isolate` and `browser.isolate`
+- `test.maxThreads` is now `test.poolOptions.<pool-name>.maxThreads`
+- `test.minThreads` is now `test.poolOptions.<pool-name>.minThreads`
+- `test.useAtomics` is now `test.poolOptions.<pool-name>.useAtomics`
+- `test.poolMatchGlobs.child_process` is now `test.poolMatchGlobs.forks`
+- `test.poolMatchGlobs.experimentalVmThreads` is now `test.poolMatchGlobs.vmThreads`
+
+```diff
+{
+  scripts: {
+-    "test": "vitest --no-threads"
+     // For identical behaviour:
++    "test": "vitest --pool forks --poolOptions.forks.singleFork"
+     // Or multi parallel forks:
++    "test": "vitest --pool forks"
+
+  }
+}
+```
+
+```diff
+{
+  scripts: {
+-    "test": "vitest --experimental-vm-threads"
++    "test": "vitest --pool vmThreads"
+  }
+}
+```
+
+```diff
+{
+  scripts: {
+-    "test": "vitest --isolate false"
++    "test": "vitest --poolOptions.threads.isolate false"
+  }
+}
+```
+
+```diff
+{
+  scripts: {
+-    "test": "vitest --no-threads --isolate false"
++    "test": "vitest --pool forks --poolOptions.forks.isolate false"
+  }
+}
+```
+
+### Changes to Coverage [#4265](https://github.com/vitest-dev/vitest/pull/4265), [#4442](https://github.com/vitest-dev/vitest/pull/4442)
+
+Option `coverage.all` is now enabled by default. This means that all project files matching `coverage.include` pattern will be processed even if they are not executed.
+
+Coverage thresholds API's shape was changed, and it now supports specifying thresholds for specific files using glob patterns:
+
+```diff
+export default defineConfig({
+  test: {
+    coverage: {
+-      perFile: true,
+-      thresholdAutoUpdate: true,
+-      100: true,
+-      lines: 100,
+-      functions: 100,
+-      branches: 100,
+-      statements: 100,
++      thresholds: {
++        perFile: true,
++        autoUpdate: true,
++        100: true,
++        lines: 100,
++        functions: 100,
++        branches: 100,
++        statements: 100,
++      }
+    }
+  }
+})
+```
+
+### Mock Types [#4400](https://github.com/vitest-dev/vitest/pull/4400)
+
+A few types were removed in favor of Jest-style "Mock" naming.
+
+```diff
+- import { EnhancedSpy, SpyInstance } from 'vitest'
++ import { MockInstance } from 'vitest'
+```
+
+::: warning
+`SpyInstance` is deprecated in favor of `MockInstance` and will be removed in the next major release.
+:::
+
+
+### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
+
+`vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
+It's still possible to mock `process.nextTick` by explicitly specifying it by using `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+
+However, mocking `process.nextTick` is not possible when using `--pool=forks`. Use a different `--pool` option if you need `process.nextTick` mocking.
 
 ## Migrating from Jest
 
@@ -14,7 +163,7 @@ Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vit
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
 
-### Module mocks
+### Module Mocks
 
 When mocking a module in Jest, the factory argument's return value is the default export. In Vitest, the factory argument has to return an object with each export explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
 
@@ -31,7 +180,7 @@ For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
-### Importing the original of a mocked package
+### Importing the Original of a Mocked Package
 
 If you are only partially mocking a package, you might have previously used Jest's function `requireActual`. In Vitest, you should replace these calls with `vi.importActual`.
 
@@ -46,7 +195,7 @@ Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vites
 
 ### Replace property
 
-If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](https://vitest.dev/api/vi.html#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest. 
+If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](https://vitest.dev/api/vi.html#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest.
 
 ### Done Callback
 

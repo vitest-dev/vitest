@@ -3315,7 +3315,7 @@ exports[`v8 json report 1`] = `
         0,
       ],
       "10": [
-        2,
+        1,
       ],
       "2": [
         0,
@@ -3324,7 +3324,7 @@ exports[`v8 json report 1`] = `
         1,
       ],
       "4": [
-        3,
+        1,
       ],
       "5": [
         0,
@@ -3336,10 +3336,10 @@ exports[`v8 json report 1`] = `
         1,
       ],
       "8": [
-        1,
+        2,
       ],
       "9": [
-        1,
+        3,
       ],
     },
     "branchMap": {
@@ -3399,8 +3399,8 @@ exports[`v8 json report 1`] = `
         "line": 24,
         "loc": {
           "end": {
-            "column": 1,
-            "line": 31,
+            "column": 3,
+            "line": 27,
           },
           "start": {
             "column": 33,
@@ -3410,8 +3410,8 @@ exports[`v8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 1,
-              "line": 31,
+              "column": 3,
+              "line": 27,
             },
             "start": {
               "column": 33,
@@ -3477,8 +3477,8 @@ exports[`v8 json report 1`] = `
         "line": 16,
         "loc": {
           "end": {
-            "column": 1,
-            "line": 31,
+            "column": 3,
+            "line": 19,
           },
           "start": {
             "column": 31,
@@ -3488,8 +3488,8 @@ exports[`v8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 1,
-              "line": 31,
+              "column": 3,
+              "line": 19,
             },
             "start": {
               "column": 31,
@@ -3581,8 +3581,8 @@ exports[`v8 json report 1`] = `
         "line": 24,
         "loc": {
           "end": {
-            "column": 3,
-            "line": 27,
+            "column": 1,
+            "line": 31,
           },
           "start": {
             "column": 33,
@@ -3592,8 +3592,8 @@ exports[`v8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 3,
-              "line": 27,
+              "column": 1,
+              "line": 31,
             },
             "start": {
               "column": 33,
@@ -3607,8 +3607,8 @@ exports[`v8 json report 1`] = `
         "line": 16,
         "loc": {
           "end": {
-            "column": 3,
-            "line": 19,
+            "column": 1,
+            "line": 31,
           },
           "start": {
             "column": 31,
@@ -3618,8 +3618,8 @@ exports[`v8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 3,
-              "line": 19,
+              "column": 1,
+              "line": 31,
             },
             "start": {
               "column": 31,

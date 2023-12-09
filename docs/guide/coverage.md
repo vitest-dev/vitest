@@ -118,7 +118,7 @@ export default CustomCoverageProviderModule
 
 Please refer to the type definition for more details.
 
-## Changing the default coverage folder location
+## Changing the Default Coverage Folder Location
 
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
 
@@ -134,7 +134,7 @@ export default defineConfig({
 })
 ```
 
-## Ignoring code
+## Ignoring Code
 
 Both coverage providers have their own ways how to ignore code from coverage reports:
 

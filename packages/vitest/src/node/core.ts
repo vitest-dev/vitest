@@ -373,7 +373,7 @@ export class Vitest {
         return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       await Promise.all(dependencies.map(async (dep) => {
-        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           deps.add(fsPath)
@@ -781,6 +781,7 @@ export class Vitest {
         if (this.pool) {
           closePromises.push((async () => {
             await this.pool?.close?.()
+
             this.pool = undefined
           })())
         }

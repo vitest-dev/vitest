@@ -244,7 +244,7 @@ mock() // 43
 
 Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
 
-When there are no more `mockReturnValueOnce` values to use, mock will fallback to preivously defined implementation if there is one.
+When there are no more `mockReturnValueOnce` values to use, mock will fallback to previously defined implementation if there is one.
 
 ```ts
 const myMockFn = vi

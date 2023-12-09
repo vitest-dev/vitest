@@ -1,8 +1,12 @@
+---
+title: Workspace | Guide
+---
+
 # Workspace
 
-Vitest provides built-in support for monorepositories through a workspace configuration file. You can create a workspace to define your project's setups.
+Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
 
-## Defining a workspace
+## Defining a Workspace
 
 A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
 

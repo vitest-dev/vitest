@@ -106,7 +106,7 @@ Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` prope
 Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend benchmark functionality.
 :::
 
-## Your task function
+## Your Task Function
 
 You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
