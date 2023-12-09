@@ -10,7 +10,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, Awaitable, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
@@ -76,7 +76,6 @@ export class Vitest {
   private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
-  private _poolClosePromise?: Awaitable<void>
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
@@ -357,10 +356,6 @@ export class Vitest {
 
       await this.runFiles(files)
     }
-
-    // In run mode close pool as early as possible
-    if (!this.config.watch && this.pool?.close)
-      this._poolClosePromise = this.pool.close()
 
     await this.reportCoverage(true)
 
@@ -785,9 +780,8 @@ export class Vitest {
 
         if (this.pool) {
           closePromises.push((async () => {
-            await (this._poolClosePromise || this.pool?.close?.())
+            await this.pool?.close?.()
 
-            this._poolClosePromise = undefined
             this.pool = undefined
           })())
         }
