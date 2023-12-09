@@ -295,11 +295,11 @@ export interface InlineConfig {
   poolOptions?: PoolOptions
 
   /**
-   * Maximum number of workers to run tests in. `poolOptions.<pool>.maxWorkers` has higher priority.
+   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
    */
   maxWorkers?: number
   /**
-   * Minimum number of workers to run tests in. `poolOptions.<pool>.minWorkers` has higher priority.
+   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
    */
   minWorkers?: number
 
