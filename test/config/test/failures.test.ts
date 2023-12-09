@@ -92,7 +92,7 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
     },
   })
 
-  expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Cannot read properties of undefined')
+  expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Expected config.test.coverage.thresholds to be an object')
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
