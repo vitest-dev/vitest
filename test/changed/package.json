@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-changed",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

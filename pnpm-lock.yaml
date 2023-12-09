@@ -1495,6 +1495,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/changed:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/cjs:
     devDependencies:
       '@types/fs-extra':
@@ -1770,12 +1776,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/related:
-    devDependencies:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
