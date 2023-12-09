@@ -13,7 +13,6 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
 
   return [
     {
-      enforce: 'pre',
       name: 'vitest:browser',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword

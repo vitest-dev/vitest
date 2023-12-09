@@ -36,4 +36,16 @@ export default defineConfig({
       onUserConsoleLog: noop,
     }, 'default'],
   },
+  plugins: [
+    {
+      name: "test:coop-coep-header-middleware-plugin",
+      configureServer(server) {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          next();
+        });
+      }
+    }
+  ]
 })
