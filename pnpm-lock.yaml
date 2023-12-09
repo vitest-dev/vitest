@@ -1479,6 +1479,9 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
+      '@vitest/cjs-lib':
+        specifier: link:./cjs-lib
+        version: link:cjs-lib
       execa:
         specifier: ^7.1.1
         version: 7.1.1
