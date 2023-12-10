@@ -9,5 +9,8 @@ export default defineConfig({
     chaiConfig: {
       truncateThreshold: 999,
     },
+    coverage: {
+      reporter: [],
+    },
   },
 })

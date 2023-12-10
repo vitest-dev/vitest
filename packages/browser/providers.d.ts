@@ -1,4 +1,4 @@
-import type { BrowserProvider } from 'vitest/nide'
+import type { BrowserProvider } from 'vitest/node'
 
 declare const webdriverio: BrowserProvider
 declare const playwright: BrowserProvider
