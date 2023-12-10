@@ -12,17 +12,9 @@ export const coverageEnabled = computed(() => {
   return coverageConfigured.value
     && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
-// dev ui mode
-// pnpm -C test/utils test -- --ui --reporter=html --coverage.enabled --coverage.reportsDirectory=html/coverage
-// pnpm -C test/utils test -- --ui --reporter=html --coverage.enabled
-
-// preview mode
-// pnpm -C test/utils test -- run --reporter=html --coverage.enabled --coverage.reportsDirectory=html/coverage
-// npx vite preview --outDir test/utils/html
-
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report. (e.g. coverageDirectory: "html/coverage").
-// Handling other cases seems difficult, so this limitation is just mentioned in the documentation for now.
+// Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
