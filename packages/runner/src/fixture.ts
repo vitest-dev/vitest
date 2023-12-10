@@ -110,7 +110,7 @@ async function resolveFixtureFunction(
     // extract `use` argument
     useFnArgPromise.resolve(useFnArg)
 
-    // suspend fixture by holding off `useReturnPromise` resolution until cleanup
+    // suspend fixture teardown by holding off `useReturnPromise` resolution until cleanup
     const useReturnPromise = createDefer<void>()
     cleanupFnArray.push(async () => {
       // start teardown by resolving `use` Promise
