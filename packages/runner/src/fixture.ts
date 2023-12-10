@@ -89,21 +89,26 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         if (fixture.isFn) {
           // wait for `use` call to extract fixture value
           const useFnArgPromise = createDefer()
-          let isFixtureTeardown = false
-          fixture.value(context, async (useFnArg: unknown) => {
+          let isUseFnArgResolved = false
+          const fixtureReturn = fixture.value(context, async (useFnArg: unknown) => {
+            isUseFnArgResolved = true
             useFnArgPromise.resolve(useFnArg)
             // suspend fixture teardown until cleanup
-            const teardownPromise = createDefer<void>()
-            cleanupFnArray.push(teardownPromise.resolve)
-            await teardownPromise
-            isFixtureTeardown = true
+            const useReturnPromise = createDefer<void>()
+            cleanupFnArray.push(async () => {
+              // start teardown by resolving `use` Promise
+              useReturnPromise.resolve()
+              // wait for finishing teardown
+              await fixtureReturn
+            })
+            await useReturnPromise
           }).catch((e: unknown) => {
             // treat fixture setup error as test failure
-            if (!isFixtureTeardown) {
+            if (!isUseFnArgResolved) {
               useFnArgPromise.reject(e)
               return
             }
-            // re-throw if fixture teardown error
+            // otherwise re-throw to avoid silencing error during cleanup
             throw e
           })
           resolvedValue = await useFnArgPromise
