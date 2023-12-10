@@ -1126,6 +1126,8 @@ Clean coverage report on watch rerun
 
 Directory to write coverage report to.
 
+To preview the coverage report in the output of [HTML reporter](https://vitest.dev/guide/reporters.html#html-reporter), this option must be set as an subdirectory of the html report, for example, `html/coverage`.
+
 #### coverage.reporter
 
 - **Type:** `string | string[] | [string, {}][]`
