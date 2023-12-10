@@ -13,7 +13,7 @@ export const coverageEnabled = computed(() => {
     && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
 // TODO
-// For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report. (e.g. coverageDirectory: "html/coverage").
+// For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
