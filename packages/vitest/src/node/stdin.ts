@@ -2,6 +2,8 @@ import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
 import ansiEscapes from 'ansi-escapes'
+import { relative } from 'pathe'
+import type { Task, Test } from '@vitest/runner/types/tasks'
 import { isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
@@ -29,7 +31,6 @@ ${keys.map(i => c.dim('  press ') + c.reset([i[0]].flat().map(c.bold).join(', ')
 
 export function registerConsoleShortcuts(ctx: Vitest) {
   let latestFilename = ''
-  let currentKeyword: string | undefined
 
   async function _keypressHandler(str: string, key: any) {
     // Cancel run and exit when ctrl-c or esc is pressed.
@@ -97,9 +98,18 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-    turnOnSearchMode(async (str: string) => {
+    const cleanUp = startSearchMode(async (str: string) => {
       const files = await ctx.state.getFiles()
-      return files.map(file => file.tasks).flat().map(task => task.name).filter(name => name.includes(str))
+      const tasks = files.map(file => file.tasks).flat()
+      const tests = extractTest(tasks)
+      try {
+        const reg = new RegExp(str)
+        return tests.map(test => test.name).filter(testName => testName.match(reg))
+      }
+      catch {
+        // `new RegExp` may throw error when input is invalid regexp
+        return []
+      }
     },
     )
     const { filter = '' }: { filter: string } = await prompt([{
@@ -108,7 +118,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input test name pattern (RegExp)',
       initial: ctx.configOverride.testNamePattern?.source || '',
     }])
-    turnOffSearchMode()
+    cleanUp()
     on()
     await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
   }
@@ -127,9 +137,11 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputFilePattern() {
     off()
-    turnOnSearchMode(async (str: string) => {
+    const cleanUp = startSearchMode(async (str: string) => {
       const files = await ctx.globTestFiles([str])
-      return files.map(file => file[1])
+      return files.map(file =>
+        relative(ctx.config.root, file[1]),
+      )
     },
     )
 
@@ -139,48 +151,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input filename pattern',
       initial: latestFilename,
     }])
-    turnOffSearchMode()
+    cleanUp()
     latestFilename = filter.trim()
     on()
     await ctx.changeFilenamePattern(filter.trim())
-  }
-
-  function searchHandler(searchFunc: SearchFunc) {
-    return async function (str: string, key: any) {
-    // backspace
-      if (key.sequence === '\x7F') {
-        if (currentKeyword && currentKeyword?.length > 1)
-
-          currentKeyword = currentKeyword?.slice(0, -1)
-
-        else
-          currentKeyword = undefined
-      }
-      else if (key?.name === 'return') {
-      // reset current keyword
-        currentKeyword = undefined
-        return
-      }
-      else {
-        if (currentKeyword === undefined)
-          currentKeyword = str
-        else
-          currentKeyword += str
-      }
-
-      if (currentKeyword) {
-        const files = await searchFunc(currentKeyword)
-
-        if (files.length === 0)
-          eraceAndPrint(`\nPattern matches no files`)
-
-        else
-          eraceAndPrint(`\nPattern matches ${files.length} files` + `\n${files.map(file => c.dim(` › ${file}`)).join('\n')}`)
-      }
-      else {
-        eraceAndPrint('\nPlease input filename pattern')
-      }
-    }
   }
 
   let rl: readline.Interface | undefined
@@ -201,42 +175,97 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       process.stdin.setRawMode(false)
   }
 
-  type SearchFunc = (str: string) => Promise<string[]>
-
-  function turnOnSearchMode(searchFunc: SearchFunc) {
-    off()
-    rl = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
-    readline.emitKeypressEvents(process.stdin, rl)
-    if (process.stdin.isTTY)
-      process.stdin.setRawMode(false)
-    process.stdin.on('keypress', searchHandler(searchFunc))
-  }
-
-  function turnOffSearchMode() {
-    rl?.close()
-    rl = undefined
-    process.stdin.removeListener('keypress', searchHandler)
-    if (process.stdin.isTTY)
-      process.stdin.setRawMode(false)
-  }
-
   on()
-
-  /**
-   * Print string and back to original cursor position
-   * @param str
-   */
-  function eraceAndPrint(str: string) {
-    const lineBreasks = str.split('\n').length - 1
-
-    stdout().write(ansiEscapes.cursorDown(1))
-    stdout().write(ansiEscapes.cursorLeft)
-    stdout().write(ansiEscapes.eraseDown)
-    stdout().write(str)
-    stdout().write(ansiEscapes.cursorUp(lineBreasks + 1))
-  }
 
   return function cleanup() {
     off()
   }
+}
+
+  type SearchFunc = (str: string) => Promise<string[]>
+
+function startSearchMode(searchFunc: SearchFunc) {
+  const searchRL = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
+  readline.emitKeypressEvents(process.stdin, searchRL)
+  if (process.stdin.isTTY)
+    process.stdin.setRawMode(false)
+  const handler = searchHandler(searchFunc)
+  process.stdin.on('keypress', handler)
+  /** return tear down method */
+  return () => {
+    searchRL.close()
+    process.stdin.removeListener('keypress', handler)
+    if (process.stdin.isTTY)
+      process.stdin.setRawMode(false)
+  }
+}
+
+/**
+ * Print string and back to original cursor position
+ * @param str
+ */
+function eraceAndPrint(str: string) {
+  const lineBreasks = str.split('\n').length - 1
+
+  stdout().write(ansiEscapes.eraseDown)
+  stdout().write(str)
+  stdout().write(ansiEscapes.cursorUp(lineBreasks))
+}
+
+function searchHandler(searchFunc: SearchFunc) {
+  let currentKeyword: string | undefined
+
+  const MAX_RESULT_COUNT = 10
+  return async function (str: string, key: any) {
+    // backspace
+    if (key.sequence === '\x7F') {
+      if (currentKeyword && currentKeyword?.length > 1)
+
+        currentKeyword = currentKeyword?.slice(0, -1)
+
+      else
+        currentKeyword = undefined
+    }
+    else if (key?.name === 'return') {
+      // reset current keyword
+      currentKeyword = undefined
+      return
+    }
+    else {
+      if (currentKeyword === undefined)
+        currentKeyword = str
+      else
+        currentKeyword += str
+    }
+
+    if (currentKeyword) {
+      const files = await searchFunc(currentKeyword)
+
+      if (files.length === 0) {
+        eraceAndPrint(`\nPattern matches no files`)
+      }
+      else {
+        if (files.length > MAX_RESULT_COUNT) {
+          eraceAndPrint(`\nPattern matches ${files.length} files`
+           + `\n${files.slice(0, MAX_RESULT_COUNT).map(file => c.dim(` › ${file}`)).join('\n')}${
+            c.dim(`\n   ...and ${files.length - MAX_RESULT_COUNT} more files`)}`)
+        }
+        else { eraceAndPrint(`\nPattern matches ${files.length} files` + `\n${files.map(file => c.dim(` › ${file}`)).join('\n')}`) }
+      }
+    }
+    else {
+      eraceAndPrint('\nPlease input filename pattern')
+    }
+  }
+}
+
+function extractTest(tasks: Task[]): Test[] {
+  return tasks.flatMap((task) => {
+    if (task.type === 'test')
+      return [task]
+
+    else if (task.type === 'suite')
+      return extractTest(task.tasks)
+    else return []
+  })
 }
