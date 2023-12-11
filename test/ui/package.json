@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "playwright test",
+    "test-e2e": "playwright test",
     "test-fixtures": "vitest"
   },
   "devDependencies": {
