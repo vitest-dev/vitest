@@ -110,7 +110,7 @@ export default (existingPlugins: Plugin[], project: WorkspaceProject, base = '/'
         const proxyHijackESM = project.config.browser.proxyHijackESM ?? false
         if (!proxyHijackESM)
           return
-        return insertEsmProxy(source, id, this.parse, this.resolve.bind(this))
+        return insertEsmProxy(source, id, this.parse)
       },
     },
   ]
