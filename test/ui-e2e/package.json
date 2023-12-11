@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test-fixtures": "vitest"
   },
   "devDependencies": {
     "@playwright/test": "^1.39.0",

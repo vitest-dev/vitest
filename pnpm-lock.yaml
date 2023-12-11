@@ -1928,15 +1928,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/ui-e2e/fixtures:
-    devDependencies:
-      '@vitest/ui':
-        specifier: workspace:*
-        version: link:../../../packages/ui
-      vitest:
-        specifier: workspace:*
-        version: link:../../../packages/vitest
-
   test/utils:
     devDependencies:
       '@vitest/utils':

@@ -1,9 +1,0 @@
-{
-  "name": "@vitest/test-ui-e2e-fixtures",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "vitest": "workspace:*",
-    "@vitest/ui": "workspace:*"
-  }
-}
