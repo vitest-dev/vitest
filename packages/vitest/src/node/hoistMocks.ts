@@ -49,7 +49,7 @@ const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
 const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
 const hashbangRE = /^#!.*\n/
 
-export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], always: boolean) {
+export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], always?: boolean) {
   if (!always) {
     const hasMocks = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
