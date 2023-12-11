@@ -121,13 +121,11 @@ jobs:
         with:
           node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-
       - name: Install
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install chromium --with-deps
+        run: pnpx playwright install chromium
 
       - name: Build
         run: pnpm run build
