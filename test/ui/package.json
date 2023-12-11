@@ -3,12 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test-v2": "playwright test",
     "test": "vitest run"
   },
   "devDependencies": {
-    "@playwright/test": "^1.39.0",
     "execa": "^6.1.0",
+    "playwright-chromium": "^1.39.0",
     "vitest": "workspace:*"
   }
 }
