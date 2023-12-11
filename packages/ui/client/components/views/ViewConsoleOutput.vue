@@ -3,31 +3,15 @@ import { getNames } from '@vitest/ws-client'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
+import { escapeHtml } from "~/utils/escape"
 
 const formattedLogs = computed(() => {
   const data = logs.value
   if (data) {
     const filter = createAnsiToHtmlFilter(isDark.value)
-    return data.map(({ taskId, type, time, content }) => {
-      return { taskId, type, time, html: true, content: filter.toHtml(escapeHtml(content)) }
-      // content = escapeHtml(content)
-      // const trimmed = content.trim()
-      // const value = filter.toHtml(trimmed)
-      // return value !== trimmed
-      //   ? { taskId, type, time, html: true, content: value }
-      //   : { taskId, type, time, html: true, content }
-    })
+    return data.map(({ taskId, type, time, content }) => ({ taskId, type, time, content: filter.toHtml(escapeHtml(content)) }))
   }
 })
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;");
-}
 
 function getTaskName(id?: string) {
   const task = id && client.state.idMap.get(id)
@@ -37,13 +21,12 @@ function getTaskName(id?: string) {
 
 <template>
   <div v-if="formattedLogs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
-    <div v-for="{ taskId, type, time, html, content } of formattedLogs" :key="taskId" font-mono>
+    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" font-mono>
       <ViewConsoleOutputEntry
         :task-name="getTaskName(taskId)"
         :type="type"
         :time="time"
         :content="content"
-        :html="html"
       />
     </div>
   </div>
