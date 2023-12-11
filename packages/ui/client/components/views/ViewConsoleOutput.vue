@@ -9,14 +9,25 @@ const formattedLogs = computed(() => {
   if (data) {
     const filter = createAnsiToHtmlFilter(isDark.value)
     return data.map(({ taskId, type, time, content }) => {
-      const trimmed = content.trim()
-      const value = filter.toHtml(trimmed)
-      return value !== trimmed
-        ? { taskId, type, time, html: true, content: value }
-        : { taskId, type, time, html: false, content }
+      return { taskId, type, time, html: true, content: filter.toHtml(escapeHtml(content)) }
+      // content = escapeHtml(content)
+      // const trimmed = content.trim()
+      // const value = filter.toHtml(trimmed)
+      // return value !== trimmed
+      //   ? { taskId, type, time, html: true, content: value }
+      //   : { taskId, type, time, html: true, content }
     })
   }
 })
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 function getTaskName(id?: string) {
   const task = id && client.state.idMap.get(id)
