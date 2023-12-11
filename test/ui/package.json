@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-ui-e2e",
+  "name": "@vitest/test-ui",
   "type": "module",
   "private": true,
   "scripts": {
