@@ -13,7 +13,7 @@ test.describe('ui', () => {
     subProcess = execa('vitest', [
       '--ui',
       '--open=false',
-`--api.port=${port}`,
+      `--api.port=${port}`,
     ], {
       // dump stdout for quick debugging
       // stdio: "inherit",

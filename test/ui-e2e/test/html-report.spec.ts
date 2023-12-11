@@ -21,8 +21,8 @@ test.describe('html report', () => {
     subProcess = execa('vite', [
       'preview',
       '--outDir=html',
-`--port=${port}`,
-'--strict-port',
+      `--port=${port}`,
+      '--strict-port',
     ], {
       // stdio: "inherit",
     })
