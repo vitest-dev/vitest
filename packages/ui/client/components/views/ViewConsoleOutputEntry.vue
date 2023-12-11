@@ -22,6 +22,7 @@ function formatTime(t: number) {
     >
       {{ formatTime(time) }} | {{ taskName }} | {{ type }}
     </div>
+    <!-- TODO(refactor): always use v-html -->
     <pre v-if="html" data-type="html" v-html="content" />
     <pre v-else data-type="text" v-text="content" />
   </div>
