@@ -1,48 +1,55 @@
-import { beforeAll, describe, expect, it } from 'vitest'
-import { browserErrors, isWindows, page, ports, startServerCommand, untilUpdated } from '../setup'
+import { expect, test } from '@playwright/test'
+import type { ExecaChildProcess } from 'execa'
+import { execa } from 'execa'
 
-const port = ports.ui
+const port = 9000
+const pageUrl = `http://localhost:${port}/__vitest__/`
 
-// TODO: fix flakyness on windows
-describe.skipIf(isWindows)('ui', () => {
-  beforeAll(async () => {
-    const exit = await startServerCommand(
-    `pnpm exec vitest --root ./fixtures --ui --open false --api.port ${port} --watch --allowOnly`,
-    `http://localhost:${port}/__vitest__/`,
-    )
+test.describe('ui', () => {
+  let subProcess: ExecaChildProcess
 
-    return exit
+  test.beforeAll(async () => {
+    // start vitest ui server
+    subProcess = execa('vitest', [
+      '--ui',
+      '--open=false',
+      `--api.port=${port}`,
+    ], {
+      // dump stdout for quick debugging
+      // stdio: "inherit",
+    })
+
+    // wait for server ready
+    await expect.poll(() => fetch(pageUrl).then(res => res.status, e => e)).toBe(200)
   })
 
-  it('dashboard', async () => {
-    await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
+  test.afterAll(async () => {
+    subProcess.kill()
+    await subProcess.catch(() => {})
   })
 
-  describe('file detail', async () => {
-    beforeAll(async () => {
-      await page.click('.details-panel span')
-    })
+  test('basic', async ({ page }) => {
+    const pageErrors: unknown[] = []
+    page.on('pageerror', error => pageErrors.push(error))
 
-    it('report', async () => {
-      await page.click('[data-testid=btn-report]')
-      await untilUpdated(() => page.textContent('[data-testid=report]'), 'All tests passed in this file')
-      await untilUpdated(() => page.textContent('[data-testid=filenames]'), 'sample.test.ts')
-    })
+    await page.goto(pageUrl)
 
-    it('graph', async () => {
-      await page.click('[data-testid=btn-graph]')
-      expect(page.url()).toMatch('graph')
-      await untilUpdated(() => page.textContent('[data-testid=graph] text'), 'sample.test.ts')
-    })
+    // dashbaord
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('1 Pass 0 Fail 1 Total')
 
-    it('console', async () => {
-      await page.click('[data-testid=btn-console]')
-      expect(page.url()).toMatch('console')
-      await untilUpdated(() => page.textContent('[data-testid=console] pre'), 'log test')
-    })
-  })
+    // report
+    await page.getByText('sample.test.ts').click()
+    await page.getByText('All tests passed in this file').click()
+    await expect(page.getByTestId('filenames')).toContainText('sample.test.ts')
 
-  it('no error happen', () => {
-    expect(browserErrors.length).toEqual(0)
+    // graph tab
+    await page.getByTestId('btn-graph').click()
+    await expect(page.locator('[data-testid=graph] text')).toContainText('sample.test.ts')
+
+    // console tab
+    await page.getByTestId('btn-console').click()
+    await expect(page.getByTestId('console')).toContainText('log test')
+
+    expect(pageErrors).toEqual([])
   })
 })
