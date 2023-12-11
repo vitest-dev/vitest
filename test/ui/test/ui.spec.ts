@@ -12,6 +12,7 @@ test.describe('ui', () => {
     // start vitest ui server
     subProcess = execa('vitest', [
       '--ui',
+      '--watch',
       '--open=false',
       `--api.port=${port}`,
     ], {
