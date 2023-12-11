@@ -3,3 +3,4 @@ packages:
   - packages/*
   - examples/*
   - test/*
+  - test/ui-e2e/fixtures

@@ -1,27 +1,25 @@
 import { test, expect } from "@playwright/test"
-import { ExecaChildProcess, execaCommand, execa } from "execa";
+import { ExecaChildProcess, execa } from "execa";
 
 const port = 9000;
 const pageUrl = `http://localhost:${port}/__vitest__/`;
 
 test.describe("ui", () => {
   let subProcess: ExecaChildProcess;
+  let subProcessExit: Promise<number | null>;
 
   test.beforeAll(async () => {
     subProcess = execa("vitest", [
-      "./fixtures/sample.test.ts", "--ui", "--open", "false", "--api.port", `${port}`
+      "--root", "./fixtures", "--ui", "--open", "false", "--api.port", `${port}`
     ], {
       stdio: ["ignore", "inherit", 'inherit'],
     })
-    // subProcess = execaCommand(`pnpm exec vitest --root ./fixtures --ui --open false --api.port ${port}`, {
-    //   env: {
-    //     ...process.env,
-    //     // CI: 'true',
-    //     // NO_COLOR: 'true',
-    //   },
-    //   stdio: ["ignore", "inherit", 'inherit'],
-    //   // stdio: "pipe"
-    // });
+
+    subProcessExit = new Promise((resolve) => {
+      subProcess.on("exit", (code) => {
+        resolve(code)
+      });
+    });
 
     // wait for server ready
     await expect.poll(() => fetch(pageUrl).then(res => res.status, e => e)).toBe(200);
@@ -29,6 +27,7 @@ test.describe("ui", () => {
 
   test.afterAll(async () => {
     subProcess.kill();
+    await subProcessExit;
   });
 
   test("basic", async ({ page }) => {

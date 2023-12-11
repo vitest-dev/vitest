@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-ui-e2e",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.39.0",
+    "execa": "^6.1.0",
+    "vitest": "workspace:*"
+  }
+}

@@ -1916,6 +1916,27 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/ui-e2e:
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.39.0
+        version: 1.39.0
+      execa:
+        specifier: ^6.1.0
+        version: 6.1.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/ui-e2e/fixtures:
+    devDependencies:
+      '@vitest/ui':
+        specifier: workspace:*
+        version: link:../../../packages/ui
+      vitest:
+        specifier: workspace:*
+        version: link:../../../packages/vitest
+
   test/utils:
     devDependencies:
       '@vitest/utils':
