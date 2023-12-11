@@ -7,6 +7,7 @@ const pageUrl = `http://localhost:${port}/__vitest__/`
 
 test.describe('ui', () => {
   let subProcess: ExecaChildProcess
+  let subProcessExit: Promise<void>
 
   test.beforeAll(async () => {
     // start vitest ui server
@@ -20,13 +21,17 @@ test.describe('ui', () => {
       // stdio: "inherit",
     })
 
+    subProcessExit = new Promise((resolve) => {
+      subProcess.on('exit', () => resolve())
+    })
+
     // wait for server ready
     await expect.poll(() => fetch(pageUrl).then(res => res.status, e => e)).toBe(200)
   })
 
   test.afterAll(async () => {
     subProcess.kill()
-    await subProcess.catch(() => {})
+    await subProcessExit
   })
 
   test('basic', async ({ page }) => {
