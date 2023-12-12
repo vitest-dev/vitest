@@ -19,7 +19,7 @@ import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
   const result = toUpperCase('foobar')
-  expect(result).toMatchSnapshot()
+  expect(result).toMatchSnapshot())
 })
 ```
 
