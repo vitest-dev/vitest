@@ -330,7 +330,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (Array.isArray(args[0]))
       args[0] = args[0].map(key => String(key).replace(/([.[\]])/g, '\\$1')).join('.')
 
-    const actual = this._obj
+    const actual = this._obj as any
     const [propertyName, expected] = args
     const getValue = () => {
       const hasOwn = Object.prototype.hasOwnProperty.call(actual, propertyName)
@@ -347,7 +347,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       pass,
       `expected #{this} to have property "${propertyName}"${valueString}`,
       `expected #{this} to not have property "${propertyName}"${valueString}`,
-      actual,
+      expected,
+      exists ? value : undefined,
     )
   })
   def('toBeCloseTo', function (received: number, precision = 2) {
