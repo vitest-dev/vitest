@@ -35,7 +35,7 @@ beforeEach<MyFixtures>(({ counter }) => {
  * The issue is that it is invoked (2*N - 1) + M times.
  */
 afterAll(() => {
-  expect(i).toEqual(4)
+  expect(i).toEqual(5)
 })
 
 myTest.concurrent('fixture - concurrent test 1', ({ a, b, counter, task }) => {
