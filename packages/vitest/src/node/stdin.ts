@@ -98,7 +98,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-    const cleanUp = startSearchMode(async (str: string) => {
+
+    const filter = await createFilter('Input test name pattern (RegExp)', ctx.configOverride.testNamePattern?.source || '', async (str: string) => {
       const files = await ctx.state.getFiles()
       const tasks = files.map(file => file.tasks).flat()
       const tests = extractTest(tasks)
@@ -110,15 +111,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
         // `new RegExp` may throw error when input is invalid regexp
         return []
       }
-    },
-    )
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input test name pattern (RegExp)',
-      initial: ctx.configOverride.testNamePattern?.source || '',
-    }])
-    cleanUp()
+    })
     on()
     await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
   }
@@ -137,21 +130,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputFilePattern() {
     off()
-    const cleanUp = startSearchMode(async (str: string) => {
+    const filter = await createFilter('Input filename pattern', latestFilename, async (str: string) => {
       const files = await ctx.globTestFiles([str])
       return files.map(file =>
         relative(ctx.config.root, file[1]),
       )
-    },
-    )
+    })
 
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input filename pattern',
-      initial: latestFilename,
-    }])
-    cleanUp()
     latestFilename = filter.trim()
     on()
     await ctx.changeFilenamePattern(filter.trim())
@@ -182,21 +167,79 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   }
 }
 
-  type SearchFunc = (str: string) => Promise<string[]>
+  type FilterFunc = (str: string) => Promise<string[]>
 
-function startSearchMode(searchFunc: SearchFunc) {
-  const searchRL = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
-  readline.emitKeypressEvents(process.stdin, searchRL)
+async function createFilter(message: string, initial: string, filterFunc: FilterFunc) {
+  let currentKeyword: string | undefined
+  const filterRL = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
+  readline.emitKeypressEvents(process.stdin, filterRL)
   if (process.stdin.isTTY)
     process.stdin.setRawMode(false)
-  const handler = searchHandler(searchFunc)
+  const handler = filterHandler(filterFunc)
   process.stdin.on('keypress', handler)
-  /** return tear down method */
-  return () => {
-    searchRL.close()
-    process.stdin.removeListener('keypress', handler)
-    if (process.stdin.isTTY)
-      process.stdin.setRawMode(false)
+
+  const { filter = '' }: { filter: string } = await prompt([{
+    name: 'filter',
+    type: 'text',
+    message,
+    initial,
+  }])
+
+  filterRL.close()
+  process.stdin.removeListener('keypress', handler)
+  if (process.stdin.isTTY)
+    process.stdin.setRawMode(false)
+
+  return filter
+
+  function restoreCursor() {
+    stdout().write(ansiEscapes.cursorTo(`? ${message} › `.length + (currentKeyword?.length || 0)))
+  }
+
+  function filterHandler(filterFunc: FilterFunc) {
+    const MAX_RESULT_COUNT = 10
+    return async function (str: string, key: any) {
+    // backspace
+      if (key.sequence === '\x7F') {
+        if (currentKeyword && currentKeyword?.length > 1)
+
+          currentKeyword = currentKeyword?.slice(0, -1)
+
+        else
+          currentKeyword = undefined
+      }
+      else if (key?.name === 'return') {
+        // reset current keyword
+        currentKeyword = undefined
+        return
+      }
+      else {
+        if (currentKeyword === undefined)
+          currentKeyword = str
+        else
+          currentKeyword += str
+      }
+
+      if (currentKeyword) {
+        const results = await filterFunc(currentKeyword)
+
+        if (results.length === 0) {
+          eraseAndPrint(`\nPattern matches no results`)
+        }
+        else {
+          if (results.length > MAX_RESULT_COUNT) {
+            eraseAndPrint(`\nPattern matches ${results.length} results`
+           + `\n${results.slice(0, MAX_RESULT_COUNT).map(result => c.dim(` › ${result}`)).join('\n')}${
+            c.dim(`\n   ...and ${results.length - MAX_RESULT_COUNT} more results`)}`)
+          }
+          else { eraseAndPrint(`\nPattern matches ${results.length} results` + `\n${results.map(result => c.dim(` › ${result}`)).join('\n')}`) }
+        }
+      }
+      else {
+        eraseAndPrint('\nPlease input filter pattern')
+      }
+      restoreCursor()
+    }
   }
 }
 
@@ -204,59 +247,12 @@ function startSearchMode(searchFunc: SearchFunc) {
  * Print string and back to original cursor position
  * @param str
  */
-function eraceAndPrint(str: string) {
+function eraseAndPrint(str: string) {
   const lineBreasks = str.split('\n').length - 1
 
   stdout().write(ansiEscapes.eraseDown)
   stdout().write(str)
   stdout().write(ansiEscapes.cursorUp(lineBreasks))
-}
-
-function searchHandler(searchFunc: SearchFunc) {
-  let currentKeyword: string | undefined
-
-  const MAX_RESULT_COUNT = 10
-  return async function (str: string, key: any) {
-    // backspace
-    if (key.sequence === '\x7F') {
-      if (currentKeyword && currentKeyword?.length > 1)
-
-        currentKeyword = currentKeyword?.slice(0, -1)
-
-      else
-        currentKeyword = undefined
-    }
-    else if (key?.name === 'return') {
-      // reset current keyword
-      currentKeyword = undefined
-      return
-    }
-    else {
-      if (currentKeyword === undefined)
-        currentKeyword = str
-      else
-        currentKeyword += str
-    }
-
-    if (currentKeyword) {
-      const files = await searchFunc(currentKeyword)
-
-      if (files.length === 0) {
-        eraceAndPrint(`\nPattern matches no files`)
-      }
-      else {
-        if (files.length > MAX_RESULT_COUNT) {
-          eraceAndPrint(`\nPattern matches ${files.length} files`
-           + `\n${files.slice(0, MAX_RESULT_COUNT).map(file => c.dim(` › ${file}`)).join('\n')}${
-            c.dim(`\n   ...and ${files.length - MAX_RESULT_COUNT} more files`)}`)
-        }
-        else { eraceAndPrint(`\nPattern matches ${files.length} files` + `\n${files.map(file => c.dim(` › ${file}`)).join('\n')}`) }
-      }
-    }
-    else {
-      eraceAndPrint('\nPlease input filename pattern')
-    }
-  }
 }
 
 function extractTest(tasks: Task[]): Test[] {
