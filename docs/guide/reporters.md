@@ -5,7 +5,7 @@ outline: deep
 
 # Reporters
 
-Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](https://vitest.dev/config/#reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
+Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/#reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
 
 Using reporters via command line:
 
@@ -28,7 +28,7 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](https://vitest.dev/config/#outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/#outputfile) either in your Vite configuration file or via CLI.
 
 :::code-group
 ```bash [CLI]
@@ -80,7 +80,7 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 ## Built-in Reporters
 
-### Default reporter
+### Default Reporter
 
 By default (i.e. if no reporter is specified), Vitest will display results for each test suite hierarchically as they run, and then collapse after a suite passes. When all tests have finished running, the final terminal output will display a summary of results and details of any failed tests.
 
@@ -106,9 +106,9 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Basic reporter
+### Basic Reporter
 
-The `basic` reporter displays the test files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail. 
+The `basic` reporter displays the test files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail.
 
 :::code-group
 ```bash [CLI]
@@ -135,7 +135,7 @@ Example output using basic reporter:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Verbose reporter
+### Verbose Reporter
 
 Follows the same hierarchical structure as the `default` reporter, but does not collapse sub-trees for passed test suites. The final terminal output displays all tests that have run, including those that have passed.
 
@@ -171,7 +171,7 @@ Example of final terminal output for a passing test suite:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Dot reporter
+### Dot Reporter
 
 Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
 
@@ -200,9 +200,9 @@ Example terminal output for a passing test suite:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### JUnit reporter
+### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](##Reporter-Output) configuration option. 
+Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/#outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -236,9 +236,9 @@ AssertionError: expected 5 to be 4 // Object.is equality
 ```
 The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively.
 
-### JSON reporter
+### JSON Reporter
 
-Outputs a report of the test results in JSON format. Can either be printed to the terminal or written to a file using the [`outputFile`](##Reporter-Output) configuration option. 
+Outputs a report of the test results in JSON format. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -300,11 +300,11 @@ Example of a JSON report:
 }
 ```
 
-### HTML reporter
+### HTML Reporter
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-Output file can be specified using the [`outputFile`](##Reporter-Output) configuration option. If no `outputFile` option is provided, a new HTML file will be created. 
+Output file can be specified using the [`outputFile`](/config/#outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
 
 :::code-group
 ```bash [CLI]
@@ -324,9 +324,9 @@ export default defineConfig({
 This reporter requires installed [`@vitest/ui`](/guide/ui) package.
 :::
 
-### TAP reporter
+### TAP Reporter
 
-Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP). 
+Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP).
 
 :::code-group
 ```bash [CLI]
@@ -364,7 +364,7 @@ not ok 1 - __tests__/test-file-1.test.ts # time=14.00ms {
 }
 ```
 
-### TAP flat reporter
+### TAP Flat Reporter
 
 Outputs a TAP flat report. Like the `tap` reporter, test results are formatted to follow TAP standards, but test suites are formatted as a flat list rather than a nested hierarchy.
 
@@ -399,7 +399,7 @@ ok 2 - __tests__/test-file-1.test.ts > first test file > 4 - 2 should equal 2 # 
 ```
 
 
-### Hanging process reporter
+### Hanging Process Reporter
 
 Displays a list of hanging processes, if any are preventing Vitest from exiting safely. The `hanging-process` reporter does not itself display test results, but can be used in conjunction with another reporter to monitor processes while tests run. Using this reporter can be resource-intensive, so should generally be reserved for debugging purposes in situations where Vitest consistently cannot exit the process.
 
@@ -417,7 +417,7 @@ export default defineConfig({
 ```
 :::
 
-## Custom reporters
+## Custom Reporters
 
 You can use third-party custom reporters installed from NPM by specifying their package name in the reporters' option:
 
@@ -441,4 +441,4 @@ Additionally, you can define your own [custom reporters](/advanced/reporters) an
 npx vitest --reporter=./path/to/reporter.ts
 ```
 
-Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts). 
+Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts).

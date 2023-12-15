@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, Test } from '@vitest/runner'
+import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import { rpc } from './rpc'
 
@@ -11,7 +11,10 @@ interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
-export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
+export function createBrowserRunner(
+  original: { new(config: ResolvedConfig): VitestRunner },
+  coverageModule: CoverageHandler | null,
+): { new(options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
     hashMap = new Map<string, [test: boolean, timstamp: string]>()
@@ -23,7 +26,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     }
 
     async onAfterRunTask(task: Test) {
-      await super.onAfterRunTest?.(task)
+      await super.onAfterRunTask?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
       })
@@ -39,8 +42,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRunFiles() {
-      await super.onAfterRun?.()
+    async onAfterRunFiles(files: File[]) {
+      await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
       if (coverage) {

@@ -82,7 +82,7 @@ export default withPwa(defineConfig({
 
     socialLinks: [
       { icon: 'mastodon', link: mastodon },
-      { icon: 'twitter', link: twitter },
+      { icon: 'x', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
     ],
@@ -198,7 +198,7 @@ export default withPwa(defineConfig({
               link: '/guide/browser',
             },
             {
-              text: 'In-source Testing',
+              text: 'In-Source Testing',
               link: '/guide/in-source',
             },
             {
@@ -259,7 +259,7 @@ export default withPwa(defineConfig({
               link: '/api/expect-typeof',
             },
             {
-              text: 'assertType',
+              text: 'AssertType',
               link: '/api/assert-type',
             },
           ],

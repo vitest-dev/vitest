@@ -1,8 +1,12 @@
+---
+title: Workspace | Guide
+---
+
 # Workspace
 
-Vitest provides built-in support for monorepositories through a workspace configuration file. You can create a workspace to define your project's setups.
+Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
 
-## Defining a workspace
+## Defining a Workspace
 
 A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
 
@@ -96,6 +100,49 @@ export default defineProject({
     reporters: ['json']
   }
 })
+```
+:::
+
+## Running tests
+
+To run tests inside the workspace, define a script in your root `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "vitest"
+  }
+}
+```
+
+Now tests can be run using your package manager:
+
+::: code-group
+```bash [npm]
+npm run test
+```
+```bash [yarn]
+yarn test
+```
+```bash [pnpm]
+pnpm run test
+```
+```bash [bun]
+bun test
+```
+:::
+
+If you need to run tests only inside a single project, use the `--project` CLI option:
+
+```bash
+npm run test --project e2e
+```
+
+::: tip
+CLI option `--project` can be used multiple times to filter out several projects:
+
+```bash
+npm run test --project e2e --project unit
 ```
 :::
 

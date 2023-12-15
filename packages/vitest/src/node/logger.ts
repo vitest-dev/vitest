@@ -3,6 +3,7 @@ import c from 'picocolors'
 import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
+import { toArray } from '../utils'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
@@ -95,6 +96,9 @@ export class Logger {
     const comma = c.dim(', ')
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+    const projectsFilter = toArray(config.project)
+    if (projectsFilter.length)
+      this.console.error(c.dim('projects: ') + c.yellow(projectsFilter.join(comma)))
     this.ctx.projects.forEach((project) => {
       const config = project.config
       const name = project.getName()

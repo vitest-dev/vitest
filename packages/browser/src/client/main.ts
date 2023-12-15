@@ -22,6 +22,7 @@ const browserHashMap = new Map<string, [test: boolean, timestamp: string]>()
 
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
+const reloadTries = Number(url.searchParams.get('reloadTries') || '0')
 
 function getQueryPaths() {
   return url.searchParams.getAll('path')
@@ -62,21 +63,51 @@ function on(event: string, listener: (...args: any[]) => void) {
   return () => window.removeEventListener(event, listener)
 }
 
-// we can't import "processError" yet because error might've been thrown before the module was loaded
-async function defaultErrorReport(type: string, unhandledError: any) {
-  const error = {
+function serializeError(unhandledError: any) {
+  return {
     ...unhandledError,
     name: unhandledError.name,
     message: unhandledError.message,
-    stack: unhandledError.stack,
+    stack: String(unhandledError.stack),
   }
+}
+
+// we can't import "processError" yet because error might've been thrown before the module was loaded
+async function defaultErrorReport(type: string, unhandledError: any) {
+  const error = serializeError(unhandledError)
   if (testId !== 'no-isolate')
     error.VITEST_TEST_PATH = testId
   await client.rpc.onUnhandledError(error, type)
   await client.rpc.onDone(testId)
 }
 
-const stopErrorHandler = on('error', e => defaultErrorReport('Error', e.error))
+function catchWindowErrors(cb: (e: ErrorEvent) => void) {
+  let userErrorListenerCount = 0
+  function throwUnhandlerError(e: ErrorEvent) {
+    if (userErrorListenerCount === 0 && e.error != null)
+      cb(e)
+    else
+      console.error(e.error)
+  }
+  const addEventListener = window.addEventListener.bind(window)
+  const removeEventListener = window.removeEventListener.bind(window)
+  window.addEventListener('error', throwUnhandlerError)
+  window.addEventListener = function (...args: Parameters<typeof addEventListener>) {
+    if (args[0] === 'error')
+      userErrorListenerCount++
+    return addEventListener.apply(this, args)
+  }
+  window.removeEventListener = function (...args: Parameters<typeof removeEventListener>) {
+    if (args[0] === 'error' && userErrorListenerCount)
+      userErrorListenerCount--
+    return removeEventListener.apply(this, args)
+  }
+  return function clearErrorHandlers() {
+    window.removeEventListener('error', throwUnhandlerError)
+  }
+}
+
+const stopErrorHandler = catchWindowErrors(e => defaultErrorReport('Error', e.error))
 const stopRejectionHandler = on('unhandledrejection', e => defaultErrorReport('Unhandled Rejection', e.reason))
 
 let runningTests = false
@@ -100,15 +131,27 @@ ws.addEventListener('open', async () => {
     const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
     safeRpc = createSafeRpc(client, getSafeTimers)
   }
-  catch (err) {
-    location.reload()
+  catch (err: any) {
+    if (reloadTries >= 10) {
+      const error = serializeError(new Error('Vitest failed to load "vitest/utils" after 10 retries.'))
+      error.cause = serializeError(err)
+
+      await client.rpc.onUnhandledError(error, 'Reload Error')
+      await client.rpc.onDone(testId)
+      return
+    }
+
+    const tries = reloadTries + 1
+    const newUrl = new URL(location.href)
+    newUrl.searchParams.set('reloadTries', String(tries))
+    location.href = newUrl.href
     return
   }
 
   stopErrorHandler()
   stopRejectionHandler()
 
-  on('error', event => reportUnexpectedError(safeRpc, 'Error', event.error))
+  catchWindowErrors(event => reportUnexpectedError(safeRpc, 'Error', event.error))
   on('unhandledrejection', event => reportUnexpectedError(safeRpc, 'Unhandled Rejection', event.reason))
 
   // @ts-expect-error untyped global for internal use

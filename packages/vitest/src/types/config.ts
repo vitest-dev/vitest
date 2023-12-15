@@ -716,6 +716,11 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
+
+  /**
+   * Name of the project or projects to run.
+   */
+  project?: string | string[]
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {

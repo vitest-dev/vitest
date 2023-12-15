@@ -100,12 +100,14 @@ export type WaitUntilCallback<T> = () => T | Promise<T>
 
 export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
 
+type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
+
 export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | WaitUntilOptions = {}) {
   const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
   const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<Truthy<T>>((resolve, reject) => {
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
     let timeoutId: ReturnType<typeof setTimeout>
     let intervalId: ReturnType<typeof setInterval>
@@ -125,7 +127,7 @@ export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | W
       if (intervalId)
         clearInterval(intervalId)
 
-      resolve(result)
+      resolve(result as Truthy<T>)
       return true
     }
 

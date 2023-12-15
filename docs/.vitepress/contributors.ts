@@ -39,7 +39,7 @@ function createLinks(tm: CoreTeam): CoreTeam {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
 
   if (tm.twitter)
-    tm.links.push({ icon: 'twitter', link: `https://twitter.com/${tm.twitter}` })
+    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
 
   return tm
 }
@@ -73,6 +73,9 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.AriPerkkio,
     name: 'Ari Perkkiö',
     github: 'AriPerkkio',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
+    twitter: 'ari_perkkio',
+    sponsor: 'https://github.com/sponsors/AriPerkkio',
     title: 'A fullstack developer, working',
     desc: 'Core team member of Vitest',
     org: 'Cloudamite',

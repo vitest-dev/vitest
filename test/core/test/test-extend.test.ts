@@ -177,6 +177,28 @@ describe('test.extend()', () => {
     })
   })
 
+  describe('fixture only in beforeEach', () => {
+    beforeEach<Fixtures>(({ todoList }) => {
+      expect(todoList).toEqual([1, 2, 3])
+      expect(todoFn).toBeCalledTimes(1)
+    })
+
+    myTest('no fixture in test', () => {
+      expect(todoFn).toBeCalledTimes(1)
+    })
+  })
+
+  describe('fixture only in afterEach', () => {
+    afterEach<Fixtures>(({ todoList }) => {
+      expect(todoList).toEqual([1, 2, 3])
+      expect(todoFn).toBeCalledTimes(1)
+    })
+
+    myTest('no fixture in test', () => {
+      expect(todoFn).toBeCalledTimes(0)
+    })
+  })
+
   describe('fixture call times', () => {
     const apiFn = vi.fn(() => true)
     const serviceFn = vi.fn(() => true)
@@ -203,6 +225,8 @@ describe('test.extend()', () => {
     beforeEach<APIFixture>(({ api, service }) => {
       expect(api).toBe(true)
       expect(service).toBe(true)
+      expect(apiFn).toBeCalledTimes(1)
+      expect(serviceFn).toBeCalledTimes(1)
     })
 
     testAPI('Should init 1 time', ({ api }) => {
@@ -329,4 +353,34 @@ teardownTest('test without describe', ({ numbers }) => {
 test('teardown should be called once time', () => {
   expect(numbers).toHaveLength(0)
   expect(teardownFn).toBeCalledTimes(1)
+})
+
+describe('asynchonous setup/teardown', () => {
+  const trackFn = vi.fn()
+
+  const myTest = test.extend<{ a: string }>({
+    a: async ({}, use) => {
+      trackFn('setup-sync')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      trackFn('setup-async')
+      await use('ok')
+      trackFn('teardown-sync')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      trackFn('teardown-async')
+    },
+  })
+
+  myTest('quick test', ({ a }) => {
+    expect(a).toBe('ok')
+    expect(trackFn.mock.calls).toEqual([['setup-sync'], ['setup-async']])
+  })
+
+  afterAll(() => {
+    expect(trackFn.mock.calls).toEqual([
+      ['setup-sync'],
+      ['setup-async'],
+      ['teardown-sync'],
+      ['teardown-async'],
+    ])
+  })
 })

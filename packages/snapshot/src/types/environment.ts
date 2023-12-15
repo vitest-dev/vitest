@@ -7,3 +7,7 @@ export interface SnapshotEnvironment {
   readSnapshotFile(filepath: string): Promise<string | null>
   removeSnapshotFile(filepath: string): Promise<void>
 }
+
+export interface SnapshotEnvironmentOptions {
+  snapshotsDirName?: string
+}

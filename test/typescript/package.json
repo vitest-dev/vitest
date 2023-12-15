@@ -9,6 +9,7 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
+    "googleapis": "^128.0.0",
     "typescript": "^5.2.2",
     "vue-tsc": "^1.8.20"
   }

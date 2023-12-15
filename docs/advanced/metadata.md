@@ -1,7 +1,7 @@
 # Task Metadata
 
 ::: warning
-Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
+Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 If you are developing a custom reporter or using Vitest Node.js API, you might find it useful to pass data from tests that are being executed in various contexts to your reporter or custom Vitest handler.

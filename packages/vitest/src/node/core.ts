@@ -56,6 +56,7 @@ export class Vitest {
 
   private coreWorkspaceProject!: WorkspaceProject
 
+  private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
@@ -151,7 +152,12 @@ export class Vitest {
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
-    this.projects = await this.resolveWorkspace(cliOptions)
+    const projects = await this.resolveWorkspace(cliOptions)
+    this.projects = projects
+    this.resolvedProjects = projects
+    const filteredProjects = toArray(resolved.project)
+    if (filteredProjects.length)
+      this.projects = this.projects.filter(p => filteredProjects.includes(p.getName()))
     if (!this.coreWorkspaceProject)
       this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
 
@@ -367,7 +373,7 @@ export class Vitest {
         return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       await Promise.all(dependencies.map(async (dep) => {
-        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           deps.add(fsPath)
@@ -510,6 +516,17 @@ export class Vitest {
     await this.reportCoverage(!trigger)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
+  }
+
+  async changeProjectName(pattern: string) {
+    if (pattern === '')
+      delete this.configOverride.project
+    else
+      this.configOverride.project = pattern
+
+    this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
+    const files = (await this.globTestFiles()).map(([, file]) => file)
+    await this.rerunFiles(files, 'change project filter')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -764,6 +781,7 @@ export class Vitest {
         if (this.pool) {
           closePromises.push((async () => {
             await this.pool?.close?.()
+
             this.pool = undefined
           })())
         }

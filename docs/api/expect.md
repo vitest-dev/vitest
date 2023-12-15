@@ -19,9 +19,9 @@ expect(input).to.equal(2) // chai API
 expect(input).toBe(2) // jest API
 ```
 
-Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Nodejs error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
+Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
 
-Also, `expect` can be used statically to access matchers functions, described later, and more.
+Also, `expect` can be used statically to access matcher functions, described later, and more.
 
 ::: warning
 `expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
@@ -50,8 +50,8 @@ import { expect, test } from 'vitest'
 
 test('expect.soft test', () => {
   expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
-  expect(1 + 2).toBe(3) // failed and terminate the test, all previous errors will be output
-  expect.soft(1 + 2).toBe(4) // do not run
+  expect(1 + 2).toBe(4) // failed and terminate the test, all previous errors will be output
+  expect.soft(1 + 3).toBe(5) // do not run
 })
 ```
 
@@ -624,19 +624,19 @@ import { expect, test } from 'vitest'
 
 function getFruitStock(type) {
   if (type === 'pineapples')
-    throw new DiabetesError('Pineapples are not good for people with diabetes')
+    throw new Error('Pineapples are not in stock')
 
   // Do some other stuff
 }
 
 test('throws on pineapples', () => {
-  // Test that the error message says "diabetes" somewhere: these are equivalent
-  expect(() => getFruitStock('pineapples')).toThrowError(/diabetes/)
-  expect(() => getFruitStock('pineapples')).toThrowError('diabetes')
+  // Test that the error message says "stock" somewhere: these are equivalent
+  expect(() => getFruitStock('pineapples')).toThrowError(/stock/)
+  expect(() => getFruitStock('pineapples')).toThrowError('stock')
 
   // Test the exact error message
   expect(() => getFruitStock('pineapples')).toThrowError(
-    /^Pineapples are not good for people with diabetes$/,
+    /^Pineapples are not in stock$/,
   )
 })
 ```
