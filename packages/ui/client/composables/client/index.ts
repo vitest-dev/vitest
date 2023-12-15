@@ -1,17 +1,18 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig } from 'vitest'
+import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
+import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
 export const testRunState: Ref<RunState> = ref('idle')
-export const unhandledErrors: Ref<unknown[]> = ref([])
+export const unhandledErrors: Ref<ErrorWithDiff[]> = ref([])
 
 export const client = (function createVitestClient() {
   if (isReport) {
@@ -26,7 +27,7 @@ export const client = (function createVitestClient() {
         },
         onFinished(_files, errors) {
           testRunState.value = 'idle'
-          unhandledErrors.value = errors || []
+          unhandledErrors.value = (errors || []).map(parseError)
         },
       },
     })
@@ -78,7 +79,7 @@ watch(
         client.rpc.getUnhandledErrors(),
       ])
       client.state.collectFiles(files)
-      unhandledErrors.value = errors
+      unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })
 
