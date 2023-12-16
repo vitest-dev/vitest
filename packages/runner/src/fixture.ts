@@ -1,3 +1,4 @@
+import { createDefer } from '@vitest/utils'
 import { getFixture } from './map'
 import type { TestContext } from './types'
 
@@ -78,49 +79,42 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
     if (!pendingFixtures.length)
       return fn(context)
 
-    let cursor = 0
+    async function resolveFixtures() {
+      for (const fixture of pendingFixtures) {
+        // fixture could be already initialized during "before" hook
+        if (fixtureValueMap.has(fixture))
+          continue
 
-    return new Promise((resolve, reject) => {
-      async function use(fixtureValue: any) {
-        const fixture = pendingFixtures[cursor++]
-        context![fixture.prop] = fixtureValue
-
-        if (!fixtureValueMap.has(fixture)) {
-          fixtureValueMap.set(fixture, fixtureValue)
-          cleanupFnArray.unshift(() => {
-            fixtureValueMap.delete(fixture)
-          })
-        }
-
-        if (cursor < pendingFixtures.length) {
-          await next()
+        let resolvedValue: unknown
+        if (fixture.isFn) {
+          // wait for `use` call to extract fixture value
+          const useFnArgPromise = createDefer()
+          const fixtureReturn = fixture.value(context, async (useFnArg: unknown) => {
+            useFnArgPromise.resolve(useFnArg)
+            // suspend fixture teardown until cleanup
+            const useReturnPromise = createDefer<void>()
+            cleanupFnArray.push(async () => {
+              // start teardown by resolving `use` Promise
+              useReturnPromise.resolve()
+              // wait for finishing teardown
+              await fixtureReturn
+            })
+            await useReturnPromise
+          }).catch(useFnArgPromise.reject) // treat fixture function error (until `use` call) as test failure
+          resolvedValue = await useFnArgPromise
         }
         else {
-          // When all fixtures setup, call the test function
-          try {
-            resolve(await fn(context))
-          }
-          catch (err) {
-            reject(err)
-          }
-          return new Promise<void>((resolve) => {
-            cleanupFnArray.push(resolve)
-          })
+          resolvedValue = fixture.value
         }
+        context![fixture.prop] = resolvedValue
+        fixtureValueMap.set(fixture, resolvedValue)
+        cleanupFnArray.unshift(() => {
+          fixtureValueMap.delete(fixture)
+        })
       }
+    }
 
-      async function next() {
-        const fixture = pendingFixtures[cursor]
-        const { isFn, value } = fixture
-        if (fixtureValueMap.has(fixture))
-          return use(fixtureValueMap.get(fixture))
-        else
-          return isFn ? value(context, use) : use(value)
-      }
-
-      const setupFixturePromise = next().catch(reject)
-      cleanupFnArray.unshift(() => setupFixturePromise)
-    })
+    return resolveFixtures().then(() => fn(context))
   }
 }
 
@@ -133,7 +127,7 @@ function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), p
       return
     }
     if (depSet.has(fixture))
-      throw new Error('circular fixture dependency')
+      throw new Error(`Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet].reverse().map(d => d.prop).join(' <- ')}`)
 
     depSet.add(fixture)
     resolveDeps(fixture.deps, depSet, pendingFixtures)
@@ -155,7 +149,7 @@ function getUsedProps(fn: Function) {
 
   const first = args[0]
   if (!(first.startsWith('{') && first.endsWith('}')))
-    throw new Error('the first argument must use object destructuring pattern')
+    throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
 
   const _first = first.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
@@ -164,7 +158,7 @@ function getUsedProps(fn: Function) {
 
   const last = props.at(-1)
   if (last && last.startsWith('...'))
-    throw new Error('Rest parameters are not supported')
+    throw new Error(`Rest parameters are not supported in fixtures, received "${last}".`)
 
   return props
 }

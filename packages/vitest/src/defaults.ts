@@ -3,7 +3,7 @@ import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, 
 import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,

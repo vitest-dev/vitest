@@ -68,7 +68,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close() {
-    await this.cachedPage?.close()
-    await this.cachedBrowser?.close()
+    const page = this.cachedPage
+    this.cachedPage = null
+    const browser = this.cachedBrowser
+    this.cachedBrowser = null
+    await page?.close()
+    await browser?.close()
   }
 }

@@ -50,8 +50,8 @@ import { expect, test } from 'vitest'
 
 test('expect.soft test', () => {
   expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
-  expect(1 + 2).toBe(3) // failed and terminate the test, all previous errors will be output
-  expect.soft(1 + 2).toBe(4) // do not run
+  expect(1 + 2).toBe(4) // failed and terminate the test, all previous errors will be output
+  expect.soft(1 + 3).toBe(5) // do not run
 })
 ```
 
