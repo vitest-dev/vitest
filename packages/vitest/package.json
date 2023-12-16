@@ -171,7 +171,6 @@
     "@types/micromatch": "^4.0.6",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
-    "ansi-escapes": "^6.2.0",
     "birpc": "0.2.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",

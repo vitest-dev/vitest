@@ -1,10 +1,8 @@
 import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
-import ansiEscapes from 'ansi-escapes'
 import { relative } from 'pathe'
-import type { Task, Test } from '@vitest/runner/types/tasks'
-import { isWindows, stdout } from '../utils'
+import { getTests, isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
 
@@ -102,7 +100,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     const filter = await createFilter('Input test name pattern (RegExp)', ctx.configOverride.testNamePattern?.source || '', async (str: string) => {
       const files = await ctx.state.getFiles()
       const tasks = files.map(file => file.tasks).flat()
-      const tests = extractTest(tasks)
+      const tests = getTests(tasks)
       try {
         const reg = new RegExp(str)
         return tests.map(test => test.name).filter(testName => testName.match(reg))
@@ -193,7 +191,8 @@ async function createFilter(message: string, initial: string, filterFunc: Filter
   return filter
 
   function restoreCursor() {
-    stdout().write(ansiEscapes.cursorTo(`? ${message} › `.length + (currentKeyword?.length || 0)))
+    const cursortPos = `? ${message} › `.length + (currentKeyword?.length || 0)
+    stdout().write(`\u001B[${cursortPos}G`)
   }
 
   function filterHandler(filterFunc: FilterFunc) {
@@ -250,18 +249,7 @@ async function createFilter(message: string, initial: string, filterFunc: Filter
 function eraseAndPrint(str: string) {
   const lineBreasks = str.split('\n').length - 1
 
-  stdout().write(ansiEscapes.eraseDown)
+  stdout().write('\u001B[J')
   stdout().write(str)
-  stdout().write(ansiEscapes.cursorUp(lineBreasks))
-}
-
-function extractTest(tasks: Task[]): Test[] {
-  return tasks.flatMap((task) => {
-    if (task.type === 'test')
-      return [task]
-
-    else if (task.type === 'suite')
-      return extractTest(task.tasks)
-    else return []
-  })
+  stdout().write(`\u001B[${lineBreasks}A`)
 }
