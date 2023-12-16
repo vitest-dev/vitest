@@ -14,7 +14,6 @@ const external = [
   /^@?vitest(\/|$)/,
   'worker_threads',
   'node:worker_threads',
-  '@vitest/utils/ast',
 ]
 
 const plugins = [
