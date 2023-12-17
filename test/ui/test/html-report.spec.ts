@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { execa } from 'execa'
 import type { PreviewServer } from 'vite'
 import { preview } from 'vite'
+import { startVitest } from 'vitest/node'
 
 const port = 9001
 const pageUrl = `http://localhost:${port}/`
@@ -11,13 +11,9 @@ test.describe('html report', () => {
 
   test.beforeAll(async () => {
     // generate vitest html report
-    await execa('vitest', [
-      'run',
-      '--reporter=html',
-    ], {
-      // stdio: "inherit",
-    })
+    await startVitest('test', [], { run: true, reporters: 'html' })
 
+    // run vite preview server
     previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
   })
 

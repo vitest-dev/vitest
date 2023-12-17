@@ -1,37 +1,19 @@
 import { expect, test } from '@playwright/test'
-import type { ExecaChildProcess } from 'execa'
-import { execa } from 'execa'
+import { type Vitest, startVitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`
 
 test.describe('ui', () => {
-  let subProcess: ExecaChildProcess
-  let subProcessExit: Promise<void>
+  let vitest: Vitest | undefined
 
   test.beforeAll(async () => {
-    // start vitest ui server
-    subProcess = execa('vitest', [
-      '--ui',
-      '--watch',
-      '--open=false',
-      `--api.port=${port}`,
-    ], {
-      // dump stdout for quick debugging
-      // stdio: "inherit",
-    })
-
-    subProcessExit = new Promise((resolve) => {
-      subProcess.on('exit', () => resolve())
-    })
-
-    // wait for server ready
-    await expect.poll(() => fetch(pageUrl).then(res => res.status, e => e)).toBe(200)
+    vitest = await startVitest('test', [], { watch: true, ui: true, open: false, api: { port } })
+    expect(vitest).toBeDefined()
   })
 
   test.afterAll(async () => {
-    subProcess.kill()
-    await subProcessExit
+    await vitest?.close()
   })
 
   test('basic', async ({ page }) => {
