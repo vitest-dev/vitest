@@ -1,7 +1,7 @@
 import { access } from 'node:fs'
 import { sep } from 'pathe'
 import { expect, test } from 'vitest'
-import { A } from '../src/sourceA'
+import { A } from './src/sourceA'
 
 test('A equals A', () => {
   expect(A).toBe('A')

@@ -1326,7 +1326,7 @@ Watermarks for statements, lines, branches and functions. See [istanbul document
 #### coverage.processingConcurrency
 
 - **Type:** `boolean`
-- **Default:** `Math.min(20, os.cpus().length)`
+- **Default:** `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.processingConcurrency=<number>`
 

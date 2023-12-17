@@ -1,9 +1,9 @@
-import { cpus } from 'node:os'
+import os from 'node:os'
 import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
@@ -43,7 +43,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
-  processingConcurrency: Math.min(20, cpus().length),
+  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
 }
 
 export const fakeTimersDefaults = {

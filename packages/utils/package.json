@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.4",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -41,6 +41,13 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "source-map": [
+        "dist/source-map.d.ts"
+      ]
+    }
+  },
   "files": [
     "*.d.ts",
     "dist"

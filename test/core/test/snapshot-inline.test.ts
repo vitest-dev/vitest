@@ -100,6 +100,22 @@ test('throwing inline snapshots', async () => {
     newlines"
   `)
 
+  expect(() => {
+    throw new Error(['Inline', 'snapshot', 'with', 'newlines'].join('\n'))
+  }).toThrowErrorMatchingInlineSnapshot(`
+    [Error: Inline
+    snapshot
+    with
+    newlines]
+  `)
+
+  expect(new Error(['Inline', 'snapshot', 'with', 'newlines'].join('\n'))).toMatchInlineSnapshot(`
+    [Error: Inline
+    snapshot
+    with
+    newlines]
+  `)
+
   await expect(async () => {
     throw new Error('omega')
   }).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.4",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -30,6 +30,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "*.d.ts",
     "dist"
   ],
   "scripts": {
@@ -38,14 +39,14 @@
     "build:node": "rollup -c",
     "typecheck": "tsc --noEmit",
     "dev:client": "vite",
-    "dev": "rollup -c --watch --watch.include=node",
+    "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "run-p dev dev:client",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component",
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": "^1.0.0-0"
+    "vitest": "^1.0.0"
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
@@ -58,7 +59,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
-    "@iconify-json/logos": "^1.1.39",
+    "@iconify-json/logos": "^1.1.40",
     "@testing-library/cypress": "^10.0.1",
     "@types/codemirror": "^5.60.13",
     "@types/d3-force": "^3.0.9",
@@ -81,7 +82,7 @@
     "unocss": "^0.57.4",
     "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "^0.25.2",
-    "vite": "^5.0.0-beta.15",
+    "vite": "^5.0.0",
     "vite-plugin-pages": "^0.31.0",
     "vue": "^3.3.8",
     "vue-router": "^4.2.5"
