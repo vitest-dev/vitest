@@ -99,6 +99,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
       expected,
       [
+        ...getCustomEqualityTesters(),
         iterableEquality,
         typeEquality,
         sparseArrayEquality,
@@ -126,6 +127,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         actual,
         expected,
         [
+          ...getCustomEqualityTesters(),
           iterableEquality,
           typeEquality,
           sparseArrayEquality,
@@ -141,7 +143,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         const toEqualPass = jestEquals(
           actual,
           expected,
-          [iterableEquality],
+          [...getCustomEqualityTesters(), iterableEquality],
         )
 
         if (toEqualPass)
@@ -160,7 +162,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toMatchObject', function (expected) {
     const actual = this._obj
     return this.assert(
-      jestEquals(actual, expected, [iterableEquality, subsetEquality]),
+      jestEquals(actual, expected, [...getCustomEqualityTesters(), iterableEquality, subsetEquality]),
       'expected #{this} to match object #{exp}',
       'expected #{this} to not match object #{exp}',
       expected,
@@ -209,7 +211,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected)
+      return jestEquals(item, expected, [...getCustomEqualityTesters(), iterableEquality])
     })
 
     this.assert(
