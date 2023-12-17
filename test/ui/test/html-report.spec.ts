@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
-import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
+import type { PreviewServer } from 'vite'
+import { preview } from 'vite'
 
 const port = 9001
 const pageUrl = `http://localhost:${port}/`
 
 test.describe('html report', () => {
-  let subProcess: ExecaChildProcess
-  let subProcessExit: Promise<void>
+  let previewServer: PreviewServer
 
   test.beforeAll(async () => {
     // generate vitest html report
@@ -18,27 +18,15 @@ test.describe('html report', () => {
       // stdio: "inherit",
     })
 
-    // vite preview
-    subProcess = execa('vite', [
-      'preview',
-      '--outDir=html',
-      `--port=${port}`,
-      '--strict-port',
-    ], {
-      // stdio: "inherit",
-    })
-
-    subProcessExit = new Promise((resolve) => {
-      subProcess.on('exit', () => resolve())
-    })
-
-    // wait for server ready
-    await expect.poll(() => fetch(pageUrl).then(res => res.status, e => e)).toBe(200)
+    previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
   })
 
   test.afterAll(async () => {
-    subProcess.kill()
-    await subProcessExit
+    await new Promise<void>((resolve, reject) => {
+      previewServer.httpServer.close((err) => {
+        err ? reject(err) : resolve()
+      })
+    })
   })
 
   test('basic', async ({ page }) => {
