@@ -33,7 +33,11 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
         ? false
         : workspacePath
 
-  const root = options.root || (typeof workspacePath === 'number' ? undefined : dirname(workspacePath))
+  const root = options.root || (
+    typeof workspacePath === 'number'
+      ? undefined
+      : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
+  )
 
   const config: ViteInlineConfig = {
     ...options,
