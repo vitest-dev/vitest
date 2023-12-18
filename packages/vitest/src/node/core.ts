@@ -264,7 +264,6 @@ export class Vitest {
       'testTimeout',
       'pool',
       'globals',
-      'mode',
       'expandSnapshotDiff',
       'retry',
       'testNamePattern',
