@@ -305,7 +305,7 @@ export interface InlineConfig {
 
   /**
    * Should all test files run in parallel. Doesn't affect tests running in the same file.
-   * This will override `maxWorkers` and `minWorkers` options.
+   * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
    *
    * @default true
    */

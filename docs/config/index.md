@@ -883,9 +883,10 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 
 - **Type:** `boolean`
 - **Default:** `true`
+- **CLI:** `--parallelism`, `--no-parallelism`
 - **Version:** Since Vitest 1.1
 
-Should all test files run in parallel. This will override `maxWorkers` and `minWorkers` options.
+Should all test files run in parallel. Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
 
 ::: tip
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
