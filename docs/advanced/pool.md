@@ -53,7 +53,7 @@ Vitest calls `runTest` when new tests are scheduled to run. It will not call it 
 
 Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/guide/reporters) only after `runTests` is resolved).
 
-If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/feat/custom-pool/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
+If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
 
 To communicate between different processes, you can create methods object using `createMethodsRPC` from `vitest/node`, and use any form of communication that you prefer. For example, to use WebSockets with `birpc` you can write something like this:
 
@@ -87,4 +87,4 @@ async function runTests(project: WorkspaceProject, tests: string[]) {
 }
 ```
 
-You can see a simple example in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/feat/custom-pool/test/run/pool-custom-fixtures/pool/custom-pool.ts).
+You can see a simple example in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/main/test/run/pool-custom-fixtures/pool/custom-pool.ts).
