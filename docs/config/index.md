@@ -2031,7 +2031,7 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 ### workspace
 
-- **Type:** `number`
+- **Type:** `string`
 - **CLI:** `--workspace=./file.js`
 - **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
 - **Version:** Since Vitest 1.1.0
