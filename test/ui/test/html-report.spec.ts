@@ -11,7 +11,7 @@ test.describe('html report', () => {
 
   test.beforeAll(async () => {
     // generate vitest html report
-    await startVitest('test', [], { run: true, reporters: 'html' })
+    await startVitest('test', [], { run: true, reporters: 'html', coverage: { enabled: true, reportsDirectory: 'html/coverage' } })
 
     // run vite preview server
     previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
@@ -32,7 +32,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('1 Pass 0 Fail 1 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('2 Pass 0 Fail 2 Total')
 
     // report
     await page.getByText('sample.test.ts').click()
@@ -48,5 +48,11 @@ test.describe('html report', () => {
     await expect(page.getByTestId('console')).toContainText('log test')
 
     expect(pageErrors).toEqual([])
+  })
+
+  test('coverage', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByLabel('Show coverage').click()
+    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
   })
 })
