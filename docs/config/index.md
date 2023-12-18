@@ -2066,3 +2066,18 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 - **Version:** Since Vitest 1.1.0
 
 Path to a [workspace](/guide/workspace) config file relative to [root](#root).
+
+### isolate
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **CLI:** `--no-isolate`, `--isolate=false` 
+- **Version:** Since Vitest 1.1.0
+
+Run tests in an isolated environment. This option has no effect on `vmThreads` pool.
+
+Disabling this option might improve [performance](/guide/performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
+
+::: note
+You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
+:::

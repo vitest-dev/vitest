@@ -138,6 +138,15 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.isolate) {
+    resolved.poolOptions ??= {}
+    resolved.poolOptions.threads ??= {}
+    // prefer CLI arguments
+    resolved.poolOptions.threads.isolate = options.poolOptions?.threads?.isolate ?? options.isolate ?? resolved.poolOptions.threads.isolate ?? resolved.isolate
+    resolved.poolOptions.forks ??= {}
+    resolved.poolOptions.forks.isolate ??= options.poolOptions?.forks?.isolate ?? options.isolate ?? resolved.poolOptions.forks.isolate ?? resolved.isolate
+  }
+
   // @ts-expect-error -- check for removed API option
   if (resolved.coverage.provider === 'c8')
     throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')

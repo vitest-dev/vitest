@@ -281,6 +281,15 @@ export interface InlineConfig {
   environmentMatchGlobs?: [string, VitestEnvironment][]
 
   /**
+   * Run tests in an isolated environment. This option has no effect on vmThreads pool.
+   *
+   * Disabling this option might improve performance if your code doesn't rely on side effects.
+   *
+   * @default true
+   */
+  isolate?: boolean
+
+  /**
    * Pool used to run tests in.
    *
    * Supports 'threads', 'forks', 'vmThreads'

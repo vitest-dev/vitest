@@ -281,6 +281,7 @@ export class Vitest {
       'testNamePattern',
       'passWithNoTests',
       'bail',
+      'isolate',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {
