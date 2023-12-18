@@ -8,7 +8,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.39.0",
-    "execa": "^6.1.0",
+    "@testing-library/dom": "^9.3.3",
+    "happy-dom": "latest",
     "vitest": "workspace:*"
   }
 }

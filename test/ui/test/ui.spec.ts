@@ -23,7 +23,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('2 Pass 0 Fail 2 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
 
     // report
     await page.getByText('sample.test.ts').click()
@@ -45,5 +45,12 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     await page.getByLabel('Show coverage').click()
     await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+  })
+
+  test('console', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByText('fixtures/console.test.ts').click()
+    await page.getByTestId('btn-console').click()
+    await page.getByText('/(?<char>\\w)/').click()
   })
 })
