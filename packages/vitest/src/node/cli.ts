@@ -29,6 +29,7 @@ cli
   .option('--coverage.all', 'Whether to include all files, including the untested ones into report', { default: true })
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
+  .option('--workspace <path>', 'Path to a workspace configuration file')
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser API with happy-dom')
   .option('--browser [options]', 'Run tests in the browser (default: false)')
@@ -149,6 +150,11 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
     argv.config = normalize(argv.config)
   else
     delete argv.config
+
+  if (argv.workspace)
+    argv.workspace = normalize(argv.workspace)
+  else
+    delete argv.workspace
 
   if (argv.dir)
     argv.dir = normalize(argv.dir)

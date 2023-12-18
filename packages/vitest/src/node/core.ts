@@ -182,19 +182,31 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async resolveWorkspace(cliOptions: UserConfig) {
+  private async getWorkspaceConfigPath() {
+    if (this.config.workspace)
+      return this.config.workspace
+
     const configDir = this.server.config.configFile
       ? dirname(this.server.config.configFile)
       : this.config.root
+
     const rootFiles = await fs.readdir(configDir)
+
     const workspaceConfigName = workspaceFiles.find((configFile) => {
       return rootFiles.includes(configFile)
     })
 
     if (!workspaceConfigName)
-      return [await this.createCoreProject()]
+      return null
 
-    const workspaceConfigPath = join(configDir, workspaceConfigName)
+    return join(configDir, workspaceConfigName)
+  }
+
+  private async resolveWorkspace(cliOptions: UserConfig) {
+    const workspaceConfigPath = await this.getWorkspaceConfigPath()
+
+    if (!workspaceConfigPath)
+      return [await this.createCoreProject()]
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
       default: (string | UserWorkspaceConfig)[]
