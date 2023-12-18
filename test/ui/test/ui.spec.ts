@@ -23,7 +23,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('1 Pass 0 Fail 1 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('4 Pass 0 Fail 4 Total')
 
     // report
     await page.getByText('sample.test.ts').click()
@@ -39,5 +39,12 @@ test.describe('ui', () => {
     await expect(page.getByTestId('console')).toContainText('log test')
 
     expect(pageErrors).toEqual([])
+  })
+
+  test('console', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByText('fixtures/console.test.ts').click()
+    await page.getByTestId('btn-console').click()
+    await page.getByText('/(?<char>\\w)/').click()
   })
 })
