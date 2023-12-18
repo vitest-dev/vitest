@@ -40,4 +40,19 @@ test.describe('ui', () => {
 
     expect(pageErrors).toEqual([])
   })
+
+  test('file-filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('')
+    await page.getByText('PASS (1)').click()
+    await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('nothing')
+    await page.getByText('No matched test').click()
+
+    await page.getByPlaceholder('Search...').fill('add')
+    await page.getByText('PASS (1)').click()
+    await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+  })
 })
