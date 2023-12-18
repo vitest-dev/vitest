@@ -360,8 +360,7 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
-        () => this._provided = ({} as any),
-      ].filter(Boolean))
+      ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
   }
