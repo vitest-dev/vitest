@@ -44,13 +44,16 @@ test.describe('ui', () => {
   test('file-filter', async ({ page }) => {
     await page.goto(pageUrl)
 
+    // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText('PASS (1)').click()
     await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
+    // match nothing
     await page.getByPlaceholder('Search...').fill('nothing')
     await page.getByText('No matched test').click()
 
+    // searching "add" will match "sample.test.ts" since it includes a test case named "add"
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
     await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
