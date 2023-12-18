@@ -66,7 +66,7 @@ If you are using Vitest 1.1 or higher, you can also just provide `--no-paralleli
 
 ```sh
 # If pool is unknown
-vitest --inspect-brk --no-parallelism
+vitest --inspect-brk --no-file-parallelism
 ```
 
 Once Vitest starts it will stop execution and wait for you to open developer tools that can connect to [Node.js inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.

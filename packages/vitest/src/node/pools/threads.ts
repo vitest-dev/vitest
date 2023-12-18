@@ -72,7 +72,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
   if (isolated)
     options.isolateWorkers = true
 
-  if (poolOptions.singleThread || !ctx.config.parallelism) {
+  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }

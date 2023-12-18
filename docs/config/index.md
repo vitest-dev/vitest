@@ -879,11 +879,11 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-### parallelism
+### fileParallelism
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **CLI:** `--parallelism`, `--no-parallelism`
+- **CLI:** `--no-file-parallelism`, `--fileParallelism=false`
 - **Version:** Since Vitest 1.1
 
 Should all test files run in parallel. Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.

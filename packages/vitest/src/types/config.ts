@@ -309,7 +309,7 @@ export interface InlineConfig {
    *
    * @default true
    */
-  parallelism?: boolean
+  fileParallelism?: boolean
 
   /**
    * Automatically assign pool based on globs. The first match will be used.

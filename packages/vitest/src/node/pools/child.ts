@@ -85,7 +85,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
   if (isolated)
     options.isolateWorkers = true
 
-  if (poolOptions.singleFork || !ctx.config.parallelism) {
+  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }

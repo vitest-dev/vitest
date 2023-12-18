@@ -35,7 +35,7 @@ cli
   .option('--poolOptions <options>', 'Specify pool options')
   .option('--poolOptions.threads.isolate', 'Isolate tests in threads pool (default: true)')
   .option('--poolOptions.forks.isolate', 'Isolate tests in forks pool (default: true)')
-  .option('--parallelism', 'Should all test files run in parallel. Use --no-parallelism to disable (default: true)')
+  .option('--fileParallelism', 'Should all test files run in parallel. Use --no-file-parallelism to disable (default: true)')
   .option('--maxWorkers', 'Maximum number of workers to run tests in')
   .option('--minWorkers', 'Minimum number of workers to run tests in')
   .option('--environment <env>', 'Specify runner environment, if not running in the browser (default: node)')

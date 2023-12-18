@@ -77,7 +77,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
 
-  if (poolOptions.singleThread || !ctx.config.parallelism) {
+  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }

@@ -113,9 +113,9 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
-  resolved.parallelism ??= true
+  resolved.fileParallelism ??= true
 
-  if (!resolved.parallelism) {
+  if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
     resolved.minWorkers = 1
@@ -125,7 +125,7 @@ export function resolveConfig(
     const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
     const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
-    if (resolved.parallelism && !isSingleThread && !isSingleFork) {
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(`You cannot use ${inspectOption} without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
