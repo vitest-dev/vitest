@@ -266,6 +266,10 @@ export class Vitest {
       'globals',
       'mode',
       'expandSnapshotDiff',
+      'retry',
+      'testNamePattern',
+      'passWithNoTests',
+      'bail',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {
