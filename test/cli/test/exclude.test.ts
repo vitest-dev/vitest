@@ -12,5 +12,6 @@ test('should still test math.test.ts', async () => {
   )
 
   expect(stdout).toContain(`✓ fixtures/exclude/math.test.ts`)
+  expect(stdout).not.toContain(`string.test.ts`)
   expect(stderr).toBe('')
 })

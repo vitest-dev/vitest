@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     include: ['fixtures/exclude/*.test.ts'],
-    exclude: ['fixtures/exclude/string.test.ts'],
   },
 })

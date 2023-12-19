@@ -90,9 +90,6 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const cliExcludes = options.exclude
-  delete options.exclude
-
   const resolved = {
     ...configDefaults,
     ...options,
@@ -195,8 +192,8 @@ export function resolveConfig(
       resolved.server.deps![option] = resolved.deps[option] as any
   })
 
-  if (cliExcludes)
-    resolved.exclude.push(...cliExcludes)
+  if (resolved.cliExclude)
+    resolved.exclude.push(...resolved.cliExclude)
 
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
