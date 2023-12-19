@@ -310,6 +310,11 @@ export interface InlineConfig {
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
+   * Path to a workspace configuration file
+   */
+  workspace?: string
+
+  /**
    * Update snapshot
    *
    * @default false

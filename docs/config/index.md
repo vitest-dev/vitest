@@ -2028,3 +2028,12 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 - **Default:** `false`
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
+
+### workspace
+
+- **Type:** `string`
+- **CLI:** `--workspace=./file.js`
+- **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
+- **Version:** Since Vitest 1.1.0
+
+Path to a [workspace](/guide/workspace) config file relative to [root](#root).

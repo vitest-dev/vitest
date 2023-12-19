@@ -78,8 +78,8 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
-| `--mode` | Override Vite mode (default: `test`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
+| `--workspace <path>` | Path to a workspace configuration file |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser API with happy-dom |
 | `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
