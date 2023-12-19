@@ -10,9 +10,14 @@ export async function generateInlineTest(templatePath, testPath) {
   console.warn(`Generated ${testPath}`)
 }
 
-const filepath = resolve(dir, '../test-update/snapshots-inline-js.test.js')
-const template = resolve(dir, './inline-test-template.js');
+const filepath1 = resolve(dir, '../test-update/snapshots-inline-js.test.js')
+const template1 = resolve(dir, './inline-test-template.js')
+const filepath2 = resolve(dir, '../test-update/snapshots-inline-concurrent-js.test.js')
+const template2 = resolve(dir, './inline-test-template-concurrent.js');
 
 (async () => {
-  await generateInlineTest(template, filepath)
+  await Promise.all([
+    generateInlineTest(template1, filepath1),
+    generateInlineTest(template2, filepath2),
+  ])
 })()

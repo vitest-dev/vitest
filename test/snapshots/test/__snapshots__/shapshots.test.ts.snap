@@ -1,5 +1,36 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`js inline concurrent snapshots generated correctly 1`] = `
+"import { describe, it } from 'vitest'
+
+describe('suite name', () => {
+  it('snapshot 1', ({ expect }) => {
+    expect({ foo: 'foo' }).toMatchInlineSnapshot(\`
+      Object {
+        "foo": "foo",
+      }
+    \`)
+  })
+
+  it('snapshot 2', ({ expect }) => {
+    expect({ foo: 'bar' }).toMatchInlineSnapshot(\`
+      Object {
+        "foo": "bar",
+      }
+    \`)
+  })
+
+  it('snapshot 3', ({ expect }) => {
+    expect({ foo: 'qux' }).toMatchInlineSnapshot(\`
+      Object {
+        "foo": "qux",
+      }
+    \`)
+  })
+})
+"
+`;
+
 exports[`js snapshots generated correctly 1`] = `
 "import { describe, expect, test } from 'vitest'
 

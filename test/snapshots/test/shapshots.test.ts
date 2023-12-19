@@ -44,3 +44,9 @@ test('js snapshots generated correctly', async () => {
   const content = await fs.readFile(path, 'utf8')
   expect(content).toMatchSnapshot()
 })
+
+test('js inline concurrent snapshots generated correctly', async () => {
+  const path = pathe.resolve(__dirname, '../test-update/snapshots-inline-concurrent-js.test.js')
+  const content = await fs.readFile(path, 'utf8')
+  expect(content).toMatchSnapshot()
+})
