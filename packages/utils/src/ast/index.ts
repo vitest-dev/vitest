@@ -1,4 +1,5 @@
 import type {
+  CallExpression,
   Function as FunctionNode,
   Identifier,
   ImportExpression,
@@ -19,13 +20,14 @@ export type Positioned<T> = T & {
 export type Node = Positioned<_Node>
 
 interface Visitors {
-  onIdentifier: (
+  onIdentifier?: (
     node: Positioned<Identifier>,
     parent: Node,
     parentStack: Node[],
   ) => void
-  onImportMeta: (node: Node) => void
-  onDynamicImport: (node: Positioned<ImportExpression>) => void
+  onImportMeta?: (node: Node) => void
+  onDynamicImport?: (node: Positioned<ImportExpression>) => void
+  onCallExpression?: (node: Positioned<CallExpression>) => void
 }
 
 const isNodeInPatternWeakSet = new WeakSet<_Node>()
@@ -42,7 +44,7 @@ export function isNodeInPattern(node: _Node): node is Property {
  */
 export function esmWalker(
   root: Node,
-  { onIdentifier, onImportMeta, onDynamicImport }: Visitors,
+  { onIdentifier, onImportMeta, onDynamicImport, onCallExpression }: Visitors,
 ) {
   const parentStack: Node[] = []
   const varKindStack: VariableDeclaration['kind'][] = []
@@ -94,8 +96,8 @@ export function esmWalker(
     }
   }
 
-  (eswalk as any)(root, {
-    enter(node: Node, parent: Node | null) {
+  eswalk(root, {
+    enter(node, parent) {
       if (node.type === 'ImportDeclaration')
         return this.skip()
 
@@ -105,17 +107,20 @@ export function esmWalker(
         parent
         && !(parent.type === 'IfStatement' && node === parent.alternate)
       )
-        parentStack.unshift(parent)
+        parentStack.unshift(parent as Node)
 
       // track variable declaration kind stack used by VariableDeclarator
       if (node.type === 'VariableDeclaration')
         varKindStack.unshift(node.kind)
 
+      if (node.type === 'CallExpression')
+        onCallExpression?.(node as Positioned<CallExpression>)
+
       if (node.type === 'MetaProperty' && node.meta.name === 'import')
-        onImportMeta(node)
+        onImportMeta?.(node as Node)
 
       else if (node.type === 'ImportExpression')
-        onDynamicImport(node)
+        onDynamicImport?.(node as Positioned<ImportExpression>)
 
       if (node.type === 'Identifier') {
         if (
@@ -186,7 +191,7 @@ export function esmWalker(
       }
     },
 
-    leave(node: Node, parent: Node | null) {
+    leave(node, parent) {
       // untrack parent stack from above
       if (
         parent
@@ -203,7 +208,7 @@ export function esmWalker(
   // can be captured correctly
   identifiers.forEach(([node, stack]) => {
     if (!isInScope(node.name, stack))
-      onIdentifier(node, stack[0], stack)
+      onIdentifier?.(node, stack[0], stack)
   })
 }
 

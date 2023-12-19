@@ -1,6 +1,6 @@
 import MagicString from 'magic-string'
 import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
-import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
+import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from '@vitest/utils/ast'
 
@@ -176,13 +176,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
         s.update(id.start, id.end, binding)
       }
     },
-    onDynamicImport() {},
-    onImportMeta() {},
-  })
-
-  simpleWalk(ast, {
-    CallExpression(_node) {
-      const node = _node as any as Positioned<CallExpression>
+    onCallExpression(node) {
       if (
         node.callee.type === 'MemberExpression'
         && isIdentifier(node.callee.object)
