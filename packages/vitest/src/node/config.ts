@@ -22,6 +22,13 @@ const extraInlineDeps = [
   '@nuxt/test-utils',
 ]
 
+function resolvePath(path: string, root: string) {
+  return normalize(
+    resolveModule(path, { paths: [root] })
+      ?? resolve(root, path),
+  )
+}
+
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
 ): ApiConfig | undefined {
@@ -116,13 +123,21 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  resolved.fileParallelism ??= true
+
+  if (!resolved.fileParallelism) {
+    // ignore user config, parallelism cannot be implemented without limiting workers
+    resolved.maxWorkers = 1
+    resolved.minWorkers = 1
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
     const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
-    if (!isSingleThread && !isSingleFork) {
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
+      throw new Error(`You cannot use ${inspectOption} without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
@@ -199,10 +214,8 @@ export function resolveConfig(
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
-  if (resolved.runner) {
-    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
-      ?? resolve(resolved.root, resolved.runner)
-  }
+  if (resolved.runner)
+    resolved.runner = resolvePath(resolved.runner, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -280,19 +293,18 @@ export function resolveConfig(
     }
   }
 
-  if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
-    resolved.pool = normalize(
-      resolveModule(resolved.pool, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.pool),
-    )
+  if (resolved.workspace) {
+    // if passed down from the CLI and it's relative, resolve relative to CWD
+    resolved.workspace = options.workspace && options.workspace[0] === '.'
+      ? resolve(process.cwd(), options.workspace)
+      : resolvePath(resolved.workspace, resolved.root)
   }
+
+  if (!builtinPools.includes(resolved.pool as BuiltinPool))
+    resolved.pool = resolvePath(resolved.pool, resolved.root)
   resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(([glob, pool]) => {
-    if (!builtinPools.includes(pool as BuiltinPool)) {
-      pool = normalize(
-        resolveModule(pool, { paths: [resolved.root] })
-          ?? resolve(resolved.root, pool),
-      )
-    }
+    if (!builtinPools.includes(pool as BuiltinPool))
+      pool = resolvePath(pool, resolved.root)
     return [glob, pool]
   })
 
@@ -321,16 +333,10 @@ export function resolveConfig(
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    normalize(
-      resolveModule(file, { paths: [resolved.root] })
-        ?? resolve(resolved.root, file),
-    ),
+    resolvePath(file, resolved.root),
   )
   resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
-    normalize(
-      resolveModule(file, { paths: [resolved.root] })
-        ?? resolve(resolved.root, file),
-    ),
+    resolvePath(file, resolved.root),
   )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
@@ -340,10 +346,7 @@ export function resolveConfig(
   ]
 
   if (resolved.diff) {
-    resolved.diff = normalize(
-      resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff),
-    )
+    resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 

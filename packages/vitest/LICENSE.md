@@ -369,6 +369,13 @@ Repository: sindresorhus/cli-truncate
 
 ---------------------------------------
 
+## eastasianwidth
+License: MIT
+By: Masaki Komagata
+Repository: git://github.com/komagata/eastasianwidth.git
+
+---------------------------------------
+
 ## emoji-regex
 License: MIT
 By: Mathias Bynens
