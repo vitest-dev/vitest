@@ -30,6 +30,7 @@ cli
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--workspace <path>', 'Path to a workspace configuration file')
+  .option('--isolate', 'Run every test file in isolation. To disable isolation, use --no-isolate (default: true)')
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser API with happy-dom')
   .option('--browser [options]', 'Run tests in the browser (default: false)')

@@ -51,6 +51,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         )
         testConfig.api = resolveApiServerConfig(testConfig)
 
+        testConfig.poolOptions ??= {}
+        testConfig.poolOptions.threads ??= {}
+        testConfig.poolOptions.forks ??= {}
+        // prefer --poolOptions.{name}.isolate CLI arguments over --isolate, but still respect config value
+        testConfig.poolOptions.threads.isolate = options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions.threads.isolate ?? viteConfig.test?.isolate
+        testConfig.poolOptions.forks.isolate = options.poolOptions?.forks?.isolate ?? options.isolate ?? testConfig.poolOptions.forks.isolate ?? viteConfig.test?.isolate
+
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
@@ -90,6 +97,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
             },
+          },
+          test: {
+            poolOptions: testConfig.poolOptions,
           },
         }
 
