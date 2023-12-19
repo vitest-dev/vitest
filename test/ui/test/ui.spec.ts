@@ -59,7 +59,7 @@ test.describe('ui', () => {
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (1)').click()
+    await page.getByText('PASS (3)').click()
     await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
