@@ -33,7 +33,11 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
         ? false
         : workspacePath
 
-  const root = options.root || (typeof workspacePath === 'number' ? undefined : dirname(workspacePath))
+  const root = options.root || (
+    typeof workspacePath === 'number'
+      ? undefined
+      : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
+  )
 
   const config: ViteInlineConfig = {
     ...options,
@@ -41,7 +45,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
     logLevel: 'error',
     configFile,
     // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.mode || ctx.config.mode,
+    mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [
       ...options.plugins || [],
       WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
@@ -360,8 +364,7 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
-        () => this._provided = ({} as any),
-      ].filter(Boolean))
+      ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
   }

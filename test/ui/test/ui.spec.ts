@@ -8,7 +8,7 @@ test.describe('ui', () => {
   let vitest: Vitest | undefined
 
   test.beforeAll(async () => {
-    vitest = await startVitest('test', [], { watch: true, ui: true, open: false, api: { port } })
+    vitest = await startVitest('test', [], { watch: true, ui: true, open: false, api: { port }, coverage: { enabled: true } })
     expect(vitest).toBeDefined()
   })
 
@@ -23,7 +23,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('1 Pass 0 Fail 1 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
 
     // report
     await page.getByText('sample.test.ts').click()
@@ -39,6 +39,19 @@ test.describe('ui', () => {
     await expect(page.getByTestId('console')).toContainText('log test')
 
     expect(pageErrors).toEqual([])
+  })
+
+  test('coverage', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByLabel('Show coverage').click()
+    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+  })
+
+  test('console', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByText('fixtures/console.test.ts').click()
+    await page.getByTestId('btn-console').click()
+    await page.getByText('/(?<char>\\w)/').click()
   })
 
   test('file-filter', async ({ page }) => {
