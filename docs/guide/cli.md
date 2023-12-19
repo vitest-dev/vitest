@@ -73,6 +73,9 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--poolOptions <options>` | Specify pool options |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
 | `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
+| `--fileParallelism` | Should all test files run in parallel. Use --no-parallelism to disable (default: true) |
+| `--maxWorkers` | Maximum number of workers to run tests in |
+| `--minWorkers` | Minimum number of workers to run tests in |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |

@@ -295,6 +295,23 @@ export interface InlineConfig {
   poolOptions?: PoolOptions
 
   /**
+   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   */
+  maxWorkers?: number
+  /**
+   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+   */
+  minWorkers?: number
+
+  /**
+   * Should all test files run in parallel. Doesn't affect tests running in the same file.
+   * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+   *
+   * @default true
+   */
+  fileParallelism?: boolean
+
+  /**
    * Automatically assign pool based on globs. The first match will be used.
    *
    * Format: [glob, pool-name]
