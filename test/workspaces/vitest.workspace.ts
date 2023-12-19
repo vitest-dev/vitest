@@ -4,7 +4,7 @@ import remapping from '@ampproject/remapping'
 import type { Plugin } from 'vite'
 
 export default defineWorkspace([
-  './space_2/*',
+  'space_2',
   './space_*/*.config.ts',
   {
     test: {

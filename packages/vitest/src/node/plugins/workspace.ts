@@ -1,4 +1,4 @@
-import { dirname, relative } from 'pathe'
+import { basename, dirname, relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -36,7 +36,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         let name = testConfig.name
         if (!name) {
           if (typeof options.workspacePath === 'string')
-            name = dirname(options.workspacePath).split('/').pop()
+            name = basename(options.workspacePath.endsWith('/') ? options.workspacePath.slice(0, -1) : dirname(options.workspacePath))
           else
             name = options.workspacePath.toString()
         }

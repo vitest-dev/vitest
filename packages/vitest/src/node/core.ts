@@ -256,7 +256,7 @@ export class Vitest {
 
     const workspacesByFolder = resolvedWorkspacesPaths
       .reduce((configByFolder, filepath) => {
-        const dir = dirname(filepath)
+        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
         configByFolder[dir] ??= []
         configByFolder[dir].push(filepath)
         return configByFolder
