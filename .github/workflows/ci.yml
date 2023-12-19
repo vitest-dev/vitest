@@ -109,6 +109,35 @@ jobs:
       - name: Test UI
         run: pnpm run ui:test
 
+  test-ui-e2e:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
+
+      - name: Install
+        run: pnpm i
+
+      - name: Install Playwright Dependencies
+        run: pnpx playwright install chromium
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm -C test/ui test-e2e
+
   test-browser:
     runs-on: ubuntu-latest
     strategy:

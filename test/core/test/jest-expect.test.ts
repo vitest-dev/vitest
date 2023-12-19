@@ -903,4 +903,96 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
 })
 
+it('toHaveProperty error diff', () => {
+  setupColors(getDefaultColors())
+
+  // make it easy for dev who trims trailing whitespace on IDE
+  function trim(s: string): string {
+    return s.replaceAll(/ *$/gm, '')
+  }
+
+  function getError(f: () => unknown) {
+    try {
+      f()
+      return expect.unreachable()
+    }
+    catch (error) {
+      const processed = processError(error)
+      return [processed.message, trim(processed.diff)]
+    }
+  }
+
+  // non match value
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { name: 'foo' } to have property "name" with value 'bar'",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
+    ]
+  `)
+
+  // non match key
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { noName: 'foo' } to have property "name" with value 'bar'",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
+    ]
+  `)
+
+  // non match value (with asymmetric matcher)
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+    [
+      "expected { name: 'foo' } to have property "name" with value Any{ …(3) }",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    "foo"",
+    ]
+  `)
+
+  // non match key (with asymmetric matcher)
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+    [
+      "expected { noName: 'foo' } to have property "name" with value Any{ …(3) }",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    undefined",
+    ]
+  `)
+
+  // non match value (deep key)
+  expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { parent: { name: 'foo' } } to have property "parent.name" with value 'bar'",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
+    ]
+  `)
+
+  // non match key (deep key)
+  expect(getError(() => expect({ parent: { noName: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { parent: { noName: 'foo' } } to have property "parent.name" with value 'bar'",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
+    ]
+  `)
+})
+
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

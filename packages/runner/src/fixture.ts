@@ -105,9 +105,11 @@ async function resolveFixtureFunction(
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
+  let isUseFnArgResolved = false
 
   const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
     // extract `use` argument
+    isUseFnArgResolved = true
     useFnArgPromise.resolve(useFnArg)
 
     // suspend fixture teardown by holding off `useReturnPromise` resolution until cleanup
@@ -119,7 +121,15 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
-  }).catch(useFnArgPromise.reject) // treat fixture function error (until `use` call) as test failure
+  }).catch((e: unknown) => {
+    // treat fixture setup error as test failure
+    if (!isUseFnArgResolved) {
+      useFnArgPromise.reject(e)
+      return
+    }
+    // otherwise re-throw to avoid silencing error during cleanup
+    throw e
+  })
 
   return useFnArgPromise
 }
