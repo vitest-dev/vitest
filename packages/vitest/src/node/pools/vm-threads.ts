@@ -123,6 +123,9 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     }
 
     return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
+
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
         if (configs.has(project))
