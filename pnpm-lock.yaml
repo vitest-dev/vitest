@@ -1540,8 +1540,8 @@ importers:
   test/cli:
     devDependencies:
       vite:
-        specifier: ^4.5.0
-        version: 4.5.0(@types/node@18.16.19)(less@4.1.3)
+        specifier: ^5.0.0
+        version: 5.0.2(@types/node@18.18.9)(less@4.1.3)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
