@@ -122,7 +122,7 @@ cli
       return info
     }
 
-    if (subcommands.length === 1 && subcommands[0] === '--verbose')
+    if (subcommands.length === 1 && subcommands[0] === '--expand-help')
       return info
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
@@ -141,9 +141,9 @@ cli
     for (let i = 0; i < subcommands.length; i++) {
       const subcommand = subcommands[i]
 
-      // --help --verbose can't be called with multiple subcommands and is handled above
-      if (subcommand === '--verbose') {
-        addBannerWarning('--verbose subcommand ignored because, when used with --help, it must be the only subcommand')
+      // --help --expand-help can't be called with multiple subcommands and is handled above
+      if (subcommand === '--expand-help') {
+        addBannerWarning('--expand-help subcommand ignored because, when used with --help, it must be the only subcommand')
         continue
       }
 
