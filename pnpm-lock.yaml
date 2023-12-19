@@ -1537,6 +1537,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/cli:
+    devDependencies:
+      vite:
+        specifier: ^5.0.0
+        version: 5.0.2(@types/node@18.18.9)(less@4.1.3)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/config:
     devDependencies:
       vite:

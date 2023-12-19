@@ -752,9 +752,14 @@ export interface UserConfig extends InlineConfig {
    * Name of the project or projects to run.
    */
   project?: string | string[]
+
+  /**
+   * Additional exclude patterns
+   */
+  cliExclude?: string[]
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
   mode: VitestRunMode
 
   base?: string
@@ -776,6 +781,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  cliExclude?: string[]
 
   benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {

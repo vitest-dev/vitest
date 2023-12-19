@@ -192,6 +192,9 @@ export function resolveConfig(
       resolved.server.deps![option] = resolved.deps[option] as any
   })
 
+  if (resolved.cliExclude)
+    resolved.exclude.push(...resolved.cliExclude)
+
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
