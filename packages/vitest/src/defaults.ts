@@ -62,6 +62,7 @@ export const fakeTimersDefaults = {
 
 const config = {
   allowOnly: !isCI,
+  isolate: true,
   watch: !isCI,
   globals: false,
   environment: 'node' as const,

@@ -81,6 +81,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
+| `--isolate` | Run every test file in isolation. To disable isolation, use --no-isolate (default: `true`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--workspace <path>` | Path to a workspace configuration file |
 | `--globals` | Inject APIs globally |
