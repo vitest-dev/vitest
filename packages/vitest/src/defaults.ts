@@ -101,6 +101,6 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-}
+} satisfies UserConfig
 
-export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
+export const configDefaults = Object.freeze(config)
