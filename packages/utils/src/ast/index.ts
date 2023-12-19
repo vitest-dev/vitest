@@ -19,10 +19,26 @@ export type Positioned<T> = T & {
 
 export type Node = Positioned<_Node>
 
+interface IdentifierInfo {
+  /**
+   * If the identifier is used in a property shorthand
+   * { foo } -> { foo: __import_x__.foo }
+   */
+  hasBindingShortcut: boolean
+  /**
+   * The identifier is used in a class declaration
+   */
+  classDeclaration: boolean
+  /**
+   * The identifier is a name for a class expression
+   */
+  classExpression: boolean
+}
+
 interface Visitors {
   onIdentifier?: (
     node: Positioned<Identifier>,
-    parent: Node,
+    info: IdentifierInfo,
     parentStack: Node[],
   ) => void
   onImportMeta?: (node: Node) => void
@@ -207,8 +223,23 @@ export function esmWalker(
   // emit the identifier events in BFS so the hoisted declarations
   // can be captured correctly
   identifiers.forEach(([node, stack]) => {
-    if (!isInScope(node.name, stack))
-      onIdentifier?.(node, stack[0], stack)
+    if (!isInScope(node.name, stack)) {
+      const parent = stack[0]
+      const grandparent = stack[1]
+      const hasBindingShortcut = isStaticProperty(parent) && parent.shorthand
+      && (!isNodeInPattern(parent) || isInDestructuringAssignment(parent, parentStack))
+
+      const classDeclaration = (parent.type === 'PropertyDefinition'
+      && grandparent?.type === 'ClassBody') || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+
+      const classExpression = parent.type === 'ClassExpression' && node === parent.id
+
+      onIdentifier?.(node, {
+        hasBindingShortcut,
+        classDeclaration,
+        classExpression,
+      }, stack)
+    }
   })
 }
 

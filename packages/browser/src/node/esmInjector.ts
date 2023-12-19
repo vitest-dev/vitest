@@ -208,26 +208,16 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
 
   // 3. convert references to import bindings & import.meta references
   esmWalker(ast, {
-    onIdentifier(id, parent, parentStack) {
-      const grandparent = parentStack[1]
+    onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
       if (!binding)
         return
 
-      if (isStaticProperty(parent) && parent.shorthand) {
-        // let binding used in a property shorthand
-        // { foo } -> { foo: __import_x__.foo }
-        // skip for destructuring patterns
-        if (
-          !isNodeInPattern(parent)
-            || isInDestructuringAssignment(parent, parentStack)
-        )
-          s.appendLeft(id.end, `: ${binding}`)
+      if (info.hasBindingShortcut) {
+        s.appendLeft(id.end, `: ${binding}`)
       }
       else if (
-        (parent.type === 'PropertyDefinition'
-            && grandparent?.type === 'ClassBody')
-          || (parent.type === 'ClassDeclaration' && id === parent.superClass)
+        info.classDeclaration
       ) {
         if (!declaredConst.has(id.name)) {
           declaredConst.add(id.name)
@@ -238,7 +228,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       }
       else if (
         // don't transform class name identifier
-        !(parent.type === 'ClassExpression' && id === parent.id)
+        !info.classExpression
       ) {
         s.update(id.start, id.end, binding)
       }
