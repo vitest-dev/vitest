@@ -2,7 +2,7 @@ import MagicString from 'magic-string'
 import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
-import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from '@vitest/utils/ast'
+import { esmWalker } from '@vitest/utils/ast'
 
 export type Positioned<T> = T & {
   start: number

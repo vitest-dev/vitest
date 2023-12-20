@@ -1,7 +1,7 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
 import type { PluginContext } from 'rollup'
-import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from '@vitest/utils/ast'
+import { esmWalker } from '@vitest/utils/ast'
 import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/utils/ast'
 
 const viInjectedKey = '__vi_inject__'
