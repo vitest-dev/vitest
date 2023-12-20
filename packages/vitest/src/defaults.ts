@@ -101,6 +101,7 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
+  spyConsoleLog: true,
 } satisfies UserConfig
 
 export const configDefaults = Object.freeze(config)
