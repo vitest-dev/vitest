@@ -22,7 +22,7 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface MockContext<TArgs, TReturns> {
+export interface MockContext<T extends Procedure> {
   /**
    * This is an array containing all arguments for each call. One item of the array is the arguments of that call.
    *
@@ -37,11 +37,11 @@ export interface MockContext<TArgs, TReturns> {
    *   ['arg3'], // second call
    * ]
    */
-  calls: TArgs[]
+  calls: Parameters<T>[]
   /**
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
    */
-  instances: TReturns[]
+  instances: ReturnType<T>[]
   /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
@@ -85,14 +85,15 @@ export interface MockContext<TArgs, TReturns> {
    *   },
    * ]
    */
-  results: MockResult<TReturns>[]
+  results: MockResult<ReturnType<T>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
-  lastCall: TArgs | undefined
+  lastCall: Parameters<T> | undefined
 }
 
 type Procedure = (...args: any[]) => any
+type UnknownProcedure = (...args: unknown[]) => unknown
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -107,9 +108,9 @@ type Classes<T> = {
 /**
  * @deprecated Use MockInstance<A, R> instead
  */
-export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> extends MockInstance<TArgs, TReturns> {}
+export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> extends MockInstance<(...args: TArgs) => TReturns> {}
 
-export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
+export interface MockInstance<T extends Procedure = UnknownProcedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
@@ -121,7 +122,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
-  mock: MockContext<TArgs, TReturns>
+  mock: MockContext<T>
   /**
    * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
    *
@@ -147,14 +148,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
+  getMockImplementation(): (T) | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  mockImplementation(fn: T | (() => Promise<ReturnType<T>>)): this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -162,7 +163,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  mockImplementationOnce(fn: T | (() => Promise<ReturnType<T>>)): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -174,7 +175,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T>(fn: ((...args: TArgs) => TReturns), cb: () => T): T extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: T, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
   /**
    * Use this if you need to return `this` context from the method without invoking actual implementation.
    */
@@ -182,7 +183,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Accepts a value that will be returned whenever the mock function is called.
    */
-  mockReturnValue(obj: TReturns): this
+  mockReturnValue(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
@@ -197,14 +198,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(obj: TReturns): this
+  mockReturnValueOnce(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be resolved when async function is called.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(obj: Awaited<TReturns>): this
+  mockResolvedValue(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
    * @example
@@ -217,7 +218,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(obj: Awaited<TReturns>): this
+  mockResolvedValueOnce(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
@@ -239,28 +240,31 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   mockRejectedValueOnce(obj: any): this
 }
 
-export interface Mock<TArgs extends any[] = any, TReturns = any> extends MockInstance<TArgs, TReturns> {
-  new (...args: TArgs): TReturns
-  (...args: TArgs): TReturns
+export interface Mock<T extends Procedure = UnknownProcedure> extends MockInstance<T> {
+  new (...args: Parameters<T>): ReturnType<T>
+  (...args: Parameters<T>): ReturnType<T>
 }
-export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends MockInstance<TArgs, TReturns extends Promise<Awaited<TReturns>> ? Promise<Partial<Awaited<TReturns>>> : Partial<TReturns>> {
-  new (...args: TArgs): TReturns
-  (...args: TArgs): TReturns
+
+type PartialMaybePromise<T> = T extends Promise<Awaited<T>> ? Promise<Partial<Awaited<T>>> : Partial<T>
+
+export interface PartialMock<T extends Procedure = UnknownProcedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
+  new (...args: Parameters<T>): ReturnType<T>
+  (...args: Parameters<T>): ReturnType<T>
 }
 
 export type MaybeMockedConstructor<T> = T extends new (
   ...args: Array<any>
 ) => infer R
-  ? Mock<ConstructorParameters<T>, R>
+  ? Mock<(...args: ConstructorParameters<T>) => R>
   : T
-export type MockedFunction<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & {
+export type MockedFunction<T extends Procedure> = Mock<T> & {
   [K in keyof T]: T[K];
 }
-export type PartiallyMockedFunction<T extends Procedure> = PartialMock<Parameters<T>, ReturnType<T>> & {
+export type PartiallyMockedFunction<T extends Procedure> = PartialMock<T> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = Mock<T> & MockedObjectDeep<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
@@ -300,23 +304,20 @@ interface Constructable {
   new (...args: any[]): any
 }
 
-export type MockedClass<T extends Constructable> = MockInstance<
-    T extends new (...args: infer P) => any ? P : never,
-    InstanceType<T>
-> & {
+export type MockedClass<T extends Constructable> = MockInstance<(...args: ConstructorParameters<T>) => InstanceType<T>> & {
   prototype: T extends { prototype: any } ? Mocked<T['prototype']> : never
 } & T
 
 export type Mocked<T> = {
-  [P in keyof T]: T[P] extends (...args: infer Args) => infer Returns
-    ? MockInstance<Args, Returns>
+  [P in keyof T]: T[P] extends Procedure
+    ? MockInstance<T[P]>
     : T[P] extends Constructable
       ? MockedClass<T[P]>
       : T[P]
 } &
 T
 
-export const mocks = new Set<MockInstance>()
+export const mocks = new Set<MockInstance<Procedure>>()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return typeof fn === 'function'
@@ -328,16 +329,16 @@ export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
   accessType: 'get',
-): MockInstance<[], T[S]>
+): MockInstance<() => T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
   accessType: 'set',
-): MockInstance<[T[G]], void>
+): MockInstance<(arg: T[G]) => void>
 export function spyOn<T, M extends (Classes<Required<T>> | Methods<Required<T>>)>(
   obj: T,
   methodName: M,
-): Required<T>[M] extends ({ new (...args: infer A): infer R }) | ((...args: infer A) => infer R) ? MockInstance<A, R> : never
+): Required<T>[M] extends ({ new (...args: infer A): infer R }) | ((...args: infer A) => infer R) ? MockInstance<(...args: A) => R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
@@ -356,12 +357,15 @@ export function spyOn<T, K extends keyof T>(
 
 let callOrder = 0
 
-function enhanceSpy<TArgs extends any[], TReturns>(
-  spy: SpyInternalImpl<TArgs, TReturns>,
-): MockInstance<TArgs, TReturns> {
-  const stub = spy as unknown as MockInstance<TArgs, TReturns>
+function enhanceSpy<T extends Procedure>(
+  spy: SpyInternalImpl<Parameters<T>, ReturnType<T>>,
+): MockInstance<T> {
+  type TArgs = Parameters<T>
+  type TReturns = ReturnType<T>
 
-  let implementation: ((...args: TArgs) => TReturns) | undefined
+  const stub = spy as unknown as MockInstance<T>
+
+  let implementation: T | undefined
 
   let instances: any[] = []
   let invocations: number[] = []
@@ -416,7 +420,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockReset = () => {
     stub.mockClear()
-    implementation = () => undefined as unknown as TReturns
+    implementation = (() => undefined) as T
     onceImplementations = []
     return stub
   }
@@ -429,20 +433,20 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   }
 
   stub.getMockImplementation = () => implementation
-  stub.mockImplementation = (fn: (...args: TArgs) => TReturns) => {
+  stub.mockImplementation = (fn: T) => {
     implementation = fn
     state.willCall(mockCall)
     return stub
   }
 
-  stub.mockImplementationOnce = (fn: (...args: TArgs) => TReturns) => {
+  stub.mockImplementationOnce = (fn: T) => {
     onceImplementations.push(fn)
     return stub
   }
 
-  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void): MockInstance<TArgs, TReturns>
-  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => Promise<void>): Promise<MockInstance<TArgs, TReturns>>
-  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void | Promise<void>): MockInstance<TArgs, TReturns> | Promise<MockInstance<TArgs, TReturns>> {
+  function withImplementation(fn: T, cb: () => void): MockInstance<T>
+  function withImplementation(fn: T, cb: () => Promise<void>): Promise<MockInstance<T>>
+  function withImplementation(fn: T, cb: () => void | Promise<void>): MockInstance<T> | Promise<MockInstance<T>> {
     const originalImplementation = implementation
 
     implementation = fn
@@ -501,16 +505,16 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   return stub as any
 }
 
-export function fn<TArgs extends any[] = any, R = any>(): Mock<TArgs, R>
-export function fn<TArgs extends any[] = any[], R = any>(
-  implementation: (...args: TArgs) => R
-): Mock<TArgs, R>
-export function fn<TArgs extends any[] = any[], R = any>(
-  implementation?: (...args: TArgs) => R,
-): Mock<TArgs, R> {
+export function fn<T extends Procedure = UnknownProcedure>(): Mock<T>
+export function fn<T extends Procedure = UnknownProcedure>(
+  implementation: T
+): Mock<T>
+export function fn<T extends Procedure = UnknownProcedure>(
+  implementation?: T,
+): Mock<T> {
   const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
   if (implementation)
     enhancedSpy.mockImplementation(implementation)
 
-  return enhancedSpy as Mock
+  return enhancedSpy as Mock<T>
 }
