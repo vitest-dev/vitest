@@ -3,18 +3,13 @@ import { getNames } from '@vitest/ws-client'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
+import { escapeHtml } from "~/utils/escape"
 
 const formattedLogs = computed(() => {
   const data = logs.value
   if (data) {
     const filter = createAnsiToHtmlFilter(isDark.value)
-    return data.map(({ taskId, type, time, content }) => {
-      const trimmed = content.trim()
-      const value = filter.toHtml(trimmed)
-      return value !== trimmed
-        ? { taskId, type, time, html: true, content: value }
-        : { taskId, type, time, html: false, content }
-    })
+    return data.map(({ taskId, type, time, content }) => ({ taskId, type, time, content: filter.toHtml(escapeHtml(content)) }))
   }
 })
 
@@ -26,13 +21,12 @@ function getTaskName(id?: string) {
 
 <template>
   <div v-if="formattedLogs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
-    <div v-for="{ taskId, type, time, html, content } of formattedLogs" :key="taskId" font-mono>
+    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" font-mono>
       <ViewConsoleOutputEntry
         :task-name="getTaskName(taskId)"
         :type="type"
         :time="time"
         :content="content"
-        :html="html"
       />
     </div>
   </div>

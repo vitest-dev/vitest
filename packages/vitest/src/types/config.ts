@@ -281,6 +281,15 @@ export interface InlineConfig {
   environmentMatchGlobs?: [string, VitestEnvironment][]
 
   /**
+   * Run tests in an isolated environment. This option has no effect on vmThreads pool.
+   *
+   * Disabling this option might improve performance if your code doesn't rely on side effects.
+   *
+   * @default true
+   */
+  isolate?: boolean
+
+  /**
    * Pool used to run tests in.
    *
    * Supports 'threads', 'forks', 'vmThreads'
@@ -293,6 +302,23 @@ export interface InlineConfig {
    * Pool options
    */
   poolOptions?: PoolOptions
+
+  /**
+   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   */
+  maxWorkers?: number
+  /**
+   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+   */
+  minWorkers?: number
+
+  /**
+   * Should all test files run in parallel. Doesn't affect tests running in the same file.
+   * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+   *
+   * @default true
+   */
+  fileParallelism?: boolean
 
   /**
    * Automatically assign pool based on globs. The first match will be used.
@@ -308,6 +334,11 @@ export interface InlineConfig {
    * ]
    */
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
+
+  /**
+   * Path to a workspace configuration file
+   */
+  workspace?: string
 
   /**
    * Update snapshot
@@ -721,9 +752,14 @@ export interface UserConfig extends InlineConfig {
    * Name of the project or projects to run.
    */
   project?: string | string[]
+
+  /**
+   * Additional exclude patterns
+   */
+  cliExclude?: string[]
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
   mode: VitestRunMode
 
   base?: string
@@ -745,6 +781,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  cliExclude?: string[]
 
   benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {

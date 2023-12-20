@@ -73,13 +73,17 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--poolOptions <options>` | Specify pool options |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
 | `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
+| `--fileParallelism` | Should all test files run in parallel. Use --no-parallelism to disable (default: true) |
+| `--maxWorkers` | Maximum number of workers to run tests in |
+| `--minWorkers` | Minimum number of workers to run tests in |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
-| `--mode` | Override Vite mode (default: `test`) |
+| `--isolate` | Run every test file in isolation. To disable isolation, use --no-isolate (default: `true`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
+| `--workspace <path>` | Path to a workspace configuration file |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser API with happy-dom |
 | `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
@@ -96,6 +100,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
+| `--exclude <glob>` | Additional file globs to be excluded from test |
 | `--expand-snapshot-diff` | Show full diff when snapshot fails |
 | `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |

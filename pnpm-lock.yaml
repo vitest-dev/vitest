@@ -54,8 +54,8 @@ importers:
         specifier: workspace:*
         version: link:packages/ui
       bumpp:
-        specifier: ^9.2.0
-        version: 9.2.0
+        specifier: ^9.2.1
+        version: 9.2.1
       esbuild:
         specifier: ^0.19.5
         version: 0.19.5
@@ -118,11 +118,11 @@ importers:
         version: 3.3.8(typescript@5.2.2)
     devDependencies:
       '@iconify-json/carbon':
-        specifier: ^1.1.25
-        version: 1.1.26
+        specifier: ^1.1.27
+        version: 1.1.27
       '@iconify-json/logos':
-        specifier: ^1.1.40
-        version: 1.1.40
+        specifier: ^1.1.41
+        version: 1.1.41
       '@unocss/reset':
         specifier: ^0.57.4
         version: 0.57.4
@@ -1127,8 +1127,8 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@iconify-json/logos':
-        specifier: ^1.1.40
-        version: 1.1.40
+        specifier: ^1.1.41
+        version: 1.1.41
       '@testing-library/cypress':
         specifier: ^10.0.1
         version: 10.0.1(cypress@13.6.0)
@@ -1428,8 +1428,8 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       '@types/ungap__structured-clone':
-        specifier: ^0.3.2
-        version: 0.3.2
+        specifier: ^0.3.3
+        version: 0.3.3
       '@ungap/structured-clone':
         specifier: ^1.2.0
         version: 1.2.0
@@ -1536,6 +1536,15 @@ importers:
       temp-dir:
         specifier: ^2.0.0
         version: 2.0.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/cli:
+    devDependencies:
+      vite:
+        specifier: ^5.0.0
+        version: 5.0.2(@types/node@18.18.9)(less@4.1.3)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1909,12 +1918,15 @@ importers:
 
   test/ui:
     devDependencies:
-      execa:
-        specifier: ^6.1.0
-        version: 6.1.0
-      playwright-chromium:
+      '@playwright/test':
         specifier: ^1.39.0
         version: 1.39.0
+      '@testing-library/dom':
+        specifier: ^9.3.3
+        version: 9.3.3
+      happy-dom:
+        specifier: latest
+        version: 12.10.3
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -5514,14 +5526,14 @@ packages:
     resolution: {integrity: sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==}
     dev: true
 
-  /@iconify-json/carbon@1.1.26:
-    resolution: {integrity: sha512-0y6JstqPCsjEiUuyTTdHE7Wd9gGlxzH2dEfvKUJe5E741qRgLlIipVdBoCkOtbyAT92WEcU8BNfDaC585OCC8w==}
+  /@iconify-json/carbon@1.1.27:
+    resolution: {integrity: sha512-tJVXv9+D9cjU5HcaY+8J0awv9AL/Mjo9MWR/fxHfHFPP/iokjPBEgq4jOBDGNe8W0k/BTrVI3zpgZjLoi6RNGg==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
 
-  /@iconify-json/logos@1.1.40:
-    resolution: {integrity: sha512-F8XapUfZHp9Q53aFvhwFrwmM1NIXOtDV9G0WxIONSu3diiieObmiJQy5oNxla4LgPccyYYHyJQCo0Diys3sIUA==}
+  /@iconify-json/logos@1.1.41:
+    resolution: {integrity: sha512-nq69aemSNSxsPh6hDx6QHQBZca6vQzTg6fUXdo996IQe41TNueyJrQXjdhaZr0jaqGEforuSPGLB16SMSZ+T2A==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
@@ -8389,8 +8401,8 @@ packages:
     dependencies:
       '@storybook/client-logger': 6.5.10
       '@storybook/instrumenter': 6.5.10(react-dom@17.0.2)(react@17.0.2)
-      '@testing-library/dom': 8.17.1
-      '@testing-library/user-event': 13.5.0(@testing-library/dom@8.17.1)
+      '@testing-library/dom': 8.19.0
+      '@testing-library/user-event': 13.5.0(@testing-library/dom@8.19.0)
       ts-dedent: 2.2.0
     transitivePeerDependencies:
       - react
@@ -8643,20 +8655,6 @@ packages:
       cypress: 13.6.0
     dev: true
 
-  /@testing-library/dom@8.17.1:
-    resolution: {integrity: sha512-KnH2MnJUzmFNPW6RIKfd+zf2Wue8mEKX0M3cpX6aKl5ZXrJM1/c/Pc8c2xDNYQCnJO48Sm5ITbMXgqTr3h4jxQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      '@babel/code-frame': 7.22.13
-      '@babel/runtime': 7.23.2
-      '@types/aria-query': 4.2.2
-      aria-query: 5.3.0
-      chalk: 4.1.2
-      dom-accessibility-api: 0.5.16
-      lz-string: 1.4.4
-      pretty-format: 27.5.1
-    dev: true
-
   /@testing-library/dom@8.19.0:
     resolution: {integrity: sha512-6YWYPPpxG3e/xOo6HIWwB/58HukkwIVTOaZ0VwdMVjhRUX/01E4FtQbck9GazOOj7MXHc5RBzMrU86iBJHbI+A==}
     engines: {node: '>=12'}
@@ -8667,21 +8665,7 @@ packages:
       aria-query: 5.3.0
       chalk: 4.1.2
       dom-accessibility-api: 0.5.16
-      lz-string: 1.5.0
-      pretty-format: 27.5.1
-    dev: true
-
-  /@testing-library/dom@9.3.1:
-    resolution: {integrity: sha512-0DGPd9AR3+iDTjGoMpxIkAsUihHZ3Ai6CneU6bRRrffXMgzCdlNk43jTrD2/5LT6CBb3MWTP8v510JzYtahD2w==}
-    engines: {node: '>=14'}
-    dependencies:
-      '@babel/code-frame': 7.22.13
-      '@babel/runtime': 7.23.2
-      '@types/aria-query': 5.0.1
-      aria-query: 5.1.3
-      chalk: 4.1.2
-      dom-accessibility-api: 0.5.16
-      lz-string: 1.5.0
+      lz-string: 1.4.4
       pretty-format: 27.5.1
     dev: true
 
@@ -8761,7 +8745,7 @@ packages:
       react-dom: <18.0.0
     dependencies:
       '@babel/runtime': 7.18.9
-      '@testing-library/dom': 8.17.1
+      '@testing-library/dom': 8.19.0
       '@types/react-dom': 17.0.17
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -8775,7 +8759,7 @@ packages:
       react-dom: ^18.0.0
     dependencies:
       '@babel/runtime': 7.18.9
-      '@testing-library/dom': 8.17.1
+      '@testing-library/dom': 8.19.0
       '@types/react-dom': 18.0.6
       react: 18.0.0
       react-dom: 18.0.0(react@18.0.0)
@@ -8789,7 +8773,7 @@ packages:
       react-dom: ^18.0.0
     dependencies:
       '@babel/runtime': 7.18.9
-      '@testing-library/dom': 8.17.1
+      '@testing-library/dom': 8.19.0
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -8803,7 +8787,7 @@ packages:
       react-dom: ^18.0.0
     dependencies:
       '@babel/runtime': 7.18.9
-      '@testing-library/dom': 8.17.1
+      '@testing-library/dom': 8.19.0
       '@types/react-dom': 18.0.8
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -8829,18 +8813,18 @@ packages:
     peerDependencies:
       svelte: ^3 || ^4
     dependencies:
-      '@testing-library/dom': 9.3.1
+      '@testing-library/dom': 9.3.3
       svelte: 4.1.1
     dev: true
 
-  /@testing-library/user-event@13.5.0(@testing-library/dom@8.17.1):
+  /@testing-library/user-event@13.5.0(@testing-library/dom@8.19.0):
     resolution: {integrity: sha512-5Kwtbo3Y/NowpkbRuSepbyMFkZmHgD+vPzYB/RJ4oxt5Gj/avFFBYjhw27cqSVPVw/3a67NK1PbiIr9k4Gwmdg==}
     engines: {node: '>=10', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@babel/runtime': 7.23.2
-      '@testing-library/dom': 8.17.1
+      '@testing-library/dom': 8.19.0
     dev: true
 
   /@testing-library/user-event@14.4.3(@testing-library/dom@9.3.3):
@@ -8877,10 +8861,6 @@ packages:
 
   /@types/aria-query@4.2.2:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
-    dev: true
-
-  /@types/aria-query@5.0.1:
-    resolution: {integrity: sha512-XTIieEY+gvJ39ChLcB4If5zHtPxt3Syj5rgZR+e1ctpmK8NjPf0zFqsz4JpLJT0xla9GFDKjy8Cpu331nrmE1Q==}
     dev: true
 
   /@types/aria-query@5.0.3:
@@ -9503,8 +9483,8 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /@types/ungap__structured-clone@0.3.2:
-    resolution: {integrity: sha512-a7oBPz4/IurTfw0/+R4F315npapBXlSimrQlmDfr0lo1Pv0BeHNADgbHXdDP8LCjnCiRne4jRSr/5UnQitX2og==}
+  /@types/ungap__structured-clone@0.3.3:
+    resolution: {integrity: sha512-RNmhIPwoip6K/zZOv3ypksTAqaqLEXvlNSXKyrC93xMSOAHZCR7PifW6xKZCwkbbnbM9dwB9X56PPoNTlNwEqw==}
     dev: true
 
   /@types/unist@2.0.6:
@@ -12260,8 +12240,8 @@ packages:
       semver: 7.5.4
     dev: true
 
-  /bumpp@9.2.0:
-    resolution: {integrity: sha512-pgp7y3jp33QTaXFVDrE0IKuZF5Y8EsIz+ywZXFALW2nD+ZD+4crxJe/GypBQBoJuZrr5dc6TGrR3wl7fk3+C6w==}
+  /bumpp@9.2.1:
+    resolution: {integrity: sha512-mq6/e8+bnIsOMy1VceTLC49WucMIZqd2nYn0e7Et5LhTO3yYQ8OWJsTl/B+uJDs5eywZmJ4Yt1WTEd2HCI35pw==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
@@ -12373,7 +12353,7 @@ packages:
       promise-inflight: 1.0.1(bluebird@3.7.2)
       rimraf: 3.0.2
       ssri: 8.0.1
-      tar: 6.1.13
+      tar: 6.2.0
       unique-filename: 1.1.1
     transitivePeerDependencies:
       - bluebird
@@ -20054,11 +20034,6 @@ packages:
       yallist: 4.0.0
     dev: true
 
-  /minipass@4.2.5:
-    resolution: {integrity: sha512-+yQl7SX3bIT83Lhb4BVorMAHVuqsskxRdlmO9kTpyukp8vsm2Sn/fUOV9xlnG8/a5JsypJzap21lz/y3FBMJ8Q==}
-    engines: {node: '>=8'}
-    dev: true
-
   /minipass@5.0.0:
     resolution: {integrity: sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==}
     engines: {node: '>=8'}
@@ -21406,15 +21381,6 @@ packages:
       jsonc-parser: 3.2.0
       mlly: 1.4.2
       pathe: 1.1.1
-
-  /playwright-chromium@1.39.0:
-    resolution: {integrity: sha512-0WVmvn9ppPbcyb2PQherIpzsvJlyjqziCZiAiexTEYSz8k6/+/3wljmFaMRMP1lcv2xKyHDn9yWd/lHb7IzYyA==}
-    engines: {node: '>=16'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.39.0
-    dev: true
 
   /playwright-core@1.39.0:
     resolution: {integrity: sha512-+k4pdZgs1qiM+OUkSjx96YiKsXsmb59evFoqv8SKO067qBA+Z2s/dCzJij/ZhdQcs2zlTAgRKfeiiLm8PQ2qvw==}
@@ -24437,18 +24403,6 @@ packages:
       b4a: 1.6.4
       fast-fifo: 1.3.2
       streamx: 2.15.1
-    dev: true
-
-  /tar@6.1.13:
-    resolution: {integrity: sha512-jdIBIN6LTIe2jqzay/2vtYLlBHa3JF42ot3h1dW8Q0PaAG4v8rm0cvpVePtau5C6OKXGGcgO9q2AMNSWxiLqKw==}
-    engines: {node: '>=10'}
-    dependencies:
-      chownr: 2.0.0
-      fs-minipass: 2.1.0
-      minipass: 4.2.5
-      minizlib: 2.1.2
-      mkdirp: 1.0.4
-      yallist: 4.0.0
     dev: true
 
   /tar@6.2.0:
