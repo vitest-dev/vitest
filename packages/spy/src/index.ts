@@ -151,7 +151,7 @@ export interface MockInstance<T extends Procedure = UnknownProcedure> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): (T) | undefined
+  getMockImplementation(): T | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
