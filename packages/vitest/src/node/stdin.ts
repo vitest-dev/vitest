@@ -119,15 +119,63 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputFilePattern() {
     off()
-    const { filter = '' }: { filter: string } = await prompt([{
+    const allFiles = ctx.state.getFilepaths()
+    const allFilesSet = new Set(allFiles)
+    async function filterFiles(input: string) {
+      const globTestFiles = await ctx.globTestFiles([input])
+      return globTestFiles.map(spec => spec[1]).filter(v => allFilesSet.has(v))
+    }
+    let input = latestFilename
+    let init = true
+    let multiple = true
+    let cancelled = false
+    function getMessage() {
+      return `Run ${multiple ? 'all matched files' : 'single selected file'} (press 'Space' to toggle)\n`
+    }
+    const result = await prompt({
       name: 'filter',
-      type: 'text',
-      message: 'Input filename pattern',
-      initial: latestFilename,
-    }])
-    latestFilename = filter.trim()
+      type: 'autocomplete',
+      message: getMessage(),
+      choices: allFiles.map(v => ({ title: v })),
+      async suggest(this: any, input_) {
+        // use first suggest callback to customize
+        if (init) {
+          init = false
+
+          // fix initial state
+          input_ = latestFilename
+          this.input = latestFilename
+          this.cursor = latestFilename.length
+          this.fallback = ''
+
+          // monkey-patch Prompt instance for custom single/multi 'Space' toggle
+          // https://github.com/terkelg/prompts/blob/735603af7c7990ac9efcfba6146967a7dbb15f50/lib/elements/autocomplete.js#L132
+          const original = this._
+          this._ = function (this: any, str: string, key: any) {
+            if (str === ' ') {
+              multiple = !multiple
+              this.msg = getMessage()
+              this.render()
+              return
+            }
+            original.apply(this, [str, key])
+          }
+        }
+        input = input_
+        const files = await filterFiles(input)
+        return files.map(v => ({ title: v }))
+      },
+    }, {
+      onCancel(_prompt, _answers) {
+        cancelled = true
+      },
+    })
+    latestFilename = input
     on()
-    await ctx.changeFilenamePattern(filter.trim())
+    if (!cancelled) {
+      const files = multiple ? await filterFiles(input) : [result.filter]
+      await ctx.rerunFiles(files)
+    }
   }
 
   let rl: readline.Interface | undefined
