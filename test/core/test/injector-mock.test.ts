@@ -70,3 +70,20 @@ test('correctly mocks namespaced', () => {
     const __vi_import_0__ = await import('../src/add')"
   `)
 })
+
+test('correctly access import', () => {
+  expect(hoistSimpleCode(`
+  import { vi } from 'vitest'
+  import add from '../src/add'
+  add();
+  vi.mock('../src/add', () => {})
+  `)).toMatchInlineSnapshot(`
+    "const { vi } = await import('vitest')
+    vi.mock('../src/add', () => {})
+    const __vi_import_0__ = await import('../src/add')
+
+      
+      
+      __vi_import_0__.default();"
+  `)
+})
