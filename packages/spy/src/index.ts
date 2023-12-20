@@ -93,7 +93,10 @@ export interface MockContext<T extends Procedure> {
 }
 
 type Procedure = (...args: any[]) => any
-type UnknownProcedure = (...args: unknown[]) => unknown
+
+// TODO: jest uses stricter default based on `unknown`
+// type UnknownProcedure = (...args: unknown[]) => unknown
+type UnknownProcedure = (...args: any[]) => any
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
