@@ -52,14 +52,14 @@ describe('testing vi utils', () => {
 
     type FooBarFactory = () => FooBar
 
-    const mockFactory: FooBarFactory = vi.fn()
+    const mockFactory = vi.fn<FooBarFactory>()
 
     vi.mocked(mockFactory, { partial: true }).mockReturnValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
@@ -68,14 +68,14 @@ describe('testing vi utils', () => {
 
     type FooBarAsyncFactory = () => Promise<FooBar>
 
-    const mockFactoryAsync: FooBarAsyncFactory = vi.fn()
+    const mockFactoryAsync = vi.fn<FooBarAsyncFactory>()
 
     vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
