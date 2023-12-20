@@ -673,8 +673,7 @@ export interface InlineConfig {
   /**
    * Intercept global console logging during tests to print each log labelled with test file and title.
    * This is also required for console log preview on Vitest UI.
-   *
-   * Disabling this option might help when you want to debug a code with normal synchronus terminal console logging.
+   * However, disabling this option might help when you want to debug a code with normal synchronus terminal console logging.
    *
    * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
    *
