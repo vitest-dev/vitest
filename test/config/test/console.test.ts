@@ -5,7 +5,7 @@ test('default intercept', async () => {
   const { stderr } = await runVitest({
     root: './fixtures/console',
   })
-  expect(stderr).toContain('stderr | basic.test.ts > basic\n__test_console__')
+  expect(stderr).toBe('stderr | basic.test.ts > basic\n__test_console__\n\n')
 })
 
 test('raw', async () => {
@@ -13,5 +13,5 @@ test('raw', async () => {
     root: './fixtures/console',
     spyConsoleLog: false,
   })
-  expect(stderr).toContain('__test_console__')
+  expect(stderr).toBe('__test_console__\n')
 })
