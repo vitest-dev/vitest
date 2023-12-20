@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",

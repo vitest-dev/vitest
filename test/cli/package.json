@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-cli",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest --exclude fixtures/exclude/**/string.test.ts"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "vitest": "workspace:*"
+  }
+}

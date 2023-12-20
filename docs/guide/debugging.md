@@ -62,6 +62,13 @@ vitest --inspect-brk --pool threads --poolOptions.threads.singleThread
 vitest --inspect-brk --pool forks --poolOptions.forks.singleFork
 ```
 
+If you are using Vitest 1.1 or higher, you can also just provide `--no-parallelism` flag:
+
+```sh
+# If pool is unknown
+vitest --inspect-brk --no-file-parallelism
+```
+
 Once Vitest starts it will stop execution and wait for you to open developer tools that can connect to [Node.js inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
 
 In watch mode you can keep the debugger open during test re-runs by using the `--poolOptions.threads.isolate false` options.
