@@ -13,7 +13,6 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
     configurable: true,
     get: () => ({
       state: globalState.get((globalThis as any)[GLOBAL_EXPECT]),
-      customEqualityTesters: [],
       matchers,
     }),
   })
@@ -21,6 +20,8 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
     get: () => assymetricMatchers,
   })
 }
+
+const customEqualityTesters: Array<Tester> = []
 
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return (globalThis as any)[MATCHERS_OBJECT].get(expect)
@@ -37,7 +38,6 @@ export function setState<State extends MatcherState = MatcherState>(
 }
 
 export function getCustomEqualityTesters(): Array<Tester> {
-  const { customEqualityTesters } = (globalThis as any)[JEST_MATCHERS_OBJECT]
   return customEqualityTesters
 }
 
@@ -48,5 +48,5 @@ export function addCustomEqualityTesters(testers: Array<Tester>): void {
     )
   }
 
-  (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters.push(...testers)
+  customEqualityTesters.push(...testers)
 }
