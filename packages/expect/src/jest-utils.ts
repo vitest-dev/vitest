@@ -301,7 +301,7 @@ function hasIterator(object: any) {
 export function iterableEquality(
   a: any,
   b: any,
-  customTesters: Array<Tester> = [],
+  // customTesters: Array<Tester> = [],
   aStack: Array<any> = [],
   bStack: Array<any> = [],
 ): boolean | undefined {
@@ -331,7 +331,7 @@ export function iterableEquality(
   bStack.push(b)
 
   const filteredCustomTesters: Array<Tester> = [
-    ...customTesters.filter(t => t !== iterableEquality),
+    // ...customTesters.filter(t => t !== iterableEquality),
     iterableEqualityWithStack,
   ]
 
@@ -339,7 +339,7 @@ export function iterableEquality(
     return iterableEquality(
       a,
       b,
-      [...filteredCustomTesters],
+      // [...filteredCustomTesters],
       [...aStack],
       [...bStack],
     )
