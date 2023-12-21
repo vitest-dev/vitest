@@ -148,9 +148,14 @@ export function registerConsoleShortcuts(ctx: Vitest) {
         const files = await filterFiles(input)
         return files.map(v => ({ title: v }))
       },
-    }, {
-      onCancel(_prompt, _answers) {
-        cancelled = true
+      onState(this: any) {
+        // handle ESC and Ctrl-C
+        if (this.exited || this.aborted) {
+          cancelled = true
+          // prevent errornous final render when cancelled
+          this.select = -1
+          this.input = ''
+        }
       },
     })
     on()
