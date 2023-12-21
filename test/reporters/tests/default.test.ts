@@ -46,7 +46,7 @@ describe('default reporter', async () => {
     // rerun and two files
     vitest.write('p')
     await vitest.waitForStdout('Input filename pattern')
-    vitest.write('b\n')
+    vitest.write('\bb\n') // backspace to clear first filter
     await vitest.waitForStdout('Waiting for file changes...')
     expect(vitest.stdout).toContain('✓ b1.test.ts')
     expect(vitest.stdout).toContain('✓ b2.test.ts')
