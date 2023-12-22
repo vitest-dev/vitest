@@ -53,19 +53,28 @@ export class SnapshotClient {
   constructor(private options: SnapshotClientOptions = {}) {}
 
   async startCurrentRun(filepath: string, name: string, options: SnapshotStateOptions) {
+    console.log("[SnapshotClient.startCurrentRun]", { filepath, name });
+
     this.filepath = filepath
     this.name = name
 
     if (this.snapshotState?.testFilePath !== filepath) {
       await this.finishCurrentRun()
 
+      // Need to move async `SnapshotState.create` outside of synchronous `Map.get/set` to support concurrent test, which does following:
+      //   Promise.all([
+      //     client.startCurrentRun(file, name1),
+      //     client.startCurrentRun(file, name2),
+      //   ])
+      // TODO: it should save redundant `SnapshotState.create` by tracking `Map<string, Promise<SnapshotState>>`
+      const created = await SnapshotState.create(
+        filepath,
+        options,
+      );
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          await SnapshotState.create(
-            filepath,
-            options,
-          ),
+          created,
         )
       }
       this.snapshotState = this.getSnapshotState(filepath)
@@ -86,6 +95,8 @@ export class SnapshotClient {
   }
 
   assert(options: AssertOptions): void {
+    console.log("[SnapshotClient.assert:in]", options);
+
     const {
       filepath = this.filepath,
       name = this.name,
@@ -135,6 +146,7 @@ export class SnapshotClient {
       inlineSnapshot,
       rawSnapshot,
     })
+    console.log("[SnapshotClient.assert:out]", { actual, expected, key, pass });
 
     if (!pass)
       throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
@@ -169,6 +181,7 @@ export class SnapshotClient {
     if (!this.snapshotState)
       return null
     const result = await this.snapshotState.pack()
+    console.log("[SnapshotClient.finishCurrentRun]", result);
 
     this.snapshotState = undefined
     return result

@@ -94,6 +94,7 @@ export default class SnapshotState {
     testFilePath: string,
     options: SnapshotStateOptions,
   ) {
+    console.log("[SnapshotState.create]", { testFilePath });
     const snapshotPath = await options.snapshotEnvironment.resolvePath(testFilePath)
     const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
     return new SnapshotState(testFilePath, snapshotPath, content, options)
@@ -227,6 +228,15 @@ export default class SnapshotState {
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
+    console.log("[SnapshotState.match]", {
+      testName,
+      received,
+      key,
+      inlineSnapshot,
+      isInline,
+      error,
+      rawSnapshot
+    });
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
 
@@ -261,6 +271,7 @@ export default class SnapshotState {
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || this._fileExists || (rawSnapshot && rawSnapshot.content != null)
+    console.log("[SnapshotState.match:2]", { expected, pass, hasSnapshot, snapshotIsPersisted }, [this._updateSnapshot]);
 
     if (pass && !isInline && !rawSnapshot) {
       // Executing a snapshot file as JavaScript and writing the strings back
@@ -298,6 +309,7 @@ export default class SnapshotState {
         }
       }
       else {
+        console.log("@@@@@@@ this.added++")
         this._addSnapshot(key, receivedSerialized, { error, isInline, rawSnapshot })
         this.added++
       }
@@ -325,6 +337,7 @@ export default class SnapshotState {
         }
       }
       else {
+        console.log("@@@@@@@ this.matched++")
         this.matched++
         return {
           actual: '',
