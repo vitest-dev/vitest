@@ -59,22 +59,17 @@ export class SnapshotClient {
     if (this.snapshotState?.testFilePath !== filepath) {
       await this.finishCurrentRun()
 
+      // Need to check `Map.get/set` synchronously after async `SnapshotState.create`
+      // to ensure unique `SnapshotState` for given `filepath`
+      const snapshotState = await SnapshotState.create(
+        filepath,
+        options,
+      )
       if (!this.getSnapshotState(filepath)) {
-        const snapshotState = await SnapshotState.create(
+        this.snapshotStateMap.set(
           filepath,
-          options,
+          snapshotState,
         )
-        // check `Map.get/set` synchronously once more after async `SnapshotState.create` to support concurrent test, which does following:
-        //   Promise.all([
-        //     client.startCurrentRun(file, name1),
-        //     client.startCurrentRun(file, name2),
-        //   ])
-        if (!this.getSnapshotState(filepath)) {
-          this.snapshotStateMap.set(
-            filepath,
-            snapshotState,
-          )
-        }
       }
       this.snapshotState = this.getSnapshotState(filepath)
     }
