@@ -29,8 +29,8 @@ export class VitestTestRunner implements VitestRunner {
 
   async onAfterRunFiles(files?: File[]) {
     // mark snapshots in skipped tests as not obsolete
-    // TODO: this probably doesn't work when `VitestTestRunner` are handling multiple files concurrently,
-    //       but `snapshotClient.startCurrentRun/finishCurrentRun` might not be working already in that case.
+    // TODO: this probably doesn't work when `VitestTestRunner` is handling multiple files concurrently,
+    //       but `snapshotClient.startCurrentRun/finishCurrentRun` doesn't work in that case already?
     for (const test of getTests(files ?? [])) {
       if (test.mode === 'skip') {
         const name = getNames(test).slice(1).join(' > ')

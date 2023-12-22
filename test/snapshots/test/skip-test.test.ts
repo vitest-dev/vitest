@@ -13,9 +13,9 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
   expect(fs.readFileSync('test/fixtures/skip-test/__snapshots__/repro.test.ts.snap', 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`repro suite > inner case 1\`] = \`"hi"\`;
+    exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;
 
-    exports[\`top-level case 1\`] = \`"hi"\`;
+    exports[\`top-level case 1\`] = \`"hi-2"\`;
     "
   `)
 
@@ -40,9 +40,9 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
   expect(fs.readFileSync('test/fixtures/skip-test/__snapshots__/repro.test.ts.snap', 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`repro suite > inner case 1\`] = \`"hi"\`;
+    exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;
 
-    exports[\`top-level case 1\`] = \`"hi"\`;
+    exports[\`top-level case 1\`] = \`"hi-2"\`;
     "
   `)
 })

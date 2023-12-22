@@ -4,12 +4,12 @@ const ENABLE_SKIP = process.env.ENABLE_SKIP;
 
 describe.skipIf(ENABLE_SKIP)('repro suite', () => {
   it('inner case', () => {
-    expect('hi').toMatchSnapshot()
+    expect('hi-1').toMatchSnapshot()
   })
 })
 
 it.skipIf(ENABLE_SKIP)('top-level case', () => {
-  expect('hi').toMatchSnapshot()
+  expect('hi-2').toMatchSnapshot()
 })
 
 // requires at least one non-skipped test to trigger
