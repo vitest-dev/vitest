@@ -28,6 +28,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onAfterRunFiles() {
+    // TOOD: should do `finishCurrentRun` in onAfterRunSuite with suite.filepath?
     const result = await this.snapshotClient.finishCurrentRun()
     if (result)
       await rpc().snapshotSaved(result)
@@ -63,14 +64,20 @@ export class VitestTestRunner implements VitestRunner {
     }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.startCurrentRun(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }
 
-  onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite) {
     if (this.cancelRun)
       suite.mode = 'skip'
+
+    // initialize snapshot state before running file suite
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // default "name" is irrelevant for Vitest since each snapshot assertion
+      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
+      await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
+    }
   }
 
   onBeforeTryTask(test: Test) {

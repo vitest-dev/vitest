@@ -59,16 +59,13 @@ export class SnapshotClient {
     if (this.snapshotState?.testFilePath !== filepath) {
       await this.finishCurrentRun()
 
-      // Need to check `Map.get/set` synchronously after async `SnapshotState.create`
-      // to ensure unique `SnapshotState` for given `filepath`
-      const snapshotState = await SnapshotState.create(
-        filepath,
-        options,
-      )
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          snapshotState,
+          await SnapshotState.create(
+            filepath,
+            options,
+          ),
         )
       }
       this.snapshotState = this.getSnapshotState(filepath)
