@@ -27,16 +27,15 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
-  async onAfterRunFiles() {
-    // TOOD: should do `finishCurrentRun` in onAfterRunSuite with suite.filepath?
-    const result = await this.snapshotClient.finishCurrentRun()
-    if (result)
-      await rpc().snapshotSaved(result)
-  }
-
-  onAfterRunSuite(suite: Suite) {
+  async onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
+
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      const result = await this.snapshotClient.finishCurrentRun()
+      if (result)
+        await rpc().snapshotSaved(result)
+    }
   }
 
   onAfterRunTask(test: Test) {
