@@ -1,9 +1,9 @@
-import type { CancelReason, Custom, ExtendedContext, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, File, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getWorkerState } from '../../utils'
+import { getFullName, getNames, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -27,7 +27,17 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
-  async onAfterRunFiles() {
+  async onAfterRunFiles(files?: File[]) {
+    // mark snapshots in skipped tests as non-obsolete
+    // TODO: this probably doesn't work when `VitestTestRunner` are handling multiple files concurrently,
+    //       but `snapshotClient.startCurrentRun/finishCurrentRun` might not be working already in that case.
+    for (const test of getTests(files ?? [])) {
+      if (test.mode === 'skip') {
+        const name = getNames(test).slice(1).join(' > ')
+        this.snapshotClient.skipTestSnapshots(name)
+      }
+    }
+
     const result = await this.snapshotClient.finishCurrentRun()
     if (result)
       await rpc().snapshotSaved(result)
@@ -57,10 +67,8 @@ export class VitestTestRunner implements VitestRunner {
     if (this.cancelRun)
       test.mode = 'skip'
 
-    if (test.mode !== 'run') {
-      this.snapshotClient.skipTestSnapshots(name)
+    if (test.mode !== 'run')
       return
-    }
 
     clearModuleMocks(this.config)
     await this.snapshotClient.startCurrentRun(test.file!.filepath, name, this.workerState.config.snapshotOptions)
