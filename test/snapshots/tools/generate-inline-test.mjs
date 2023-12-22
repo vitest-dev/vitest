@@ -17,6 +17,6 @@ const template = resolve(dir, './inline-test-template.js');
   await generateInlineTest(template, filepath)
   await generateInlineTest(
     resolve(dir, './inline-test-template-concurrent.js'),
-    resolve(dir, '../test-update/inline-test-template-concurrent.test.js')
+    resolve(dir, '../test-update/inline-test-template-concurrent.test.js'),
   )
 })()
