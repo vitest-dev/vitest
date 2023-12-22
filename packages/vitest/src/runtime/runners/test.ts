@@ -28,7 +28,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onAfterRunFiles(files?: File[]) {
-    // mark snapshots in skipped tests as non-obsolete
+    // mark snapshots in skipped tests as not obsolete
     // TODO: this probably doesn't work when `VitestTestRunner` are handling multiple files concurrently,
     //       but `snapshotClient.startCurrentRun/finishCurrentRun` might not be working already in that case.
     for (const test of getTests(files ?? [])) {
