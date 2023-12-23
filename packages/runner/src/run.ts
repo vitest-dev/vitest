@@ -251,6 +251,17 @@ function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
   }
 }
 
+function markTasksAsFailed(suite: Suite, runner: VitestRunner) {
+  suite.tasks.forEach((t) => {
+    if (t.mode === 'run') {
+      t.result = { ...t.result, state: 'fail' }
+      updateTask(t, runner)
+      if (t.type === 'suite')
+        markTasksAsFailed(t, runner)
+    }
+  })
+}
+
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   suite.tasks.forEach((t) => {
     t.mode = 'skip'
@@ -317,6 +328,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
+      markTasksAsFailed(suite, runner)
     }
 
     try {
@@ -325,6 +337,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
+      markTasksAsFailed(suite, runner)
     }
 
     if (suite.mode === 'run') {
