@@ -52,3 +52,60 @@ test('emits <failure> if a test has a syntax error', async () => {
   expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="TIMESTAMP" hostname="HOSTNAME" tests="1" failures="1" errors="0" skipped="0" time="0">')
   expect(xml).toContain('<failure')
 })
+
+test('suite hook failure', async () => {
+  const vitest = await runVitest({
+    root: 'fixtures/suite-hook-failure',
+    reporters: 'junit',
+  })
+  let xml = vitest.stdout
+  xml = xml.replaceAll(/time=".*?"/g, 'time="..."')
+  xml = xml.replaceAll(/timestamp=".*?"/g, 'timestamp="..."')
+  xml = xml.replaceAll(/hostname=".*?"/g, 'hostname="..."')
+  expect(xml).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="9" failures="4" errors="0" time="...">
+        <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="9" failures="4" errors="0" skipped="4" time="...">
+            <testcase classname="basic.test.ts" name="fail beforeEach &gt; run" time="...">
+                <failure message="fail" type="Error">
+    Error: fail
+     ❯ basic.test.ts:5:11
+                </failure>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail beforeEach &gt; skip" time="...">
+                <skipped/>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail beforeAll &gt; run" time="...">
+                <failure message="fail" type="Error">
+    Error: fail
+     ❯ basic.test.ts:14:11
+                </failure>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail beforeAll &gt; skip" time="...">
+                <skipped/>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail afterEach &gt; run" time="...">
+                <failure message="fail" type="Error">
+    Error: fail
+     ❯ basic.test.ts:23:11
+                </failure>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail afterEach &gt; skip" time="...">
+                <skipped/>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail afterAll &gt; run" time="...">
+                <failure message="fail" type="Error">
+    Error: fail
+     ❯ basic.test.ts:32:11
+                </failure>
+            </testcase>
+            <testcase classname="basic.test.ts" name="fail afterAll &gt; skip" time="...">
+                <skipped/>
+            </testcase>
+            <testcase classname="basic.test.ts" name="ok" time="...">
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
+})

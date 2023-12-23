@@ -1,6 +1,6 @@
 import path from 'pathe'
 import { describe, expect, test } from 'vitest'
-import { runVitestCli } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 const resolve = (id = '') => path.resolve(__dirname, '../fixtures/default', id)
 async function run(fileFilter: string[], watch = false, ...args: string[]) {
@@ -53,5 +53,17 @@ describe('default reporter', async () => {
     expect(vitest.stdout).not.toContain('✓ nested b1 test')
     expect(vitest.stdout).not.toContain('✓ b1 test')
     expect(vitest.stdout).not.toContain('✓ b2 test')
+  })
+
+  test('suite hook failure', async () => {
+    const vitest = await runVitest({
+      root: 'fixtures/suite-hook-failure',
+    })
+    expect(vitest.stdout).toContain('× basic.test.ts > fail beforeEach > run')
+    expect(vitest.stdout).toContain('× basic.test.ts > fail beforeAll > run')
+    expect(vitest.stdout).toContain('× basic.test.ts > fail afterEach > run')
+    expect(vitest.stdout).toContain('× basic.test.ts > fail afterAll > run')
+    expect(vitest.stdout).toContain('✓ basic.test.ts > ok')
+    expect(vitest.stdout).toContain('4 failed | 1 passed | 4 skipped')
   })
 }, 120000)
