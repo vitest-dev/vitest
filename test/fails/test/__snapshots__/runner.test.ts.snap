@@ -16,6 +16,8 @@ exports[`should fail hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: 
 
 exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `
 "Error: after all
+Error: before all
+Error: after all
 Error: before all"
 `;
 
