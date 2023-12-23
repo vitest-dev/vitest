@@ -1,5 +1,6 @@
 import limit from 'p-limit'
 import { getSafeTimers, shuffle } from '@vitest/utils'
+import type { ErrorWithDiff } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { VitestRunner } from './types/runner'
@@ -8,7 +9,7 @@ import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setCurrentTest } from './test-state'
-import { hasFailed, hasTests } from './utils/tasks'
+import { getTests, hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 
@@ -234,32 +235,32 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
+function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions): ErrorWithDiff[] {
   if (err instanceof PendingError) {
     result.state = 'skip'
-    return
+    return []
   }
 
   result.state = 'fail'
   const errors = Array.isArray(err)
     ? err
     : [err]
-  for (const e of errors) {
-    const error = processError(e, diffOptions)
-    result.errors ??= []
-    result.errors.push(error)
-  }
+  const processedErrors = errors.map(e => processError(e, diffOptions))
+  result.errors = [...result.errors ?? [], ...processedErrors]
+  return processedErrors
 }
 
-function markTasksAsFailed(suite: Suite, runner: VitestRunner) {
-  suite.tasks.forEach((t) => {
+function markTasksAsFailed(suite: Suite, errors: ErrorWithDiff[], runner: VitestRunner) {
+  for (const t of getTests(suite)) {
     if (t.mode === 'run') {
-      t.result = { ...t.result, state: 'fail' }
+      t.result = {
+        ...t.result,
+        state: 'fail',
+        errors: [...t.result?.errors ?? [], ...errors],
+      }
       updateTask(t, runner)
-      if (t.type === 'suite')
-        markTasksAsFailed(t, runner)
     }
-  })
+  }
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
@@ -327,8 +328,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       }
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
-      markTasksAsFailed(suite, runner)
+      const errors = failTask(suite.result, e, runner.config.diffOptions)
+      markTasksAsFailed(suite, errors, runner)
     }
 
     try {
@@ -336,8 +337,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
-      markTasksAsFailed(suite, runner)
+      const errors = failTask(suite.result, e, runner.config.diffOptions)
+      markTasksAsFailed(suite, errors, runner)
     }
 
     if (suite.mode === 'run') {
