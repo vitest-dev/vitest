@@ -1134,7 +1134,7 @@ importers:
         version: 1.1.41
       '@testing-library/cypress':
         specifier: ^10.0.1
-        version: 10.0.1(cypress@13.6.0)
+        version: 10.0.1(cypress@13.6.2)
       '@types/codemirror':
         specifier: ^5.60.13
         version: 5.60.13
@@ -1178,8 +1178,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.2
       cypress:
-        specifier: ^13.6.0
-        version: 13.6.0
+        specifier: ^13.6.2
+        version: 13.6.2
       d3-graph-controller:
         specifier: ^3.0.1
         version: 3.0.1
@@ -8641,7 +8641,7 @@ packages:
       defer-to-connect: 2.0.1
     dev: true
 
-  /@testing-library/cypress@10.0.1(cypress@13.6.0):
+  /@testing-library/cypress@10.0.1(cypress@13.6.2):
     resolution: {integrity: sha512-e8uswjTZIBhaIXjzEcrQQ8nHRWHgZH7XBxKuIWxZ/T7FxfWhCR48nFhUX5nfPizjVOKSThEfOSv67jquc1ASkw==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
@@ -8649,7 +8649,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.2
       '@testing-library/dom': 9.3.3
-      cypress: 13.6.0
+      cypress: 13.6.2
     dev: true
 
   /@testing-library/dom@8.19.0:
@@ -9220,8 +9220,8 @@ packages:
     dependencies:
       undici-types: 5.26.5
 
-  /@types/node@20.10.0:
-    resolution: {integrity: sha512-D0WfRmU9TQ8I9PFx9Yc+EBHw+vSpIub4IDvQivcp26PtPrdMGAq5SDcpXEo/epqa/DXotVpekHiLNTg3iaKXBQ==}
+  /@types/node@20.10.5:
+    resolution: {integrity: sha512-nNPsNE65wjMxEKI93yOP+NPGGBJz/PoN3kZsVLee0XMiJolxSekEVD8wRwBUBqkwc7UWop0edW50yrCQW4CyRw==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -10468,28 +10468,28 @@ packages:
     resolution: {integrity: sha512-VZ1WFHTNKjR8Ga97TtV2SZM6fvRjWbYI2i/f4pJB4PtusorKvONAMJf2LQcUBIyzbVobqr7KSrcjmSwRolI+yw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
     dev: true
 
   /@wdio/repl@8.23.1:
     resolution: {integrity: sha512-u6zG2cgBm67V5/WlQzadWqLGXs3moH8MOsgoljULQncelSBBZGZ5DyLB4p7jKcUAsKtMjgmFQmIvpQoqmyvdfg==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
     dev: true
 
   /@wdio/types@8.21.0:
     resolution: {integrity: sha512-mZFOipmu541z0BXBW7mBAUjM4zZWhNnP/w321OSYx082Jy4d0UHMFXYWaOC98DIMBPahJu/yLX2WH5iCrazKSA==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
     dev: true
 
   /@wdio/types@8.24.0:
     resolution: {integrity: sha512-FXbJnQCS1b39RKqBlW9HTNEP4vukxjFc+GiwvPS+XPtY+3Vn7eOyBv3X3CiH1K7C+tzelqlio/HgP68pV5cXsQ==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
     dev: true
 
   /@wdio/utils@8.22.0:
@@ -13413,8 +13413,8 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress@13.6.0:
-    resolution: {integrity: sha512-quIsnFmtj4dBUEJYU4OH0H12bABJpSujvWexC24Ju1gTlKMJbeT6tTO0vh7WNfiBPPjoIXLN+OUqVtiKFs6SGw==}
+  /cypress@13.6.2:
+    resolution: {integrity: sha512-TW3bGdPU4BrfvMQYv1z3oMqj71YI4AlgJgnrycicmPZAXtvywVFZW9DAToshO65D97rCWfG/kqMFsYB6Kp91gQ==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
     hasBin: true
     requiresBuild: true
@@ -24746,7 +24746,7 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       psl: 1.9.0
-      punycode: 2.3.0
+      punycode: 2.3.1
       universalify: 0.2.0
       url-parse: 1.5.10
     dev: true
@@ -24778,7 +24778,7 @@ packages:
     resolution: {integrity: sha512-2lv/66T7e5yNyhAAC4NaKe5nVavzuGJQVVtRYLyQ2OI8tsJ61PMLlelehb0wi2Hx6+hT/OJUWZcw8MjlSRnxvw==}
     engines: {node: '>=14'}
     dependencies:
-      punycode: 2.3.0
+      punycode: 2.3.1
     dev: true
 
   /tr46@5.0.0:
@@ -25476,7 +25476,7 @@ packages:
   /uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
     dependencies:
-      punycode: 2.3.0
+      punycode: 2.3.1
     dev: true
 
   /urix@0.1.0:
@@ -26180,7 +26180,7 @@ packages:
     resolution: {integrity: sha512-EQY2YjbOZInuvYAqEEP7w7voWSy9cPMt3UB1o1+obKhrD8dkIDZNkPocpZUI59PokqHTXk4zIclV50k1KpyyiA==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
       '@types/ws': 8.5.9
       '@wdio/config': 8.22.1
       '@wdio/logger': 8.16.17
@@ -26201,7 +26201,7 @@ packages:
     resolution: {integrity: sha512-zI1zw4lbP2cg1NPikIaUBHQU3+xdvEEBi0Jrydhtp3VVeIEqJWwUFxG/P9LwJpiQ0PYMb/5cxoQrSRhrEXyXHQ==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.10.0
+      '@types/node': 20.10.5
       '@types/ws': 8.5.9
       '@wdio/config': 8.24.0
       '@wdio/logger': 8.16.17
