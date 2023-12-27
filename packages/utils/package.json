@@ -70,6 +70,6 @@
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.20",
     "@types/estree": "^1.0.5",
-    "tinyhighlight": "^0.0.4"
+    "tinyhighlight": "^0.1.0"
   }
 }

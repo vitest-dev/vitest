@@ -1230,8 +1230,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.5
       tinyhighlight:
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.1.0
+        version: 0.1.0
 
   packages/vite-node:
     dependencies:
@@ -25053,8 +25053,8 @@ packages:
     resolution: {integrity: sha512-65NKvSuAVDP/n4CqH+a9w2kTlLReS9vhsAP06MWx+/89nMinJyB2icyl58RIcqCmIggpojIGeuJGhjU1aGMBSg==}
     dev: false
 
-  /tinyhighlight@0.0.4:
-    resolution: {integrity: sha512-A6/LF8l+hGVs8NCbOn8D9mloq0ubMyKT9cyF8C1xi1EzRaL1vHBMP+bB2sUVMDK5q40Fai/WGOWF+RGqUobheQ==}
+  /tinyhighlight@0.1.0:
+    resolution: {integrity: sha512-v4k39HBXZ232WbIbtGM2yP2QNu8LJCSRAGNIgjeN1ME2Q8jIep8Qr94DNTqnfYk9Nt0j8zvU8SrVG3wayrecYA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       picocolors: ^1.0.0
