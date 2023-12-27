@@ -1,10 +1,10 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
-import { extname, normalize, relative } from 'pathe'
+import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import { highlight, inspect } from '@vitest/utils'
+import { inspect } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
