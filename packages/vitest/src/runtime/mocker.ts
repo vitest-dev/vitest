@@ -176,7 +176,6 @@ export class VitestMocker {
     const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
-    // TODO: set this.moduleCache before calling handler
     let exports: any
     try {
       exports = await mock()
