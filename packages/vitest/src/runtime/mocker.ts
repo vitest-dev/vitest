@@ -212,9 +212,9 @@ export class VitestMocker {
           throw this.createError(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
-            + '\nIf you need to partially mock a module, you can use "vi.importActual" inside:\n\n'
-            + `${c.green(`vi.mock("${mockpath}", async () => {
-  const actual = await vi.importActual("${mockpath}")
+            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n\n'
+            + `${c.green(`vi.mock("${mockpath}", async (importOriginal) => {
+  const actual = await importOriginal()
   return {
     ...actual,
     // your mocked methods
