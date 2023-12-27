@@ -19,8 +19,8 @@ function getDefs(c: Colors): TokenColors {
     TemplateHead: text => c.green(text.slice(0, text.length - 2)) + c.cyan(text.slice(-2)),
     TemplateTail: text => c.cyan(text.slice(0, 1)) + c.green(text.slice(1)),
     TemplateMiddle: text => c.cyan(text.slice(0, 1)) + c.green(text.slice(1, text.length - 2)) + c.cyan(text.slice(-2)),
-    IdentifierMethodName: c.blue,
-    PrivateIdentifierMethodName: text => `#${c.blue(text.slice(1))}`,
+    IdentifierCallable: c.blue,
+    PrivateIdentifierCallable: text => `#${c.blue(text.slice(1))}`,
     Invalid,
 
     JSXString: c.green,
