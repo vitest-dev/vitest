@@ -67,6 +67,8 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   if (type)
     printErrorType(type, project.ctx)
   printErrorMessage(e, logger)
+  if (e.codeFrame)
+    logger.error(`${e.codeFrame}\n`)
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff)
@@ -123,6 +125,7 @@ const skipErrorProperties = new Set([
   'type',
   'showDiff',
   'diff',
+  'codeFrame',
   'actual',
   'expected',
   'diffOptions',

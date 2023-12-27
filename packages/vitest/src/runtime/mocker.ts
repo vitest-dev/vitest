@@ -113,9 +113,11 @@ export class VitestMocker {
     return this.executor.state.filepath || 'global'
   }
 
-  private createError(message: string) {
+  private createError(message: string, codeFrame?: string) {
     const Error = this.primitives.Error
-    return new Error(message)
+    const error = new Error(message)
+    Object.assign(error, { codeFrame })
+    return error
   }
 
   public getMocks() {
@@ -210,16 +212,16 @@ export class VitestMocker {
             return undefined
           const c = getColors()
           throw this.createError(
-            `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
+            c.red(`[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
-            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n\n'
-            + `${c.black(highlight(`vi.mock("${mockpath}", async (importOriginal) => {
+            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n'),
+            highlight(`vi.mock("${mockpath}", async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
     // your mocked methods
   }
-})`))}\n`,
+})`),
           )
         }
 
