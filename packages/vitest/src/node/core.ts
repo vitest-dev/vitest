@@ -670,6 +670,7 @@ export class Vitest {
 
     const onChange = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun.length)
@@ -677,6 +678,7 @@ export class Vitest {
     }
     const onUnlink = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       this.invalidates.add(id)
 
       if (this.state.filesMap.has(id)) {

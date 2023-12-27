@@ -1,5 +1,7 @@
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
+import { highlight } from '@vitest/utils'
+import { extname } from 'pathe'
 import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
@@ -28,12 +30,13 @@ export class Logger {
   logUpdate = createLogUpdate(process.stdout)
 
   private _clearScreenPending: string | undefined
+  private _highlights = new Map<string, string>()
 
   constructor(
     public ctx: Vitest,
     public console = globalThis.console,
   ) {
-
+    this._highlights.clear()
   }
 
   log(...args: any[]) {
@@ -89,6 +92,22 @@ export class Logger {
       showCodeFrame: true,
       logger: this,
     })
+  }
+
+  clearHighlightCache(filename?: string) {
+    if (filename)
+      this._highlights.delete(filename)
+    else
+      this._highlights.clear()
+  }
+
+  highlight(filename: string, source: string) {
+    if (this._highlights.has(filename))
+      return this._highlights.get(filename)!
+    const ext = extname(filename)
+    const code = highlight(source, { jsx: ext === '.tsx' || ext === '.jsx', colors: c })
+    this._highlights.set(filename, code)
+    return code
   }
 
   printNoTestFound(filters?: string[]) {
