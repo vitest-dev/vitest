@@ -32,6 +32,13 @@ class RefTracker {
 
 type Key = string | symbol
 
+interface MockContext {
+  /**
+   * When mocking with a factory, this refers to the module that imported the mock.
+   */
+  callstack: null | string[]
+}
+
 function isSpecialProp(prop: Key, parentType: string) {
   return parentType.includes('Function')
       && typeof prop === 'string'
@@ -53,6 +60,10 @@ export class VitestMocker {
   }
 
   private filterPublicKeys: (symbol | string)[]
+
+  private mockContext: MockContext = {
+    callstack: null,
+  }
 
   constructor(
     public executor: VitestExecutor,
@@ -165,6 +176,7 @@ export class VitestMocker {
     const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
+    // TODO: set this.moduleCache before calling handler
     let exports: any
     try {
       exports = await mock()
@@ -219,6 +231,10 @@ export class VitestMocker {
     this.moduleCache.set(dep, { exports: moduleExports })
 
     return moduleExports
+  }
+
+  public getMockContext() {
+    return this.mockContext
   }
 
   public getMockPath(dep: string) {
@@ -407,9 +423,9 @@ export class VitestMocker {
     this.deleteCachedItem(id)
   }
 
-  public async importActual<T>(rawId: string, importee: string): Promise<T> {
-    const { id, fsPath } = await this.resolvePath(rawId, importee)
-    const result = await this.executor.cachedRequest(id, fsPath, [importee])
+  public async importActual<T>(rawId: string, importer: string, callstack?: string[] | null): Promise<T> {
+    const { id, fsPath } = await this.resolvePath(rawId, importer)
+    const result = await this.executor.cachedRequest(id, fsPath, callstack || [importer])
     return result as T
   }
 
@@ -453,9 +469,14 @@ export class VitestMocker {
     if (typeof mock === 'function' && !callstack.includes(mockPath) && !callstack.includes(url)) {
       try {
         callstack.push(mockPath)
+        // this will not work if user does Promise.all(import(), import())
+        // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
+        // maybe we should improve mock API in the future?
+        this.mockContext.callstack = callstack
         return await this.callFunctionMock(mockPath, mock)
       }
       finally {
+        this.mockContext.callstack = null
         const indexMock = callstack.indexOf(mockPath)
         callstack.splice(indexMock, 1)
       }
