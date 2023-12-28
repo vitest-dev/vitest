@@ -1,3 +1,4 @@
+import type { Context } from 'node:vm'
 import { isContext } from 'node:vm'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
@@ -36,7 +37,7 @@ export async function runVmTests(state: WorkerGlobalState) {
   if (!vm.getVmContext)
     throw new TypeError(`Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
 
-  const context = vm.getVmContext()
+  let context: Context | null = vm.getVmContext()
 
   if (!isContext(context))
     throw new TypeError(`Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
@@ -89,5 +90,6 @@ export async function runVmTests(state: WorkerGlobalState) {
     state.environmentTeardownRun = true
     context.__vitest_mocker__ = null
     context.__vitest_worker__ = null
+    context = null
   }
 }
