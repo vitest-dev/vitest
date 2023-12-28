@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
-import { isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, toFilePath } from 'vite-node/utils'
+import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
