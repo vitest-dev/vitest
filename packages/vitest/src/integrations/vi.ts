@@ -482,7 +482,7 @@ function createVitest(): VitestUtils {
       _mocker.queueMock(
         path,
         importer,
-        factory ? () => factory(() => _mocker.importActual(path, importer)) : undefined,
+        factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
       )
     },
 
@@ -495,7 +495,7 @@ function createVitest(): VitestUtils {
       _mocker.queueMock(
         path,
         importer,
-        factory ? () => factory(() => _mocker.importActual(path, importer)) : undefined,
+        factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
       )
     },
 
@@ -504,7 +504,11 @@ function createVitest(): VitestUtils {
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
-      return _mocker.importActual<T>(path, getImporter())
+      return _mocker.importActual<T>(
+        path,
+        getImporter(),
+        _mocker.getMockContext().callstack,
+      )
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {

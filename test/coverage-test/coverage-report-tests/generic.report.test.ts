@@ -112,7 +112,7 @@ test('thresholds.autoUpdate updates thresholds', async () => {
   thresholds['**/function-count.ts'].functions = 59
   thresholds['**/function-count.ts'].lines = 50
 
-  fs.writeFileSync(configFilename, mod.generate().code, 'utf-8')
+  fs.writeFileSync(configFilename, `${mod.generate().code}\n`, 'utf-8')
 })
 
 test('function count is correct', async () => {
