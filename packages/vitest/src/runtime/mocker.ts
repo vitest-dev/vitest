@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import vm from 'node:vm'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'pathe'
-import { getColors, getType, highlight } from '@vitest/utils'
+import { getType, highlight } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
@@ -210,11 +210,10 @@ export class VitestMocker {
         else if (!(prop in target)) {
           if (this.filterPublicKeys.includes(prop))
             return undefined
-          const c = getColors()
           throw this.createError(
-            c.red(`[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
+            `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
-            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n'),
+            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n',
             highlight(`vi.mock("${mockpath}", async (importOriginal) => {
   const actual = await importOriginal()
   return {
