@@ -63,6 +63,8 @@ export interface ContextExecutorOptions {
   state: WorkerGlobalState
 }
 
+const bareVitestRegexp = /^@?vitest(\/|$)/
+
 export async function startVitestExecutor(options: ContextExecutorOptions) {
   // @ts-expect-error injected untyped global
   const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
@@ -108,6 +110,10 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)
         return { externalize }
+      }
+      if (bareVitestRegexp.test(id)) {
+        externalizeMap.set(id, id)
+        return { externalize: id }
       }
 
       return rpc().fetch(id, getTransformMode())
