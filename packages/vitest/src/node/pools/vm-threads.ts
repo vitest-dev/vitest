@@ -111,7 +111,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root, project.getName())
+          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
 
         else
           throw error
@@ -123,6 +123,9 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     }
 
     return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
+
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
         if (configs.has(project))
