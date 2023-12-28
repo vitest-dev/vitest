@@ -3,7 +3,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getWorkerState } from '../../utils'
+import { getFullName, getNames, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -32,6 +32,14 @@ export class VitestTestRunner implements VitestRunner {
       suite.result!.heap = process.memoryUsage().heapUsed
 
     if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // mark snapshots in skipped tests as not obsolete
+      for (const test of getTests(suite)) {
+        if (test.mode === 'skip') {
+          const name = getNames(test).slice(1).join(' > ')
+          this.snapshotClient.skipTestSnapshots(name)
+        }
+      }
+
       const result = await this.snapshotClient.finishCurrentRun()
       if (result)
         await rpc().snapshotSaved(result)
@@ -52,15 +60,11 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onBeforeRunTask(test: Test) {
-    const name = getNames(test).slice(1).join(' > ')
-
     if (this.cancelRun)
       test.mode = 'skip'
 
-    if (test.mode !== 'run') {
-      this.snapshotClient.skipTestSnapshots(name)
+    if (test.mode !== 'run')
       return
-    }
 
     clearModuleMocks(this.config)
 
