@@ -249,4 +249,11 @@ export class CommonjsExecutor {
     // TODO: should we wrapp module to rethrow context errors?
     return moduleExports
   }
+
+  destroy() {
+    this.requireCache.clear()
+    this.moduleCache.clear()
+    this.builtinCache = Object.create(null)
+    this.extensions = Object.create(null)
+  }
 }

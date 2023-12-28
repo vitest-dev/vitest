@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
 import type { WorkerGlobalState } from '../../types/worker'
 import { createCustomConsole } from '../console'
+import type { VitestExecutor } from '../execute'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { ExternalModulesExecutor } from '../external-executor'
@@ -54,7 +55,7 @@ export async function runVmTests(state: WorkerGlobalState) {
 
   const stubs = getDefaultRequestStubs(context)
 
-  const externalModulesExecutor = new ExternalModulesExecutor({
+  let externalModulesExecutor: ExternalModulesExecutor | null = new ExternalModulesExecutor({
     context,
     fileMap,
     packageCache,
@@ -62,7 +63,7 @@ export async function runVmTests(state: WorkerGlobalState) {
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor = await startVitestExecutor({
+  let executor: VitestExecutor | null = await startVitestExecutor({
     context,
     moduleCache: state.moduleCache,
     mockMap: state.mockMap,
@@ -80,6 +81,13 @@ export async function runVmTests(state: WorkerGlobalState) {
   }
   finally {
     await vm.teardown?.()
+    externalModulesExecutor.destroy()
+    executor = null
+    externalModulesExecutor = null
+    state.mockMap.clear()
+    state.moduleCache.clear()
     state.environmentTeardownRun = true
+    context.__vitest_mocker__ = null
+    context.__vitest_worker__ = null
   }
 }

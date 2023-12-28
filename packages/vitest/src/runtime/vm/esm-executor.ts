@@ -177,4 +177,8 @@ export class EsmExecutor {
 
     return this.createEsModule(identifier, code)
   }
+
+  destroy() {
+    this.moduleCache.clear()
+  }
 }

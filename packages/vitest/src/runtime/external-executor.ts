@@ -217,4 +217,11 @@ export class ExternalModulesExecutor {
   createRequire(identifier: string) {
     return this.cjs.createRequire(identifier)
   }
+
+  destroy() {
+    this.fs.clear()
+    this.cjs.destroy()
+    this.esm.destroy()
+    this.resolvers = []
+  }
 }
