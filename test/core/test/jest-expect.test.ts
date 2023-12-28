@@ -926,7 +926,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { name: 'foo' } to have property "name" with value 'bar'",
-      "Compared values have no visual difference.",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
     ]
   `)
 
@@ -934,7 +938,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { noName: 'foo' } to have property "name" with value 'bar'",
-      "Compared values have no visual difference.",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
     ]
   `)
 
@@ -942,7 +950,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
     [
       "expected { name: 'foo' } to have property "name" with value Any{ …(3) }",
-      "Compared values have no visual difference.",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    "foo"",
     ]
   `)
 
@@ -950,7 +962,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
     [
       "expected { noName: 'foo' } to have property "name" with value Any{ …(3) }",
-      "Compared values have no visual difference.",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    undefined",
     ]
   `)
 
@@ -958,7 +974,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { parent: { name: 'foo' } } to have property "parent.name" with value 'bar'",
-      "Compared values have no visual difference.",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
     ]
   `)
 
@@ -966,7 +986,11 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ parent: { noName: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { parent: { noName: 'foo' } } to have property "parent.name" with value 'bar'",
-      "Compared values have no visual difference.",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
     ]
   `)
 })
