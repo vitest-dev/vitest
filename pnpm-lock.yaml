@@ -1136,8 +1136,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(cypress@13.6.2)
       '@types/codemirror':
-        specifier: ^5.60.13
-        version: 5.60.13
+        specifier: ^5.60.15
+        version: 5.60.15
       '@types/d3-force':
         specifier: ^3.0.9
         version: 3.0.9
@@ -1172,8 +1172,8 @@ importers:
         specifier: 0.2.14
         version: 0.2.14
       codemirror:
-        specifier: ^5.65.15
-        version: 5.65.15
+        specifier: ^5.65.16
+        version: 5.65.16
       codemirror-theme-vars:
         specifier: ^0.1.2
         version: 0.1.2
@@ -8923,8 +8923,8 @@ packages:
     dev: true
     patched: true
 
-  /@types/codemirror@5.60.13:
-    resolution: {integrity: sha512-qLWcKUwYDYB7mZpE++0Jn3i1TJ2GW8nlhALRAfjaKgb1HRnk2qcNqWxZ+BpPY1h4n4IQT0foThaOxWHxEL8MnQ==}
+  /@types/codemirror@5.60.15:
+    resolution: {integrity: sha512-dTOvwEQ+ouKJ/rE9LT1Ue2hmP6H1mZv5+CCnNWu2qtiOe2LQa9lCprEY20HxiDmV/Bxh+dXjywmy5aKvoGjULA==}
     dependencies:
       '@types/tern': 0.23.4
     dev: true
@@ -12846,8 +12846,8 @@ packages:
     resolution: {integrity: sha512-WTau8X2q58b0SOAY9DO+iQVw8JKVEgyQIqArp2D732tcc+pobbMta3bnVMdQdmgwuvNrOFFr6HoxPRoQOgooFA==}
     dev: true
 
-  /codemirror@5.65.15:
-    resolution: {integrity: sha512-YC4EHbbwQeubZzxLl5G4nlbLc1T21QTrKGaOal/Pkm9dVDMZXMH7+ieSPEOZCtO9I68i8/oteJKOxzHC2zR+0g==}
+  /codemirror@5.65.16:
+    resolution: {integrity: sha512-br21LjYmSlVL0vFCPWPfhzUCT34FM/pAdK7rRIZwa0rrtrIdotvP4Oh4GUHsu2E3IrQMCfRkL/fN3ytMNxVQvg==}
     dev: true
 
   /collapse-white-space@1.0.6:
