@@ -34,7 +34,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await import('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -106,7 +106,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await import('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
