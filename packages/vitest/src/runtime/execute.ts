@@ -63,6 +63,8 @@ export interface ContextExecutorOptions {
   state: WorkerGlobalState
 }
 
+const bareVitestRegexp = /^@?vitest(\/|$)/
+
 export async function startVitestExecutor(options: ContextExecutorOptions) {
   // @ts-expect-error injected untyped global
   const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
@@ -103,7 +105,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         return { externalize: externalizeMap.get(id)! }
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
-      if (id.includes(distDir)) {
+      if (id.includes(distDir) || bareVitestRegexp.test(id)) {
         const { path } = toFilePath(id, state().config.root)
         const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)
