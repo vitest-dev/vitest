@@ -12,8 +12,9 @@ it.skipIf(ENABLE_SKIP)('top-level case', () => {
   expect('hi-2').toMatchSnapshot()
 })
 
-// requires at least one non-skipped test to trigger
-// `SnapshotClient.startCurrentRun` on current file
+// at least one non-skipped test is needed to reproduce a bug.
+// without this, there will be no SnapshotClient.startCurrentRun,
+// so the code to check skip/obsolete snapshot is not exercised.
 it('normal case', () => {
   expect(0).toBe(0)
 })
