@@ -23,6 +23,15 @@ const ERASE_DOWN = `${ESC}J`
 const ERASE_SCROLLBACK = `${ESC}3J`
 const CURSOR_TO_START = `${ESC}1;1H`
 const CLEAR_SCREEN = '\x1Bc'
+const HIGHLIGHT_SUPPORTED_LANGS = ['js', 'ts']
+const HIGHLIGHT_SUPPORTED_EXTS = HIGHLIGHT_SUPPORTED_LANGS.flatMap(lang => [
+  `.${lang}`,
+  `.m${lang}`,
+  `.c${lang}`,
+  `.${lang}x`,
+  `.m${lang}x`,
+  `.c${lang}x`,
+])
 
 export class Logger {
   outputStream = process.stdout
@@ -105,7 +114,10 @@ export class Logger {
     if (this._highlights.has(filename))
       return this._highlights.get(filename)!
     const ext = extname(filename)
-    const code = highlight(source, { jsx: ext === '.tsx' || ext === '.jsx', colors: c })
+    if (!HIGHLIGHT_SUPPORTED_EXTS.includes(ext))
+      return source
+    const isJsx = ext.endsWith('x')
+    const code = highlight(source, { jsx: isJsx, colors: c })
     this._highlights.set(filename, code)
     return code
   }
