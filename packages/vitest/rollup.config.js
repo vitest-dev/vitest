@@ -38,6 +38,7 @@ const entries = {
   'workers/forks': 'src/runtime/workers/forks.ts',
   'workers/threads': 'src/runtime/workers/threads.ts',
   'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
+  'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 }

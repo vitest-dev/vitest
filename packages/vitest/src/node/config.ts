@@ -274,6 +274,10 @@ export function resolveConfig(
         ...resolved.poolOptions?.forks,
         maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
       },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
     }
   }
 
@@ -282,6 +286,10 @@ export function resolveConfig(
       ...resolved.poolOptions,
       forks: {
         ...resolved.poolOptions?.forks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
         minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
       },
     }

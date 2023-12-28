@@ -8,6 +8,7 @@ import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vmThreads'
 import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
+import { createVmForksPool } from './pools/vmForks'
 
 export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Awaitable<void>
@@ -31,6 +32,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     threads: null,
     browser: null,
     vmThreads: null,
+    vmForks: null,
     typescript: null,
   }
 
@@ -86,14 +88,18 @@ export function createPool(ctx: Vitest): ProcessPool {
     async function resolveCustomPool(filepath: string) {
       if (customPools.has(filepath))
         return customPools.get(filepath)!
+
       const pool = await ctx.runner.executeId(filepath)
       if (typeof pool.default !== 'function')
         throw new Error(`Custom pool "${filepath}" must export a function as default export`)
+
       const poolInstance = await pool.default(ctx, options)
+
       if (typeof poolInstance?.name !== 'string')
         throw new Error(`Custom pool "${filepath}" should return an object with "name" property`)
       if (typeof poolInstance?.runTests !== 'function')
         throw new Error(`Custom pool "${filepath}" should return an object with "runTests" method`)
+
       customPools.set(filepath, poolInstance)
       return poolInstance as ProcessPool
     }
@@ -103,7 +109,17 @@ export function createPool(ctx: Vitest): ProcessPool {
       threads: [],
       browser: [],
       vmThreads: [],
+      vmForks: [],
       typescript: [],
+    }
+
+    const factories: Record<Pool, () => ProcessPool> = {
+      browser: () => createBrowserPool(ctx),
+      vmThreads: () => createVmThreadsPool(ctx, options),
+      threads: () => createThreadsPool(ctx, options),
+      forks: () => createForksPool(ctx, options),
+      vmForks: () => createVmForksPool(ctx, options),
+      typescript: () => createTypecheckPool(ctx),
     }
 
     for (const spec of files) {
@@ -129,29 +145,10 @@ export function createPool(ctx: Vitest): ProcessPool {
 
       const specs = await sortSpecs(files)
 
-      if (pool === 'browser') {
-        pools.browser ??= createBrowserPool(ctx)
-        return pools.browser.runTests(specs, invalidate)
-      }
-
-      if (pool === 'vmThreads') {
-        pools.vmThreads ??= createVmThreadsPool(ctx, options)
-        return pools.vmThreads.runTests(specs, invalidate)
-      }
-
-      if (pool === 'threads') {
-        pools.threads ??= createThreadsPool(ctx, options)
-        return pools.threads.runTests(specs, invalidate)
-      }
-
-      if (pool === 'typescript') {
-        pools.typescript ??= createTypecheckPool(ctx)
-        return pools.typescript.runTests(specs)
-      }
-
-      if (pool === 'forks') {
-        pools.forks ??= createForksPool(ctx, options)
-        return pools.forks.runTests(files, invalidate)
+      if (pool in factories) {
+        const factory = factories[pool]
+        pools[pool] ??= factory()
+        return pools[pool]!.runTests(specs, invalidate)
       }
 
       const poolHandler = await resolveCustomPool(pool)
