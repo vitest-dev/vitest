@@ -105,11 +105,15 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         return { externalize: externalizeMap.get(id)! }
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
-      if (id.includes(distDir) || bareVitestRegexp.test(id)) {
+      if (id.includes(distDir)) {
         const { path } = toFilePath(id, state().config.root)
         const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)
         return { externalize }
+      }
+      if (bareVitestRegexp.test(id)) {
+        externalizeMap.set(id, id)
+        return { externalize: id }
       }
 
       return rpc().fetch(id, getTransformMode())
