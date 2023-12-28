@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
-import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
+import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
@@ -41,6 +41,7 @@ export const packageCache = new Map<string, any>()
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 export const fileMap = new FileMap()
+const externalizeMap = new Map<string, string>()
 
 export async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode)
@@ -64,7 +65,7 @@ export interface ContextExecutorOptions {
 
 export async function startVitestExecutor(options: ContextExecutorOptions) {
   // @ts-expect-error injected untyped global
-  const state = () => globalThis.__vitest_worker__ || options.state
+  const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
   const processExit = process.exit
@@ -97,7 +98,18 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   }
 
   return await createVitestExecutor({
-    fetchModule(id) {
+    async fetchModule(id) {
+      if (externalizeMap.has(id))
+        return { externalize: externalizeMap.get(id)! }
+      // always externalize Vitest because we import from there before running tests
+      // so we already have it cached by Node.js
+      if (id.includes(distDir)) {
+        const { path } = toFilePath(id, state().config.root)
+        const externalize = pathToFileURL(path).toString()
+        externalizeMap.set(id, externalize)
+        return { externalize }
+      }
+
       return rpc().fetch(id, getTransformMode())
     },
     resolveId(id, importer) {
