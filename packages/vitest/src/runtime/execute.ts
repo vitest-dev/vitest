@@ -104,7 +104,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
       if (id.includes(distDir)) {
-        const { path: externalize } = toFilePath(id, state().config.root)
+        const { path } = toFilePath(id, state().config.root)
+        const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)
         return { externalize }
       }
