@@ -233,6 +233,10 @@ export default withPwa(defineConfig({
               text: 'Common Errors',
               link: '/guide/common-errors',
             },
+            {
+              text: 'Improving Performance',
+              link: '/guide/improving-performance',
+            },
           ],
         },
         {

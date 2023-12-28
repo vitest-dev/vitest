@@ -1,4 +1,4 @@
-# Performance
+# Improving Performance
 
 By default Vitest runs every test file in an isolated environment based on the [pool](/config/#pool):
 

@@ -2076,7 +2076,7 @@ Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
 Run tests in an isolated environment. This option has no effect on `vmThreads` pool.
 
-Disabling this option might improve [performance](/guide/performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
+Disabling this option might [improve performance](/guide/improving-performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
 
 ::: note
 You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
