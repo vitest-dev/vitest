@@ -188,7 +188,7 @@ export class JsonReporter implements Reporter {
       getSourceMap: file => project.getBrowserSourceMapModuleById(file),
       frameFilter: this.ctx.config.onStackTrace,
     })
-    const frame = stack[0]
+    const frame = stack[stack.length - 1]
     if (!frame)
       return
 
