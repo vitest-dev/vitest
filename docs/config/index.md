@@ -1904,7 +1904,7 @@ By default Vitest will run all of your test cases even if some of them fail. Thi
 
 Retry the test specific number of times if it fails.
 
-### onConsoleLog
+### onConsoleLog<NonProjectOption />
 
 - **Type**: `(log: string, type: 'stdout' | 'stderr') => false | void`
 
@@ -1925,7 +1925,7 @@ export default defineConfig({
 })
 ```
 
-### onStackTrace <Badge type="info">1.0.0+</Badge>
+### onStackTrace<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
 
@@ -2033,7 +2033,7 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
-### workspace <Badge type="info">1.1.0+</Badge>
+### workspace<NonProjectOption /> <Badge type="info">1.1.0+</Badge>
 
 - **Type:** `string`
 - **CLI:** `--workspace=./file.js`
