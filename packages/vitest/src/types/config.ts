@@ -671,15 +671,15 @@ export interface InlineConfig {
   expandSnapshotDiff?: boolean
 
   /**
-   * Intercept global console logging during tests to print each log labelled with test file and title.
+   * By default, Vitest automatically intercept console logging during tests for extra formatting of test file, test title, etc...
    * This is also required for console log preview on Vitest UI.
-   * However, disabling this option might help when you want to debug a code with normal synchronus terminal console logging.
+   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
    *
    * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
    *
-   * @default true
+   * @default false
    */
-  spyConsoleLog?: boolean
+  disableConsoleIntercept?: boolean
 }
 
 export interface TypecheckConfig {

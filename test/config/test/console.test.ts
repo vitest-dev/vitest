@@ -8,10 +8,10 @@ test('default intercept', async () => {
   expect(stderr).toBe('stderr | basic.test.ts > basic\n__test_console__\n\n')
 })
 
-test('raw', async () => {
+test('disable intercept', async () => {
   const { stderr } = await runVitest({
     root: './fixtures/console',
-    spyConsoleLog: false,
+    disableConsoleIntercept: true,
   })
   expect(stderr).toBe('__test_console__\n')
 })

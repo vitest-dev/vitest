@@ -277,7 +277,7 @@ export class Vitest {
       'pool',
       'globals',
       'expandSnapshotDiff',
-      'spyConsoleLog',
+      'disableConsoleIntercept',
       'retry',
       'testNamePattern',
       'passWithNoTests',
