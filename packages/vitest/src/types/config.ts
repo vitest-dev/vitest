@@ -671,7 +671,7 @@ export interface InlineConfig {
   expandSnapshotDiff?: boolean
 
   /**
-   * By default, Vitest automatically intercept console logging during tests for extra formatting of test file, test title, etc...
+   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
    * This is also required for console log preview on Vitest UI.
    * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
    *
