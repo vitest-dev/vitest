@@ -1,5 +1,22 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`concurrent snapshot update 1`] = `
+"import { it } from 'vitest'
+
+it.concurrent('1st', ({ expect }) => {
+  expect('hi1').toMatchInlineSnapshot(\`"hi1"\`)
+})
+
+it.concurrent('2nd', ({ expect }) => {
+  expect('hi2').toMatchInlineSnapshot(\`"hi2"\`)
+})
+
+it.concurrent('3rd', ({ expect }) => {
+  expect('hi3').toMatchInlineSnapshot(\`"hi3"\`)
+})
+"
+`;
+
 exports[`js snapshots generated correctly 1`] = `
 "import { describe, expect, test } from 'vitest'
 
