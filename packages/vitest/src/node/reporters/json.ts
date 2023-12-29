@@ -192,6 +192,7 @@ export class JsonReporter implements Reporter {
     if (!frame)
       return
 
-    return { line: frame.line, column: frame.column }
+    // Jest produces zero-based line and column numbers
+    return { line: frame.line - 1, column: frame.column - 1 }
   }
 }

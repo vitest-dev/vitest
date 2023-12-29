@@ -284,8 +284,8 @@ exports[`json reporter (no outputFile entry) 1`] = `
           ],
           "fullName": "suite inner suite Math.sqrt()",
           "location": {
-            "column": 32,
-            "line": 8,
+            "column": 31,
+            "line": 7,
           },
           "status": "failed",
           "title": "Math.sqrt()",
@@ -406,8 +406,8 @@ exports[`json reporter 1`] = `
           ],
           "fullName": "suite inner suite Math.sqrt()",
           "location": {
-            "column": 32,
-            "line": 8,
+            "column": 31,
+            "line": 7,
           },
           "status": "failed",
           "title": "Math.sqrt()",
@@ -535,8 +535,8 @@ exports[`json reporter with outputFile 2`] = `
             "expected 2.23606797749979 to equal 2"
           ],
           "location": {
-            "line": 8,
-            "column": 32
+            "line": 7,
+            "column": 31
           }
         },
         {
@@ -662,8 +662,8 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
             "expected 2.23606797749979 to equal 2"
           ],
           "location": {
-            "line": 8,
-            "column": 32
+            "line": 7,
+            "column": 31
           }
         },
         {
@@ -789,8 +789,8 @@ exports[`json reporter with outputFile object 2`] = `
             "expected 2.23606797749979 to equal 2"
           ],
           "location": {
-            "line": 8,
-            "column": 32
+            "line": 7,
+            "column": 31
           }
         },
         {
@@ -916,8 +916,8 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
             "expected 2.23606797749979 to equal 2"
           ],
           "location": {
-            "line": 8,
-            "column": 32
+            "line": 7,
+            "column": 31
           }
         },
         {
