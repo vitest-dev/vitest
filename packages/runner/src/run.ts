@@ -183,6 +183,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
         test.mode = 'skip'
         test.result = { state: 'skip' }
         updateTask(test, runner)
+        setCurrentTest(undefined)
         return
       }
 
