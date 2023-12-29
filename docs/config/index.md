@@ -2051,6 +2051,6 @@ Run tests in an isolated environment. This option has no effect on `vmThreads` p
 
 Disabling this option might [improve performance](/guide/improving-performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
 
-::: note
+::: tip
 You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
 :::
