@@ -76,7 +76,6 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     if (!cleanupFnArrayMap.has(context))
       cleanupFnArrayMap.set(context, [])
-
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
 
     const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))

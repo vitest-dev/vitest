@@ -12,7 +12,7 @@ interface MyFixtures {
 }
 
 export const myTest = test.extend<MyFixtures>({
-  // [repro] ordered must be { a, b } and not { b, a }
+  // [repro] fixture order must be { a, b } and not { b, a }
   a: async ({}, use) => {
     globalA++
     await new Promise<void>(resolve => setTimeout(resolve, 200)) // [repro] async fixture
