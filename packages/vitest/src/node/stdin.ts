@@ -98,7 +98,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   async function inputNamePattern() {
     off()
     const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
-    const filter = await watchFilter.filter(ctx.configOverride.testNamePattern?.source || '', async (str: string) => {
+    const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.state.getFiles()
       const tasks = files.map(file => file.tasks).flat()
       const tests = getTests(tasks)
@@ -111,6 +111,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
         return []
       }
     })
+
+    if (!filter)
+      return on()
+
     on()
     await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
   }
@@ -132,17 +136,18 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const watchFilter = new WatchFilter('Input filename pattern')
 
-    const filter = await watchFilter.filter(latestFilename, async (str: string) => {
+    const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.globTestFiles([str])
       return files.map(file =>
         relative(ctx.config.root, file[1]),
       )
     })
 
-    latestFilename = filter.trim()
-
     on()
-    await ctx.changeFilenamePattern(filter.trim())
+
+    latestFilename = filter?.trim() || ''
+
+    await ctx.changeFilenamePattern(latestFilename)
   }
 
   let rl: readline.Interface | undefined
