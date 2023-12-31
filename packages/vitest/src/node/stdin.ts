@@ -5,6 +5,7 @@ import { relative } from 'pathe'
 import { getTests, isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
+import { WatchFilter } from './watch-filter'
 
 const keys = [
   [['a', 'return'], 'rerun all tests'],
@@ -96,8 +97,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-
-    const filter = await createFilter('Input test name pattern (RegExp)', ctx.configOverride.testNamePattern?.source || '', async (str: string) => {
+    const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
+    const filter = await watchFilter.filter(ctx.configOverride.testNamePattern?.source || '', async (str: string) => {
       const files = await ctx.state.getFiles()
       const tasks = files.map(file => file.tasks).flat()
       const tests = getTests(tasks)
@@ -128,7 +129,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputFilePattern() {
     off()
-    const filter = await createFilter('Input filename pattern', latestFilename, async (str: string) => {
+
+    const watchFilter = new WatchFilter('Input filename pattern')
+
+    const filter = await watchFilter.filter(latestFilename, async (str: string) => {
       const files = await ctx.globTestFiles([str])
       return files.map(file =>
         relative(ctx.config.root, file[1]),
@@ -136,6 +140,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     })
 
     latestFilename = filter.trim()
+
     on()
     await ctx.changeFilenamePattern(filter.trim())
   }
@@ -163,93 +168,4 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   return function cleanup() {
     off()
   }
-}
-
-  type FilterFunc = (str: string) => Promise<string[]>
-
-async function createFilter(message: string, initial: string, filterFunc: FilterFunc) {
-  let currentKeyword: string | undefined
-  const filterRL = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
-  readline.emitKeypressEvents(process.stdin, filterRL)
-  if (process.stdin.isTTY)
-    process.stdin.setRawMode(false)
-  const handler = filterHandler(filterFunc)
-  process.stdin.on('keypress', handler)
-
-  const { filter = '' }: { filter: string } = await prompt([{
-    name: 'filter',
-    type: 'text',
-    message,
-    initial,
-  }])
-
-  filterRL.close()
-  process.stdin.removeListener('keypress', handler)
-  if (process.stdin.isTTY)
-    process.stdin.setRawMode(false)
-
-  return filter
-
-  function restoreCursor() {
-    const cursortPos = `? ${message} › `.length + (currentKeyword?.length || 0)
-    stdout().write(`\u001B[${cursortPos}G`)
-  }
-
-  function filterHandler(filterFunc: FilterFunc) {
-    const MAX_RESULT_COUNT = 10
-    return async function (str: string, key: any) {
-    // backspace
-      if (key.sequence === '\x7F') {
-        if (currentKeyword && currentKeyword?.length > 1)
-
-          currentKeyword = currentKeyword?.slice(0, -1)
-
-        else
-          currentKeyword = undefined
-      }
-      else if (key?.name === 'return') {
-        // reset current keyword
-        currentKeyword = undefined
-        return
-      }
-      else {
-        if (currentKeyword === undefined)
-          currentKeyword = str
-        else
-          currentKeyword += str
-      }
-
-      if (currentKeyword) {
-        const results = await filterFunc(currentKeyword)
-
-        if (results.length === 0) {
-          eraseAndPrint(`\nPattern matches no results`)
-        }
-        else {
-          if (results.length > MAX_RESULT_COUNT) {
-            eraseAndPrint(`\nPattern matches ${results.length} results`
-           + `\n${results.slice(0, MAX_RESULT_COUNT).map(result => c.dim(` › ${result}`)).join('\n')}${
-            c.dim(`\n   ...and ${results.length - MAX_RESULT_COUNT} more results`)}`)
-          }
-          else { eraseAndPrint(`\nPattern matches ${results.length} results` + `\n${results.map(result => c.dim(` › ${result}`)).join('\n')}`) }
-        }
-      }
-      else {
-        eraseAndPrint('\nPlease input filter pattern')
-      }
-      restoreCursor()
-    }
-  }
-}
-
-/**
- * Print string and back to original cursor position
- * @param str
- */
-function eraseAndPrint(str: string) {
-  const lineBreasks = str.split('\n').length - 1
-
-  stdout().write('\u001B[J')
-  stdout().write(str)
-  stdout().write(`\u001B[${lineBreasks}A`)
 }
