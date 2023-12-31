@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`emits <failure> when beforeAll/afterAll failed 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="8" failures="2" errors="0" time="...">
+    <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="8" failures="2" errors="0" skipped="2" time="...">
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 1" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 2" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; skip 1" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; ok 1" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; ok 2" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; skip 1" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll" time="...">
+            <failure message="beforeAll error" type="Error">
+Error: beforeAll error
+ ❯ basic.test.ts:10:11
+            </failure>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll" time="...">
+            <failure message="afterAll error" type="Error">
+Error: afterAll error
+ ❯ basic.test.ts:20:11
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
