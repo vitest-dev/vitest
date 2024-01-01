@@ -35,7 +35,7 @@ export class SnapshotManager {
   resolveRawPath(testPath: string, rawPath: string) {
     return isAbsolute(rawPath)
       ? rawPath
-      : resolve(dirname(testPath), rawPath);
+      : resolve(dirname(testPath), rawPath)
   }
 }
 
