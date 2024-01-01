@@ -280,7 +280,17 @@ exports[`json reporter (no outputFile entry) 1`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite inner suite Math.sqrt()",
           "location": {
@@ -402,7 +412,17 @@ exports[`json reporter 1`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite inner suite Math.sqrt()",
           "location": {
@@ -532,7 +552,7 @@ exports[`json reporter with outputFile 2`] = `
           "title": "Math.sqrt()",
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2"
+            "AssertionError: expected 2.23606797749979 to equal 2\\n    at /vitest/test/core/test/basic.test.ts:8:32\\n    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\\n    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\\n    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\\n    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\\n    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\\n    at async /vitest/packages/vitest/dist/entry.js:1798:7\\n    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\\n    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\\n    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20"
           ],
           "location": {
             "line": 8,
@@ -659,7 +679,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "title": "Math.sqrt()",
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2"
+            "AssertionError: expected 2.23606797749979 to equal 2\\n    at /vitest/test/core/test/basic.test.ts:8:32\\n    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\\n    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\\n    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\\n    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\\n    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\\n    at async /vitest/packages/vitest/dist/entry.js:1798:7\\n    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\\n    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\\n    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20"
           ],
           "location": {
             "line": 8,
@@ -786,7 +806,7 @@ exports[`json reporter with outputFile object 2`] = `
           "title": "Math.sqrt()",
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2"
+            "AssertionError: expected 2.23606797749979 to equal 2\\n    at /vitest/test/core/test/basic.test.ts:8:32\\n    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\\n    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\\n    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\\n    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\\n    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\\n    at async /vitest/packages/vitest/dist/entry.js:1798:7\\n    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\\n    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\\n    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20"
           ],
           "location": {
             "line": 8,
@@ -913,7 +933,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "title": "Math.sqrt()",
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2"
+            "AssertionError: expected 2.23606797749979 to equal 2\\n    at /vitest/test/core/test/basic.test.ts:8:32\\n    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\\n    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\\n    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\\n    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\\n    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\\n    at async /vitest/packages/vitest/dist/entry.js:1798:7\\n    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\\n    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\\n    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20"
           ],
           "location": {
             "line": 8,

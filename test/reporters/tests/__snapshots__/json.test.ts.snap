@@ -6,7 +6,17 @@ exports[`json reporter > generates correct report 1`] = `
     "",
   ],
   "failureMessages": [
-    "expected 2 to deeply equal 1",
+    "AssertionError: expected 2 to deeply equal 1
+    at /home/bard/projects/vitest/test/reporters/fixtures/json-fail.test.ts:8:13
+    at file:///home/bard/projects/vitest/packages/runner/dist/index.js:127:14
+    at file:///home/bard/projects/vitest/packages/runner/dist/index.js:59:26
+    at runTest (file:///home/bard/projects/vitest/packages/runner/dist/index.js:671:17)
+    at runSuite (file:///home/bard/projects/vitest/packages/runner/dist/index.js:789:15)
+    at runFiles (file:///home/bard/projects/vitest/packages/runner/dist/index.js:838:5)
+    at startTests (file:///home/bard/projects/vitest/packages/runner/dist/index.js:847:3)
+    at file:///home/bard/projects/vitest/packages/vitest/dist/entry.js:112:7
+    at withEnv (file:///home/bard/projects/vitest/packages/vitest/dist/entry.js:79:5)
+    at run (file:///home/bard/projects/vitest/packages/vitest/dist/entry.js:101:3)",
   ],
   "fullName": " should fail",
   "location": {

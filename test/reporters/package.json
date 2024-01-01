@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "NO_COLOR=1 vitest run"
+    "test": "NO_COLOR=1 vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "flatted": "^3.2.9",

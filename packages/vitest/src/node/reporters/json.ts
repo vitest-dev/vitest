@@ -109,7 +109,7 @@ export class JsonReporter implements Reporter {
           status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
-          failureMessages: t.result?.errors?.map(e => e.message) || [],
+          failureMessages: t.result?.errors?.map(e => e.stack) || [],
           location: await this.getFailureLocation(t),
         } as FormattedAssertionResult
       }))
