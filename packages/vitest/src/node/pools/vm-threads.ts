@@ -167,6 +167,7 @@ function getMemoryLimit(config: ResolvedConfig) {
     )
   }
 
+// If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
   if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
     return stringToBytes(limit)
 
