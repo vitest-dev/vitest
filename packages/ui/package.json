@@ -55,7 +55,7 @@
     "flatted": "^3.2.9",
     "pathe": "^1.1.1",
     "picocolors": "^1.0.0",
-    "sirv": "^2.0.3"
+    "sirv": "^2.0.4"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
