@@ -55,11 +55,10 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend
+### test.extend <Badge type="info">0.32.3+</Badge>
 
 - **Type:** `<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>`
 - **Alias:** `it.extend`
-- **Version:** Vitest 0.32.3
 
 Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context.html#test-extend) for more information.
 
