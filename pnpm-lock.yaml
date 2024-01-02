@@ -897,11 +897,11 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       playwright:
-        specifier: ^1.40.0
-        version: 1.40.0
+        specifier: ^1.40.1
+        version: 1.40.1
       playwright-core:
-        specifier: ^1.40.0
-        version: 1.40.0
+        specifier: ^1.40.1
+        version: 1.40.1
       safaridriver:
         specifier: ^0.1.1
         version: 0.1.1
@@ -21513,8 +21513,8 @@ packages:
     hasBin: true
     dev: true
 
-  /playwright-core@1.40.0:
-    resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
+  /playwright-core@1.40.1:
+    resolution: {integrity: sha512-+hkOycxPiV534c4HhpfX6yrlawqVUzITRKwHAmYfmsVreltEl6fAZJ3DPfLMOODw0H3s1Itd6MDCWmP1fl/QvQ==}
     engines: {node: '>=16'}
     hasBin: true
     dev: true
@@ -21529,12 +21529,12 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /playwright@1.40.0:
-    resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
+  /playwright@1.40.1:
+    resolution: {integrity: sha512-2eHI7IioIpQ0bS1Ovg/HszsN/XKNwEG1kbzSDDmADpclKc7CyqkHw7Mg2JCz/bbCxg25QUPcjksoMW7JcIFQmw==}
     engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      playwright-core: 1.40.0
+      playwright-core: 1.40.1
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
