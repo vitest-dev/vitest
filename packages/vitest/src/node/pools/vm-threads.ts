@@ -111,7 +111,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root, project.getName())
+          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
 
         else
           throw error
@@ -123,6 +123,9 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     }
 
     return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
+
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
         if (configs.has(project))
@@ -167,9 +170,10 @@ function getMemoryLimit(config: ResolvedConfig) {
     )
   }
 
-  if (limit && limit > 1)
+  // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
+  if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
     return stringToBytes(limit)
 
-  // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
 }

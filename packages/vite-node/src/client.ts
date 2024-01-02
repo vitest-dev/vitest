@@ -303,6 +303,8 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
+    const SYMBOL_NOT_DEFINED = Symbol('not defined')
+    let moduleExports: unknown = SYMBOL_NOT_DEFINED
     // this proxy is triggered only on exports.{name} and module.exports access
     // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exports, {
@@ -326,12 +328,14 @@ export class ViteNodeRunner {
 
         // returns undefined, when accessing named exports, if default is not an object
         // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (isPrimitive(exports.default)) {
+        if (moduleExports !== SYMBOL_NOT_DEFINED && isPrimitive(moduleExports)) {
           defineExport(exports, p, () => undefined)
           return true
         }
 
-        exports.default[p] = value
+        if (!isPrimitive(exports.default))
+          exports.default[p] = value
+
         if (p !== 'default')
           defineExport(exports, p, () => value)
 
@@ -345,6 +349,7 @@ export class ViteNodeRunner {
       set exports(value) {
         exportAll(cjsExports, value)
         exports.default = value
+        moduleExports = value
       },
       get exports() {
         return cjsExports

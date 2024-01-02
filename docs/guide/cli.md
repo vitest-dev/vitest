@@ -73,7 +73,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--poolOptions <options>` | Specify pool options |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
 | `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
-| `--fileParallelism` | Should all test files run in parallel. Use --no-parallelism to disable (default: true) |
+| `--fileParallelism` | Should all test files run in parallel. Use --no-file-parallelism to disable (default: true) |
 | `--maxWorkers` | Maximum number of workers to run tests in |
 | `--minWorkers` | Minimum number of workers to run tests in |
 | `--silent` | Silent console output from tests |

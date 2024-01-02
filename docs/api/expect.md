@@ -730,10 +730,9 @@ test('matches snapshot', () => {
 })
 ```
 
-## toMatchFileSnapshot
+## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge>
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
-- **Version:** Since Vitest 0.30.0
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -1209,10 +1208,9 @@ test('"id" is a number', () => {
 })
 ```
 
-## expect.closeTo
+## expect.closeTo <Badge type="info">1.0.0+</Badge>
 
 - **Type:** `(expected: any, precision?: number) => any`
-- **Version:** Since Vitest 1.0.0
 
 `expect.closeTo` is useful when comparing floating point numbers in object properties or array item. If you need to compare a number, please use `.toBeCloseTo` instead.
 

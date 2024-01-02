@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -142,7 +142,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn-walk": "^8.3.0",
+    "acorn-walk": "^8.3.1",
     "cac": "^6.7.14",
     "chai": "^4.3.10",
     "debug": "^4.3.4",
