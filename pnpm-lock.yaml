@@ -904,7 +904,7 @@ importers:
         version: 1.40.1
       safaridriver:
         specifier: ^0.1.1
-        version: 0.1.1
+        version: 0.1.2
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -4047,7 +4047,7 @@ packages:
       '@babel/helper-module-imports': 7.22.15
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-jsx': 7.22.5(@babel/core@7.23.3)
-      '@babel/types': 7.23.3
+      '@babel/types': 7.23.0
     dev: true
 
   /@babel/plugin-transform-react-pure-annotations@7.18.6(@babel/core@7.23.3):
@@ -10628,7 +10628,7 @@ packages:
       got: 13.0.0
       import-meta-resolve: 3.0.0
       locate-app: 2.1.0
-      safaridriver: 0.1.1
+      safaridriver: 0.1.2
       split2: 4.2.0
       wait-port: 1.0.4
     transitivePeerDependencies:
@@ -10650,7 +10650,7 @@ packages:
       got: 13.0.0
       import-meta-resolve: 3.0.0
       locate-app: 2.1.0
-      safaridriver: 0.1.1
+      safaridriver: 0.1.2
       split2: 4.2.0
       wait-port: 1.0.4
     transitivePeerDependencies:
@@ -20262,11 +20262,6 @@ packages:
     resolution: {integrity: sha512-eu38+hdgojoyq63s+yTpN4XMBdt5l8HhMhc4VKLO9KM5caLIBvUm4thi7fFaxyTmCKeNnXZ5pAlBwCUnhA09uw==}
     engines: {node: '>=10'}
 
-  /mrmime@2.0.0:
-    resolution: {integrity: sha512-eu38+hdgojoyq63s+yTpN4XMBdt5l8HhMhc4VKLO9KM5caLIBvUm4thi7fFaxyTmCKeNnXZ5pAlBwCUnhA09uw==}
-    engines: {node: '>=10'}
-    dev: true
-
   /ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
     dev: true
@@ -23103,8 +23098,8 @@ packages:
     resolution: {integrity: sha512-EgK9Vc2Bk4WaECq1E7ti9GyeQ6JKKQNs40vNOE/b5Ul5dDEt429G0Kj5Nzs4FRS5ZIVa7nBck1TyHuinOYdz2Q==}
     dev: true
 
-  /safaridriver@0.1.1:
-    resolution: {integrity: sha512-dpCmh2EYKh9G61nR+ve0w2+WW2YJX59Rtke0pUoUXbvGKPDLK+NcL7I3VBS1UcGJbA6ptQTT82JcGwJHALD0kQ==}
+  /safaridriver@0.1.2:
+    resolution: {integrity: sha512-4R309+gWflJktzPXBQCobbWEHlzC4aK3a+Ov3tz2Ib2aBxiwd11phkdIBH1l0EO22x24CJMUQkpKFumRriCSRg==}
     dev: true
 
   /safe-array-concat@1.0.1:
@@ -23506,20 +23501,20 @@ packages:
     resolution: {integrity: sha512-8o/QEhSSRb1a5i7TFR0iM4G16Z0vYB2OQVs4G3aAFXjn3T6yEx8AZxy1PgDF7I00LZHYA3WxaSYIf5e5sAX8Rw==}
     dev: true
 
-  /shikiji-core@0.9.15:
-    resolution: {integrity: sha512-7hqIcUKS15OMs/61Qp2GvO1fSajBB36bDqi8vexIg5kp80V6v6SGtBrlq+nLlo7erMG2d1kvIuTIq1bwKI6fEg==}
+  /shikiji-core@0.9.17:
+    resolution: {integrity: sha512-r1FWTXk6SO2aYqfWgcsJ11MuVQ1ymPSdXzJjK7q8EXuyqu8yc2N5qrQy5+BL6gTVOaF4yLjbxFjF+KTRM1Sp8Q==}
     dev: true
 
-  /shikiji-transformers@0.9.15:
-    resolution: {integrity: sha512-k0sQ6tX26/cdb8QV9CCwwr7QjRp6/AVP9C0oNIXNld3of+xCrpf74kD74piybG6vMfzBoHGsz/s60RVBJOUaYQ==}
+  /shikiji-transformers@0.9.17:
+    resolution: {integrity: sha512-2CCG9qSLS6Bn/jbeUTEuvC6YSuP8gm8VyX5VjmCvDKyCPGhlLJbH1k/kg9wfRt7cJqpYjhdMDgT5rkdYrOZnsA==}
     dependencies:
-      shikiji: 0.9.15
+      shikiji: 0.9.17
     dev: true
 
-  /shikiji@0.9.15:
-    resolution: {integrity: sha512-+inN4cN+nY7b0uCPOiqFHAk+cn2DEdM3AIQgPhAV7QKqhww/o7OGS5xvLh3SNnjke9C/HispALqGOQGYHVq7KQ==}
+  /shikiji@0.9.17:
+    resolution: {integrity: sha512-0z/1NfkhBkm3ijrfFeHg3G9yDNuHhXdAGbQm7tRxj4WQ5z2y0XDbnagFyKyuV2ebCTS1Mwy1I3n0Fzcc/4xdmw==}
     dependencies:
-      shikiji-core: 0.9.15
+      shikiji-core: 0.9.17
     dev: true
 
   /side-channel@1.0.4:
@@ -23692,7 +23687,7 @@ packages:
     dependencies:
       '@babel/generator': 7.23.0
       '@babel/helper-module-imports': 7.22.15
-      '@babel/types': 7.23.3
+      '@babel/types': 7.23.0
       solid-js: 1.8.3
     dev: true
 
@@ -26057,9 +26052,9 @@ packages:
       minisearch: 6.3.0
       mrmime: 2.0.0
       postcss: 8.4.31
-      shikiji: 0.9.15
-      shikiji-core: 0.9.15
-      shikiji-transformers: 0.9.15
+      shikiji: 0.9.17
+      shikiji-core: 0.9.17
+      shikiji-transformers: 0.9.17
       vite: 5.0.2(@types/node@18.18.9)(less@4.1.3)
       vue: 3.4.3(typescript@5.2.2)
     transitivePeerDependencies:
@@ -26208,6 +26203,7 @@ packages:
 
   /vue@2.7.10:
     resolution: {integrity: sha512-HmFC70qarSHPXcKtW8U8fgIkF6JGvjEmDiVInTkKZP0gIlEPhlVlcJJLkdGIDiNkIeA2zJPQTWJUI4iWe+AVfg==}
+    deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
     dependencies:
       '@vue/compiler-sfc': 2.7.10
       csstype: 3.1.2
