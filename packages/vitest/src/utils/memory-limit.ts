@@ -23,7 +23,7 @@ export function getWorkerMemoryLimit(config: ResolvedConfig) {
   const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
 
   if (memoryLimit)
-    return stringToBytes(memoryLimit)
+    return memoryLimit
 
   return 1 / (config.poolOptions?.vmThreads?.maxThreads ?? getDefaultThreadsCount(config))
 }
@@ -94,7 +94,7 @@ export function stringToBytes(
       return Math.floor(input)
     }
     else {
-      throw new Error('Unexpected numerical input for "experimentalVmWorkerMemoryLimit"')
+      throw new Error('Unexpected numerical input for "memoryLimit"')
     }
   }
 
