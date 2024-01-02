@@ -170,9 +170,10 @@ function getMemoryLimit(config: ResolvedConfig) {
     )
   }
 
-  if (limit && limit > 1)
+  // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
+  if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
     return stringToBytes(limit)
 
-  // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
 }
