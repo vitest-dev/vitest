@@ -148,7 +148,7 @@ export class JsonReporter implements Reporter {
       testResults,
     }
 
-    await this.writeReport(JSON.stringify(result, null, 2))
+    await this.writeReport(JSON.stringify(result))
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {

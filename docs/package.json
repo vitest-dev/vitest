@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.27",
-    "@iconify-json/logos": "^1.1.41",
+    "@iconify-json/logos": "^1.1.42",
     "@unocss/reset": "^0.57.4",
     "@vite-pwa/assets-generator": "^0.0.11",
     "@vite-pwa/vitepress": "^0.2.3",
@@ -29,7 +29,7 @@
     "unplugin-vue-components": "^0.25.2",
     "vite": "^5.0.0",
     "vite-plugin-pwa": "^0.16.7",
-    "vitepress": "^1.0.0-rc.27",
+    "vitepress": "^1.0.0-rc.34",
     "workbox-window": "^7.0.0"
   }
 }

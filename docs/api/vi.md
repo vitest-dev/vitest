@@ -421,10 +421,9 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
-### vi.stubEnv
+### vi.stubEnv <Badge type="info">0.26.0+</Badge>
 
 - **Type:** `(name: string, value: string) => Vitest`
-- **Version:** Since Vitest 0.26.0
 
 Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
@@ -450,10 +449,9 @@ import.meta.env.MODE = 'test'
 ```
 :::
 
-### vi.unstubAllEnvs
+### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge>
 
 - **Type:** `() => Vitest`
-- **Version:** Since Vitest 0.26.0
 
 Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
 
@@ -509,10 +507,9 @@ window.innerWidth = 100
 ```
 :::
 
-### vi.unstubAllGlobals
+### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge>
 
 - **Type:** `() => Vitest`
-- **Version:** Since Vitest 0.26.0
 
 Restores all global values on `globalThis`/`global` (and `window`/`top`/`self`/`parent`, if you are using `jsdom` or `happy-dom` environment) that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
 
@@ -752,10 +749,9 @@ Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `proce
 It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
-### vi.isFakeTimers
+### vi.isFakeTimers <Badge type="info">0.34.5+</Badge>
 
 - **Type:** `() => boolean`
-- **Version:** Since Vitest 0.34.5
 
 Returns `true` if fake timers are enabled.
 
@@ -769,10 +765,9 @@ When timers are run out, you may call this method to return mocked timers to its
 
 A set of useful helper functions that Vitest provides.
 
-### vi.waitFor
+### vi.waitFor <Badge type="info">0.34.5+</Badge>
 
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
-- **Version**: Since Vitest 0.34.5
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
 
@@ -829,10 +824,9 @@ test('Element exists in a DOM', async () => {
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
 
-### vi.waitUntil
+### vi.waitUntil <Badge type="info">0.34.5+</Badge>
 
 - **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
-- **Version**: Since Vitest 0.34.5
 
 This is similar to `vi.waitFor`, but if the callback throws any errors, execution is immediately interrupted and an error message is received. If the callback returns falsy value, the next check will continue until truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
 
@@ -855,10 +849,9 @@ test('Element render correctly', async () => {
 })
 ```
 
-### vi.hoisted
+### vi.hoisted <Badge type="info">0.31.0+</Badge>
 
 - **Type**: `<T>(factory: () => T) => T`
-- **Version**: Since Vitest 0.31.0
 
 All static `import` statements in ES modules are hoisted to the top of the file, so any code that is defined before the imports will actually be executed after imports are evaluated.
 

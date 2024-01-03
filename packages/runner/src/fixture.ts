@@ -46,12 +46,13 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
-let cleanupFnArray = new Array<() => void | Promise<void>>()
+const cleanupFnArrayMap = new Map<TestContext, Array<() => void | Promise<void>>>()
 
-export async function callFixtureCleanup() {
+export async function callFixtureCleanup(context: TestContext) {
+  const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
   for (const cleanup of cleanupFnArray.reverse())
     await cleanup()
-  cleanupFnArray = []
+  cleanupFnArrayMap.delete(context)
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
@@ -73,6 +74,10 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       fixtureValueMaps.set(context, new Map<FixtureItem, any>())
     const fixtureValueMap: Map<FixtureItem, any> = fixtureValueMaps.get(context)!
 
+    if (!cleanupFnArrayMap.has(context))
+      cleanupFnArrayMap.set(context, [])
+    const cleanupFnArray = cleanupFnArrayMap.get(context)!
+
     const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
     const pendingFixtures = resolveDeps(usedFixtures)
 
@@ -85,37 +90,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         if (fixtureValueMap.has(fixture))
           continue
 
-        let resolvedValue: unknown
-        if (fixture.isFn) {
-          // wait for `use` call to extract fixture value
-          const useFnArgPromise = createDefer()
-          let isUseFnArgResolved = false
-          const fixtureReturn = fixture.value(context, async (useFnArg: unknown) => {
-            isUseFnArgResolved = true
-            useFnArgPromise.resolve(useFnArg)
-            // suspend fixture teardown until cleanup
-            const useReturnPromise = createDefer<void>()
-            cleanupFnArray.push(async () => {
-              // start teardown by resolving `use` Promise
-              useReturnPromise.resolve()
-              // wait for finishing teardown
-              await fixtureReturn
-            })
-            await useReturnPromise
-          }).catch((e: unknown) => {
-            // treat fixture setup error as test failure
-            if (!isUseFnArgResolved) {
-              useFnArgPromise.reject(e)
-              return
-            }
-            // otherwise re-throw to avoid silencing error during cleanup
-            throw e
-          })
-          resolvedValue = await useFnArgPromise
-        }
-        else {
-          resolvedValue = fixture.value
-        }
+        const resolvedValue = fixture.isFn ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray) : fixture.value
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
         cleanupFnArray.unshift(() => {
@@ -126,6 +101,42 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     return resolveFixtures().then(() => fn(context))
   }
+}
+
+async function resolveFixtureFunction(
+  fixtureFn: (context: unknown, useFn: (arg: unknown) => Promise<void>) => Promise<void>,
+  context: unknown,
+  cleanupFnArray: (() => (void | Promise<void>))[],
+): Promise<unknown> {
+  // wait for `use` call to extract fixture value
+  const useFnArgPromise = createDefer()
+  let isUseFnArgResolved = false
+
+  const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
+    // extract `use` argument
+    isUseFnArgResolved = true
+    useFnArgPromise.resolve(useFnArg)
+
+    // suspend fixture teardown by holding off `useReturnPromise` resolution until cleanup
+    const useReturnPromise = createDefer<void>()
+    cleanupFnArray.push(async () => {
+      // start teardown by resolving `use` Promise
+      useReturnPromise.resolve()
+      // wait for finishing teardown
+      await fixtureReturn
+    })
+    await useReturnPromise
+  }).catch((e: unknown) => {
+    // treat fixture setup error as test failure
+    if (!isUseFnArgResolved) {
+      useFnArgPromise.reject(e)
+      return
+    }
+    // otherwise re-throw to avoid silencing error during cleanup
+    throw e
+  })
+
+  return useFnArgPromise
 }
 
 function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {

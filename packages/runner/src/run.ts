@@ -183,13 +183,14 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
         test.mode = 'skip'
         test.result = { state: 'skip' }
         updateTask(test, runner)
+        setCurrentTest(undefined)
         return
       }
 
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
-        await callFixtureCleanup()
+        await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)

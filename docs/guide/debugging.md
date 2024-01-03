@@ -62,7 +62,7 @@ vitest --inspect-brk --pool threads --poolOptions.threads.singleThread
 vitest --inspect-brk --pool forks --poolOptions.forks.singleFork
 ```
 
-If you are using Vitest 1.1 or higher, you can also just provide `--no-parallelism` flag:
+If you are using Vitest 1.1 or higher, you can also just provide `--no-file-parallelism` flag:
 
 ```sh
 # If pool is unknown
