@@ -12,11 +12,10 @@ interface CoverageHandler {
 }
 
 export function createBrowserRunner(
-  original: { new(config: ResolvedConfig): VitestRunner },
+  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
   coverageModule: CoverageHandler | null,
-  basePath: string,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
-  return class BrowserTestRunner extends original {
+  return class BrowserTestRunner extends VitestRunner {
     public config: ResolvedConfig
     hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
@@ -70,9 +69,10 @@ export function createBrowserRunner(
         hash = Date.now().toString()
         this.hashMap.set(filepath, [false, hash])
       }
+      const base = this.config.base || '/'
 
       // on Windows we need the unit to resolve the test file
-      const prefix = `${basePath}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const prefix = `${base}${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `${test ? 'browserv' : 'v'}=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)

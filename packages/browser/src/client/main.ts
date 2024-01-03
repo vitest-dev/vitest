@@ -3,7 +3,7 @@ import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
 import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
-import { importId as importIdImpl } from './utils'
+import { importId as _importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
 import { setupDialogsSpy } from './dialog'
@@ -24,8 +24,8 @@ const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 const reloadTries = Number(url.searchParams.get('reloadTries') || '0')
 
-const basePath = () => config!.base! || '/'
-const importId = (id: string) => importIdImpl(id, basePath())
+const basePath = () => config?.base || '/'
+const importId = (id: string) => _importId(id, basePath())
 const viteClientPath = () => `${basePath()}@vite/client`
 
 function getQueryPaths() {
@@ -207,7 +207,7 @@ async function prepareTestEnvironment(config: ResolvedConfig) {
 
   if (!runner) {
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) }, basePath())
+    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
 
