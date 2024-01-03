@@ -45,9 +45,9 @@ export default defineConfig({
 
 ## Cannot mock "./mocked-file.js" because it is already loaded
 
-This error happens when `vi.mock` or `vi.doMock` methods are called on modules that were already loaded. Vitest throws this error because this call has no effect because cached modules are preferred.
+This error happens when `vi.mock` method is called on a module that was already loaded. Vitest throws this error because this call has no effect since cached modules are preferred.
 
-If you are getting this error for `vi.mock`, remember that `vi.mock` is always hoisted - it means that the module was loaded before the test file started executing - most likely in a setup file. To fix the error, remove the import or clear the cache at the end of a setup file - beware that setup file and your test file will reference different modules in that case.
+Remember that `vi.mock` is always hoisted - it means that the module was loaded before the test file started executing - most likely in a setup file. To fix the error, remove the import or clear the cache at the end of a setup file - beware that setup file and your test file will reference different modules in that case.
 
 ```ts
 // setupFile.js
@@ -57,28 +57,4 @@ import { sideEffect } from './mocked-file.js'
 sideEffect()
 
 vi.resetModules()
-```
-
-If you are getting this error with `vi.doMock`, it means the file was already imported during test file execution or inside the setup file. If it was imported in the setup file, follow instruction from the previous paragraph. Otherwise it is possible that you are testing different module behaviours - so make sure to call `vi.resetModules` before mocking a module:
-
-```ts
-import { beforeEach, it, vi } from 'vitest'
-
-beforeEach(() => {
-  vi.resetModules() // this will reset all modules cache
-})
-
-it('total is big', async () => {
-  vi.doMock('./mocked-file.js', () => ({ total: 100 }))
-
-  const { total } = await import('./mocked-file.js')
-  expect(total).toBe(100)
-})
-
-it('total is bigger', async () => {
-  vi.doMock('./mocked-file.js', () => ({ total: 200 }))
-
-  const { total } = await import('./mocked-file.js')
-  expect(total).toBe(200)
-})
 ```
