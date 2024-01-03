@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     include: ['test/**.test.{ts,js}'],
-    exclude: [...defaultExclude, "**/fixtures/**"],
+    exclude: [...defaultExclude, '**/fixtures/**'],
     browser: {
       enabled: true,
       name: process.env.BROWSER || 'chrome',
