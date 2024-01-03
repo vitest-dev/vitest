@@ -21,9 +21,4 @@ export class FileMap {
     this.fsBufferCache.set(path, buffer)
     return buffer
   }
-
-  clear() {
-    this.fsBufferCache.clear()
-    this.fsCache.clear()
-  }
 }

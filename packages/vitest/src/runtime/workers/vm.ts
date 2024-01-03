@@ -37,7 +37,7 @@ export async function runVmTests(state: WorkerGlobalState) {
   if (!vm.getVmContext)
     throw new TypeError(`Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
 
-  let context: Context | null = vm.getVmContext()
+  const context: Context | null = vm.getVmContext()
 
   if (!isContext(context))
     throw new TypeError(`Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
@@ -56,7 +56,7 @@ export async function runVmTests(state: WorkerGlobalState) {
 
   const stubs = getDefaultRequestStubs(context)
 
-  let externalModulesExecutor: ExternalModulesExecutor | null = new ExternalModulesExecutor({
+  const externalModulesExecutor: ExternalModulesExecutor | null = new ExternalModulesExecutor({
     context,
     fileMap,
     packageCache,
@@ -64,7 +64,7 @@ export async function runVmTests(state: WorkerGlobalState) {
     viteClientModule: stubs['/@vite/client'],
   })
 
-  let executor: VitestExecutor | null = await startVitestExecutor({
+  const executor: VitestExecutor | null = await startVitestExecutor({
     context,
     moduleCache: state.moduleCache,
     mockMap: state.mockMap,
@@ -82,14 +82,6 @@ export async function runVmTests(state: WorkerGlobalState) {
   }
   finally {
     await vm.teardown?.()
-    externalModulesExecutor.destroy()
-    executor = null
-    externalModulesExecutor = null
-    state.mockMap.clear()
-    state.moduleCache.clear()
     state.environmentTeardownRun = true
-    context.__vitest_mocker__ = null
-    context.__vitest_worker__ = null
-    context = null
   }
 }
