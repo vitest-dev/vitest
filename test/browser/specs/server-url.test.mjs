@@ -22,7 +22,6 @@ test('server-url https', { skip: true }, async () => {
       TEST_HTTPS: '1',
     },
   })
-
   assert.match(result.stdout, /Browser runner started at https:\/\/localhost:5173\//)
   assert.match(result.stdout, /Test Files {2}1 passed/)
 })
