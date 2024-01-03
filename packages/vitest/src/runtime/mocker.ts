@@ -411,6 +411,9 @@ export class VitestMocker {
     const suitefile = this.getSuiteFilepath()
     const id = this.normalizePath(path)
 
+    if (this.moduleCache.has(id))
+      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?`)
+
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
 
