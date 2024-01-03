@@ -154,7 +154,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  mockImplementation(fn: ((...args: TArgs) => TReturns)): this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -162,7 +162,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  mockImplementationOnce(fn: ((...args: TArgs) => TReturns)): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -479,16 +479,16 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(() => val)
 
   stub.mockResolvedValue = (val: Awaited<TReturns>) =>
-    stub.mockImplementation(() => Promise.resolve(val as TReturns))
+    stub.mockImplementation(() => Promise.resolve(val as TReturns) as any)
 
   stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
-    stub.mockImplementationOnce(() => Promise.resolve(val as TReturns))
+    stub.mockImplementationOnce(() => Promise.resolve(val as TReturns) as any)
 
   stub.mockRejectedValue = (val: unknown) =>
-    stub.mockImplementation(() => Promise.reject(val))
+    stub.mockImplementation(() => Promise.reject(val) as any)
 
   stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementationOnce(() => Promise.reject(val))
+    stub.mockImplementationOnce(() => Promise.reject(val) as any)
 
   Object.defineProperty(stub, 'mock', {
     get: () => mockContext,
