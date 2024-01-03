@@ -10,6 +10,7 @@ import type { VitestWorker } from './workers/types'
 
 // this is what every pool executes when running tests
 export async function run(ctx: ContextRPC) {
+  const exit = process.exit
   const prepareStart = performance.now()
 
   const inspectorCleanup = setupInspect(ctx.config)
@@ -70,5 +71,6 @@ export async function run(ctx: ContextRPC) {
       state.environment = null as any
       state = null
     }
+    process.exit = exit
   }
 }
