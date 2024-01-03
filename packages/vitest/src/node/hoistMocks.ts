@@ -128,7 +128,6 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       const importId = defineImport(node)
       if (!importId)
         continue
-
       s.remove(node.start, getBetterEnd(code, node))
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
