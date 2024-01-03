@@ -1196,25 +1196,4 @@ console.log(foo + 2)
       ;"
     `)
   })
-
-  test('test', async () => {
-    expect(
-      await hoistSimpleCodeWithoutMocks(`
-      import { vi } from 'vitest'
-      import add, * as AddModule from '../src/add'
-      vi.mock('../src/add', () => {})`),
-    ).toMatchInlineSnapshot(`
-      "const { vi } = await import('vitest')
-      const { vi } = await import('vitest')
-      vi.mock('../src/add', () => {})
-      vi.mock('faker')
-      const __vi_import_0__ = await import('../src/add')
-
-
-            
-            
-            
-      ;"
-    `)
-  })
 })
