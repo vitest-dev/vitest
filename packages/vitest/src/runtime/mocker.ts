@@ -412,7 +412,7 @@ export class VitestMocker {
     const id = this.normalizePath(path)
 
     if (this.moduleCache.has(id))
-      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again.`)
+      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file.js-because-it-is-already-loaded`)
 
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
