@@ -13,18 +13,14 @@ test("server-url http", async () => {
   assert.ok(result.stdout.includes("Test Files  1 passed"));
 })
 
-test("server-url https", async (t) => {
-  // the test is skipped since browser warns self-signed https and it requires manual interaction.
-  // please comment out this "skip" to verify manually.
-  t.skip();
-  return;
-
+// the test is skipped since browser warns self-signed https and it requires manual interaction.
+// you can toggle `skip` to verify this test locally.
+test("server-url https", { skip: true }, async () => {
   const result = await execa('npx', ['vitest', 'run', '--root=./fixtures/server-url'], {
     env: {
       NO_COLOR: "1",
       TEST_HTTPS: '1',
     },
-    reject: false,
   });
   assert.ok(result.stdout.includes("Browser runner started at https://localhost:5173/"));
   assert.ok(result.stdout.includes("Test Files  1 passed"));
