@@ -143,6 +143,7 @@ jobs:
     strategy:
       matrix:
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+      fail-fast: false
 
     timeout-minutes: 30
 
@@ -186,6 +187,7 @@ jobs:
     strategy:
       matrix:
         browser: [[chrome, chromium], [edge, webkit]]
+      fail-fast: false
 
     timeout-minutes: 30
 
