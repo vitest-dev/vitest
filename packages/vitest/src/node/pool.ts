@@ -24,7 +24,7 @@ export interface PoolProcessOptions {
   env: Record<string, string>
 }
 
-export const builtinPools: BuiltinPool[] = ['forks', 'threads', 'browser', 'vmThreads', 'typescript']
+export const builtinPools: BuiltinPool[] = ['forks', 'threads', 'browser', 'vmThreads', 'vmForks', 'typescript']
 
 export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<Pool, ProcessPool | null> = {

@@ -46,6 +46,12 @@ function createChildProcessChannel(project: WorkspaceProject) {
   return { channel, cleanup }
 }
 
+function stringifyRegex(input: RegExp | string): string {
+  if (typeof input === 'string')
+    return input
+  return `$$vitest:${input.toString()}`
+}
+
 export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
@@ -64,6 +70,7 @@ export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const worker = resolve(ctx.distPath, 'workers/vmForks.js')
 
   const options: TinypoolOptions = {
+    runtime: 'child_process',
     filename: resolve(ctx.distPath, 'worker.js'),
 
     maxThreads,
@@ -138,7 +145,15 @@ export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         if (configs.has(project))
           return configs.get(project)!
 
-        const config = project.getSerializableConfig()
+        const _config = project.getSerializableConfig()
+
+        const config = {
+          ..._config,
+          // v8 serialize does not support regex
+          testNamePattern: _config.testNamePattern
+            ? stringifyRegex(_config.testNamePattern)
+            : undefined,
+        } as ResolvedConfig
         configs.set(project, config)
         return config
       }
