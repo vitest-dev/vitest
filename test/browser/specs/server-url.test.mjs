@@ -9,8 +9,8 @@ test('server-url http', async () => {
       NO_COLOR: '1',
     },
   })
-  assert.match(result.stdout, /Browser runner started at http:\/\/localhost:5173\//);
-  assert.match(result.stdout, /Test Files  1 passed/);
+  assert.match(result.stdout, /Browser runner started at http:\/\/localhost:5173\//)
+  assert.match(result.stdout, /Test Files {2}1 passed/)
 })
 
 // the test is skipped since browser warns self-signed https and it requires manual interaction.
@@ -22,6 +22,7 @@ test('server-url https', { skip: true }, async () => {
       TEST_HTTPS: '1',
     },
   })
-  assert.match(result.stdout, /Browser runner started at https:\/\/localhost:5173\//);
-  assert.match(result.stdout, /Test Files  1 passed/);
+
+  assert.match(result.stdout, /Browser runner started at https:\/\/localhost:5173\//)
+  assert.match(result.stdout, /Test Files {2}1 passed/)
 })
