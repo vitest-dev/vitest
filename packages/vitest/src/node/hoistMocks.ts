@@ -46,6 +46,15 @@ function transformImportSpecifiers(node: ImportDeclaration) {
   return `{ ${dynamicImports} }`
 }
 
+export function getBetterEnd(code: string, node: Node) {
+  let end = node.end
+  if (code[node.end] === ';')
+    end += 1
+  if (code[node.end + 1] === '\n')
+    end += 1
+  return end
+}
+
 const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
 const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
 const hashbangRE = /^#!.*\n/
@@ -99,7 +108,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     if (node.source.value === 'vitest') {
       const code = `const ${transformImportSpecifiers(node)} = await import('vitest')\n`
       hoistedVitestImports += code
-      s.remove(node.start, node.end)
+      s.remove(node.start, getBetterEnd(code, node))
       return
     }
 
@@ -119,7 +128,8 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       const importId = defineImport(node)
       if (!importId)
         continue
-      s.remove(node.start, node.end)
+
+      s.remove(node.start, getBetterEnd(code, node))
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
           idToImportMap.set(
@@ -176,8 +186,10 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
         const methodName = node.callee.property.name
 
         if (methodName === 'mock' || methodName === 'unmock') {
-          hoistedCode += `${code.slice(node.start, node.end)}\n`
-          s.remove(node.start, node.end)
+          const end = getBetterEnd(code, node)
+          const nodeCode = code.slice(node.start, end)
+          hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+          s.remove(node.start, end)
         }
 
         if (methodName === 'hoisted') {
@@ -201,13 +213,17 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
           if (canMoveDeclaration) {
             // hoist "const variable = vi.hoisted(() => {})"
-            hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
-            s.remove(declarationNode.start, declarationNode.end)
+            const end = getBetterEnd(code, declarationNode)
+            const nodeCode = code.slice(declarationNode.start, end)
+            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+            s.remove(declarationNode.start, end)
           }
           else {
             // hoist "vi.hoisted(() => {})"
-            hoistedCode += `${code.slice(node.start, node.end)}\n`
-            s.remove(node.start, node.end)
+            const end = getBetterEnd(code, node)
+            const nodeCode = code.slice(node.start, end)
+            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+            s.remove(node.start, end)
           }
         }
       }
