@@ -1,8 +1,8 @@
 import { processError } from '@vitest/utils/error'
 import type { Test } from '@vitest/runner/types'
-import { GLOBAL_EXPECT } from './constants'
+import { GLOBAL_EXPECT, JEST_MATCHERS_OBJECT } from './constants'
 import { getState } from './state'
-import type { Assertion, MatcherState } from './types'
+import type { Assertion, ChaiPlugin, MatcherState } from './types'
 
 export function recordAsyncExpect(test: any, promise: Promise<any> | PromiseLike<any>) {
   // record promise for test, that resolves before test ends
@@ -47,5 +47,20 @@ export function wrapSoft(utils: Chai.ChaiUtils, fn: (this: Chai.AssertionStatic 
       test.result.errors ||= []
       test.result.errors.push(processError(err))
     }
+  }
+}
+
+export function defineAssertion<T>(name: keyof Assertion, fn: (this: Omit<Chai.AssertionStatic & Assertion, '_obj'> & { _obj: T }, ...args: any) => any): ChaiPlugin {
+  return (chai, utils) => {
+    const addMethod = (n: keyof Assertion) => {
+      const softWrapper = wrapSoft(utils, fn)
+      utils.addMethod(chai.Assertion.prototype, n, softWrapper)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, softWrapper)
+    }
+
+    if (Array.isArray(name))
+      name.forEach(n => addMethod(n))
+    else
+      addMethod(name)
   }
 }
