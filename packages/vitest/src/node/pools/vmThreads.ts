@@ -154,12 +154,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
   return {
     name: 'vmThreads',
     runTests: runWithFiles('run'),
-    close: async () => {
-      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
-      if (nodeVersion >= 16.17)
-        await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }
 

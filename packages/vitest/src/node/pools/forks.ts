@@ -224,8 +224,6 @@ export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptio
   return {
     name: 'forks',
     runTests: runWithFiles('run'),
-    close: async () => {
-      await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }

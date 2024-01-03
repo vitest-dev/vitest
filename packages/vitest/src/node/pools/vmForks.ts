@@ -157,12 +157,7 @@ export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   return {
     name: 'vmForks',
     runTests: runWithFiles('run'),
-    close: async () => {
-      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
-      if (nodeVersion >= 16.17)
-        await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }
 
@@ -177,9 +172,10 @@ function getMemoryLimit(config: ResolvedConfig) {
     )
   }
 
-  if (limit && limit > 1)
+  // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
+  if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
     return stringToBytes(limit)
 
-  // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
+  // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
 }
