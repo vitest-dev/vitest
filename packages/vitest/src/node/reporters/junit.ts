@@ -4,6 +4,7 @@ import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/utils'
+import { getSuites } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -218,6 +219,15 @@ export class JUnitReporter implements Reporter {
           failures: 0,
           skipped: 0,
         })
+
+        // inject failed suites to surface errors during beforeAll/afterAll
+        const suites = getSuites(file)
+        for (const suite of suites) {
+          if (suite.result?.errors) {
+            tasks.push(suite)
+            stats.failures += 1
+          }
+        }
 
         // If there are no tests, but the file failed to load, we still want to report it as a failure
         if (tasks.length === 0 && file.result?.state === 'fail') {

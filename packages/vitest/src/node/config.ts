@@ -134,7 +134,7 @@ export function resolveConfig(
 
     if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "--no-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
+      throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
