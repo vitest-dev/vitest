@@ -98,10 +98,9 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   async function inputNamePattern() {
     off()
     const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
-    const filter = await watchFilter.filter(async (str: string) => {
-      const files = await ctx.state.getFiles()
-      const tasks = files.map(file => file.tasks).flat()
-      const tests = getTests(tasks)
+    const filter = await watchFilter.filter((str: string) => {
+      const files = ctx.state.getFiles()
+      const tests = getTests(files)
       try {
         const reg = new RegExp(str)
         return tests.map(test => test.name).filter(testName => testName.match(reg))

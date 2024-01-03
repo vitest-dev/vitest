@@ -6,7 +6,7 @@ const MAX_RESULT_COUNT = 10
 const SELECTION_MAX_INDEX = 7
 const ESC = '\u001B['
 
-type FilterFunc = (keyword: string) => Promise<string[]>
+type FilterFunc = (keyword: string) => Promise<string[]> | string[]
 
 export class WatchFilter {
   private filterRL: readline.Interface
@@ -95,7 +95,7 @@ export class WatchFilter {
       this.eraseAndPrint(`\nPattern matches no results`)
     }
     else {
-      const resulCountLine = `Pattern matches ${this.results.length} results`
+      const resultCountLine = this.results.length === 1 ? `Pattern matches ${this.results.length} result` : `Pattern matches ${this.results.length} results`
 
       let resultBody = ''
 
@@ -106,14 +106,14 @@ export class WatchFilter {
 
         resultBody = `${displayResults.map((result, index) => (index + offset === this.selectionIndex) ? c.green(` › ${result}`) : c.dim(` › ${result}`)).join('\n')}`
         if (remainingResultCount > 0)
-          resultBody += '\n' + `${c.dim(`   ...and ${remainingResultCount} more results`)}`
+          resultBody += '\n' + `${c.dim(`   ...and ${remainingResultCount} more ${remainingResultCount === 1 ? 'result' : 'results'}`)}`
       }
       else {
         resultBody = this.results.map((result, index) => (index === this.selectionIndex) ? c.green(` › ${result}`) : c.dim(` › ${result}`))
           .join('\n')
       }
 
-      this.eraseAndPrint(`\n${resulCountLine}\n${resultBody}`)
+      this.eraseAndPrint(`\n${resultCountLine}\n${resultBody}`)
     }
     this.restoreCursor()
   }
