@@ -29,7 +29,7 @@ export default defineConfig({
 ```
 :::
 
-::: note
+:::tip
 If you are using `vmThreads` pool, you cannot disable isolation. Use `threads` pool instead to improve your tests performance.
 :::
 
