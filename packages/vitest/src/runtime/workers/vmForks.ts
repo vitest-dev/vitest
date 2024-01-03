@@ -9,10 +9,16 @@ class ForksVmWorker implements VitestWorker {
     return createForksRpcOptions(v8)
   }
 
-  runTests(state: WorkerGlobalState) {
+  async runTests(state: WorkerGlobalState) {
+    const exit = process.exit
     state.ctx.config = unwrapForksConfig(state.ctx.config)
 
-    return runVmTests(state)
+    try {
+      await runVmTests(state)
+    }
+    finally {
+      process.exit = exit
+    }
   }
 }
 
