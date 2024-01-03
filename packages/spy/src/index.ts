@@ -478,24 +478,24 @@ function enhanceSpy<T extends Procedure>(
   stub.withImplementation = withImplementation
 
   stub.mockReturnThis = () =>
-    stub.mockImplementation(function (this: TReturns) {
+    stub.mockImplementation((function (this: TReturns) {
       return this
-    })
+    }) as any)
 
-  stub.mockReturnValue = (val: TReturns) => stub.mockImplementation(() => val)
-  stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(() => val)
+  stub.mockReturnValue = (val: TReturns) => stub.mockImplementation((() => val) as any)
+  stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce((() => val) as any)
 
   stub.mockResolvedValue = (val: Awaited<TReturns>) =>
-    stub.mockImplementation(() => Promise.resolve(val as TReturns) as any)
+    stub.mockImplementation((() => Promise.resolve(val as TReturns)) as any)
 
   stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
-    stub.mockImplementationOnce(() => Promise.resolve(val as TReturns) as any)
+    stub.mockImplementationOnce((() => Promise.resolve(val as TReturns)) as any)
 
   stub.mockRejectedValue = (val: unknown) =>
-    stub.mockImplementation(() => Promise.reject(val) as any)
+    stub.mockImplementation((() => Promise.reject(val)) as any)
 
   stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementationOnce(() => Promise.reject(val) as any)
+    stub.mockImplementationOnce((() => Promise.reject(val)) as any)
 
   Object.defineProperty(stub, 'mock', {
     get: () => mockContext,
