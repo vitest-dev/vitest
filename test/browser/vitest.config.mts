@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vitest/config'
+import { defaultExclude, defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
@@ -11,7 +11,7 @@ export default defineConfig({
     include: ['@vitest/cjs-lib'],
   },
   test: {
-    include: ['test/**.test.{ts,js}'],
+    include: [...defaultExclude, 'test/**.test.{ts,js}'],
     browser: {
       enabled: true,
       name: process.env.BROWSER || 'chrome',
