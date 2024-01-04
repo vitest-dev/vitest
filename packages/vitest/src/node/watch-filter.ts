@@ -26,7 +26,7 @@ export class WatchFilter {
   }
 
   public async filter(filterFunc: FilterFunc): Promise<string | undefined> {
-    stdout().write(`${c.cyan('?')} ${c.bold(this.message)} › `)
+    stdout().write(this.promptLine())
     return new Promise((resolve) => {
       this.onKeyPress = this.filterHandler(filterFunc, (result) => {
         this.close()
