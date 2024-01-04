@@ -17,16 +17,16 @@ import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: ViteDevServer) {
+export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
   const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
 
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
-  const getServer = () => server ?? ctx.server
+  const server = _server || ctx.server
 
-  getServer().httpServer?.on('upgrade', (request, socket, head) => {
+  server.httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
       return
 
@@ -41,8 +41,8 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
   })
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, getServer()))
-      throw new Error(`Access denied to "${path}". See Vite config documentation for server.fs.`)
+    if (!isFileServingAllowed(path, server))
+      throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
   }
 
   function setupClient(ws: WebSocket) {
