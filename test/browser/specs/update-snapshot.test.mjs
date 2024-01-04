@@ -20,6 +20,7 @@ test('update snapshot', async () => {
   vitest = await startVitest('test', [], {
     watch: true,
     root: './fixtures/update-snapshot',
+    reporters: ["tap-flat"], // use simple reporter to not pollute stdout
     browser: { headless: true },
   })
   assert.ok(vitest)
