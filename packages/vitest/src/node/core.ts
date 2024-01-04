@@ -126,7 +126,10 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
-        return await serverRestart(...args)
+        await serverRestart(...args)
+        // watcher is recreated on restart
+        this.unregisterWatcher()
+        this.registerWatcher()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
@@ -136,6 +139,9 @@ export class Vitest {
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           await serverRestart()
+          // watcher is recreated on restart
+          this.unregisterWatcher()
+          this.registerWatcher()
         }
       })
     }
@@ -729,8 +735,15 @@ export class Vitest {
     }
 
     const projects = this.getModuleProjects(id)
-    if (!projects.length)
+    if (!projects.length) {
+      // if there are no modules it's possible that server was restarted
+      // we don't have information about importers anymore, so let's check if the file is a test file at least
+      if (this.state.filesMap.has(id) || this.projects.some(project => project.isTestFile(id))) {
+        this.changedTests.add(id)
+        return [id]
+      }
       return []
+    }
 
     const files: string[] = []
 
