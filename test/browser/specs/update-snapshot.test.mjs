@@ -6,12 +6,14 @@ import { startVitest } from 'vitest/node'
 let vitest
 
 test.after(async () => {
-  // force exitCode mutated by vitest
-  process.exitCode = 0
   await vitest?.close()
 })
 
 test('update snapshot', async () => {
+  // reset exit code later
+  const prevExitCode = process.exitCode
+  process.exitCode = undefined
+
   // setup wrong snapshot value
   const snapshotPath = './fixtures/update-snapshot/__snapshots__/basic.test.ts.snap'
   await editFile(snapshotPath, data => data.replace('`1`', '`2`'))
@@ -27,6 +29,8 @@ test('update snapshot', async () => {
 
   // test fails
   assert.equal(vitest.state.getFiles()[0].result.state, 'fail')
+  assert.equal(process.exitCode, 1)
+  process.exitCode = prevExitCode // reset exitCode
 
   // updateSnapshot API to simulate "u" commmand
   await vitest.updateSnapshot()
