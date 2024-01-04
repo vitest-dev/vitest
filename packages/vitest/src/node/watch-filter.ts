@@ -1,6 +1,7 @@
 import readline from 'node:readline'
 import c from 'picocolors'
 import stripAnsi from 'strip-ansi'
+import { createDefer } from '@vitest/utils'
 import { stdout } from '../utils'
 
 const MAX_RESULT_COUNT = 10
@@ -27,13 +28,19 @@ export class WatchFilter {
 
   public async filter(filterFunc: FilterFunc): Promise<string | undefined> {
     stdout().write(this.promptLine())
-    return new Promise((resolve) => {
-      this.onKeyPress = this.filterHandler(filterFunc, (result) => {
-        this.close()
-        resolve(result)
-      })
-      process.stdin.on('keypress', this.onKeyPress)
+
+    const resultPromise = createDefer<string | undefined>()
+
+    this.onKeyPress = this.filterHandler(filterFunc, (result) => {
+      resultPromise.resolve(result)
     })
+    process.stdin.on('keypress', this.onKeyPress)
+    try {
+      return await resultPromise
+    }
+    finally {
+      this.close()
+    }
   }
 
   private filterHandler(filterFunc: FilterFunc, onSubmit: (result?: string) => void) {
