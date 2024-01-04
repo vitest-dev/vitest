@@ -20,7 +20,7 @@ test('update snapshot', async () => {
   vitest = await startVitest('test', [], {
     watch: true,
     root: './fixtures/update-snapshot',
-    reporters: ["tap-flat"], // use simple reporter to not pollute stdout
+    reporters: ['tap-flat'], // use simple reporter to not pollute stdout
     browser: { headless: true },
   })
   assert.ok(vitest)
@@ -44,6 +44,6 @@ test('update snapshot', async () => {
  * @param {(data: string) => string} edit
  */
 async function editFile(filepath, edit) {
-  let data = await fs.promises.readFile(filepath, 'utf-8')
+  const data = await fs.promises.readFile(filepath, 'utf-8')
   await fs.promises.writeFile(filepath, edit(data))
 }
