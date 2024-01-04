@@ -52,6 +52,27 @@ describe('jest mock compat layer', () => {
     expect(mock2.getMockImplementation()).toBeUndefined()
   })
 
+  it('implementation types allow only function returned types', () => {
+    function fn() {
+      return 1
+    }
+
+    function asyncFn() {
+      return Promise.resolve(1)
+    }
+
+    const mock1 = vi.fn(fn)
+    const mock2 = vi.fn(asyncFn)
+
+    mock1.mockImplementation(() => 2)
+    // @ts-expect-error promise is not allowed
+    mock1.mockImplementation(() => Promise.resolve(2))
+
+    // @ts-expect-error non-promise is not allowed
+    mock2.mockImplementation(() => 2)
+    mock2.mockImplementation(() => Promise.resolve(2))
+  })
+
   it('implementation sync fn', () => {
     const originalFn = function () {
       return 'original'

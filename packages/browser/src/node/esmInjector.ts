@@ -1,9 +1,8 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
-import type { Expression, ImportDeclaration } from 'estree'
 import type { PluginContext } from 'rollup'
-import type { Node, Positioned } from './esmWalker'
-import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
+import { esmWalker } from '@vitest/utils/ast'
+import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/utils/ast'
 
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
@@ -209,26 +208,16 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
 
   // 3. convert references to import bindings & import.meta references
   esmWalker(ast, {
-    onIdentifier(id, parent, parentStack) {
-      const grandparent = parentStack[1]
+    onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
       if (!binding)
         return
 
-      if (isStaticProperty(parent) && parent.shorthand) {
-        // let binding used in a property shorthand
-        // { foo } -> { foo: __import_x__.foo }
-        // skip for destructuring patterns
-        if (
-          !isNodeInPattern(parent)
-            || isInDestructuringAssignment(parent, parentStack)
-        )
-          s.appendLeft(id.end, `: ${binding}`)
+      if (info.hasBindingShortcut) {
+        s.appendLeft(id.end, `: ${binding}`)
       }
       else if (
-        (parent.type === 'PropertyDefinition'
-            && grandparent?.type === 'ClassBody')
-          || (parent.type === 'ClassDeclaration' && id === parent.superClass)
+        info.classDeclaration
       ) {
         if (!declaredConst.has(id.name)) {
           declaredConst.add(id.name)
@@ -239,7 +228,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       }
       else if (
         // don't transform class name identifier
-        !(parent.type === 'ClassExpression' && id === parent.id)
+        !info.classExpression
       ) {
         s.update(id.start, id.end, binding)
       }

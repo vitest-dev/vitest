@@ -483,7 +483,6 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
-   * @internal
    */
   ui?: boolean
 

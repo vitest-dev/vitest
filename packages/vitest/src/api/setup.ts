@@ -6,24 +6,27 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
+import { isFileServingAllowed } from 'vite'
 import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { getModuleGraph, isPrimitive } from '../utils'
+import { getModuleGraph, isPrimitive, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: ViteDevServer) {
+export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
   const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
 
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
-  ;(server || ctx.server).httpServer?.on('upgrade', (request, socket, head) => {
+  const server = _server || ctx.server
+
+  server.httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
       return
 
@@ -36,6 +39,11 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
       setupClient(ws)
     })
   })
+
+  function checkFileAccess(path: string) {
+    if (!isFileServingAllowed(path, server))
+      throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
+  }
 
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
@@ -73,7 +81,8 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return ctx.snapshot.resolveRawPath(testPath, rawPath)
         },
         async readSnapshotFile(snapshotPath) {
-          if (!ctx.snapshot.resolvedPaths.has(snapshotPath) || !existsSync(snapshotPath))
+          checkFileAccess(snapshotPath)
+          if (!existsSync(snapshotPath))
             return null
           return fs.readFile(snapshotPath, 'utf-8')
         },
@@ -88,13 +97,13 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return fs.writeFile(id, content, 'utf-8')
         },
         async saveSnapshotFile(id, content) {
-          if (!ctx.snapshot.resolvedPaths.has(id))
-            throw new Error(`Snapshot file "${id}" does not exist.`)
+          checkFileAccess(id)
           await fs.mkdir(dirname(id), { recursive: true })
           return fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
-          if (!ctx.snapshot.resolvedPaths.has(id) || !existsSync(id))
+          checkFileAccess(id)
+          if (!existsSync(id))
             throw new Error(`Snapshot file "${id}" does not exist.`)
           return fs.unlink(id)
         },
@@ -140,7 +149,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
-        serialize: stringify,
+        serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
       },
     )
