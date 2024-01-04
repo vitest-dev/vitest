@@ -111,11 +111,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       }
     })
 
-    if (!filter)
-      return on()
-
     on()
-    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
+    await ctx.changeNamePattern(filter?.trim() || '', undefined, 'change pattern')
   }
 
   async function inputProjectName() {
