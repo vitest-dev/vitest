@@ -6,7 +6,8 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed, ViteDevServer } from 'vite'
+import { isFileServingAllowed } from 'vite'
+import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
@@ -75,10 +76,8 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           return ctx.snapshot.resolveRawPath(testPath, rawPath)
         },
         async readSnapshotFile(snapshotPath) {
-          if (!isFileServingAllowed(snapshotPath, getServer())) {
-            throw new Error(
-              `Reading of snapshot "${snapshotPath}" disallowed. See Vite config documentation for server.fs.`)
-          }
+          if (!isFileServingAllowed(snapshotPath, getServer()))
+            throw new Error(`Reading of snapshot "${snapshotPath}" disallowed. See Vite config documentation for server.fs.`)
           if (!existsSync(snapshotPath))
             return null
           return fs.readFile(snapshotPath, 'utf-8')

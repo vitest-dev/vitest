@@ -6,7 +6,7 @@ function cloneByOwnProperties(value: any) {
   return Object.getOwnPropertyNames(value)
     .reduce((clone, prop) => ({
       ...clone,
-      [prop]: value[prop]
+      [prop]: value[prop],
     }), {})
 }
 
@@ -15,9 +15,8 @@ function cloneByOwnProperties(value: any) {
  * flatted.stringify().
  */
 export function stringifyReplace(key: string, value: any) {
-  if (value instanceof Error) {
+  if (value instanceof Error)
     return cloneByOwnProperties(value)
-  } else {
+  else
     return value
-  }
 }
