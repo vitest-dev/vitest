@@ -3,13 +3,21 @@ import fs from 'node:fs'
 import test from 'node:test'
 import { startVitest } from 'vitest/node'
 
+let vitest
+
+test.after(async () => {
+  // force exitCode mutated by vitest
+  process.exitCode = 0
+  await vitest?.close()
+})
+
 test('update snapshot', async () => {
   // setup wrong snapshot value
   const snapshotPath = './fixtures/update-snapshot/__snapshots__/basic.test.ts.snap'
   await editFile(snapshotPath, data => data.replace('`1`', '`2`'))
 
   // run vitest watch mode
-  const vitest = await startVitest('test', [], {
+  vitest = await startVitest('test', [], {
     watch: true,
     root: './fixtures/update-snapshot',
     browser: { headless: true },
@@ -28,10 +36,6 @@ test('update snapshot', async () => {
 
   // test passes
   assert.equal(vitest.state.getFiles()[0].result.state, 'pass')
-
-  // force exitCode mutated by vitest
-  process.exitCode = 0
-  await vitest.close()
 })
 
 /**
