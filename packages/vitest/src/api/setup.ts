@@ -12,7 +12,7 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive } from '../utils'
-import type { WorkspaceProject } from '../node/workspace'
+import { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
@@ -105,6 +105,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
           await ctx.rerunFiles(files)
         },
         getConfig() {
+          if (vitestOrWorkspace instanceof WorkspaceProject)
+            return vitestOrWorkspace.getSerializableConfig()
+
           return vitestOrWorkspace.config
         },
         async getTransformResult(id) {
