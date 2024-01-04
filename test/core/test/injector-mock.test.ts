@@ -99,13 +99,76 @@ describe('transform', () => {
   }
   test('default import', async () => {
     expect(
-      await hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`),
+      hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
       vi.mock('faker');
       const __vi_import_0__ = await import('vue')
 
       console.log(__vi_import_0__.default.bar)"
+    `)
+  })
+
+  test('can use imported variables inside the mock', () => {
+    expect(
+      hoistMocks(`
+import { vi } from 'vitest'
+import user from './user'
+import { admin } from './admin'
+vi.mock('./mock.js', () => {
+  getSession: vi.fn().mockImplementation(() => ({
+    user,
+    admin: admin,
+  }))
+})
+`, './test.js', parse)?.code.trim(),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      vi.mock('./mock.js', () => {
+        getSession: vi.fn().mockImplementation(() => ({
+          user,
+          admin: admin,
+        }))
+      })
+      const __vi_import_0__ = await import('./user')
+      const __vi_import_1__ = await import('./admin')
+
+
+
+
+      : __vi_import_0__.default__vi_import_1__.admin"
+    `)
+  })
+
+  test('can use hoisted variables inside the mock', () => {
+    expect(
+      hoistMocks(`
+import { vi } from 'vitest'
+const { user, admin } = await vi.hoisted(async () => {
+  const { default: user } = await import('./user')
+  const { admin } = await import('./admin')
+  return { user, admin }
+})
+vi.mock('./mock.js', () => {
+  getSession: vi.fn().mockImplementation(() => ({
+    user,
+    admin: admin,
+  }))
+})
+`, './test.js', parse)?.code.trim(),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      const { user, admin } = await vi.hoisted(async () => {
+        const { default: user } = await import('./user')
+        const { admin } = await import('./admin')
+        return { user, admin }
+      })
+      vi.mock('./mock.js', () => {
+        getSession: vi.fn().mockImplementation(() => ({
+          user,
+          admin: admin,
+        }))
+      })"
     `)
   })
 
