@@ -11,7 +11,7 @@ import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { getModuleGraph, isPrimitive } from '../utils'
+import { getModuleGraph, isPrimitive, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
@@ -23,7 +23,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
-  ;(server || ctx.server).httpServer?.on('upgrade', (request, socket, head) => {
+  const getServer = () => server ?? ctx.server
+
+  getServer().httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
       return
 
@@ -138,7 +140,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, server?: Vit
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
-        serialize: stringify,
+        serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
       },
     )
