@@ -233,6 +233,25 @@ export default class SnapshotState {
     if (!key)
       key = testNameToKey(testName, count)
 
+    const passResult = {
+      actual: '',
+      count,
+      expected: '',
+      key,
+      pass: true,
+    }
+
+    const expected = isInline
+      ? inlineSnapshot
+      : rawSnapshot
+        ? rawSnapshot.content
+        : this._snapshotData[key]
+
+    if (received == null && expected == null) {
+      // Special equality case where the expected snapshot is nullish.
+      return passResult
+    }
+
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be
     // removed with `--updateSnapshot`.
@@ -252,11 +271,6 @@ export default class SnapshotState {
         rawSnapshot.content = normalizeNewlines(rawSnapshot.content)
     }
 
-    const expected = isInline
-      ? inlineSnapshot
-      : rawSnapshot
-        ? rawSnapshot.content
-        : this._snapshotData[key]
     const expectedTrimmed = prepareExpected(expected)
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
@@ -302,13 +316,7 @@ export default class SnapshotState {
         this.added++
       }
 
-      return {
-        actual: '',
-        count,
-        expected: '',
-        key,
-        pass: true,
-      }
+      return passResult
     }
     else {
       if (!pass) {
@@ -326,13 +334,7 @@ export default class SnapshotState {
       }
       else {
         this.matched++
-        return {
-          actual: '',
-          count,
-          expected: '',
-          key,
-          pass: true,
-        }
+        return passResult
       }
     }
   }
