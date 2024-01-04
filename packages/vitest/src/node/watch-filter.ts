@@ -37,7 +37,7 @@ export class WatchFilter {
   }
 
   private filterHandler(filterFunc: FilterFunc, onSubmit: (result?: string) => void) {
-    return async (str: string, key: any) => {
+    return async (str: string | undefined, key: any) => {
       switch (true) {
         case key.sequence === '\x7F':
           if (this.currentKeyword && this.currentKeyword?.length > 1)
@@ -76,7 +76,7 @@ export class WatchFilter {
             this.currentKeyword = str
 
           else
-            this.currentKeyword += str
+            this.currentKeyword += str || ''
           break
       }
 
