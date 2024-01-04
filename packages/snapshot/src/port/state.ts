@@ -233,14 +233,6 @@ export default class SnapshotState {
     if (!key)
       key = testNameToKey(testName, count)
 
-    const passResult = {
-      actual: '',
-      count,
-      expected: '',
-      key,
-      pass: true,
-    }
-
     const expected = isInline
       ? inlineSnapshot
       : rawSnapshot
@@ -249,7 +241,13 @@ export default class SnapshotState {
 
     if (received == null && expected == null) {
       // Special equality case where the expected snapshot is nullish.
-      return passResult
+      return {
+        actual: '',
+        count,
+        expected: '',
+        key,
+        pass: true,
+      }
     }
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
@@ -316,7 +314,13 @@ export default class SnapshotState {
         this.added++
       }
 
-      return passResult
+      return {
+        actual: '',
+        count,
+        expected: '',
+        key,
+        pass: true,
+      }
     }
     else {
       if (!pass) {
@@ -334,7 +338,13 @@ export default class SnapshotState {
       }
       else {
         this.matched++
-        return passResult
+        return {
+          actual: '',
+          count,
+          expected: '',
+          key,
+          pass: true,
+        }
       }
     }
   }

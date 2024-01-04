@@ -78,5 +78,5 @@ await test('popup apis should log a warning', () => {
 })
 
 await test('snapshot inaccessible file debuggability', () => {
-  assert.ok(stdout.includes('Reading of snapshot "/inaccesible/path" disallowed.'), 'file security enforcement explained')
+  assert.ok(stdout.includes('Access denied to "/inaccesible/path".'), 'file security enforcement explained')
 })
