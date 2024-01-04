@@ -1,5 +1,6 @@
 import readline from 'node:readline'
 import c from 'picocolors'
+import stripAnsi from 'strip-ansi'
 import { stdout } from '../utils'
 
 const MAX_RESULT_COUNT = 10
@@ -87,12 +88,12 @@ export class WatchFilter {
   }
 
   private render() {
-    this.printKeyword()
+    let printStr = this.promptLine()
     if (!this.currentKeyword) {
-      this.eraseAndPrint('\nPlease input filter pattern')
+      printStr += '\nPlease input filter pattern'
     }
     else if (this.currentKeyword && this.results.length === 0) {
-      this.eraseAndPrint(`\nPattern matches no results`)
+      printStr += '\nPattern matches no results'
     }
     else {
       const resultCountLine = this.results.length === 1 ? `Pattern matches ${this.results.length} result` : `Pattern matches ${this.results.length} results`
@@ -113,8 +114,9 @@ export class WatchFilter {
           .join('\n')
       }
 
-      this.eraseAndPrint(`\n${resultCountLine}\n${resultBody}`)
+      printStr += `\n${resultCountLine}\n${resultBody}`
     }
+    this.eraseAndPrint(printStr)
     this.restoreCursor()
   }
 
@@ -122,22 +124,21 @@ export class WatchFilter {
     return `? ${this.message} › `.length + 1
   }
 
-  private printKeyword() {
-    // move corsor to keyword offset
-    stdout().write(`${ESC}${this.keywordOffset()}G`)
-
-    // erase to the end of line
-    stdout().write(`${ESC}K`)
-
-    stdout().write(this.currentKeyword || '')
+  private promptLine() {
+    return `${c.cyan('?')} ${c.bold(this.message)} › ${this.currentKeyword || ''}`
   }
 
   private eraseAndPrint(str: string) {
-    const lineBreasks = str.split('\n').length - 1
+    let rows = 0
+    const lines = str.split(/\r?\n/)
+    for (const line of lines)
+      // We have to take care of screen width in case of long lines
+      rows += 1 + Math.floor(Math.max(stripAnsi(line).length - 1, 0) / stdout().columns)
 
+    stdout().write(`${ESC}1G`) // move to the beginning of the line
     stdout().write(`${ESC}J`) // erase down
     stdout().write(str)
-    stdout().write(`${ESC}${lineBreasks}A`) // moving up lines
+    stdout().write(`${ESC}${rows - 1}A`) // moving up lines
   }
 
   private close() {
