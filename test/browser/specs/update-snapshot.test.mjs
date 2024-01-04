@@ -40,12 +40,10 @@ test('update snapshot', async () => {
 })
 
 /**
- *
  * @param {string} filepath
- * @param {(data: string) => string | Promise<string>} edit
+ * @param {(data: string) => string} edit
  */
 async function editFile(filepath, edit) {
   let data = await fs.promises.readFile(filepath, 'utf-8')
-  data = await edit(data)
-  await fs.promises.writeFile(filepath, data)
+  await fs.promises.writeFile(filepath, edit(data))
 }
