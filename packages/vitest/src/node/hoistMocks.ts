@@ -78,7 +78,6 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
 
-  let hoistedCode = ''
   let hoistedVitestImports = ''
 
   let uid = 0
@@ -148,6 +147,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   }
 
   const declaredConst = new Set<string>()
+  const hoistedNodes: Node[] = []
 
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
@@ -184,12 +184,8 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       ) {
         const methodName = node.callee.property.name
 
-        if (methodName === 'mock' || methodName === 'unmock') {
-          const end = getBetterEnd(code, node)
-          const nodeCode = code.slice(node.start, end)
-          hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-          s.remove(node.start, end)
-        }
+        if (methodName === 'mock' || methodName === 'unmock')
+          hoistedNodes.push(node)
 
         if (methodName === 'hoisted') {
           const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
@@ -212,22 +208,31 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
           if (canMoveDeclaration) {
             // hoist "const variable = vi.hoisted(() => {})"
-            const end = getBetterEnd(code, declarationNode)
-            const nodeCode = code.slice(declarationNode.start, end)
-            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-            s.remove(declarationNode.start, end)
+            hoistedNodes.push(declarationNode)
           }
           else {
             // hoist "vi.hoisted(() => {})"
-            const end = getBetterEnd(code, node)
-            const nodeCode = code.slice(node.start, end)
-            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-            s.remove(node.start, end)
+            hoistedNodes.push(node)
           }
         }
       }
     },
   })
+
+  // Wait for imports to be hoisted and then hoist the mocks
+  const hoistedCode = hoistedNodes.map((node) => {
+    const end = getBetterEnd(code, node)
+    /**
+     * In the following case, we need to change the `user` to user: __vi_import_x__.user
+     * So we should get the latest code from `s`.
+     *
+     * import user from './user'
+     * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
+     */
+    const nodeCode = s.slice(node.start, end)
+    s.remove(node.start, end)
+    return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+  }).join('')
 
   if (hoistedCode || hoistedVitestImports) {
     s.prepend(
