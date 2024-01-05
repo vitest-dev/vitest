@@ -185,6 +185,11 @@ jobs:
           pnpm run test:browser:playwright
           pnpm run test:browser:playwright
           pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
@@ -224,6 +229,11 @@ jobs:
 
       - name: Test Browser (playwright)
         run: |
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
           pnpm run test:browser:playwright
           pnpm run test:browser:playwright
           pnpm run test:browser:playwright
