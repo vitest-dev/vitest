@@ -10,27 +10,23 @@ test.after(async () => {
 })
 
 test('update snapshot', async () => {
-  // reset exit code later
-  const prevExitCode = process.exitCode
-  process.exitCode = undefined
-
   // setup wrong snapshot value
   const snapshotPath = './fixtures/update-snapshot/__snapshots__/basic.test.ts.snap'
   await editFile(snapshotPath, data => data.replace('`1`', '`2`'))
 
   // run vitest watch mode
-  vitest = await startVitest('test', [], {
+  const result = await wrapWithExitCode(() => startVitest('test', [], {
     watch: true,
     root: './fixtures/update-snapshot',
     reporters: ['tap-flat'], // use simple reporter to not pollute stdout
     browser: { headless: true },
-  })
+  }))
+  vitest = result.value
   assert.ok(vitest)
 
   // test fails
+  assert.equal(result.exitCode, 1)
   assert.equal(vitest.state.getFiles()[0].result.state, 'fail')
-  assert.equal(process.exitCode, 1)
-  process.exitCode = prevExitCode // reset exitCode
 
   // updateSnapshot API to simulate "u" commmand
   await vitest.updateSnapshot()
@@ -50,4 +46,22 @@ test('update snapshot', async () => {
 async function editFile(filepath, edit) {
   const data = await fs.promises.readFile(filepath, 'utf-8')
   await fs.promises.writeFile(filepath, edit(data))
+}
+
+/**
+ * run function and return mutated exitCode while preserving current exitCode
+ * @param {() => any} f
+ */
+async function wrapWithExitCode(f) {
+  const prevExitCode = process.exitCode
+  /** @type {{ value?: any, exitCode?: number }} */
+  const result = {}
+  try {
+    result.value = await f()
+  }
+  finally {
+    result.exitCode = process.exitCode
+    process.exitCode = prevExitCode
+  }
+  return result
 }
