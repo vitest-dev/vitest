@@ -11,9 +11,8 @@ export interface TableRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
+  slowTestThreshold: number
 }
-
-const DURATION_LONG = 300
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -121,7 +120,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
       suffix += ` ${c.dim(c.gray('[skipped]'))}`
 
     if (task.result?.duration != null) {
-      if (task.result.duration > DURATION_LONG)
+      if (task.result.duration > options.slowTestThreshold)
         suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
