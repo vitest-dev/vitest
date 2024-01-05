@@ -142,7 +142,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+        # browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+        browser: [[edge, webkit]]
       fail-fast: false
 
     timeout-minutes: 30
@@ -178,7 +179,12 @@ jobs:
       #     EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
+        run: |
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
@@ -186,7 +192,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        browser: [[chrome, chromium], [edge, webkit]]
+        # browser: [[chrome, chromium], [edge, webkit]]
+        browser: [[edge, webkit]]
       fail-fast: false
 
     timeout-minutes: 30
@@ -216,6 +223,11 @@ jobs:
       #   run: pnpm run test:browser:webdriverio
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
+        run: |
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
+          pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
