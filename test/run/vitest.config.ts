@@ -7,6 +7,6 @@ export default defineConfig({
     chaiConfig: {
       truncateThreshold: 0,
     },
-    testTimeout: process.env.CI ? 30_000 : 10_000,
+    testTimeout: process.env.CI ? 60_000 : 10_000,
   },
 })

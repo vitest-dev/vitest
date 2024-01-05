@@ -14,7 +14,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio'
 
   private cachedBrowser: WebdriverIO.Browser | null = null
-  private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
@@ -39,14 +38,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     if (this.browser === 'safari') {
       if (options.headless)
         throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it.')
-
-      const safaridriver = await import('safaridriver')
-      safaridriver.start({ diagnose: true })
-      this.stopSafari = () => safaridriver.stop()
-
-      process.on('beforeExit', () => {
-        safaridriver.stop()
-      })
     }
 
     const { remote } = await import('webdriverio')
@@ -97,7 +88,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async close() {
     await Promise.all([
-      this.stopSafari(),
       this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
     ])
     // TODO: right now process can only exit with timeout, if we use browser
