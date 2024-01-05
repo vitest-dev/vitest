@@ -11,10 +11,9 @@ export interface ListRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
+  slowTestThreshold: number
   mode: VitestRunMode
 }
-
-const DURATION_LONG = 300
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -115,7 +114,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       suffix += c.yellow(` (repeat x${task.result.repeatCount})`)
 
     if (task.result?.duration != null) {
-      if (task.result.duration > DURATION_LONG)
+      if (task.result.duration > options.slowTestThreshold)
         suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
