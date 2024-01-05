@@ -219,6 +219,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     },
   })
 
+  // Wait for imports to be hoisted and then hoist the mocks
   const hoistedCode = hoistedNodes.map((node) => {
     const end = getBetterEnd(code, node)
     /**
