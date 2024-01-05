@@ -1,15 +1,13 @@
 import assert from 'node:assert'
 import test from 'node:test'
-import { execa } from 'execa'
+import { startVitest } from 'vitest/node'
 
 test('custom-base', async () => {
-  const result = await execa('npx', [
-    'vitest',
-    'run',
-    '--root=fixtures/custom-base',
-    '--browser.headless',
-    '--reporter=tap-flat',
-  ])
-  assert.match(result.stdout, /\n1\.\.1\nok 1/)
-  assert.equal(result.stderr, '')
+  const vitest = await startVitest('test', [], {
+    watch: false,
+    root: 'fixtures/custom-base',
+    browser: { headless: true },
+    reporters: ['tap'],
+  })
+  assert.equal(vitest.state.getFiles()[0].result.state, 'pass')
 })
