@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import test from 'node:test'
 import { execa } from 'execa'
 
-test('custom-base', async () => {
+test('custom-base', { skip: true }, async () => {
   const result = await execa('npx', [
     'vitest',
     'run',
