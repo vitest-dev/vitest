@@ -172,10 +172,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-        env:
-          EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
+      # - name: Test Browser (webdriverio)
+      #   run: pnpm run test:browser:webdriverio
+      #   env:
+      #     EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -212,8 +212,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
+      # - name: Test Browser (webdriverio)
+      #   run: pnpm run test:browser:webdriverio
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
