@@ -1,9 +1,13 @@
+import { existsSync, rmSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { execa } from 'execa'
 
 const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
 
 export default async function runVitest(moreArgs = []) {
+  if (existsSync('./browser.json'))
+    rmSync('./browser.json')
+
   const argv = ['vitest', '--run', `--browser.name=${browser}`]
 
   if (browser !== 'safari')
