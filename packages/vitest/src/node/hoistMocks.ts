@@ -227,7 +227,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
      * So we should get the latest code from `s`.
      *
      * import user from './user'
-     * vi.mock('./mock.js', () => { getSession: vi.fn().mockImplementation(() => ({ user })) })
+     * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
      */
     const nodeCode = s.slice(node.start, end)
     s.remove(node.start, end)

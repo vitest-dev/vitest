@@ -115,21 +115,21 @@ describe('transform', () => {
 import { vi } from 'vitest'
 import user from './user'
 import { admin } from './admin'
-vi.mock('./mock.js', () => {
+vi.mock('./mock.js', () => ({
   getSession: vi.fn().mockImplementation(() => ({
     user,
     admin: admin,
   }))
-})
+}))
 `, './test.js', parse)?.code.trim(),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
-      vi.mock('./mock.js', () => {
+      vi.mock('./mock.js', () => ({
         getSession: vi.fn().mockImplementation(() => ({
           user: __vi_import_0__.default,
           admin: __vi_import_1__.admin,
         }))
-      })
+      }))
       const __vi_import_0__ = await import('./user')
       const __vi_import_1__ = await import('./admin')"
     `)
