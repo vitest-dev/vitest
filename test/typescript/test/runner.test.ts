@@ -40,7 +40,7 @@ describe('should fail', async () => {
         expect(msg).toMatchSnapshot()
       }
     })
-  }, 30_000)
+  })
 
   it('typecheks with custom tsconfig', async () => {
     const { stderr } = await runVitestCli(
@@ -74,7 +74,7 @@ describe('should fail', async () => {
     expect(stderr).not.toContain('js-fail.test-d.js')
     expect(stderr).not.toContain('js.test-d.js')
     expect(stderr).not.toContain('test.test-d.ts')
-  }, 30_000)
+  })
 
   it('typechecks empty "include" but with tests', async () => {
     const { stderr } = await runVitestCli(
@@ -95,5 +95,5 @@ describe('should fail', async () => {
     )
 
     expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
-  }, 30_000)
+  })
 })

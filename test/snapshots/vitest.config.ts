@@ -8,5 +8,6 @@ export default defineConfig({
     snapshotFormat: {
       printBasicPrototype: true,
     },
+    testTimeout: process.env.CI ? 60_000 : 5_000,
   },
 })

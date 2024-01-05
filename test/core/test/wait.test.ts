@@ -122,8 +122,8 @@ describe('waitUntil', () => {
 
       await expect(
         vi.waitUntil(callback, {
-          timeout: 100,
-          interval: 75,
+          timeout: 1000,
+          interval: 600,
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
 
