@@ -11,7 +11,8 @@ export default defineConfig({
     include: ['@vitest/cjs-lib'],
   },
   test: {
-    include: [...defaultExclude, 'test/**.test.{ts,js}'],
+    include: ['test/**.test.{ts,js}'],
+    exclude: ['**/fixtures/**', ...defaultExclude],
     browser: {
       enabled: true,
       name: process.env.BROWSER || 'chrome',
