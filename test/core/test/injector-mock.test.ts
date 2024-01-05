@@ -126,17 +126,12 @@ vi.mock('./mock.js', () => {
       "const { vi } = await import('vitest')
       vi.mock('./mock.js', () => {
         getSession: vi.fn().mockImplementation(() => ({
-          user,
-          admin: admin,
+          user: __vi_import_0__.default,
+          admin: __vi_import_1__.admin,
         }))
       })
       const __vi_import_0__ = await import('./user')
-      const __vi_import_1__ = await import('./admin')
-
-
-
-
-      : __vi_import_0__.default__vi_import_1__.admin"
+      const __vi_import_1__ = await import('./admin')"
     `)
   })
 
