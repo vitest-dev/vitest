@@ -149,7 +149,7 @@ export class Logger {
       const name = project.getName()
       const output = project.isCore() ? '' : ` [${name}]`
 
-      const url = project.browser.resolvedUrls?.local[0]
+      const url = new URL('/', project.browser.resolvedUrls?.local[0])
       this.log(c.dim(c.green(`     ${output} Browser runner started at ${url}`)))
     })
 
