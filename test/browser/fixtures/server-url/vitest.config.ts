@@ -9,8 +9,7 @@ const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' :
 
 export default defineConfig({
   plugins: [
-    // @ts-ignore basicSsl type error?
-    process.env.TEST_HTTPS && basicSsl()
+    !!process.env.TEST_HTTPS && basicSsl(),
   ],
   test: {
     browser: {
