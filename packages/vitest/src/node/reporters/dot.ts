@@ -1,9 +1,10 @@
 import type { UserConsoleLog } from '../../types/general'
 import { BaseReporter } from './base'
 import { createDotRenderer } from './renderers/dotRenderer'
+import type { createListRenderer } from './renderers/listRenderer'
 
 export class DotReporter extends BaseReporter {
-  renderer?: ReturnType<typeof createDotRenderer>
+  renderer?: ReturnType<typeof createListRenderer>
 
   onCollected() {
     if (this.isTTY) {

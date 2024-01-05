@@ -7,7 +7,7 @@ import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
 
-export interface TableRendererOptions {
+export interface ListRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
@@ -100,7 +100,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('  ')
 }
 
-function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): string {
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0): string {
   const output: string[] = []
 
   let idx = 0
@@ -161,7 +161,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
   return output.filter(Boolean).join('\n')
 }
 
-export function createTableRenderer(_tasks: Task[], options: TableRendererOptions) {
+export function createTableRenderer(_tasks: Task[], options: ListRendererOptions) {
   let tasks = _tasks
   let timer: any
 

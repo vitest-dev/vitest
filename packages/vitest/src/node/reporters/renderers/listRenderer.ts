@@ -85,7 +85,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('')
 }
 
-function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
   const output: string[] = []
   let currentRowCount = 0
 
