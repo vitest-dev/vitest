@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --test-timeout 60000",
     "types": "vitest --typecheck --run",
     "tsc": "tsc --watch --pretty false --noEmit"
   },

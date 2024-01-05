@@ -13,7 +13,7 @@ export const suite = createSuite()
 export const test = createTest(
   function (name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
     if (getCurrentTest())
-      throw new Error('Nested tests are not allowed')
+      throw new Error('Calling the test function inside another test function is not allowed. Please put it inside "describe" or "suite" so it can be properly collected.')
 
     getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
   },

@@ -483,6 +483,7 @@ function createVitest(): VitestUtils {
         path,
         importer,
         factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
+        true,
       )
     },
 
@@ -496,6 +497,7 @@ function createVitest(): VitestUtils {
         path,
         importer,
         factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
+        false,
       )
     },
 

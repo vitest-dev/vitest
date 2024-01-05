@@ -166,7 +166,7 @@ export class VitestMocker {
       if (mock.type === 'unmock')
         this.unmockPath(fsPath)
       if (mock.type === 'mock')
-        this.mockPath(mock.id, fsPath, external, mock.factory)
+        this.mockPath(mock.id, fsPath, external, mock.factory, mock.throwIfCached)
     }))
 
     VitestMocker.pendingIds = []
@@ -407,10 +407,13 @@ export class VitestMocker {
     this.deleteCachedItem(id)
   }
 
-  public mockPath(originalId: string, path: string, external: string | null, factory?: MockFactory) {
-    const suitefile = this.getSuiteFilepath()
+  public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined, throwIfExists: boolean) {
     const id = this.normalizePath(path)
 
+    if (throwIfExists && this.moduleCache.has(id))
+      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file.js-because-it-is-already-loaded`)
+
+    const suitefile = this.getSuiteFilepath()
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
 
@@ -484,11 +487,11 @@ export class VitestMocker {
       return mock
   }
 
-  public queueMock(id: string, importer: string, factory?: MockFactory) {
-    VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
+  public queueMock(id: string, importer: string, factory?: MockFactory, throwIfCached = false) {
+    VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory, throwIfCached })
   }
 
-  public queueUnmock(id: string, importer: string) {
-    VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
+  public queueUnmock(id: string, importer: string, throwIfCached = false) {
+    VitestMocker.pendingIds.push({ type: 'unmock', id, importer, throwIfCached })
   }
 }

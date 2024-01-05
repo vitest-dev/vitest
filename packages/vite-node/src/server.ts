@@ -211,10 +211,16 @@ export class ViteNodeServer {
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
 
-    const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module ? module.lastHMRTimestamp : null
+    const moduleNode = this.server.moduleGraph.getModuleById(id) || this.server.moduleGraph.getModuleById(filePath)
     const cache = this.fetchCaches[transformMode].get(filePath)
-    if (timestamp && cache && cache.timestamp >= timestamp)
+
+    // lastUpdateTimestamp is the timestamp that marks the last time the module was changed
+    // if lastUpdateTimestamp is 0, then the module was not changed since the server started
+    // we test "timestamp === 0" for expressiveness, but it's not necessary
+    const timestamp = moduleNode
+      ? Math.max(moduleNode.lastHMRTimestamp, moduleNode.lastInvalidationTimestamp)
+      : 0
+    if (cache && (timestamp === 0 || cache.timestamp >= timestamp))
       return cache.result
 
     const time = Date.now()

@@ -190,7 +190,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
-        await callFixtureCleanup()
+        await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
