@@ -46,7 +46,6 @@ export interface CliOptions {
   mode?: string
   watch?: boolean
   options?: ViteNodeServerOptionsCLI
-  version?: boolean
   help?: boolean
   '--'?: string[]
 }
