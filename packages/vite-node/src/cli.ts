@@ -19,8 +19,8 @@ cli
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
   .option('--script', 'Use vite-node as a script runner')
   .option('--options <options>', 'Use specified Vite server options')
-  .option('-v, --version', 'Output the version number')
   .option('-h, --help', 'Display help for command')
+  .version(version)
 
 cli
   .command('[...files]')
@@ -61,18 +61,13 @@ async function run(files: string[], options: CliOptions = {}) {
     process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
   }
 
-  if (options.version) {
-    cli.version(version)
-    cli.outputVersion()
-    process.exit(0)
-  }
   if (options.help) {
-    cli.version(version).outputHelp()
+    cli.outputHelp()
     process.exit(0)
   }
   if (!files.length) {
     console.error(c.red('No files specified.'))
-    cli.version(version).outputHelp()
+    cli.outputHelp()
     process.exit(1)
   }
 
