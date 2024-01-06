@@ -14,7 +14,7 @@ const external = [
 
 const plugins = [
   esbuild({
-    target: 'node14',
+    target: 'node18',
   }),
 ]
 
