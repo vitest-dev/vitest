@@ -1171,6 +1171,23 @@ The reporter has three different types:
   }
   ```
 
+Since Vitest 1.2.0, you can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
+
+<!-- eslint-skip -->
+```ts
+  {
+    reporter: [
+      // Specify reporter using name of the NPM package
+      '@vitest/custom-coverage-reporter',
+      ['@vitest/custom-coverage-reporter', { someOption: true }],
+
+      // Specify reporter using local path
+      '/absolute/path/to/custom-reporter.cjs',
+      ['/absolute/path/to/custom-reporter.cjs', { someOption: true }],
+    ]
+  }
+```
+
 Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
 #### coverage.reportOnFailure <Badge type="info">0.31.2+</Badge>
@@ -2045,7 +2062,7 @@ Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **CLI:** `--no-isolate`, `--isolate=false` 
+- **CLI:** `--no-isolate`, `--isolate=false`
 
 Run tests in an isolated environment. This option has no effect on `vmThreads` pool.
 
