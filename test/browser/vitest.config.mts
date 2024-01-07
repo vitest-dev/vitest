@@ -9,8 +9,8 @@ function noop() {}
 export default defineConfig({
   server: {
     headers: {
-      "x-custom": "hello",
-    }
+      'x-custom': 'hello',
+    },
   },
   optimizeDeps: {
     include: ['@vitest/cjs-lib'],
