@@ -25,3 +25,15 @@ test('root2', async () => {
   assert.match(result.stdout, /\n1\.\.1\nok 1/)
   assert.equal(result.stderr, '')
 })
+
+test('root3', async () => {
+  const result = await execa('npx', [
+    'vitest',
+    'run',
+    '--browser.headless',
+    '--reporter=tap-flat',
+  ], {
+    reject: false
+  })
+  assert.match(result.stdout, /\n1\.\.29\n/)
+})
