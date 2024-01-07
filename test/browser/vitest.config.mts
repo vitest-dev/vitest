@@ -7,6 +7,11 @@ const dir = dirname(fileURLToPath(import.meta.url))
 function noop() {}
 
 export default defineConfig({
+  server: {
+    headers: {
+      "x-custom": "hello",
+    }
+  },
   optimizeDeps: {
     include: ['@vitest/cjs-lib'],
   },
