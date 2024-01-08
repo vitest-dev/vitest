@@ -10,9 +10,9 @@ const provider = process.env.PROVIDER || 'webdriverio';
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome');
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ['@vitest/cjs-lib'],
-  },
+  // optimizeDeps: {
+  //   include: ['@vitest/cjs-lib'],
+  // },
   test: {
     include: ['test/**.test.{ts,js}'],
     browser: {
@@ -20,26 +20,26 @@ export default defineConfig({
       name: browser,
       headless: false,
       provider,
-      isolate: false,
-      slowHijackESM: true,
+      // isolate: false,
+      // slowHijackESM: true,
     },
-    alias: {
-      '#src': resolve(dir, './src'),
-    },
-    open: false,
-    diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
-    reporters: ['json', {
-      onInit: noop,
-      onPathsCollected: noop,
-      onCollected: noop,
-      onFinished: noop,
-      onTaskUpdate: noop,
-      onTestRemoved: noop,
-      onWatcherStart: noop,
-      onWatcherRerun: noop,
-      onServerRestart: noop,
-      onUserConsoleLog: noop,
-    }, 'default'],
+    // alias: {
+    //   '#src': resolve(dir, './src'),
+    // },
+    // open: false,
+    // diff: './custom-diff-config.ts',
+    // outputFile: './browser.json',
+    // reporters: ['json', {
+    //   onInit: noop,
+    //   onPathsCollected: noop,
+    //   onCollected: noop,
+    //   onFinished: noop,
+    //   onTaskUpdate: noop,
+    //   onTestRemoved: noop,
+    //   onWatcherStart: noop,
+    //   onWatcherRerun: noop,
+    //   onServerRestart: noop,
+    //   onUserConsoleLog: noop,
+    // }, 'default'],
   },
 })
