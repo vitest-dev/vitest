@@ -20,8 +20,8 @@ export default defineConfig({
       name: browser,
       headless: false,
       provider,
-      // isolate: false,
-      // slowHijackESM: true,
+      isolate: false,
+      slowHijackESM: true,
     },
     // alias: {
     //   '#src': resolve(dir, './src'),
