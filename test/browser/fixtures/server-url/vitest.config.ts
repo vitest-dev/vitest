@@ -1,3 +1,5 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
@@ -18,4 +20,7 @@ export default defineConfig({
       name: browser,
     },
   },
+  // separate cacheDir from test/browser/vite.config.ts
+  // to prevent pre-bundling related flakiness on Webkit
+  cacheDir: path.join(path.dirname(fileURLToPath(import.meta.url)), "node_modules/.vite")
 })
