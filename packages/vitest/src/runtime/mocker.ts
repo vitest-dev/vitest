@@ -1,11 +1,12 @@
 import { existsSync, readdirSync } from 'node:fs'
 import vm from 'node:vm'
-import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import { getWorkerState } from '../utils'
 import type { VitestExecutor } from './execute'
 
 const spyModulePath = resolve(distDir, 'spy.js')
@@ -410,8 +411,17 @@ export class VitestMocker {
   public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined, throwIfExists: boolean) {
     const id = this.normalizePath(path)
 
-    if (throwIfExists && this.moduleCache.has(id))
-      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file.js-because-it-is-already-loaded`)
+    if (throwIfExists) {
+      const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
+      if (cached) {
+        const state = getWorkerState()
+        for (const importer of cached.importers) {
+          // throw an error only if module is imported by the source code, ignore imports inside test files
+          if (!state.ctx.files.includes(importer))
+            throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${relative(this.root, importer)}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
+        }
+      }
+    }
 
     const suitefile = this.getSuiteFilepath()
     const mocks = this.mockMap.get(suitefile) || {}
