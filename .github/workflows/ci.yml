@@ -178,13 +178,7 @@ jobs:
           EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
 
       - name: Test Browser (playwright)
-        run: |
-          for ((i=0; i<20; i++)); do
-            echo "::::"
-            echo ":::: trial (${i})"
-            echo "::::"
-            pnpm run test:browser:playwright
-          done
+        run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
