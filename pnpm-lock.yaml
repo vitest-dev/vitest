@@ -900,7 +900,7 @@ importers:
         specifier: ^1.40.1
         version: 1.40.1
       safaridriver:
-        specifier: ^0.1.1
+        specifier: ^0.1.2
         version: 0.1.2
       vitest:
         specifier: workspace:*
