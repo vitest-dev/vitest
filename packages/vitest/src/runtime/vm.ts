@@ -31,7 +31,7 @@ export async function run(ctx: WorkerContext) {
       onCancel: setCancel,
     },
     {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },

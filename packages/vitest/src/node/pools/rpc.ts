@@ -5,14 +5,6 @@ import type { WorkspaceProject } from '../workspace'
 export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
   return {
-    async onWorkerExit(error, code) {
-      await ctx.cancelCurrentRun('test-failure')
-      await ctx.runningPromise
-
-      await ctx.logger.printError(error, { type: 'Unexpected Exit', fullStack: true })
-      process.exitCode = code || 1
-      await ctx.exit(true)
-    },
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
     },
