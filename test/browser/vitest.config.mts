@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    force: true,
     include: ['@vitest/cjs-lib'],
   },
   test: {
