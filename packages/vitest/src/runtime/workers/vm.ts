@@ -56,7 +56,7 @@ export async function runVmTests(state: WorkerGlobalState) {
 
   const stubs = getDefaultRequestStubs(context)
 
-  const externalModulesExecutor: ExternalModulesExecutor | null = new ExternalModulesExecutor({
+  const externalModulesExecutor = new ExternalModulesExecutor({
     context,
     fileMap,
     packageCache,
@@ -64,7 +64,7 @@ export async function runVmTests(state: WorkerGlobalState) {
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor: VitestExecutor | null = await startVitestExecutor({
+  const executor = await startVitestExecutor({
     context,
     moduleCache: state.moduleCache,
     mockMap: state.mockMap,

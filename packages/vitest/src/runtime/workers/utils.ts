@@ -11,10 +11,10 @@ export function createThreadsRpcOptions({ port }: WorkerContext): WorkerRpcOptio
   }
 }
 
-export function createForksRpcOptions(v8: typeof import('v8')): WorkerRpcOptions {
+export function createForksRpcOptions(nodeV8: typeof import('v8')): WorkerRpcOptions {
   return {
-    serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
+    serialize: nodeV8.serialize,
+    deserialize: v => nodeV8.deserialize(Buffer.from(v)),
     post(v) { process.send!(v) },
     on(fn) {
       process.on('message', (message: any, ...extras: any) => {

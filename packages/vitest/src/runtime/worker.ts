@@ -4,9 +4,13 @@ import { ModuleCacheMap } from 'vite-node/client'
 import type { ContextRPC } from '../types/rpc'
 import { loadEnvironment } from '../integrations/env/loader'
 import type { WorkerGlobalState } from '../types/worker'
+import { isChildProcess, setProcessTitle } from '../utils/base'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import type { VitestWorker } from './workers/types'
+
+if (isChildProcess())
+  setProcessTitle(`vitest ${poolId}`)
 
 // this is what every pool executes when running tests
 export async function run(ctx: ContextRPC) {
