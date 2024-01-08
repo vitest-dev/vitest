@@ -6,7 +6,7 @@ test('handle custom error without name', async () => {
   stdout = stdout.replaceAll(/time=(\S*)/g, 'time=[...]') // strip non-deterministic output
   expect(stdout).toMatchInlineSnapshot(`
     "TAP version 13
-    1..3
+    1..4
     not ok 1 - basic.test.ts > no name object # time=[...]
         ---
         error:
@@ -24,6 +24,12 @@ test('handle custom error without name', async () => {
         error:
             name: "Unknown Error"
             message: "1234"
+        ...
+    not ok 4 - basic.test.ts > number name object # time=[...]
+        ---
+        error:
+            name: "1234"
+            message: "undefined"
         ...
     "
   `)

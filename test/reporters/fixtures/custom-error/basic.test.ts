@@ -11,3 +11,7 @@ test('string', () => {
 test('number', () => {
   throw 1234;
 });
+
+test('number name object', () => {
+  throw { name: 1234 };
+});
