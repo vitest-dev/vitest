@@ -27,7 +27,7 @@ export default defineConfig({
     //   '#src': resolve(dir, './src'),
     // },
     // open: false,
-    diff: './custom-diff-config.ts',
+    // diff: './custom-diff-config.ts',
     // outputFile: './browser.json',
     // reporters: ['json', {
     //   onInit: noop,
