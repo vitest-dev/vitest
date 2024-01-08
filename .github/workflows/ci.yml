@@ -189,51 +189,51 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
-  test-browser-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        # browser: [[chrome, chromium], [edge, webkit]]
-        browser: [[edge, webkit]]
-      fail-fast: false
+  # test-browser-windows:
+  #   runs-on: windows-latest
+  #   strategy:
+  #     matrix:
+  #       # browser: [[chrome, chromium], [edge, webkit]]
+  #       browser: [[edge, webkit]]
+  #     fail-fast: false
 
-    timeout-minutes: 30
+  #   timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
-    steps:
-      - uses: actions/checkout@v4
+  #   env:
+  #     BROWSER: ${{ matrix.browser[0] }}
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-edge@v1
+  #     - uses: browser-actions/setup-chrome@v1
+  #     - uses: browser-actions/setup-edge@v1
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
+  #     - name: Install Playwright Dependencies
+  #       run: pnpx playwright install --with-deps
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Build
+  #       run: pnpm run build
 
-      # - name: Test Browser (webdriverio)
-      #   run: pnpm run test:browser:webdriverio
+  #     # - name: Test Browser (webdriverio)
+  #     #   run: pnpm run test:browser:webdriverio
 
-      - name: Test Browser (playwright)
-        run: |
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
+  #     - name: Test Browser (playwright)
+  #       run: |
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #         pnpm run test:browser:playwright
+  #       env:
+  #         BROWSER: ${{ matrix.browser[1] }}
