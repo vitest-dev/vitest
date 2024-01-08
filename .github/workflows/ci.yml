@@ -180,16 +180,10 @@ jobs:
 
       - name: Test Browser (playwright)
         run: |
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
-          pnpm run test:browser:playwright
+          for ((i=0; i<20; i++)) {
+            echo ":::: trial:${i} ::::"
+            pnpm run test:browser:playwright
+          }
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
