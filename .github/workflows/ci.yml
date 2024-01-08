@@ -180,10 +180,12 @@ jobs:
 
       - name: Test Browser (playwright)
         run: |
-          for ((i=0; i<20; i++)) {
+          for ((i=0; i<20; i++)); do
+            echo "::::::::::::::::::::"
             echo ":::: trial:${i} ::::"
+            echo "::::::::::::::::::::"
             pnpm run test:browser:playwright
-          }
+          done
         env:
           BROWSER: ${{ matrix.browser[1] }}
 

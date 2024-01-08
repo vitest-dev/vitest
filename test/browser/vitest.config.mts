@@ -10,9 +10,9 @@ const provider = process.env.PROVIDER || 'webdriverio';
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome');
 
 export default defineConfig({
-  // optimizeDeps: {
-  //   include: ['@vitest/cjs-lib'],
-  // },
+  optimizeDeps: {
+    include: ['@vitest/cjs-lib'],
+  },
   test: {
     include: ['test/**.test.{ts,js}'],
     browser: {
