@@ -1,12 +1,11 @@
 import c from 'picocolors'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
-import type { ListRendererOptions } from '../../renderers/listRenderer'
-import { createTableRenderer } from './tableRender'
+import { type TableRendererOptions, createTableRenderer } from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
-  rendererOptions: ListRendererOptions = {} as any
+  rendererOptions: TableRendererOptions = {} as any
 
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
