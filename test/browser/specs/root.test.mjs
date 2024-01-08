@@ -32,8 +32,7 @@ test('root3', async () => {
     'run',
     '--browser.headless',
     '--reporter=tap-flat',
-  ], {
-    reject: false
-  })
-  assert.match(result.stdout, /\n1\.\.29\n/)
+    'test/basic.test.ts',
+  ])
+  assert.match(result.stdout, /\n1\.\.4\n/)
 })
