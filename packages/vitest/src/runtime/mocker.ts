@@ -418,8 +418,8 @@ export class VitestMocker {
     // TODO: find a good way to throw this error even in non-isolated mode
     if (throwIfExists && (isIsolatedThreads || isIsolatedForks)) {
       const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
-      if (cached)
-        throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
+      if (cached && cached.importers.size)
+        throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers.values()].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
     }
 
     const suitefile = this.getSuiteFilepath()
