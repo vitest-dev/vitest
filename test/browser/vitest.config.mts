@@ -20,7 +20,7 @@ export default defineConfig({
       name: browser,
       headless: false,
       provider,
-      isolate: false,
+      // isolate: false,
       // slowHijackESM: true,
     },
     // alias: {
