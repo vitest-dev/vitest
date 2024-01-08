@@ -411,16 +411,15 @@ export class VitestMocker {
   public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined, throwIfExists: boolean) {
     const id = this.normalizePath(path)
 
-    if (throwIfExists) {
+    const { config } = getWorkerState()
+    const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
+    const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
+
+    // TODO: find a good way to throw this error even in non-isolated mode
+    if (throwIfExists && (isIsolatedThreads || isIsolatedForks)) {
       const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
-      if (cached) {
-        const state = getWorkerState()
-        for (const importer of cached.importers) {
-          // throw an error only if module is imported by the source code, ignore imports inside test files
-          if (!state.ctx.files.includes(importer))
-            throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${relative(this.root, importer)}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
-        }
-      }
+      if (cached)
+        throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
     }
 
     const suitefile = this.getSuiteFilepath()
