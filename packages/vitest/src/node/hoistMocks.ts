@@ -3,8 +3,9 @@ import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, Va
 
 // TODO: should use findNodeBefore, but it's not typed
 import { findNodeAround } from 'acorn-walk'
-import type { PluginContext } from 'rollup'
+import type { PluginContext, TransformPluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
+import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
   start: number
@@ -62,9 +63,9 @@ const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoist
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
-  const hasMocks = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
+  const needHoisting = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
-  if (!hasMocks)
+  if (!needHoisting)
     return
 
   const s = new MagicString(code)
@@ -149,7 +150,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   }
 
   const declaredConst = new Set<string>()
-  const hoistedNodes: Node[] = []
+  const hoistedNodes: Positioned<CallExpression | VariableDeclaration | AwaitExpression>[] = []
 
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
@@ -221,6 +222,49 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       }
     },
   })
+
+  function getNodeName(node: Node): string {
+    if (node.type === 'CallExpression') {
+      const { callee } = node
+      if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
+        return `${callee.object.name}.${callee.property.name}()`
+    }
+    if (node.type === 'VariableDeclaration') {
+      const { declarations } = node
+      const init = declarations[0].init
+      if (init)
+        return getNodeName(init as Node)
+    }
+    if (node.type === 'AwaitExpression') {
+      const { argument } = node
+      if (argument.type === 'CallExpression')
+        return getNodeName(argument as Node)
+    }
+    return '"hoisted method"'
+  }
+
+  function createError(outsideNode: Node, insideNode: Node) {
+    const outsideMethod = getNodeName(outsideNode)
+    const insideMethod = getNodeName(insideNode)
+    const error = new SyntaxError(`Cannot call ${insideMethod} inside ${outsideMethod}: both methods are hoisted to the top of the file and not actually called inside each other.`)
+    Object.assign(error, {
+      frame: generateCodeFrame(code, 4, insideNode.start + 1),
+    })
+    throw error
+  }
+
+  // validate hoistedNodes doesn't have nodes inside other nodes
+  for (let i = 0; i < hoistedNodes.length; i++) {
+    const node = hoistedNodes[i]
+    for (let j = i + 1; j < hoistedNodes.length; j++) {
+      const otherNode = hoistedNodes[j]
+
+      if (node.start >= otherNode.start && node.end <= otherNode.end)
+        throw createError(otherNode, node)
+      if (otherNode.start >= node.start && otherNode.end <= node.end)
+        throw createError(node, otherNode)
+    }
+  }
 
   // Wait for imports to be hoisted and then hoist the mocks
   const hoistedCode = hoistedNodes.map((node) => {

@@ -1,4 +1,5 @@
 import type { RawSourceMap } from 'vite-node'
+import { processError } from '@vitest/runner'
 import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
 
@@ -20,8 +21,14 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id, transformMode) {
-      return project.vitenode.fetchModule(id, transformMode)
+    async fetch(id, transformMode) {
+      try {
+        return await project.vitenode.fetchModule(id, transformMode)
+      }
+      catch (e) {
+        // TODO: improve error serialization between threads
+        throw processError(e)
+      }
     },
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)
