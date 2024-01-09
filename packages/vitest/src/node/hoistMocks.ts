@@ -3,7 +3,7 @@ import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, Va
 
 // TODO: should use findNodeBefore, but it's not typed
 import { findNodeAround } from 'acorn-walk'
-import type { PluginContext, TransformPluginContext } from 'rollup'
+import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
 import { generateCodeFrame } from './error'
 
@@ -246,10 +246,14 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   function createError(outsideNode: Node, insideNode: Node) {
     const outsideMethod = getNodeName(outsideNode)
     const insideMethod = getNodeName(insideNode)
-    const error = new SyntaxError(`Cannot call ${insideMethod} inside ${outsideMethod}: both methods are hoisted to the top of the file and not actually called inside each other.`)
-    Object.assign(error, {
+    const _error = new SyntaxError(`Cannot call ${insideMethod} inside ${outsideMethod}: both methods are hoisted to the top of the file and not actually called inside each other.`)
+    // throw an object instead of an error so it can be serialized for RPC, TODO: improve error handling in rpc serializer
+    const error = {
+      name: 'SyntaxError',
+      message: _error.message,
+      stack: _error.stack,
       frame: generateCodeFrame(code, 4, insideNode.start + 1),
-    })
+    }
     throw error
   }
 
