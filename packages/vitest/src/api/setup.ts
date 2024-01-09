@@ -11,7 +11,7 @@ import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive, stringifyReplace } from '../utils'
 import { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
@@ -115,7 +115,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
         getConfig() {
           if (vitestOrWorkspace instanceof WorkspaceProject)
-            return vitestOrWorkspace.getSerializableConfig()
+            return wrapConfig(vitestOrWorkspace.getSerializableConfig())
 
           return vitestOrWorkspace.config
         },
@@ -216,5 +216,16 @@ class WebSocketReporter implements Reporter {
     this.clients.forEach((client) => {
       client.onUserConsoleLog?.(log)
     })
+  }
+}
+
+function wrapConfig(config: ResolvedConfig): ResolvedConfig {
+  return {
+    ...config,
+    // workaround RegExp serialization
+    testNamePattern:
+      config.testNamePattern
+        ? config.testNamePattern.toString() as any as RegExp
+        : undefined,
   }
 }
