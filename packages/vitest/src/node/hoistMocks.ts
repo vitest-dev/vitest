@@ -1,5 +1,7 @@
 import MagicString from 'magic-string'
-import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+
+// TODO: should use findNodeBefore, but it's not typed
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
@@ -211,8 +213,9 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
             hoistedNodes.push(declarationNode)
           }
           else {
-            // hoist "vi.hoisted(() => {})"
-            hoistedNodes.push(node)
+            const awaitedExpression = findNodeAround(ast, node.start, 'AwaitExpression')?.node as Positioned<AwaitExpression> | undefined
+            // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
+            hoistedNodes.push(awaitedExpression?.argument === node ? awaitedExpression : node)
           }
         }
       }
