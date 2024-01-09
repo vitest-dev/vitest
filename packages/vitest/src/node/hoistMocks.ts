@@ -223,36 +223,43 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     },
   })
 
-  function getNodeName(node: Node): string {
+  function getNodeName(node: CallExpression) {
+    const callee = node.callee || {}
+    if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
+      return `${callee.object.name}.${callee.property.name}()`
+    return '"hoisted method"'
+  }
+
+  function getNodeCall(node: Node): Positioned<CallExpression> {
     if (node.type === 'CallExpression') {
       const { callee } = node
       if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
-        return `${callee.object.name}.${callee.property.name}()`
+        return node
     }
     if (node.type === 'VariableDeclaration') {
       const { declarations } = node
       const init = declarations[0].init
       if (init)
-        return getNodeName(init as Node)
+        return getNodeCall(init as Node)
     }
     if (node.type === 'AwaitExpression') {
       const { argument } = node
       if (argument.type === 'CallExpression')
-        return getNodeName(argument as Node)
+        return getNodeCall(argument as Node)
     }
-    return '"hoisted method"'
+    return node as Positioned<CallExpression>
   }
 
   function createError(outsideNode: Node, insideNode: Node) {
-    const outsideMethod = getNodeName(outsideNode)
-    const insideMethod = getNodeName(insideNode)
-    const _error = new SyntaxError(`Cannot call ${insideMethod} inside ${outsideMethod}: both methods are hoisted to the top of the file and not actually called inside each other.`)
+    const outsideCall = getNodeCall(outsideNode)
+    const insideCall = getNodeCall(insideNode)
+    const _error = new SyntaxError(`Cannot call ${getNodeName(insideCall)} inside ${getNodeName(outsideCall)}: both methods are hoisted to the top of the file and not actually called inside each other.`)
     // throw an object instead of an error so it can be serialized for RPC, TODO: improve error handling in rpc serializer
     const error = {
       name: 'SyntaxError',
       message: _error.message,
       stack: _error.stack,
-      frame: generateCodeFrame(code, 4, insideNode.start + 1),
+      frame: generateCodeFrame(code, 4, insideCall.start + 1),
     }
     throw error
   }

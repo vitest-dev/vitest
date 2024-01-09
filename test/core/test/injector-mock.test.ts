@@ -1,5 +1,6 @@
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
+import stripAnsi from 'strip-ansi'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
@@ -1189,77 +1190,64 @@ describe('throws an error when nodes are incompatible', () => {
       hoistSimpleCode(code)
     }
     catch (err: any) {
-      return err.message
+      return err
     }
   }
 
-  it('throws an error when hoisted is used inside vi.mock', () => {
-    expect(getErrorWhileHoisting(`
-import { vi } from 'vitest'
-
-vi.mock('./mocked', () => {
-  const variable = vi.hoisted(() => 1)
-  console.log(variable)
-})
-    `)).toMatchInlineSnapshot(`"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-
-  it('throws an error when async hoisted is used inside vi.mock', () => {
-    expect(getErrorWhileHoisting(`
+  it.each([
+    `
+    import { vi } from 'vitest'
+    
+    vi.mock('./mocked', () => {
+      const variable = vi.hoisted(() => 1)
+      console.log(variable)
+    })
+        `,
+        `
 import { vi } from 'vitest'
 
 vi.mock('./mocked', async () => {
   await vi.hoisted(() => 1)
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-
-  it('throws an error when assigned async hoisted is used inside vi.mock', () => {
-    expect(getErrorWhileHoisting(`
+    `,
+    `
 import { vi } from 'vitest'
 
 vi.mock('./mocked', async () => {
   const variable = await vi.hoisted(() => 1)
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-
-  it('throws an error when mock is used inside vi.hoisted', () => {
-    expect(getErrorWhileHoisting(`
+    `,
+    `
 import { vi } from 'vitest'
 
 vi.hoisted(() => {
   vi.mock('./mocked')
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-
-  it('throws an error when mock is used inside assigned vi.hoisted', () => {
-    expect(getErrorWhileHoisting(`
+    `,
+    `
 import { vi } from 'vitest'
 
 const values = vi.hoisted(() => {
   vi.mock('./mocked')
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-
-  it('throws an error when mock is used inside async vi.hoisted', () => {
-    expect(getErrorWhileHoisting(`
+    `,
+    `
 import { vi } from 'vitest'
 
 await vi.hoisted(async () => {
   vi.mock('./mocked')
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`)
-  })
-  it('throws an error when mock is used inside async assigned vi.hoisted', () => {
-    expect(getErrorWhileHoisting(`
+    `,
+    `
 import { vi } from 'vitest'
 
 const values = await vi.hoisted(async () => {
   vi.mock('./mocked')
 })
-    `)).toMatchInlineSnapshot(`"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`)
+    `,
+  ])('correctly throws an error', (code) => {
+    const error = getErrorWhileHoisting(code)
+    expect(error.message).toMatchSnapshot()
+    expect(stripAnsi(error.frame)).toMatchSnapshot()
   })
 })
