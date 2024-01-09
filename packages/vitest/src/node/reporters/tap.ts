@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/utils'
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -36,9 +36,10 @@ export class TapReporter implements Reporter {
       return ''
   }
 
-  private logErrorDetails(error: Error, stack?: ParsedStack) {
-    this.logger.log(`name: ${yamlString(error.name)}`)
-    this.logger.log(`message: ${yamlString(error.message)}`)
+  private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
+    const errorName = error.name || error.nameStr || 'Unknown Error'
+    this.logger.log(`name: ${yamlString(String(errorName))}`)
+    this.logger.log(`message: ${yamlString(String(error.message))}`)
 
     if (stack) {
       // For compatibility with tap-mocha-reporter
