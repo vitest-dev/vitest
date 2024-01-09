@@ -411,7 +411,7 @@ export class VitestMocker {
   public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined, throwIfExists: boolean) {
     const id = this.normalizePath(path)
 
-    const { config } = getWorkerState()
+    const { config } = this.executor.state
     const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
     const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
 

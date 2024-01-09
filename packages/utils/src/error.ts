@@ -89,7 +89,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
 }
 
 function normalizeErrorMessage(message: string) {
-  return message.replace(/__vite_ssr_import_\d+__\./g, '')
+  return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
 export function processError(err: any, diffOptions?: DiffOptions) {
