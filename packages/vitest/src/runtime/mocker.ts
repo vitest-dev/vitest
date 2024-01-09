@@ -6,7 +6,6 @@ import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
-import { getWorkerState } from '../utils'
 import type { VitestExecutor } from './execute'
 
 const spyModulePath = resolve(distDir, 'spy.js')
