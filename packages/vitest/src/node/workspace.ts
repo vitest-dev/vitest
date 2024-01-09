@@ -256,10 +256,10 @@ export class WorkspaceProject {
 
     if (filters.length) {
       return testFiles.filter((t) => {
-        const testFile = relative(dir, t)
+        const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-          return testFile.includes(f) || testFile.includes(relativePath)
+          return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
     }
