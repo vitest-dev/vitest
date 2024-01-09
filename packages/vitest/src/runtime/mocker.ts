@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs'
 import vm from 'node:vm'
-import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
@@ -410,8 +410,16 @@ export class VitestMocker {
   public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined, throwIfExists: boolean) {
     const id = this.normalizePath(path)
 
-    if (throwIfExists && this.moduleCache.has(id))
-      throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded. Did you import it in a setup file?\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file.js-because-it-is-already-loaded`)
+    const { config } = this.executor.state
+    const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
+    const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
+
+    // TODO: find a good way to throw this error even in non-isolated mode
+    if (throwIfExists && (isIsolatedThreads || isIsolatedForks)) {
+      const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
+      if (cached && cached.importers.size)
+        throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers.values()].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
+    }
 
     const suitefile = this.getSuiteFilepath()
     const mocks = this.mockMap.get(suitefile) || {}

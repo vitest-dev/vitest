@@ -216,7 +216,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return this.primitives
   }
 
-  get state() {
+  get state(): WorkerGlobalState {
     // @ts-expect-error injected untyped global
     return globalThis.__vitest_worker__ || this.options.state
   }
