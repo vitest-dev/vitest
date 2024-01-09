@@ -1,3 +1,5 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 /*
@@ -5,8 +7,9 @@ manually test snapshot by
   pnpm -C test/browser test-fixtures --root fixtures/update-snapshot
 */
 
-const provider = process.env.PROVIDER || 'webdriverio';
-const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome');
+const provider = process.env.PROVIDER || 'webdriverio'
+const browser =
+  process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
 
 export default defineConfig({
   test: {
@@ -16,4 +19,8 @@ export default defineConfig({
       name: browser,
     },
   },
+  cacheDir: path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    'node_modules/.vite'
+  ),
 })

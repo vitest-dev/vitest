@@ -1,5 +1,5 @@
-import { expect, test } from "vitest";
+import { expect, test } from 'vitest'
 
-test("basic", () => {
+test('basic', () => {
   expect(1).toMatchSnapshot()
 })
