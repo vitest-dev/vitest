@@ -15,7 +15,7 @@ test('update snapshot', async () => {
   await editFile(snapshotPath, data => data.replace('`1`', '`2`'))
 
   // run vitest watch mode
-  const result = await wrapWithExitCode(() => startVitest('test', [], {
+  const result = await wrapExit(() => startVitest('test', [], {
     watch: true,
     root: './fixtures/update-snapshot',
     reporters: ['tap-flat'], // use simple reporter to not pollute stdout
@@ -52,8 +52,10 @@ async function editFile(filepath, edit) {
  * run function and return mutated exitCode while preserving current exitCode
  * @param {() => any} f
  */
-async function wrapWithExitCode(f) {
+async function wrapExit(f) {
   const prevExitCode = process.exitCode
+  const prevExit = process.exit
+  process.exit = () => {}
   /** @type {{ value?: any, exitCode?: number }} */
   const result = {}
   try {
@@ -62,6 +64,7 @@ async function wrapWithExitCode(f) {
   finally {
     result.exitCode = process.exitCode
     process.exitCode = prevExitCode
+    process.exit = prevExit
   }
   return result
 }
