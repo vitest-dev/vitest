@@ -231,11 +231,8 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   }
 
   function getNodeCall(node: Node): Positioned<CallExpression> {
-    if (node.type === 'CallExpression') {
-      const { callee } = node
-      if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
-        return node
-    }
+    if (node.type === 'CallExpression')
+      return node
     if (node.type === 'VariableDeclaration') {
       const { declarations } = node
       const init = declarations[0].init
