@@ -32,7 +32,7 @@ async function init(ctx: WorkerContext) {
       onCancel: setCancel,
     },
     {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },
