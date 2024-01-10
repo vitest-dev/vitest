@@ -319,12 +319,28 @@ export class WorkspaceProject {
 
   getSerializableConfig() {
     const optimizer = this.config.deps?.optimizer
+    const poolOptions = this.config.poolOptions
+
+    // Resolve from server.config to avoid comparing against default value
+    const isolate = this.server?.config?.test?.isolate
+
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
 
-      pool: this.ctx.config.pool,
-      poolOptions: this.ctx.config.poolOptions,
+      poolOptions: {
+        forks: {
+          singleFork: poolOptions?.forks?.singleFork ?? this.ctx.config.poolOptions?.forks?.singleFork ?? false,
+          isolate: poolOptions?.forks?.isolate ?? isolate ?? this.ctx.config.poolOptions?.forks?.isolate ?? true,
+        },
+        threads: {
+          singleThread: poolOptions?.threads?.singleThread ?? this.ctx.config.poolOptions?.threads?.singleThread ?? false,
+          isolate: poolOptions?.threads?.isolate ?? isolate ?? this.ctx.config.poolOptions?.threads?.isolate ?? true,
+        },
+        vmThreads: {
+          singleThread: poolOptions?.vmThreads?.singleThread ?? this.ctx.config.poolOptions?.vmThreads?.singleThread ?? false,
+        },
+      },
 
       reporters: [],
       deps: {

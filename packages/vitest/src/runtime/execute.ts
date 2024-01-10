@@ -70,12 +70,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
-  const processExit = process.exit
-
   process.exit = (code = process.exitCode || 0): never => {
-    const error = new Error(`process.exit called with "${code}"`)
-    rpc().onWorkerExit(error, code)
-    return processExit(code)
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
   }
 
   function catchError(err: unknown, type: string) {
@@ -220,7 +216,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return this.primitives
   }
 
-  get state() {
+  get state(): WorkerGlobalState {
     // @ts-expect-error injected untyped global
     return globalThis.__vitest_worker__ || this.options.state
   }
