@@ -76,5 +76,6 @@ describe('truncateThreshold', () => {
 })
 
 function cleanOutput(output: string) {
+  // remove non-deterministic output
   return output.replaceAll(/\s*# time=.*/g, '')
 }
