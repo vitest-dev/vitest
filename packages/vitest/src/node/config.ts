@@ -120,6 +120,12 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.maxWorkers)
+    resolved.maxWorkers = Number(resolved.maxWorkers)
+
+  if (resolved.minWorkers)
+    resolved.minWorkers = Number(resolved.minWorkers)
+
   resolved.fileParallelism ??= true
 
   if (!resolved.fileParallelism) {
