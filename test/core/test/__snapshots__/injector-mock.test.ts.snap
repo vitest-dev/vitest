@@ -1,0 +1,78 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 1`] = `"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 2`] = `
+"      3|     
+      4|     vi.mock('./mocked', () => {
+      5|       const variable = vi.hoisted(() => 1)
+       |                        ^
+      6|       console.log(variable)
+      7|     })"
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 3`] = `"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 4`] = `
+"      3| 
+      4| vi.mock('./mocked', async () => {
+      5|   await vi.hoisted(() => 1)
+       |         ^
+      6| })
+      7|     "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 5`] = `"Cannot call vi.hoisted() inside vi.mock(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 6`] = `
+"      3| 
+      4| vi.mock('./mocked', async () => {
+      5|   const variable = await vi.hoisted(() => 1)
+       |                          ^
+      6| })
+      7|     "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 7`] = `"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 8`] = `
+"      3| 
+      4| vi.hoisted(() => {
+      5|   vi.mock('./mocked')
+       |   ^
+      6| })
+      7|     "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 9`] = `"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 10`] = `
+"      3| 
+      4| const values = vi.hoisted(() => {
+      5|   vi.mock('./mocked')
+       |   ^
+      6| })
+      7|     "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 11`] = `"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 12`] = `
+"      3| 
+      4| await vi.hoisted(async () => {
+      5|   vi.mock('./mocked')
+       |   ^
+      6| })
+      7|     "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 13`] = `"Cannot call vi.mock() inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error 14`] = `
+"      3| 
+      4| const values = await vi.hoisted(async () => {
+      5|   vi.mock('./mocked')
+       |   ^
+      6| })
+      7|     "
+`;

@@ -1569,6 +1569,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      strip-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
       tinyspy:
         specifier: ^1.0.2
         version: 1.0.2

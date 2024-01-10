@@ -1,6 +1,6 @@
 import { parseAst } from 'rollup/parseAst'
-import { expect, test } from 'vitest'
-import { describe } from 'node:test'
+import { describe, expect, it, test } from 'vitest'
+import stripAnsi from 'strip-ansi'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
@@ -1181,5 +1181,73 @@ console.log(foo + 2)
       export * from './b'
       console.log(__vi_import_0__.foo + 2)"
     `)
+  })
+})
+
+describe('throws an error when nodes are incompatible', () => {
+  const getErrorWhileHoisting = (code: string) => {
+    try {
+      hoistSimpleCode(code)
+    }
+    catch (err: any) {
+      return err
+    }
+  }
+
+  it.each([
+    `
+    import { vi } from 'vitest'
+    
+    vi.mock('./mocked', () => {
+      const variable = vi.hoisted(() => 1)
+      console.log(variable)
+    })
+        `,
+        `
+import { vi } from 'vitest'
+
+vi.mock('./mocked', async () => {
+  await vi.hoisted(() => 1)
+})
+    `,
+    `
+import { vi } from 'vitest'
+
+vi.mock('./mocked', async () => {
+  const variable = await vi.hoisted(() => 1)
+})
+    `,
+    `
+import { vi } from 'vitest'
+
+vi.hoisted(() => {
+  vi.mock('./mocked')
+})
+    `,
+    `
+import { vi } from 'vitest'
+
+const values = vi.hoisted(() => {
+  vi.mock('./mocked')
+})
+    `,
+    `
+import { vi } from 'vitest'
+
+await vi.hoisted(async () => {
+  vi.mock('./mocked')
+})
+    `,
+    `
+import { vi } from 'vitest'
+
+const values = await vi.hoisted(async () => {
+  vi.mock('./mocked')
+})
+    `,
+  ])('correctly throws an error', (code) => {
+    const error = getErrorWhileHoisting(code)
+    expect(error.message).toMatchSnapshot()
+    expect(stripAnsi(error.frame)).toMatchSnapshot()
   })
 })
