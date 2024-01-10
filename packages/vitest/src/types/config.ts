@@ -817,7 +817,6 @@ export type ProjectConfig = Omit<
   | 'update'
   | 'reporters'
   | 'outputFile'
-  | 'pool'
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
@@ -842,6 +841,11 @@ export type ProjectConfig = Omit<
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
+  poolOptions?: {
+    threads?: Pick<NonNullable<PoolOptions['threads']>, 'singleThread' | 'isolate'>
+    vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
+    forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
+  }
 }
 
 export type RuntimeConfig = Pick<

@@ -23,6 +23,96 @@ export default defineWorkspace([
     },
   },
 
+  // Projects testing pool and poolOptions
+  {
+    test: {
+      name: 'Threads pool',
+      include: [
+        './space-pools/threads.test.ts',
+        './space-pools/multi-worker.test.ts',
+        './space-pools/isolate.test.ts',
+      ],
+      pool: 'threads',
+    },
+  },
+  {
+    test: {
+      name: 'Single thread pool',
+      include: [
+        './space-pools/threads.test.ts',
+        './space-pools/single-worker.test.ts',
+      ],
+      pool: 'threads',
+      poolOptions: { threads: { singleThread: true } },
+    },
+  },
+  {
+    test: {
+      name: 'Non-isolated thread pool #1',
+      include: [
+        './space-pools/threads.test.ts',
+        './space-pools/no-isolate.test.ts',
+      ],
+      pool: 'threads',
+      poolOptions: { threads: { isolate: false } },
+    },
+  },
+  {
+    test: {
+      name: 'Non-isolated thread pool #2',
+      include: [
+        './space-pools/threads.test.ts',
+        './space-pools/no-isolate.test.ts',
+      ],
+      pool: 'threads',
+      isolate: false,
+    },
+  },
+  {
+    test: {
+      name: 'Forks pool',
+      include: [
+        './space-pools/forks.test.ts',
+        './space-pools/multi-worker.test.ts',
+        './space-pools/isolate.test.ts',
+      ],
+      pool: 'forks',
+    },
+  },
+  {
+    test: {
+      name: 'Single fork pool',
+      include: [
+        './space-pools/forks.test.ts',
+        './space-pools/single-worker.test.ts',
+      ],
+      pool: 'forks',
+      poolOptions: { forks: { singleFork: true } },
+    },
+  },
+  {
+    test: {
+      name: 'Non-isolated fork pool #1',
+      include: [
+        './space-pools/forks.test.ts',
+        './space-pools/no-isolate.test.ts',
+      ],
+      pool: 'forks',
+      poolOptions: { forks: { isolate: false } },
+    },
+  },
+  {
+    test: {
+      name: 'Non-isolated fork pool #2',
+      include: [
+        './space-pools/forks.test.ts',
+        './space-pools/no-isolate.test.ts',
+      ],
+      pool: 'forks',
+      isolate: false,
+    },
+  },
+
   // These two projects run on same environment but still transform
   // a single file differently due to Vite plugins
   {
