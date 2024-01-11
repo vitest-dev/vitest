@@ -797,8 +797,11 @@ export class Vitest {
   async close() {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
+        const teardownProjects = [...this.projects]
+        if (!teardownProjects.includes(this.coreWorkspaceProject))
+          teardownProjects.push(this.coreWorkspaceProject)
         // do teardown before closing the server
-        for await (const project of [...this.projects].reverse())
+        for await (const project of teardownProjects.reverse())
           await project.teardownGlobalSetup()
 
         const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
