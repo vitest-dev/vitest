@@ -1002,7 +1002,7 @@ describe('toSatisfy()', () => {
     expect(1).toSatisfy(isOdd)
   })
 
-  it('pass with negotiation', () => {
+  it('pass with negation', () => {
     expect(2).not.toSatisfy(isOdd)
   })
 })
