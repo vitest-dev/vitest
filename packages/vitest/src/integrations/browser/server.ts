@@ -1,6 +1,5 @@
 import { createServer } from 'vite'
 import { defaultBrowserPort } from '../../constants'
-import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
@@ -10,7 +9,7 @@ import { resolveFsAllow } from '../../node/plugins/utils'
 export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
   const root = project.config.root
 
-  await ensurePackageInstalled('@vitest/browser', root)
+  await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
 
   const configPath = typeof configFile === 'string' ? configFile : false
 

@@ -23,8 +23,13 @@ import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
+import { VitestPackageInstaller } from './packageInstaller'
 
 const WATCHER_DEBOUNCE = 100
+
+export interface VitestOptions {
+  packageInstaller?: VitestPackageInstaller
+}
 
 export class Vitest {
   config: ResolvedConfig = undefined!
@@ -53,6 +58,8 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
+  public packageInstaller: VitestPackageInstaller
+
   private coreWorkspaceProject!: WorkspaceProject
 
   private resolvedProjects: WorkspaceProject[] = []
@@ -63,8 +70,10 @@ export class Vitest {
 
   constructor(
     public readonly mode: VitestRunMode,
+    options: VitestOptions = {},
   ) {
     this.logger = new Logger(this)
+    this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
@@ -139,7 +148,7 @@ export class Vitest {
 
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this.runner)
+      : await createReporters(resolved.reporters, this)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
