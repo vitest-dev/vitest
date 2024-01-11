@@ -18,5 +18,5 @@ it('custom URL is changed to my-website:5435', () => {
 
 it('accepts custom environment options', () => {
   // default is false
-  expect(window.happyDOM.settings.disableCSSFileLoading).toBe(true)
+  expect(window.happyDOM?.settings.disableCSSFileLoading).toBe(true)
 })

@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-core",
+  "name": "@vitest/test-import-meta",
   "type": "module",
   "private": true,
   "scripts": {

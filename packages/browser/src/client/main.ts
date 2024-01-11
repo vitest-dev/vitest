@@ -1,6 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { CancelReason, VitestRunner } from '@vitest/runner'
+import { parseRegexp } from '@vitest/utils'
 import type { VitestExecutor } from '../../../vitest/src/runtime/execute'
 import { createBrowserRunner } from './runner'
 import { importId as _importId } from './utils'
@@ -51,6 +52,7 @@ async function loadConfig() {
     try {
       await new Promise(resolve => setTimeout(resolve, 150))
       config = await client.rpc.getConfig()
+      config = unwrapConfig(config)
       return
     }
     catch (_) {
@@ -60,6 +62,17 @@ async function loadConfig() {
   while (--retries > 0)
 
   throw new Error('cannot load configuration after 5 retries')
+}
+
+function unwrapConfig(config: ResolvedConfig): ResolvedConfig {
+  return {
+    ...config,
+    // workaround RegExp serialization
+    testNamePattern:
+      config.testNamePattern
+        ? parseRegexp((config.testNamePattern as any as string))
+        : undefined,
+  }
 }
 
 function on(event: string, listener: (...args: any[]) => void) {

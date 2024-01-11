@@ -655,7 +655,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 - **Type:** `Record<'threads' | 'forks' | 'vmThreads', {}>`
 - **Default:** `{}`
 
-#### poolOptions.threads<NonProjectOption />
+#### poolOptions.threads
 
 Options for `threads` pool.
 
@@ -687,7 +687,7 @@ Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment var
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
-##### poolOptions.threads.singleThread<NonProjectOption />
+##### poolOptions.threads.singleThread
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -710,7 +710,7 @@ Use Atomics to synchronize threads.
 
 This can improve performance in some cases, but might cause segfault in older Node versions.
 
-##### poolOptions.threads.isolate<NonProjectOption />
+##### poolOptions.threads.isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -728,7 +728,7 @@ Pass additional arguments to `node` in the threads. See [Command-line API | Node
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-#### poolOptions.forks<NonProjectOption />
+#### poolOptions.forks
 
 Options for `forks` pool.
 
@@ -760,14 +760,14 @@ Maximum number of forks.
 
 Minimum number of forks.
 
-##### poolOptions.forks.isolate<NonProjectOption />
+##### poolOptions.forks.isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
 
 Isolate environment for each test file.
 
-##### poolOptions.forks.singleFork<NonProjectOption />
+##### poolOptions.forks.singleFork
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -792,7 +792,7 @@ Pass additional arguments to `node` process in the child processes. See [Command
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-#### poolOptions.vmThreads<NonProjectOption />
+#### poolOptions.vmThreads
 
 Options for `vmThreads` pool.
 

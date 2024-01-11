@@ -9,11 +9,16 @@ describe('define project helper', () => {
     expectProjectTestConfig.toHaveProperty('name')
     expectMainTestConfig.toHaveProperty('name')
 
-    expectProjectTestConfig.not.toHaveProperty('pool')
-    expectMainTestConfig.toHaveProperty('pool')
-
     expectProjectTestConfig.not.toHaveProperty('coverage')
     expectMainTestConfig.toHaveProperty('coverage')
+
+    expectProjectTestConfig.not.toHaveProperty('reporters')
+    expectMainTestConfig.toHaveProperty('reporters')
+  })
+
+  test('allows expected project fields on a project config', () => {
+    expectProjectTestConfig.toHaveProperty('pool')
+    expectProjectTestConfig.toHaveProperty('poolOptions')
   })
 })
 
