@@ -1,4 +1,5 @@
 {
+  "name": "@vitest/test-typescript",
   "type": "module",
   "scripts": {
     "test": "vitest --test-timeout 60000",
