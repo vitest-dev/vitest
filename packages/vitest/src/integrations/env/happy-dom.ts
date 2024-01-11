@@ -1,6 +1,16 @@
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
+async function teardownWindow(win: { happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }; close?: () => void }) {
+  if (win.close && win.happyDOM.abort) {
+    await win.happyDOM.abort()
+    win.close()
+  }
+  else {
+    win.happyDOM.cancelAsync()
+  }
+}
+
 export default <Environment>({
   name: 'happy-dom',
   transformMode: 'web',
@@ -28,7 +38,7 @@ export default <Environment>({
         return win
       },
       async teardown() {
-        await win.happyDOM.cancelAsync()
+        await teardownWindow(win)
       },
     }
   },
@@ -53,8 +63,8 @@ export default <Environment>({
     })
 
     return {
-      teardown(global) {
-        win.happyDOM.cancelAsync()
+      async teardown(global) {
+        await teardownWindow(win)
         keys.forEach(key => delete global[key])
         originals.forEach((v, k) => global[k] = v)
       },
