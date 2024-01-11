@@ -20,26 +20,26 @@ export interface VitestRunner {
   /**
    * Called when test runner should cancel next test runs.
    * Runner should listen for this method and mark tests and suites as skipped in
-   * "onBeforeRunSuite" and "onBeforeRunTest" when called.
+   * "onBeforeRunSuite" and "onBeforeRunTask" when called.
    */
   onCancel?(reason: CancelReason): unknown
 
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTest?(test: Test): unknown
+  onBeforeRunTask?(test: TaskPopulated): unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTest?(test: Test, retryCount: number): unknown
+  onBeforeTryTask?(test: TaskPopulated, options: { retry: number; repeats: number }): unknown
   /**
    * Called after result and state are set.
    */
-  onAfterRunTest?(test: Test): unknown
+  onAfterRunTask?(test: TaskPopulated): unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTest?(test: Test, retryCount: number): unknown
+  onAfterTryTask?(test: TaskPopulated, options: { retry: number; repeats: number }): unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -59,7 +59,7 @@ export interface VitestRunner {
    * If defined, will be called instead of usual Vitest handling. Useful, if you have your custom test function.
    * "before" and "after" hooks will not be ignored.
    */
-  runTest?(test: Test): Promise<void>
+  runTask?(test: TaskPopulated): Promise<void>
 
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
@@ -69,16 +69,20 @@ export interface VitestRunner {
   /**
    * Called before running all tests in collected paths.
    */
-  onBeforeRun?(files: File[]): unknown
+  onBeforeRunFiles?(files: File[]): unknown
   /**
    * Called right after running all tests in collected paths.
    */
-  onAfterRun?(files: File[]): unknown
+  onAfterRunFiles?(files: File[]): unknown
   /**
    * Called when new context for a test is defined. Useful, if you want to add custom properties to the context.
    * If you only want to define custom context with a runner, consider using "beforeAll" in "setupFiles" instead.
+   *
+   * This method is called for both "test" and "custom" handlers.
+   *
+   * @see https://vitest.dev/advanced/runner.html#your-task-function
    */
-  extendTestContext?(context: TestContext): TestContext
+  extendTaskContext?<T extends Test | Custom>(context: TaskContext<T>): TaskContext<T>
   /**
    * Called, when certain files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
@@ -102,29 +106,37 @@ Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` prope
 Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend benchmark functionality.
 :::
 
-## Your task function
+## Your Task Function
 
-You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.custom` method:
+You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
 ```js
 // ./utils/custom.js
-import { getCurrentSuite, setFn } from 'vitest/suite'
+import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
 
 export { describe, beforeAll, afterAll } from 'vitest'
 
-// this function will be called, when Vitest collects tasks
-export const myCustomTask = function (name, fn) {
-  const task = getCurrentSuite().custom(name)
-  task.meta = {
-    customPropertyToDifferentiateTask: true
+// this function will be called during collection phase:
+// don't call function handler here, add it to suite tasks
+// with "getCurrentSuite().task()" method
+// note: createTaskCollector provides support for "todo"/"each"/...
+export const myCustomTask = createTaskCollector(
+  function (name, fn, timeout) {
+    getCurrentSuite().task(name, {
+      ...this, // so "todo"/"skip"/... is tracked correctly
+      meta: {
+        customPropertyToDifferentiateTask: true
+      },
+      handler: fn,
+      timeout,
+    })
   }
-  setFn(task, fn || (() => {}))
-}
+)
 ```
 
 ```js
 // ./garden/tasks.test.js
-import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
+import { afterAll, beforeAll, describe, myCustomTask } from '../custom.js'
 import { gardener } from './gardener.js'
 
 describe('take care of the garden', () => {
@@ -134,6 +146,9 @@ describe('take care of the garden', () => {
 
   myCustomTask('weed the grass', () => {
     gardener.weedTheGrass()
+  })
+  myCustomTask.todo('mow the lawn', () => {
+    gardener.mowerTheLawn()
   })
   myCustomTask('water flowers', () => {
     gardener.waterFlowers()

@@ -1,40 +1,37 @@
 import type { ChaiPlugin } from '@vitest/expect'
+import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
+import { SnapshotClient, addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
 import type { Test } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
-import type { SnapshotClient } from '@vitest/snapshot'
-import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
 import { recordAsyncExpect } from '../../../../expect/src/utils'
-import { VitestSnapshotClient } from './client'
 
 let _client: SnapshotClient
 
 export function getSnapshotClient(): SnapshotClient {
-  if (!_client)
-    _client = new VitestSnapshotClient()
+  if (!_client) {
+    _client = new SnapshotClient({
+      isEqual: (received, expected) => {
+        return equals(received, expected, [iterableEquality, subsetEquality])
+      },
+    })
+  }
   return _client
 }
 
-function getErrorMessage(err: unknown) {
-  if (err instanceof Error)
-    return err.message
-
-  return err
-}
-
-function getErrorString(expected: () => void | Error, promise: string | undefined) {
+function getError(expected: () => void | Error, promise: string | undefined) {
   if (typeof expected !== 'function') {
     if (!promise)
       throw new Error(`expected must be a function, received ${typeof expected}`)
 
     // when "promised", it receives thrown error
-    return getErrorMessage(expected)
+    return expected
   }
 
   try {
     expected()
   }
   catch (e) {
-    return getErrorMessage(e)
+    return e
   }
 
   throw new Error('snapshot function didn\'t throw')
@@ -137,7 +134,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
-        received: getErrorString(expected, promise),
+        received: getError(expected, promise),
         message,
         errorMessage,
         ...getTestNames(test),
@@ -157,8 +154,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
 
+      if (inlineSnapshot)
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+
       getSnapshotClient().assert({
-        received: getErrorString(expected, promise),
+        received: getError(expected, promise),
         message,
         inlineSnapshot,
         isInline: true,

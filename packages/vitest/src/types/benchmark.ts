@@ -1,4 +1,4 @@
-import type { TaskCustom } from '@vitest/runner'
+import type { Custom } from '@vitest/runner'
 import type { ChainableFunction } from '@vitest/runner/utils'
 import type { Arrayable } from '@vitest/utils'
 import type { Bench as BenchFactory, Options as BenchOptions, Task as BenchTask, TaskResult as BenchTaskResult, TaskResult as TinybenchResult } from 'tinybench'
@@ -39,7 +39,7 @@ export interface BenchmarkUserOptions {
   outputFile?: string | (Partial<Record<BenchmarkBuiltinReporters, string>> & Record<string, string>)
 }
 
-export interface Benchmark extends TaskCustom {
+export interface Benchmark extends Custom {
   meta: {
     benchmark: true
     result?: BenchTaskResult
@@ -52,13 +52,14 @@ export interface BenchmarkResult extends TinybenchResult {
 }
 
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void
-export type BenchmarkAPI = ChainableFunction<
-'skip' | 'only' | 'todo',
-[name: string | Function, fn?: BenchFunction, options?: BenchOptions],
-void
-> & {
-  skipIf(condition: any): BenchmarkAPI
-  runIf(condition: any): BenchmarkAPI
+type ChainableBenchmarkAPI = ChainableFunction<
+  'skip' | 'only' | 'todo',
+  [name: string | Function, fn?: BenchFunction, options?: BenchOptions],
+  void
+>
+export type BenchmarkAPI = ChainableBenchmarkAPI & {
+  skipIf(condition: any): ChainableBenchmarkAPI
+  runIf(condition: any): ChainableBenchmarkAPI
 }
 
 export {

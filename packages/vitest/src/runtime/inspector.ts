@@ -25,8 +25,11 @@ export function setupInspect(config: ResolvedConfig) {
     }
   }
 
-  // In watch mode the inspector can persist re-runs if "isolate: false, singleThread: true" is used
-  const keepOpen = config.watch && !config.isolate && config.singleThread
+  // In watch mode the inspector can persist re-runs if isolation is disabled and a single worker is used
+  const isIsolatedSingleThread = config.pool === 'threads' && config.poolOptions?.threads?.isolate === false && config.poolOptions?.threads?.singleThread
+  const isIsolatedSingleFork = config.pool === 'forks' && config.poolOptions?.forks?.isolate === false && config.poolOptions?.forks?.singleFork
+
+  const keepOpen = config.watch && (isIsolatedSingleFork || isIsolatedSingleThread)
 
   return function cleanup() {
     if (isEnabled && !keepOpen && inspector)

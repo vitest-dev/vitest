@@ -4,7 +4,7 @@ inputs:
   node-version:
     required: false
     description: Node version for setup-node
-    default: 18.x
+    default: 20.x
 
 runs:
   using: composite
@@ -14,7 +14,7 @@ runs:
       uses: pnpm/action-setup@v2
 
     - name: Set node version to ${{ inputs.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
 
@@ -29,10 +29,8 @@ runs:
             const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
             const cypressVersion = lockfile.match(pattern('cypress'))[1];
             const playwrightVersion = lockfile.match(pattern('playwright'))[1];
-            const puppeteerVersion = lockfile.match(pattern('puppeteer'))[1];
             console.log('CYPRESS_VERSION=' + cypressVersion);
             console.log('PLAYWRIGHT_VERSION=' + playwrightVersion);
-            console.log('PUPPETEER_VERSION=' + puppeteerVersion);
           "
         )" >> $GITHUB_OUTPUT
 
@@ -44,8 +42,7 @@ runs:
       shell: bash
       if: |
         contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.CYPRESS_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION) ||
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PUPPETEER_VERSION)
+        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
       run: echo "Failed to resolve package versions. See log above." && exit 1
 
     - name: Cache Cypress v${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
@@ -65,12 +62,3 @@ runs:
         key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-
-
-    - name: Cache Puppeteer v${{ steps.resolve-package-versions.outputs.PUPPETEER_VERSION }}
-      uses: actions/cache@v3
-      id: puppeteer-cache
-      with:
-        path: ${{ env.PUPPETEER_DOWNLOAD_PATH }}
-        key: ${{ runner.os }}-puppeteer-${{ steps.resolve-package-versions.outputs.PUPPETEER_VERSION }}
-        restore-keys: |
-          ${{ runner.os }}-puppeteer-

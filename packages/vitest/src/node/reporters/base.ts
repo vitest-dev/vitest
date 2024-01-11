@@ -1,9 +1,10 @@
 import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
+import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath, toArray } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
+import { UNKNOWN_TEST_ID } from '../../runtime/console'
 import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -29,6 +30,7 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
+  private _offUnhandledRejection?: () => void
 
   constructor() {
     this.registerUnhandledRejection()
@@ -40,6 +42,9 @@ export abstract class BaseReporter implements Reporter {
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
+    ctx.onClose(() => {
+      this._offUnhandledRejection?.()
+    })
     ctx.logger.printBanner()
     this.start = performance.now()
   }
@@ -113,9 +118,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
     const hints: string[] = []
-    // TODO typecheck doesn't support these for now
-    if (this.mode !== 'typecheck')
-      hints.push(HELP_HINT)
+    hints.push(HELP_HINT)
     if (failedSnap)
       hints.unshift(HELP_UPDATE_SNAP)
     else
@@ -166,16 +169,17 @@ export abstract class BaseReporter implements Reporter {
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
     const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.configOverride.testNamePattern))}\n` : ''
+    const PROJECT_FILTER = this.ctx.configOverride.project ? `${BADGE_PADDING} ${c.dim('Project name: ')}${c.blue(toArray(this.ctx.configOverride.project).join(', '))}\n` : ''
 
-    if (files.length > 1) {
+    if (files.length > 1 || !files.length) {
       // we need to figure out how to handle rerun all from stdin
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${PROJECT_FILTER}${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
       this._lastRunCount = 0
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
       this._lastRunCount = rerun
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${PROJECT_FILTER}${FILENAME_PATTERN}${TESTNAME_PATTERN}`)
     }
 
     this._timeStart = new Date()
@@ -186,7 +190,7 @@ export abstract class BaseReporter implements Reporter {
     if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : 'unknown test'}`))
+    const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : log.taskId !== UNKNOWN_TEST_ID ? log.taskId : 'unknown test'}`))
     process[log.type].write(`${header}\n${log.content}\n`)
   }
 
@@ -257,19 +261,23 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
-    if (this.mode === 'typecheck') {
+    if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
       const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
       logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'))
     }
     if (errors.length)
       logger.log(padTitle('Errors'), c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)))
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
-    if (this.watchFilters)
+    if (this.watchFilters) {
       logger.log(padTitle('Duration'), time(threadTime))
-    else if (this.mode === 'typecheck')
-      logger.log(padTitle('Duration'), time(executionTime))
-    else
-      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)})`))
+    }
+    else {
+      let timers = `transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)}`
+      const typecheck = this.ctx.projects.reduce((acc, c) => acc + (c.typechecker?.getResult().time || 0), 0)
+      if (typecheck)
+        timers += `, typecheck ${time(typecheck)}`
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (${timers})`))
+    }
 
     logger.log()
   }
@@ -367,11 +375,15 @@ export abstract class BaseReporter implements Reporter {
   }
 
   registerUnhandledRejection() {
-    process.on('unhandledRejection', async (err) => {
+    const onUnhandledRejection = async (err: unknown) => {
       process.exitCode = 1
       await this.ctx.logger.printError(err, { fullStack: true, type: 'Unhandled Rejection' })
       this.ctx.logger.error('\n\n')
       process.exit(1)
-    })
+    }
+    process.on('unhandledRejection', onUnhandledRejection)
+    this._offUnhandledRejection = () => {
+      process.off('unhandledRejection', onUnhandledRejection)
+    }
   }
 }

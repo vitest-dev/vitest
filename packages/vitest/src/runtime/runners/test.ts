@@ -1,9 +1,9 @@
-import type { CancelReason, Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getWorkerState } from '../../utils'
+import { getFullName, getNames, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -23,22 +23,30 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
-  onBeforeRun() {
+  onBeforeRunFiles() {
     this.snapshotClient.clear()
   }
 
-  async onAfterRun() {
-    const result = await this.snapshotClient.resetCurrent()
-    if (result)
-      await rpc().snapshotSaved(result)
-  }
-
-  onAfterRunSuite(suite: Suite) {
+  async onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
+
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // mark snapshots in skipped tests as not obsolete
+      for (const test of getTests(suite)) {
+        if (test.mode === 'skip') {
+          const name = getNames(test).slice(1).join(' > ')
+          this.snapshotClient.skipTestSnapshots(name)
+        }
+      }
+
+      const result = await this.snapshotClient.finishCurrentRun()
+      if (result)
+        await rpc().snapshotSaved(result)
+    }
   }
 
-  onAfterRunTest(test: Test) {
+  onAfterRunTask(test: Test) {
     this.snapshotClient.clearTest()
 
     if (this.config.logHeapUsage && typeof process !== 'undefined')
@@ -51,29 +59,31 @@ export class VitestTestRunner implements VitestRunner {
     this.cancelRun = true
   }
 
-  async onBeforeRunTest(test: Test) {
-    const name = getNames(test).slice(1).join(' > ')
-
+  async onBeforeRunTask(test: Test) {
     if (this.cancelRun)
       test.mode = 'skip'
 
-    if (test.mode !== 'run') {
-      this.snapshotClient.skipTestSnapshots(name)
+    if (test.mode !== 'run')
       return
-    }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.setTest(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }
 
-  onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite) {
     if (this.cancelRun)
       suite.mode = 'skip'
+
+    // initialize snapshot state before running file suite
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // default "name" is irrelevant for Vitest since each snapshot assertion
+      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
+      await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
+    }
   }
 
-  onBeforeTryTest(test: Test) {
+  onBeforeTryTask(test: Test) {
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -86,7 +96,7 @@ export class VitestTestRunner implements VitestRunner {
     }, (globalThis as any)[GLOBAL_EXPECT])
   }
 
-  onAfterTryTest(test: Test) {
+  onAfterTryTask(test: Test) {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -103,12 +113,12 @@ export class VitestTestRunner implements VitestRunner {
       throw isExpectingAssertionsError
   }
 
-  extendTestContext(context: TestContext): TestContext {
+  extendTaskContext<T extends Test | Custom>(context: TaskContext<T>): ExtendedContext<T> {
     let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
         if (!_expect)
-          _expect = createExpect(context.meta)
+          _expect = createExpect(context.task)
         return _expect
       },
     })
@@ -117,7 +127,7 @@ export class VitestTestRunner implements VitestRunner {
         return _expect != null
       },
     })
-    return context
+    return context as ExtendedContext<T>
   }
 }
 

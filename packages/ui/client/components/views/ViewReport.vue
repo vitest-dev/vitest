@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import type Convert from 'ansi-to-html'
 import ViewReportError from './ViewReportError.vue'
-import type { ErrorWithDiff, File, Suite, Task } from '#types'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { config } from '~/composables/client'
+import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
   file?: File
@@ -22,15 +23,6 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return [{ ...task, level }]
   else
     return [{ ...task, level }, ...task.tasks.flatMap(t => collectFailed(t, level + 1))]
-}
-
-function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
 }
 
 function createHtmlError(filter: Convert, error: ErrorWithDiff) {

@@ -97,7 +97,7 @@ export function clone<T>(
   if (Array.isArray(val)) {
     out = Array((k = val.length))
     seen.set(val, out)
-    while (k--) out[k] = clone(val[k], seen)
+    while (k--) out[k] = clone(val[k], seen, options)
     return out as any
   }
 
@@ -110,7 +110,7 @@ export function clone<T>(
       const descriptor = Object.getOwnPropertyDescriptor(val, k)
       if (!descriptor)
         continue
-      const cloned = clone((val as any)[k], seen)
+      const cloned = clone((val as any)[k], seen, options)
       if ('get' in descriptor) {
         Object.defineProperty(out, k, {
           ...descriptor,

@@ -3,14 +3,9 @@
   "labels": ["dependencies"],
   "pin": false,
   "rangeStrategy": "bump",
-  "node": false,
   "packageRules": [
     {
       "depTypeList": ["peerDependencies"],
-      "enabled": false
-    },
-    {
-      "packageNames": ["node"],
       "enabled": false
     },
     {
@@ -23,24 +18,23 @@
       ],
       "groupName": "all non-major examples dependencies",
       "groupSlug": "all-minor-patch-examples"
-    },
-    {
-      "excludePackagePatterns": [
-        "@vitest/test-"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
     }
   ],
   "ignoreDeps": [
     // wait for ecosystem to upgrade to React v18
     "@testing-library/react",
     "@testing-library/user-event",
+    "node",
     // user can install any version
-    "vite"
+    "vite",
+    // we patch these packages
+    "@types/chai",
+    "@sinonjs/fake-timers",
+    // TODO: update when chai is updated to 5.0
+    "loupe",
+    // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
+    "log-update",
+    // we update types for node when we bump the minimal version
+    "@types/node"
   ]
 }

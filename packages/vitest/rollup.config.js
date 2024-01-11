@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
@@ -12,9 +12,11 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 
-import pkg from './package.json' assert { type: 'json' }
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 const entries = [
+  'src/paths.ts',
   'src/index.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
@@ -26,7 +28,6 @@ const entries = [
   'src/runtime/worker.ts',
   'src/runtime/vm.ts',
   'src/runtime/child.ts',
-  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/runtime/entry-vm.ts',
   'src/integrations/spy.ts',
@@ -57,18 +58,15 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
-  'rollup',
   'node:vm',
   'inspector',
-  'webdriverio',
-  'safaridriver',
-  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
   'vite-node/constants',
   'vite-node/utils',
   '@vitest/utils/diff',
+  '@vitest/utils/ast',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
@@ -93,6 +91,7 @@ const plugins = [
 export default ({ watch }) => defineConfig([
   {
     input: entries,
+    treeshake: true,
     output: {
       dir: 'dist',
       format: 'esm',
@@ -106,9 +105,9 @@ export default ({ watch }) => defineConfig([
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+            return `chunks/${parts.slice(-2).join('-')}.[hash].js`
         }
-        return 'vendor-[name].[hash].js'
+        return 'vendor/[name].[hash].js'
       },
     },
     external,
@@ -172,8 +171,7 @@ function licensePlugin() {
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
-        .sort(({ name: nameA }, { name: nameB }) =>
-          nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
+        .sort(({ name: nameA }, { name: nameB }) => nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )
         .map(
           ({

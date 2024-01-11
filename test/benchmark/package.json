@@ -1,8 +1,9 @@
 {
   "name": "@vitest/benchmark",
+  "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test specs/ && echo '1'",
+    "test": "node --test specs/* && echo '1'",
     "bench:json": "vitest bench --reporter=json",
     "bench": "vitest bench"
   },

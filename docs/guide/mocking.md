@@ -156,9 +156,9 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/vi#vi-mock) for a more in-depth detailed API description.
+See the [`vi.mock()` API section](/api/vi#vi-mock) for a more in-depth detailed API description.
 
-### Automocking algorithm
+### Automocking Algorithm
 
 If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
@@ -167,6 +167,98 @@ The following principles apply
 * All primitives and collections will stay the same
 * All objects will be deeply cloned
 * All instances of classes and their prototypes will be deeply cloned
+
+### Virtual Modules
+
+Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention). It works differently from how virtual modules are treated in Jest. Instead of passing down `virtual: true` to a `vi.mock` function, you need to tell Vite that module exists otherwise it will fail during parsing. You can do that in several ways:
+
+1. Provide an alias
+
+```ts
+// vitest.config.js
+export default {
+  test: {
+    alias: {
+      '$app/forms': resolve('./mocks/forms.js')
+    }
+  }
+}
+```
+
+2. Provide a plugin that resolves a virtual module
+
+```ts
+// vitest.config.js
+export default {
+  plugins: [
+    {
+      name: 'virtual-modules',
+      resolveId(id) {
+        if (id === '$app/forms')
+          return 'virtual:$app/forms'
+      }
+    }
+  ]
+}
+```
+
+The benefit of the second approach is that you can dynamically create different virtual entrypoints. If you redirect several virtual modules into a single file, then all of them will be affected by `vi.mock`, so make sure to use unique identifiers.
+
+### Mocking Pitfalls
+
+Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
+
+```ts
+export function foo() {
+  return 'foo'
+}
+
+export function foobar() {
+  return `${foo()}bar`
+}
+```
+
+It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
+
+```ts
+import { vi } from 'vitest'
+import * as mod from './foobar.js'
+
+// this will only affect "foo" outside of the original module
+vi.spyOn(mod, 'foo')
+vi.mock('./foobar.js', async (importOriginal) => {
+  return {
+    ...await importOriginal(),
+    // this will only affect "foo" outside of the original module
+    foo: () => 'mocked'
+  }
+})
+```
+
+You can confirm this behaviour by providing the implementation to the `foobar` method directly:
+
+```ts
+// foobar.test.js
+import * as mod from './foobar.js'
+
+vi.spyOn(mod, 'foo')
+
+// exported foo references mocked method
+mod.foobar(mod.foo)
+```
+
+```ts
+// foobar.js
+export function foo() {
+  return 'foo'
+}
+
+export function foobar(injectedFoo) {
+  return injectedFoo !== foo // false
+}
+```
+
+This is the intended behaviour. It is usually a sign of bad code when mocking is involved in such a manner. Consider refactoring your code into multiple files or improving your application architecture by using techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection).
 
 ### Example
 
@@ -268,7 +360,7 @@ describe('get a list of todo items', () => {
 
 Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
 
-Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses [node-request-interceptor](https://mswjs.io/docs/api/setup-server#operation). To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
+Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses the [`@mswjs/interceptors`](https://github.com/mswjs/interceptors) library. To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
 
 
 ### Configuration
@@ -277,7 +369,7 @@ You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
-import { graphql, rest } from 'msw'
+import { HttpResponse, graphql, http } from 'msw'
 
 const posts = [
   {
@@ -290,14 +382,18 @@ const posts = [
 ]
 
 export const restHandlers = [
-  rest.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json(posts))
+  http.get('https://rest-endpoint.example/path/to/posts', () => {
+    return HttpResponse.json(posts)
   }),
 ]
 
 const graphqlHandlers = [
-  graphql.query('https://graphql-endpoint.example/api/v1/posts', (req, res, ctx) => {
-    return res(ctx.data(posts))
+  graphql.query('ListPosts', () => {
+    return HttpResponse.json(
+      {
+        data: { posts },
+      },
+    )
   }),
 ]
 
@@ -320,13 +416,13 @@ afterEach(() => server.resetHandlers())
 We have a full working example which uses MSW: [React Testing with MSW](https://github.com/vitest-dev/vitest/tree/main/examples/react-testing-lib-msw).
 
 ### More
-There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs/recipes).
+There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs).
 
 ## Timers
 
 When we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout, we can speed up our tests by using "fake" timers that mock calls to `setTimeout` and `setInterval`.
 
-See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
+See the [`vi.useFakeTimers` API section](/api/vi#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 

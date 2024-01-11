@@ -22,6 +22,8 @@ basic-foo.test.ts
 basic/foo.test.ts
 ```
 
+You can also use the `-t, --testNamePattern <pattern>	` option to filter tests by full name. This can be helpful when you want to filter by the name defined within a file rather than the filename itself.
+
 ## Specifying a Timeout
 
 You can optionally pass a timeout in milliseconds as third argument to tests. The default is 5 seconds.

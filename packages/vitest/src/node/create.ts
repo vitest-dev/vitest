@@ -23,8 +23,8 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
   const config: ViteInlineConfig = {
     logLevel: 'error',
     configFile: configPath,
-    // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || process.env.NODE_ENV || mode,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.mode || mode,
     plugins: await VitestPlugin(options, ctx),
   }
 

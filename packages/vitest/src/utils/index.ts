@@ -9,6 +9,7 @@ export * from './global'
 export * from './timers'
 export * from './env'
 export * from './modules'
+export * from './serialization'
 
 export const isWindows = isNode && process.platform === 'win32'
 export function getRunMode() {

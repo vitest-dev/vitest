@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-mocks",
+  "type": "module",
   "private": true,
   "files": [
     "dist",
@@ -22,7 +23,7 @@
     "sweetalert2": "^11.6.16",
     "vite": "latest",
     "vitest": "latest",
-    "vue": "^3.2.39",
+    "vue": "^3.3.8",
     "zustand": "^4.1.1"
   },
   "stackblitz": {

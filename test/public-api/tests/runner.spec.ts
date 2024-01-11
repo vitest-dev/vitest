@@ -4,8 +4,8 @@ import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
 
 it.each([
-  { name: 'threads are enabled', threads: true },
-  { name: 'threads are disabled', threads: false },
+  { name: 'threads are enabled', pool: 'threads' },
+  { name: 'threads are disabled', pool: 'forks' },
   {
     name: 'running in the browser',
     browser: {

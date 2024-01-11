@@ -3,7 +3,7 @@ import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 
-function createMismatchError(message: string, actual: unknown, expected: unknown) {
+function createMismatchError(message: string, expand: boolean | undefined, actual: unknown, expected: unknown) {
   const error = new Error(message)
   Object.defineProperty(error, 'actual', {
     value: actual,
@@ -17,6 +17,7 @@ function createMismatchError(message: string, actual: unknown, expected: unknown
     configurable: true,
     writable: true,
   })
+  Object.defineProperty(error, 'diffOptions', { value: { expand } })
   return error
 }
 
@@ -39,25 +40,29 @@ interface AssertOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
+export interface SnapshotClientOptions {
+  isEqual?: (received: unknown, expected: unknown) => boolean
+}
+
 export class SnapshotClient {
   filepath?: string
   name?: string
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()
 
-  constructor(private Service = SnapshotState) {}
+  constructor(private options: SnapshotClientOptions = {}) {}
 
-  async setTest(filepath: string, name: string, options: SnapshotStateOptions) {
+  async startCurrentRun(filepath: string, name: string, options: SnapshotStateOptions) {
     this.filepath = filepath
     this.name = name
 
     if (this.snapshotState?.testFilePath !== filepath) {
-      this.resetCurrent()
+      await this.finishCurrentRun()
 
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          await this.Service.create(
+          await SnapshotState.create(
             filepath,
             options,
           ),
@@ -78,15 +83,6 @@ export class SnapshotClient {
 
   skipTestSnapshots(name: string) {
     this.snapshotState?.markSnapshotsAsCheckedForTest(name)
-  }
-
-  /**
-   * Should be overridden by the consumer.
-   *
-   * Vitest checks equality with @vitest/expect.
-   */
-  equalityCheck(received: unknown, expected: unknown) {
-    return received === expected
   }
 
   assert(options: AssertOptions): void {
@@ -111,10 +107,10 @@ export class SnapshotClient {
         throw new Error('Received value must be an object when the matcher has properties')
 
       try {
-        const pass = this.equalityCheck(received, properties)
+        const pass = this.options.isEqual?.(received, properties) ?? false
         // const pass = equals(received, properties, [iterableEquality, subsetEquality])
         if (!pass)
-          throw createMismatchError('Snapshot properties mismatched', received, properties)
+          throw createMismatchError('Snapshot properties mismatched', this.snapshotState?.expand, received, properties)
         else
           received = deepMergeSnapshot(received, properties)
       }
@@ -141,7 +137,7 @@ export class SnapshotClient {
     })
 
     if (!pass)
-      throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, actual?.trim(), expected?.trim())
+      throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {
@@ -169,7 +165,7 @@ export class SnapshotClient {
     return this.assert(options)
   }
 
-  async resetCurrent() {
+  async finishCurrentRun() {
     if (!this.snapshotState)
       return null
     const result = await this.snapshotState.pack()

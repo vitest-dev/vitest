@@ -1,8 +1,9 @@
 {
   "name": "@vitest/test-config",
+  "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run --typecheck.enabled"
   },
   "devDependencies": {
     "vite": "latest",

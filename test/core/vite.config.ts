@@ -36,7 +36,6 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
-      { find: '$', replacement: 'src' },
       { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
       { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
     ],
@@ -61,7 +60,7 @@ export default defineConfig({
       CUSTOM_ENV: 'foo',
     },
     poolMatchGlobs: [
-      ['**/vm-wasm.test.ts', 'experimentalVmThreads'],
+      ['**/vm-wasm.test.ts', 'vmThreads'],
     ],
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot'))

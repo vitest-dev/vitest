@@ -148,7 +148,7 @@ export class JsonReporter implements Reporter {
       testResults,
     }
 
-    await this.writeReport(JSON.stringify(result, null, 2))
+    await this.writeReport(JSON.stringify(result))
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
@@ -186,6 +186,7 @@ export class JsonReporter implements Reporter {
     const project = this.ctx.getProjectByTaskId(test.id)
     const stack = parseErrorStacktrace(error, {
       getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+      frameFilter: this.ctx.config.onStackTrace,
     })
     const frame = stack[0]
     if (!frame)

@@ -8,7 +8,20 @@ import fg from 'fast-glob'
 import { stringify } from 'flatted'
 import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
-import { getOutputFile } from '../../vitest/src/utils/config-helpers'
+
+interface PotentialConfig {
+  outputFile?: string | Partial<Record<string, string>>
+}
+
+function getOutputFile(config: PotentialConfig | undefined) {
+  if (!config?.outputFile)
+    return
+
+  if (typeof config.outputFile === 'string')
+    return config.outputFile
+
+  return config.outputFile.html
+}
 
 interface HTMLReportData {
   paths: string[]
@@ -38,14 +51,14 @@ export default class HTMLReporter implements Reporter {
     }
     await Promise.all(
       result.files.map(async (file) => {
-        result.moduleGraph[file.filepath] = await getModuleGraph(this.ctx, file.filepath)
+        result.moduleGraph[file.filepath] = await getModuleGraph(this.ctx as any, file.filepath)
       }),
     )
     await this.writeReport(stringify(result))
   }
 
   async writeReport(report: string) {
-    const htmlFile = getOutputFile(this.ctx.config, 'html') || 'html/index.html'
+    const htmlFile = getOutputFile(this.ctx.config) || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 

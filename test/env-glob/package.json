@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-env-glob",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

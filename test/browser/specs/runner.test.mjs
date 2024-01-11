@@ -1,32 +1,19 @@
 import assert from 'node:assert'
-import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { execa } from 'execa'
+import runVitest from './run-vitest.mjs'
 
-const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
-
-const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.name=${browser}`, '--browser.headless'], {
-  env: {
-    ...process.env,
-    CI: 'true',
-    NO_COLOR: 'true',
-  },
-  reject: false,
-})
-
-const browserResult = await readFile('./browser.json', 'utf-8')
-const browserResultJson = JSON.parse(browserResult)
-
-const getPassed = results => results.filter(result => result.status === 'passed')
-const getFailed = results => results.filter(result => result.status === 'failed')
-
-const passedTests = getPassed(browserResultJson.testResults)
-const failedTests = getFailed(browserResultJson.testResults)
+const {
+  stderr,
+  stdout,
+  browserResultJson,
+  passedTests,
+  failedTests,
+} = await runVitest()
 
 await test('tests are actually running', async () => {
-  assert.ok(browserResultJson.testResults.length === 8, 'Not all the tests have been run')
-  assert.ok(passedTests.length === 7, 'Some tests failed')
-  assert.ok(failedTests.length === 1, 'Some tests have passed but should fail')
+  assert.ok(browserResultJson.testResults.length === 11, 'Not all the tests have been run')
+  assert.ok(passedTests.length === 9, 'Some tests failed')
+  assert.ok(failedTests.length === 2, 'Some tests have passed but should fail')
 
   assert.doesNotMatch(stderr, /Unhandled Error/, 'doesn\'t have any unhandled errors')
 })
@@ -75,4 +62,8 @@ await test('popup apis should log a warning', () => {
   assert.ok(stderr.includes('Vitest encountered a \`alert\("test"\)\`'), 'prints warning for alert')
   assert.ok(stderr.includes('Vitest encountered a \`confirm\("test"\)\`'), 'prints warning for confirm')
   assert.ok(stderr.includes('Vitest encountered a \`prompt\("test"\)\`'), 'prints warning for prompt')
+})
+
+await test('snapshot inaccessible file debuggability', () => {
+  assert.ok(stdout.includes('Access denied to "/inaccesible/path".'), 'file security enforcement explained')
 })

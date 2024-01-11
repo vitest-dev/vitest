@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-run-once",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

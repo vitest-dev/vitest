@@ -1,21 +1,17 @@
 [build.environment]
-  NPM_FLAGS = "--version"
-  NODE_VERSION = "16"
+  NODE_VERSION = "20"
+  # don't need playwright for docs build
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 
 [build]
   publish = "docs/.vitepress/dist"
-  command = "npx pnpm@7.8.0 i --store=node_modules/.pnpm-store --no-frozen-lockfile && npm run docs:build"
+  command = "pnpm docs:build"
   ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json pnpm-lock.yaml"
 
 [[redirects]]
   from = "/new"
   to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
   status = 302
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 [[headers]]
   for = "/manifest.webmanifest"

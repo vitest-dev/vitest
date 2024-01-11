@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { Task } from '#types'
+import type { Task } from 'vitest'
 
 defineProps<{ task: Task }>()
 </script>

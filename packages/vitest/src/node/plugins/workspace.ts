@@ -1,4 +1,4 @@
-import { dirname, relative } from 'pathe'
+import { basename, dirname, relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -8,11 +8,11 @@ import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
+import { NormalizeURLPlugin } from './normalizeURL'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -36,7 +36,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         let name = testConfig.name
         if (!name) {
           if (typeof options.workspacePath === 'string')
-            name = dirname(options.workspacePath).split('/').pop()
+            name = basename(options.workspacePath.endsWith('/') ? options.workspacePath.slice(0, -1) : dirname(options.workspacePath))
           else
             name = options.workspacePath.toString()
         }
@@ -49,9 +49,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             mainFields: [],
             alias: testConfig.alias,
             conditions: ['node'],
-            // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-            // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
-            browserField: false,
           },
           esbuild: {
             sourcemap: 'external',
@@ -62,11 +59,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
-            watch: {
-              ignored: ['**/*'],
-              depth: 0,
-              persistent: false,
-            },
+            watch: null,
             open: false,
             hmr: false,
             preTransformRequests: false,
@@ -123,9 +116,9 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
-    GlobalSetupPlugin(project, project.ctx.logger),
     MocksPlugin(),
     VitestResolver(project.ctx),
     VitestOptimizer(),
+    NormalizeURLPlugin(),
   ]
 }

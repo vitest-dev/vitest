@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-graphql",
+  "type": "module",
   "private": true,
   "files": [
     "dist",
@@ -12,7 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@rollup/plugin-graphql": "^1.1.0",
+    "@rollup/plugin-graphql": "^2.0.4",
     "graphql": "^16.5.0"
   },
   "devDependencies": {

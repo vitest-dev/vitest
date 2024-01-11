@@ -4,7 +4,6 @@ export default defineConfig({
   test: {
     deps: {
       external: [/tslib/, /css-what/, /prototype\.mjs/],
-      registerNodeLoader: true,
     },
   },
 })

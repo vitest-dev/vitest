@@ -2,6 +2,7 @@ import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
 import { isWindows, stdout } from '../utils'
+import { toArray } from '../utils/base'
 import type { Vitest } from './core'
 
 const keys = [
@@ -11,6 +12,7 @@ const keys = [
   ['u', 'update snapshot'],
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
+  ['w', 'filter by a project name'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -49,10 +51,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return
     }
 
-    // Other keys are for watch mode only
-    if (!ctx.config.watch)
-      return
-
     const name = key?.name
 
     if (ctx.runningPromise) {
@@ -64,10 +62,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // quit
     if (name === 'q')
       return ctx.exit(true)
-
-    // TODO typechecking doesn't support shortcuts this yet
-    if (ctx.mode === 'typecheck')
-      return
 
     // help
     if (name === 'h')
@@ -84,6 +78,9 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // rerun only failed tests
     if (name === 'f')
       return ctx.rerunFailed()
+    // change project filter
+    if (name === 'w')
+      return inputProjectName()
     // change testNamePattern
     if (name === 't')
       return inputNamePattern()
@@ -106,6 +103,18 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     }])
     on()
     await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
+  }
+
+  async function inputProjectName() {
+    off()
+    const { filter = '' }: { filter: string } = await prompt([{
+      name: 'filter',
+      type: 'text',
+      message: 'Input a single project name',
+      initial: toArray(ctx.configOverride.project)[0] || '',
+    }])
+    on()
+    await ctx.changeProjectName(filter.trim())
   }
 
   async function inputFilePattern() {

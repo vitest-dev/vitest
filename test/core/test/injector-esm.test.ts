@@ -1,10 +1,10 @@
-import { Parser } from 'acorn'
-import { injectVitestModule } from '@vitest/browser/src/node/esmInjector'
+import { parseAst } from 'rollup/parseAst'
 import { expect, test } from 'vitest'
 import { transformWithEsbuild } from 'vite'
+import { injectVitestModule } from '../../../packages/browser/src/node/esmInjector'
 
 function parse(code: string, options: any) {
-  return Parser.parse(code, options)
+  return parseAst(code, options)
 }
 
 function injectSimpleCode(code: string) {
@@ -45,9 +45,9 @@ test('namespace import', async () => {
 test('export function declaration', async () => {
   expect(injectSimpleCode('export function foo() {}'))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
       function foo() {}
-      Object.defineProperty(__vi_inject__, \\"foo\\", { enumerable: true, configurable: true, get(){ return foo }});
+      Object.defineProperty(__vi_inject__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
       export { __vi_inject__ }"
     `)
 })
@@ -55,9 +55,9 @@ test('export function declaration', async () => {
 test('export class declaration', async () => {
   expect(await injectSimpleCode('export class foo {}'))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
       class foo {}
-      Object.defineProperty(__vi_inject__, \\"foo\\", { enumerable: true, configurable: true, get(){ return foo }});
+      Object.defineProperty(__vi_inject__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
       export { __vi_inject__ }"
     `)
 })
@@ -65,10 +65,10 @@ test('export class declaration', async () => {
 test('export var declaration', async () => {
   expect(await injectSimpleCode('export const a = 1, b = 2'))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
       const a = 1, b = 2
-      Object.defineProperty(__vi_inject__, \\"a\\", { enumerable: true, configurable: true, get(){ return a }});
-      Object.defineProperty(__vi_inject__, \\"b\\", { enumerable: true, configurable: true, get(){ return b }});
+      Object.defineProperty(__vi_inject__, "a", { enumerable: true, configurable: true, get(){ return a }});
+      Object.defineProperty(__vi_inject__, "b", { enumerable: true, configurable: true, get(){ return b }});
       export { __vi_inject__ }"
     `)
 })
@@ -77,10 +77,10 @@ test('export named', async () => {
   expect(
     injectSimpleCode('const a = 1, b = 2; export { a, b as c }'),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     const a = 1, b = 2; 
-    Object.defineProperty(__vi_inject__, \\"a\\", { enumerable: true, configurable: true, get(){ return a }});
-    Object.defineProperty(__vi_inject__, \\"c\\", { enumerable: true, configurable: true, get(){ return b }});
+    Object.defineProperty(__vi_inject__, "a", { enumerable: true, configurable: true, get(){ return a }});
+    Object.defineProperty(__vi_inject__, "c", { enumerable: true, configurable: true, get(){ return b }});
     export { __vi_inject__ }"
   `)
 })
@@ -89,11 +89,11 @@ test('export named from', async () => {
   expect(
     injectSimpleCode('export { ref, computed as c } from \'vue\''),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
-    const { __vi_inject__: __vi_esm_0__ } = await import(\\"vue\\");
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    const { __vi_inject__: __vi_esm_0__ } = await import("vue");
 
-    Object.defineProperty(__vi_inject__, \\"ref\\", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.ref }});
-    Object.defineProperty(__vi_inject__, \\"c\\", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.computed }});
+    Object.defineProperty(__vi_inject__, "ref", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.ref }});
+    Object.defineProperty(__vi_inject__, "c", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.computed }});
     export { __vi_inject__ }"
   `)
 })
@@ -104,10 +104,10 @@ test('named exports of imported binding', async () => {
       'import {createApp} from \'vue\';export {createApp}',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     import { __vi_inject__ as __vi_esm_0__ } from 'vue'
 
-    Object.defineProperty(__vi_inject__, \\"createApp\\", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.createApp }});
+    Object.defineProperty(__vi_inject__, "createApp", { enumerable: true, configurable: true, get(){ return __vi_esm_0__.createApp }});
     export { __vi_inject__ }"
   `)
 })
@@ -118,10 +118,10 @@ test('export * from', async () => {
       'export * from \'vue\'\n' + 'export * from \'react\'',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
-    const { __vi_inject__: __vi_esm_0__ } = await import(\\"vue\\");
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    const { __vi_inject__: __vi_esm_0__ } = await import("vue");
     __vi_export_all__(__vi_inject__, __vi_esm_0__);
-    const { __vi_inject__: __vi_esm_1__ } = await import(\\"react\\");
+    const { __vi_inject__: __vi_esm_1__ } = await import("react");
     __vi_export_all__(__vi_inject__, __vi_esm_1__);
 
 
@@ -132,10 +132,10 @@ test('export * from', async () => {
 test('export * as from', async () => {
   expect(injectSimpleCode('export * as foo from \'vue\''))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
-      const { __vi_inject__: __vi_esm_0__ } = await import(\\"vue\\");
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+      const { __vi_inject__: __vi_esm_0__ } = await import("vue");
 
-      Object.defineProperty(__vi_inject__, \\"foo\\", { enumerable: true, configurable: true, get(){ return __vi_esm_0__ }});
+      Object.defineProperty(__vi_inject__, "foo", { enumerable: true, configurable: true, get(){ return __vi_esm_0__ }});
       export { __vi_inject__ }"
     `)
 })
@@ -144,7 +144,7 @@ test('export default', async () => {
   expect(
     injectSimpleCode('export default {}'),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     __vi_inject__.default = {}
     export default { __vi_inject__: __vi_inject__.default };
 
@@ -158,9 +158,9 @@ test('export then import minified', async () => {
       'export * from \'vue\';import {createApp} from \'vue\';',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    const { __vi_inject__: __vi_esm_1__ } = await import(\\"vue\\");
+    const { __vi_inject__: __vi_esm_1__ } = await import("vue");
     __vi_export_all__(__vi_inject__, __vi_esm_1__);
 
     export { __vi_inject__ }"
@@ -189,7 +189,7 @@ test('dynamic import', async () => {
     'export const i = () => import(\'./foo\')',
   )
   expect(result).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     const i = () => __vi_wrap_module__(import('./foo'))
     export { __vi_inject__ }"
   `)
@@ -301,13 +301,13 @@ test('should declare variable for imported super class', async () => {
         + 'export class B extends Foo {}',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     import { __vi_inject__ as __vi_esm_0__ } from './dependency'
     const Foo = __vi_esm_0__.Foo;
     class A extends Foo {}
     class B extends Foo {}
-    Object.defineProperty(__vi_inject__, \\"B\\", { enumerable: true, configurable: true, get(){ return B }});
-    Object.defineProperty(__vi_inject__, \\"default\\", { enumerable: true, configurable: true, value: A });
+    Object.defineProperty(__vi_inject__, "B", { enumerable: true, configurable: true, get(){ return B }});
+    Object.defineProperty(__vi_inject__, "default", { enumerable: true, configurable: true, value: A });
     export { __vi_inject__ }"
   `)
 })
@@ -317,7 +317,7 @@ test('should handle default export variants', async () => {
   // default anonymous functions
   expect(injectSimpleCode('export default function() {}\n'))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
       __vi_inject__.default = function() {}
 
       export default { __vi_inject__: __vi_inject__.default };
@@ -327,7 +327,7 @@ test('should handle default export variants', async () => {
   // default anonymous class
   expect(injectSimpleCode('export default class {}\n'))
     .toMatchInlineSnapshot(`
-      "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
       __vi_inject__.default = class {}
 
       export default { __vi_inject__: __vi_inject__.default };
@@ -341,10 +341,10 @@ test('should handle default export variants', async () => {
         + 'foo.prototype = Object.prototype;',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     function foo() {}
     foo.prototype = Object.prototype;
-    Object.defineProperty(__vi_inject__, \\"default\\", { enumerable: true, configurable: true, value: foo });
+    Object.defineProperty(__vi_inject__, "default", { enumerable: true, configurable: true, value: foo });
     export { __vi_inject__ }"
   `)
   // default named classes
@@ -353,11 +353,11 @@ test('should handle default export variants', async () => {
       'export default class A {}\n' + 'export class B extends A {}',
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     class A {}
     class B extends A {}
-    Object.defineProperty(__vi_inject__, \\"B\\", { enumerable: true, configurable: true, get(){ return B }});
-    Object.defineProperty(__vi_inject__, \\"default\\", { enumerable: true, configurable: true, value: A });
+    Object.defineProperty(__vi_inject__, "B", { enumerable: true, configurable: true, get(){ return B }});
+    Object.defineProperty(__vi_inject__, "default", { enumerable: true, configurable: true, value: A });
     export { __vi_inject__ }"
   `)
 })
@@ -718,13 +718,13 @@ export function fn1() {
         `,
     ),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
 
     function fn1() {
     }
-    Object.defineProperty(__vi_inject__, \\"fn1\\", { enumerable: true, configurable: true, get(){ return fn1 }});function fn2() {
+    Object.defineProperty(__vi_inject__, "fn1", { enumerable: true, configurable: true, get(){ return fn1 }});function fn2() {
     }
-    Object.defineProperty(__vi_inject__, \\"fn2\\", { enumerable: true, configurable: true, get(){ return fn2 }});
+    Object.defineProperty(__vi_inject__, "fn2", { enumerable: true, configurable: true, get(){ return fn2 }});
             
     export { __vi_inject__ }"
   `)
@@ -743,7 +743,7 @@ export default (function getRandom() {
 `.trim()
 
   expect(injectSimpleCode(code)).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     __vi_inject__.default = (function getRandom() {
       return Math.random();
     });
@@ -755,7 +755,7 @@ export default (function getRandom() {
   expect(
     injectSimpleCode('export default (class A {});'),
   ).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     __vi_inject__.default = (class A {});
     export default { __vi_inject__: __vi_inject__.default };
 
@@ -848,7 +848,7 @@ export class Test {
 };`.trim()
 
   expect(injectSimpleCode(code)).toMatchInlineSnapshot(`
-    "const __vi_inject__ = { [Symbol.toStringTag]: \\"Module\\" };
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     import { __vi_inject__ as __vi_esm_0__ } from 'foobar'
 
     if (false) {
@@ -875,7 +875,7 @@ export class Test {
         }
       }
     }
-    Object.defineProperty(__vi_inject__, \\"Test\\", { enumerable: true, configurable: true, get(){ return Test }});;
+    Object.defineProperty(__vi_inject__, "Test", { enumerable: true, configurable: true, get(){ return Test }});;
     export { __vi_inject__ }"
   `)
 })

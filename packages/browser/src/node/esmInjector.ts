@@ -1,9 +1,8 @@
 import MagicString from 'magic-string'
 import { extract_names as extractNames } from 'periscopic'
-import type { Expression, ImportDeclaration } from 'estree'
-import type { AcornNode } from 'rollup'
-import type { Node, Positioned } from './esmWalker'
-import { esmWalker, isInDestructuringAssignment, isNodeInPattern, isStaticProperty } from './esmWalker'
+import type { PluginContext } from 'rollup'
+import { esmWalker } from '@vitest/utils/ast'
+import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/utils/ast'
 
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
@@ -18,7 +17,7 @@ const skipHijack = [
 // this is basically copypaste from Vite SSR
 // this method transforms all import and export statements into `__vi_injected__` variable
 // to allow spying on them. this can be disabled by setting `slowHijackESM` to `false`
-export function injectVitestModule(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
+export function injectVitestModule(code: string, id: string, parse: PluginContext['parse']) {
   if (skipHijack.some(skip => id.match(skip)))
     return
 
@@ -26,11 +25,7 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
 
   let ast: any
   try {
-    ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-      locations: true,
-    })
+    ast = parse(code)
   }
   catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
@@ -45,7 +40,7 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
 
   let hasInjected = false
 
-  // this will tranfrom import statements into dynamic ones, if there are imports
+  // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
@@ -213,26 +208,16 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
 
   // 3. convert references to import bindings & import.meta references
   esmWalker(ast, {
-    onIdentifier(id, parent, parentStack) {
-      const grandparent = parentStack[1]
+    onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
       if (!binding)
         return
 
-      if (isStaticProperty(parent) && parent.shorthand) {
-        // let binding used in a property shorthand
-        // { foo } -> { foo: __import_x__.foo }
-        // skip for destructuring patterns
-        if (
-          !isNodeInPattern(parent)
-            || isInDestructuringAssignment(parent, parentStack)
-        )
-          s.appendLeft(id.end, `: ${binding}`)
+      if (info.hasBindingShortcut) {
+        s.appendLeft(id.end, `: ${binding}`)
       }
       else if (
-        (parent.type === 'PropertyDefinition'
-            && grandparent?.type === 'ClassBody')
-          || (parent.type === 'ClassDeclaration' && id === parent.superClass)
+        info.classDeclaration
       ) {
         if (!declaredConst.has(id.name)) {
           declaredConst.add(id.name)
@@ -243,7 +228,7 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
       }
       else if (
         // don't transform class name identifier
-        !(parent.type === 'ClassExpression' && id === parent.id)
+        !info.classExpression
       ) {
         s.update(id.start, id.end, binding)
       }
@@ -268,6 +253,6 @@ export function injectVitestModule(code: string, id: string, parse: (code: strin
   return {
     ast,
     code: s.toString(),
-    map: s.generateMap({ hires: true, source: id }),
+    map: s.generateMap({ hires: 'boundary', source: id }),
   }
 }

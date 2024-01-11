@@ -10,7 +10,7 @@ outline: deep
 <div h-2 />
 <CourseLink href="https://vueschool.io/lessons/your-first-test?friend=vueuse">Learn how to write your first test by Video</CourseLink>
 
-## Shared config between test, dev and build
+## Shared Config between Test, Dev and Build
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.
 
@@ -26,7 +26,7 @@ When you modify your source code or the test files, Vitest smartly searches the 
 
 `vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 
-## Common web idioms out-of-the-box
+## Common Web Idioms Out-Of-The-Box
 
 Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
@@ -42,9 +42,9 @@ Vitest provided many ways to narrow down the tests to run in order to speed up t
 
 Learn more about [Test Filtering](./filtering.md).
 
-## Running tests concurrently
+## Running Tests Concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel. 
+Use `.concurrent` in consecutive tests to run them in parallel.
 
 ```ts
 import { describe, it } from 'vitest'
@@ -91,7 +91,7 @@ it('renders correctly', () => {
 
 Learn more at [Snapshot](/guide/snapshot).
 
-## Chai and Jest `expect` compatibility
+## Chai and Jest `expect` Compatibility
 
 [Chai](https://www.chaijs.com/) is built-in for assertions plus [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
 
@@ -129,7 +129,7 @@ $ npm i -D jsdom
 After that, change the `environment` option in your config file:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -156,7 +156,7 @@ Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-c
 
 Learn more at [Coverage](/guide/coverage).
 
-## In-source testing
+## In-Source Testing
 
 Vitest also provides a way to run tests within your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
@@ -183,7 +183,7 @@ if (import.meta.vitest) {
 
 Learn more at [In-source testing](/guide/in-source).
 
-## Benchmarking <sup><code>experimental</code></sup>
+## Benchmarking <Badge type="warning">Experimental</Badge>
 
 Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
 function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
@@ -208,7 +208,7 @@ describe('sort', () => {
 })
 ```
 
-## Type Testing <sup><code>experimental</code></sup>
+## Type Testing <Badge type="warning">Experimental</Badge>
 
 Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 

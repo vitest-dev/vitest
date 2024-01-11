@@ -3,13 +3,14 @@ import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { VitestRunner } from './types/runner'
-import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
+import type { Custom, File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskMeta, TaskResult, TaskResultPack, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
+import { callFixtureCleanup } from './fixture'
 
 const now = Date.now
 
@@ -113,8 +114,8 @@ async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   }))
 }
 
-export async function runTest(test: Test, runner: VitestRunner) {
-  await runner.onBeforeRunTest?.(test)
+export async function runTest(test: Test | Custom, runner: VitestRunner) {
+  await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run')
     return
@@ -141,14 +142,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: HookCleanupCallback[] = []
       try {
-        await runner.onBeforeTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+        await runner.onBeforeTryTask?.(test, { retry: retryCount, repeats: repeatCount })
 
         test.result.repeatCount = repeatCount
 
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
-        if (runner.runTest) {
-          await runner.runTest(test)
+        if (runner.runTask) {
+          await runner.runTask(test)
         }
         else {
           const fn = getFn(test)
@@ -164,7 +165,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
             throw errors
         }
 
-        await runner.onAfterTryTest?.(test, { retry: retryCount, repeats: repeatCount })
+        await runner.onAfterTryTask?.(test, { retry: retryCount, repeats: repeatCount })
 
         if (test.result.state !== 'fail') {
           if (!test.repeats)
@@ -182,12 +183,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
         test.mode = 'skip'
         test.result = { state: 'skip' }
         updateTask(test, runner)
+        setCurrentTest(undefined)
         return
       }
 
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
+        await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
@@ -215,12 +218,10 @@ export async function runTest(test: Test, runner: VitestRunner) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
-      test.result.error = error
       test.result.errors = [error]
     }
     else {
       test.result.state = 'pass'
-      test.result.error = undefined
       test.result.errors = undefined
     }
   }
@@ -229,7 +230,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   test.result.duration = now() - start
 
-  await runner.onAfterRunTest?.(test)
+  await runner.onAfterRunTask?.(test)
 
   updateTask(test, runner)
 }
@@ -246,7 +247,6 @@ function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
     : [err]
   for (const e of errors) {
     const error = processError(e, diffOptions)
-    result.error ??= error
     result.errors ??= []
     result.errors.push(error)
   }
@@ -329,11 +329,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     if (suite.mode === 'run') {
-      if (!hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !hasTests(suite)) {
         suite.result.state = 'fail'
-        if (!suite.result.error) {
+        if (!suite.result.errors?.length) {
           const error = processError(new Error(`No test found in suite ${suite.name}`))
-          suite.result.error = error
           suite.result.errors = [error]
         }
       }
@@ -354,7 +353,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 }
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
-  if (c.type === 'test')
+  if (c.type === 'test' || c.type === 'custom')
     return runTest(c, runner)
 
   else if (c.type === 'suite')
@@ -368,7 +367,6 @@ export async function runFiles(files: File[], runner: VitestRunner) {
         const error = processError(new Error(`No test suite found in file ${file.filepath}`))
         file.result = {
           state: 'fail',
-          error,
           errors: [error],
         }
       }
@@ -383,11 +381,11 @@ export async function startTests(paths: string[], runner: VitestRunner) {
   const files = await collectTests(paths, runner)
 
   runner.onCollected?.(files)
-  await runner.onBeforeRun?.(files)
+  await runner.onBeforeRunFiles?.(files)
 
   await runFiles(files, runner)
 
-  await runner.onAfterRun?.(files)
+  await runner.onAfterRunFiles?.(files)
 
   await sendTasksUpdate(runner)
 

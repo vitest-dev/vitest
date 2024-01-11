@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-cache",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",

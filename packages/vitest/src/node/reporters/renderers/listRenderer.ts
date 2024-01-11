@@ -11,10 +11,9 @@ export interface ListRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
+  slowTestThreshold: number
   mode: VitestRunMode
 }
-
-const DURATION_LONG = 300
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -86,7 +85,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
+function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
   const output: string[] = []
   let currentRowCount = 0
 
@@ -103,7 +102,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 0)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
-    if (task.type === 'suite' && !task.meta?.typecheck) {
+    if (task.type === 'suite') {
       const tests = getTests(task)
       suffix += c.dim(` (${tests.length})`)
     }
@@ -115,7 +114,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       suffix += c.yellow(` (repeat x${task.result.repeatCount})`)
 
     if (task.result?.duration != null) {
-      if (task.result.duration > DURATION_LONG)
+      if (task.result.duration > options.slowTestThreshold)
         suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 

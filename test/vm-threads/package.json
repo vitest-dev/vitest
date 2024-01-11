@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-vm-threads",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest"

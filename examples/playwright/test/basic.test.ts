@@ -5,6 +5,8 @@ import { chromium } from 'playwright'
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
 
+const PORT = 3001
+
 // unstable in Windows, TODO: investigate
 describe.runIf(process.platform !== 'win32')('basic', async () => {
   let server: PreviewServer
@@ -12,8 +14,8 @@ describe.runIf(process.platform !== 'win32')('basic', async () => {
   let page: Page
 
   beforeAll(async () => {
-    server = await preview({ preview: { port: 3000 } })
-    browser = await chromium.launch()
+    server = await preview({ preview: { port: PORT } })
+    browser = await chromium.launch({ headless: true })
     page = await browser.newPage()
   })
 
@@ -25,7 +27,7 @@ describe.runIf(process.platform !== 'win32')('basic', async () => {
   })
 
   test('should change count when button clicked', async () => {
-    await page.goto('http://localhost:3000')
+    await page.goto(`http://localhost:${PORT}`)
     const button = page.getByRole('button', { name: /Clicked/ })
     await expect(button).toBeVisible()
 

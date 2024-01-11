@@ -208,11 +208,9 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
       // sides of it.
       if (lastEquality && (lastEquality.length
           <= Math.max(length_insertions1, length_deletions1))
-          && (lastEquality.length <= Math.max(length_insertions2,
-            length_deletions2))) {
+          && (lastEquality.length <= Math.max(length_insertions2, length_deletions2))) {
         // Duplicate record.
-        diffs.splice(equalities[equalitiesLength - 1], 0,
-          new Diff(DIFF_DELETE, lastEquality))
+        diffs.splice(equalities[equalitiesLength - 1], 0, new Diff(DIFF_DELETE, lastEquality))
         // Change second copy to insert.
         diffs[equalities[equalitiesLength - 1] + 1][0] = DIFF_INSERT
         // Throw away the equality we just deleted.
@@ -255,8 +253,7 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
         if (overlap_length1 >= deletion.length / 2
             || overlap_length1 >= insertion.length / 2) {
           // Overlap found.  Insert an equality and trim the surrounding edits.
-          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL,
-            insertion.substring(0, overlap_length1)))
+          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL, insertion.substring(0, overlap_length1)))
           diffs[pointer - 1][1]
               = deletion.substring(0, deletion.length - overlap_length1)
           diffs[pointer + 1][1] = insertion.substring(overlap_length1)
@@ -268,8 +265,7 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
             || overlap_length2 >= insertion.length / 2) {
           // Reverse overlap found.
           // Insert an equality and swap and trim the surrounding edits.
-          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL,
-            deletion.substring(0, overlap_length2)))
+          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL, deletion.substring(0, overlap_length2)))
           diffs[pointer - 1][0] = DIFF_INSERT
           diffs[pointer - 1][1]
               = insertion.substring(0, insertion.length - overlap_length2)
@@ -463,8 +459,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
                     += text_insert.substring(0, commonlength)
               }
               else {
-                diffs.splice(0, 0, new Diff(DIFF_EQUAL,
-                  text_insert.substring(0, commonlength)))
+                diffs.splice(0, 0, new Diff(DIFF_EQUAL, text_insert.substring(0, commonlength)))
                 pointer++
               }
               text_insert = text_insert.substring(commonlength)
@@ -485,13 +480,11 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
           pointer -= count_delete + count_insert
           diffs.splice(pointer, count_delete + count_insert)
           if (text_delete.length) {
-            diffs.splice(pointer, 0,
-              new Diff(DIFF_DELETE, text_delete))
+            diffs.splice(pointer, 0, new Diff(DIFF_DELETE, text_delete))
             pointer++
           }
           if (text_insert.length) {
-            diffs.splice(pointer, 0,
-              new Diff(DIFF_INSERT, text_insert))
+            diffs.splice(pointer, 0, new Diff(DIFF_INSERT, text_insert))
             pointer++
           }
           pointer++

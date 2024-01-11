@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import type { HMRPayload, Update } from 'vite/types/hmrPayload'
-import type { CustomEventMap } from 'vite/types/customEvent'
+import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
+import type { CustomEventMap } from 'vite/types/customEvent.js'
 import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
@@ -286,6 +286,26 @@ export function createHotContext(
       }
       addToMap(maps.customListenersMap)
       addToMap(newListeners)
+    },
+
+    off<T extends string>(
+      event: T,
+      cb: (payload: InferCustomEventPayload<T>) => void,
+    ) {
+      const removeFromMap = (map: Map<string, any[]>) => {
+        const existing = map.get(event)
+        if (existing === undefined)
+          return
+
+        const pruned = existing.filter(l => l !== cb)
+        if (pruned.length === 0) {
+          map.delete(event)
+          return
+        }
+        map.set(event, pruned)
+      }
+      removeFromMap(maps.customListenersMap)
+      removeFromMap(newListeners)
     },
 
     send<T extends string>(event: T, data?: InferCustomEventPayload<T>): void {

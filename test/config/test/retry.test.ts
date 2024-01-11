@@ -1,13 +1,8 @@
-import path from 'node:path'
 import { describe, expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitestCli } from '../../test-utils'
 
-const root = path.resolve('./fixtures/retry')
-function run(testNamePattern?: string) {
-  return runVitest({
-    root,
-    testNamePattern,
-  })
+function run(testNamePattern: string) {
+  return runVitestCli('run', 'fixtures/retry/retry.test.ts', '-c', 'fixtures/retry/vitest.config.ts', '-t', testNamePattern)
 }
 
 describe('retry', () => {

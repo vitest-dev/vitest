@@ -3,7 +3,7 @@ import {
 } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
 import { getWorkerState } from '../utils/global'
-import type { RuntimeRPC } from '../types/rpc'
+import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types'
 
 const { get } = Reflect
@@ -73,7 +73,7 @@ export function createSafeRpc(rpc: WorkerRPC) {
   })
 }
 
-export function rpc(): BirpcReturn<RuntimeRPC> {
+export function rpc(): BirpcReturn<RuntimeRPC, RunnerRPC> {
   const { rpc } = getWorkerState()
   return rpc
 }

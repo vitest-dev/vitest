@@ -1,12 +1,40 @@
 import { resolve } from 'pathe'
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
+import MagicString from 'magic-string'
+import remapping from '@ampproject/remapping'
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 
 export default defineConfig({
   plugins: [
     vue(),
+    /*
+     * Transforms `multi-environment.ts` differently based on test environment (JSDOM/Node)
+     * so that there are multiple different source maps for a single file.
+     * This causes a case where coverage report is incorrect if sourcemaps are not picked based on transform mode.
+     */
+    {
+      name: 'vitest-custom-multi-transform',
+      enforce: 'pre',
+      transform(code, id, options) {
+        if (id.includes('src/multi-environment')) {
+          const ssr = options?.ssr || false
+          const transforMode = `transformMode is ${ssr ? 'ssr' : 'csr'}`
+          const padding = '\n*****'.repeat(ssr ? 0 : 15)
+
+          const transformed = new MagicString(code)
+          transformed.replace('\'default-padding\'', `\`${transforMode} ${padding}\``)
+
+          const map = remapping(
+            [transformed.generateMap({ hires: true }), this.getCombinedSourcemap() as any],
+            () => null,
+          ) as any
+
+          return { code: transformed.toString(), map }
+        }
+      },
+    },
     {
       // Simulates Vite's virtual files: https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
       name: 'vitest-custom-virtual-files',
@@ -45,7 +73,7 @@ export default defineConfig({
       customProviderModule: provider === 'custom' ? 'custom-provider' : undefined,
       include: ['src/**'],
       clean: true,
-      all: true,
+      reportOnFailure: true,
       reporter: [
         'text',
         ['html'],
@@ -54,11 +82,21 @@ export default defineConfig({
       ],
 
       // These will be updated by tests and reseted back by generic.report.test.ts
-      thresholdAutoUpdate: true,
-      functions: 1.01,
-      branches: 1.01,
-      lines: 1.01,
-      statements: 1.01,
+      thresholds: {
+        'autoUpdate': true,
+        'functions': 0,
+        'branches': 1.01,
+        'lines': 0,
+        'statements': 1.01,
+
+        // These need to pass both V8 and istanbul
+        '**/function-count.ts': {
+          statements: 50,
+          branches: 99,
+          functions: 59,
+          lines: 50,
+        },
+      },
     },
     setupFiles: [
       resolve(__dirname, './setup.ts'),

@@ -1,7 +1,11 @@
 import MagicString from 'magic-string'
-import type { CallExpression, Identifier, ImportDeclaration, ImportNamespaceSpecifier, VariableDeclaration, Node as _Node } from 'estree'
-import { findNodeAround, simple as simpleWalk } from 'acorn-walk'
-import type { AcornNode } from 'rollup'
+import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+
+// TODO: should use findNodeBefore, but it's not typed
+import { findNodeAround } from 'acorn-walk'
+import type { PluginContext } from 'rollup'
+import { esmWalker } from '@vitest/utils/ast'
+import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
   start: number
@@ -45,24 +49,30 @@ function transformImportSpecifiers(node: ImportDeclaration) {
   return `{ ${dynamicImports} }`
 }
 
+export function getBetterEnd(code: string, node: Node) {
+  let end = node.end
+  if (code[node.end] === ';')
+    end += 1
+  if (code[node.end + 1] === '\n')
+    end += 1
+  return end
+}
+
 const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
+const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
 const hashbangRE = /^#!.*\n/
 
-export function hoistMocks(code: string, id: string, parse: (code: string, options: any) => AcornNode) {
-  const hasMocks = regexpHoistable.test(code)
+export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
+  const needHoisting = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
-  if (!hasMocks)
+  if (!needHoisting)
     return
 
   const s = new MagicString(code)
 
   let ast: any
   try {
-    ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-      locations: true,
-    })
+    ast = parse(code)
   }
   catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
@@ -71,50 +81,44 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
 
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
 
-  let hoistedCode = ''
   let hoistedVitestImports = ''
 
-  // this will tranfrom import statements into dynamic ones, if there are imports
+  let uid = 0
+  const idToImportMap = new Map<string, string>()
+
+  // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
   const transformImportDeclaration = (node: ImportDeclaration) => {
     const source = node.source.value as string
 
-    const namespace = node.specifiers.find(specifier => specifier.type === 'ImportNamespaceSpecifier') as ImportNamespaceSpecifier | undefined
-
-    let code = ''
-    if (namespace)
-      code += `const ${namespace.local.name} = await import('${source}')\n`
-
-    // if we don't hijack ESM and process this file, then we definetly have mocks,
-    // so we need to transform imports into dynamic ones, so "vi.mock" can be executed before
-    const specifiers = transformImportSpecifiers(node)
-
-    if (specifiers) {
-      if (namespace)
-        code += `const ${specifiers} = ${namespace.local.name}\n`
-      else
-        code += `const ${specifiers} = await import('${source}')\n`
+    const importId = `__vi_import_${uid++}__`
+    const hasSpecifiers = node.specifiers.length > 0
+    const code = hasSpecifiers
+      ? `const ${importId} = await import('${source}')\n`
+      : `await import('${source}')\n`
+    return {
+      code,
+      id: importId,
     }
-    else if (!namespace) {
-      code += `await import('${source}')\n`
-    }
-    return code
   }
 
-  function hoistImport(node: Positioned<ImportDeclaration>) {
+  function defineImport(node: Positioned<ImportDeclaration>) {
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    s.remove(node.start, node.end)
-
     if (node.source.value === 'vitest') {
       const code = `const ${transformImportSpecifiers(node)} = await import('vitest')\n`
       hoistedVitestImports += code
+      s.remove(node.start, getBetterEnd(code, node))
       return
     }
-    const code = transformImportDeclaration(node)
-    s.appendLeft(hoistIndex, code)
+
+    const declaration = transformImportDeclaration(node)
+    if (!declaration)
+      return null
+    s.appendLeft(hoistIndex, declaration.code)
+    return declaration.id
   }
 
   // 1. check all import statements and record id -> importName map
@@ -122,13 +126,59 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
     // import foo from 'foo' --> foo -> __import_foo__.default
     // import { baz } from 'foo' --> baz -> __import_foo__.baz
     // import * as ok from 'foo' --> ok -> __import_foo__
-    if (node.type === 'ImportDeclaration')
-      hoistImport(node)
+    if (node.type === 'ImportDeclaration') {
+      const importId = defineImport(node)
+      if (!importId)
+        continue
+      s.remove(node.start, getBetterEnd(code, node))
+      for (const spec of node.specifiers) {
+        if (spec.type === 'ImportSpecifier') {
+          idToImportMap.set(
+            spec.local.name,
+            `${importId}.${spec.imported.name}`,
+          )
+        }
+        else if (spec.type === 'ImportDefaultSpecifier') {
+          idToImportMap.set(spec.local.name, `${importId}.default`)
+        }
+        else {
+          // namespace specifier
+          idToImportMap.set(spec.local.name, importId)
+        }
+      }
+    }
   }
 
-  simpleWalk(ast, {
-    CallExpression(_node) {
-      const node = _node as any as Positioned<CallExpression>
+  const declaredConst = new Set<string>()
+  const hoistedNodes: Positioned<CallExpression | VariableDeclaration | AwaitExpression>[] = []
+
+  esmWalker(ast, {
+    onIdentifier(id, info, parentStack) {
+      const binding = idToImportMap.get(id.name)
+      if (!binding)
+        return
+
+      if (info.hasBindingShortcut) {
+        s.appendLeft(id.end, `: ${binding}`)
+      }
+      else if (
+        info.classDeclaration
+      ) {
+        if (!declaredConst.has(id.name)) {
+          declaredConst.add(id.name)
+          // locate the top-most node containing the class declaration
+          const topNode = parentStack[parentStack.length - 2]
+          s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
+        }
+      }
+      else if (
+        // don't transform class name identifier
+        !info.classExpression
+      ) {
+        s.update(id.start, id.end, binding)
+      }
+    },
+    onCallExpression(node) {
       if (
         node.callee.type === 'MemberExpression'
         && isIdentifier(node.callee.object)
@@ -137,10 +187,8 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
       ) {
         const methodName = node.callee.property.name
 
-        if (methodName === 'mock' || methodName === 'unmock') {
-          hoistedCode += `${code.slice(node.start, node.end)}\n`
-          s.remove(node.start, node.end)
-        }
+        if (methodName === 'mock' || methodName === 'unmock')
+          hoistedNodes.push(node)
 
         if (methodName === 'hoisted') {
           const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
@@ -163,18 +211,83 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
 
           if (canMoveDeclaration) {
             // hoist "const variable = vi.hoisted(() => {})"
-            hoistedCode += `${code.slice(declarationNode.start, declarationNode.end)}\n`
-            s.remove(declarationNode.start, declarationNode.end)
+            hoistedNodes.push(declarationNode)
           }
           else {
-            // hoist "vi.hoisted(() => {})"
-            hoistedCode += `${code.slice(node.start, node.end)}\n`
-            s.remove(node.start, node.end)
+            const awaitedExpression = findNodeAround(ast, node.start, 'AwaitExpression')?.node as Positioned<AwaitExpression> | undefined
+            // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
+            hoistedNodes.push(awaitedExpression?.argument === node ? awaitedExpression : node)
           }
         }
       }
     },
   })
+
+  function getNodeName(node: CallExpression) {
+    const callee = node.callee || {}
+    if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
+      return `${callee.object.name}.${callee.property.name}()`
+    return '"hoisted method"'
+  }
+
+  function getNodeCall(node: Node): Positioned<CallExpression> {
+    if (node.type === 'CallExpression')
+      return node
+    if (node.type === 'VariableDeclaration') {
+      const { declarations } = node
+      const init = declarations[0].init
+      if (init)
+        return getNodeCall(init as Node)
+    }
+    if (node.type === 'AwaitExpression') {
+      const { argument } = node
+      if (argument.type === 'CallExpression')
+        return getNodeCall(argument as Node)
+    }
+    return node as Positioned<CallExpression>
+  }
+
+  function createError(outsideNode: Node, insideNode: Node) {
+    const outsideCall = getNodeCall(outsideNode)
+    const insideCall = getNodeCall(insideNode)
+    const _error = new SyntaxError(`Cannot call ${getNodeName(insideCall)} inside ${getNodeName(outsideCall)}: both methods are hoisted to the top of the file and not actually called inside each other.`)
+    // throw an object instead of an error so it can be serialized for RPC, TODO: improve error handling in rpc serializer
+    const error = {
+      name: 'SyntaxError',
+      message: _error.message,
+      stack: _error.stack,
+      frame: generateCodeFrame(code, 4, insideCall.start + 1),
+    }
+    throw error
+  }
+
+  // validate hoistedNodes doesn't have nodes inside other nodes
+  for (let i = 0; i < hoistedNodes.length; i++) {
+    const node = hoistedNodes[i]
+    for (let j = i + 1; j < hoistedNodes.length; j++) {
+      const otherNode = hoistedNodes[j]
+
+      if (node.start >= otherNode.start && node.end <= otherNode.end)
+        throw createError(otherNode, node)
+      if (otherNode.start >= node.start && otherNode.end <= node.end)
+        throw createError(node, otherNode)
+    }
+  }
+
+  // Wait for imports to be hoisted and then hoist the mocks
+  const hoistedCode = hoistedNodes.map((node) => {
+    const end = getBetterEnd(code, node)
+    /**
+     * In the following case, we need to change the `user` to user: __vi_import_x__.user
+     * So we should get the latest code from `s`.
+     *
+     * import user from './user'
+     * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
+     */
+    const nodeCode = s.slice(node.start, end)
+    s.remove(node.start, end)
+    return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+  }).join('')
 
   if (hoistedCode || hoistedVitestImports) {
     s.prepend(
@@ -187,6 +300,6 @@ export function hoistMocks(code: string, id: string, parse: (code: string, optio
   return {
     ast,
     code: s.toString(),
-    map: s.generateMap({ hires: true, source: id }),
+    map: s.generateMap({ hires: 'boundary', source: id }),
   }
 }

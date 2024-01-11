@@ -11,7 +11,8 @@ import {
   ogUrl,
   releases,
   twitter,
-  vitestDescription, vitestName,
+  vitestDescription,
+  vitestName,
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
@@ -37,7 +38,7 @@ export default withPwa(defineConfig({
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-    ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
+    ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
     ['meta', { property: 'og:title', content: vitestName }],
     ['meta', { property: 'og:description', content: vitestDescription }],
     ['meta', { property: 'og:url', content: ogUrl }],
@@ -54,15 +55,15 @@ export default withPwa(defineConfig({
   lastUpdated: true,
   markdown: {
     theme: {
-      light: 'vitesse-light',
-      dark: 'vitesse-dark',
+      light: 'github-light',
+      dark: 'github-dark',
     },
   },
   themeConfig: {
     logo: '/logo.svg',
 
     editLink: {
-      pattern: 'https://github.com/vitest-dev/vitest/tree/main/docs/:path',
+      pattern: 'https://github.com/vitest-dev/vitest/edit/main/docs/:path',
       text: 'Suggest changes to this page',
     },
 
@@ -81,7 +82,7 @@ export default withPwa(defineConfig({
 
     socialLinks: [
       { icon: 'mastodon', link: mastodon },
-      { icon: 'twitter', link: twitter },
+      { icon: 'x', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
     ],
@@ -130,8 +131,12 @@ export default withPwa(defineConfig({
               link: '/advanced/metadata',
             },
             {
-              text: 'Extending default reporters',
+              text: 'Extending Reporters',
               link: '/advanced/reporters',
+            },
+            {
+              text: 'Custom Pool',
+              link: '/advanced/pool',
             },
           ],
         },
@@ -165,6 +170,10 @@ export default withPwa(defineConfig({
               link: '/guide/filtering',
             },
             {
+              text: 'Reporters',
+              link: '/guide/reporters',
+            },
+            {
               text: 'Coverage',
               link: '/guide/coverage',
             },
@@ -189,7 +198,7 @@ export default withPwa(defineConfig({
               link: '/guide/browser',
             },
             {
-              text: 'In-source Testing',
+              text: 'In-Source Testing',
               link: '/guide/in-source',
             },
             {
@@ -224,6 +233,10 @@ export default withPwa(defineConfig({
               text: 'Common Errors',
               link: '/guide/common-errors',
             },
+            {
+              text: 'Improving Performance',
+              link: '/guide/improving-performance',
+            },
           ],
         },
         {
@@ -250,7 +263,7 @@ export default withPwa(defineConfig({
               link: '/api/expect-typeof',
             },
             {
-              text: 'assertType',
+              text: 'AssertType',
               link: '/api/assert-type',
             },
           ],

@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-coverage",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:options && pnpm test:types",
@@ -8,10 +9,11 @@
     "test:istanbul": "node ./testing.mjs --provider istanbul",
     "test:browser": "node ./testing.mjs --browser --provider istanbul",
     "test:options": "node ./testing-options.mjs",
-    "test:types": "vitest typecheck --run --reporter verbose"
+    "test:types": "vitest --typecheck.only --typecheck.tsconfig ../../tsconfig.check.json --run --reporter verbose"
   },
   "devDependencies": {
-    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@ampproject/remapping": "^2.2.1",
+    "@types/istanbul-lib-coverage": "^2.0.6",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -19,6 +21,7 @@
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
     "istanbul-lib-coverage": "^3.2.0",
+    "magicast": "^0.3.2",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "latest",

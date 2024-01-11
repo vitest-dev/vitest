@@ -1,18 +1,22 @@
 # assertType
 
-  - **Type:** `<T>(value: T): void`
+::: warning
+During runtime this function doesn't do anything. To [enable typechecking](/guide/testing-types#run-typechecking), don't forget to pass down `--typecheck` flag.
+:::
 
-  You can use this function as an alternative for [`expectTypeOf`](/api/expect-typeof) to easily assert that the argument type is equal to the generic provided.
+- **Type:** `<T>(value: T): void`
 
-  ```ts
-  import { assertType } from 'vitest'
+You can use this function as an alternative for [`expectTypeOf`](/api/expect-typeof) to easily assert that the argument type is equal to the generic provided.
 
-  function concat(a: string, b: string): string
-  function concat(a: number, b: number): number
-  function concat(a: string | number, b: string | number): string | number
+```ts
+import { assertType } from 'vitest'
 
-  assertType<string>(concat('a', 'b'))
-  assertType<number>(concat(1, 2))
-  // @ts-expect-error wrong types
-  assertType(concat('a', 2))
-  ```
+function concat(a: string, b: string): string
+function concat(a: number, b: number): number
+function concat(a: string | number, b: string | number): string | number
+
+assertType<string>(concat('a', 'b'))
+assertType<number>(concat(1, 2))
+// @ts-expect-error wrong types
+assertType(concat('a', 2))
+```

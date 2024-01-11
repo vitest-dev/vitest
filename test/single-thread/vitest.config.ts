@@ -3,7 +3,7 @@ import { BaseSequencer, type WorkspaceSpec } from 'vitest/node'
 
 export default defineConfig({
   test: {
-    threads: false,
+    pool: 'forks',
     sequence: {
       sequencer: class Sequences extends BaseSequencer {
         public async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {

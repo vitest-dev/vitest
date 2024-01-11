@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { ParsedStack } from '@vitest/utils'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type { ParsedStack } from '../../../utils/src/index'
+import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import type { SnapshotData, SnapshotEnvironment, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
@@ -84,6 +84,7 @@ export default class SnapshotState {
     this.updated = 0
     this._snapshotFormat = {
       printBasicPrototype: false,
+      escapeString: false,
       ...options.snapshotFormat,
     }
     this._environment = options.snapshotEnvironment

@@ -4,6 +4,7 @@
 
 import fs from 'node:fs'
 import { resolve } from 'pathe'
+import { parseModule } from 'magicast'
 import { expect, test } from 'vitest'
 import libCoverage from 'istanbul-lib-coverage'
 
@@ -35,6 +36,11 @@ test('all includes untested files', () => {
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('untested-file.ts.html')
+
+  // Directories starting with dot should be excluded
+  expect(files).not.toContain('.should-be-excluded-from-coverage/excluded-from-coverage.ts.html')
+  expect(files).not.toContain('.should-be-excluded-from-coverage')
+  expect(files).not.toContain('excluded-from-coverage.ts.html')
 })
 
 test('files should not contain query parameters', () => {
@@ -67,21 +73,46 @@ test('files should not contain a setup file', () => {
   expect(srcFiles).not.toContain('another-setup.ts.html')
 })
 
-test('thresholdAutoUpdate updates thresholds', async () => {
+test('thresholds.autoUpdate updates thresholds', async () => {
   const configFilename = resolve('./vitest.config.ts')
-  const configContents = fs.readFileSync(configFilename, 'utf-8')
+  const mod = parseModule(fs.readFileSync(configFilename, 'utf-8'))
+  const thresholds = mod.exports.default.$args[0].test.coverage.thresholds
 
-  for (const threshold of ['functions', 'branches', 'lines', 'statements']) {
-    const match = configContents.match(new RegExp(`${threshold}: (?<coverage>[\\d|\\.]+)`))
-    const coverage = match?.groups?.coverage || '0'
+  // Configuration has fixed value of 1.01 and 0 set for each threshold
+  expect(Number.parseInt(thresholds.functions)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.branches)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.lines)).toBeGreaterThan(1.01)
+  expect(Number.parseInt(thresholds.statements)).toBeGreaterThan(1.01)
 
-    // Configuration has fixed value of 1.01 set for each threshold
-    expect(Number.parseInt(coverage)).toBeGreaterThan(1.01)
+  // Check file coverage for glob
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/function-count.ts')
+  const summary = fileCoverage.toSummary()
+  expect(summary.branches.pct).toBe(100)
+  expect(summary.functions.pct).toBe(60)
+
+  if (process.env.COVERAGE_PROVIDER === 'v8') {
+    expect(summary.statements.pct).toBe(86.11)
+    expect(summary.lines.pct).toBe(86.11)
+  }
+  else {
+    expect(summary.statements.pct).toBe(71.42)
+    expect(summary.lines.pct).toBe(71.42)
   }
 
   // Update thresholds back to fixed values
-  const updatedConfig = configContents.replace(/(branches|functions|lines|statements): ([\d|\.])+/g, '$1: 1.01')
-  fs.writeFileSync(configFilename, updatedConfig)
+  thresholds.functions = 0
+  thresholds.lines = 0
+  thresholds.branches = 1.01
+  thresholds.statements = 1.01
+  thresholds['**/function-count.ts'].statements = 50
+  thresholds['**/function-count.ts'].branches = 99
+  thresholds['**/function-count.ts'].functions = 59
+  thresholds['**/function-count.ts'].lines = 50
+
+  fs.writeFileSync(configFilename, `${mod.generate().code}\n`, 'utf-8')
 })
 
 test('function count is correct', async () => {
@@ -116,4 +147,26 @@ test('virtual files should be excluded', () => {
     // Vitest browser
     expect(file).not.toContain('\x00')
   }
+})
+
+test('multi environment coverage is merged correctly', async () => {
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/multi-environment.ts')
+  const lineCoverage = fileCoverage.getLineCoverage()
+
+  // Condition not covered by any test
+  expect(lineCoverage[13]).toBe(0)
+
+  // Condition covered by SSR test but not by Web
+  expect(lineCoverage[18]).toBe(1)
+
+  // Condition not covered by any test
+  expect(lineCoverage[22]).toBe(0)
+
+  // Condition covered by Web test but not by SSR
+  expect(lineCoverage[26]).toBe(1)
+
+  // Condition covered by both tests
+  expect(lineCoverage[30]).toBe(2)
 })

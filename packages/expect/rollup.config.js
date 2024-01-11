@@ -1,20 +1,27 @@
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import { defineConfig } from 'rollup'
-import pkg from './package.json' assert { type: 'json' }
+import copy from 'rollup-plugin-copy'
+
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
-  '@vitest/utils/diff',
-  '@vitest/utils/error',
+  /^@?vitest(\/|$)/,
 ]
 
 const plugins = [
   esbuild({
     target: 'node14',
+  }),
+  copy({
+    targets: [
+      { src: 'node_modules/@types/chai/index.d.ts', dest: 'dist', rename: 'chai.d.cts' },
+    ],
   }),
 ]
 

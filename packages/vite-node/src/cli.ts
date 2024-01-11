@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import cac from 'cac'
 import c from 'picocolors'
 import { createServer } from 'vite'
@@ -54,7 +55,7 @@ async function run(files: string[], options: CliOptions = {}) {
   if (options.script) {
     files = [files[0]]
     options = {}
-    process.argv = [process.argv[0], files[0], ...process.argv.slice(2).filter(arg => arg !== '--script' && arg !== files[0])]
+    process.argv = [process.argv[0], resolve(files[0]), ...process.argv.slice(2).filter(arg => arg !== '--script' && arg !== files[0])]
   }
   else {
     process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]

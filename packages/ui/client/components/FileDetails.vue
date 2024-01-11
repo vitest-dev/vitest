@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { ModuleGraphData } from 'vitest'
 import { client, current, currentLogs, isReport } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
-import type { ModuleGraphData } from '#types'
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })

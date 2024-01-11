@@ -6,22 +6,22 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-  `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions build on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions build on top of `chai`.
 
-  For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
+For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
-  ```ts
-  import { expect } from 'vitest'
+```ts
+import { expect } from 'vitest'
 
-  const input = Math.sqrt(4)
+const input = Math.sqrt(4)
 
-  expect(input).to.equal(2) // chai API
-  expect(input).toBe(2) // jest API
-  ```
+expect(input).to.equal(2) // chai API
+expect(input).toBe(2) // jest API
+```
 
-  Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Nodejs error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
+Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
 
-  Also, `expect` can be used statically to access matchers functions, described later, and more.
+Also, `expect` can be used statically to access matcher functions, described later, and more.
 
 ::: warning
 `expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
@@ -33,27 +33,27 @@ type Awaitable<T> = T | PromiseLike<T>
 
 `expect.soft` functions similarly to `expect`, but instead of terminating the test execution upon a failed assertion, it continues running and marks the failure as a test failure. All errors encountered during the test will be displayed until the test is completed.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('expect.soft test', () => {
-    expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
-    expect.soft(1 + 2).toBe(4) // mark the test as fail and continue
-  })
-  // At the end of the test, the above errors will be output.
-  ```
+test('expect.soft test', () => {
+  expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
+  expect.soft(1 + 2).toBe(4) // mark the test as fail and continue
+})
+// At the end of the test, the above errors will be output.
+```
 
-  It can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
+It can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('expect.soft test', () => {
-    expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
-    expect(1 + 2).toBe(3) // failed and terminate the test, all previous errors will be output
-    expect.soft(1 + 2).toBe(4) // do not run
-  })
-  ```
+test('expect.soft test', () => {
+  expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
+  expect(1 + 2).toBe(4) // failed and terminate the test, all previous errors will be output
+  expect.soft(1 + 3).toBe(5) // do not run
+})
+```
 
 ::: warning
 `expect.soft` can only be used inside the [`test`](/api/#test) function.
@@ -61,482 +61,488 @@ type Awaitable<T> = T | PromiseLike<T>
 
 ## not
 
-  Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
+Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const input = Math.sqrt(16)
+const input = Math.sqrt(16)
 
-  expect(input).not.to.equal(2) // chai API
-  expect(input).not.toBe(2) // jest API
-  ```
+expect(input).not.to.equal(2) // chai API
+expect(input).not.toBe(2) // jest API
+```
 
 ## toBe
 
 - **Type:** `(value: any) => Awaitable<void>`
 
-  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want to check if their structures are identical, you can use [`toEqual`](#toequal).
+`toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want to check if their structures are identical, you can use [`toEqual`](#toequal).
 
-  For example, the code below checks if the trader has 13 apples.
+For example, the code below checks if the trader has 13 apples.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const stock = {
-    type: 'apples',
-    count: 13,
-  }
+const stock = {
+  type: 'apples',
+  count: 13,
+}
 
-  test('stock has 13 apples', () => {
-    expect(stock.type).toBe('apples')
-    expect(stock.count).toBe(13)
-  })
+test('stock has 13 apples', () => {
+  expect(stock.type).toBe('apples')
+  expect(stock.count).toBe(13)
+})
 
-  test('stocks are the same', () => {
-    const refStock = stock // same reference
+test('stocks are the same', () => {
+  const refStock = stock // same reference
 
-    expect(stock).toBe(refStock)
-  })
-  ```
+  expect(stock).toBe(refStock)
+})
+```
 
-  Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them, `0.1 + 0.2` is not strictly `0.3`. To reliably assert floating-point numbers, use [`toBeCloseTo`](#tobecloseto) assertion.
+Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them, `0.1 + 0.2` is not strictly `0.3`. To reliably assert floating-point numbers, use [`toBeCloseTo`](#tobecloseto) assertion.
 
 ## toBeCloseTo
 
 - **Type:** `(value: number, numDigits?: number) => Awaitable<void>`
 
-  Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
+Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test.fails('decimals are not equal in javascript', () => {
-    expect(0.2 + 0.1).toBe(0.3) // 0.2 + 0.1 is 0.30000000000000004
-  })
+test.fails('decimals are not equal in javascript', () => {
+  expect(0.2 + 0.1).toBe(0.3) // 0.2 + 0.1 is 0.30000000000000004
+})
 
-  test('decimals are rounded to 5 after the point', () => {
-    // 0.2 + 0.1 is 0.30000 | "000000000004" removed
-    expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
-    // nothing from 0.30000000000000004 is removed
-    expect(0.2 + 0.1).not.toBeCloseTo(0.3, 50)
-  })
-  ```
+test('decimals are rounded to 5 after the point', () => {
+  // 0.2 + 0.1 is 0.30000 | "000000000004" removed
+  expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
+  // nothing from 0.30000000000000004 is removed
+  expect(0.2 + 0.1).not.toBeCloseTo(0.3, 50)
+})
+```
 
 ## toBeDefined
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeDefined` asserts that the value is not equal to `undefined`. Useful use case would be to check if function _returned_ anything.
+`toBeDefined` asserts that the value is not equal to `undefined`. Useful use case would be to check if function _returned_ anything.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  function getApples() {
-    return 3
-  }
+function getApples() {
+  return 3
+}
 
-  test('function returned something', () => {
-    expect(getApples()).toBeDefined()
-  })
-  ```
+test('function returned something', () => {
+  expect(getApples()).toBeDefined()
+})
+```
 
 ## toBeUndefined
 
 - **Type:** `() => Awaitable<void>`
 
-  Opposite of `toBeDefined`, `toBeUndefined` asserts that the value _is_ equal to `undefined`. Useful use case would be to check if function hasn't _returned_ anything.
+Opposite of `toBeDefined`, `toBeUndefined` asserts that the value _is_ equal to `undefined`. Useful use case would be to check if function hasn't _returned_ anything.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  function getApplesFromStock(stock) {
-    if (stock === 'Bill')
-      return 13
-  }
+function getApplesFromStock(stock) {
+  if (stock === 'Bill')
+    return 13
+}
 
-  test('mary doesn\'t have a stock', () => {
-    expect(getApplesFromStock('Mary')).toBeUndefined()
-  })
-  ```
+test('mary doesn\'t have a stock', () => {
+  expect(getApplesFromStock('Mary')).toBeUndefined()
+})
+```
 
 ## toBeTruthy
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeTruthy` asserts that the value is true when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `true`.
+`toBeTruthy` asserts that the value is true when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `true`.
 
-  For example, having this code you don't care for the return value of `stocks.getInfo` - it maybe a complex object, a string, or anything else. The code will still work.
+For example, having this code you don't care for the return value of `stocks.getInfo` - it maybe a complex object, a string, or anything else. The code will still work.
 
-  ```ts
-  import { Stocks } from './stocks.js'
+```ts
+import { Stocks } from './stocks.js'
 
-  const stocks = new Stocks()
+const stocks = new Stocks()
+stocks.sync('Bill')
+if (stocks.getInfo('Bill'))
+  stocks.sell('apples', 'Bill')
+```
+
+So if you want to test that `stocks.getInfo` will be truthy, you could write:
+
+```ts
+import { expect, test } from 'vitest'
+import { Stocks } from './stocks.js'
+
+const stocks = new Stocks()
+
+test('if we know Bill stock, sell apples to him', () => {
   stocks.sync('Bill')
-  if (stocks.getInfo('Bill'))
-    stocks.sell('apples', 'Bill')
-  ```
+  expect(stocks.getInfo('Bill')).toBeTruthy()
+})
+```
 
-  So if you want to test that `stocks.getInfo` will be truthy, you could write:
-
-  ```ts
-  import { expect, test } from 'vitest'
-  import { Stocks } from './stocks.js'
-
-  const stocks = new Stocks()
-
-  test('if we know Bill stock, sell apples to him', () => {
-    stocks.sync('Bill')
-    expect(stocks.getInfo('Bill')).toBeTruthy()
-  })
-  ```
-
-  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+Everything in JavaScript is truthy, except `false`, `null`, `undefined`, `NaN`, `0`, `-0`, `0n`, `""` and `document.all`.
 
 ## toBeFalsy
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeFalsy` asserts that the value is false when converted to boolean. Useful if you don't care for the value, but just want to know if it can be converted to `false`.
+`toBeFalsy` asserts that the value is false when converted to boolean. Useful if you don't care for the value, but just want to know if it can be converted to `false`.
 
-  For example, having this code you don't care for the return value of `stocks.stockFailed` - it may return any falsy value, but the code will still work.
+For example, having this code you don't care for the return value of `stocks.stockFailed` - it may return any falsy value, but the code will still work.
 
-  ```ts
-  import { Stocks } from './stocks.js'
+```ts
+import { Stocks } from './stocks.js'
 
-  const stocks = new Stocks()
-  stocks.sync('Bill')
-  if (!stocks.stockFailed('Bill'))
-    stocks.sell('apples', 'Bill')
-  ```
+const stocks = new Stocks()
+stocks.sync('Bill')
+if (!stocks.stockFailed('Bill'))
+  stocks.sell('apples', 'Bill')
+```
 
-  So if you want to test that `stocks.stockFailed` will be falsy, you could write:
+So if you want to test that `stocks.stockFailed` will be falsy, you could write:
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { Stocks } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { Stocks } from './stocks.js'
 
-  const stocks = new Stocks()
+const stocks = new Stocks()
 
-  test('if Bill stock hasn\'t failed, sell apples to him', () => {
-    stocks.syncStocks('Bill')
-    expect(stocks.stockFailed('Bill')).toBeFalsy()
-  })
-  ```
+test('if Bill stock hasn\'t failed, sell apples to him', () => {
+  stocks.syncStocks('Bill')
+  expect(stocks.stockFailed('Bill')).toBeFalsy()
+})
+```
 
-  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+Everything in JavaScript is truthy, except `false`, `null`, `undefined`, `NaN`, `0`, `-0`, `0n`, `""` and `document.all`.
 
 ## toBeNull
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeNull` simply asserts if something is `null`. Alias for `.toBe(null)`.
+`toBeNull` simply asserts if something is `null`. Alias for `.toBe(null)`.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  function apples() {
-    return null
-  }
+function apples() {
+  return null
+}
 
-  test('we don\'t have apples', () => {
-    expect(apples()).toBeNull()
-  })
-  ```
+test('we don\'t have apples', () => {
+  expect(apples()).toBeNull()
+})
+```
 
 ## toBeNaN
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeNaN` simply asserts if something is `NaN`. Alias for `.toBe(NaN)`.
+`toBeNaN` simply asserts if something is `NaN`. Alias for `.toBe(NaN)`.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  let i = 0
+let i = 0
 
-  function getApplesCount() {
-    i++
-    return i > 1 ? Number.NaN : i
-  }
+function getApplesCount() {
+  i++
+  return i > 1 ? Number.NaN : i
+}
 
-  test('getApplesCount has some unusual side effects...', () => {
-    expect(getApplesCount()).not.toBeNaN()
-    expect(getApplesCount()).toBeNaN()
-  })
-  ```
+test('getApplesCount has some unusual side effects...', () => {
+  expect(getApplesCount()).not.toBeNaN()
+  expect(getApplesCount()).toBeNaN()
+})
+```
 
 ## toBeTypeOf
 
 - **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
 
-  `toBeTypeOf` asserts if an actual value is of type of received type.
+`toBeTypeOf` asserts if an actual value is of type of received type.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const actual = 'stock'
+const actual = 'stock'
 
-  test('stock is type of string', () => {
-    expect(actual).toBeTypeOf('string')
-  })
-  ```
+test('stock is type of string', () => {
+  expect(actual).toBeTypeOf('string')
+})
+```
 
 ## toBeInstanceOf
 
 - **Type:** `(c: any) => Awaitable<void>`
 
-  `toBeInstanceOf` asserts if an actual value is instance of received class.
+`toBeInstanceOf` asserts if an actual value is instance of received class.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { Stocks } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { Stocks } from './stocks.js'
 
-  const stocks = new Stocks()
+const stocks = new Stocks()
 
-  test('stocks are instance of Stocks', () => {
-    expect(stocks).toBeInstanceOf(Stocks)
-  })
-  ```
+test('stocks are instance of Stocks', () => {
+  expect(stocks).toBeInstanceOf(Stocks)
+})
+```
 
 ## toBeGreaterThan
 
 - **Type:** `(n: number | bigint) => Awaitable<void>`
 
-  `toBeGreaterThan` asserts if actual value is greater than received one. Equal values will fail the test.
+`toBeGreaterThan` asserts if actual value is greater than received one. Equal values will fail the test.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getApples } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getApples } from './stocks.js'
 
-  test('have more then 10 apples', () => {
-    expect(getApples()).toBeGreaterThan(10)
-  })
-  ```
+test('have more then 10 apples', () => {
+  expect(getApples()).toBeGreaterThan(10)
+})
+```
 
 ## toBeGreaterThanOrEqual
 
 - **Type:** `(n: number | bigint) => Awaitable<void>`
 
-  `toBeGreaterThanOrEqual` asserts if actual value is greater than received one or equal to it.
+`toBeGreaterThanOrEqual` asserts if actual value is greater than received one or equal to it.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getApples } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getApples } from './stocks.js'
 
-  test('have 11 apples or more', () => {
-    expect(getApples()).toBeGreaterThanOrEqual(11)
-  })
-  ```
+test('have 11 apples or more', () => {
+  expect(getApples()).toBeGreaterThanOrEqual(11)
+})
+```
 
 ## toBeLessThan
 
 - **Type:** `(n: number | bigint) => Awaitable<void>`
 
-  `toBeLessThan` asserts if actual value is less than received one. Equal values will fail the test.
+`toBeLessThan` asserts if actual value is less than received one. Equal values will fail the test.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getApples } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getApples } from './stocks.js'
 
-  test('have less then 20 apples', () => {
-    expect(getApples()).toBeLessThan(20)
-  })
-  ```
+test('have less then 20 apples', () => {
+  expect(getApples()).toBeLessThan(20)
+})
+```
 
 ## toBeLessThanOrEqual
 
 - **Type:** `(n: number | bigint) => Awaitable<void>`
 
-  `toBeLessThanOrEqual` asserts if actual value is less than received one or equal to it.
+`toBeLessThanOrEqual` asserts if actual value is less than received one or equal to it.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getApples } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getApples } from './stocks.js'
 
-  test('have 11 apples or less', () => {
-    expect(getApples()).toBeLessThanOrEqual(11)
-  })
-  ```
+test('have 11 apples or less', () => {
+  expect(getApples()).toBeLessThanOrEqual(11)
+})
+```
 
 ## toEqual
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively). You can see the difference between `toEqual` and [`toBe`](#tobe) in this example:
+`toEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively). You can see the difference between `toEqual` and [`toBe`](#tobe) in this example:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const stockBill = {
-    type: 'apples',
-    count: 13,
-  }
+const stockBill = {
+  type: 'apples',
+  count: 13,
+}
 
-  const stockMary = {
-    type: 'apples',
-    count: 13,
-  }
+const stockMary = {
+  type: 'apples',
+  count: 13,
+}
 
-  test('stocks have the same properties', () => {
-    expect(stockBill).toEqual(stockMary)
-  })
+test('stocks have the same properties', () => {
+  expect(stockBill).toEqual(stockMary)
+})
 
-  test('stocks are not the same', () => {
-    expect(stockBill).not.toBe(stockMary)
-  })
-  ```
+test('stocks are not the same', () => {
+  expect(stockBill).not.toBe(stockMary)
+})
+```
 
-  :::warning
-  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
-  :::
+:::warning
+A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+:::
 
 ## toStrictEqual
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toStrictEqual` asserts if the actual value is equal to the received one or has the same structure if it is an object (compares them recursively), and of the same type.
+`toStrictEqual` asserts if the actual value is equal to the received one or has the same structure if it is an object (compares them recursively), and of the same type.
 
-  Differences from [`.toEqual`](#toequal):
+Differences from [`.toEqual`](#toequal):
 
-  -  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
-  -  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
-  -  Object types are checked to be equal. e.g. A class instance with fields `a` and` b` will not equal a literal object with fields `a` and `b`.
+-  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
+-  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
+-  Object types are checked to be equal. e.g. A class instance with fields `a` and` b` will not equal a literal object with fields `a` and `b`.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  class Stock {
-    constructor(type) {
-      this.type = type
-    }
+class Stock {
+  constructor(type) {
+    this.type = type
   }
+}
 
-  test('structurally the same, but semantically different', () => {
-    expect(new Stock('apples')).toEqual({ type: 'apples' })
-    expect(new Stock('apples')).not.toStrictEqual({ type: 'apples' })
-  })
-  ```
+test('structurally the same, but semantically different', () => {
+  expect(new Stock('apples')).toEqual({ type: 'apples' })
+  expect(new Stock('apples')).not.toStrictEqual({ type: 'apples' })
+})
+```
 
 ## toContain
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-  `toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getAllFruits } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getAllFruits } from './stocks.js'
 
-  test('the fruit list contains orange', () => {
-    expect(getAllFruits()).toContain('orange')
-  })
-  ```
+test('the fruit list contains orange', () => {
+  expect(getAllFruits()).toContain('orange')
+
+  const element = document.querySelector('#el')
+  // element has a class
+  expect(element.classList).toContain('flex')
+  // element is inside another one
+  expect(document.querySelector('#wrapper')).toContain(element)
+})
+```
 
 ## toContainEqual
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toContainEqual` asserts if an item with a specific structure and values is contained in an array.
-  It works like [`toEqual`](#toequal) inside for each element.
+`toContainEqual` asserts if an item with a specific structure and values is contained in an array.
+It works like [`toEqual`](#toequal) inside for each element.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { getFruitStock } from './stocks.js'
+```ts
+import { expect, test } from 'vitest'
+import { getFruitStock } from './stocks.js'
 
-  test('apple available', () => {
-    expect(getFruitStock()).toContainEqual({ fruit: 'apple', count: 5 })
-  })
-  ```
+test('apple available', () => {
+  expect(getFruitStock()).toContainEqual({ fruit: 'apple', count: 5 })
+})
+```
 
 ## toHaveLength
 
 - **Type:** `(received: number) => Awaitable<void>`
 
-  `toHaveLength` asserts if an object has a `.length` property and it is set to a certain numeric value.
+`toHaveLength` asserts if an object has a `.length` property and it is set to a certain numeric value.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('toHaveLength', () => {
-    expect('abc').toHaveLength(3)
-    expect([1, 2, 3]).toHaveLength(3)
+test('toHaveLength', () => {
+  expect('abc').toHaveLength(3)
+  expect([1, 2, 3]).toHaveLength(3)
 
-    expect('').not.toHaveLength(3) // doesn't have .length of 3
-    expect({ length: 3 }).toHaveLength(3)
-  })
-  ```
+  expect('').not.toHaveLength(3) // doesn't have .length of 3
+  expect({ length: 3 }).toHaveLength(3)
+})
+```
 
 ## toHaveProperty
 
 - **Type:** `(key: any, received?: any) => Awaitable<void>`
 
-  `toHaveProperty` asserts if a property at provided reference `key` exists for an object.
+`toHaveProperty` asserts if a property at provided reference `key` exists for an object.
 
-  You can provide an optional value argument also known as deep equality, like the `toEqual` matcher to compare the received property value.
+You can provide an optional value argument also known as deep equality, like the `toEqual` matcher to compare the received property value.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const invoice = {
-    'isActive': true,
-    'P.O': '12345',
-    'customer': {
-      first_name: 'John',
-      last_name: 'Doe',
-      location: 'China',
+const invoice = {
+  'isActive': true,
+  'P.O': '12345',
+  'customer': {
+    first_name: 'John',
+    last_name: 'Doe',
+    location: 'China',
+  },
+  'total_amount': 5000,
+  'items': [
+    {
+      type: 'apples',
+      quantity: 10,
     },
-    'total_amount': 5000,
-    'items': [
-      {
-        type: 'apples',
-        quantity: 10,
-      },
-      {
-        type: 'oranges',
-        quantity: 5,
-      },
-    ],
-  }
+    {
+      type: 'oranges',
+      quantity: 5,
+    },
+  ],
+}
 
-  test('John Doe Invoice', () => {
-    expect(invoice).toHaveProperty('isActive') // assert that the key exists
-    expect(invoice).toHaveProperty('total_amount', 5000) // assert that the key exists and the value is equal
+test('John Doe Invoice', () => {
+  expect(invoice).toHaveProperty('isActive') // assert that the key exists
+  expect(invoice).toHaveProperty('total_amount', 5000) // assert that the key exists and the value is equal
 
-    expect(invoice).not.toHaveProperty('account') // assert that this key does not exist
+  expect(invoice).not.toHaveProperty('account') // assert that this key does not exist
 
-    // Deep referencing using dot notation
-    expect(invoice).toHaveProperty('customer.first_name')
-    expect(invoice).toHaveProperty('customer.last_name', 'Doe')
-    expect(invoice).not.toHaveProperty('customer.location', 'India')
+  // Deep referencing using dot notation
+  expect(invoice).toHaveProperty('customer.first_name')
+  expect(invoice).toHaveProperty('customer.last_name', 'Doe')
+  expect(invoice).not.toHaveProperty('customer.location', 'India')
 
-    // Deep referencing using an array containing the key
-    expect(invoice).toHaveProperty('items[0].type', 'apples')
-    expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
+  // Deep referencing using an array containing the key
+  expect(invoice).toHaveProperty('items[0].type', 'apples')
+  expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
 
-    // Deep referencing using an array containing the keyPath
-    expect(invoice).toHaveProperty(['items', 0, 'type'], 'apples')
-    expect(invoice).toHaveProperty(['items', '0', 'type'], 'apples') // string notation also works
+  // Deep referencing using an array containing the keyPath
+  expect(invoice).toHaveProperty(['items', 0, 'type'], 'apples')
+  expect(invoice).toHaveProperty(['items', '0', 'type'], 'apples') // string notation also works
 
-    // Wrap your key in an array to avoid the key from being parsed as a deep reference
-    expect(invoice).toHaveProperty(['P.O'], '12345')
-  })
-  ```
+  // Wrap your key in an array to avoid the key from being parsed as a deep reference
+  expect(invoice).toHaveProperty(['P.O'], '12345')
+})
+```
 
 ## toMatch
 
 - **Type:** `(received: string | regexp) => Awaitable<void>`
 
-  `toMatch` asserts if a string matches a regular expression or a string.
+`toMatch` asserts if a string matches a regular expression or a string.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('top fruits', () => {
-    expect('top fruits include apple, orange and grape').toMatch(/apple/)
-    expect('applefruits').toMatch('fruit') // toMatch also accepts a string
-  })
-  ```
+test('top fruits', () => {
+  expect('top fruits include apple, orange and grape').toMatch(/apple/)
+  expect('applefruits').toMatch('fruit') // toMatch also accepts a string
+})
+```
 
 ::: tip
 If the value in the error message is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
@@ -546,53 +552,53 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 
 - **Type:** `(received: object | array) => Awaitable<void>`
 
-  `toMatchObject` asserts if an object matches a subset of the properties of an object.
+`toMatchObject` asserts if an object matches a subset of the properties of an object.
 
-  You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  const johnInvoice = {
-    isActive: true,
-    customer: {
-      first_name: 'John',
-      last_name: 'Doe',
-      location: 'China',
+const johnInvoice = {
+  isActive: true,
+  customer: {
+    first_name: 'John',
+    last_name: 'Doe',
+    location: 'China',
+  },
+  total_amount: 5000,
+  items: [
+    {
+      type: 'apples',
+      quantity: 10,
     },
-    total_amount: 5000,
-    items: [
-      {
-        type: 'apples',
-        quantity: 10,
-      },
-      {
-        type: 'oranges',
-        quantity: 5,
-      },
-    ],
-  }
-
-  const johnDetails = {
-    customer: {
-      first_name: 'John',
-      last_name: 'Doe',
-      location: 'China',
+    {
+      type: 'oranges',
+      quantity: 5,
     },
-  }
+  ],
+}
 
-  test('invoice has john personal details', () => {
-    expect(johnInvoice).toMatchObject(johnDetails)
-  })
+const johnDetails = {
+  customer: {
+    first_name: 'John',
+    last_name: 'Doe',
+    location: 'China',
+  },
+}
 
-  test('the number of elements must match exactly', () => {
-    // Assert that an array of object matches
-    expect([{ foo: 'bar' }, { baz: 1 }]).toMatchObject([
-      { foo: 'bar' },
-      { baz: 1 },
-    ])
-  })
-  ```
+test('invoice has john personal details', () => {
+  expect(johnInvoice).toMatchObject(johnDetails)
+})
+
+test('the number of elements must match exactly', () => {
+  // Assert that an array of object matches
+  expect([{ foo: 'bar' }, { baz: 1 }]).toMatchObject([
+    { foo: 'bar' },
+    { baz: 1 },
+  ])
+})
+```
 
 ## toThrowError
 
@@ -600,788 +606,802 @@ If the value in the error message is too truncated, you can increase [chaiConfig
 
 - **Alias:** `toThrow`
 
-  `toThrowError` asserts if a function throws an error when it is called.
+`toThrowError` asserts if a function throws an error when it is called.
 
-  You can provide an optional argument to test that a specific error is thrown:
+You can provide an optional argument to test that a specific error is thrown:
 
-  - regular expression: error message matches the pattern
-  - string: error message includes the substring
+- regular expression: error message matches the pattern
+- string: error message includes the substring
 
-  :::tip
-  You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
-  :::
+:::tip
+You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+:::
 
-  For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
+For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  function getFruitStock(type) {
-    if (type === 'pineapples')
-      throw new DiabetesError('Pineapples are not good for people with diabetes')
+function getFruitStock(type) {
+  if (type === 'pineapples')
+    throw new Error('Pineapples are not in stock')
 
-    // Do some other stuff
-  }
+  // Do some other stuff
+}
 
-  test('throws on pineapples', () => {
-    // Test that the error message says "diabetes" somewhere: these are equivalent
-    expect(() => getFruitStock('pineapples')).toThrowError(/diabetes/)
-    expect(() => getFruitStock('pineapples')).toThrowError('diabetes')
+test('throws on pineapples', () => {
+  // Test that the error message says "stock" somewhere: these are equivalent
+  expect(() => getFruitStock('pineapples')).toThrowError(/stock/)
+  expect(() => getFruitStock('pineapples')).toThrowError('stock')
 
-    // Test the exact error message
-    expect(() => getFruitStock('pineapples')).toThrowError(
-      /^Pineapples are not good for people with diabetes$/,
-    )
-  })
-  ```
+  // Test the exact error message
+  expect(() => getFruitStock('pineapples')).toThrowError(
+    /^Pineapples are not in stock$/,
+  )
+})
+```
 
-  :::tip
-  To test async functions, use in combination with [rejects](#rejects).
+:::tip
+To test async functions, use in combination with [rejects](#rejects).
 
-  ```js
-  function getAsyncFruitStock() {
-    return Promise.reject(new Error('empty'))
-  }
+```js
+function getAsyncFruitStock() {
+  return Promise.reject(new Error('empty'))
+}
 
-  test('throws on pineapples', async () => {
-    await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
-  })
-  ```
-  :::
+test('throws on pineapples', async () => {
+  await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
+})
+```
+:::
 
 ## toMatchSnapshot
 
 - **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
 
-  This ensures that a value matches the most recent snapshot.
+This ensures that a value matches the most recent snapshot.
 
-  You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
+You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
-  :::tip
-    When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
-  :::
+:::tip
+  When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+:::
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('matches snapshot', () => {
-    const data = { foo: new Set(['bar', 'snapshot']) }
-    expect(data).toMatchSnapshot()
-  })
-  ```
+test('matches snapshot', () => {
+  const data = { foo: new Set(['bar', 'snapshot']) }
+  expect(data).toMatchSnapshot()
+})
+```
 
-  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('matches snapshot', () => {
-    const data = { foo: new Set(['bar', 'snapshot']) }
-    expect(data).toMatchSnapshot({ foo: expect.any(Set) })
-  })
-  ```
+test('matches snapshot', () => {
+  const data = { foo: new Set(['bar', 'snapshot']) }
+  expect(data).toMatchSnapshot({ foo: expect.any(Set) })
+})
+```
 
 ## toMatchInlineSnapshot
 
 - **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
 
-  This ensures that a value matches the most recent snapshot.
+This ensures that a value matches the most recent snapshot.
 
-  Vitest adds and updates the inlineSnapshot string argument to the matcher in the test file (instead of an external `.snap` file).
+Vitest adds and updates the inlineSnapshot string argument to the matcher in the test file (instead of an external `.snap` file).
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('matches inline snapshot', () => {
-    const data = { foo: new Set(['bar', 'snapshot']) }
-    // Vitest will update following content when updating the snapshot
-    expect(data).toMatchInlineSnapshot(`
-      {
-        "foo": Set {
-          "bar",
-          "snapshot",
-        },
-      }
-    `)
-  })
-  ```
+test('matches inline snapshot', () => {
+  const data = { foo: new Set(['bar', 'snapshot']) }
+  // Vitest will update following content when updating the snapshot
+  expect(data).toMatchInlineSnapshot(`
+    {
+      "foo": Set {
+        "bar",
+        "snapshot",
+      },
+    }
+  `)
+})
+```
 
-  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('matches snapshot', () => {
-    const data = { foo: new Set(['bar', 'snapshot']) }
-    expect(data).toMatchInlineSnapshot(
-      { foo: expect.any(Set) },
-      `
-      {
-        "foo": Any<Set>,
-      }
+test('matches snapshot', () => {
+  const data = { foo: new Set(['bar', 'snapshot']) }
+  expect(data).toMatchInlineSnapshot(
+    { foo: expect.any(Set) },
     `
-    )
-  })
-  ```
+    {
+      "foo": Any<Set>,
+    }
+  `
+  )
+})
+```
 
-## toMatchFileSnapshot
+## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge>
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
-- **Version:** Since Vitest 0.30.0
 
-  Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
+Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
-  ```ts
-  import { expect, it } from 'vitest'
+```ts
+import { expect, it } from 'vitest'
 
-  it('render basic', async () => {
-    const result = renderHTML(h('div', { class: 'foo' }))
-    await expect(result).toMatchFileSnapshot('./test/basic.output.html')
-  })
-  ```
+it('render basic', async () => {
+  const result = renderHTML(h('div', { class: 'foo' }))
+  await expect(result).toMatchFileSnapshot('./test/basic.output.html')
+})
+```
 
-  Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
+Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
 
 ## toThrowErrorMatchingSnapshot
 
 - **Type:** `(message?: string) => void`
 
-  The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
-
-  If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
+The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
 - **Type:** `(snapshot?: string, message?: string) => void`
 
-  The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
-
-  If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
+The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toHaveBeenCalled
 
 - **Type:** `() => Awaitable<void>`
 
-  This assertion is useful for testing that a function has been called. Requires a spy function to be passed to `expect`.
+This assertion is useful for testing that a function has been called. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  const market = {
-    buy(subject: string, amount: number) {
-      // ...
-    },
-  }
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
 
-  test('spy function', () => {
-    const buySpy = vi.spyOn(market, 'buy')
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
 
-    expect(buySpy).not.toHaveBeenCalled()
+  expect(buySpy).not.toHaveBeenCalled()
 
-    market.buy('apples', 10)
+  market.buy('apples', 10)
 
-    expect(buySpy).toHaveBeenCalled()
-  })
-  ```
+  expect(buySpy).toHaveBeenCalled()
+})
+```
 
 ## toHaveBeenCalledTimes
 
- - **Type**: `(amount: number) => Awaitable<void>`
+- **Type**: `(amount: number) => Awaitable<void>`
 
-  This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
+This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  const market = {
-    buy(subject: string, amount: number) {
-      // ...
-    },
-  }
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
 
-  test('spy function called two times', () => {
-    const buySpy = vi.spyOn(market, 'buy')
+test('spy function called two times', () => {
+  const buySpy = vi.spyOn(market, 'buy')
 
-    market.buy('apples', 10)
-    market.buy('apples', 20)
+  market.buy('apples', 10)
+  market.buy('apples', 20)
 
-    expect(buySpy).toHaveBeenCalledTimes(2)
-  })
-  ```
+  expect(buySpy).toHaveBeenCalledTimes(2)
+})
+```
 
 ## toHaveBeenCalledWith
 
- - **Type**: `(...args: any[]) => Awaitable<void>`
+- **Type**: `(...args: any[]) => Awaitable<void>`
 
-  This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
+This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  const market = {
-    buy(subject: string, amount: number) {
-      // ...
-    },
-  }
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
 
-  test('spy function', () => {
-    const buySpy = vi.spyOn(market, 'buy')
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
 
-    market.buy('apples', 10)
-    market.buy('apples', 20)
+  market.buy('apples', 10)
+  market.buy('apples', 20)
 
-    expect(buySpy).toHaveBeenCalledWith('apples', 10)
-    expect(buySpy).toHaveBeenCalledWith('apples', 20)
-  })
-  ```
+  expect(buySpy).toHaveBeenCalledWith('apples', 10)
+  expect(buySpy).toHaveBeenCalledWith('apples', 20)
+})
+```
 
 ## toHaveBeenLastCalledWith
 
- - **Type**: `(...args: any[]) => Awaitable<void>`
+- **Type**: `(...args: any[]) => Awaitable<void>`
 
-  This assertion checks if a function was called with certain parameters at it's last invocation. Requires a spy function to be passed to `expect`.
+This assertion checks if a function was called with certain parameters at it's last invocation. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  const market = {
-    buy(subject: string, amount: number) {
-      // ...
-    },
-  }
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
 
-  test('spy function', () => {
-    const buySpy = vi.spyOn(market, 'buy')
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
 
-    market.buy('apples', 10)
-    market.buy('apples', 20)
+  market.buy('apples', 10)
+  market.buy('apples', 20)
 
-    expect(buySpy).not.toHaveBeenLastCalledWith('apples', 10)
-    expect(buySpy).toHaveBeenLastCalledWith('apples', 20)
-  })
-  ```
+  expect(buySpy).not.toHaveBeenLastCalledWith('apples', 10)
+  expect(buySpy).toHaveBeenLastCalledWith('apples', 20)
+})
+```
 
 ## toHaveBeenNthCalledWith
 
- - **Type**: `(time: number, ...args: any[]) => Awaitable<void>`
+- **Type**: `(time: number, ...args: any[]) => Awaitable<void>`
 
-  This assertion checks if a function was called with certain parameters at the certain time. The count starts at 1. So, to check the second entry, you would write `.toHaveBeenNthCalledWith(2, ...)`.
+This assertion checks if a function was called with certain parameters at the certain time. The count starts at 1. So, to check the second entry, you would write `.toHaveBeenNthCalledWith(2, ...)`.
 
-  Requires a spy function to be passed to `expect`.
+Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  const market = {
-    buy(subject: string, amount: number) {
-      // ...
-    },
-  }
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
 
-  test('first call of spy function called with right params', () => {
-    const buySpy = vi.spyOn(market, 'buy')
+test('first call of spy function called with right params', () => {
+  const buySpy = vi.spyOn(market, 'buy')
 
-    market.buy('apples', 10)
-    market.buy('apples', 20)
+  market.buy('apples', 10)
+  market.buy('apples', 20)
 
-    expect(buySpy).toHaveBeenNthCalledWith(1, 'apples', 10)
-  })
-  ```
+  expect(buySpy).toHaveBeenNthCalledWith(1, 'apples', 10)
+})
+```
 
 ## toHaveReturned
 
-  - **Type**: `() => Awaitable<void>`
+- **Type**: `() => Awaitable<void>`
 
-  This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  function getApplesPrice(amount: number) {
-    const PRICE = 10
-    return amount * PRICE
-  }
+function getApplesPrice(amount: number) {
+  const PRICE = 10
+  return amount * PRICE
+}
 
-  test('spy function returned a value', () => {
-    const getPriceSpy = vi.fn(getApplesPrice)
+test('spy function returned a value', () => {
+  const getPriceSpy = vi.fn(getApplesPrice)
 
-    const price = getPriceSpy(10)
+  const price = getPriceSpy(10)
 
-    expect(price).toBe(100)
-    expect(getPriceSpy).toHaveReturned()
-  })
-  ```
+  expect(price).toBe(100)
+  expect(getPriceSpy).toHaveReturned()
+})
+```
 
 ## toHaveReturnedTimes
 
-  - **Type**: `(amount: number) => Awaitable<void>`
+- **Type**: `(amount: number) => Awaitable<void>`
 
-  This assertion checks if a function has successfully returned a value exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+This assertion checks if a function has successfully returned a value exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  test('spy function returns a value two times', () => {
-    const sell = vi.fn((product: string) => ({ product }))
+test('spy function returns a value two times', () => {
+  const sell = vi.fn((product: string) => ({ product }))
 
-    sell('apples')
-    sell('bananas')
+  sell('apples')
+  sell('bananas')
 
-    expect(sell).toHaveReturnedTimes(2)
-  })
-  ```
+  expect(sell).toHaveReturnedTimes(2)
+})
+```
 
 ## toHaveReturnedWith
 
-  - **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type**: `(returnValue: any) => Awaitable<void>`
 
-  You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  test('spy function returns a product', () => {
-    const sell = vi.fn((product: string) => ({ product }))
+test('spy function returns a product', () => {
+  const sell = vi.fn((product: string) => ({ product }))
 
-    sell('apples')
+  sell('apples')
 
-    expect(sell).toHaveReturnedWith({ product: 'apples' })
-  })
-  ```
+  expect(sell).toHaveReturnedWith({ product: 'apples' })
+})
+```
 
 ## toHaveLastReturnedWith
 
-  - **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type**: `(returnValue: any) => Awaitable<void>`
 
-  You can call this assertion to check if a function has successfully returned a value with certain parameters on it's last invoking. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a value with certain parameters on it's last invoking. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  test('spy function returns bananas on a last call', () => {
-    const sell = vi.fn((product: string) => ({ product }))
+test('spy function returns bananas on a last call', () => {
+  const sell = vi.fn((product: string) => ({ product }))
 
-    sell('apples')
-    sell('bananas')
+  sell('apples')
+  sell('bananas')
 
-    expect(sell).toHaveLastReturnedWith({ product: 'bananas' })
-  })
-  ```
+  expect(sell).toHaveLastReturnedWith({ product: 'bananas' })
+})
+```
 
 ## toHaveNthReturnedWith
 
-  - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
+- **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-  You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
-  ```ts
-  import { expect, test, vi } from 'vitest'
+```ts
+import { expect, test, vi } from 'vitest'
 
-  test('spy function returns bananas on second call', () => {
-    const sell = vi.fn((product: string) => ({ product }))
+test('spy function returns bananas on second call', () => {
+  const sell = vi.fn((product: string) => ({ product }))
 
-    sell('apples')
-    sell('bananas')
+  sell('apples')
+  sell('bananas')
 
-    expect(sell).toHaveNthReturnedWith(2, { product: 'bananas' })
-  })
-  ```
+  expect(sell).toHaveNthReturnedWith(2, { product: 'bananas' })
+})
+```
 
 ## toSatisfy
 
-  - **Type:** `(predicate: (value: any) => boolean) => Awaitable<void>`
+- **Type:** `(predicate: (value: any) => boolean) => Awaitable<void>`
 
-  This assertion checks if a value satisfies a certain predicate.
+This assertion checks if a value satisfies a certain predicate.
 
-  ```ts
-  describe('toSatisfy()', () => {
-    const isOdd = (value: number) => value % 2 !== 0
+```ts
+describe('toSatisfy()', () => {
+  const isOdd = (value: number) => value % 2 !== 0
 
-    it('pass with 0', () => {
-      expect(1).toSatisfy(isOdd)
-    })
-
-    it('pass with negotiation', () => {
-      expect(2).not.toSatisfy(isOdd)
-    })
+  it('pass with 0', () => {
+    expect(1).toSatisfy(isOdd)
   })
-  ```
+
+  it('pass with negotiation', () => {
+    expect(2).not.toSatisfy(isOdd)
+  })
+})
+```
 
 ## resolves
 
 - **Type:** `Promisify<Assertions>`
 
-  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from the pending promise and assert its value with usual assertions. If the promise rejects, the assertion will fail.
+`resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from the pending promise and assert its value with usual assertions. If the promise rejects, the assertion will fail.
 
-  It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
-  For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
+For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  async function buyApples() {
-    return fetch('/buy/apples').then(r => r.json())
-  }
+async function buyApples() {
+  return fetch('/buy/apples').then(r => r.json())
+}
 
-  test('buyApples returns new stock id', async () => {
-    // toEqual returns a promise now, so you HAVE to await it
-    await expect(buyApples()).resolves.toEqual({ id: 1 }) // jest API
-    await expect(buyApples()).resolves.to.equal({ id: 1 }) // chai API
-  })
-  ```
+test('buyApples returns new stock id', async () => {
+  // toEqual returns a promise now, so you HAVE to await it
+  await expect(buyApples()).resolves.toEqual({ id: 1 }) // jest API
+  await expect(buyApples()).resolves.to.equal({ id: 1 }) // chai API
+})
+```
 
-  :::warning
-  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
-  :::
+:::warning
+If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
+:::
 
 ## rejects
 
 - **Type:** `Promisify<Assertions>`
 
-  `rejects` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap reason why the promise was rejected, and assert its value with usual assertions. If the promise successfully resolves, the assertion will fail.
+`rejects` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap reason why the promise was rejected, and assert its value with usual assertions. If the promise successfully resolves, the assertion will fail.
 
-  It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
-  For example, if you have a function that fails when you call it, you may use this code to assert the reason:
+For example, if you have a function that fails when you call it, you may use this code to assert the reason:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  async function buyApples(id) {
-    if (!id)
-      throw new Error('no id')
-  }
+async function buyApples(id) {
+  if (!id)
+    throw new Error('no id')
+}
 
-  test('buyApples throws an error when no id provided', async () => {
-    // toThrow returns a promise now, so you HAVE to await it
-    await expect(buyApples()).rejects.toThrow('no id')
-  })
-  ```
+test('buyApples throws an error when no id provided', async () => {
+  // toThrow returns a promise now, so you HAVE to await it
+  await expect(buyApples()).rejects.toThrow('no id')
+})
+```
 
-  :::warning
-  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
-  :::
+:::warning
+If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
+:::
 
 ## expect.assertions
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verify that a certain number of assertions was called during a test. A useful case would be to check if an asynchronous code was called.
+After the test has passed or failed verify that a certain number of assertions was called during a test. A useful case would be to check if an asynchronous code was called.
 
-  For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
+For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  async function doAsync(...cbs) {
-    await Promise.all(
-      cbs.map((cb, index) => cb({ index })),
-    )
+async function doAsync(...cbs) {
+  await Promise.all(
+    cbs.map((cb, index) => cb({ index })),
+  )
+}
+
+test('all assertions are called', async () => {
+  expect.assertions(2)
+  function callback1(data) {
+    expect(data).toBeTruthy()
+  }
+  function callback2(data) {
+    expect(data).toBeTruthy()
   }
 
-  test('all assertions are called', async () => {
-    expect.assertions(2)
-    function callback1(data) {
-      expect(data).toBeTruthy()
-    }
-    function callback2(data) {
-      expect(data).toBeTruthy()
-    }
-
-    await doAsync(callback1, callback2)
-  })
-  ```
-  ::: warning
-  When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
-  :::
-
+  await doAsync(callback1, callback2)
+})
+```
+::: warning
+When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+:::
 
 ## expect.hasAssertions
 
 - **Type:** `() => void`
 
-  After the test has passed or failed verify that at least one assertion was called during a test. A useful case would be to check if an asynchronous code was called.
+After the test has passed or failed verify that at least one assertion was called during a test. A useful case would be to check if an asynchronous code was called.
 
-  For example, if you have a code that calls a callback, we can make an assertion inside a callback, but the test will always pass if we don't check if an assertion was called.
+For example, if you have a code that calls a callback, we can make an assertion inside a callback, but the test will always pass if we don't check if an assertion was called.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { db } from './db.js'
+```ts
+import { expect, test } from 'vitest'
+import { db } from './db.js'
 
-  const cbs = []
+const cbs = []
 
-  function onSelect(cb) {
-    cbs.push(cb)
-  }
+function onSelect(cb) {
+  cbs.push(cb)
+}
 
-  // after selecting from db, we call all callbacks
-  function select(id) {
-    return db.select({ id }).then((data) => {
-      return Promise.all(
-        cbs.map(cb => cb(data)),
-      )
-    })
-  }
-
-  test('callback was called', async () => {
-    expect.hasAssertions()
-    onSelect((data) => {
-      // should be called on select
-      expect(data).toBeTruthy()
-    })
-    // if not awaited, test will fail
-    // if you don't have expect.hasAssertions(), test will pass
-    await select(3)
+// after selecting from db, we call all callbacks
+function select(id) {
+  return db.select({ id }).then((data) => {
+    return Promise.all(
+      cbs.map(cb => cb(data)),
+    )
   })
-  ```
+}
+
+test('callback was called', async () => {
+  expect.hasAssertions()
+  onSelect((data) => {
+    // should be called on select
+    expect(data).toBeTruthy()
+  })
+  // if not awaited, test will fail
+  // if you don't have expect.hasAssertions(), test will pass
+  await select(3)
+})
+```
 
 ## expect.unreachable
 
 - **Type:** `(message?: string) => never`
 
-  This method is used to asserting that a line should never be reached.
+This method is used to asserting that a line should never be reached.
 
-  For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
+For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  async function build(dir) {
-    if (dir.includes('no-src'))
-      throw new Error(`${dir}/src does not exist`)
+async function build(dir) {
+  if (dir.includes('no-src'))
+    throw new Error(`${dir}/src does not exist`)
+}
+
+const errorDirs = [
+  'no-src-folder',
+  // ...
+]
+
+test.each(errorDirs)('build fails with "%s"', async (dir) => {
+  try {
+    await build(dir)
+    expect.unreachable('Should not pass build')
   }
+  catch (err: any) {
+    expect(err).toBeInstanceOf(Error)
+    expect(err.stack).toContain('build')
 
-  const errorDirs = [
-    'no-src-folder',
-    // ...
-  ]
-
-  test.each(errorDirs)('build fails with "%s"', async (dir) => {
-    try {
-      await build(dir)
-      expect.unreachable('Should not pass build')
+    switch (dir) {
+      case 'no-src-folder':
+        expect(err.message).toBe(`${dir}/src does not exist`)
+        break
+      default:
+        // to exhaust all error tests
+        expect.unreachable('All error test must be handled')
+        break
     }
-    catch (err: any) {
-      expect(err).toBeInstanceOf(Error)
-      expect(err.stack).toContain('build')
-
-      switch (dir) {
-        case 'no-src-folder':
-          expect(err.message).toBe(`${dir}/src does not exist`)
-          break
-        default:
-          // to exhaust all error tests
-          expect.unreachable('All error test must be handled')
-          break
-      }
-    }
-  })
-  ```
-
-<!-- asymmetric matchers -->
+  }
+})
+```
 
 ## expect.anything
 
 - **Type:** `() => any`
 
-  This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('object has "apples" key', () => {
-    expect({ apples: 22 }).toEqual({ apples: expect.anything() })
-  })
-  ```
+test('object has "apples" key', () => {
+  expect({ apples: 22 }).toEqual({ apples: expect.anything() })
+})
+```
 
 ## expect.any
 
 - **Type:** `(constructor: unknown) => any`
 
-  This asymmetric matcher, when used with an equality check, will return `true` only if the value is an instance of a specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exists with a proper type.
+This asymmetric matcher, when used with an equality check, will return `true` only if the value is an instance of a specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exists with a proper type.
 
-  ```ts
-  import { expect, test } from 'vitest'
-  import { generateId } from './generators.js'
+```ts
+import { expect, test } from 'vitest'
+import { generateId } from './generators.js'
 
-  test('"id" is a number', () => {
-    expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+test('"id" is a number', () => {
+  expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+})
+```
+
+## expect.closeTo <Badge type="info">1.0.0+</Badge>
+
+- **Type:** `(expected: any, precision?: number) => any`
+
+`expect.closeTo` is useful when comparing floating point numbers in object properties or array item. If you need to compare a number, please use `.toBeCloseTo` instead.
+
+The optional `numDigits` argument limits the number of digits to check **after** the decimal point. For the default value `2`, the test criterion is `Math.abs(expected - received) < 0.005 (that is, 10 ** -2 / 2)`.
+
+For example, this test passes with a precision of 5 digits:
+
+```js
+test('compare float in object properties', () => {
+  expect({
+    title: '0.1 + 0.2',
+    sum: 0.1 + 0.2,
+  }).toEqual({
+    title: '0.1 + 0.2',
+    sum: expect.closeTo(0.3, 5),
   })
-  ```
+})
+```
 
 ## expect.arrayContaining
 
 - **Type:** `<T>(expected: T[]) => any`
 
-  When used with an equality check, this asymmetric matcher will return `true` if the value is an array and contains specified items.
+When used with an equality check, this asymmetric matcher will return `true` if the value is an array and contains specified items.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('basket includes fuji', () => {
-    const basket = {
-      varieties: [
-        'Empire',
-        'Fuji',
-        'Gala',
-      ],
-      count: 3
-    }
-    expect(basket).toEqual({
-      count: 3,
-      varieties: expect.arrayContaining(['Fuji'])
-    })
+test('basket includes fuji', () => {
+  const basket = {
+    varieties: [
+      'Empire',
+      'Fuji',
+      'Gala',
+    ],
+    count: 3
+  }
+  expect(basket).toEqual({
+    count: 3,
+    varieties: expect.arrayContaining(['Fuji'])
   })
-  ```
+})
+```
 
-  :::tip
-  You can use `expect.not` with this matcher to negate the expected value.
-  :::
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
 
 ## expect.objectContaining
 
 - **Type:** `(expected: any) => any`
 
-  When used with an equality check, this asymmetric matcher will return `true` if the value has a similar shape.
+When used with an equality check, this asymmetric matcher will return `true` if the value has a similar shape.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('basket has empire apples', () => {
-    const basket = {
-      varieties: [
-        {
-          name: 'Empire',
-          count: 1,
-        }
-      ],
-    }
-    expect(basket).toEqual({
-      varieties: [
-        expect.objectContaining({ name: 'Empire' }),
-      ]
-    })
+test('basket has empire apples', () => {
+  const basket = {
+    varieties: [
+      {
+        name: 'Empire',
+        count: 1,
+      }
+    ],
+  }
+  expect(basket).toEqual({
+    varieties: [
+      expect.objectContaining({ name: 'Empire' }),
+    ]
   })
-  ```
+})
+```
 
-  :::tip
-  You can use `expect.not` with this matcher to negate the expected value.
-  :::
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
 
 ## expect.stringContaining
 
 - **Type:** `(expected: any) => any`
 
-  When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring.
+When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('variety has "Emp" in its name', () => {
-    const variety = {
-      name: 'Empire',
-      count: 1,
-    }
-    expect(variety).toEqual({
-      name: expect.stringContaining('Emp'),
-      count: 1,
-    })
+test('variety has "Emp" in its name', () => {
+  const variety = {
+    name: 'Empire',
+    count: 1,
+  }
+  expect(variety).toEqual({
+    name: expect.stringContaining('Emp'),
+    count: 1,
   })
-  ```
+})
+```
 
-  :::tip
-  You can use `expect.not` with this matcher to negate the expected value.
-  :::
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
 
 ## expect.stringMatching
 
 - **Type:** `(expected: any) => any`
 
-  When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring or if the string matches a regular expression.
+When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring or if the string matches a regular expression.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('variety ends with "re"', () => {
-    const variety = {
-      name: 'Empire',
-      count: 1,
-    }
-    expect(variety).toEqual({
-      name: expect.stringMatching(/re$/),
-      count: 1,
-    })
+test('variety ends with "re"', () => {
+  const variety = {
+    name: 'Empire',
+    count: 1,
+  }
+  expect(variety).toEqual({
+    name: expect.stringMatching(/re$/),
+    count: 1,
   })
-  ```
+})
+```
 
-  :::tip
-  You can use `expect.not` with this matcher to negate the expected value.
-  :::
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
 
 ## expect.addSnapshotSerializer
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`
 
-  This method adds custom serializers that are called when creating a snapshot. This is an advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
+This method adds custom serializers that are called when creating a snapshot. This is an advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
-  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
+If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 
-  :::tip
-  If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
-  :::
+:::tip
+If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
+:::
 
 ## expect.extend
 
 - **Type:** `(matchers: MatchersObject) => void`
 
-  You can extend default matchers with your own. This function is used to extend the matchers object with custom matchers.
+You can extend default matchers with your own. This function is used to extend the matchers object with custom matchers.
 
-  When you define matchers that way, you also create asymmetric matchers that can be used like `expect.stringContaining`.
+When you define matchers that way, you also create asymmetric matchers that can be used like `expect.stringContaining`.
 
-  ```ts
-  import { expect, test } from 'vitest'
+```ts
+import { expect, test } from 'vitest'
 
-  test('custom matchers', () => {
-    expect.extend({
-      toBeFoo: (received, expected) => {
-        if (received !== 'foo') {
-          return {
-            message: () => `expected ${received} to be foo`,
-            pass: false,
-          }
+test('custom matchers', () => {
+  expect.extend({
+    toBeFoo: (received, expected) => {
+      if (received !== 'foo') {
+        return {
+          message: () => `expected ${received} to be foo`,
+          pass: false,
         }
-      },
-    })
-
-    expect('foo').toBeFoo()
-    expect({ foo: 'foo' }).toEqual({ foo: expect.toBeFoo() })
+      }
+    },
   })
-  ```
 
-  ::: tip
-  If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupFiles).
-  :::
+  expect('foo').toBeFoo()
+  expect({ foo: 'foo' }).toEqual({ foo: expect.toBeFoo() })
+})
+```
 
-  This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
+::: tip
+If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupFiles).
+:::
 
-  If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-  ```ts
-  interface CustomMatchers<R = unknown> {
-    toBeFoo(): R
-  }
+If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
-  declare module 'vitest' {
-    interface Assertion<T = any> extends CustomMatchers<T> {}
-    interface AsymmetricMatchersContaining extends CustomMatchers {}
-  }
-  ```
+```ts
+interface CustomMatchers<R = unknown> {
+  toBeFoo(): R
+}
 
-  ::: warning
-  Don't forget to include the ambient declaration file in your `tsconfig.json`.
-  :::
+declare module 'vitest' {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}
+```
 
-  :::tip
-  If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
-  :::
+::: warning
+Don't forget to include the ambient declaration file in your `tsconfig.json`.
+:::
+
+:::tip
+If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
+:::

@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers } from '@vitest/utils'
-import type { RuntimeContext, SuiteCollector, Test, TestContext } from './types'
+import type { Custom, ExtendedContext, RuntimeContext, SuiteCollector, TaskContext, Test } from './types'
 import type { VitestRunner } from './types/runner'
 import { PendingError } from './errors'
 
@@ -42,12 +42,11 @@ export function withTimeout<T extends((...args: any[]) => any)>(
   }) as T
 }
 
-export function createTestContext(test: Test, runner: VitestRunner): TestContext {
+export function createTestContext<T extends Test | Custom>(test: T, runner: VitestRunner): ExtendedContext<T> {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
-  } as unknown as TestContext
+  } as unknown as TaskContext<T>
 
-  context.meta = test
   context.task = test
 
   context.skip = () => {
@@ -60,7 +59,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
     test.onFailed.push(fn)
   }
 
-  return runner.extendTestContext?.(context) || context
+  return runner.extendTaskContext?.(context) as ExtendedContext<T> || context
 }
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {

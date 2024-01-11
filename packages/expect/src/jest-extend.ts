@@ -6,7 +6,7 @@ import type {
   MatchersObject,
   SyncExpectationResult,
 } from './types'
-import { JEST_MATCHERS_OBJECT } from './constants'
+import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './state'
 
@@ -33,6 +33,8 @@ function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expec
 
   const matcherState: MatcherState = {
     ...getState(expect),
+    // TODO: implement via expect.addEqualityTesters
+    customTesters: [],
     isNot,
     utils: jestUtils,
     promise,
@@ -108,10 +110,12 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
         }
       }
 
+      const customMatcher = (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample)
+
       Object.defineProperty(expect, expectAssertionName, {
         configurable: true,
         enumerable: true,
-        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
+        value: customMatcher,
         writable: true,
       })
 
@@ -119,6 +123,15 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
         configurable: true,
         enumerable: true,
         value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(true, ...sample),
+        writable: true,
+      })
+
+      // keep track of asymmetric matchers on global so that it can be copied over to local context's `expect`.
+      // note that the negated variant is automatically shared since it's assigned on the single `expect.not` object.
+      Object.defineProperty(((globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT]), expectAssertionName, {
+        configurable: true,
+        enumerable: true,
+        value: customMatcher,
         writable: true,
       })
     })

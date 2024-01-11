@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-preact-testing-lib",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",
@@ -16,12 +17,12 @@
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.5.0",
+    "@preact/preset-vite": "^2.6.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/preact": "^3.2.3",
     "@vitest/ui": "latest",
     "less": "^4.1.3",
-    "typescript": "^4.8.4",
+    "typescript": "^5.2.2",
     "vite": "latest",
     "vitest": "latest"
   }

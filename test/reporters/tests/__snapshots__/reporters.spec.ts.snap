@@ -1,34 +1,34 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`JUnit reporter (no outputFile entry) 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -37,34 +37,34 @@ AssertionError: expected 2.23606797749979 to equal 2
 `;
 
 exports[`JUnit reporter 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -78,34 +78,34 @@ exports[`JUnit reporter with outputFile 1`] = `
 `;
 
 exports[`JUnit reporter with outputFile 2`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -119,34 +119,34 @@ exports[`JUnit reporter with outputFile in non-existing directory 1`] = `
 `;
 
 exports[`JUnit reporter with outputFile in non-existing directory 2`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -160,34 +160,34 @@ exports[`JUnit reporter with outputFile object 1`] = `
 `;
 
 exports[`JUnit reporter with outputFile object 2`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -201,34 +201,34 @@ exports[`JUnit reporter with outputFile object in non-existing directory 1`] = `
 `;
 
 exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
-            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="9" failures="1" errors="0" skipped="2" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; inner suite &gt; Math.sqrt()" time="0.001442286">
+            <failure message="expected 2.23606797749979 to equal 2" type="AssertionError">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; JSON" time="0.001023711">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; async with timeout" time="0">
             <skipped/>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; timeout" time="0.1005059841">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success " time="0.020184875">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success " time="0.0003324542">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback setup success done(false)" time="0.019738606">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; callback test success done(false)" time="0.0001923509">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; todo test" time="0">
             <skipped/>
         </testcase>
     </testsuite>
@@ -242,11 +242,11 @@ exports[`JUnit reporter with outputFile with XML in error message 1`] = `
 `;
 
 exports[`JUnit reporter with outputFile with XML in error message 2`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites name=\\"vitest tests\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0.145992842\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; test with xml in error\\" time=\\"0.0021231231\\">
-            <failure message=\\"error message that has XML in it &lt;tag&gt;\\" type=\\"AssertionError\\">
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="1" errors="0" time="0">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="1" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="suite &gt; test with xml in error" time="0.0021231231">
+            <failure message="error message that has XML in it &lt;tag&gt;" type="AssertionError">
 AssertionError: error message that has XML in it &lt;tag&gt;
  ❯ test/core/test/basic.test.ts:8:32
  ❯ test/core/test/&lt;bracket-name&gt;.ts:3:11
@@ -506,508 +506,28 @@ exports[`json reporter with outputFile 1`] = `
 "
 `;
 
-exports[`json reporter with outputFile 2`] = `
-"{
-  \\"numTotalTestSuites\\": 3,
-  \\"numPassedTestSuites\\": 3,
-  \\"numFailedTestSuites\\": 0,
-  \\"numPendingTestSuites\\": 0,
-  \\"numTotalTests\\": 9,
-  \\"numPassedTests\\": 8,
-  \\"numFailedTests\\": 1,
-  \\"numPendingTests\\": 0,
-  \\"numTodoTests\\": 1,
-  \\"startTime\\": 1642587001759,
-  \\"success\\": false,
-  \\"testResults\\": [
-    {
-      \\"assertionResults\\": [
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\",
-            \\"inner suite\\"
-          ],
-          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
-          \\"status\\": \\"failed\\",
-          \\"title\\": \\"Math.sqrt()\\",
-          \\"duration\\": 1.4422860145568848,
-          \\"failureMessages\\": [
-            \\"expected 2.23606797749979 to equal 2\\"
-          ],
-          \\"location\\": {
-            \\"line\\": 8,
-            \\"column\\": 32
-          }
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite JSON\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"JSON\\",
-          \\"duration\\": 1.0237109661102295,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite async with timeout\\",
-          \\"status\\": \\"skipped\\",
-          \\"title\\": \\"async with timeout\\",
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite timeout\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"timeout\\",
-          \\"duration\\": 100.50598406791687,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success \\",
-          \\"duration\\": 20.184875011444092,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success \\",
-          \\"duration\\": 0.33245420455932617,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success done(false)\\",
-          \\"duration\\": 19.738605976104736,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success done(false)\\",
-          \\"duration\\": 0.1923508644104004,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite todo test\\",
-          \\"status\\": \\"todo\\",
-          \\"title\\": \\"todo test\\",
-          \\"failureMessages\\": []
-        }
-      ],
-      \\"startTime\\": 1642587001759,
-      \\"endTime\\": 1642587001759,
-      \\"status\\": \\"failed\\",
-      \\"message\\": \\"\\",
-      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    }
-  ]
-}"
-`;
+exports[`json reporter with outputFile 2`] = `"{"numTotalTestSuites":3,"numPassedTestSuites":3,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":9,"numPassedTests":8,"numFailedTests":1,"numPendingTests":0,"numTodoTests":1,"startTime":1642587001759,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["suite","inner suite"],"fullName":"suite inner suite Math.sqrt()","status":"failed","title":"Math.sqrt()","duration":1.4422860145568848,"failureMessages":["expected 2.23606797749979 to equal 2"],"location":{"line":8,"column":32}},{"ancestorTitles":["suite"],"fullName":"suite JSON","status":"passed","title":"JSON","duration":1.0237109661102295,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite async with timeout","status":"skipped","title":"async with timeout","failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite timeout","status":"passed","title":"timeout","duration":100.50598406791687,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success ","status":"passed","title":"callback setup success ","duration":20.184875011444092,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success ","status":"passed","title":"callback test success ","duration":0.33245420455932617,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success done(false)","status":"passed","title":"callback setup success done(false)","duration":19.738605976104736,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success done(false)","status":"passed","title":"callback test success done(false)","duration":0.1923508644104004,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite todo test","status":"todo","title":"todo test","failureMessages":[]}],"startTime":1642587001759,"endTime":1642587001759,"status":"failed","message":"","name":"/vitest/test/core/test/basic.test.ts"}]}"`;
 
 exports[`json reporter with outputFile in non-existing directory 1`] = `
 "JSON report written to <process-cwd>/jsonReportDirectory/deeply/nested/report.json
 "
 `;
 
-exports[`json reporter with outputFile in non-existing directory 2`] = `
-"{
-  \\"numTotalTestSuites\\": 3,
-  \\"numPassedTestSuites\\": 3,
-  \\"numFailedTestSuites\\": 0,
-  \\"numPendingTestSuites\\": 0,
-  \\"numTotalTests\\": 9,
-  \\"numPassedTests\\": 8,
-  \\"numFailedTests\\": 1,
-  \\"numPendingTests\\": 0,
-  \\"numTodoTests\\": 1,
-  \\"startTime\\": 1642587001759,
-  \\"success\\": false,
-  \\"testResults\\": [
-    {
-      \\"assertionResults\\": [
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\",
-            \\"inner suite\\"
-          ],
-          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
-          \\"status\\": \\"failed\\",
-          \\"title\\": \\"Math.sqrt()\\",
-          \\"duration\\": 1.4422860145568848,
-          \\"failureMessages\\": [
-            \\"expected 2.23606797749979 to equal 2\\"
-          ],
-          \\"location\\": {
-            \\"line\\": 8,
-            \\"column\\": 32
-          }
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite JSON\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"JSON\\",
-          \\"duration\\": 1.0237109661102295,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite async with timeout\\",
-          \\"status\\": \\"skipped\\",
-          \\"title\\": \\"async with timeout\\",
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite timeout\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"timeout\\",
-          \\"duration\\": 100.50598406791687,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success \\",
-          \\"duration\\": 20.184875011444092,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success \\",
-          \\"duration\\": 0.33245420455932617,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success done(false)\\",
-          \\"duration\\": 19.738605976104736,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success done(false)\\",
-          \\"duration\\": 0.1923508644104004,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite todo test\\",
-          \\"status\\": \\"todo\\",
-          \\"title\\": \\"todo test\\",
-          \\"failureMessages\\": []
-        }
-      ],
-      \\"startTime\\": 1642587001759,
-      \\"endTime\\": 1642587001759,
-      \\"status\\": \\"failed\\",
-      \\"message\\": \\"\\",
-      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    }
-  ]
-}"
-`;
+exports[`json reporter with outputFile in non-existing directory 2`] = `"{"numTotalTestSuites":3,"numPassedTestSuites":3,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":9,"numPassedTests":8,"numFailedTests":1,"numPendingTests":0,"numTodoTests":1,"startTime":1642587001759,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["suite","inner suite"],"fullName":"suite inner suite Math.sqrt()","status":"failed","title":"Math.sqrt()","duration":1.4422860145568848,"failureMessages":["expected 2.23606797749979 to equal 2"],"location":{"line":8,"column":32}},{"ancestorTitles":["suite"],"fullName":"suite JSON","status":"passed","title":"JSON","duration":1.0237109661102295,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite async with timeout","status":"skipped","title":"async with timeout","failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite timeout","status":"passed","title":"timeout","duration":100.50598406791687,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success ","status":"passed","title":"callback setup success ","duration":20.184875011444092,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success ","status":"passed","title":"callback test success ","duration":0.33245420455932617,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success done(false)","status":"passed","title":"callback setup success done(false)","duration":19.738605976104736,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success done(false)","status":"passed","title":"callback test success done(false)","duration":0.1923508644104004,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite todo test","status":"todo","title":"todo test","failureMessages":[]}],"startTime":1642587001759,"endTime":1642587001759,"status":"failed","message":"","name":"/vitest/test/core/test/basic.test.ts"}]}"`;
 
 exports[`json reporter with outputFile object 1`] = `
 "JSON report written to <process-cwd>/report_object.json
 "
 `;
 
-exports[`json reporter with outputFile object 2`] = `
-"{
-  \\"numTotalTestSuites\\": 3,
-  \\"numPassedTestSuites\\": 3,
-  \\"numFailedTestSuites\\": 0,
-  \\"numPendingTestSuites\\": 0,
-  \\"numTotalTests\\": 9,
-  \\"numPassedTests\\": 8,
-  \\"numFailedTests\\": 1,
-  \\"numPendingTests\\": 0,
-  \\"numTodoTests\\": 1,
-  \\"startTime\\": 1642587001759,
-  \\"success\\": false,
-  \\"testResults\\": [
-    {
-      \\"assertionResults\\": [
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\",
-            \\"inner suite\\"
-          ],
-          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
-          \\"status\\": \\"failed\\",
-          \\"title\\": \\"Math.sqrt()\\",
-          \\"duration\\": 1.4422860145568848,
-          \\"failureMessages\\": [
-            \\"expected 2.23606797749979 to equal 2\\"
-          ],
-          \\"location\\": {
-            \\"line\\": 8,
-            \\"column\\": 32
-          }
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite JSON\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"JSON\\",
-          \\"duration\\": 1.0237109661102295,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite async with timeout\\",
-          \\"status\\": \\"skipped\\",
-          \\"title\\": \\"async with timeout\\",
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite timeout\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"timeout\\",
-          \\"duration\\": 100.50598406791687,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success \\",
-          \\"duration\\": 20.184875011444092,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success \\",
-          \\"duration\\": 0.33245420455932617,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success done(false)\\",
-          \\"duration\\": 19.738605976104736,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success done(false)\\",
-          \\"duration\\": 0.1923508644104004,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite todo test\\",
-          \\"status\\": \\"todo\\",
-          \\"title\\": \\"todo test\\",
-          \\"failureMessages\\": []
-        }
-      ],
-      \\"startTime\\": 1642587001759,
-      \\"endTime\\": 1642587001759,
-      \\"status\\": \\"failed\\",
-      \\"message\\": \\"\\",
-      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    }
-  ]
-}"
-`;
+exports[`json reporter with outputFile object 2`] = `"{"numTotalTestSuites":3,"numPassedTestSuites":3,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":9,"numPassedTests":8,"numFailedTests":1,"numPendingTests":0,"numTodoTests":1,"startTime":1642587001759,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["suite","inner suite"],"fullName":"suite inner suite Math.sqrt()","status":"failed","title":"Math.sqrt()","duration":1.4422860145568848,"failureMessages":["expected 2.23606797749979 to equal 2"],"location":{"line":8,"column":32}},{"ancestorTitles":["suite"],"fullName":"suite JSON","status":"passed","title":"JSON","duration":1.0237109661102295,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite async with timeout","status":"skipped","title":"async with timeout","failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite timeout","status":"passed","title":"timeout","duration":100.50598406791687,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success ","status":"passed","title":"callback setup success ","duration":20.184875011444092,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success ","status":"passed","title":"callback test success ","duration":0.33245420455932617,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success done(false)","status":"passed","title":"callback setup success done(false)","duration":19.738605976104736,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success done(false)","status":"passed","title":"callback test success done(false)","duration":0.1923508644104004,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite todo test","status":"todo","title":"todo test","failureMessages":[]}],"startTime":1642587001759,"endTime":1642587001759,"status":"failed","message":"","name":"/vitest/test/core/test/basic.test.ts"}]}"`;
 
 exports[`json reporter with outputFile object in non-existing directory 1`] = `
 "JSON report written to <process-cwd>/jsonReportDirectory_object/deeply/nested/report.json
 "
 `;
 
-exports[`json reporter with outputFile object in non-existing directory 2`] = `
-"{
-  \\"numTotalTestSuites\\": 3,
-  \\"numPassedTestSuites\\": 3,
-  \\"numFailedTestSuites\\": 0,
-  \\"numPendingTestSuites\\": 0,
-  \\"numTotalTests\\": 9,
-  \\"numPassedTests\\": 8,
-  \\"numFailedTests\\": 1,
-  \\"numPendingTests\\": 0,
-  \\"numTodoTests\\": 1,
-  \\"startTime\\": 1642587001759,
-  \\"success\\": false,
-  \\"testResults\\": [
-    {
-      \\"assertionResults\\": [
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\",
-            \\"inner suite\\"
-          ],
-          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
-          \\"status\\": \\"failed\\",
-          \\"title\\": \\"Math.sqrt()\\",
-          \\"duration\\": 1.4422860145568848,
-          \\"failureMessages\\": [
-            \\"expected 2.23606797749979 to equal 2\\"
-          ],
-          \\"location\\": {
-            \\"line\\": 8,
-            \\"column\\": 32
-          }
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite JSON\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"JSON\\",
-          \\"duration\\": 1.0237109661102295,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite async with timeout\\",
-          \\"status\\": \\"skipped\\",
-          \\"title\\": \\"async with timeout\\",
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite timeout\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"timeout\\",
-          \\"duration\\": 100.50598406791687,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success \\",
-          \\"duration\\": 20.184875011444092,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success \\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success \\",
-          \\"duration\\": 0.33245420455932617,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback setup success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback setup success done(false)\\",
-          \\"duration\\": 19.738605976104736,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite callback test success done(false)\\",
-          \\"status\\": \\"passed\\",
-          \\"title\\": \\"callback test success done(false)\\",
-          \\"duration\\": 0.1923508644104004,
-          \\"failureMessages\\": []
-        },
-        {
-          \\"ancestorTitles\\": [
-            \\"suite\\"
-          ],
-          \\"fullName\\": \\"suite todo test\\",
-          \\"status\\": \\"todo\\",
-          \\"title\\": \\"todo test\\",
-          \\"failureMessages\\": []
-        }
-      ],
-      \\"startTime\\": 1642587001759,
-      \\"endTime\\": 1642587001759,
-      \\"status\\": \\"failed\\",
-      \\"message\\": \\"\\",
-      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    }
-  ]
-}"
-`;
+exports[`json reporter with outputFile object in non-existing directory 2`] = `"{"numTotalTestSuites":3,"numPassedTestSuites":3,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":9,"numPassedTests":8,"numFailedTests":1,"numPendingTests":0,"numTodoTests":1,"startTime":1642587001759,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["suite","inner suite"],"fullName":"suite inner suite Math.sqrt()","status":"failed","title":"Math.sqrt()","duration":1.4422860145568848,"failureMessages":["expected 2.23606797749979 to equal 2"],"location":{"line":8,"column":32}},{"ancestorTitles":["suite"],"fullName":"suite JSON","status":"passed","title":"JSON","duration":1.0237109661102295,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite async with timeout","status":"skipped","title":"async with timeout","failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite timeout","status":"passed","title":"timeout","duration":100.50598406791687,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success ","status":"passed","title":"callback setup success ","duration":20.184875011444092,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success ","status":"passed","title":"callback test success ","duration":0.33245420455932617,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback setup success done(false)","status":"passed","title":"callback setup success done(false)","duration":19.738605976104736,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite callback test success done(false)","status":"passed","title":"callback test success done(false)","duration":0.1923508644104004,"failureMessages":[]},{"ancestorTitles":["suite"],"fullName":"suite todo test","status":"todo","title":"todo test","failureMessages":[]}],"startTime":1642587001759,"endTime":1642587001759,"status":"failed","message":"","name":"/vitest/test/core/test/basic.test.ts"}]}"`;
 
 exports[`tap reporter 1`] = `
 "TAP version 13
@@ -1021,11 +541,11 @@ not ok 1 - test/core/test/basic.test.ts # time=145.99ms {
             not ok 1 - Math.sqrt() # time=1.44ms
                 ---
                 error:
-                    name: \\"AssertionError\\"
-                    message: \\"expected 2.23606797749979 to equal 2\\"
-                at: \\"/vitest/test/core/test/basic.test.ts:8:32\\"
-                actual: \\"2.23606797749979\\"
-                expected: \\"2\\"
+                    name: "AssertionError"
+                    message: "expected 2.23606797749979 to equal 2"
+                at: "/vitest/test/core/test/basic.test.ts:8:32"
+                actual: "2.23606797749979"
+                expected: "2"
                 ...
         }
         ok 2 - JSON # time=1.02ms
@@ -1047,11 +567,11 @@ exports[`tap-flat reporter 1`] = `
 not ok 1 - test/core/test/basic.test.ts > suite > inner suite > Math.sqrt() # time=1.44ms
     ---
     error:
-        name: \\"AssertionError\\"
-        message: \\"expected 2.23606797749979 to equal 2\\"
-    at: \\"/vitest/test/core/test/basic.test.ts:8:32\\"
-    actual: \\"2.23606797749979\\"
-    expected: \\"2\\"
+        name: "AssertionError"
+        message: "expected 2.23606797749979 to equal 2"
+    at: "/vitest/test/core/test/basic.test.ts:8:32"
+    actual: "2.23606797749979"
+    expected: "2"
     ...
 ok 2 - test/core/test/basic.test.ts > suite > JSON # time=1.02ms
 ok 3 - test/core/test/basic.test.ts > suite > async with timeout # SKIP

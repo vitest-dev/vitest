@@ -1,19 +1,18 @@
 import { MessageChannel } from 'node:worker_threads'
-import { cpus } from 'node:os'
-import { pathToFileURL } from 'node:url'
+import * as nodeos from 'node:os'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
-import { distDir, rootDir } from '../../paths'
+import { rootDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
+import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { createMethodsRPC } from './rpc'
 
-const workerPath = pathToFileURL(resolve(distDir, './vm.js')).href
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: WorkspaceProject) {
@@ -39,19 +38,26 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
-  const threadsCount = ctx.config.watch
-    ? Math.max(Math.floor(cpus().length / 2), 1)
-    : Math.max(cpus().length - 1, 1)
+export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: PoolProcessOptions): ProcessPool {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
 
-  const maxThreads = ctx.config.maxThreads ?? threadsCount
-  const minThreads = ctx.config.minThreads ?? threadsCount
+  const threadsCount = ctx.config.watch
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
+
+  const poolOptions = ctx.config.poolOptions?.vmThreads ?? {}
+
+  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
   const options: TinypoolOptions = {
-    filename: workerPath,
+    filename: vmPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.useAtomics ?? false,
+    useAtomics: poolOptions.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -62,15 +68,16 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
       '--experimental-vm-modules',
       '--require',
       suppressWarningsPath,
+      ...poolOptions.execArgv ?? [],
       ...execArgv,
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
-    maxMemoryLimitBeforeRecycle: ctx.config.experimentalVmWorkerMemoryLimit || undefined,
+    concurrentTasksPerWorker: 1,
+    maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
 
-  if (ctx.config.singleThread) {
-    options.concurrentTasksPerWorker = 1
+  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -91,6 +98,8 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
         invalidates,
         environment,
         workerId,
+        projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
@@ -102,7 +111,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root)
+          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
 
         else
           throw error
@@ -113,10 +122,10 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
       }
     }
 
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
-
     return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
+
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
         if (configs.has(project))
@@ -126,13 +135,6 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
         configs.set(project, config)
         return config
       }
-
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
 
       const filesByEnv = await groupFilesByEnv(specs)
       const promises = Object.values(filesByEnv).flat()
@@ -146,6 +148,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
   }
 
   return {
+    name: 'vmThreads',
     runTests: runWithFiles('run'),
     close: async () => {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
@@ -154,4 +157,23 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
         await pool.destroy()
     },
   }
+}
+
+function getMemoryLimit(config: ResolvedConfig) {
+  const memory = nodeos.totalmem()
+  const limit = getWorkerMemoryLimit(config)
+
+  if (typeof memory === 'number') {
+    return stringToBytes(
+      limit,
+      config.watch ? memory / 2 : memory,
+    )
+  }
+
+  // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
+  if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
+    return stringToBytes(limit)
+
+  // just ignore "memoryLimit" value because we cannot detect memory limit
+  return null
 }

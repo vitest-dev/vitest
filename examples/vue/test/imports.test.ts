@@ -5,7 +5,6 @@ describe('import vue components', () => {
   })
 
   test('template string imports as expected', async () => {
-    // eslint-disable-next-line @typescript-eslint/quotes
     const cmp = await import(`../components/Hello.vue`)
     expect(cmp).toBeDefined()
   })

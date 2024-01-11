@@ -1,3 +1,3 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mount component 1`] = `"<a-select-stub value=\\"test\\"></a-select-stub>"`;
+exports[`mount component 1`] = `"<a-select-stub value="test"></a-select-stub>"`;

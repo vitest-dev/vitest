@@ -1,21 +1,27 @@
 import v8 from 'node:v8'
-import type { ChildProcess } from 'node:child_process'
-import { fork } from 'node:child_process'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import * as nodeos from 'node:os'
+import EventEmitter from 'node:events'
+import { Tinypool } from 'tinypool'
+import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import { createBirpc } from 'birpc'
-import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
-import type { PoolProcessOptions, ProcessPool, WorkspaceSpec } from '../pool'
-import { distDir } from '../../paths'
-import { groupBy } from '../../utils/base'
-import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { WorkspaceProject } from '../workspace'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import { groupBy } from '../../utils'
 import { createMethodsRPC } from './rpc'
 
-const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
+function createChildProcessChannel(project: WorkspaceProject) {
+  const emitter = new EventEmitter()
+  const cleanup = () => emitter.removeAllListeners()
 
-function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess): void {
+  const events = { message: 'message', response: 'response' }
+  const channel: TinypoolChannel = {
+    onMessage: callback => emitter.on(events.message, callback),
+    postMessage: message => emitter.emit(events.response, message),
+  }
+
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
     createMethodsRPC(project),
     {
@@ -23,15 +29,17 @@ function setupChildProcessChannel(project: WorkspaceProject, fork: ChildProcess)
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
-        fork.send(v)
+        emitter.emit(events.message, v)
       },
       on(fn) {
-        fork.on('message', fn)
+        emitter.on(events.response, fn)
       },
     },
   )
 
   project.ctx.onCancel(reason => rpc.onCancel(reason))
+
+  return { channel, cleanup }
 }
 
 function stringifyRegex(input: RegExp | string): string {
@@ -40,101 +48,181 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-function getTestConfig(ctx: WorkspaceProject): ResolvedConfig {
-  const config = ctx.getSerializableConfig()
-  // v8 serialize does not support regex
-  return <ResolvedConfig>{
-    ...config,
-    testNamePattern: config.testNamePattern
-      ? stringifyRegex(config.testNamePattern)
-      : undefined,
+export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }: PoolProcessOptions): ProcessPool {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
+
+  const threadsCount = ctx.config.watch
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
+
+  const poolOptions = ctx.config.poolOptions?.forks ?? {}
+
+  const maxThreads = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
+
+  const options: TinypoolOptions = {
+    runtime: 'child_process',
+    filename: forksPath,
+
+    maxThreads,
+    minThreads,
+
+    env,
+    execArgv: [
+      ...poolOptions.execArgv ?? [],
+      ...execArgv,
+    ],
+
+    terminateTimeout: ctx.config.teardownTimeout,
+    concurrentTasksPerWorker: 1,
   }
-}
 
-export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
-  const children = new Set<ChildProcess>()
+  const isolated = poolOptions.isolate ?? true
 
-  const Sequencer = ctx.config.sequence.sequencer
-  const sequencer = new Sequencer(ctx)
+  if (isolated)
+    options.isolateWorkers = true
 
-  function runFiles(project: WorkspaceProject, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
-    const config = getTestConfig(project)
-    ctx.state.clearFiles(project, files)
+  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
 
-    const data: ChildContext = {
-      command: 'start',
-      config,
-      files,
-      invalidates,
-      environment,
+  const pool = new Tinypool(options)
+
+  const runWithFiles = (name: string): RunWithFiles => {
+    let id = 0
+
+    async function runFiles(project: WorkspaceProject, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+      ctx.state.clearFiles(project, files)
+      const { channel, cleanup } = createChildProcessChannel(project)
+      const workerId = ++id
+      const data: ChildContext = {
+        config,
+        files,
+        invalidates,
+        environment,
+        workerId,
+        projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
+      }
+      try {
+        await pool.run(data, { name, channel })
+      }
+      catch (error) {
+        // Worker got stuck and won't terminate - this may cause process to hang
+        if (error instanceof Error && /Failed to terminate worker/.test(error.message))
+          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}.`)
+
+        // Intentionally cancelled
+        else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
+          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+
+        else
+          throw error
+      }
+      finally {
+        cleanup()
+      }
     }
 
-    const child = fork(childPath, [], {
-      execArgv,
-      env,
-      // TODO: investigate
-      // serialization: 'advanced',
-    })
-    children.add(child)
-    setupChildProcessChannel(project, child)
+    return async (specs, invalidates) => {
+      // Cancel pending tasks from pool when possible
+      ctx.onCancel(() => pool.cancelPendingTasks())
 
-    return new Promise<void>((resolve, reject) => {
-      child.send(data, (err) => {
-        if (err)
-          reject(err)
-      })
-      child.on('close', (code) => {
-        if (!code)
-          resolve()
-        else
-          reject(new Error(`Child process exited unexpectedly with code ${code}`))
+      const configs = new Map<WorkspaceProject, ResolvedConfig>()
+      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+        if (configs.has(project))
+          return configs.get(project)!
 
-        children.delete(child)
-      })
-    })
-  }
+        const _config = project.getSerializableConfig()
 
-  async function runTests(specs: WorkspaceSpec[], invalidates: string[] = []): Promise<void> {
-    const { shard } = ctx.config
+        const config = {
+          ..._config,
+          // v8 serialize does not support regex
+          testNamePattern: _config.testNamePattern
+            ? stringifyRegex(_config.testNamePattern)
+            : undefined,
+        } as ResolvedConfig
 
-    if (shard)
-      specs = await sequencer.shard(specs)
+        configs.set(project, config)
+        return config
+      }
 
-    specs = await sequencer.sort(specs)
+      const workspaceMap = new Map<string, WorkspaceProject[]>()
+      for (const [project, file] of specs) {
+        const workspaceFiles = workspaceMap.get(file) ?? []
+        workspaceFiles.push(project)
+        workspaceMap.set(file, workspaceFiles)
+      }
 
-    const filesByEnv = await groupFilesByEnv(specs)
-    const envs = envsOrder.concat(
-      Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
-    )
+      const singleFork = specs.filter(([project]) => project.config.poolOptions?.forks?.singleFork)
+      const multipleForks = specs.filter(([project]) => !project.config.poolOptions?.forks?.singleFork)
 
-    // always run environments isolated between each other
-    for (const env of envs) {
-      const files = filesByEnv[env]
+      if (multipleForks.length) {
+        const filesByEnv = await groupFilesByEnv(multipleForks)
+        const files = Object.values(filesByEnv).flat()
+        const results: PromiseSettledResult<void>[] = []
 
-      if (!files?.length)
-        continue
+        if (isolated) {
+          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
+            runFiles(project, getConfig(project), [file], environment, invalidates))))
+        }
+        else {
+          // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
+          // Tasks are still running parallel but environments are isolated between tasks.
+          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
 
-      const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options) + environment.transformMode)
+          for (const group of Object.values(grouped)) {
+            // Push all files to pool's queue
+            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
+              runFiles(project, getConfig(project), [file], environment, invalidates))))
 
-      for (const option in filesByOptions) {
-        const files = filesByOptions[option]
+            // Once all tasks are running or finished, recycle worker for isolation.
+            // On-going workers will run in the previous environment.
+            await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
+            await pool.recycleWorkers()
+          }
+        }
 
-        if (files?.length) {
-          const filenames = files.map(f => f.file)
-          await runFiles(files[0].project, filenames, files[0].environment, invalidates)
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
+
+      if (singleFork.length) {
+        const filesByEnv = await groupFilesByEnv(singleFork)
+        const envs = envsOrder.concat(
+          Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
+        )
+
+        for (const env of envs) {
+          const files = filesByEnv[env]
+
+          if (!files?.length)
+            continue
+
+          const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
+
+          for (const files of Object.values(filesByOptions)) {
+            // Always run environments isolated between each other
+            await pool.recycleWorkers()
+
+            const filenames = files.map(f => f.file)
+            await runFiles(files[0].project, getConfig(files[0].project), filenames, files[0].environment, invalidates)
+          }
         }
       }
     }
   }
 
   return {
-    runTests,
-    async close() {
-      children.forEach((child) => {
-        if (!child.killed)
-          child.kill()
-      })
-      children.clear()
+    name: 'forks',
+    runTests: runWithFiles('run'),
+    close: async () => {
+      await pool.destroy()
     },
   }
 }

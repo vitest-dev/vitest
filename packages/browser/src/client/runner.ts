@@ -1,6 +1,6 @@
-import type { File, TaskResultPack, Test } from '@vitest/runner'
+import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
+import type { ResolvedConfig } from 'vitest'
 import { rpc } from './rpc'
-import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
@@ -11,8 +11,11 @@ interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
-export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
-  return class BrowserTestRunner extends original {
+export function createBrowserRunner(
+  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
+  coverageModule: CoverageHandler | null,
+): { new(options: BrowserRunnerOptions): VitestRunner } {
+  return class BrowserTestRunner extends VitestRunner {
     public config: ResolvedConfig
     hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
@@ -22,8 +25,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       this.hashMap = options.browserHashMap
     }
 
-    async onAfterRunTest(task: Test) {
-      await super.onAfterRunTest?.(task)
+    async onAfterRunTask(task: Test) {
+      await super.onAfterRunTask?.(task)
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
       })
@@ -39,11 +42,17 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRun() {
-      await super.onAfterRun?.()
+    async onAfterRunFiles(files: File[]) {
+      await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
-      if (coverage)
-        await rpc().onAfterSuiteRun({ coverage })
+
+      if (coverage) {
+        await rpc().onAfterSuiteRun({
+          coverage,
+          transformMode: 'web',
+          projectName: this.config.name,
+        })
+      }
     }
 
     onCollected(files: File[]): unknown {
@@ -60,11 +69,12 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
         hash = Date.now().toString()
         this.hashMap.set(filepath, [false, hash])
       }
+      const base = this.config.base || '/'
 
       // on Windows we need the unit to resolve the test file
-      const importpath = /^\w:/.test(filepath)
-        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
-        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+      const prefix = `${base}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)
     }
   }

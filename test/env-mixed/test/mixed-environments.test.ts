@@ -3,10 +3,11 @@ import { type UserConfig, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const configs: UserConfig[] = [
-  { isolate: false, singleThread: true },
-  { isolate: false, singleThread: false },
-  { isolate: false, threads: true, minThreads: 1, maxThreads: 1 },
-  { isolate: false, threads: false },
+  { pool: 'threads', poolOptions: { threads: { isolate: false, singleThread: true } } },
+  { pool: 'threads', poolOptions: { threads: { isolate: false, singleThread: false } } },
+  { pool: 'threads', poolOptions: { threads: { isolate: false, minThreads: 1, maxThreads: 1 } } },
+  { pool: 'forks', poolOptions: { forks: { isolate: true } } },
+  { pool: 'forks', poolOptions: { forks: { isolate: false } } },
 ]
 
 test.each(configs)('should isolate environments when %s', async (config) => {

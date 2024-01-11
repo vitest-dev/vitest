@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { UserConsoleLog } from '#types'
+import type { UserConsoleLog } from 'vitest'
 
 defineProps<{
   taskName: string
   type: UserConsoleLog['type']
   time: UserConsoleLog['time']
   content: UserConsoleLog['content']
-  html: boolean
 }>()
 
 function formatTime(t: number) {
@@ -22,7 +21,6 @@ function formatTime(t: number) {
     >
       {{ formatTime(time) }} | {{ taskName }} | {{ type }}
     </div>
-    <pre v-if="html" data-type="html" v-html="content" />
-    <pre v-else data-type="text" v-text="content" />
+    <pre data-type="html" v-html="content" />
   </div>
 </template>

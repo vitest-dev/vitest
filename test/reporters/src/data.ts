@@ -10,6 +10,7 @@ const file: File = {
   filepath: '/vitest/test/core/test/basic.test.ts',
   result: { state: 'fail', duration: 145.99284195899963 },
   tasks: [],
+  projectName: '',
 }
 
 const suite: Suite = {
@@ -21,6 +22,7 @@ const suite: Suite = {
   file,
   result: { state: 'pass', duration: 1.90183687210083 },
   tasks: [],
+  projectName: '',
 }
 
 const innerSuite: Suite = {
@@ -33,6 +35,7 @@ const innerSuite: Suite = {
   suite,
   result: { state: 'pass', duration: 1.90183687210083 },
   tasks: [],
+  projectName: '',
 }
 
 const error: ErrorWithDiff = new AssertionError({
@@ -66,7 +69,6 @@ const innerTasks: Task[] = [
     file,
     result: {
       state: 'fail',
-      error,
       errors: [error],
       duration: 1.4422860145568848,
     },

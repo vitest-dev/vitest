@@ -1,8 +1,10 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
-import type { SnapshotEnvironment } from '../types'
+import type { SnapshotEnvironment, SnapshotEnvironmentOptions } from '../types'
 
 export class NodeSnapshotEnvironment implements SnapshotEnvironment {
+  constructor(private options: SnapshotEnvironmentOptions = {}) {}
+
   getVersion(): string {
     return '1'
   }
@@ -20,7 +22,9 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   async resolvePath(filepath: string): Promise<string> {
     return join(
       join(
-        dirname(filepath), '__snapshots__'),
+        dirname(filepath),
+        this.options.snapshotsDirName ?? '__snapshots__',
+      ),
       `${basename(filepath)}.snap`,
     )
   }

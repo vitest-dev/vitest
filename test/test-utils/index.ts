@@ -12,6 +12,7 @@ import { dirname, resolve } from 'pathe'
 export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test') {
   // Reset possible previous runs
   process.exitCode = 0
+  let exitCode = process.exitCode
 
   // Prevent possible process.exit() calls, e.g. from --browser
   const exit = process.exit
@@ -31,17 +32,17 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
     return {
       stderr: `${getLogs().stderr}\n${e.message}`,
       stdout: getLogs().stdout,
-      exitCode: process.exitCode,
+      exitCode,
       vitest,
     }
   }
   finally {
+    exitCode = process.exitCode
+    process.exitCode = 0
+    process.exit = exit
+
     restore()
   }
-
-  const exitCode = process.exitCode
-  process.exitCode = 0
-  process.exit = exit
 
   return { ...getLogs(), exitCode, vitest }
 }

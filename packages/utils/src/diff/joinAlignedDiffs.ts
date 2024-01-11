@@ -9,17 +9,11 @@ import type { Diff } from './cleanupSemantic'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import type { DiffOptionsColor, DiffOptionsNormalized } from './types'
 
-function formatTrailingSpaces(line: string,
-  trailingSpaceFormatter: DiffOptionsColor): string {
+function formatTrailingSpaces(line: string, trailingSpaceFormatter: DiffOptionsColor): string {
   return line.replace(/\s+$/, match => trailingSpaceFormatter(match))
 }
 
-function printDiffLine(line: string,
-  isFirstOrLast: boolean,
-  color: DiffOptionsColor,
-  indicator: string,
-  trailingSpaceFormatter: DiffOptionsColor,
-  emptyFirstOrLastLinePlaceholder: string): string {
+function printDiffLine(line: string, isFirstOrLast: boolean, color: DiffOptionsColor, indicator: string, trailingSpaceFormatter: DiffOptionsColor, emptyFirstOrLastLinePlaceholder: string): string {
   return line.length !== 0
     ? color(
         `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
@@ -31,14 +25,12 @@ function printDiffLine(line: string,
           : ''
 }
 
-function printDeleteLine(line: string,
-  isFirstOrLast: boolean,
-  {
-    aColor,
-    aIndicator,
-    changeLineTrailingSpaceColor,
-    emptyFirstOrLastLinePlaceholder,
-  }: DiffOptionsNormalized): string {
+function printDeleteLine(line: string, isFirstOrLast: boolean, {
+  aColor,
+  aIndicator,
+  changeLineTrailingSpaceColor,
+  emptyFirstOrLastLinePlaceholder,
+}: DiffOptionsNormalized): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -49,14 +41,12 @@ function printDeleteLine(line: string,
   )
 }
 
-function printInsertLine(line: string,
-  isFirstOrLast: boolean,
-  {
-    bColor,
-    bIndicator,
-    changeLineTrailingSpaceColor,
-    emptyFirstOrLastLinePlaceholder,
-  }: DiffOptionsNormalized): string {
+function printInsertLine(line: string, isFirstOrLast: boolean, {
+  bColor,
+  bIndicator,
+  changeLineTrailingSpaceColor,
+  emptyFirstOrLastLinePlaceholder,
+}: DiffOptionsNormalized): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -67,14 +57,12 @@ function printInsertLine(line: string,
   )
 }
 
-function printCommonLine(line: string,
-  isFirstOrLast: boolean,
-  {
-    commonColor,
-    commonIndicator,
-    commonLineTrailingSpaceColor,
-    emptyFirstOrLastLinePlaceholder,
-  }: DiffOptionsNormalized): string {
+function printCommonLine(line: string, isFirstOrLast: boolean, {
+  commonColor,
+  commonIndicator,
+  commonLineTrailingSpaceColor,
+  emptyFirstOrLastLinePlaceholder,
+}: DiffOptionsNormalized): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -86,11 +74,7 @@ function printCommonLine(line: string,
 }
 
 // In GNU diff format, indexes are one-based instead of zero-based.
-function createPatchMark(aStart: number,
-  aEnd: number,
-  bStart: number,
-  bEnd: number,
-  { patchColor }: DiffOptionsNormalized): string {
+function createPatchMark(aStart: number, aEnd: number, bStart: number, bEnd: number, { patchColor }: DiffOptionsNormalized): string {
   return patchColor(
     `@@ -${aStart + 1},${aEnd - aStart} +${bStart + 1},${bEnd - bStart} @@`,
   )
@@ -100,8 +84,7 @@ function createPatchMark(aStart: number,
 //
 // Given array of aligned strings with inverse highlight formatting,
 // return joined lines with diff formatting (and patch marks, if needed).
-export function joinAlignedDiffsNoExpand(diffs: Array<Diff>,
-  options: DiffOptionsNormalized): string {
+export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
   const iLength = diffs.length
   const nContextLines = options.contextLines
   const nContextLines2 = nContextLines + nContextLines
@@ -270,8 +253,7 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>,
 //
 // Given array of aligned strings with inverse highlight formatting,
 // return joined lines with diff formatting.
-export function joinAlignedDiffsExpand(diffs: Array<Diff>,
-  options: DiffOptionsNormalized): string {
+export function joinAlignedDiffsExpand(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
   return diffs
     .map((diff: Diff, i: number, diffs: Array<Diff>): string => {
       const line = diff[1]

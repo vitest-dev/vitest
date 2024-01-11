@@ -1,5 +1,26 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`stacktrace filtering > filters stacktraces > stacktrace-filtering 1`] = `
+"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  error-with-stack.test.js > error in deps
+Error: Something truly horrible has happened!
+ ❯ d error-with-stack.test.js:20:9
+     18| 
+     19| function d() {
+     20|   throw new Error('Something truly horrible has happened!')
+       |         ^
+     21| }
+     22| 
+ ❯ c error-with-stack.test.js:16:3
+ ❯ a error-with-stack.test.js:8:3
+ ❯ error-with-stack.test.js:4:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+"
+`;
+
 exports[`stacktrace should print error frame source file correctly > error-in-deps > error-in-deps 1`] = `
 "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
@@ -22,7 +43,7 @@ ReferenceError: bar is not defined
 exports[`stacktraces should pick error frame if present > frame.spec.imba > frame.spec.imba 1`] = `
 " FAIL  frame.spec.imba [ frame.spec.imba ]
 imba-parser error: Unexpected 'CALL_END'
-4 | test(\\"1+1\\") do
+4 | test("1+1") do
 5 |  expect(1+1).toBe 2
 6 |  frame.
   |        ^
@@ -43,7 +64,7 @@ exports[`stacktraces should respect sourcemaps > add.test.ts > add.test.ts 1`] =
 
 exports[`stacktraces should respect sourcemaps > add-in-imba.test.imba > add-in-imba.test.imba 1`] = `
 " ❯ add-in-imba.test.imba:8:17
-      6| it \\"add\\", do
+      6| it "add", do
       7|  expect(add()).toBe 0
       8|  expect(add(1)).toBe 3
        |                 ^
@@ -69,6 +90,17 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-i
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
 "
+`;
+
+exports[`stacktraces should respect sourcemaps > error-with-stack.test.js > error-with-stack.test.js 1`] = `
+" ❯ d error-with-stack.test.js:20:9
+     18| 
+     19| function d() {
+     20|   throw new Error('Something truly horrible has happened!')
+       |         ^
+     21| }
+     22| 
+ ❯ c error-with-stack.test.js:16:3"
 `;
 
 exports[`stacktraces should respect sourcemaps > mocked-global.test.js > mocked-global.test.js 1`] = `

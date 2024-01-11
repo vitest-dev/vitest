@@ -1,13 +1,15 @@
 {
   "name": "@vitest/test-ui",
+  "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test-e2e": "playwright test",
+    "test-fixtures": "vitest"
   },
   "devDependencies": {
-    "execa": "^6.1.0",
-    "fs-extra": "^10.1.0",
-    "playwright-chromium": "^1.27.0",
+    "@playwright/test": "^1.39.0",
+    "@testing-library/dom": "^9.3.3",
+    "happy-dom": "latest",
     "vitest": "workspace:*"
   }
 }

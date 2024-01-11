@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
@@ -16,10 +15,15 @@ export default <Environment>({
   name: 'happy-dom',
   transformMode: 'web',
   async setupVM({ happyDOM = {} }) {
-    const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
+    const { Window } = await import('happy-dom')
     const win = new Window({
       ...happyDOM,
+      console: (console && globalThis.console) ? globalThis.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
+      settings: {
+        ...happyDOM.settings,
+        disableErrorCapturing: true,
+      },
     }) as any
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
@@ -41,14 +45,22 @@ export default <Environment>({
   async setup(global, { happyDOM = {} }) {
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour
-    const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
+    const { Window, GlobalWindow } = await import('happy-dom')
     const win = new (GlobalWindow || Window)({
       ...happyDOM,
       console: (console && global.console) ? global.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
+      settings: {
+        ...happyDOM.settings,
+        disableErrorCapturing: true,
+      },
     })
 
-    const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })
+    const { keys, originals } = populateGlobal(global, win, {
+      bindFunctions: true,
+      // jsdom doesn't support Request and Response, but happy-dom does
+      additionalKeys: ['Request', 'Response'],
+    })
 
     return {
       async teardown(global) {

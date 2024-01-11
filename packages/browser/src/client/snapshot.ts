@@ -1,5 +1,5 @@
+import type { SnapshotEnvironment } from 'vitest'
 import { rpc } from './rpc'
-import type { SnapshotEnvironment } from '#types'
 
 export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   getVersion(): string {

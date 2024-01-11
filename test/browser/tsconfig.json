@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "module": "node16",
-    "esModuleInterop": true,
     "rootDir": ".",
+    "module": "node16",
     "paths": {
       "#src/*": ["./src/*"]
-    }
+    },
+    "esModuleInterop": true
   }
 }

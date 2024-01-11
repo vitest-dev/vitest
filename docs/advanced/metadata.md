@@ -1,7 +1,7 @@
 # Task Metadata
 
 ::: warning
-Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
+Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 If you are developing a custom reporter or using Vitest Node.js API, you might find it useful to pass data from tests that are being executed in various contexts to your reporter or custom Vitest handler.
@@ -46,7 +46,7 @@ Vitest uses different methods to communicate with the Node.js process.
 
 - If Vitest runs tests inside worker threads, it will send data via [message port](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort)
 - If Vitest uses child process, the data will be send as a serialized Buffer via [`process.send`](https://nodejs.org/api/process.html#processsendmessage-sendhandle-options-callback) API
-- If Vitest run tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
+- If Vitest runs tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
 
 The general rule of thumb is that you can send almost anything, except for functions, Promises, regexp (`v8.stringify` cannot serialize it, but you can send a string version and parse it in the Node.js process yourself), and other non-serializable data, but you can have cyclic references inside.
 

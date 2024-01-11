@@ -6,23 +6,18 @@ import type { VitestClient } from '@vitest/ws-client'
 const { get } = Reflect
 
 function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getTimers()
+  const { setTimeout, clearTimeout, setImmediate, clearImmediate } = getTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
 
-  const currentNextTick = globalThis.process?.nextTick
-
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
-
-    if (globalThis.process)
-      globalThis.process.nextTick = nextTick
 
     const result = fn()
     return result
@@ -32,12 +27,6 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
     globalThis.clearTimeout = currentClearTimeout
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
-
-    if (globalThis.process) {
-      nextTick(() => {
-        globalThis.process.nextTick = currentNextTick
-      })
-    }
   }
 }
 

@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-public-api",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest"

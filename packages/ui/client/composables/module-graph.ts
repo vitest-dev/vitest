@@ -1,6 +1,6 @@
 import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
 import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
-import type { ModuleGraphData } from 'vitest/src/types'
+import type { ModuleGraphData } from 'vitest'
 
 export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>
@@ -41,8 +41,8 @@ export function calcExternalLabels(labels: ModuleLabelItem[]): Map<string, strin
         label.candidate += label.candidate === '' ? head : `/${head}`
         splitMap.get(head)?.push(i)
         splits.shift()
-      // eslint-disable-next-line @typescript-eslint/brace-style
-      } else {
+      }
+      else {
         splitMap.set(head, [i])
         // record the index of the label where the head first appears
         firsts.push(i)

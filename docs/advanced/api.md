@@ -1,7 +1,7 @@
 # Node API
 
 ::: warning
-Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
+Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 ## startVitest
@@ -18,7 +18,7 @@ await vitest?.close()
 
 `startVitest` function returns `Vitest` instance if tests can be started. It returns `undefined`, if one of the following occurs:
 
-- Vitest didn't find "vite" package (usually installed with Vitest)
+- Vitest didn't find the `vite` package (usually installed with Vitest)
 - If coverage is enabled and run mode is "test", but the coverage package is not installed (`@vitest/coverage-v8` or `@vitest/coverage-istanbul`)
 - If the environment package is not installed (`jsdom`/`happy-dom`/`@edge-runtime/vm`)
 
@@ -52,7 +52,6 @@ Vitest instance requires the current test mode. It can be either:
 
 - `test` when running runtime tests
 - `benchmark` when running benchmarks
-- `typecheck` when running type tests
 
 ### mode
 
@@ -63,10 +62,6 @@ Test mode will only call functions inside `test` or `it`, and throws an error wh
 #### benchmark
 
 Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
-
-#### typecheck
-
-Typecheck mode doesn't _run_ tests. It only analyses types and gives a summary. This mode uses `typecheck.include` and `typecheck.exclude` options in the config to find files to analyze.
 
 ### start
 

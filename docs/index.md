@@ -3,12 +3,12 @@ layout: home
 sidebar: false
 
 title: Vitest
-titleTemplate: A blazing fast unit test framework powered by Vite
+titleTemplate: Next Generation testing framework
 
 hero:
   name: Vitest
-  text: Blazing Fast Unit Test Framework
-  tagline: A Vite-native unit test framework. It's fast!
+  text: Next Generation Testing Framework
+  tagline: A Vite-native testing framework. It's fast!
   image:
     src: /logo-shadow.svg
     alt: Vitest
@@ -28,11 +28,15 @@ hero:
 
 features:
   - title: Vite Powered
-    details: Reuse Vite's config, transformers, resolvers, and plugins - consistent across your app and tests.
+    icon: <span class="i-logos:vitejs"></span>
+    details: Reuse Vite's config and plugins - consistent across your app and tests. But it's not required to use Vitest!
   - title: Jest Compatible
+    icon: <span class="i-logos:jest"></span>
     details: Expect, snapshot, coverage, and more - migrating from Jest is straightforward.
   - title: Smart & instant watch mode
+    icon: ⚡
     details: Only rerun the related changes, just like HMR for tests!
   - title: ESM, TypeScript, JSX
-    details: Out-of-box ESM, TypeScript and JSX support powered by esbuild
+    icon: <span class="i-logos:typescript-icon"></span>
+    details: Out-of-box ESM, TypeScript and JSX support powered by esbuild.
 ---

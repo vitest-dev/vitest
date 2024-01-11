@@ -41,8 +41,8 @@ export default defineConfig({
     },
   }],
   test: {
-    threads: false,
     isolate: false,
+    pool: 'forks',
     include: ['**/*.{test,spec}.{imba,?(c|m)[jt]s?(x)}'],
     setupFiles: ['./setup.js'],
   },

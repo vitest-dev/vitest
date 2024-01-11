@@ -3,6 +3,7 @@ import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig }
 import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 import { VitestCache } from '../cache'
+import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
   const testOptions = _testOptions || {}
@@ -30,6 +31,7 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       'vitest',
       // Ideally, we shouldn't optimize react in test mode, otherwise we need to optimize _every_ dependency that uses react.
       'react',
+      'vue',
       ...(testOptions.exclude || viteOptions?.exclude || []),
     ]
     const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime'))
@@ -101,6 +103,6 @@ export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
 
 export function resolveFsAllow(projectRoot: string, rootConfigFile: string | false | undefined) {
   if (!rootConfigFile)
-    return [searchForWorkspaceRoot(projectRoot)]
-  return [dirname(rootConfigFile), searchForWorkspaceRoot(projectRoot)]
+    return [searchForWorkspaceRoot(projectRoot), rootDir]
+  return [dirname(rootConfigFile), searchForWorkspaceRoot(projectRoot), rootDir]
 }

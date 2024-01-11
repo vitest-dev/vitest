@@ -2,20 +2,27 @@ import { performance } from 'node:perf_hooks'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { parseRegexp } from '@vitest/utils'
+import { workerId as poolId } from 'tinypool'
+import type { TinypoolWorkerMessage } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from '../types'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
-import { loadEnvironment } from '../integrations/env'
+import { loadEnvironment } from '../integrations/env/loader'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { createSafeRpc, rpcDone } from './rpc'
 import { setupInspect } from './inspector'
 
-async function init(ctx: ChildContext) {
-  const { config } = ctx
+try {
+  process.title = `node (vitest ${poolId})`
+}
+catch {}
 
-  process.env.VITEST_WORKER_ID = '1'
-  process.env.VITEST_POOL_ID = '1'
+async function init(ctx: ChildContext) {
+  const { config, workerId, providedContext } = ctx
+
+  process.env.VITEST_WORKER_ID = String(workerId)
+  process.env.VITEST_POOL_ID = String(poolId)
 
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
@@ -27,21 +34,28 @@ async function init(ctx: ChildContext) {
       onCancel: setCancel,
     },
     {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
         process.send?.(v)
       },
-      on(fn) { process.on('message', fn) },
+      on(fn) {
+        process.on('message', (message: any, ...extras: any) => {
+          // Do not react on Tinypool's internal messaging
+          if ((message as TinypoolWorkerMessage)?.__tinypool_worker_message__)
+            return
+
+          return fn(message, ...extras)
+        })
+      },
     },
   ))
 
   const environment = await loadEnvironment(ctx.environment.name, {
     root: ctx.config.root,
-    fetchModule(id) {
-      return rpc.fetch(id, 'ssr')
-    },
+    fetchModule: id => rpc.fetch(id, 'ssr'),
+    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
   if (ctx.environment.transformMode)
     environment.transformMode = ctx.environment.transformMode
@@ -58,10 +72,16 @@ async function init(ctx: ChildContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
+    isChildProcess: true,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {
@@ -88,6 +108,9 @@ function unwrapConfig(config: ResolvedConfig) {
 }
 
 export async function run(ctx: ChildContext) {
+  const exit = process.exit
+
+  ctx.config = unwrapConfig(ctx.config)
   const inspectorCleanup = setupInspect(ctx.config)
 
   try {
@@ -100,19 +123,6 @@ export async function run(ctx: ChildContext) {
   }
   finally {
     inspectorCleanup()
+    process.exit = exit
   }
 }
-
-const procesExit = process.exit
-
-process.on('message', async (message: any) => {
-  if (typeof message === 'object' && message.command === 'start') {
-    try {
-      message.config = unwrapConfig(message.config)
-      await run(message)
-    }
-    finally {
-      procesExit()
-    }
-  }
-})

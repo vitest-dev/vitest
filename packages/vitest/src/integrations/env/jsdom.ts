@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
@@ -35,7 +34,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -69,9 +68,27 @@ export default <Environment>({
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
 
-    // inject structuredClone if it exists
-    if (typeof structuredClone !== 'undefined' && !dom.window.structuredClone)
-      dom.window.structuredClone = structuredClone
+    // inject web globals if they missing in JSDOM but otherwise available in Nodejs
+    // https://nodejs.org/dist/latest/docs/api/globals.html
+    const globalNames = [
+      'structuredClone',
+      'fetch',
+      'Request',
+      'Response',
+      'BroadcastChannel',
+      'MessageChannel',
+      'MessagePort',
+      'TextEncoder',
+      'TextDecoder',
+    ] as const
+    for (const name of globalNames) {
+      const value = globalThis[name]
+      if (
+        typeof value !== 'undefined'
+        && typeof dom.window[name] === 'undefined'
+      )
+        dom.window[name] = value
+    }
 
     return {
       getVmContext() {
@@ -89,7 +106,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,

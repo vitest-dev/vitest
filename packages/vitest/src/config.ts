@@ -26,10 +26,12 @@ export function defineConfig(config: UserConfigExport): UserConfigExport {
   return config
 }
 
-export function defineProject(config: UserProjectConfigExport) {
+export function defineProject<T extends UserProjectConfigExport>(config: T): T {
   return config
 }
 
-export function defineWorkspace(config: (string | (UserProjectConfigExport & { extends?: string }))[]) {
+type Workspace = (string | (UserProjectConfigExport & { extends?: string }))
+
+export function defineWorkspace(config: Workspace[]): Workspace[] {
   return config
 }

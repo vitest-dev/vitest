@@ -1231,7 +1231,7 @@ exports[`v8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/dynamic-file-cjs.ignore.js": {
+  "<process-cwd>/src/dynamic-file-cjs.ignore.cjs": {
     "all": false,
     "b": {
       "0": [
@@ -1349,7 +1349,7 @@ exports[`v8 json report 1`] = `
         "name": "uncovered",
       },
     },
-    "path": "<process-cwd>/src/dynamic-file-cjs.ignore.js",
+    "path": "<process-cwd>/src/dynamic-file-cjs.ignore.cjs",
     "s": {
       "0": 1,
     },
@@ -1366,7 +1366,7 @@ exports[`v8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/dynamic-file-esm.ignore.mjs": {
+  "<process-cwd>/src/dynamic-file-esm.ignore.js": {
     "all": false,
     "b": {
       "0": [
@@ -1455,7 +1455,7 @@ exports[`v8 json report 1`] = `
         "name": "uncovered",
       },
     },
-    "path": "<process-cwd>/src/dynamic-file-esm.ignore.mjs",
+    "path": "<process-cwd>/src/dynamic-file-esm.ignore.js",
     "s": {
       "0": 1,
       "1": 1,
@@ -2003,7 +2003,7 @@ exports[`v8 json report 1`] = `
       },
       "27": {
         "end": {
-          "column": 90,
+          "column": 91,
           "line": 28,
         },
         "start": {
@@ -2223,7 +2223,7 @@ exports[`v8 json report 1`] = `
       },
       "5": {
         "end": {
-          "column": 91,
+          "column": 90,
           "line": 6,
         },
         "start": {
@@ -3301,6 +3301,707 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 7,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/multi-environment.ts": {
+    "all": false,
+    "b": {
+      "0": [
+        4,
+      ],
+      "1": [
+        0,
+      ],
+      "10": [
+        1,
+      ],
+      "2": [
+        0,
+      ],
+      "3": [
+        1,
+      ],
+      "4": [
+        1,
+      ],
+      "5": [
+        0,
+      ],
+      "6": [
+        0,
+      ],
+      "7": [
+        1,
+      ],
+      "8": [
+        2,
+      ],
+      "9": [
+        3,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "line": 6,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 31,
+          },
+          "start": {
+            "column": 7,
+            "line": 6,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 31,
+            },
+            "start": {
+              "column": 7,
+              "line": 6,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "1": {
+        "line": 11,
+        "loc": {
+          "end": {
+            "column": 26,
+            "line": 11,
+          },
+          "start": {
+            "column": 12,
+            "line": 11,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 26,
+              "line": 11,
+            },
+            "start": {
+              "column": 12,
+              "line": 11,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "10": {
+        "line": 24,
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 27,
+          },
+          "start": {
+            "column": 33,
+            "line": 24,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 27,
+            },
+            "start": {
+              "column": 33,
+              "line": 24,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "2": {
+        "line": 11,
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 14,
+          },
+          "start": {
+            "column": 26,
+            "line": 11,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 14,
+            },
+            "start": {
+              "column": 26,
+              "line": 11,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "3": {
+        "line": 16,
+        "loc": {
+          "end": {
+            "column": 31,
+            "line": 16,
+          },
+          "start": {
+            "column": 17,
+            "line": 16,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 31,
+              "line": 16,
+            },
+            "start": {
+              "column": 17,
+              "line": 16,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "4": {
+        "line": 16,
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 19,
+          },
+          "start": {
+            "column": 31,
+            "line": 16,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 19,
+            },
+            "start": {
+              "column": 31,
+              "line": 16,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "5": {
+        "line": 20,
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 20,
+          },
+          "start": {
+            "column": 17,
+            "line": 20,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 33,
+              "line": 20,
+            },
+            "start": {
+              "column": 17,
+              "line": 20,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "6": {
+        "line": 20,
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 23,
+          },
+          "start": {
+            "column": 33,
+            "line": 20,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 23,
+            },
+            "start": {
+              "column": 33,
+              "line": 20,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "7": {
+        "line": 24,
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 24,
+          },
+          "start": {
+            "column": 17,
+            "line": 24,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 33,
+              "line": 24,
+            },
+            "start": {
+              "column": 17,
+              "line": 24,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "8": {
+        "line": 24,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 31,
+          },
+          "start": {
+            "column": 33,
+            "line": 24,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 31,
+            },
+            "start": {
+              "column": 33,
+              "line": 24,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+      "9": {
+        "line": 16,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 31,
+          },
+          "start": {
+            "column": 31,
+            "line": 16,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 31,
+            },
+            "start": {
+              "column": 31,
+              "line": 16,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+    },
+    "f": {
+      "0": 4,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 31,
+          },
+          "start": {
+            "column": 7,
+            "line": 6,
+          },
+        },
+        "line": 6,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 31,
+          },
+          "start": {
+            "column": 7,
+            "line": 6,
+          },
+        },
+        "name": "sum",
+      },
+    },
+    "path": "<process-cwd>/src/multi-environment.ts",
+    "s": {
+      "0": 2,
+      "1": 2,
+      "10": 4,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 4,
+      "15": 4,
+      "16": 1,
+      "17": 1,
+      "18": 1,
+      "19": 3,
+      "2": 2,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 3,
+      "24": 1,
+      "25": 1,
+      "26": 1,
+      "27": 2,
+      "28": 2,
+      "29": 2,
+      "3": 2,
+      "30": 2,
+      "4": 2,
+      "5": 2,
+      "6": 4,
+      "7": 4,
+      "8": 4,
+      "9": 4,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 3,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 55,
+          "line": 2,
+        },
+        "start": {
+          "column": 0,
+          "line": 2,
+        },
+      },
+      "10": {
+        "end": {
+          "column": 27,
+          "line": 11,
+        },
+        "start": {
+          "column": 0,
+          "line": 11,
+        },
+      },
+      "11": {
+        "end": {
+          "column": 38,
+          "line": 12,
+        },
+        "start": {
+          "column": 0,
+          "line": 12,
+        },
+      },
+      "12": {
+        "end": {
+          "column": 13,
+          "line": 13,
+        },
+        "start": {
+          "column": 0,
+          "line": 13,
+        },
+      },
+      "13": {
+        "end": {
+          "column": 3,
+          "line": 14,
+        },
+        "start": {
+          "column": 0,
+          "line": 14,
+        },
+      },
+      "14": {
+        "end": {
+          "column": 12,
+          "line": 15,
+        },
+        "start": {
+          "column": 0,
+          "line": 15,
+        },
+      },
+      "15": {
+        "end": {
+          "column": 32,
+          "line": 16,
+        },
+        "start": {
+          "column": 0,
+          "line": 16,
+        },
+      },
+      "16": {
+        "end": {
+          "column": 34,
+          "line": 17,
+        },
+        "start": {
+          "column": 0,
+          "line": 17,
+        },
+      },
+      "17": {
+        "end": {
+          "column": 12,
+          "line": 18,
+        },
+        "start": {
+          "column": 0,
+          "line": 18,
+        },
+      },
+      "18": {
+        "end": {
+          "column": 3,
+          "line": 19,
+        },
+        "start": {
+          "column": 0,
+          "line": 19,
+        },
+      },
+      "19": {
+        "end": {
+          "column": 34,
+          "line": 20,
+        },
+        "start": {
+          "column": 0,
+          "line": 20,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 3,
+          "line": 3,
+        },
+        "start": {
+          "column": 0,
+          "line": 3,
+        },
+      },
+      "20": {
+        "end": {
+          "column": 38,
+          "line": 21,
+        },
+        "start": {
+          "column": 0,
+          "line": 21,
+        },
+      },
+      "21": {
+        "end": {
+          "column": 13,
+          "line": 22,
+        },
+        "start": {
+          "column": 0,
+          "line": 22,
+        },
+      },
+      "22": {
+        "end": {
+          "column": 3,
+          "line": 23,
+        },
+        "start": {
+          "column": 0,
+          "line": 23,
+        },
+      },
+      "23": {
+        "end": {
+          "column": 34,
+          "line": 24,
+        },
+        "start": {
+          "column": 0,
+          "line": 24,
+        },
+      },
+      "24": {
+        "end": {
+          "column": 34,
+          "line": 25,
+        },
+        "start": {
+          "column": 0,
+          "line": 25,
+        },
+      },
+      "25": {
+        "end": {
+          "column": 13,
+          "line": 26,
+        },
+        "start": {
+          "column": 0,
+          "line": 26,
+        },
+      },
+      "26": {
+        "end": {
+          "column": 3,
+          "line": 27,
+        },
+        "start": {
+          "column": 0,
+          "line": 27,
+        },
+      },
+      "27": {
+        "end": {
+          "column": 0,
+          "line": 28,
+        },
+        "start": {
+          "column": 0,
+          "line": 28,
+        },
+      },
+      "28": {
+        "end": {
+          "column": 61,
+          "line": 29,
+        },
+        "start": {
+          "column": 0,
+          "line": 29,
+        },
+      },
+      "29": {
+        "end": {
+          "column": 14,
+          "line": 30,
+        },
+        "start": {
+          "column": 0,
+          "line": 30,
+        },
+      },
+      "3": {
+        "end": {
+          "column": 40,
+          "line": 4,
+        },
+        "start": {
+          "column": 0,
+          "line": 4,
+        },
+      },
+      "30": {
+        "end": {
+          "column": 1,
+          "line": 31,
+        },
+        "start": {
+          "column": 0,
+          "line": 31,
+        },
+      },
+      "4": {
+        "end": {
+          "column": 0,
+          "line": 5,
+        },
+        "start": {
+          "column": 0,
+          "line": 5,
+        },
+      },
+      "5": {
+        "end": {
+          "column": 43,
+          "line": 6,
+        },
+        "start": {
+          "column": 0,
+          "line": 6,
+        },
+      },
+      "6": {
+        "end": {
+          "column": 4,
+          "line": 7,
+        },
+        "start": {
+          "column": 0,
+          "line": 7,
+        },
+      },
+      "7": {
+        "end": {
+          "column": 64,
+          "line": 8,
+        },
+        "start": {
+          "column": 0,
+          "line": 8,
+        },
+      },
+      "8": {
+        "end": {
+          "column": 35,
+          "line": 9,
+        },
+        "start": {
+          "column": 0,
+          "line": 9,
+        },
+      },
+      "9": {
+        "end": {
+          "column": 5,
+          "line": 10,
+        },
+        "start": {
+          "column": 0,
+          "line": 10,
         },
       },
     },

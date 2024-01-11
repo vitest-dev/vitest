@@ -21,11 +21,12 @@ function getAvatarUrl(name: string) {
   return import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 }
 
-export const contributors = (contributorNames as string[]).reduce((acc, name) => {
+export const contributors = (contributorNames).reduce<Contributor[]>((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
-}, [] as Contributor[])
+}, [])
+
 function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
   if (tm.mastodon)
@@ -38,12 +39,22 @@ function createLinks(tm: CoreTeam): CoreTeam {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
 
   if (tm.twitter)
-    tm.links.push({ icon: 'twitter', link: `https://twitter.com/${tm.twitter}` })
+    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
 
   return tm
 }
 
 const plainTeamMembers: CoreTeam[] = [
+  {
+    avatar: contributorsAvatars['sheremet-va'],
+    name: 'Vladimir',
+    github: 'sheremet-va',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
+    twitter: 'sheremet_va',
+    sponsor: 'https://github.com/sponsors/sheremet-va',
+    title: 'An open source fullstack developer',
+    desc: 'Core team member of Vitest & Vite',
+  },
   {
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
@@ -59,21 +70,14 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Core team member of Vite & Vue',
   },
   {
-    avatar: contributorsAvatars['sheremet-va'],
-    name: 'Vladimir',
-    github: 'sheremet-va',
-    mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
-    twitter: 'sheremet_va',
-    sponsor: 'https://github.com/sponsors/sheremet-va',
-    title: 'An open source fullstack developer',
-    desc: 'Core team member of Vitest',
-  },
-  {
     avatar: contributorsAvatars.AriPerkkio,
     name: 'Ari Perkkiö',
     github: 'AriPerkkio',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
+    twitter: 'ari_perkkio',
+    sponsor: 'https://github.com/sponsors/AriPerkkio',
     title: 'A fullstack developer, working',
-    desc: 'Team member of Vitest',
+    desc: 'Core team member of Vitest',
     org: 'Cloudamite',
     orgLink: 'https://cloudamite.com/',
   },
@@ -97,6 +101,14 @@ const plainTeamMembers: CoreTeam[] = [
     twitter: 'userquin',
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
+  },
+  {
+    avatar: contributorsAvatars.Dunqing,
+    name: 'Dunqing',
+    github: 'Dunqing',
+    twitter: '@Dunqingg',
+    title: 'A passionate enthusiast of open source contributions',
+    desc: 'Team member of Vitest & UnoCSS',
   },
   {
     avatar: contributorsAvatars.Aslemammad,

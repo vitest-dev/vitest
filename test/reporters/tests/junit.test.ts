@@ -15,6 +15,7 @@ test('calc the duration used by junit', () => {
     mode: 'run',
     tasks: [],
     meta: {},
+    projectName: '',
   }
   const task: Task = {
     id: '1',
@@ -50,4 +51,11 @@ test('emits <failure> if a test has a syntax error', async () => {
 
   expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="TIMESTAMP" hostname="HOSTNAME" tests="1" failures="1" errors="0" skipped="0" time="0">')
   expect(xml).toContain('<failure')
+})
+
+test('emits <failure> when beforeAll/afterAll failed', async () => {
+  let { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/suite-hook-failure' })
+  // reduct non-deterministic output
+  stdout = stdout.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+  expect(stdout).toMatchSnapshot()
 })

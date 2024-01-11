@@ -4,17 +4,20 @@ import { workerId as poolId } from 'tinypool'
 import type { CancelReason } from '@vitest/runner'
 import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
 import { getWorkerState } from '../utils/global'
-import { loadEnvironment } from '../integrations/env'
+import { loadEnvironment } from '../integrations/env/loader'
 import { mockMap, moduleCache, startViteNode } from './execute'
 import { setupInspect } from './inspector'
 import { createSafeRpc, rpcDone } from './rpc'
 
 async function init(ctx: WorkerContext) {
   // @ts-expect-error untyped global
-  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
+  const isInitialized = typeof __vitest_worker__ !== 'undefined'
+  const isIsolatedThreads = ctx.config.pool === 'threads' && (ctx.config.poolOptions?.threads?.isolate ?? true)
+
+  if (isInitialized && isIsolatedThreads)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  const { config, port, workerId } = ctx
+  const { config, port, workerId, providedContext } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -29,7 +32,7 @@ async function init(ctx: WorkerContext) {
       onCancel: setCancel,
     },
     {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     },
@@ -37,9 +40,8 @@ async function init(ctx: WorkerContext) {
 
   const environment = await loadEnvironment(ctx.environment.name, {
     root: ctx.config.root,
-    fetchModule(id) {
-      return rpc.fetch(id, 'ssr')
-    },
+    fetchModule: id => rpc.fetch(id, 'ssr'),
+    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
   if (ctx.environment.transformMode)
     environment.transformMode = ctx.environment.transformMode
@@ -56,10 +58,15 @@ async function init(ctx: WorkerContext) {
       prepare: performance.now(),
     },
     rpc,
+    providedContext,
   }
 
-  // @ts-expect-error I know what I am doing :P
-  globalThis.__vitest_worker__ = state
+  Object.defineProperty(globalThis, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((fsPath) => {

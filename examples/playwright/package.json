@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-playwright",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "vite build",
@@ -7,9 +8,9 @@
     "test:ui": "vite build && vitest --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.28.0",
+    "@playwright/test": "^1.39.0",
     "@vitest/ui": "latest",
-    "playwright": "^1.28.0",
+    "playwright": "^1.39.0",
     "vite": "latest",
     "vitest": "latest"
   }

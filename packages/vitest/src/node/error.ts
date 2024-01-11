@@ -49,6 +49,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
     getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+    frameFilter: project.config.onStackTrace,
   }
 
   if (fullStack)
@@ -58,8 +59,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      project.getModuleById(stack.file)
-      && existsSync(stack.file),
+      project.server && project.getModuleById(stack.file) && existsSync(stack.file),
     )
 
   const errorProperties = getErrorProperties(e)
@@ -80,7 +80,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
     printStack(project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
+        logger.error(generateCodeFrame(sourceCode, 4, s))
       }
     })
   }
@@ -125,6 +125,7 @@ const skipErrorProperties = new Set([
   'diff',
   'actual',
   'expected',
+  'diffOptions',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',
@@ -187,7 +188,8 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
       }
     }
   }
-}\n`)))
+}\n`),
+  ))
 }
 
 function printModuleWarningForSourceCode(logger: Logger, path: string) {
@@ -246,11 +248,10 @@ function printStack(
 export function generateCodeFrame(
   source: string,
   indent = 0,
-  lineNumber: number,
-  columnNumber: number,
+  loc: { line: number; column: number } | number,
   range = 2,
 ): string {
-  const start = positionToOffset(source, lineNumber, columnNumber)
+  const start = typeof loc === 'object' ? positionToOffset(source, loc.line, loc.column) : loc
   const end = start
   const lines = source.split(lineSplitRE)
   const nl = /\r\n/.test(source) ? 2 : 1

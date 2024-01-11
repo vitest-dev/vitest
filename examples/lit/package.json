@@ -1,5 +1,6 @@
 {
   "name": "@vitest/example-lit",
+  "type": "module",
   "private": true,
   "files": [
     "dist",
@@ -12,13 +13,15 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "lit": "^2.2.5"
+    "lit": "^3.0.1"
   },
   "devDependencies": {
+    "@vitest/browser": "latest",
     "@vitest/ui": "latest",
     "jsdom": "latest",
     "vite": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "webdriverio": "^8.21.1"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"

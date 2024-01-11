@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "0.34.4",
+  "version": "1.1.3",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -18,19 +18,19 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
     "*.d.ts",
-    "*.mjs"
+    "*.mjs",
+    "dist"
   ],
   "engines": {
-    "node": ">=v14.18.0"
+    "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -39,9 +39,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "0.2.12",
-    "flatted": "^3.2.7",
-    "ws": "^8.13.0"
+    "birpc": "0.2.14",
+    "flatted": "^3.2.9",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*"

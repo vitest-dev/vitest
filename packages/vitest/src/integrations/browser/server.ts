@@ -39,7 +39,10 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           // browser never runs in middleware mode
           server.middlewareMode = false
 
-          config.server = server
+          config.server = {
+            ...config.server,
+            ...server,
+          }
           config.server.fs ??= {}
           config.server.fs.allow = config.server.fs.allow || []
           config.server.fs.allow.push(
@@ -53,6 +56,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             resolve: {
               alias: config.test?.alias,
             },
+            server: {
+              watch: null,
+            },
           }
         },
       },
@@ -61,7 +67,6 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   })
 
   await server.listen()
-  await server.watcher.close()
 
   ;(await import('../../api/setup')).setup(project, server)
 

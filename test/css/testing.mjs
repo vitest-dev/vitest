@@ -10,7 +10,7 @@ const configs = [
 
 async function runTests() {
   for (const [name, config] of configs) {
-    const names = Array.isArray(name) ? name : [name];
+    const names = Array.isArray(name) ? name : [name]
     await startVitest('test', names, {
       run: true,
       css: config,

@@ -8,13 +8,13 @@ import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 import { MocksPlugin } from './mocks'
 import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
+import { NormalizeURLPlugin } from './normalizeURL'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
@@ -51,6 +51,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         )
         testConfig.api = resolveApiServerConfig(testConfig)
 
+        testConfig.poolOptions ??= {}
+        testConfig.poolOptions.threads ??= {}
+        testConfig.poolOptions.forks ??= {}
+        // prefer --poolOptions.{name}.isolate CLI arguments over --isolate, but still respect config value
+        testConfig.poolOptions.threads.isolate = options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions.threads.isolate ?? viteConfig.test?.isolate
+        testConfig.poolOptions.forks.isolate = options.poolOptions?.forks?.isolate ?? options.isolate ?? testConfig.poolOptions.forks.isolate ?? viteConfig.test?.isolate
+
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
@@ -64,21 +71,20 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
-          esbuild: {
-            sourcemap: 'external',
+          esbuild: viteConfig.esbuild === false
+            ? false
+            : {
+                sourcemap: 'external',
 
-            // Enables using ignore hint for coverage providers with @preserve keyword
-            legalComments: 'inline',
-          },
+                // Enables using ignore hint for coverage providers with @preserve keyword
+                legalComments: 'inline',
+              },
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
             conditions: ['node'],
-            // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-            // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
-            browserField: false,
           },
           server: {
             ...testConfig.api,
@@ -91,6 +97,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
             },
+          },
+          test: {
+            poolOptions: testConfig.poolOptions,
           },
         }
 
@@ -145,13 +154,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           process.env[name] ??= envs[name]
 
         // don't watch files in run mode
-        if (!options.watch) {
-          viteConfig.server.watch = {
-            persistent: false,
-            depth: 0,
-            ignored: ['**/*'],
-          }
-        }
+        if (!options.watch)
+          viteConfig.server.watch = null
 
         hijackVitePluginInject(viteConfig)
       },
@@ -178,7 +182,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
     },
     SsrReplacerPlugin(),
-    GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     options.ui
@@ -187,6 +190,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     MocksPlugin(),
     VitestResolver(ctx),
     VitestOptimizer(),
+    NormalizeURLPlugin(),
   ]
     .filter(notNullish)
 }

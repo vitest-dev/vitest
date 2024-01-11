@@ -5,5 +5,6 @@ export default defineProject({
     include: ['**/*.space-3-test.ts'],
     name: 'space_3',
     environment: 'node',
+    globalSetup: './localSetup.ts',
   },
 })

@@ -1,14 +1,13 @@
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { DEFAULT_REQUEST_STUBS, ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
-import { isInternalRequest, isNodeBuiltin, isPrimitive } from 'vite-node/utils'
+import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative, resolve } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { MockMap } from '../types/mocker'
 import type { ResolvedConfig, ResolvedTestEnvironment, RuntimeRPC, WorkerGlobalState } from '../types'
 import { distDir } from '../paths'
-import { getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 import { ExternalModulesExecutor } from './external-executor'
 import { FileMap } from './vm/file-map'
@@ -42,6 +41,7 @@ export const packageCache = new Map<string, any>()
 export const moduleCache = new ModuleCacheMap()
 export const mockMap: MockMap = new Map()
 export const fileMap = new FileMap()
+const externalizeMap = new Map<string, string>()
 
 export async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode)
@@ -63,16 +63,15 @@ export interface ContextExecutorOptions {
   state: WorkerGlobalState
 }
 
+const bareVitestRegexp = /^@?vitest(\/|$)/
+
 export async function startVitestExecutor(options: ContextExecutorOptions) {
-  const state = () => getWorkerState() || options.state
+  // @ts-expect-error injected untyped global
+  const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
-  const processExit = process.exit
-
   process.exit = (code = process.exitCode || 0): never => {
-    const error = new Error(`process.exit called with "${code}"`)
-    rpc().onWorkerExit(error, code)
-    return processExit(code)
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
   }
 
   function catchError(err: unknown, type: string) {
@@ -87,6 +86,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     rpc().onUnhandledError(error, type)
   }
 
+  process.setMaxListeners(25)
+
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
@@ -95,7 +96,22 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   }
 
   return await createVitestExecutor({
-    fetchModule(id) {
+    async fetchModule(id) {
+      if (externalizeMap.has(id))
+        return { externalize: externalizeMap.get(id)! }
+      // always externalize Vitest because we import from there before running tests
+      // so we already have it cached by Node.js
+      if (id.includes(distDir)) {
+        const { path } = toFilePath(id, state().config.root)
+        const externalize = pathToFileURL(path).toString()
+        externalizeMap.set(id, externalize)
+        return { externalize }
+      }
+      if (bareVitestRegexp.test(id)) {
+        externalizeMap.set(id, id)
+        return { externalize: id }
+      }
+
       return rpc().fetch(id, getTransformMode())
     },
     resolveId(id, importer) {
@@ -200,8 +216,9 @@ export class VitestExecutor extends ViteNodeRunner {
     return this.primitives
   }
 
-  get state() {
-    return getWorkerState() || this.options.state
+  get state(): WorkerGlobalState {
+    // @ts-expect-error injected untyped global
+    return globalThis.__vitest_worker__ || this.options.state
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {

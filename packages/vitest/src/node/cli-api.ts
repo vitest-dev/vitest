@@ -28,18 +28,13 @@ export async function startVitest(
 ): Promise<Vitest | undefined> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= options.mode || 'test'
+  process.env.NODE_ENV ??= 'test'
 
   if (options.run)
     options.watch = false
 
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
-
-  if (!await ensurePackageInstalled('vite', root)) {
-    process.exitCode = 1
-    return
-  }
 
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
@@ -56,8 +51,14 @@ export async function startVitest(
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
-  if ('threads' in options && options.experimentalVmThreads)
-    throw new Error('Cannot use both "threads" (or "no-threads") and "experimentalVmThreads" at the same time.')
+  if (typeof options.typecheck === 'boolean')
+    options.typecheck = { enabled: true }
+
+  if (typeof options.typecheck?.only === 'boolean') {
+    options.typecheck ??= {}
+    options.typecheck.only = true
+    options.typecheck.enabled = true
+  }
 
   const ctx = await createVitest(mode, options, viteOverrides)
 
@@ -81,7 +82,7 @@ export async function startVitest(
   }
 
   let stdinCleanup
-  if (process.stdin.isTTY)
+  if (process.stdin.isTTY && ctx.config.watch)
     stdinCleanup = registerConsoleShortcuts(ctx)
 
   ctx.onServerRestart((reason) => {

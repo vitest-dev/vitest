@@ -1,4 +1,3 @@
-import { totalmem } from 'node:os'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
@@ -6,12 +5,13 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultBrowserPort, defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { isCI, toArray } from '../utils'
-import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
+import { isCI, stdProvider, toArray } from '../utils'
+import type { BuiltinPool } from '../types/pool-options'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
+import { builtinPools } from './pool'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -21,6 +21,13 @@ const extraInlineDeps = [
   // Nuxt
   '@nuxt/test-utils',
 ]
+
+function resolvePath(path: string, root: string) {
+  return normalize(
+    resolveModule(path, { paths: [root] })
+      ?? resolve(root, path),
+  )
+}
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
@@ -92,7 +99,6 @@ export function resolveConfig(
 
   resolved.inspect = Boolean(resolved.inspect)
   resolved.inspectBrk = Boolean(resolved.inspectBrk)
-  resolved.singleThread = Boolean(resolved.singleThread)
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -114,10 +120,27 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.maxWorkers)
+    resolved.maxWorkers = Number(resolved.maxWorkers)
+
+  if (resolved.minWorkers)
+    resolved.minWorkers = Number(resolved.minWorkers)
+
+  resolved.fileParallelism ??= true
+
+  if (!resolved.fileParallelism) {
+    // ignore user config, parallelism cannot be implemented without limiting workers
+    resolved.maxWorkers = 1
+    resolved.minWorkers = 1
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
-    if (resolved.threads !== false && resolved.singleThread !== true) {
+    const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
+    const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
+
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+      throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
@@ -175,11 +198,12 @@ export function resolveConfig(
       resolved.server.deps![option] = resolved.deps[option] as any
   })
 
+  if (resolved.cliExclude)
+    resolved.exclude.push(...resolved.cliExclude)
+
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr
     if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
       resolved.server.deps.inline = true
@@ -193,20 +217,8 @@ export function resolveConfig(
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
-  if (resolved.runner) {
-    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
-      ?? resolve(resolved.root, resolved.runner)
-  }
-
-  if (resolved.deps.registerNodeLoader) {
-    const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-    console.warn(
-      c.yellow(
-      `${c.inverse(c.yellow(' Vitest '))} "deps.registerNodeLoader" is deprecated.`
-      + `If you rely on aliases inside external packages, use "deps.optimizer.${transformMode}.include" instead.`,
-      ),
-    )
-  }
+  if (resolved.runner)
+    resolved.runner = resolvePath(resolved.runner, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -214,8 +226,12 @@ export function resolveConfig(
       : new RegExp(resolved.testNamePattern)
     : undefined
 
+  if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat)
+    (resolved.snapshotFormat as any).plugins = []
+
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
+    expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
@@ -227,30 +243,73 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
-  const memory = totalmem()
-  const limit = getWorkerMemoryLimit(resolved)
-
-  if (typeof memory === 'number') {
-    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(
-      limit,
-      resolved.watch ? memory / 2 : memory,
-    )
-  }
-  else if (limit > 1) {
-    resolved.experimentalVmWorkerMemoryLimit = stringToBytes(limit)
-  }
-  else {
-    // just ignore "experimentalVmWorkerMemoryLimit" value because we cannot detect memory limit
-  }
-
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
-  if (process.env.VITEST_MAX_THREADS)
-    resolved.maxThreads = Number.parseInt(process.env.VITEST_MAX_THREADS)
+  resolved.pool ??= 'threads'
 
-  if (process.env.VITEST_MIN_THREADS)
-    resolved.minThreads = Number.parseInt(process.env.VITEST_MIN_THREADS)
+  if (process.env.VITEST_MAX_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MIN_THREADS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      threads: {
+        ...resolved.poolOptions?.threads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+      vmThreads: {
+        ...resolved.poolOptions?.vmThreads,
+        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MAX_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
+    }
+  }
+
+  if (process.env.VITEST_MIN_FORKS) {
+    resolved.poolOptions = {
+      ...resolved.poolOptions,
+      forks: {
+        ...resolved.poolOptions?.forks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
+    }
+  }
+
+  if (resolved.workspace) {
+    // if passed down from the CLI and it's relative, resolve relative to CWD
+    resolved.workspace = options.workspace && options.workspace[0] === '.'
+      ? resolve(process.cwd(), options.workspace)
+      : resolvePath(resolved.workspace, resolved.root)
+  }
+
+  if (!builtinPools.includes(resolved.pool as BuiltinPool))
+    resolved.pool = resolvePath(resolved.pool, resolved.root)
+  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(([glob, pool]) => {
+    if (!builtinPools.includes(pool as BuiltinPool))
+      pool = resolvePath(pool, resolved.root)
+    return [glob, pool]
+  })
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -277,10 +336,10 @@ export function resolveConfig(
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    normalize(
-      resolveModule(file, { paths: [resolved.root] })
-        ?? resolve(resolved.root, file),
-    ),
+    resolvePath(file, resolved.root),
+  )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    resolvePath(file, resolved.root),
   )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
@@ -290,9 +349,7 @@ export function resolveConfig(
   ]
 
   if (resolved.diff) {
-    resolved.diff = normalize(
-      resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
+    resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 
@@ -349,15 +406,20 @@ export function resolveConfig(
 
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
 
-  if (mode === 'typecheck') {
-    resolved.include = resolved.typecheck.include
-    resolved.exclude = resolved.typecheck.exclude
-  }
+  resolved.typecheck ??= {} as any
+  resolved.typecheck.enabled ??= false
+
+  if (resolved.typecheck.enabled)
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.slowHijackESM ??= true
+  resolved.browser.slowHijackESM ??= false
+  resolved.browser.isolate ??= true
+
+  if (resolved.browser.enabled && stdProvider === 'stackblitz')
+    resolved.browser.provider = 'none'
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
@@ -368,9 +430,6 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser?.enabled)
-    return true
-
-  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+export function isBrowserEnabled(config: ResolvedConfig): boolean {
+  return Boolean(config.browser?.enabled)
 }

@@ -462,12 +462,23 @@ exports[`istanbul json report 1`] = `
     "s": {
       "0": 1,
       "1": 1,
-      "2": 3,
-      "3": 1,
-      "4": 2,
+      "2": 1,
+      "3": 3,
+      "4": 1,
+      "5": 2,
     },
     "statementMap": {
       "0": {
+        "end": {
+          "column": null,
+          "line": 4,
+        },
+        "start": {
+          "column": 14,
+          "line": 4,
+        },
+      },
+      "1": {
         "end": {
           "column": null,
           "line": 6,
@@ -477,7 +488,7 @@ exports[`istanbul json report 1`] = `
           "line": 6,
         },
       },
-      "1": {
+      "2": {
         "end": {
           "column": null,
           "line": 7,
@@ -487,7 +498,7 @@ exports[`istanbul json report 1`] = `
           "line": 7,
         },
       },
-      "2": {
+      "3": {
         "end": {
           "column": 55,
           "line": 7,
@@ -497,7 +508,7 @@ exports[`istanbul json report 1`] = `
           "line": 7,
         },
       },
-      "3": {
+      "4": {
         "end": {
           "column": null,
           "line": 9,
@@ -507,7 +518,7 @@ exports[`istanbul json report 1`] = `
           "line": 9,
         },
       },
-      "4": {
+      "5": {
         "end": {
           "column": 30,
           "line": 14,
@@ -1338,6 +1349,467 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 2,
           "line": 6,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/multi-environment.ts": {
+    "b": {
+      "0": [
+        0,
+        4,
+      ],
+      "1": [
+        4,
+        0,
+      ],
+      "2": [
+        1,
+        3,
+      ],
+      "3": [
+        4,
+        1,
+      ],
+      "4": [
+        0,
+        3,
+      ],
+      "5": [
+        3,
+        0,
+      ],
+      "6": [
+        1,
+        2,
+      ],
+      "7": [
+        3,
+        1,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 27,
+          },
+          "start": {
+            "column": 2,
+            "line": 11,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 11,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 14,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": 26,
+            "line": 11,
+          },
+          "start": {
+            "column": 6,
+            "line": 11,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 17,
+              "line": 11,
+            },
+            "start": {
+              "column": 6,
+              "line": 11,
+            },
+          },
+          {
+            "end": {
+              "column": 26,
+              "line": 11,
+            },
+            "start": {
+              "column": 17,
+              "line": 11,
+            },
+          },
+        ],
+        "type": "binary-expr",
+      },
+      "2": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 27,
+          },
+          "start": {
+            "column": 2,
+            "line": 14,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 14,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 19,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "3": {
+        "loc": {
+          "end": {
+            "column": 31,
+            "line": 16,
+          },
+          "start": {
+            "column": 11,
+            "line": 16,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 22,
+              "line": 16,
+            },
+            "start": {
+              "column": 11,
+              "line": 16,
+            },
+          },
+          {
+            "end": {
+              "column": 31,
+              "line": 16,
+            },
+            "start": {
+              "column": 22,
+              "line": 16,
+            },
+          },
+        ],
+        "type": "binary-expr",
+      },
+      "4": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 27,
+          },
+          "start": {
+            "column": 2,
+            "line": 19,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 19,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 23,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "5": {
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 20,
+          },
+          "start": {
+            "column": 11,
+            "line": 20,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 23,
+              "line": 20,
+            },
+            "start": {
+              "column": 11,
+              "line": 20,
+            },
+          },
+          {
+            "end": {
+              "column": 33,
+              "line": 20,
+            },
+            "start": {
+              "column": 23,
+              "line": 20,
+            },
+          },
+        ],
+        "type": "binary-expr",
+      },
+      "6": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 27,
+          },
+          "start": {
+            "column": 2,
+            "line": 23,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 23,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 27,
+            },
+            "start": {
+              "column": 2,
+              "line": 23,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "7": {
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 24,
+          },
+          "start": {
+            "column": 11,
+            "line": 24,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 23,
+              "line": 24,
+            },
+            "start": {
+              "column": 11,
+              "line": 24,
+            },
+          },
+          {
+            "end": {
+              "column": 33,
+              "line": 24,
+            },
+            "start": {
+              "column": 23,
+              "line": 24,
+            },
+          },
+        ],
+        "type": "binary-expr",
+      },
+    },
+    "f": {
+      "0": 4,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 20,
+            "line": 6,
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 31,
+          },
+          "start": {
+            "column": 42,
+            "line": 6,
+          },
+        },
+        "name": "sum",
+      },
+    },
+    "path": "<process-cwd>/src/multi-environment.ts",
+    "s": {
+      "0": 2,
+      "1": 4,
+      "2": 0,
+      "3": 4,
+      "4": 1,
+      "5": 3,
+      "6": 0,
+      "7": 3,
+      "8": 1,
+      "9": 2,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 4,
+        },
+        "start": {
+          "column": 23,
+          "line": 4,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 27,
+        },
+        "start": {
+          "column": 2,
+          "line": 11,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 13,
+        },
+        "start": {
+          "column": 4,
+          "line": 13,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 27,
+        },
+        "start": {
+          "column": 2,
+          "line": 14,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 18,
+        },
+        "start": {
+          "column": 4,
+          "line": 18,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 27,
+        },
+        "start": {
+          "column": 2,
+          "line": 19,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 22,
+        },
+        "start": {
+          "column": 4,
+          "line": 22,
+        },
+      },
+      "7": {
+        "end": {
+          "column": null,
+          "line": 27,
+        },
+        "start": {
+          "column": 2,
+          "line": 23,
+        },
+      },
+      "8": {
+        "end": {
+          "column": null,
+          "line": 26,
+        },
+        "start": {
+          "column": 4,
+          "line": 26,
+        },
+      },
+      "9": {
+        "end": {
+          "column": null,
+          "line": 30,
+        },
+        "start": {
+          "column": 2,
+          "line": 30,
         },
       },
     },

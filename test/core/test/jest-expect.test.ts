@@ -21,7 +21,7 @@ declare module 'vitest' {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeJestCompatible(): R
@@ -50,6 +50,18 @@ describe('jest-expect', () => {
 
     expect(new Date(0)).toEqual(new Date(0))
     expect(new Date('inValId')).toEqual(new Date('inValId'))
+
+    expect(new Error('message')).toEqual(new Error('message'))
+    expect(new Error('message')).not.toEqual(new Error('different message'))
+
+    expect(new URL('https://example.org')).toEqual(new URL('https://example.org'))
+    expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
+    expect(new URL('https://example.org?query=value')).toEqual(new URL('https://example.org?query=value'))
+    expect(new URL('https://example.org?query=one')).not.toEqual(new URL('https://example.org?query=two'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).toEqual(new URL('https://subdomain.example.org/path?query=value#fragment-identifier'))
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).not.toEqual(new URL('https://subdomain.example.org/path?query=value#different-fragment-identifier'))
+    expect(new URL('https://example.org/path')).toEqual(new URL('/path', 'https://example.org'))
+    expect(new URL('https://example.org/path')).not.toEqual(new URL('/path', 'https://example.com'))
 
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
@@ -143,6 +155,31 @@ describe('jest-expect', () => {
 
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.closeTo(0.3, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).not.toEqual({
+      sum: expect.closeTo(0.4, 5),
+    })
+
+    expect({
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      sum: expect.not.closeTo(0.4, 5),
+    })
+
+    expect(() => {
+      expect({
+        sum: 0.1 + 0.2,
+      }).toEqual({
+        sum: expect.closeTo(0.4),
+      })
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }]`)
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
@@ -277,7 +314,14 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
+
+    expect(() => {
+      const x = { a: { b: { c: 1 } } }
+      const y = { a: { b: { c: 2 } } }
+      Object.freeze(x.a)
+      expect(x).toEqual(y)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
   })
 
   it('assertions', () => {
@@ -374,14 +418,14 @@ describe('jest-expect', () => {
       expect(() => {
         expect(() => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
 
     it('async wasn\'t awaited', () => {
       expect(() => {
         expect(async () => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot('"expected function to throw an error, but it didn\'t"')
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
   })
 })
@@ -770,7 +814,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot('"promise resolved \\"{ foo: { bar: 42 } }\\" instead of rejecting"')
+      expect(err.message).toMatchInlineSnapshot(`"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
 
@@ -781,7 +825,9 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot('"promise rejected \\"Error: some error { foo: { bar: 42 } }\\" instead of resolving"')
+      expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+      expect(err.cause).toBeDefined()
+      expect(err.cause.message).toMatchInlineSnapshot(`"some error"`)
       expect(err.stack).toContain('jest-expect.test.ts')
     }
   })
@@ -849,12 +895,104 @@ it('correctly prints diff with asymmetric matchers', () => {
       + Received
 
         Object {
-          \\"a\\": Any<Number>,
-      -   \\"b\\": Any<Function>,
-      +   \\"b\\": \\"string\\",
+          "a": Any<Number>,
+      -   "b": Any<Function>,
+      +   "b": "string",
         }"
     `)
   }
+})
+
+it('toHaveProperty error diff', () => {
+  setupColors(getDefaultColors())
+
+  // make it easy for dev who trims trailing whitespace on IDE
+  function trim(s: string): string {
+    return s.replaceAll(/ *$/gm, '')
+  }
+
+  function getError(f: () => unknown) {
+    try {
+      f()
+      return expect.unreachable()
+    }
+    catch (error) {
+      const processed = processError(error)
+      return [processed.message, trim(processed.diff)]
+    }
+  }
+
+  // non match value
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { name: 'foo' } to have property "name" with value 'bar'",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
+    ]
+  `)
+
+  // non match key
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { noName: 'foo' } to have property "name" with value 'bar'",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
+    ]
+  `)
+
+  // non match value (with asymmetric matcher)
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+    [
+      "expected { name: 'foo' } to have property "name" with value Any{ …(3) }",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    "foo"",
+    ]
+  `)
+
+  // non match key (with asymmetric matcher)
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+    [
+      "expected { noName: 'foo' } to have property "name" with value Any{ …(3) }",
+      "- Expected:
+    Any<Number>
+
+    + Received:
+    undefined",
+    ]
+  `)
+
+  // non match value (deep key)
+  expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { parent: { name: 'foo' } } to have property "parent.name" with value 'bar'",
+      "- Expected
+    + Received
+
+    - bar
+    + foo",
+    ]
+  `)
+
+  // non match key (deep key)
+  expect(getError(() => expect({ parent: { noName: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+    [
+      "expected { parent: { noName: 'foo' } } to have property "parent.name" with value 'bar'",
+      "- Expected:
+    "bar"
+
+    + Received:
+    undefined",
+    ]
+  `)
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
