@@ -1038,6 +1038,18 @@ it('asymmetric matcher error', () => {
   // assertion form
   expect(getError(() => (expect('hello') as any).stringContainingCustom('xx'))).toMatchSnapshot()
   expect(getError(() => (expect('hello') as any).not.stringContainingCustom('ll'))).toMatchSnapshot()
+
+  // matcher with complex argument
+  // TOOD: serialized by `String` so it doesn't look good
+  expect.extend({
+    testComplexMatcher(_received: unknown, _any: any) {
+      return {
+        pass: false,
+        message: () => `NA`,
+      }
+    },
+  })
+  expect(getError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))).toMatchSnapshot()
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

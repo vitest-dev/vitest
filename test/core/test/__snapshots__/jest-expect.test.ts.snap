@@ -137,3 +137,16 @@ exports[`asymmetric matcher error 10`] = `
   "message": "expected "hello" not to contain "ll"",
 }
 `;
+
+exports[`asymmetric matcher error 11`] = `
+{
+  "actual": "hello",
+  "diff": "- Expected: 
+testComplexMatcher<[object Object]>
+
++ Received: 
+"hello"",
+  "expected": "testComplexMatcher<[object Object]>",
+  "message": "expected 'hello' to deeply equal testComplexMatcher<[object Object]>",
+}
+`;
