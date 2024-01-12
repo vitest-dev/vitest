@@ -1,4 +1,4 @@
-import { type Tester, equals } from '@vitest/expect'
+import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
@@ -173,12 +173,12 @@ describe('recursive custom equality tester', () => {
     }
   }
 
-  const arePersonsEqual = (a: unknown, b: unknown, customTesters: Array<Tester>) => {
+  const arePersonsEqual: Tester = function (a, b, customTesters) {
     const isAPerson = a instanceof Person
     const isBPerson = b instanceof Person
 
     if (isAPerson && isBPerson)
-      return a.name === b.name && equals(a.address, b.address, customTesters)
+      return a.name === b.name && this.equals(a.address, b.address, customTesters)
 
     else if (isAPerson === isBPerson)
       return undefined
@@ -187,10 +187,7 @@ describe('recursive custom equality tester', () => {
       return false
   }
 
-  const areAddressesEqual = (
-    a: unknown,
-    b: unknown,
-  ) => {
+  const areAddressesEqual: Tester = (a, b) => {
     const isAAddress = a instanceof Address
     const isBAddress = b instanceof Address
 
