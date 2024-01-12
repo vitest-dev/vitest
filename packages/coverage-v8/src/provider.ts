@@ -198,7 +198,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter[0], {
+      // Type assertion required for custom reporters
+      reports.create(reporter[0] as Parameters<typeof reports.create>[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
         ...reporter[1],

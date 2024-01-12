@@ -57,7 +57,7 @@ function resolveCoverageFolder(ctx: Vitest) {
     ? htmlReporter[1].subdir
     : undefined
 
-  if (!subdir)
+  if (!subdir || typeof subdir !== 'string')
     return [root, `/${basename(root)}/`]
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]

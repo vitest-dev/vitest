@@ -10,7 +10,7 @@ Vitest provides built-in support for monorepos through a workspace configuration
 
 A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
 
-Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder with your projects named `packages`, you can define a workspace with this config file:
+Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can define a workspace with this config file:
 
 :::code-group
 ```ts [vitest.workspace.ts]

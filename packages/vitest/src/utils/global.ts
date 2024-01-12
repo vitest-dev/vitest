@@ -14,6 +14,17 @@ export function getWorkerState(): WorkerGlobalState {
   return workerState
 }
 
+export function provideWorkerState(context: any, state: WorkerGlobalState) {
+  Object.defineProperty(context, '__vitest_worker__', {
+    value: state,
+    configurable: true,
+    writable: true,
+    enumerable: false,
+  })
+
+  return state
+}
+
 export function getCurrentEnvironment(): string {
   const state = getWorkerState()
   return state?.environment.name

@@ -28,6 +28,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           sirv(resolve(distRoot, 'client'), {
             single: false,
             dev: true,
+            setHeaders(res, _pathname, _stats) {
+              const headers = server.config.server.headers
+              if (headers) {
+                for (const name in headers)
+                  res.setHeader(name, headers[name]!)
+              }
+            },
           }),
         )
       },

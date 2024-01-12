@@ -1,8 +1,12 @@
 import MagicString from 'magic-string'
-import type { CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+
+// TODO: should use findNodeBefore, but it's not typed
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
+import { highlight } from '@vitest/utils'
+import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
   start: number
@@ -60,9 +64,9 @@ const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoist
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
-  const hasMocks = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
+  const needHoisting = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
 
-  if (!hasMocks)
+  if (!needHoisting)
     return
 
   const s = new MagicString(code)
@@ -78,7 +82,6 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
 
-  let hoistedCode = ''
   let hoistedVitestImports = ''
 
   let uid = 0
@@ -148,6 +151,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   }
 
   const declaredConst = new Set<string>()
+  const hoistedNodes: Positioned<CallExpression | VariableDeclaration | AwaitExpression>[] = []
 
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
@@ -184,12 +188,8 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       ) {
         const methodName = node.callee.property.name
 
-        if (methodName === 'mock' || methodName === 'unmock') {
-          const end = getBetterEnd(code, node)
-          const nodeCode = code.slice(node.start, end)
-          hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-          s.remove(node.start, end)
-        }
+        if (methodName === 'mock' || methodName === 'unmock')
+          hoistedNodes.push(node)
 
         if (methodName === 'hoisted') {
           const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
@@ -212,22 +212,83 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
           if (canMoveDeclaration) {
             // hoist "const variable = vi.hoisted(() => {})"
-            const end = getBetterEnd(code, declarationNode)
-            const nodeCode = code.slice(declarationNode.start, end)
-            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-            s.remove(declarationNode.start, end)
+            hoistedNodes.push(declarationNode)
           }
           else {
-            // hoist "vi.hoisted(() => {})"
-            const end = getBetterEnd(code, node)
-            const nodeCode = code.slice(node.start, end)
-            hoistedCode += `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-            s.remove(node.start, end)
+            const awaitedExpression = findNodeAround(ast, node.start, 'AwaitExpression')?.node as Positioned<AwaitExpression> | undefined
+            // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
+            hoistedNodes.push(awaitedExpression?.argument === node ? awaitedExpression : node)
           }
         }
       }
     },
   })
+
+  function getNodeName(node: CallExpression) {
+    const callee = node.callee || {}
+    if (callee.type === 'MemberExpression' && isIdentifier(callee.property) && isIdentifier(callee.object))
+      return `${callee.object.name}.${callee.property.name}()`
+    return '"hoisted method"'
+  }
+
+  function getNodeCall(node: Node): Positioned<CallExpression> {
+    if (node.type === 'CallExpression')
+      return node
+    if (node.type === 'VariableDeclaration') {
+      const { declarations } = node
+      const init = declarations[0].init
+      if (init)
+        return getNodeCall(init as Node)
+    }
+    if (node.type === 'AwaitExpression') {
+      const { argument } = node
+      if (argument.type === 'CallExpression')
+        return getNodeCall(argument as Node)
+    }
+    return node as Positioned<CallExpression>
+  }
+
+  function createError(outsideNode: Node, insideNode: Node) {
+    const outsideCall = getNodeCall(outsideNode)
+    const insideCall = getNodeCall(insideNode)
+    const _error = new SyntaxError(`Cannot call ${getNodeName(insideCall)} inside ${getNodeName(outsideCall)}: both methods are hoisted to the top of the file and not actually called inside each other.`)
+    // throw an object instead of an error so it can be serialized for RPC, TODO: improve error handling in rpc serializer
+    const error = {
+      name: 'SyntaxError',
+      message: _error.message,
+      stack: _error.stack,
+      frame: generateCodeFrame(highlight(code), 4, insideCall.start + 1),
+    }
+    throw error
+  }
+
+  // validate hoistedNodes doesn't have nodes inside other nodes
+  for (let i = 0; i < hoistedNodes.length; i++) {
+    const node = hoistedNodes[i]
+    for (let j = i + 1; j < hoistedNodes.length; j++) {
+      const otherNode = hoistedNodes[j]
+
+      if (node.start >= otherNode.start && node.end <= otherNode.end)
+        throw createError(otherNode, node)
+      if (otherNode.start >= node.start && otherNode.end <= node.end)
+        throw createError(node, otherNode)
+    }
+  }
+
+  // Wait for imports to be hoisted and then hoist the mocks
+  const hoistedCode = hoistedNodes.map((node) => {
+    const end = getBetterEnd(code, node)
+    /**
+     * In the following case, we need to change the `user` to user: __vi_import_x__.user
+     * So we should get the latest code from `s`.
+     *
+     * import user from './user'
+     * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
+     */
+    const nodeCode = s.slice(node.start, end)
+    s.remove(node.start, end)
+    return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
+  }).join('')
 
   if (hoistedCode || hoistedVitestImports) {
     s.prepend(

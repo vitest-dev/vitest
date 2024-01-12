@@ -8,6 +8,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 // will import vitest declare test in module 'vite'
 export { configDefaults, defaultInclude, defaultExclude, coverageConfigDefaults } from './defaults'
 export { mergeConfig } from 'vite'
+export { extraInlineDeps } from './constants'
 
 export type { ConfigEnv, ViteUserConfig as UserConfig }
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig

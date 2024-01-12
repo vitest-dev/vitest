@@ -33,6 +33,7 @@ export class DefaultReporter extends BaseReporter {
     if (this.isTTY) {
       this.rendererOptions.logger = this.ctx.logger
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
       this.rendererOptions.mode = this.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)

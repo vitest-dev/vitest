@@ -1,4 +1,4 @@
-export type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'typescript' // | 'vmForks'
+export type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'
 export type Pool = BuiltinPool | (string & {})
 
 export interface PoolOptions extends Record<string, unknown> {
@@ -33,7 +33,7 @@ export interface PoolOptions extends Record<string, unknown> {
    *
    * This makes tests run faster, but VM module is unstable. Your tests might leak memory.
    */
-  // vmForks?: ForksOptions & VmOptions
+  vmForks?: ForksOptions & VmOptions
 }
 
 interface ThreadsOptions {

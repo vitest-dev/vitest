@@ -149,9 +149,7 @@ test('reporters, single', () => {
   assertType<Coverage>({ reporter: 'text-lcov' })
   assertType<Coverage>({ reporter: 'text-summary' })
   assertType<Coverage>({ reporter: 'text' })
-
-  // @ts-expect-error -- String reporters must be known built-in's
-  assertType<Coverage>({ reporter: 'unknown-reporter' })
+  assertType<Coverage>({ reporter: 'custom-reporter' })
 })
 
 test('reporters, multiple', () => {
@@ -173,11 +171,8 @@ test('reporters, multiple', () => {
     ],
   })
 
-  // @ts-expect-error -- List of string reporters must be known built-in's
-  assertType<Coverage>({ reporter: ['unknown-reporter'] })
-
-  // @ts-expect-error -- ... and all reporters must be known
-  assertType<Coverage>({ reporter: ['html', 'json', 'unknown-reporter'] })
+  assertType<Coverage>({ reporter: ['custom-reporter'] })
+  assertType<Coverage>({ reporter: ['html', 'json', 'custom-reporter'] })
 })
 
 test('reporters, with options', () => {
@@ -196,6 +191,7 @@ test('reporters, with options', () => {
       ['text-lcov', { projectRoot: 'string' }],
       ['text-summary', { file: 'string' }],
       ['text', { skipEmpty: true, skipFull: true, maxCols: 1 }],
+      ['custom-reporter', { 'someOption': true, 'some-other-custom-option': { width: 123 } }],
     ],
   })
 
@@ -209,12 +205,6 @@ test('reporters, with options', () => {
 
   assertType<Coverage>({
     reporter: [
-      // @ts-expect-error -- teamcity report option on html reporter
-      ['html', { blockName: 'string' }],
-
-      // @ts-expect-error -- html-spa report option on json reporter
-      ['json', { metricsToShow: ['branches'] }],
-
       // @ts-expect-error -- second value should be object even though TS intellisense prompts types of reporters
       ['lcov', 'html-spa'],
     ],
@@ -225,9 +215,13 @@ test('reporters, mixed variations', () => {
   assertType<Coverage>({
     reporter: [
       'clover',
+      'custom-reporter-1',
       ['cobertura'],
+      ['custom-reporter-2'],
       ['html-spa', {}],
+      ['custom-reporter-3', {}],
       ['html', { verbose: true, subdir: 'string' }],
+      ['custom-reporter-4', { some: 'option', width: 123 }],
     ],
   })
 })

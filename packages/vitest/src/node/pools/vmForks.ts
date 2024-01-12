@@ -1,11 +1,12 @@
-import { MessageChannel } from 'node:worker_threads'
 import * as nodeos from 'node:os'
+import v8 from 'node:v8'
+import EventEmitter from 'node:events'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
-import type { Options as TinypoolOptions } from 'tinypool'
+import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
+import type { ContextRPC, ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
@@ -15,30 +16,43 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createWorkerChannel(project: WorkspaceProject) {
-  const channel = new MessageChannel()
-  const port = channel.port2
-  const workerPort = channel.port1
+function createChildProcessChannel(project: WorkspaceProject) {
+  const emitter = new EventEmitter()
+  const cleanup = () => emitter.removeAllListeners()
+
+  const events = { message: 'message', response: 'response' }
+  const channel: TinypoolChannel = {
+    onMessage: callback => emitter.on(events.message, callback),
+    postMessage: message => emitter.emit(events.response, message),
+  }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
     createMethodsRPC(project),
     {
       eventNames: ['onCancel'],
+      serialize: v8.serialize,
+      deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
-        port.postMessage(v)
+        emitter.emit(events.message, v)
       },
       on(fn) {
-        port.on('message', fn)
+        emitter.on(events.response, fn)
       },
     },
   )
 
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 
-  return { workerPort, port }
+  return { channel, cleanup }
 }
 
-export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: PoolProcessOptions): ProcessPool {
+function stringifyRegex(input: RegExp | string): string {
+  if (typeof input === 'string')
+    return input
+  return `$$vitest:${input.toString()}`
+}
+
+export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -48,16 +62,16 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.vmThreads ?? {}
+  const poolOptions = ctx.config.poolOptions?.vmForks ?? {}
 
-  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
-  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
+  const maxThreads = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.maxForks ?? ctx.config.minWorkers ?? threadsCount
+
+  const worker = resolve(ctx.distPath, 'workers/vmForks.js')
 
   const options: TinypoolOptions = {
-    filename: vmPath,
-    // TODO: investigate further
-    // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: poolOptions.useAtomics ?? false,
+    runtime: 'child_process',
+    filename: resolve(ctx.distPath, 'worker.js'),
 
     maxThreads,
     minThreads,
@@ -77,7 +91,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
     maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
 
-  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
+  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -89,10 +103,11 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
 
     async function runFiles(project: WorkspaceProject, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
       ctx.state.clearFiles(project, files)
-      const { workerPort, port } = createWorkerChannel(project)
+      const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
-      const data: WorkerContext = {
-        port: workerPort,
+      const data: ContextRPC = {
+        pool: 'forks',
+        worker,
         config,
         files,
         invalidates,
@@ -102,7 +117,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         providedContext: project.getProvidedContext(),
       }
       try {
-        await pool.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { name, channel })
       }
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
@@ -117,8 +132,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
           throw error
       }
       finally {
-        port.close()
-        workerPort.close()
+        cleanup()
       }
     }
 
@@ -131,7 +145,15 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
         if (configs.has(project))
           return configs.get(project)!
 
-        const config = project.getSerializableConfig()
+        const _config = project.getSerializableConfig()
+
+        const config = {
+          ..._config,
+          // v8 serialize does not support regex
+          testNamePattern: _config.testNamePattern
+            ? stringifyRegex(_config.testNamePattern)
+            : undefined,
+        } as ResolvedConfig
         configs.set(project, config)
         return config
       }
@@ -148,14 +170,9 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env, vmPath }: Pool
   }
 
   return {
-    name: 'vmThreads',
+    name: 'vmForks',
     runTests: runWithFiles('run'),
-    close: async () => {
-      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
-      if (nodeVersion >= 16.17)
-        await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }
 

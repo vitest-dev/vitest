@@ -6,6 +6,7 @@ import type { ResolvedConfig, RuntimeConfig } from '../types'
 import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
+import { isChildProcess } from '../utils/base'
 import { FakeTimers } from './mock/timers'
 import type { MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep, MockInstance } from './spy'
 import { fn, isMockFunction, mocks, spyOn } from './spy'
@@ -370,7 +371,7 @@ function createVitest(): VitestUtils {
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
-      if (workerState.isChildProcess) {
+      if (isChildProcess()) {
         if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
           throw new Error(
             'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
