@@ -150,3 +150,26 @@ testComplexMatcher<[object Object]>
   "message": "expected 'hello' to deeply equal testComplexMatcher<[object Object]>",
 }
 `;
+
+exports[`asymmetric matcher error 12`] = `
+{
+  "actual": "Object {
+  "k1": "v1",
+  "k2": "v2",
+}",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
++ Object {
+    "k1": "v1",
+-   "kk": "vv",
++   "k2": "v2",
+  }",
+  "expected": "ObjectContaining {
+  "k1": "v1",
+  "kk": "vv",
+}",
+  "message": "expected { k1: 'v1', k2: 'v2' } to deeply equal { Object ($$typeof, sample, ...) }",
+}
+`;

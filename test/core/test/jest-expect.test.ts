@@ -1023,11 +1023,11 @@ it('asymmetric matcher error', () => {
     }
   }
 
-  // builtin
-  expect(getError(() => expect('hello').toEqual((expect as any).stringContaining('xx')))).toMatchSnapshot()
-  expect(getError(() => expect('hello').toEqual((expect as any).not.stringContaining('ll')))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContaining('xx') }))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContaining('ll') }))).toMatchSnapshot()
+  // builtin: stringContaining
+  expect(getError(() => expect('hello').toEqual(expect.stringContaining('xx')))).toMatchSnapshot()
+  expect(getError(() => expect('hello').toEqual(expect.not.stringContaining('ll')))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.stringContaining('xx') }))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.not.stringContaining('ll') }))).toMatchSnapshot()
 
   // custom
   expect(getError(() => expect('hello').toEqual((expect as any).stringContainingCustom('xx')))).toMatchSnapshot()
@@ -1050,6 +1050,10 @@ it('asymmetric matcher error', () => {
     },
   })
   expect(getError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))).toMatchSnapshot()
+
+  // builtin: objectContaining
+  // TODO: doesn't look good...
+  expect(getError(() => expect({ k1: 'v1', k2: 'v2' }).toEqual(expect.objectContaining({ k1: 'v1', kk: 'vv' })))).toMatchSnapshot()
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
