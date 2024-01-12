@@ -1052,11 +1052,13 @@ it('asymmetric matcher error', () => {
   expect(getError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))).toMatchSnapshot()
 
   // more builtins
-  // TODO: something odd with objectContaining and arrayContaining
   expect(getError(() => expect({ k1: 'v1', k2: 'v2' }).toEqual(expect.objectContaining({ k1: 'v1', kk: 'vv' })))).toMatchSnapshot()
   expect(getError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))).toMatchSnapshot()
   expect(getError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))).toMatchSnapshot()
   expect(getError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))).toMatchSnapshot()
+
+  // simple truncation if pretty-format is too long
+  expect(getError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))).toMatchSnapshot()
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

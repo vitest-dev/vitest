@@ -170,7 +170,7 @@ exports[`asymmetric matcher error 12`] = `
   "k1": "v1",
   "kk": "vv",
 }",
-  "message": "expected { k1: 'v1', k2: 'v2' } to deeply equal { Object ($$typeof, sample, ...) }",
+  "message": "expected { k1: 'v1', k2: 'v2' } to deeply equal ObjectContaining{…}",
 }
 `;
 
@@ -193,10 +193,7 @@ exports[`asymmetric matcher error 13`] = `
   "a",
   "c",
 ]",
-  "message": "expected [ 'a', 'b' ] to deeply equal ArrayContaining [
-  "a",
-  "c",
-]",
+  "message": "expected [ 'a', 'b' ] to deeply equal ArrayContaining ["a", "c"]",
 }
 `;
 
@@ -219,5 +216,14 @@ exports[`asymmetric matcher error 15`] = `
 + 2.5",
   "expected": "NumberCloseTo 2 (1 digit)",
   "message": "expected 2.5 to deeply equal NumberCloseTo 2 (1 digit)",
+}
+`;
+
+exports[`asymmetric matcher error 16`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringContaining "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"",
+  "message": "expected 'hello' to deeply equal StringContaining{…}",
 }
 `;

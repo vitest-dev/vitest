@@ -44,8 +44,12 @@ export abstract class AsymmetricMatcher<
 
   // implement loupe-based serialization for AssertionError.message
   // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
-  [Symbol.for('chai/inspect')]() {
-    return stringify(this)
+  [Symbol.for('chai/inspect')](options: { depth: number; truncate: number }) {
+    // minimal pretty-format with simple manual truncation
+    const result = stringify(this, options.depth, { min: true })
+    if (result.length <= options.truncate)
+      return result
+    return `${this.toString()}{…}`
   }
 }
 
