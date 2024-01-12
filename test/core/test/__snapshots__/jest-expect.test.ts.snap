@@ -173,3 +173,51 @@ exports[`asymmetric matcher error 12`] = `
   "message": "expected { k1: 'v1', k2: 'v2' } to deeply equal { Object ($$typeof, sample, ...) }",
 }
 `;
+
+exports[`asymmetric matcher error 13`] = `
+{
+  "actual": "Array [
+  "a",
+  "b",
+]",
+  "diff": "- Expected
++ Received
+
+- ArrayContaining [
++ Array [
+    "a",
+-   "c",
++   "b",
+  ]",
+  "expected": "ArrayContaining [
+  "a",
+  "c",
+]",
+  "message": "expected [ 'a', 'b' ] to deeply equal ArrayContaining [
+  "a",
+  "c",
+]",
+}
+`;
+
+exports[`asymmetric matcher error 14`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringMatching /xx/",
+  "message": "expected 'hello' to deeply equal StringMatching /xx/",
+}
+`;
+
+exports[`asymmetric matcher error 15`] = `
+{
+  "actual": "2.5",
+  "diff": "- Expected
++ Received
+
+- NumberCloseTo 2 (1 digit)
++ 2.5",
+  "expected": "NumberCloseTo 2 (1 digit)",
+  "message": "expected 2.5 to deeply equal NumberCloseTo 2 (1 digit)",
+}
+`;
