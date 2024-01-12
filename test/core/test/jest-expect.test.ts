@@ -998,6 +998,22 @@ it('toHaveProperty error diff', () => {
 it('asymmetric matcher error', () => {
   setupColors(getDefaultColors())
 
+  function snapshotError(f: () => unknown) {
+    try {
+      f()
+      return expect.unreachable()
+    }
+    catch (error) {
+      const e = processError(error)
+      expect({
+        message: e.message,
+        diff: e.diff,
+        expected: e.expected,
+        actual: e.actual,
+      }).toMatchSnapshot()
+    }
+  }
+
   expect.extend({
     stringContainingCustom(received: unknown, other: string) {
       return {
@@ -1007,37 +1023,21 @@ it('asymmetric matcher error', () => {
     },
   })
 
-  function getError(f: () => unknown) {
-    try {
-      f()
-      return expect.unreachable()
-    }
-    catch (error) {
-      const e = processError(error)
-      return {
-        message: e.message,
-        diff: e.diff,
-        expected: e.expected,
-        actual: e.actual,
-      }
-    }
-  }
-
   // builtin: stringContaining
-  expect(getError(() => expect('hello').toEqual(expect.stringContaining('xx')))).toMatchSnapshot()
-  expect(getError(() => expect('hello').toEqual(expect.not.stringContaining('ll')))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.stringContaining('xx') }))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.not.stringContaining('ll') }))).toMatchSnapshot()
+  snapshotError(() => expect('hello').toEqual(expect.stringContaining('xx')))
+  snapshotError(() => expect('hello').toEqual(expect.not.stringContaining('ll')))
+  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.stringContaining('xx') }))
+  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: expect.not.stringContaining('ll') }))
 
   // custom
-  expect(getError(() => expect('hello').toEqual((expect as any).stringContainingCustom('xx')))).toMatchSnapshot()
-  expect(getError(() => expect('hello').toEqual((expect as any).not.stringContainingCustom('ll')))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContainingCustom('xx') }))).toMatchSnapshot()
-  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContainingCustom('ll') }))).toMatchSnapshot()
+  snapshotError(() => expect('hello').toEqual((expect as any).stringContainingCustom('xx')))
+  snapshotError(() => expect('hello').toEqual((expect as any).not.stringContainingCustom('ll')))
+  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContainingCustom('xx') }))
+  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContainingCustom('ll') }))
 
   // assertion form
-  expect(getError(() => (expect('hello') as any).stringContainingCustom('xx'))).toMatchSnapshot()
-  expect(getError(() => (expect('hello') as any).not.stringContainingCustom('ll'))).toMatchSnapshot()
+  snapshotError(() => (expect('hello') as any).stringContainingCustom('xx'))
+  snapshotError(() => (expect('hello') as any).not.stringContainingCustom('ll'))
 
   // matcher with complex argument
   // (serialized by `String` so it becomes "testComplexMatcher<[object Object]>", which is same as jest's asymmetric matcher and pretty-format)
@@ -1049,16 +1049,16 @@ it('asymmetric matcher error', () => {
       }
     },
   })
-  expect(getError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))).toMatchSnapshot()
+  snapshotError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))
 
   // more builtins
-  expect(getError(() => expect({ k1: 'v1', k2: 'v2' }).toEqual(expect.objectContaining({ k1: 'v1', kk: 'vv' })))).toMatchSnapshot()
-  expect(getError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))).toMatchSnapshot()
-  expect(getError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))).toMatchSnapshot()
-  expect(getError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))).toMatchSnapshot()
+  snapshotError(() => expect({ k1: 'v1', k2: 'v2' }).toEqual(expect.objectContaining({ k1: 'v1', kk: 'vv' })))
+  snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
+  snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
+  snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
 
   // simple truncation if pretty-format is too long
-  expect(getError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))).toMatchSnapshot()
+  snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
