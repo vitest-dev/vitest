@@ -6,8 +6,7 @@ import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
 import { getTasks } from '../utils'
-import { ensurePackageInstalled } from '../node/pkg'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
 import type { WorkspaceProject } from '../node/workspace'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -225,16 +224,15 @@ export class Typechecker {
     this.process?.kill()
   }
 
-  protected async ensurePackageInstalled(root: string, checker: string) {
+  protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
     if (checker !== 'tsc' && checker !== 'vue-tsc')
       return
     const packageName = checker === 'tsc' ? 'typescript' : 'vue-tsc'
-    await ensurePackageInstalled(packageName, root)
+    await ctx.packageInstaller.ensureInstalled(packageName, ctx.config.root)
   }
 
   public async prepare() {
     const { root, typecheck } = this.ctx.config
-    await this.ensurePackageInstalled(root, typecheck.checker)
 
     const { config, path } = await getTsconfig(root, typecheck)
 

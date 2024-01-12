@@ -386,7 +386,7 @@ export class WorkspaceProject {
       return
     if (this.browserProvider)
       return
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    const Provider = await getBrowserProvider(this.config.browser, this)
     this.browserProvider = new Provider()
     const browser = this.config.browser.name
     const supportedBrowsers = this.browserProvider.getSupportedBrowsers()

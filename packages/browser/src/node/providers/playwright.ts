@@ -27,8 +27,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return playwrightBrowsers
   }
 
-  async initialize(ctx: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
-    this.ctx = ctx
+  initialize(project: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
+    this.ctx = project
     this.browser = browser
     this.options = options as any
   }

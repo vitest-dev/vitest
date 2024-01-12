@@ -3,7 +3,6 @@ import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../utils'
-import { ensurePackageInstalled } from '../pkg'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -22,7 +21,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
     return (await import('@vitest/ui')).default(ctx)
   }
 
