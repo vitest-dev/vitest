@@ -4,11 +4,13 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
+
+import matchers from './assertions/index'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -19,10 +21,16 @@ declare class DOMTokenList {
   contains(item: unknown): boolean
 }
 
+const defineJestMatchers: ChaiPlugin = (chai, utils) => {
+  matchers.forEach(define => define(chai, utils))
+}
+
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
   const c = () => getColors()
+
+  defineJestMatchers(chai, utils)
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
@@ -152,16 +160,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       pass,
       generateToBeMessage(deepEqualityName),
       'expected #{this} not to be #{exp} // Object.is equality',
-      expected,
-      actual,
-    )
-  })
-  def('toMatchObject', function (expected) {
-    const actual = this._obj
-    return this.assert(
-      jestEquals(actual, expected, [iterableEquality, subsetEquality]),
-      'expected #{this} to match object #{exp}',
-      'expected #{this} to not match object #{exp}',
       expected,
       actual,
     )
