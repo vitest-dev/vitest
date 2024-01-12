@@ -1,94 +1,78 @@
-import { performance } from 'node:perf_hooks'
-import { createBirpc } from 'birpc'
+import { pathToFileURL } from 'node:url'
 import { workerId as poolId } from 'tinypool'
-import type { CancelReason } from '@vitest/runner'
-import type { RunnerRPC, RuntimeRPC, WorkerContext, WorkerGlobalState } from '../types'
-import { getWorkerState } from '../utils/global'
+import { ModuleCacheMap } from 'vite-node/client'
+import type { ContextRPC } from '../types/rpc'
 import { loadEnvironment } from '../integrations/env/loader'
-import { mockMap, moduleCache, startViteNode } from './execute'
+import type { WorkerGlobalState } from '../types/worker'
+import { isChildProcess, setProcessTitle } from '../utils/base'
 import { setupInspect } from './inspector'
-import { createSafeRpc, rpcDone } from './rpc'
+import { createRuntimeRpc, rpcDone } from './rpc'
+import type { VitestWorker } from './workers/types'
 
-async function init(ctx: WorkerContext) {
-  // @ts-expect-error untyped global
-  const isInitialized = typeof __vitest_worker__ !== 'undefined'
-  const isIsolatedThreads = ctx.config.pool === 'threads' && (ctx.config.poolOptions?.threads?.isolate ?? true)
+if (isChildProcess())
+  setProcessTitle(`vitest ${poolId}`)
 
-  if (isInitialized && isIsolatedThreads)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+// this is what every pool executes when running tests
+export async function run(ctx: ContextRPC) {
+  const prepareStart = performance.now()
 
-  const { config, port, workerId, providedContext } = ctx
-
-  process.env.VITEST_WORKER_ID = String(workerId)
-  process.env.VITEST_POOL_ID = String(poolId)
-
-  let setCancel = (_reason: CancelReason) => {}
-  const onCancel = new Promise<CancelReason>((resolve) => {
-    setCancel = resolve
-  })
-
-  const rpc = createSafeRpc(createBirpc<RuntimeRPC, RunnerRPC>(
-    {
-      onCancel: setCancel,
-    },
-    {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit', 'onCancel'],
-      post(v) { port.postMessage(v) },
-      on(fn) { port.addListener('message', fn) },
-    },
-  ))
-
-  const environment = await loadEnvironment(ctx.environment.name, {
-    root: ctx.config.root,
-    fetchModule: id => rpc.fetch(id, 'ssr'),
-    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
-  })
-  if (ctx.environment.transformMode)
-    environment.transformMode = ctx.environment.transformMode
-
-  const state: WorkerGlobalState = {
-    ctx,
-    moduleCache,
-    config,
-    mockMap,
-    onCancel,
-    environment,
-    durations: {
-      environment: 0,
-      prepare: performance.now(),
-    },
-    rpc,
-    providedContext,
-  }
-
-  Object.defineProperty(globalThis, '__vitest_worker__', {
-    value: state,
-    configurable: true,
-    writable: true,
-    enumerable: false,
-  })
-
-  if (ctx.invalidates) {
-    ctx.invalidates.forEach((fsPath) => {
-      moduleCache.delete(fsPath)
-      moduleCache.delete(`mock:${fsPath}`)
-    })
-  }
-  ctx.files.forEach(i => moduleCache.delete(i))
-
-  return state
-}
-
-export async function run(ctx: WorkerContext) {
   const inspectorCleanup = setupInspect(ctx.config)
 
+  process.env.VITEST_WORKER_ID = String(ctx.workerId)
+  process.env.VITEST_POOL_ID = String(poolId)
+
+  let state: WorkerGlobalState | null = null
+
   try {
-    const state = await init(ctx)
-    const { run, executor } = await startViteNode({ state })
-    await run(ctx.files, ctx.config, { environment: state.environment, options: ctx.environment.options }, executor)
-    await rpcDone()
+    // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
+    if (ctx.worker[0] === '.')
+      throw new Error(`Path to the test runner cannot be relative, received "${ctx.worker}"`)
+
+    const file = ctx.worker.startsWith('file:') ? ctx.worker : pathToFileURL(ctx.worker).toString()
+    const testRunnerModule = await import(file)
+
+    if (!testRunnerModule.default || typeof testRunnerModule.default !== 'object')
+      throw new TypeError(`Test worker object should be exposed as a default export. Received "${typeof testRunnerModule.default}"`)
+
+    const worker = testRunnerModule.default as VitestWorker
+    if (!worker.getRpcOptions || typeof worker.getRpcOptions !== 'function')
+      throw new TypeError(`Test worker should expose "getRpcOptions" method. Received "${typeof worker.getRpcOptions}".`)
+
+    // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
+    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
+
+    const beforeEnvironmentTime = performance.now()
+    const environment = await loadEnvironment(ctx, rpc)
+    if (ctx.environment.transformMode)
+      environment.transformMode = ctx.environment.transformMode
+
+    state = {
+      ctx,
+      // here we create a new one, workers can reassign this if they need to keep it non-isolated
+      moduleCache: new ModuleCacheMap(),
+      mockMap: new Map(),
+      config: ctx.config,
+      onCancel,
+      environment,
+      durations: {
+        environment: beforeEnvironmentTime,
+        prepare: prepareStart,
+      },
+      rpc,
+      providedContext: ctx.providedContext,
+    }
+
+    if (!worker.runTests || typeof worker.runTests !== 'function')
+      throw new TypeError(`Test worker should expose "runTests" method. Received "${typeof worker.runTests}".`)
+
+    await worker.runTests(state)
   }
   finally {
+    await rpcDone().catch(() => {})
     inspectorCleanup()
+    if (state) {
+      state.environment = null as any
+      state = null
+    }
   }
 }

@@ -21,6 +21,8 @@ export class VerboseReporter extends DefaultReporter {
         if (task.suite?.projectName)
           title += formatProjectName(task.suite.projectName)
         title += getFullName(task, c.dim(' > '))
+        if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
+          title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
         this.ctx.logger.log(title)

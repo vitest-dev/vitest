@@ -256,7 +256,7 @@ Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like
 This module will have a default export equal to the path to the asset, if no query is specified.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) pool.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
 :::
 
 #### deps.web.transformCss
@@ -269,7 +269,7 @@ Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like 
 If CSS files are disabled with [`css`](#css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) pool.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
 :::
 
 #### deps.web.transformGlobPattern
@@ -282,7 +282,7 @@ Regexp pattern to match external files that should be transformed.
 By default, files inside `node_modules` are externalized and not transformed, unless it's CSS or an asset, and corresponding option is not disabled.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) pool.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
 :::
 
 #### deps.interopDefault
@@ -545,7 +545,7 @@ export default defineConfig({
 
 ### poolMatchGlobs <Badge type="info">0.29.4+</Badge>
 
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'typescript'][]`
+- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
 - **Default:** `[]`
 
 Automatically assign pool in which tests will run based on globs. The first match will be used.
@@ -610,7 +610,7 @@ By providing an object instead of a string you can define individual outputs whe
 
 ### pool<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
-- **Type:** `'threads' | 'forks' | 'vmThreads'`
+- **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`
 - **Default:** `'threads'`
 - **CLI:** `--pool=threads`
 
@@ -650,12 +650,16 @@ catch (err) {
 Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
 :::
 
+#### vmForks<NonProjectOption />
+
+Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`. 
+
 ### poolOptions<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
-- **Type:** `Record<'threads' | 'forks' | 'vmThreads', {}>`
+- **Type:** `Record<'threads' | 'forks' | 'vmThreads' | 'vmForks', {}>`
 - **Default:** `{}`
 
-#### poolOptions.threads<NonProjectOption />
+#### poolOptions.threads
 
 Options for `threads` pool.
 
@@ -687,7 +691,7 @@ Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment var
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
-##### poolOptions.threads.singleThread<NonProjectOption />
+##### poolOptions.threads.singleThread
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -710,7 +714,7 @@ Use Atomics to synchronize threads.
 
 This can improve performance in some cases, but might cause segfault in older Node versions.
 
-##### poolOptions.threads.isolate<NonProjectOption />
+##### poolOptions.threads.isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -728,7 +732,7 @@ Pass additional arguments to `node` in the threads. See [Command-line API | Node
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-#### poolOptions.forks<NonProjectOption />
+#### poolOptions.forks
 
 Options for `forks` pool.
 
@@ -760,14 +764,14 @@ Maximum number of forks.
 
 Minimum number of forks.
 
-##### poolOptions.forks.isolate<NonProjectOption />
+##### poolOptions.forks.isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
 
 Isolate environment for each test file.
 
-##### poolOptions.forks.singleFork<NonProjectOption />
+##### poolOptions.forks.singleFork
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -792,7 +796,7 @@ Pass additional arguments to `node` process in the child processes. See [Command
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-#### poolOptions.vmThreads<NonProjectOption />
+#### poolOptions.vmThreads
 
 Options for `vmThreads` pool.
 
@@ -863,6 +867,57 @@ Use Atomics to synchronize threads.
 This can improve performance in some cases, but might cause segfault in older Node versions.
 
 ##### poolOptions.vmThreads.execArgv<NonProjectOption />
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Pass additional arguments to `node` process in the VM context. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+:::warning
+Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
+:::
+
+
+#### poolOptions.vmForks<NonProjectOption />
+
+Options for `vmForks` pool.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    poolOptions: {
+      vmForks: {
+        // VM forks related options here
+      }
+    }
+  }
+})
+```
+
+##### poolOptions.vmForks.maxForks<NonProjectOption />
+
+- **Type:** `number`
+- **Default:** _available CPUs_
+
+Maximum number of threads. You can also use `VITEST_MAX_FORKS` environment variable.
+
+##### poolOptions.vmForks.minForks<NonProjectOption />
+
+- **Type:** `number`
+- **Default:** _available CPUs_
+
+Minimum number of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+
+##### poolOptions.vmForks.memoryLimit<NonProjectOption />
+
+- **Type:** `string | number`
+- **Default:** `1 / CPU Cores`
+
+Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default. How the value is calculated is described in [`poolOptions.vmThreads.memoryLimit`](#pooloptions-vmthreads-memorylimit)
+
+##### poolOptions.vmForks.execArgv<NonProjectOption />
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -1170,6 +1225,23 @@ The reporter has three different types:
     ]
   }
   ```
+
+Since Vitest 1.2.0, you can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
+
+<!-- eslint-skip -->
+```ts
+  {
+    reporter: [
+      // Specify reporter using name of the NPM package
+      '@vitest/custom-coverage-reporter',
+      ['@vitest/custom-coverage-reporter', { someOption: true }],
+
+      // Specify reporter using local path
+      '/absolute/path/to/custom-reporter.cjs',
+      ['/absolute/path/to/custom-reporter.cjs', { someOption: true }],
+    ]
+  }
+```
 
 Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
@@ -2045,9 +2117,9 @@ Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
 - **Type:** `boolean`
 - **Default:** `true`
-- **CLI:** `--no-isolate`, `--isolate=false` 
+- **CLI:** `--no-isolate`, `--isolate=false`
 
-Run tests in an isolated environment. This option has no effect on `vmThreads` pool.
+Run tests in an isolated environment. This option has no effect on `vmThreads` and `vmForks` pools.
 
 Disabling this option might [improve performance](/guide/improving-performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
 

@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -12,15 +12,6 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
-
-const extraInlineDeps = [
-  /^(?!.*(?:node_modules)).*\.mjs$/,
-  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
-  // Vite client
-  /vite\w*\/dist\/client\/env.mjs/,
-  // Nuxt
-  '@nuxt/test-utils',
-]
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -119,6 +110,12 @@ export function resolveConfig(
 
     resolved.shard = { index, count }
   }
+
+  if (resolved.maxWorkers)
+    resolved.maxWorkers = Number(resolved.maxWorkers)
+
+  if (resolved.minWorkers)
+    resolved.minWorkers = Number(resolved.minWorkers)
 
   resolved.fileParallelism ??= true
 
@@ -277,6 +274,10 @@ export function resolveConfig(
         ...resolved.poolOptions?.forks,
         maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
       },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
     }
   }
 
@@ -285,6 +286,10 @@ export function resolveConfig(
       ...resolved.poolOptions,
       forks: {
         ...resolved.poolOptions?.forks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
         minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
       },
     }

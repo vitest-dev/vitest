@@ -65,7 +65,8 @@ export class ViteNodeServer {
       }
       else if (options.deps.inline !== true) {
         options.deps.inline ??= []
-        options.deps.inline.push(...toArray(ssrOptions.noExternal))
+        const inline = options.deps.inline
+        options.deps.inline.push(...toArray(ssrOptions.noExternal).filter(dep => !inline.includes(dep)))
       }
     }
     if (process.env.VITE_NODE_DEBUG_DUMP) {
