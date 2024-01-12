@@ -1,9 +1,10 @@
-import type { ExpectStatic, MatcherState } from './types'
+import type { ExpectStatic, MatcherState, Tester } from './types'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, JEST_MATCHERS_OBJECT, MATCHERS_OBJECT } from './constants'
 
 if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
   const globalState = new WeakMap<ExpectStatic, MatcherState>()
   const matchers = Object.create(null)
+  const customEqualityTesters: Array<Tester> = []
   const assymetricMatchers = Object.create(null)
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
     get: () => globalState,
@@ -13,6 +14,7 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
     get: () => ({
       state: globalState.get((globalThis as any)[GLOBAL_EXPECT]),
       matchers,
+      customEqualityTesters,
     }),
   })
   Object.defineProperty(globalThis, ASYMMETRIC_MATCHERS_OBJECT, {
