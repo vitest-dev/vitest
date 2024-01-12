@@ -116,6 +116,7 @@ describe('jest-expect', () => {
     expect('bar').toEqual(expect.stringContaining('ba'))
     expect(['bar']).toEqual([expect.stringContaining('ba')])
     expect(new Set(['bar'])).toEqual(new Set([expect.stringContaining('ba')]))
+    expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
 
     expect({ foo: 'bar' }).not.toEqual({ foo: expect.stringContaining('zoo') })
     expect('bar').not.toEqual(expect.stringContaining('zoo'))
@@ -180,9 +181,6 @@ describe('jest-expect', () => {
         sum: expect.closeTo(0.4),
       })
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }]`)
-
-    // TODO: support set
-    // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
 
   it('asymmetric matchers negate', () => {
