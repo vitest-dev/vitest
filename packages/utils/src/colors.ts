@@ -27,16 +27,17 @@ const colorsMap = {
   bgWhite: ['\x1B[47m', '\x1B[49m'],
 } as const
 
-type ColorName = keyof typeof colorsMap
-type ColorsMethods = {
-  [Key in ColorName]: {
-    (input: unknown): string
-    open: string
-    close: string
-  }
+export type ColorName = keyof typeof colorsMap
+export interface ColorMethod {
+  (input: unknown): string
+  open: string
+  close: string
+}
+export type ColorsMethods = {
+  [Key in ColorName]: ColorMethod
 }
 
-type Colors = ColorsMethods & {
+export type Colors = ColorsMethods & {
   isColorSupported: boolean
   reset: (input: unknown) => string
 }

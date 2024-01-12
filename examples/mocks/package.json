@@ -18,11 +18,11 @@
     "tinyspy": "^0.3.2"
   },
   "devDependencies": {
-    "@vitest/ui": "latest",
+    "@vitest/ui": "workspace:*",
     "react": "^18.0.0",
     "sweetalert2": "^11.6.16",
     "vite": "latest",
-    "vitest": "latest",
+    "vitest": "workspace:*",
     "vue": "^3.3.8",
     "zustand": "^4.1.1"
   },
