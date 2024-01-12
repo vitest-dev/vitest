@@ -79,6 +79,7 @@ export default defineConfig({
         ['html'],
         ['lcov', {}],
         ['json', { file: 'custom-json-report-name.json' }],
+        [resolve('./custom-reporter.cjs'), { file: 'custom-reporter-output.md' }],
       ],
 
       // These will be updated by tests and reseted back by generic.report.test.ts

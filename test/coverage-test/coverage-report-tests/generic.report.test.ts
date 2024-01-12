@@ -31,6 +31,20 @@ test('lcov report', async () => {
   expect(lcovReportFiles).toContain('index.html')
 })
 
+test('custom report', async () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).toContain('custom-reporter-output.md')
+
+  const content = fs.readFileSync(resolve(coveragePath, 'custom-reporter-output.md'), 'utf-8')
+  expect(content).toMatchInlineSnapshot(`
+    "Start of custom coverage report
+    End of custom coverage report
+    "
+  `)
+})
+
 test('all includes untested files', () => {
   const coveragePath = resolve('./coverage/src')
   const files = fs.readdirSync(coveragePath)
