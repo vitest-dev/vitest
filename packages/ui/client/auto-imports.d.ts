@@ -90,6 +90,7 @@ declare global {
   const onUpdated: typeof import('vue')['onUpdated']
   const openInEditor: typeof import('./composables/error')['openInEditor']
   const params: typeof import('./composables/params')['params']
+  const parseError: typeof import('./composables/error')['parseError']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
   const provide: typeof import('vue')['provide']
   const provideLocal: typeof import('@vueuse/core')['provideLocal']

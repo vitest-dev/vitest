@@ -25,8 +25,17 @@ test.describe('ui', () => {
     // dashbaord
     await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
 
+    // unhandled errors
+    await expect(page.getByTestId('unhandled-errors')).toContainText(
+      'Vitest caught 2 errors during the test run. This might cause false positive tests. '
+      + 'Resolve unhandled errors to make sure your tests are not affected.',
+    )
+
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
+
     // report
-    await page.getByText('sample.test.ts').click()
+    await page.getByTestId('details-panel').getByText('sample.test.ts').click()
     await page.getByText('All tests passed in this file').click()
     await expect(page.getByTestId('filenames')).toContainText('sample.test.ts')
 
@@ -60,7 +69,7 @@ test.describe('ui', () => {
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText('PASS (3)').click()
-    await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
     await page.getByPlaceholder('Search...').fill('nothing')
@@ -69,6 +78,6 @@ test.describe('ui', () => {
     // searching "add" will match "sample.test.ts" since it includes a test case named "add"
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
-    await expect(page.getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
   })
 })

@@ -31,6 +31,7 @@ export interface WebSocketHandlers {
   rerun(files: string[]): Promise<void>
   updateSnapshot(file?: File): Promise<void>
   getProvidedContext(): ProvidedContext
+  getUnhandledErrors(): unknown[]
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
