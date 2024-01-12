@@ -13,7 +13,7 @@ import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
 
-const extraInlineDeps = [
+export const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
   // Vite client
