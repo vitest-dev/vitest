@@ -103,14 +103,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           },
         }
 
+        const noExternal = viteConfig.ssr?.noExternal
         // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
+        if (noExternal !== true) {
           const inline = testConfig.server?.deps?.inline
           if (inline === true) {
             config.ssr = { noExternal: true }
           }
           else {
-            const noExternal = viteConfig.ssr?.noExternal
             const noExternalArray = typeof noExternal !== 'undefined' ? toArray(noExternal) : undefined
             // filter the same packages
             const uniqueInline = inline && noExternalArray

@@ -133,6 +133,38 @@ describe('correctly defines inline and noExternal flags', async () => {
     expect(v.vitenode.server.config.ssr.noExternal).toBe(true)
   })
 
+  it('all true if inline is true but noExternal is a list', async () => {
+    const v = await vitest({}, {
+      server: {
+        deps: {
+          inline: true,
+        },
+      },
+    }, {
+      ssr: {
+        noExternal: ['dep1'],
+      },
+    })
+    expect(v.vitenode.options.deps?.inline).toBe(true)
+    expect(v.vitenode.server.config.ssr.noExternal).toBe(true)
+  })
+
+  it('all true if noExternal is true but inline is a list', async () => {
+    const v = await vitest({}, {
+      server: {
+        deps: {
+          inline: ['dep1'],
+        },
+      },
+    }, {
+      ssr: {
+        noExternal: true,
+      },
+    })
+    expect(v.vitenode.options.deps?.inline).toBe(true)
+    expect(v.vitenode.server.config.ssr.noExternal).toBe(true)
+  })
+
   it('inline are added to noExternal', async () => {
     const regexp1 = /dep1/
     const regexp2 = /dep2/

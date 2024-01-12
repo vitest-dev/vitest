@@ -196,7 +196,7 @@ export function resolveConfig(
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
     const ssrOptions = viteConfig.ssr
-    if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
+    if (ssrOptions?.noExternal === true) {
       resolved.server.deps.inline = true
     }
     else {
