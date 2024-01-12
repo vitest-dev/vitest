@@ -1040,9 +1040,9 @@ it('asymmetric matcher error', () => {
   expect(getError(() => (expect('hello') as any).not.stringContainingCustom('ll'))).toMatchSnapshot()
 
   // matcher with complex argument
-  // TOOD: serialized by `String` so it doesn't look good
+  // (serialized by `String` so it becomes "testComplexMatcher<[object Object]>", which is same as jest's asymmetric matcher and pretty-format)
   expect.extend({
-    testComplexMatcher(_received: unknown, _any: any) {
+    testComplexMatcher(_received: unknown, _arg: unknown) {
       return {
         pass: false,
         message: () => `NA`,
