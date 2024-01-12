@@ -1,9 +1,8 @@
 import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
-import type { WebSocketEvents, WebSocketHandlers } from 'vitest/src/api/types'
+import type { File, ModuleGraphData, ResolvedConfig, WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
-import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
 import { StateManager } from '../../../../vitest/src/node/state'
 
 interface HTMLReportMetadata {
@@ -72,6 +71,7 @@ export function createStaticClient(): VitestClient {
     removeSnapshotFile: asyncNoop,
     onUnhandledError: noop,
     saveTestFile: asyncNoop,
+    getProvidedContext: () => ({}),
   } as WebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>

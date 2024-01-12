@@ -1,6 +1,6 @@
 import Filter from 'ansi-to-html'
 import type { ErrorWithDiff } from 'vitest'
-import { parseStacktrace } from '../../../utils/src/source-map'
+import { parseStacktrace } from '@vitest/utils/source-map'
 
 export function shouldOpenInEditor(name: string, fileName?: string) {
   return fileName && name.endsWith(fileName)
