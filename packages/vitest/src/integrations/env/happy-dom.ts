@@ -16,7 +16,7 @@ export default <Environment>({
   transformMode: 'web',
   async setupVM({ happyDOM = {} }) {
     const { Window } = await import('happy-dom')
-    const win = new Window({
+    let win = new Window({
       ...happyDOM,
       console: (console && globalThis.console) ? globalThis.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
@@ -39,6 +39,7 @@ export default <Environment>({
       },
       async teardown() {
         await teardownWindow(win)
+        win = undefined
       },
     }
   },

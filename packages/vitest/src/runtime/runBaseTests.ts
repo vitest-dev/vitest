@@ -24,9 +24,6 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   workerState.onCancel.then(reason => runner.onCancel?.(reason))
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
-
-  workerState.environment = environment.environment
-
   workerState.durations.environment = performance.now()
 
   await withEnv(environment, environment.options || config.environmentOptions || {}, async () => {

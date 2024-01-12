@@ -1,15 +1,19 @@
 import { MessageChannel } from 'node:worker_threads'
 import * as nodeos from 'node:os'
 import { createBirpc } from 'birpc'
+import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
-import { resolve } from 'pathe'
+import { rootDir } from '../../paths'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { AggregateError, groupBy } from '../../utils/base'
+import { groupFilesByEnv } from '../../utils/test-helpers'
+import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
+import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { createMethodsRPC } from './rpc'
+
+const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: WorkspaceProject) {
   const channel = new MessageChannel()
@@ -34,7 +38,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -44,12 +48,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.threads ?? {}
+  const poolOptions = ctx.config.poolOptions?.vmThreads ?? {}
 
   const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
-  const worker = resolve(ctx.distPath, 'workers/threads.js')
+  const worker = resolve(ctx.distPath, 'workers/vmThreads.js')
 
   const options: TinypoolOptions = {
     filename: resolve(ctx.distPath, 'worker.js'),
@@ -62,18 +66,18 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
     env,
     execArgv: [
+      '--experimental-import-meta-resolve',
+      '--experimental-vm-modules',
+      '--require',
+      suppressWarningsPath,
       ...poolOptions.execArgv ?? [],
       ...execArgv,
     ],
 
     terminateTimeout: ctx.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
+    maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
   }
-
-  const isolated = poolOptions.isolate ?? true
-
-  if (isolated)
-    options.isolateWorkers = true
 
   if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
@@ -90,7 +94,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
-        pool: 'threads',
+        pool: 'vmThreads',
         worker,
         port: workerPort,
         config,
@@ -136,76 +140,39 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         return config
       }
 
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
-      }
+      const filesByEnv = await groupFilesByEnv(specs)
+      const promises = Object.values(filesByEnv).flat()
+      const results = await Promise.allSettled(promises
+        .map(({ file, environment, project }) => runFiles(project, getConfig(project), [file], environment, invalidates)))
 
-      const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
-
-      if (multipleThreads.length) {
-        const filesByEnv = await groupFilesByEnv(multipleThreads)
-        const files = Object.values(filesByEnv).flat()
-        const results: PromiseSettledResult<void>[] = []
-
-        if (isolated) {
-          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
-            runFiles(project, getConfig(project), [file], environment, invalidates))))
-        }
-        else {
-          // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
-          // Tasks are still running parallel but environments are isolated between tasks.
-          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
-
-          for (const group of Object.values(grouped)) {
-            // Push all files to pool's queue
-            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
-              runFiles(project, getConfig(project), [file], environment, invalidates))))
-
-            // Once all tasks are running or finished, recycle worker for isolation.
-            // On-going workers will run in the previous environment.
-            await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
-            await pool.recycleWorkers()
-          }
-        }
-
-        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-        if (errors.length > 0)
-          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
-      }
-
-      if (singleThreads.length) {
-        const filesByEnv = await groupFilesByEnv(singleThreads)
-        const envs = envsOrder.concat(
-          Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
-        )
-
-        for (const env of envs) {
-          const files = filesByEnv[env]
-
-          if (!files?.length)
-            continue
-
-          const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
-
-          for (const files of Object.values(filesByOptions)) {
-            // Always run environments isolated between each other
-            await pool.recycleWorkers()
-
-            const filenames = files.map(f => f.file)
-            await runFiles(files[0].project, getConfig(files[0].project), filenames, files[0].environment, invalidates)
-          }
-        }
-      }
+      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+      if (errors.length > 0)
+        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
     }
   }
 
   return {
-    name: 'threads',
+    name: 'vmThreads',
     runTests: runWithFiles('run'),
     close: () => pool.destroy(),
   }
+}
+
+function getMemoryLimit(config: ResolvedConfig) {
+  const memory = nodeos.totalmem()
+  const limit = getWorkerMemoryLimit(config)
+
+  if (typeof memory === 'number') {
+    return stringToBytes(
+      limit,
+      config.watch ? memory / 2 : memory,
+    )
+  }
+
+  // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
+  if ((typeof limit === 'number' && limit > 1) || (typeof limit === 'string' && limit.at(-1) !== '%'))
+    return stringToBytes(limit)
+
+  // just ignore "memoryLimit" value because we cannot detect memory limit
+  return null
 }

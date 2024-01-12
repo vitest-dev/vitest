@@ -7,7 +7,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -307,10 +307,6 @@ export class WorkspaceProject {
     })
 
     await this.initBrowserServer(this.server.config.configFile)
-  }
-
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.ctx.report(name, ...args)
   }
 
   isBrowserEnabled() {
