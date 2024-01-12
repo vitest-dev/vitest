@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -12,15 +12,6 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
-
-export const extraInlineDeps = [
-  /^(?!.*(?:node_modules)).*\.mjs$/,
-  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
-  // Vite client
-  /vite\w*\/dist\/client\/env.mjs/,
-  // Nuxt
-  '@nuxt/test-utils',
-]
 
 function resolvePath(path: string, root: string) {
   return normalize(

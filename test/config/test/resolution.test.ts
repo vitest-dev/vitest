@@ -2,10 +2,10 @@ import type { UserConfig } from 'vitest'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { createVitest } from 'vitest/node'
-import { extraInlineDeps } from '../../../packages/vitest/src/node/config'
+import { extraInlineDeps } from 'vitest/config'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue })
+  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any })
   return vitest
 }
 
