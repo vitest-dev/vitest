@@ -179,7 +179,7 @@ describe('jest-expect', () => {
       }).toEqual({
         sum: expect.closeTo(0.4),
       })
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: CloseTo{ …(4) } }]`)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
@@ -949,7 +949,7 @@ it('toHaveProperty error diff', () => {
   // non match value (with asymmetric matcher)
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
     [
-      "expected { name: 'foo' } to have property "name" with value Any{ …(3) }",
+      "expected { name: 'foo' } to have property "name" with value Any<Number>",
       "- Expected:
     Any<Number>
 
@@ -961,7 +961,7 @@ it('toHaveProperty error diff', () => {
   // non match key (with asymmetric matcher)
   expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
     [
-      "expected { noName: 'foo' } to have property "name" with value Any{ …(3) }",
+      "expected { noName: 'foo' } to have property "name" with value Any<Number>",
       "- Expected:
     Any<Number>
 
@@ -993,6 +993,51 @@ it('toHaveProperty error diff', () => {
     undefined",
     ]
   `)
+})
+
+it('asymmetric matcher error', () => {
+  setupColors(getDefaultColors())
+
+  expect.extend({
+    stringContainingCustom(received: unknown, other: string) {
+      return {
+        pass: typeof received === 'string' && received.includes(other),
+        message: () => `expected ${this.utils.printReceived(received)} ${this.isNot ? 'not ' : ''}to contain ${this.utils.printExpected(other)}`,
+      }
+    },
+  })
+
+  function getError(f: () => unknown) {
+    try {
+      f()
+      return expect.unreachable()
+    }
+    catch (error) {
+      const e = processError(error)
+      return {
+        message: e.message,
+        diff: e.diff,
+        expected: e.expected,
+        actual: e.actual,
+      }
+    }
+  }
+
+  // builtin
+  expect(getError(() => expect('hello').toEqual((expect as any).stringContaining('xx')))).toMatchSnapshot()
+  expect(getError(() => expect('hello').toEqual((expect as any).not.stringContaining('ll')))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContaining('xx') }))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContaining('ll') }))).toMatchSnapshot()
+
+  // custom
+  expect(getError(() => expect('hello').toEqual((expect as any).stringContainingCustom('xx')))).toMatchSnapshot()
+  expect(getError(() => expect('hello').toEqual((expect as any).not.stringContainingCustom('ll')))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContainingCustom('xx') }))).toMatchSnapshot()
+  expect(getError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContainingCustom('ll') }))).toMatchSnapshot()
+
+  // assertion form
+  expect(getError(() => (expect('hello') as any).stringContainingCustom('xx'))).toMatchSnapshot()
+  expect(getError(() => (expect('hello') as any).not.stringContainingCustom('ll'))).toMatchSnapshot()
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
