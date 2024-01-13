@@ -1,10 +1,12 @@
 import { expect, test } from 'vitest'
 
+// @ts-expect-error test vite resolve.alias
+import testAlias from 'test-alias-from'
+
 test('window is defined', () => {
   expect(typeof window).toBe('object')
 })
 
-test('"define" from workspace inline config', () => {
-  // @ts-expect-error vite define
-  expect(TEST_DEFINE).toBe('hello')
+test('alias from workspace inline config', () => {
+  expect(testAlias).toBe('hello')
 })

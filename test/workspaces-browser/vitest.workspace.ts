@@ -13,8 +13,13 @@ export default defineWorkspace([
         provider: process.env.PROVIDER || 'webdriverio',
       },
     },
-    define: {
-      TEST_DEFINE: '"hello"',
+    resolve: {
+      alias: {
+        'test-alias-from': new URL(
+          './space_browser_inline/test-alias-to.ts',
+          import.meta.url,
+        ).pathname,
+      },
     },
   },
 ])
