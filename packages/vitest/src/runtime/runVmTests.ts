@@ -53,12 +53,17 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
+  const { vi } = VitestIndex
+
   for (const file of files) {
     workerState.filepath = file
 
     await startTests([file], runner)
 
-    workerState.filepath = undefined
+    // reset after tests, because user might call `vi.setConfig` in setupFile
+    vi.resetConfig()
+    // mocks should not affect different files
+    vi.restoreAllMocks()
   }
 
   await stopCoverageInsideWorker(config.coverage, executor)

@@ -59,6 +59,7 @@ cli
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
   .option('--exclude <glob>', 'Additional file globs to be excluded from test')
   .option('--expand-snapshot-diff', 'Show full diff when snapshot fails')
+  .option('--disable-console-intercept', 'Disable automatic interception of console logging (default: `false`)')
   .option('--typecheck [options]', 'Custom options for typecheck pool')
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')

@@ -6,7 +6,7 @@ import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { diff, stringify } from './jest-matcher-utils'
+import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
@@ -23,6 +23,7 @@ declare class DOMTokenList {
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
   const c = () => getColors()
+  const customTesters = getCustomEqualityTesters()
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
@@ -80,7 +81,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const equal = jestEquals(
       actual,
       expected,
-      [iterableEquality],
+      [...customTesters, iterableEquality],
     )
 
     return this.assert(
@@ -98,6 +99,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
       expected,
       [
+        ...customTesters,
         iterableEquality,
         typeEquality,
         sparseArrayEquality,
@@ -125,6 +127,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         actual,
         expected,
         [
+          ...customTesters,
           iterableEquality,
           typeEquality,
           sparseArrayEquality,
@@ -140,7 +143,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         const toEqualPass = jestEquals(
           actual,
           expected,
-          [iterableEquality],
+          [...customTesters, iterableEquality],
         )
 
         if (toEqualPass)
@@ -159,7 +162,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toMatchObject', function (expected) {
     const actual = this._obj
     return this.assert(
-      jestEquals(actual, expected, [iterableEquality, subsetEquality]),
+      jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality]),
       'expected #{this} to match object #{exp}',
       'expected #{this} to not match object #{exp}',
       expected,
@@ -208,7 +211,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected)
+      return jestEquals(item, expected, customTesters)
     })
 
     this.assert(
@@ -339,7 +342,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return utils.getPathInfo(actual, propertyName)
     }
     const { value, exists } = getValue()
-    const pass = exists && (args.length === 1 || jestEquals(expected, value))
+    const pass = exists && (args.length === 1 || jestEquals(expected, value, customTesters))
 
     const valueString = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
 
@@ -482,7 +485,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
+    const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [...customTesters, iterableEquality]))
     const isNot = utils.flag(this, 'negate') as boolean
 
     const msg = utils.getMessage(
@@ -504,7 +507,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const nthCall = spy.mock.calls[times - 1]
 
     this.assert(
-      jestEquals(nthCall, args, [iterableEquality]),
+      jestEquals(nthCall, args, [...customTesters, iterableEquality]),
       `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -517,7 +520,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
     this.assert(
-      jestEquals(lastCall, args, [iterableEquality]),
+      jestEquals(lastCall, args, [...customTesters, iterableEquality]),
       `expected last "${spyName}" call to have been called with #{exp}`,
       `expected last "${spyName}" call to not have been called with #{exp}`,
       args,

@@ -5,6 +5,7 @@ import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, Va
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
+import { highlight } from '@vitest/utils'
 import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
@@ -256,7 +257,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       name: 'SyntaxError',
       message: _error.message,
       stack: _error.stack,
-      frame: generateCodeFrame(code, 4, insideCall.start + 1),
+      frame: generateCodeFrame(highlight(code), 4, insideCall.start + 1),
     }
     throw error
   }

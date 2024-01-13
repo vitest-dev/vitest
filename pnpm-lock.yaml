@@ -295,7 +295,7 @@ importers:
         version: 0.3.3
     devDependencies:
       '@vitest/ui':
-        specifier: latest
+        specifier: workspace:*
         version: link:../../packages/ui
       react:
         specifier: ^18.0.0
@@ -1229,6 +1229,9 @@ importers:
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.5
+      tinyhighlight:
+        specifier: ^0.3.2
+        version: 0.3.2
 
   packages/vite-node:
     dependencies:
@@ -1590,6 +1593,9 @@ importers:
       '@types/istanbul-lib-coverage':
         specifier: ^2.0.6
         version: 2.0.6
+      '@types/istanbul-lib-report':
+        specifier: ^3.0.3
+        version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
         version: 4.5.0(vite@5.0.2)(vue@3.3.8)
@@ -1611,6 +1617,9 @@ importers:
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
+      istanbul-lib-report:
+        specifier: ^3.0.1
+        version: 3.0.1
       magicast:
         specifier: ^0.3.2
         version: 0.3.2
@@ -2311,7 +2320,7 @@ packages:
     resolution: {integrity: sha512-XktuhWlJ5g+3TJXc5upd9Ks1HutSArik6jf2eAjYFyIOf4ej3RN+184cZbzDvbPnuTJIUhPKKJE3cIsYTiAT3w==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/highlight': 7.22.13
+      '@babel/highlight': 7.23.4
       chalk: 2.4.2
 
   /@babel/compat-data@7.23.2:
@@ -2704,10 +2713,9 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/highlight@7.22.13:
-    resolution: {integrity: sha512-C/BaXcnnvBCmHTpz/VGZ8jgtE2aYlW4hxDhseJAWZb7gqGM/qtCK6iZUb0TyKFf7BOUsBH7Q7fkRsDRhg1XklQ==}
+  /@babel/highlight@7.23.4:
+    resolution: {integrity: sha512-acGdbYSfp2WheJoJm/EBBBLh/ID8KDc64ISZ9DYtBmC8/Q204PZJLHyzeB5qMzJ5trcOkybd78M4x2KWsUq++A==}
     engines: {node: '>=6.9.0'}
-    requiresBuild: true
     dependencies:
       '@babel/helper-validator-identifier': 7.22.20
       chalk: 2.4.2
@@ -19130,6 +19138,10 @@ packages:
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
+  /js-tokens@8.0.2:
+    resolution: {integrity: sha512-Olnt+V7xYdvGze9YTbGFZIfQXuGV4R3nQwwl8BrtgaPE/wq8UFpUHWuTNc05saowhSr1ZO6tx+V6RjE9D5YQog==}
+    dev: true
+
   /js-yaml@3.14.1:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
     hasBin: true
@@ -25040,6 +25052,18 @@ packages:
   /tinybench@2.5.1:
     resolution: {integrity: sha512-65NKvSuAVDP/n4CqH+a9w2kTlLReS9vhsAP06MWx+/89nMinJyB2icyl58RIcqCmIggpojIGeuJGhjU1aGMBSg==}
     dev: false
+
+  /tinyhighlight@0.3.2:
+    resolution: {integrity: sha512-PaaMroXMDSO3X+UGsTfbL3MmBkTK4+Yycjg6gDAFXNf6lHvKWjXZcdmylJst7V+HFl6W1FijqLqyB07Ze60PZw==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      picocolors: ^1.0.0
+    peerDependenciesMeta:
+      picocolors:
+        optional: true
+    dependencies:
+      js-tokens: 8.0.2
+    dev: true
 
   /tinypool@0.8.1:
     resolution: {integrity: sha512-zBTCK0cCgRROxvs9c0CGK838sPkeokNGdQVUUwHAbynHFlmyJYj825f/oRs528HaIJ97lo0pLIlDUzwN+IorWg==}

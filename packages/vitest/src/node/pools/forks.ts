@@ -4,12 +4,11 @@ import EventEmitter from 'node:events'
 import { Tinypool } from 'tinypool'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import { createBirpc } from 'birpc'
-import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
-import type { ChildContext } from '../../types/child'
+import type { ContextRPC, ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { groupBy } from '../../utils'
+import { groupBy, resolve } from '../../utils'
 import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: WorkspaceProject) {
@@ -48,7 +47,7 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }: PoolProcessOptions): ProcessPool {
+export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -63,9 +62,11 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
   const maxThreads = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
 
+  const worker = resolve(ctx.distPath, 'workers/forks.js')
+
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: forksPath,
+    filename: resolve(ctx.distPath, 'worker.js'),
 
     maxThreads,
     minThreads,
@@ -99,7 +100,9 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
       ctx.state.clearFiles(project, files)
       const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
-      const data: ChildContext = {
+      const data: ContextRPC = {
+        pool: 'forks',
+        worker,
         config,
         files,
         invalidates,
@@ -221,8 +224,6 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env, forksPath }
   return {
     name: 'forks',
     runTests: runWithFiles('run'),
-    close: async () => {
-      await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }

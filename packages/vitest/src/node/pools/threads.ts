@@ -3,6 +3,7 @@ import * as nodeos from 'node:os'
 import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
+import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
@@ -33,7 +34,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: PoolProcessOptions): ProcessPool {
+export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -48,8 +49,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
   const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
   const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
+  const worker = resolve(ctx.distPath, 'workers/threads.js')
+
   const options: TinypoolOptions = {
-    filename: workerPath,
+    filename: resolve(ctx.distPath, 'worker.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -87,6 +90,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
+        pool: 'threads',
+        worker,
         port: workerPort,
         config,
         files,
@@ -201,11 +206,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
   return {
     name: 'threads',
     runTests: runWithFiles('run'),
-    close: async () => {
-      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
-      if (nodeVersion >= 16.17)
-        await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }

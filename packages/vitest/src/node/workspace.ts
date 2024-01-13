@@ -7,7 +7,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -256,10 +256,10 @@ export class WorkspaceProject {
 
     if (filters.length) {
       return testFiles.filter((t) => {
-        const testFile = relative(dir, t)
+        const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-          return testFile.includes(f) || testFile.includes(relativePath)
+          return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
     }
@@ -307,10 +307,6 @@ export class WorkspaceProject {
     })
 
     await this.initBrowserServer(this.server.config.configFile)
-  }
-
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.ctx.report(name, ...args)
   }
 
   isBrowserEnabled() {
@@ -390,7 +386,7 @@ export class WorkspaceProject {
       return
     if (this.browserProvider)
       return
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    const Provider = await getBrowserProvider(this.config.browser, this)
     this.browserProvider = new Provider()
     const browser = this.config.browser.name
     const supportedBrowsers = this.browserProvider.getSupportedBrowsers()

@@ -147,6 +147,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getProvidedContext() {
           return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
         },
+        getUnhandledErrors() {
+          return ctx.state.getUnhandledErrors()
+        },
       },
       {
         post: msg => ws.send(msg),
@@ -206,9 +209,9 @@ class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files?: File[] | undefined) {
+  onFinished(files?: File[], errors?: unknown[]) {
     this.clients.forEach((client) => {
-      client.onFinished?.(files)
+      client.onFinished?.(files, errors)
     })
   }
 

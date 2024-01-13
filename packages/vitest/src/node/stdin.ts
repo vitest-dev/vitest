@@ -1,9 +1,11 @@
 import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { isWindows, stdout } from '../utils'
+import { relative } from 'pathe'
+import { getTests, isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
+import { WatchFilter } from './watch-filter'
 
 const keys = [
   [['a', 'return'], 'rerun all tests'],
@@ -95,14 +97,22 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input test name pattern (RegExp)',
-      initial: ctx.configOverride.testNamePattern?.source || '',
-    }])
+    const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
+    const filter = await watchFilter.filter((str: string) => {
+      const files = ctx.state.getFiles()
+      const tests = getTests(files)
+      try {
+        const reg = new RegExp(str)
+        return tests.map(test => test.name).filter(testName => testName.match(reg))
+      }
+      catch {
+        // `new RegExp` may throw error when input is invalid regexp
+        return []
+      }
+    })
+
     on()
-    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
+    await ctx.changeNamePattern(filter?.trim() || '', undefined, 'change pattern')
   }
 
   async function inputProjectName() {
@@ -119,15 +129,21 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputFilePattern() {
     off()
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input filename pattern',
-      initial: latestFilename,
-    }])
-    latestFilename = filter.trim()
+
+    const watchFilter = new WatchFilter('Input filename pattern')
+
+    const filter = await watchFilter.filter(async (str: string) => {
+      const files = await ctx.globTestFiles([str])
+      return files.map(file =>
+        relative(ctx.config.root, file[1]),
+      )
+    })
+
     on()
-    await ctx.changeFilenamePattern(filter.trim())
+
+    latestFilename = filter?.trim() || ''
+
+    await ctx.changeFilenamePattern(latestFilename)
   }
 
   let rl: readline.Interface | undefined

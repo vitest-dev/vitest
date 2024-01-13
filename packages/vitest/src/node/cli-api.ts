@@ -4,9 +4,9 @@ import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../types'
-import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
+import type { VitestOptions } from './core'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -25,6 +25,7 @@ export async function startVitest(
   cliFilters: string[] = [],
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
 ): Promise<Vitest | undefined> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
@@ -60,14 +61,14 @@ export async function startVitest(
     options.typecheck.enabled = true
   }
 
-  const ctx = await createVitest(mode, options, viteOverrides)
+  const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      if (!await ensurePackageInstalled(requiredPackages, root)) {
+      if (!await ctx.packageInstaller.ensureInstalled(requiredPackages, root)) {
         process.exitCode = 1
         return ctx
       }
@@ -76,7 +77,7 @@ export async function startVitest(
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 
-  if (environmentPackage && !await ensurePackageInstalled(environmentPackage, root)) {
+  if (environmentPackage && !await ctx.packageInstaller.ensureInstalled(environmentPackage, root)) {
     process.exitCode = 1
     return ctx
   }
