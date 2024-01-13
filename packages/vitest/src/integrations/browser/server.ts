@@ -16,6 +16,8 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   const server = await createServer({
     logLevel: 'error',
     mode: project.config.mode,
+    // test config can be inlined in root workspace config without dedicated vite/vitest configFile for this project
+    test: project.config,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
