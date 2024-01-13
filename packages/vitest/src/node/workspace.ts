@@ -19,7 +19,7 @@ import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
 
-export interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
   extends?: string
 }
@@ -272,7 +272,7 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, configFile, this.options)
+    this.browser = await createBrowserServer(this, configFile)
   }
 
   static createBasicProject(ctx: Vitest) {
