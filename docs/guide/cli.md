@@ -68,7 +68,9 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--dir <path>`| Base directory to scan for the test files |
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
-| `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
+| `--api [port], --api.port [port]` | Specify server port. Note if the port is already being used, Vite will automatically try the next available port |
+| `--api.host [host]` | Specify which IP addresses the server should listen on. Set this to 0.0.0.0 or true to listen on all addresses, including LAN and public addresses |
+| `--api.strictPort` | Set to true to exit if port is already in use, instead of automatically trying the next available port |
 | `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`)  |
 | `--poolOptions <options>` | Specify pool options |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
@@ -80,6 +82,29 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
+| `--coverage.all` | Whether to include all files, including the untested ones into report |
+| `--coverage.provider` | Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom" |
+| `--coverage.enabled` | Enables coverage collection. Can be overridden using the --coverage CLI option. This option is not available for custom providers (default: false) |
+| `--coverage.include` | Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. This option is not available for custom providers (default: **) |
+| `--coverage.extension` | Extension to be included in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`) |
+| `--coverage.exclude` | Files to be excluded in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: Visit https://vitest.dev/config/#coverage-exclude)
+| `--coverage.clean` | Clean coverage results before running tests. This option is not available for custom providers (default: true) |
+| `coverage.cleanOnRerun` | Clean coverage report on watch rerun. This option is not available for custom providers (default: true) |
+| `coverage.reportsDirectory` | Directory to write coverage report to. This option is not available for custom providers (default: ./coverage) |
+| `--coverage.reporter` | Coverage reporters to use. Visit [https://vitest.dev/config/#coverage-reporter](https://vitest.dev/config/#coverage-reporter) for more information. This option is not available for custom providers (default: `["text", "html", "clover", "json"]`) |
+| `--coverage.reportOnFailure` | Generate coverage report even when tests fail. This option is not available for custom providers (default: `false`) |
+| `--coverage.allowExternal` | Collect coverage of files outside the project root. This option is not available for custom providers (default: `false`) |
+| `--coverage.skipFull` | Do not show files with 100% statement, branch, and function coverage. This option is not available for custom providers (default: `false`) |
+| `--coverage.perFile` | Check thresholds per file. See `--coverage.lines`, `--coverage.functions`, `--coverage.branches` and `--coverage.statements` for the actual thresholds. This option is not available for custom providers (default: `false`) |
+| `--coverage.thresholdAutoUpdate` | Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds. This option is not available for custom providers (default: `false`) |
+| `--coverage.lines` | Threshold for lines. Visit [https://github.com/istanbuljs/nyc#coverage-thresholds](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers |
+| `--coverage.functions` | Threshold for functions. Visit [https://github.com/istanbuljs/nyc#coverage-thresholds](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers |
+| `--coverage.branches` | Threshold for branches. Visit [https://github.com/istanbuljs/nyc#coverage-thresholds](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers |
+| `--coverage.statements` | Threshold for statements. Visit [https://github.com/istanbuljs/nyc#coverage-thresholds](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers |
+| `--coverage.100` | Shortcut to set all coverage thresholds to 100. This option is only available for the v8 provider (default: `false`) |
+| `--coverage.ignoreClassMethods` | Array of class method names to ignore for coverage. Visit [https://github.com/istanbuljs/nyc#ignoring-methods](https://github.com/istanbuljs/nyc#ignoring-methods) for more information. This option is only available for the istanbul providers (default: `[]`) |
+| `--coverage.watermarks` | Watermarks for statements, lines, branches and functions. Visit [https://github.com/istanbuljs/nyc#high-and-low-watermarks](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information. This option is not available for custom providers (default: Visit [https://vitest.dev/config/#coverage-watermarks](https://vitest.dev/config/#coverage-watermarks)) |
+| `--coverage.customProviderModule` | Specifies the module name or path for the custom coverage provider module. Visit [https://vitest.dev/guide/coverage.html#custom-coverage-provider](https://vitest.dev/guide/coverage.html#custom-coverage-provider) for more information. This option is only available for custom providers |
 | `--run` | Do not watch |
 | `--isolate` | Run every test file in isolation. To disable isolation, use --no-isolate (default: `true`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
@@ -87,6 +112,14 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser API with happy-dom |
 | `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
+| `--browser.enabled` | Run all tests inside a browser by default. Can be overriden with the poolMatchGlobs configuration file option (default: false) |
+| `--browser.name <name>` | Run all tests in a specific browser. Some browsers are only available for specific providers (see --browser.provider). Visit https://vitest.dev/config/#browser-name for more information |
+| `--browser.headless` | Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: process.env.CI) |
+| `--browser.api [port]` | Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. Does not affect the --api option. If true will be set to ${defaultBrowserPort} (default: ${defaultBrowserPort}) |
+| `--browser.api.port <port>` | Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. Does not affect the --api.port option |
+| `--browser.api.host [host]` | Specify which IP addresses the server should listen on. Set this to 0.0.0.0 or true to listen on all addresses, including LAN and public addresses. Does not affect the --api.host option |
+| `--browser.provider` | Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", or the path to a custom provider. Visit https://vitest.dev/config/#browser-provider for more information (default: "webdriverio") |
+| `--browser.slowHijackESM` | Let Vitest use its own module resolution on the browser to enable APIs such as vi.mock and vi.spyOn. Visit https://vitest.dev/config/#browser-slowhijackesm for more information (default: true) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--logHeapUsage` | Show the size of heap for each test |
@@ -95,6 +128,10 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
+| `--sequence.concurrent [concurrent]` | Make tests run in parallel (default: false) |
+| `--sequence.seed <seed>` | Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit https://en.wikipedia.org/wiki/Random_seed for more information |
+| `--sequence.hooks <order>` | Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit https://vitest.dev/config/#sequence-hooks for more information (default: "parallel") |
+| `--sequence.setupFiles <order>` | Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: "parallel") |
 | `--no-color` | Removes colors from the console output |
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
