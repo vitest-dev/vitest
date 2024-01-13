@@ -1,12 +1,16 @@
 import { expect, test } from 'vitest'
 
-// @ts-expect-error test vite resolve.alias
-import testAlias from 'test-alias-from'
+// @ts-expect-error alias
+import testAliasVite from 'test-alias-from-vite'
+
+// @ts-expect-error alias
+import testAliasVitest from 'test-alias-from-vitest'
 
 test('window is defined', () => {
   expect(typeof window).toBe('object')
 })
 
 test('alias from workspace inline config', () => {
-  expect(testAlias).toBe('hello')
+  expect(testAliasVite).toBe('hello')
+  expect(testAliasVitest).toBe('hello')
 })
