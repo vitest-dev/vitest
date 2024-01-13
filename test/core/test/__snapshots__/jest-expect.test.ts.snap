@@ -154,7 +154,7 @@ testComplexMatcher<[object Object]>
 exports[`asymmetric matcher error 12`] = `
 {
   "actual": "Object {
-  "k1": "v1",
+  "k": "v",
   "k2": "v2",
 }",
   "diff": "- Expected
@@ -162,15 +162,15 @@ exports[`asymmetric matcher error 12`] = `
 
 - ObjectContaining {
 + Object {
-    "k1": "v1",
--   "kk": "vv",
+    "k": "v",
+-   "k3": "v3",
 +   "k2": "v2",
   }",
   "expected": "ObjectContaining {
-  "k1": "v1",
-  "kk": "vv",
+  "k": "v",
+  "k3": "v3",
 }",
-  "message": "expected { k1: 'v1', k2: 'v2' } to deeply equal ObjectContaining{…}",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal ObjectContaining {"k": "v", "k3": "v3"}",
 }
 `;
 

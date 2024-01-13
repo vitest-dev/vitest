@@ -1052,7 +1052,7 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))
 
   // more builtins
-  snapshotError(() => expect({ k1: 'v1', k2: 'v2' }).toEqual(expect.objectContaining({ k1: 'v1', kk: 'vv' })))
+  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.objectContaining({ k: 'v', k3: 'v3' })))
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
