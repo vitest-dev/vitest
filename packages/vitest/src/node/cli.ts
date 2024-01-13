@@ -62,7 +62,7 @@ cli
   .option('--dom', 'Mock browser API with happy-dom')
   .option('--browser', 'Run tests in the browser. Equivalent to --browser.enabled (default: false)')
   .option('--browser.enabled', 'Run all tests inside a browser by default. Can be overriden with the poolMatchGlobs configuration file option (default: false)')
-  .option('--browser.name', 'Run all tests in a specific browser. Some browsers are only available for specific providers (see --browser.provider). Visit https://vitest.dev/config/#browser-name for more information')
+  .option('--browser.name <name>', 'Run all tests in a specific browser. Some browsers are only available for specific providers (see --browser.provider). Visit https://vitest.dev/config/#browser-name for more information')
   .option('--browser.headless', 'Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: process.env.CI)')
   .option('--browser.api [port]', `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. Does not affect the --api option. If true will be set to ${defaultBrowserPort} (default: ${defaultBrowserPort})`)
   .option('--browser.api.port <port>', 'Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. Does not affect the --api.port option')
