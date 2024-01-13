@@ -22,7 +22,7 @@ cli
   .option('--ui', 'Enable UI')
   .option('--open', 'Open UI automatically (default: !process.env.CI))')
   .option('--api [port]', `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`)
-  .option('--api.port <port>', 'Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on')
+  .option('--api.port [port]', `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`)
   .option('--api.host [host]', 'Specify which IP addresses the server should listen on. Set this to 0.0.0.0 or true to listen on all addresses, including LAN and public addresses')
   .option('--api.strictPort', 'Set to true to exit if port is already in use, instead of automatically trying the next available port')
   .option('--silent', 'Silent console output from tests')
