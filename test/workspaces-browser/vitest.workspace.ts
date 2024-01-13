@@ -14,7 +14,7 @@ export default defineWorkspace([
       },
     },
     define: {
-      TEST_DEIFNE: 'hello',
+      TEST_DEFINE: '"hello"',
     },
   },
 ])

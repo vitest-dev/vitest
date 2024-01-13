@@ -5,6 +5,6 @@ test('window is defined', () => {
 })
 
 test('"defined" from workspace inline config', () => {
-  // TODO
-  // expect(typeof TEST_DEIFNE).toBe("string")
+  // @ts-expect-error vite define
+  expect(TEST_DEFINE).toBe('hello')
 })

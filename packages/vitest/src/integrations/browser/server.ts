@@ -2,11 +2,11 @@ import { createServer } from 'vite'
 import { defaultBrowserPort } from '../../constants'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
-import type { WorkspaceProject } from '../../node/workspace'
+import type { InitializeProjectOptions, WorkspaceProject } from '../../node/workspace'
 import { MocksPlugin } from '../../node/plugins/mocks'
 import { resolveFsAllow } from '../../node/plugins/utils'
 
-export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
+export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined, options?: InitializeProjectOptions) {
   const root = project.config.root
 
   await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
@@ -14,10 +14,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   const configPath = typeof configFile === 'string' ? configFile : false
 
   const server = await createServer({
+    ...options,
     logLevel: 'error',
     mode: project.config.mode,
-    // test config can be inlined in root workspace config without dedicated vite/vitest configFile for this project
-    test: project.config,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
@@ -27,6 +26,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
       },
     },
     plugins: [
+      ...options?.plugins || [],
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {

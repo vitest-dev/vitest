@@ -19,13 +19,13 @@ import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+export interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
   extends?: string
 }
 
 export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: InitializeProjectOptions) {
-  const project = new WorkspaceProject(workspacePath, ctx)
+  const project = new WorkspaceProject(workspacePath, ctx, options)
 
   const configFile = options.extends
     ? resolve(dirname(options.workspaceConfigPath), options.extends)
@@ -78,6 +78,7 @@ export class WorkspaceProject {
   constructor(
     public path: string | number,
     public ctx: Vitest,
+    public options?: InitializeProjectOptions,
   ) { }
 
   getName(): string {
@@ -271,7 +272,7 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, configFile)
+    this.browser = await createBrowserServer(this, configFile, this.options)
   }
 
   static createBasicProject(ctx: Vitest) {
