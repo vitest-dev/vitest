@@ -5,7 +5,8 @@ import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, Va
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
-import { highlight } from '@vitest/utils'
+import type { Colors } from '@vitest/utils'
+import { highlightCode } from '../utils/colors'
 import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
@@ -62,7 +63,7 @@ export function getBetterEnd(code: string, node: Node) {
 const regexpHoistable = /[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
 const hashbangRE = /^#!.*\n/
 
-export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
+export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], colors?: Colors) {
   const needHoisting = regexpHoistable.test(code)
 
   if (!needHoisting)
@@ -256,7 +257,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       name: 'SyntaxError',
       message: _error.message,
       stack: _error.stack,
-      frame: generateCodeFrame(highlight(code), 4, insideCall.start + 1),
+      frame: generateCodeFrame(highlightCode(id, code, colors), 4, insideCall.start + 1),
     }
     throw error
   }
