@@ -1,6 +1,7 @@
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
 import stripAnsi from 'strip-ansi'
+import { getDefaultColors } from '@vitest/utils'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
@@ -1205,7 +1206,7 @@ await vi
 describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
-      hoistSimpleCode(code)
+      hoistMocks(code, '/test.js', parse, getDefaultColors())?.code.trim()
     }
     catch (err: any) {
       return err
