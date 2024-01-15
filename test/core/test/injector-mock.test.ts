@@ -1182,6 +1182,22 @@ console.log(foo + 2)
       console.log(__vi_import_0__.foo + 2)"
     `)
   })
+
+  test('handle single "await vi.hoisted"', async () => {
+    expect(
+      hoistSimpleCode(`
+import { vi } from 'vitest';
+1234;
+await vi.hoisted(() => {});
+    `),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      await vi.hoisted(() => {});
+
+
+      1234;"
+    `)
+  })
 })
 
 describe('throws an error when nodes are incompatible', () => {
