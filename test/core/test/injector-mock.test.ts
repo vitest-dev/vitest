@@ -1,6 +1,7 @@
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
 import stripAnsi from 'strip-ansi'
+import { getDefaultColors } from '@vitest/utils'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
@@ -1182,12 +1183,30 @@ console.log(foo + 2)
       console.log(__vi_import_0__.foo + 2)"
     `)
   })
+
+  test('handle single "await vi.hoisted"', async () => {
+    expect(
+      hoistSimpleCode(`
+import { vi } from 'vitest';
+1234;
+await vi
+  .hoisted(() => {});
+    `),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      await vi
+        .hoisted(() => {});
+
+
+      1234;"
+    `)
+  })
 })
 
 describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
-      hoistSimpleCode(code)
+      hoistMocks(code, '/test.js', parse, getDefaultColors())?.code.trim()
     }
     catch (err: any) {
       return err
