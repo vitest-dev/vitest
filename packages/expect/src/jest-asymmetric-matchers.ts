@@ -41,6 +41,16 @@ export abstract class AsymmetricMatcher<
   abstract toString(): string
   getExpectedType?(): string
   toAsymmetricMatcher?(): string
+
+  // implement custom chai/loupe inspect for better AssertionError.message formatting
+  // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
+  [Symbol.for('chai/inspect')](options: { depth: number; truncate: number }) {
+    // minimal pretty-format with simple manual truncation
+    const result = stringify(this, options.depth, { min: true })
+    if (result.length <= options.truncate)
+      return result
+    return `${this.toString()}{…}`
+  }
 }
 
 export class StringContaining extends AsymmetricMatcher<string> {
