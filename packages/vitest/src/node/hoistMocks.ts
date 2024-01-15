@@ -59,12 +59,11 @@ export function getBetterEnd(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
-const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
+const regexpHoistable = /[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
-  const needHoisting = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
+  const needHoisting = regexpHoistable.test(code)
 
   if (!needHoisting)
     return
