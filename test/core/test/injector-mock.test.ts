@@ -1188,11 +1188,13 @@ console.log(foo + 2)
       hoistSimpleCode(`
 import { vi } from 'vitest';
 1234;
-await vi.hoisted(() => {});
+await vi
+  .hoisted(() => {});
     `),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
-      await vi.hoisted(() => {});
+      await vi
+        .hoisted(() => {});
 
 
       1234;"
