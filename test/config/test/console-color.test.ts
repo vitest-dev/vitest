@@ -1,0 +1,24 @@
+import { expect, test } from 'vitest'
+import { execa } from 'execa'
+
+// use "execa" directly since "runVitestCli" strips color
+
+test('with color', async () => {
+  const proc = await execa('vitest', ['run', '--root=./fixtures/console-color'], {
+    env: {
+      FORCE_COLOR: '1',
+      NO_COLOR: undefined,
+    },
+  })
+  expect(proc.stdout).toContain('\n\x1B[33mtrue\x1B[39m\n')
+})
+
+test('without color', async () => {
+  const proc = await execa('vitest', ['run', '--root=./fixtures/console-color'], {
+    env: {
+      FORCE_COLOR: undefined,
+      NO_COLOR: '1',
+    },
+  })
+  expect(proc.stdout).toContain('\ntrue\n')
+})

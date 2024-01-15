@@ -1554,6 +1554,9 @@ importers:
 
   test/config:
     devDependencies:
+      execa:
+        specifier: ^8.0.1
+        version: 8.0.1
       vite:
         specifier: ^5.0.0
         version: 5.0.2(@types/node@18.18.9)(less@4.1.3)
