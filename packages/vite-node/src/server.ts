@@ -195,6 +195,30 @@ export class ViteNodeServer {
     return 'web'
   }
 
+  private getChangedModule(
+    id: string,
+    file: string,
+  ) {
+    const module = this.server.moduleGraph.getModuleById(id) || this.server.moduleGraph.getModuleById(file)
+    if (module)
+      return module
+    const _modules = this.server.moduleGraph.getModulesByFile(file)
+    if (!_modules || !_modules.size)
+      return null
+    // find the latest changed module
+    const modules = [..._modules]
+    let mod = modules[0]
+    let latestMax = -1
+    for (const m of _modules) {
+      const timestamp = Math.max(m.lastHMRTimestamp, m.lastInvalidationTimestamp)
+      if (timestamp > latestMax) {
+        latestMax = timestamp
+        mod = m
+      }
+    }
+    return mod
+  }
+
   private async _fetchModule(id: string, transformMode: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
 
@@ -212,7 +236,7 @@ export class ViteNodeServer {
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
 
-    const moduleNode = this.server.moduleGraph.getModuleById(id) || this.server.moduleGraph.getModuleById(filePath)
+    const moduleNode = this.getChangedModule(id, filePath)
     const cache = this.fetchCaches[transformMode].get(filePath)
 
     // lastUpdateTimestamp is the timestamp that marks the last time the module was changed
