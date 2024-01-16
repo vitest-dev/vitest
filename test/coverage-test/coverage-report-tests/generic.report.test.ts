@@ -90,7 +90,7 @@ test('files should not contain a setup file', () => {
 test('thresholds.autoUpdate updates thresholds', async () => {
   const configFilename = resolve('./vitest.config.ts')
   const mod = parseModule(fs.readFileSync(configFilename, 'utf-8'))
-  const thresholds = mod.exports.default.$args[0].test.coverage.thresholds
+  const thresholds = mod.exports.default.$args[0].$body.test.coverage.thresholds
 
   // Configuration has fixed value of 1.01 and 0 set for each threshold
   expect(Number.parseInt(thresholds.functions)).toBeGreaterThan(1.01)

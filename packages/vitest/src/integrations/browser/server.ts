@@ -14,6 +14,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   const configPath = typeof configFile === 'string' ? configFile : false
 
   const server = await createServer({
+    ...project.options, // spread project config inlined in root workspace config
     logLevel: 'error',
     mode: project.config.mode,
     configFile: configPath,
@@ -25,6 +26,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
       },
     },
     plugins: [
+      ...project.options?.plugins || [],
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {

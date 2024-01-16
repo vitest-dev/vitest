@@ -6,7 +6,7 @@ import remapping from '@ampproject/remapping'
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 
-export default defineConfig({
+export default defineConfig(() => ({
   plugins: [
     vue(),
     /*
@@ -104,4 +104,4 @@ export default defineConfig({
       './src/another-setup.ts',
     ],
   },
-})
+}))

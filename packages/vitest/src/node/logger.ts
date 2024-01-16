@@ -1,11 +1,10 @@
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import { highlight } from '@vitest/utils'
-import { extname } from 'pathe'
 import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
+import { highlightCode } from '../utils/colors'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
@@ -23,14 +22,6 @@ const ERASE_DOWN = `${ESC}J`
 const ERASE_SCROLLBACK = `${ESC}3J`
 const CURSOR_TO_START = `${ESC}1;1H`
 const CLEAR_SCREEN = '\x1Bc'
-const HIGHLIGHT_SUPPORTED_EXTS = new Set(['js', 'ts'].flatMap(lang => [
-  `.${lang}`,
-  `.m${lang}`,
-  `.c${lang}`,
-  `.${lang}x`,
-  `.m${lang}x`,
-  `.c${lang}x`,
-]))
 
 export class Logger {
   outputStream = process.stdout
@@ -112,11 +103,7 @@ export class Logger {
   highlight(filename: string, source: string) {
     if (this._highlights.has(filename))
       return this._highlights.get(filename)!
-    const ext = extname(filename)
-    if (!HIGHLIGHT_SUPPORTED_EXTS.has(ext))
-      return source
-    const isJsx = ext.endsWith('x')
-    const code = highlight(source, { jsx: isJsx, colors: c })
+    const code = highlightCode(filename, source)
     this._highlights.set(filename, code)
     return code
   }
