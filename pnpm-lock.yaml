@@ -1482,6 +1482,9 @@ importers:
 
   test/browser:
     devDependencies:
+      '@vitejs/plugin-basic-ssl':
+        specifier: ^1.0.2
+        version: 1.0.2(vite@5.0.2)
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -10229,6 +10232,15 @@ packages:
       vite-plugin-pwa: '>=0.16.5 <1'
     dependencies:
       vite-plugin-pwa: 0.16.7(vite@5.0.2)(workbox-build@7.0.0)(workbox-window@7.0.0)
+    dev: true
+
+  /@vitejs/plugin-basic-ssl@1.0.2(vite@5.0.2):
+    resolution: {integrity: sha512-DKHKVtpI+eA5fvObVgQ3QtTGU70CcCnedalzqmGSR050AzKZMdUzgC8KmlOneHWH8dF2hJ3wkC9+8FDVAaDRCw==}
+    engines: {node: '>=14.6.0'}
+    peerDependencies:
+      vite: ^5.0.0
+    dependencies:
+      vite: 5.0.2(@types/node@18.18.9)(less@4.1.3)
     dev: true
 
   /@vitejs/plugin-react@1.3.2:

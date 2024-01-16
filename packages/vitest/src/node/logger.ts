@@ -166,7 +166,9 @@ export class Logger {
       const name = project.getName()
       const output = project.isCore() ? '' : ` [${name}]`
 
-      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${project.config.browser.api?.host || 'localhost'}:${c.bold(`${project.browser.config.server.port}`)}`)))
+      const resolvedUrls = project.browser.resolvedUrls
+      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+      this.log(c.dim(c.green(`     ${output} Browser runner started at ${new URL('/', origin)}`)))
     })
 
     if (this.ctx.config.ui)
