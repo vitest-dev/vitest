@@ -43,7 +43,7 @@ test('filter by filename', async () => {
 
   vitest.write('math')
 
-  await vitest.waitForStdout('Pattern matches 1 results')
+  await vitest.waitForStdout('Pattern matches 1 result')
   await vitest.waitForStdout('› math.test.ts')
 
   vitest.write('\n')
@@ -60,7 +60,7 @@ test('filter by test name', async () => {
   await vitest.waitForStdout('Input test name pattern')
 
   vitest.write('sum')
-  await vitest.waitForStdout('Pattern matches 1 results')
+  await vitest.waitForStdout('Pattern matches 1 result')
   await vitest.waitForStdout('› sum')
 
   vitest.write('\n')
