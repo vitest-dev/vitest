@@ -3,6 +3,7 @@
  */
 import { resolve } from 'pathe'
 import type { ViteNodeRunner } from 'vite-node/client'
+import type { Vitest } from 'vitest'
 import { describe, expect, test } from 'vitest'
 import { createReporters } from '../../../packages/vitest/src/node/reporters/utils'
 import { DefaultReporter } from '../../../packages/vitest/src/node/reporters/default'
@@ -12,29 +13,32 @@ const customReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 const fetchModule = {
   executeId: (id: string) => import(id),
 } as ViteNodeRunner
+const ctx = {
+  runner: fetchModule,
+} as Vitest
 
 describe('Reporter Utils', () => {
   test('passing an empty array returns nothing', async () => {
-    const promisedReporters = await createReporters([], fetchModule)
+    const promisedReporters = await createReporters([], ctx)
     expect(promisedReporters).toHaveLength(0)
   })
 
   test('passing the name of a single built-in reporter returns a new instance', async () => {
-    const promisedReporters = await createReporters(['default'], fetchModule)
+    const promisedReporters = await createReporters(['default'], ctx)
     expect(promisedReporters).toHaveLength(1)
     const reporter = promisedReporters[0]
     expect(reporter).toBeInstanceOf(DefaultReporter)
   })
 
   test('passing in the path to a custom reporter returns a new instance', async () => {
-    const promisedReporters = await createReporters(([customReporterPath]), fetchModule)
+    const promisedReporters = await createReporters(([customReporterPath]), ctx)
     expect(promisedReporters).toHaveLength(1)
     const customReporter = promisedReporters[0]
     expect(customReporter).toBeInstanceOf(TestReporter)
   })
 
   test('passing in a mix of built-in and custom reporters works', async () => {
-    const promisedReporters = await createReporters(['default', customReporterPath], fetchModule)
+    const promisedReporters = await createReporters(['default', customReporterPath], ctx)
     expect(promisedReporters).toHaveLength(2)
     const defaultReporter = promisedReporters[0]
     expect(defaultReporter).toBeInstanceOf(DefaultReporter)

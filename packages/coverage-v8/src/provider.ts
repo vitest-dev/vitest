@@ -9,6 +9,7 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import MagicString from 'magic-string'
+import type { ProxifiedModule } from 'magicast'
 import { parseModule } from 'magicast'
 import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
@@ -198,7 +199,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter[0], {
+      // Type assertion required for custom reporters
+      reports.create(reporter[0] as Parameters<typeof reports.create>[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
         ...reporter[1],
@@ -229,9 +231,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           perFile: this.options.thresholds.perFile,
           configurationFile: {
             write: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
-            read: () => configModule.exports.default.$type === 'function-call'
-              ? configModule.exports.default.$args[0]
-              : configModule.exports.default,
+            read: () => resolveConfig(configModule),
           },
         })
       }
@@ -430,4 +430,30 @@ function toSlices<T>(array: T[], size: number): T[][] {
 
     return chunks
   }, [])
+}
+
+function resolveConfig(configModule: ProxifiedModule<any>) {
+  const mod = configModule.exports.default
+
+  try {
+    // Check for "export default { test: {...} }"
+    if (mod.$type === 'object')
+      return mod
+
+    if (mod.$type === 'function-call') {
+      // "export default defineConfig({ test: {...} })"
+      if (mod.$args[0].$type === 'object')
+        return mod.$args[0]
+
+      // "export default defineConfig(() => ({ test: {...} }))"
+      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
+        return mod.$args[0].$body
+    }
+  }
+  catch (error) {
+    // Reduce magicast's verbose errors to readable ones
+    throw new Error(error instanceof Error ? error.message : String(error))
+  }
+
+  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
 }

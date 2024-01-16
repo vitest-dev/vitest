@@ -4,7 +4,7 @@ import * as chai from 'chai'
 import './setup'
 import type { TaskPopulated, Test } from '@vitest/runner'
 import { getCurrentTest } from '@vitest/runner'
-import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
+import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
 import { getFullName } from '../../utils/tasks'
@@ -46,6 +46,8 @@ export function createExpect(test?: TaskPopulated) {
 
   // @ts-expect-error untyped
   expect.extend = matchers => chai.expect.extend(expect, matchers)
+  expect.addEqualityTesters = customTesters =>
+    addCustomEqualityTesters(customTesters)
 
   expect.soft = (...args) => {
     const assert = expect(...args)

@@ -15,7 +15,7 @@ import { FakeTimers } from '../../../../packages/vitest/src/integrations/mock/ti
 
 class FakeDate extends Date {}
 
-const isChildProcess = globalThis.__vitest_worker__.isChildProcess
+const isChildProcess = !!process.send
 
 describe('FakeTimers', () => {
   afterEach(() => {

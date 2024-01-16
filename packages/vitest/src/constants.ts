@@ -6,6 +6,15 @@ export const EXIT_CODE_RESTART = 43
 
 export const API_PATH = '/__vitest_api__'
 
+export const extraInlineDeps = [
+  /^(?!.*(?:node_modules)).*\.mjs$/,
+  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vite client
+  /vite\w*\/dist\/client\/env.mjs/,
+  // Nuxt
+  '@nuxt/test-utils',
+]
+
 export const CONFIG_NAMES = [
   'vitest.config',
   'vite.config',

@@ -23,7 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import { isObject } from '@vitest/utils'
-import type { Tester } from './types'
+import type { Tester, TesterContext } from './types'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -87,8 +87,9 @@ function eq(
   if (asymmetricResult !== undefined)
     return asymmetricResult
 
+  const testerContext: TesterContext = { equals }
   for (let i = 0; i < customTesters.length; i++) {
-    const customTesterResult = customTesters[i](a, b)
+    const customTesterResult = customTesters[i].call(testerContext, a, b, customTesters)
     if (customTesterResult !== undefined)
       return customTesterResult
   }
@@ -298,7 +299,7 @@ function hasIterator(object: any) {
   return !!(object != null && object[IteratorSymbol])
 }
 
-export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack: Array<any> = []): boolean | undefined {
+export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = [], aStack: Array<any> = [], bStack: Array<any> = []): boolean | undefined {
   if (
     typeof a !== 'object'
     || typeof b !== 'object'
@@ -324,7 +325,20 @@ export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack
   aStack.push(a)
   bStack.push(b)
 
-  const iterableEqualityWithStack = (a: any, b: any) => iterableEquality(a, b, [...aStack], [...bStack])
+  const filteredCustomTesters: Array<Tester> = [
+    ...customTesters.filter(t => t !== iterableEquality),
+    iterableEqualityWithStack,
+  ]
+
+  function iterableEqualityWithStack(a: any, b: any) {
+    return iterableEquality(
+      a,
+      b,
+      [...filteredCustomTesters],
+      [...aStack],
+      [...bStack],
+    )
+  }
 
   if (a.size !== undefined) {
     if (a.size !== b.size) {
@@ -336,7 +350,7 @@ export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack
         if (!b.has(aValue)) {
           let has = false
           for (const bValue of b) {
-            const isEqual = equals(aValue, bValue, [iterableEqualityWithStack])
+            const isEqual = equals(aValue, bValue, filteredCustomTesters)
             if (isEqual === true)
               has = true
           }
@@ -357,20 +371,16 @@ export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack
       for (const aEntry of a) {
         if (
           !b.has(aEntry[0])
-          || !equals(aEntry[1], b.get(aEntry[0]), [iterableEqualityWithStack])
+          || !equals(aEntry[1], b.get(aEntry[0]), filteredCustomTesters)
         ) {
           let has = false
           for (const bEntry of b) {
-            const matchedKey = equals(aEntry[0], bEntry[0], [
-              iterableEqualityWithStack,
-            ])
+            const matchedKey = equals(aEntry[0], bEntry[0], filteredCustomTesters)
 
             let matchedValue = false
-            if (matchedKey === true) {
-              matchedValue = equals(aEntry[1], bEntry[1], [
-                iterableEqualityWithStack,
-              ])
-            }
+            if (matchedKey === true)
+              matchedValue = equals(aEntry[1], bEntry[1], filteredCustomTesters)
+
             if (matchedValue === true)
               has = true
           }
@@ -394,7 +404,7 @@ export function iterableEquality(a: any, b: any, aStack: Array<any> = [], bStack
     const nextB = bIterator.next()
     if (
       nextB.done
-      || !equals(aValue, nextB.value, [iterableEqualityWithStack])
+      || !equals(aValue, nextB.value, filteredCustomTesters)
     )
       return false
   }
@@ -430,7 +440,8 @@ function isObjectWithKeys(a: any) {
   && !(a instanceof Date)
 }
 
-export function subsetEquality(object: unknown, subset: unknown): boolean | undefined {
+export function subsetEquality(object: unknown, subset: unknown, customTesters: Array<Tester> = []): boolean | undefined {
+  const filteredCustomTesters = customTesters.filter(t => t !== subsetEquality)
   // subsetEquality needs to keep track of the references
   // it has already visited to avoid infinite loops in case
   // there are circular references in the subset passed to it.
@@ -443,7 +454,7 @@ export function subsetEquality(object: unknown, subset: unknown): boolean | unde
         return Object.keys(subset).every((key) => {
           if (isObjectWithKeys(subset[key])) {
             if (seenReferences.has(subset[key]))
-              return equals(object[key], subset[key], [iterableEquality])
+              return equals(object[key], subset[key], filteredCustomTesters)
 
             seenReferences.set(subset[key], true)
           }
@@ -451,7 +462,7 @@ export function subsetEquality(object: unknown, subset: unknown): boolean | unde
             = object != null
             && hasPropertyInObject(object, key)
             && equals(object[key], subset[key], [
-              iterableEquality,
+              ...filteredCustomTesters,
               subsetEqualityWithContext(seenReferences),
             ])
           // The main goal of using seenReference is to avoid circular node on tree.
@@ -504,15 +515,16 @@ export function arrayBufferEquality(a: unknown, b: unknown): boolean | undefined
   return true
 }
 
-export function sparseArrayEquality(a: unknown, b: unknown): boolean | undefined {
+export function sparseArrayEquality(a: unknown, b: unknown, customTesters: Array<Tester> = []): boolean | undefined {
   if (!Array.isArray(a) || !Array.isArray(b))
     return undefined
 
   // A sparse array [, , 1] will have keys ["2"] whereas [undefined, undefined, 1] will have keys ["0", "1", "2"]
   const aKeys = Object.keys(a)
   const bKeys = Object.keys(b)
+  const filteredCustomTesters = customTesters.filter(t => t !== sparseArrayEquality)
   return (
-    equals(a, b, [iterableEquality, typeEquality], true) && equals(aKeys, bKeys)
+    equals(a, b, filteredCustomTesters, true) && equals(aKeys, bKeys)
   )
 }
 

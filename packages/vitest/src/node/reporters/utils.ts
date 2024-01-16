@@ -1,6 +1,5 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { Reporter } from '../../types'
-import { ensurePackageInstalled } from '../pkg'
+import type { Reporter, Vitest } from '../../types'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
@@ -19,11 +18,12 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
   return customReporterModule.default
 }
 
-function createReporters(reporterReferences: Array<string | Reporter | BuiltinReporters>, runner: ViteNodeRunner) {
+function createReporters(reporterReferences: Array<string | Reporter | BuiltinReporters>, ctx: Vitest) {
+  const runner = ctx.runner
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance === 'html') {
-        await ensurePackageInstalled('@vitest/ui', runner.root)
+        await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
         return new CustomReporter()
       }

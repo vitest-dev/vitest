@@ -4,12 +4,13 @@ import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } f
 import { findUp } from 'find-up'
 import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
+import type { VitestOptions } from './core'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
 
-export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
-  const ctx = new Vitest(mode)
+export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+  const ctx = new Vitest(mode, vitestOptions)
   const root = resolve(options.root || process.cwd())
 
   const configPath = options.config === false

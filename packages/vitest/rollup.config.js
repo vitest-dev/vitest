@@ -15,27 +15,33 @@ import { defineConfig } from 'rollup'
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
-const entries = [
-  'src/paths.ts',
-  'src/index.ts',
-  'src/node/cli.ts',
-  'src/node/cli-wrapper.ts',
-  'src/node.ts',
-  'src/suite.ts',
-  'src/browser.ts',
-  'src/runners.ts',
-  'src/environments.ts',
-  'src/runtime/worker.ts',
-  'src/runtime/vm.ts',
-  'src/runtime/child.ts',
-  'src/runtime/entry.ts',
-  'src/runtime/entry-vm.ts',
-  'src/integrations/spy.ts',
-  'src/coverage.ts',
-  'src/public/utils.ts',
-  'src/public/execute.ts',
-  'src/public/reporters.ts',
-]
+const entries = {
+  'path': 'src/paths.ts',
+  'index': 'src/index.ts',
+  'cli': 'src/node/cli.ts',
+  'cli-wrapper': 'src/node/cli-wrapper.ts',
+  'node': 'src/node.ts',
+  'suite': 'src/suite.ts',
+  'browser': 'src/browser.ts',
+  'runners': 'src/runners.ts',
+  'environments': 'src/environments.ts',
+  'spy': 'src/integrations/spy.ts',
+  'coverage': 'src/coverage.ts',
+  'utils': 'src/public/utils.ts',
+  'execute': 'src/public/execute.ts',
+  'reporters': 'src/public/reporters.ts',
+  // TODO: advanced docs
+  'workers': 'src/workers.ts',
+
+  // for performance reasons we bundle them separately so we don't import everything at once
+  'worker': 'src/runtime/worker.ts',
+  'workers/forks': 'src/runtime/workers/forks.ts',
+  'workers/threads': 'src/runtime/workers/threads.ts',
+  'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
+  'workers/vmForks': 'src/runtime/workers/vmForks.ts',
+
+  'workers/runVmTests': 'src/runtime/runVmTests.ts',
+}
 
 const dtsEntries = {
   index: 'src/index.ts',
@@ -49,6 +55,7 @@ const dtsEntries = {
   utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
+  workers: 'src/workers.ts',
 }
 
 const external = [

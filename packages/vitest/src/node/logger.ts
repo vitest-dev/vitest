@@ -4,6 +4,7 @@ import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
+import { highlightCode } from '../utils/colors'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
@@ -28,12 +29,13 @@ export class Logger {
   logUpdate = createLogUpdate(process.stdout)
 
   private _clearScreenPending: string | undefined
+  private _highlights = new Map<string, string>()
 
   constructor(
     public ctx: Vitest,
     public console = globalThis.console,
   ) {
-
+    this._highlights.clear()
   }
 
   log(...args: any[]) {
@@ -89,6 +91,21 @@ export class Logger {
       showCodeFrame: true,
       logger: this,
     })
+  }
+
+  clearHighlightCache(filename?: string) {
+    if (filename)
+      this._highlights.delete(filename)
+    else
+      this._highlights.clear()
+  }
+
+  highlight(filename: string, source: string) {
+    if (this._highlights.has(filename))
+      return this._highlights.get(filename)!
+    const code = highlightCode(filename, source)
+    this._highlights.set(filename, code)
+    return code
   }
 
   printNoTestFound(filters?: string[]) {

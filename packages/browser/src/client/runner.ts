@@ -27,9 +27,6 @@ export function createBrowserRunner(
 
     async onAfterRunTask(task: Test) {
       await super.onAfterRunTask?.(task)
-      task.result?.errors?.forEach((error) => {
-        console.error(error.message)
-      })
 
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()

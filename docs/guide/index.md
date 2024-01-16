@@ -62,6 +62,10 @@ test('adds 1 + 2 to equal 3', () => {
 })
 ```
 
+::: tip
+By default, tests must contain ".test." or ".spec." in their file name.
+:::
+
 Next, in order to execute the test, add the following section to your `package.json`:
 
 ```json

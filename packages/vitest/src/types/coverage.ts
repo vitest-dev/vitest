@@ -52,14 +52,14 @@ export interface CoverageProviderModule {
   stopCoverage?(): unknown | Promise<unknown>
 }
 
-export type CoverageReporter = keyof ReportOptions
+export type CoverageReporter = keyof ReportOptions | (string & {})
 
 type CoverageReporterWithOptions<ReporterName extends CoverageReporter = CoverageReporter> =
-   ReporterName extends CoverageReporter
+   ReporterName extends keyof ReportOptions
      ? ReportOptions[ReporterName] extends never
        ? [ReporterName, {}] // E.g. the "none" reporter
        : [ReporterName, Partial<ReportOptions[ReporterName]>]
-     : never
+     : [ReporterName, Record<string, unknown>]
 
 type Provider = 'v8' | 'istanbul' | 'custom' | undefined
 

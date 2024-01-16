@@ -2,8 +2,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
-import { ensurePackageInstalled } from '../pkg'
+import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../utils'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -22,7 +21,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -101,6 +100,25 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           test: {
             poolOptions: testConfig.poolOptions,
           },
+        }
+
+        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
+        if (viteConfig.ssr?.noExternal !== true) {
+          const inline = testConfig.server?.deps?.inline
+          if (inline === true) {
+            config.ssr = { noExternal: true }
+          }
+          else {
+            const noExternal = viteConfig.ssr?.noExternal
+            const noExternalArray = typeof noExternal !== 'undefined' ? toArray(noExternal) : undefined
+            // filter the same packages
+            const uniqueInline = inline && noExternalArray
+              ? inline.filter(dep => !noExternalArray.includes(dep))
+              : inline
+            config.ssr = {
+              noExternal: uniqueInline,
+            }
+          }
         }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event

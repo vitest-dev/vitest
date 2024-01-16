@@ -1,16 +1,18 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig } from 'vitest'
+import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
+import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
 export const testRunState: Ref<RunState> = ref('idle')
+export const unhandledErrors: Ref<ErrorWithDiff[]> = ref([])
 
 export const client = (function createVitestClient() {
   if (isReport) {
@@ -23,8 +25,9 @@ export const client = (function createVitestClient() {
         onTaskUpdate() {
           testRunState.value = 'running'
         },
-        onFinished() {
+        onFinished(_files, errors) {
           testRunState.value = 'idle'
+          unhandledErrors.value = (errors || []).map(parseError)
         },
       },
     })
@@ -70,11 +73,13 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      const [files, _config] = await Promise.all([
+      const [files, _config, errors] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
+        client.rpc.getUnhandledErrors(),
       ])
       client.state.collectFiles(files)
+      unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })
 

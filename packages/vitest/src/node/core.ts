@@ -5,7 +5,6 @@ import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
-import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
@@ -24,8 +23,13 @@ import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
+import { VitestPackageInstaller } from './packageInstaller'
 
 const WATCHER_DEBOUNCE = 100
+
+export interface VitestOptions {
+  packageInstaller?: VitestPackageInstaller
+}
 
 export class Vitest {
   config: ResolvedConfig = undefined!
@@ -54,22 +58,22 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
+  public packageInstaller: VitestPackageInstaller
+
   private coreWorkspaceProject!: WorkspaceProject
 
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
-  projectFiles!: {
-    workerPath: string
-    forksPath: string
-    vmPath: string
-  }
+  public distPath!: string
 
   constructor(
     public readonly mode: VitestRunMode,
+    options: VitestOptions = {},
   ) {
     this.logger = new Logger(this)
+    this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
@@ -103,11 +107,7 @@ export class Vitest {
     // if Vitest is running globally, then we should still import local vitest if possible
     const projectVitestPath = await this.vitenode.resolveId('vitest')
     const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.projectFiles = {
-      workerPath: join(vitestDir, 'dist/worker.js'),
-      forksPath: join(vitestDir, 'dist/child.js'),
-      vmPath: join(vitestDir, 'dist/vm.js'),
-    }
+    this.distPath = join(vitestDir, 'dist')
 
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
@@ -148,7 +148,7 @@ export class Vitest {
 
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this.runner)
+      : await createReporters(resolved.reporters, this)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -283,6 +283,7 @@ export class Vitest {
       'pool',
       'globals',
       'expandSnapshotDiff',
+      'disableConsoleIntercept',
       'retry',
       'testNamePattern',
       'passWithNoTests',
@@ -646,23 +647,23 @@ export class Vitest {
     }, WATCHER_DEBOUNCE)
   }
 
-  public getModuleProjects(id: string) {
+  public getModuleProjects(filepath: string) {
     return this.projects.filter((project) => {
-      return project.getModulesByFilepath(id).size
+      return project.getModulesByFilepath(filepath).size
       // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
   }
 
   private unregisterWatcher = noop
   private registerWatcher() {
-    const updateLastChanged = (id: string) => {
-      const projects = this.getModuleProjects(id)
+    const updateLastChanged = (filepath: string) => {
+      const projects = this.getModuleProjects(filepath)
       projects.forEach(({ server, browser }) => {
-        const serverMods = server.moduleGraph.getModulesByFile(id)
+        const serverMods = server.moduleGraph.getModulesByFile(filepath)
         serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
 
         if (browser) {
-          const browserMods = browser.moduleGraph.getModulesByFile(id)
+          const browserMods = browser.moduleGraph.getModulesByFile(filepath)
           browserMods?.forEach(mod => browser.moduleGraph.invalidateModule(mod))
         }
       })
@@ -670,6 +671,7 @@ export class Vitest {
 
     const onChange = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun.length)
@@ -677,6 +679,7 @@ export class Vitest {
     }
     const onUnlink = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       this.invalidates.add(id)
 
       if (this.state.filesMap.has(id)) {
@@ -725,22 +728,22 @@ export class Vitest {
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
-  private handleFileChanged(id: string): string[] {
-    if (this.changedTests.has(id) || this.invalidates.has(id))
+  private handleFileChanged(filepath: string): string[] {
+    if (this.changedTests.has(filepath) || this.invalidates.has(filepath))
       return []
 
-    if (mm.isMatch(id, this.config.forceRerunTriggers)) {
+    if (mm.isMatch(filepath, this.config.forceRerunTriggers)) {
       this.state.getFilepaths().forEach(file => this.changedTests.add(file))
-      return [id]
+      return [filepath]
     }
 
-    const projects = this.getModuleProjects(id)
+    const projects = this.getModuleProjects(filepath)
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
       // we don't have information about importers anymore, so let's check if the file is a test file at least
-      if (this.state.filesMap.has(id) || this.projects.some(project => project.isTestFile(id))) {
-        this.changedTests.add(id)
-        return [id]
+      if (this.state.filesMap.has(filepath) || this.projects.some(project => project.isTestFile(filepath))) {
+        this.changedTests.add(filepath)
+        return [filepath]
       }
       return []
     }
@@ -748,39 +751,33 @@ export class Vitest {
     const files: string[] = []
 
     for (const project of projects) {
-      const { server } = project
-      const mods = project.getModulesByFilepath(id)
+      const mods = project.getModulesByFilepath(filepath)
       if (!mods.size)
         continue
 
-      // remove queries from id
-      id = normalizeRequestId(id, server.config.base)
-
-      this.invalidates.add(id)
+      this.invalidates.add(filepath)
 
       // one of test files that we already run, or one of test files that we can run
-      if (this.state.filesMap.has(id) || project.isTestFile(id)) {
-        this.changedTests.add(id)
-        files.push(id)
+      if (this.state.filesMap.has(filepath) || project.isTestFile(filepath)) {
+        this.changedTests.add(filepath)
+        files.push(filepath)
         continue
       }
 
       let rerun = false
       for (const mod of mods) {
-        if (!mod.id)
-          continue
         mod.importers.forEach((i) => {
-          if (!i.id)
+          if (!i.file)
             return
 
-          const heedsRerun = this.handleFileChanged(i.id)
+          const heedsRerun = this.handleFileChanged(i.file)
           if (heedsRerun)
             rerun = true
         })
       }
 
       if (rerun)
-        files.push(id)
+        files.push(filepath)
     }
 
     return files
@@ -797,8 +794,11 @@ export class Vitest {
   async close() {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
+        const teardownProjects = [...this.projects]
+        if (!teardownProjects.includes(this.coreWorkspaceProject))
+          teardownProjects.push(this.coreWorkspaceProject)
         // do teardown before closing the server
-        for await (const project of [...this.projects].reverse())
+        for await (const project of teardownProjects.reverse())
           await project.teardownGlobalSetup()
 
         const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))

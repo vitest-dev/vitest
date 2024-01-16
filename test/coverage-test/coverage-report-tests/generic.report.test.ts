@@ -31,6 +31,20 @@ test('lcov report', async () => {
   expect(lcovReportFiles).toContain('index.html')
 })
 
+test('custom report', async () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).toContain('custom-reporter-output.md')
+
+  const content = fs.readFileSync(resolve(coveragePath, 'custom-reporter-output.md'), 'utf-8')
+  expect(content).toMatchInlineSnapshot(`
+    "Start of custom coverage report
+    End of custom coverage report
+    "
+  `)
+})
+
 test('all includes untested files', () => {
   const coveragePath = resolve('./coverage/src')
   const files = fs.readdirSync(coveragePath)
@@ -76,7 +90,7 @@ test('files should not contain a setup file', () => {
 test('thresholds.autoUpdate updates thresholds', async () => {
   const configFilename = resolve('./vitest.config.ts')
   const mod = parseModule(fs.readFileSync(configFilename, 'utf-8'))
-  const thresholds = mod.exports.default.$args[0].test.coverage.thresholds
+  const thresholds = mod.exports.default.$args[0].$body.test.coverage.thresholds
 
   // Configuration has fixed value of 1.01 and 0 set for each threshold
   expect(Number.parseInt(thresholds.functions)).toBeGreaterThan(1.01)

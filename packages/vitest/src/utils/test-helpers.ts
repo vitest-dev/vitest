@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
-import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../types'
+import type { ContextTestEnvironment, EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../types'
 import type { WorkspaceProject } from '../node/workspace'
 import { groupBy } from './base'
 
@@ -47,14 +47,15 @@ export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string
 
     const envOptions = JSON.parse(code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1] || 'null')
     const envKey = env === 'happy-dom' ? 'happyDOM' : env
+    const environment: ContextTestEnvironment = {
+      name: env as VitestEnvironment,
+      transformMode,
+      options: envOptions ? { [envKey]: envOptions } as EnvironmentOptions : null,
+    }
     return {
       file,
       project,
-      environment: {
-        name: env as VitestEnvironment,
-        transformMode,
-        options: envOptions ? { [envKey]: envOptions } as EnvironmentOptions : null,
-      },
+      environment,
     }
   }))
 
