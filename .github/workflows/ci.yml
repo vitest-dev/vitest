@@ -77,7 +77,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install
+        run: pnpm playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -130,7 +130,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install chromium
+        run: pnpm playwright install chromium
 
       - name: Build
         run: pnpm run build
@@ -167,7 +167,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install
+        run: pnpm playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -207,7 +207,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install
+        run: pnpm playwright install --with-deps
 
       - name: Build
         run: pnpm run build
