@@ -1178,8 +1178,8 @@ importers:
         specifier: ^13.6.2
         version: 13.6.2
       d3-graph-controller:
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^3.0.4
+        version: 3.0.4
       floating-vue:
         specifier: ^2.0.0-y.0
         version: 2.0.0-y.0(vue@3.3.8)
@@ -2720,6 +2720,7 @@ packages:
   /@babel/highlight@7.23.4:
     resolution: {integrity: sha512-acGdbYSfp2WheJoJm/EBBBLh/ID8KDc64ISZ9DYtBmC8/Q204PZJLHyzeB5qMzJ5trcOkybd78M4x2KWsUq++A==}
     engines: {node: '>=6.9.0'}
+    requiresBuild: true
     dependencies:
       '@babel/helper-validator-identifier': 7.22.20
       chalk: 2.4.2
@@ -11264,8 +11265,8 @@ packages:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
     dev: true
 
-  /@yeger/debounce@2.0.2:
-    resolution: {integrity: sha512-B+z4Cmaf5dkfvjN4wTVhM8M40IFpz+KoMp80cCemiPH8XYL5nmogyfd2Kmf1cn/TC2RR601yFsZe1DV4GVbmuA==}
+  /@yeger/debounce@2.0.4:
+    resolution: {integrity: sha512-/ZZKulDHoptM7C7PeU2BKFt8tr+jER2PQB8jS25pzh881B5znnsU+76EgQYhChYmwp6h1VIMteE38jCENUPjcw==}
     dev: true
 
   /@zxing/text-encoding@0.9.0:
@@ -13861,15 +13862,15 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
-  /d3-graph-controller@3.0.2:
-    resolution: {integrity: sha512-R3RygK8AjFwQlyckcMC4SO7QxD9In4vIXBLBmbLoAGyw0glj6Cq0gEh7Nh2g5ENK47L+ODxNE4Jj1s1zoowZmA==}
+  /d3-graph-controller@3.0.4:
+    resolution: {integrity: sha512-GkMzNmBWrR6eQX3ADgqqoXkIUk7ESvXrI89xkMctiGuLGs+WXICtxSZTxn1S+EKt+eQcTh5YxsvLI2H+Hi3Eug==}
     dependencies:
-      '@yeger/debounce': 2.0.2
+      '@yeger/debounce': 2.0.4
       d3-drag: 3.0.0
       d3-force: 3.0.0
       d3-selection: 3.0.0
       d3-zoom: 3.0.0
-      vecti: 3.0.2
+      vecti: 3.0.4
     dev: true
 
   /d3-interpolate@3.0.1:
@@ -26073,8 +26074,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vecti@3.0.2:
-    resolution: {integrity: sha512-rZk5CcFfbsAtB2dJlO5EW3FvDk5b/AEPE7LwPjur7na5hBDCklls0T4/0KDVIwNBs8CCS/c4I7jhyurQNai6Ig==}
+  /vecti@3.0.4:
+    resolution: {integrity: sha512-6QZPg/nmgSFaQocjTGVI3tM85pswgh/RrVJ5KbeOuQdM2QaUqsurL572xlkGFeTh+13bTuUBrmZqVml81r/myg==}
     dev: true
 
   /verror@1.10.0:
