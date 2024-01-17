@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -23,6 +23,33 @@ test.concurrent.each3([['hello'], ['hi']])(
 
 test.concurrent.each4([['hello'], ['hi']])(
   'test.each4 %s',
+  async (arg, { expect }) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+    expect(arg).toMatchSnapshot()
+  },
+)
+
+// type test
+;() => test.concurrent.each5([['hello'], ['hi']])(
+  'test.each5-context-false %s',
+  // @ts-expect-error no context
+  async (arg, { expect }) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+  },
+)
+
+test.concurrent.each5([['hello'], ['hi']])(
+  'test.each5-context-false %s',
+  async (arg) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+  },
+)
+
+test.concurrent.each5([['hello'], ['hi']], { context: true })(
+  'test.each5-context-true %s',
   async (arg, { expect }) => {
     await sleep(200)
     expect(arg).toBeTypeOf('string')
@@ -59,6 +86,32 @@ myTest.concurrent.each3([['hello'], ['hi']])(
 
 myTest.concurrent.each4([['hello'], ['hi']])(
   'myTest.each4 %s',
+  async (arg, { expect, myFixture }) => {
+    await sleep(200)
+    expect({ arg, myFixture }).toMatchSnapshot()
+  },
+)
+
+// type test
+;() => myTest.concurrent.each5([['hello'], ['hi']])(
+  'myTest.each5-context-false %s',
+  // @ts-expect-error no context
+  async (arg, { expect }) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+  },
+)
+
+myTest.concurrent.each5([['hello'], ['hi']])(
+  'myTest.each5-context-false %s',
+  async (arg) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+  },
+)
+
+myTest.concurrent.each5([['hello'], ['hi']], { context: true })(
+  'myTest.each5-context-true %s',
   async (arg, { expect, myFixture }) => {
     await sleep(200)
     expect({ arg, myFixture }).toMatchSnapshot()

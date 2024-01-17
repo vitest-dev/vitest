@@ -219,6 +219,20 @@ interface TestEachFunction4<ExtraContext> {
   ) => void
 }
 
+// TODO: cannot support template string "test.each`${param1} | ${param2}`" usage?
+interface TestEachFunction5<ExtraContext> {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>, options: { context: true }): (
+    name: string | Function,
+    fn: (...args: [T, ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: [T]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+}
+
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
@@ -228,6 +242,7 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
     each2: TestEachFunction2<ExtraContext>
     each3: TestEachFunction3<ExtraContext>
     each4: TestEachFunction4<ExtraContext>
+    each5: TestEachFunction5<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >

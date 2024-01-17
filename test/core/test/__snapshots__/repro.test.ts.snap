@@ -50,6 +50,20 @@ exports[`myTest.each4 hi 1`] = `
 }
 `;
 
+exports[`myTest.each5-context-true hello 1`] = `
+{
+  "arg": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each5-context-true hi 1`] = `
+{
+  "arg": "hi",
+  "myFixture": 1234,
+}
+`;
+
 exports[`test.each2 hello 1`] = `
 [
   "hello",
@@ -77,3 +91,7 @@ exports[`test.each3 hi 1`] = `
 exports[`test.each4 hello 1`] = `"hello"`;
 
 exports[`test.each4 hi 1`] = `"hi"`;
+
+exports[`test.each5-context-true hello 1`] = `"hello"`;
+
+exports[`test.each5-context-true hi 1`] = `"hi"`;
