@@ -28,6 +28,7 @@ interface HTMLReportData {
   files: File[]
   config: ResolvedConfig
   moduleGraph: Record<string, ModuleGraphData>
+  unhandledErrors: unknown[]
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -47,6 +48,7 @@ export default class HTMLReporter implements Reporter {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.config,
+      unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
     }
     await Promise.all(

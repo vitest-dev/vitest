@@ -102,7 +102,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   if (testName) {
     logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
-    + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+    + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.'))
   }
   if (afterEnvTeardown) {
     logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'

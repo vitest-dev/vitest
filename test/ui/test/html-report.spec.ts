@@ -34,8 +34,17 @@ test.describe('html report', () => {
     // dashbaord
     await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
 
+    // unhandled errors
+    await expect(page.getByTestId('unhandled-errors')).toContainText(
+      'Vitest caught 2 errors during the test run. This might cause false positive tests. '
+      + 'Resolve unhandled errors to make sure your tests are not affected.',
+    )
+
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
+
     // report
-    await page.getByText('sample.test.ts').click()
+    await page.getByTestId('details-panel').getByText('sample.test.ts').click()
     await page.getByText('All tests passed in this file').click()
     await expect(page.getByTestId('filenames')).toContainText('sample.test.ts')
 

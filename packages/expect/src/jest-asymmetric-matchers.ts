@@ -1,7 +1,7 @@
 import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
-import { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
+import { diff, getCustomEqualityTesters, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 import { equals, isA, iterableEquality, pluralize, subsetEquality } from './jest-utils'
 
@@ -26,7 +26,7 @@ export abstract class AsymmetricMatcher<
       ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
-      customTesters: [],
+      customTesters: getCustomEqualityTesters(),
       utils: {
         ...getMatcherUtils(),
         diff,
@@ -41,6 +41,16 @@ export abstract class AsymmetricMatcher<
   abstract toString(): string
   getExpectedType?(): string
   toAsymmetricMatcher?(): string
+
+  // implement custom chai/loupe inspect for better AssertionError.message formatting
+  // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
+  [Symbol.for('chai/inspect')](options: { depth: number; truncate: number }) {
+    // minimal pretty-format with simple manual truncation
+    const result = stringify(this, options.depth, { min: true })
+    if (result.length <= options.truncate)
+      return result
+    return `${this.toString()}{…}`
+  }
 }
 
 export class StringContaining extends AsymmetricMatcher<string> {
@@ -116,8 +126,9 @@ export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>>
 
     let result = true
 
+    const matcherContext = this.getMatcherContext()
     for (const property in this.sample) {
-      if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property])) {
+      if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property], matcherContext.customTesters)) {
         result = false
         break
       }
@@ -149,11 +160,12 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
       )
     }
 
+    const matcherContext = this.getMatcherContext()
     const result
       = this.sample.length === 0
       || (Array.isArray(other)
         && this.sample.every(item =>
-          other.some(another => equals(item, another)),
+          other.some(another => equals(item, another, matcherContext.customTesters)),
         ))
 
     return this.inverse ? !result : result

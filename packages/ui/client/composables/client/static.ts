@@ -1,9 +1,8 @@
 import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
-import type { WebSocketHandlers } from 'vitest/src/api/types'
+import type { File, ModuleGraphData, ResolvedConfig, WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
-import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
 import { StateManager } from '../../../../vitest/src/node/state'
 
 interface HTMLReportMetadata {
@@ -11,6 +10,7 @@ interface HTMLReportMetadata {
   files: File[]
   config: ResolvedConfig
   moduleGraph: Record<string, ModuleGraphData>
+  unhandledErrors: unknown[]
 }
 
 const noop: any = () => {}
@@ -42,6 +42,9 @@ export function createStaticClient(): VitestClient {
     getModuleGraph: async (id) => {
       return metadata.moduleGraph[id]
     },
+    getUnhandledErrors: () => {
+      return metadata.unhandledErrors
+    },
     getTransformResult: async (id) => {
       return {
         code: id,
@@ -66,9 +69,12 @@ export function createStaticClient(): VitestClient {
     saveSnapshotFile: asyncNoop,
     readTestFile: asyncNoop,
     removeSnapshotFile: asyncNoop,
+    onUnhandledError: noop,
+    saveTestFile: asyncNoop,
+    getProvidedContext: () => ({}),
   } as WebSocketHandlers
 
-  ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers>
+  ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
   let openPromise: Promise<void>
 

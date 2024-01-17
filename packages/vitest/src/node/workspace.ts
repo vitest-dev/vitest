@@ -25,7 +25,7 @@ interface InitializeProjectOptions extends UserWorkspaceConfig {
 }
 
 export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: InitializeProjectOptions) {
-  const project = new WorkspaceProject(workspacePath, ctx)
+  const project = new WorkspaceProject(workspacePath, ctx, options)
 
   const configFile = options.extends
     ? resolve(dirname(options.workspaceConfigPath), options.extends)
@@ -78,6 +78,7 @@ export class WorkspaceProject {
   constructor(
     public path: string | number,
     public ctx: Vitest,
+    public options?: InitializeProjectOptions,
   ) { }
 
   getName(): string {
@@ -386,7 +387,7 @@ export class WorkspaceProject {
       return
     if (this.browserProvider)
       return
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    const Provider = await getBrowserProvider(this.config.browser, this)
     this.browserProvider = new Provider()
     const browser = this.config.browser.name
     const supportedBrowsers = this.browserProvider.getSupportedBrowsers()

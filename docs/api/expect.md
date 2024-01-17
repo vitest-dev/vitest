@@ -1405,3 +1405,55 @@ Don't forget to include the ambient declaration file in your `tsconfig.json`.
 :::tip
 If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
 :::
+
+## expect.addEqualityTesters <Badge type="info">1.2.0+</Badge>
+
+- **Type:** `(tester: Array<Tester>) => void`
+
+You can use this method to define custom testers, which are methods used by matchers, to test if two objects are equal. It is compatible with Jest's `expect.addEqualityTesters`.
+
+```ts
+import { expect, test } from 'vitest'
+
+class AnagramComparator {
+  public word: string
+
+  constructor(word: string) {
+    this.word = word
+  }
+
+  equals(other: AnagramComparator): boolean {
+    const cleanStr1 = this.word.replace(/ /g, '').toLowerCase()
+    const cleanStr2 = other.word.replace(/ /g, '').toLowerCase()
+
+    const sortedStr1 = cleanStr1.split('').sort().join('')
+    const sortedStr2 = cleanStr2.split('').sort().join('')
+
+    return sortedStr1 === sortedStr2
+  }
+}
+
+function isAnagramComparator(a: unknown): a is AnagramComparator {
+  return a instanceof AnagramComparator
+}
+
+function areAnagramsEqual(a: unknown, b: unknown): boolean | undefined {
+  const isAAnagramComparator = isAnagramComparator(a)
+  const isBAnagramComparator = isAnagramComparator(b)
+
+  if (isAAnagramComparator && isBAnagramComparator)
+    return a.equals(b)
+
+  else if (isAAnagramComparator === isBAnagramComparator)
+    return undefined
+
+  else
+    return false
+}
+
+expect.addEqualityTesters([areAnagramsEqual])
+
+test('custom equality tester', () => {
+  expect(new AnagramComparator('listen')).toEqual(new AnagramComparator('silent'))
+})
+```

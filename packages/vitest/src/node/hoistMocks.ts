@@ -1,11 +1,10 @@
 import MagicString from 'magic-string'
-import type { AwaitExpression, CallExpression, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
-
-// TODO: should use findNodeBefore, but it's not typed
+import type { AwaitExpression, CallExpression, ExportDefaultDeclaration, ExportNamedDeclaration, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
-import { highlight } from '@vitest/utils'
+import type { Colors } from '@vitest/utils'
+import { highlightCode } from '../utils/colors'
 import { generateCodeFrame } from './error'
 
 export type Positioned<T> = T & {
@@ -59,12 +58,11 @@ export function getBetterEnd(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable = /^[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/m
-const regexpAssignedHoisted = /=[ \t]*(\bawait|)[ \t]*\b(vi|vitest)\s*\.\s*hoisted\(/
+const regexpHoistable = /\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
 const hashbangRE = /^#!.*\n/
 
-export function hoistMocks(code: string, id: string, parse: PluginContext['parse']) {
-  const needHoisting = regexpHoistable.test(code) || regexpAssignedHoisted.test(code)
+export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], colors?: Colors) {
+  const needHoisting = regexpHoistable.test(code)
 
   if (!needHoisting)
     return
@@ -153,6 +151,17 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   const declaredConst = new Set<string>()
   const hoistedNodes: Positioned<CallExpression | VariableDeclaration | AwaitExpression>[] = []
 
+  function createSyntaxError(node: Positioned<Node>, message: string) {
+    const _error = new SyntaxError(message)
+    Error.captureStackTrace(_error, createSyntaxError)
+    return {
+      name: 'SyntaxError',
+      message: _error.message,
+      stack: _error.stack,
+      frame: generateCodeFrame(highlightCode(id, code, colors), 4, node.start + 1),
+    }
+  }
+
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
@@ -192,6 +201,11 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
           hoistedNodes.push(node)
 
         if (methodName === 'hoisted') {
+          // check it's not a default export
+          const defaultExport = findNodeAround(ast, node.start, 'ExportDefaultDeclaration')?.node as Positioned<ExportDefaultDeclaration> | undefined
+          if (defaultExport?.declaration === node || (defaultExport?.declaration.type === 'AwaitExpression' && defaultExport.declaration.argument === node))
+            throw createSyntaxError(defaultExport, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
+
           const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
           const init = declarationNode?.declarations[0]?.init
           const isViHoisted = (node: CallExpression) => {
@@ -211,6 +225,10 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
                 && isViHoisted(init.argument)) /* const v = await vi.hoisted() */
 
           if (canMoveDeclaration) {
+            // export const variable = vi.hoisted()
+            const nodeExported = findNodeAround(ast, declarationNode.start, 'ExportNamedDeclaration')?.node as Positioned<ExportNamedDeclaration> | undefined
+            if (nodeExported?.declaration === declarationNode)
+              throw createSyntaxError(nodeExported, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
             // hoist "const variable = vi.hoisted(() => {})"
             hoistedNodes.push(declarationNode)
           }
@@ -251,15 +269,10 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
   function createError(outsideNode: Node, insideNode: Node) {
     const outsideCall = getNodeCall(outsideNode)
     const insideCall = getNodeCall(insideNode)
-    const _error = new SyntaxError(`Cannot call ${getNodeName(insideCall)} inside ${getNodeName(outsideCall)}: both methods are hoisted to the top of the file and not actually called inside each other.`)
-    // throw an object instead of an error so it can be serialized for RPC, TODO: improve error handling in rpc serializer
-    const error = {
-      name: 'SyntaxError',
-      message: _error.message,
-      stack: _error.stack,
-      frame: generateCodeFrame(highlight(code), 4, insideCall.start + 1),
-    }
-    throw error
+    throw createSyntaxError(
+      insideCall,
+      `Cannot call ${getNodeName(insideCall)} inside ${getNodeName(outsideCall)}: both methods are hoisted to the top of the file and not actually called inside each other.`,
+    )
   }
 
   // validate hoistedNodes doesn't have nodes inside other nodes

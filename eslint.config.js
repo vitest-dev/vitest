@@ -13,6 +13,7 @@ export default antfu(
       'test/core/src/self',
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
+      'test/network-imports/public/slash@3.0.0.js',
       'examples/**/mockServiceWorker.js',
     ],
   },

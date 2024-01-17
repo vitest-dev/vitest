@@ -1,5 +1,5 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { Custom, Task, Test } from 'vitest/src'
+import type { Custom, Task, Test } from 'vitest'
 import { files, testRunState } from '~/composables/client'
 
 type Nullable<T> = T | null | undefined

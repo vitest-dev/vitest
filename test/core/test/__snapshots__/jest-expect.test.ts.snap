@@ -1,0 +1,229 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`asymmetric matcher error 1`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringContaining "xx"",
+  "message": "expected 'hello' to deeply equal StringContaining "xx"",
+}
+`;
+
+exports[`asymmetric matcher error 2`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringNotContaining "ll"",
+  "message": "expected 'hello' to deeply equal StringNotContaining "ll"",
+}
+`;
+
+exports[`asymmetric matcher error 3`] = `
+{
+  "actual": "Object {
+  "foo": "hello",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "foo": StringContaining "xx",
++   "foo": "hello",
+  }",
+  "expected": "Object {
+  "foo": StringContaining "xx",
+}",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: StringContaining "xx" }",
+}
+`;
+
+exports[`asymmetric matcher error 4`] = `
+{
+  "actual": "Object {
+  "foo": "hello",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "foo": StringNotContaining "ll",
++   "foo": "hello",
+  }",
+  "expected": "Object {
+  "foo": StringNotContaining "ll",
+}",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: StringNotContaining "ll" }",
+}
+`;
+
+exports[`asymmetric matcher error 5`] = `
+{
+  "actual": "hello",
+  "diff": "- Expected: 
+stringContainingCustom<xx>
+
++ Received: 
+"hello"",
+  "expected": "stringContainingCustom<xx>",
+  "message": "expected 'hello' to deeply equal stringContainingCustom<xx>",
+}
+`;
+
+exports[`asymmetric matcher error 6`] = `
+{
+  "actual": "hello",
+  "diff": "- Expected: 
+not.stringContainingCustom<ll>
+
++ Received: 
+"hello"",
+  "expected": "not.stringContainingCustom<ll>",
+  "message": "expected 'hello' to deeply equal not.stringContainingCustom<ll>",
+}
+`;
+
+exports[`asymmetric matcher error 7`] = `
+{
+  "actual": "Object {
+  "foo": "hello",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "foo": stringContainingCustom<xx>,
++   "foo": "hello",
+  }",
+  "expected": "Object {
+  "foo": stringContainingCustom<xx>,
+}",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: stringContainingCustom<xx> }",
+}
+`;
+
+exports[`asymmetric matcher error 8`] = `
+{
+  "actual": "Object {
+  "foo": "hello",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "foo": not.stringContainingCustom<ll>,
++   "foo": "hello",
+  }",
+  "expected": "Object {
+  "foo": not.stringContainingCustom<ll>,
+}",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: not.stringContainingCustom<ll> }",
+}
+`;
+
+exports[`asymmetric matcher error 9`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expected "hello" to contain "xx"",
+}
+`;
+
+exports[`asymmetric matcher error 10`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expected "hello" not to contain "ll"",
+}
+`;
+
+exports[`asymmetric matcher error 11`] = `
+{
+  "actual": "hello",
+  "diff": "- Expected: 
+testComplexMatcher<[object Object]>
+
++ Received: 
+"hello"",
+  "expected": "testComplexMatcher<[object Object]>",
+  "message": "expected 'hello' to deeply equal testComplexMatcher<[object Object]>",
+}
+`;
+
+exports[`asymmetric matcher error 12`] = `
+{
+  "actual": "Object {
+  "k": "v",
+  "k2": "v2",
+}",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
++ Object {
+    "k": "v",
+-   "k3": "v3",
++   "k2": "v2",
+  }",
+  "expected": "ObjectContaining {
+  "k": "v",
+  "k3": "v3",
+}",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal ObjectContaining {"k": "v", "k3": "v3"}",
+}
+`;
+
+exports[`asymmetric matcher error 13`] = `
+{
+  "actual": "Array [
+  "a",
+  "b",
+]",
+  "diff": "- Expected
++ Received
+
+- ArrayContaining [
++ Array [
+    "a",
+-   "c",
++   "b",
+  ]",
+  "expected": "ArrayContaining [
+  "a",
+  "c",
+]",
+  "message": "expected [ 'a', 'b' ] to deeply equal ArrayContaining ["a", "c"]",
+}
+`;
+
+exports[`asymmetric matcher error 14`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringMatching /xx/",
+  "message": "expected 'hello' to deeply equal StringMatching /xx/",
+}
+`;
+
+exports[`asymmetric matcher error 15`] = `
+{
+  "actual": "2.5",
+  "diff": "- Expected
++ Received
+
+- NumberCloseTo 2 (1 digit)
++ 2.5",
+  "expected": "NumberCloseTo 2 (1 digit)",
+  "message": "expected 2.5 to deeply equal NumberCloseTo 2 (1 digit)",
+}
+`;
+
+exports[`asymmetric matcher error 16`] = `
+{
+  "actual": "hello",
+  "diff": null,
+  "expected": "StringContaining "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"",
+  "message": "expected 'hello' to deeply equal StringContaining{…}",
+}
+`;

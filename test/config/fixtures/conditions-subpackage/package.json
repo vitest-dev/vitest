@@ -1,0 +1,13 @@
+{
+  "name": "subpackage",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "custom": "./custom.js",
+      "development": "./development.js",
+      "production": "./production.js",
+      "default": "./default.js"
+    }
+  }
+}
