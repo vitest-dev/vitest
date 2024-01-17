@@ -294,7 +294,7 @@ export function createTaskCollector(
     }
   }
 
-  // use proxy to inject "each args" while preserving `Function.toString` for fixture extraction
+  // wrapper function to inject "each arg" + patch `toString` for fixture extraction
   taskFn.each3 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
     this.setContext('each', true)
@@ -307,20 +307,15 @@ export function createTaskCollector(
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        const args = arrayOnlyCases ? items : [i]
 
-        // TODO: test failure stack trace might ugly?
-        const fnProxy = new Proxy(fn as any, {
-          apply(target, thisArg, argArray) {
-            argArray[0].args = args
-            return target.apply(thisArg, argArray)
-          },
-        })
-        // manually proxy `toString` for fixture extraction
-        // https://stackoverflow.com/a/38317184
-        fnProxy.toString = Function.prototype.toString.bind(fn)
+        // TODO: test failure stack might become ugly?
+        const fnWrapper = (testContext: any) => {
+          testContext.args = arrayOnlyCases ? items : [i]
+          return fn(testContext)
+        }
+        fnWrapper.toString = () => fn.toString() // preserve toString for fixture extraction
 
-        test(formatTitle(_name, items, idx), fnProxy, options)
+        test(formatTitle(_name, items, idx), fnWrapper, options)
       })
 
       this.setContext('each', undefined)
