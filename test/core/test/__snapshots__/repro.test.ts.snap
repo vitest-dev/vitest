@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`myTest.each2 hello 1`] = `
+{
+  "args": [
+    "hello",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each2 hi 1`] = `
+{
+  "args": [
+    "hi",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each3 hello 1`] = `
+{
+  "args": [
+    "hello",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each3 hi 1`] = `
+{
+  "args": [
+    "hi",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`test.each2 hello 1`] = `
+[
+  "hello",
+]
+`;
+
+exports[`test.each2 hi 1`] = `
+[
+  "hi",
+]
+`;
+
+exports[`test.each3 hello 1`] = `
+[
+  "hello",
+]
+`;
+
+exports[`test.each3 hi 1`] = `
+[
+  "hi",
+]
+`;

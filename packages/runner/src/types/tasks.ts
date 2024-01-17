@@ -149,12 +149,60 @@ interface TestEachFunction {
   ) => void
 }
 
+interface TestEachFunction2<ExtraContext> {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: T) => TestFunction<ExtraContext>,
+    options?: number | TestOptions,
+  ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: ExtractEachCallbackArgs<T>) => TestFunction<ExtraContext>,
+    options?: number | TestOptions,
+  ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: T[]) => TestFunction<ExtraContext>,
+    options?: number | TestOptions,
+  ) => void
+  (...args: [TemplateStringsArray, ...any]): (
+    name: string | Function,
+    fn: (...args: any[]) => TestFunction<ExtraContext>,
+    options?: number | TestOptions,
+  ) => void
+}
+
+interface TestEachFunction3<ExtraContext> {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: TestFunction<ExtraContext & { args: T }>,
+    options?: number | TestOptions,
+  ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: TestFunction<ExtraContext & { args: ExtractEachCallbackArgs<T> }>,
+    options?: number | TestOptions,
+  ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: TestFunction<ExtraContext & { args: T[] }>,
+    options?: number | TestOptions,
+  ) => void
+  (...args: [TemplateStringsArray, ...any]): (
+    name: string | Function,
+    fn: TestFunction<ExtraContext & { args: any[] }>,
+    options?: number | TestOptions,
+  ) => void
+}
+
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
     each: TestEachFunction
+    each2: TestEachFunction2<ExtraContext>
+    each3: TestEachFunction3<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >

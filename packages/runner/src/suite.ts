@@ -269,6 +269,64 @@ export function createTaskCollector(
     }
   }
 
+  // TODO: typing overload
+
+  // easy but probably ugly higher order function API
+  taskFn.each2 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext()
+    this.setContext('each', true)
+
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
+
+    return (name: string | Function, fn: (...args: T[]) => (context: unknown) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
+      const arrayOnlyCases = cases.every(Array.isArray)
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+
+        arrayOnlyCases
+          ? test(formatTitle(_name, items, idx), fn(...items), options)
+          : test(formatTitle(_name, items, idx), fn(i), options)
+      })
+
+      this.setContext('each', undefined)
+    }
+  }
+
+  // use proxy to inject "each args" while preserving `Function.toString` for fixture extraction
+  taskFn.each3 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext()
+    this.setContext('each', true)
+
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
+
+    return (name: string | Function, fn: (testContext: any) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
+      const arrayOnlyCases = cases.every(Array.isArray)
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+        const args = arrayOnlyCases ? items : [i]
+
+        // TODO: test failure stack trace might ugly?
+        const fnProxy = new Proxy(fn as any, {
+          apply(target, thisArg, argArray) {
+            argArray[0].args = args
+            return target.apply(thisArg, argArray)
+          },
+        })
+        // manually proxy `toString` for fixture extraction
+        // https://stackoverflow.com/a/38317184
+        fnProxy.toString = Function.prototype.toString.bind(fn)
+
+        test(formatTitle(_name, items, idx), fnProxy, options)
+      })
+
+      this.setContext('each', undefined)
+    }
+  }
+
   taskFn.skipIf = function (this: TestAPI, condition: any) {
     return condition ? this.skip : this
   }
