@@ -705,6 +705,12 @@ export class Vitest {
         this.changedTests.add(id)
         this.scheduleRerun([id])
       }
+      else {
+        // it's possible that file was already there but watcher triggered "add" event instead
+        const needsRerun = this.handleFileChanged(id)
+        if (needsRerun.length)
+          this.scheduleRerun(needsRerun)
+      }
     }
     const watcher = this.server.watcher
 

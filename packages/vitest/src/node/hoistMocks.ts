@@ -60,7 +60,7 @@ export function getBetterEnd(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable = /[ \t]*\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
+const regexpHoistable = /\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], colors?: Colors) {
