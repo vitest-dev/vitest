@@ -195,6 +195,30 @@ interface TestEachFunction3<ExtraContext> {
   ) => void
 }
 
+// TODO: does typescript inference work?
+interface TestEachFunction4<ExtraContext> {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: [T, ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: [...ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    fn: (...args: [...T[], ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+  (...args: [TemplateStringsArray, ...any]): (
+    name: string | Function,
+    fn: (...args: [...any[], ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
+}
+
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
@@ -203,6 +227,7 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
     each: TestEachFunction
     each2: TestEachFunction2<ExtraContext>
     each3: TestEachFunction3<ExtraContext>
+    each4: TestEachFunction4<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >

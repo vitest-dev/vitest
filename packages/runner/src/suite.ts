@@ -322,6 +322,35 @@ export function createTaskCollector(
     }
   }
 
+  // "each arg" at the last argument + fixture extraction trickery
+  taskFn.each4 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext()
+    this.setContext('each', true)
+
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
+
+    return (name: string | Function, fn: (...args: any[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
+      const arrayOnlyCases = cases.every(Array.isArray)
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+        const args = arrayOnlyCases ? items : [i]
+
+        const fnWrapper = (testContext: any) => {
+          return fn(...args, testContext)
+        }
+        // TODO: what if the length is not uniform?
+        (fnWrapper as any).__testEachItemLength = args.length
+        fnWrapper.toString = () => fn.toString()
+
+        test(formatTitle(_name, items, idx), fnWrapper, options)
+      })
+
+      this.setContext('each', undefined)
+    }
+  }
+
   taskFn.skipIf = function (this: TestAPI, condition: any) {
     return condition ? this.skip : this
   }

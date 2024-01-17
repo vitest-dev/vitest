@@ -21,6 +21,15 @@ test.concurrent.each3([['hello'], ['hi']])(
   },
 )
 
+test.concurrent.each4([['hello'], ['hi']])(
+  'test.each4 %s',
+  async (arg, { expect }) => {
+    await sleep(200)
+    expect(arg).toBeTypeOf('string')
+    expect(arg).toMatchSnapshot()
+  },
+)
+
 //
 // with fixture
 //
@@ -45,5 +54,13 @@ myTest.concurrent.each3([['hello'], ['hi']])(
   async ({ expect, myFixture, args }) => {
     await sleep(200)
     expect({ args, myFixture }).toMatchSnapshot()
+  },
+)
+
+myTest.concurrent.each4([['hello'], ['hi']])(
+  'myTest.each4 %s',
+  async (arg, { expect, myFixture }) => {
+    await sleep(200)
+    expect({ arg, myFixture }).toMatchSnapshot()
   },
 )

@@ -168,7 +168,17 @@ function getUsedProps(fn: Function) {
   if (!args.length)
     return []
 
-  const first = args[0]
+  let first: string
+  if ('__testEachItemLength' in fn) {
+    // TODO: what if each items are spread?
+    first = args[(fn as any).__testEachItemLength]
+    if (!first)
+      return []
+  }
+  else {
+    first = args[0]
+  }
+
   if (!(first.startsWith('{') && first.endsWith('}')))
     throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
 
