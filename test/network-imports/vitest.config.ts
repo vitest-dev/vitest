@@ -7,5 +7,7 @@ export default defineConfig({
         execArgv: ['--experimental-network-imports'],
       },
     },
+    // let vite serve public/slash@3.0.0.js
+    api: 9602,
   },
 })
