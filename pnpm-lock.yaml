@@ -1561,6 +1561,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/config/fixtures/conditions-pkg:
+    dependencies:
+      subpackage:
+        specifier: file:../conditions-subpackage
+        version: file:test/config/fixtures/conditions-subpackage
+
   test/core:
     devDependencies:
       '@vitest/expect':
@@ -27580,6 +27586,11 @@ packages:
   /zwitch@1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: true
+
+  file:test/config/fixtures/conditions-subpackage:
+    resolution: {directory: test/config/fixtures/conditions-subpackage, type: directory}
+    name: subpackage
+    dev: false
 
   file:test/env-custom/vitest-environment-custom:
     resolution: {directory: test/env-custom/vitest-environment-custom, type: directory}
