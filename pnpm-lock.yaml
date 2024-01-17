@@ -1793,6 +1793,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/network-imports:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/path-resolution:
     devDependencies:
       '@edge-runtime/vm':
