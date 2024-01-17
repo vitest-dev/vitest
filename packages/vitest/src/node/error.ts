@@ -23,6 +23,7 @@ interface PrintErrorOptions {
 }
 
 export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions) {
+  console.log('[printError] error:', error)
   const { showCodeFrame = true, fullStack = false, type } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
