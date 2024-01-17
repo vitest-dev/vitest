@@ -60,7 +60,16 @@ export function createPool(ctx: Vitest): ProcessPool {
     return getDefaultPoolName(project, file)
   }
 
-  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
+  // in addition to resolve.conditions Vite also adds production/development,
+  // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
+  const potentialConditions = new Set(['production', 'development', ...ctx.server.config.resolve.conditions])
+  const conditions = [...potentialConditions].filter((condition) => {
+    if (condition === 'production')
+      return ctx.server.config.isProduction
+    if (condition === 'development')
+      return !ctx.server.config.isProduction
+    return true
+  }).flatMap(c => ['--conditions', c])
 
   // Instead of passing whole process.execArgv to the workers, pick allowed options.
   // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
