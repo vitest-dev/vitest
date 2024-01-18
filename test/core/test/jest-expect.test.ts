@@ -1057,6 +1057,16 @@ it('asymmetric matcher error', () => {
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))
+
+  // error message on `toThrow(asymmetricMatcher)` failure
+  function throwError() {
+    // eslint-disable-next-line no-throw-literal
+    throw 'hello'
+  }
+  snapshotError(() => expect(throwError).toThrow(expect.stringContaining('xx')))
+  snapshotError(() => expect(throwError).toThrow((expect as any).stringContainingCustom('xx')))
+  snapshotError(() => expect(throwError).not.toThrow(expect.stringContaining('ll')))
+  snapshotError(() => expect(throwError).not.toThrow((expect as any).stringContainingCustom('ll')))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

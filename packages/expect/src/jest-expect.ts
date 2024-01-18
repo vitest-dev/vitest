@@ -599,9 +599,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const matcher = expected as any as AsymmetricMatcher<any>
       return this.assert(
         thrown && matcher.asymmetricMatch(thrown),
-        'expected error to match asymmetric matcher',
-        'expected error not to match asymmetric matcher',
-        matcher.toString(),
+        'expected thrown value #{act} to match asymmetric matcher: #{exp}',
+        'expected thrown value #{act} not to match asymmetric matcher: #{exp}',
+        matcher,
         thrown,
         false,
       )
