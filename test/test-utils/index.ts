@@ -2,6 +2,7 @@ import { Console } from 'node:console'
 import { Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
@@ -9,7 +10,7 @@ import { type Options, execa } from 'execa'
 import stripAnsi from 'strip-ansi'
 import { dirname, resolve } from 'pathe'
 
-export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test') {
+export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test', viteOverrides: ViteUserConfig = {}) {
   // Reset possible previous runs
   process.exitCode = 0
   let exitCode = process.exitCode
@@ -26,7 +27,7 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
       watch: false,
       reporters: ['verbose'],
       ...config,
-    })
+    }, viteOverrides)
   }
   catch (e: any) {
     return {

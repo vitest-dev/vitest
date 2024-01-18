@@ -151,7 +151,7 @@ class AggregateErrorPonyfill extends Error {
 export { AggregateErrorPonyfill as AggregateError }
 
 export function isChildProcess(): boolean {
-  return !!process?.send
+  return typeof process !== 'undefined' && !!process.send
 }
 
 export function setProcessTitle(title: string) {

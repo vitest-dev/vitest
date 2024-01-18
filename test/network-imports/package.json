@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-network-imports",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

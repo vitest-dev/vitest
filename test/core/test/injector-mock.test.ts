@@ -1214,57 +1214,118 @@ describe('throws an error when nodes are incompatible', () => {
   }
 
   it.each([
-    `
-    import { vi } from 'vitest'
-    
-    vi.mock('./mocked', () => {
-      const variable = vi.hoisted(() => 1)
-      console.log(variable)
-    })
-        `,
-        `
+    [
+      'vi.hoisted is called inside vi.mock',
+      `\
+import { vi } from 'vitest'
+
+vi.mock('./mocked', () => {
+  const variable = vi.hoisted(() => 1)
+  console.log(variable)
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is called inside vi.mock',
+      `\
 import { vi } from 'vitest'
 
 vi.mock('./mocked', async () => {
   await vi.hoisted(() => 1)
 })
-    `,
-    `
+`,
+    ],
+    [
+      'awaited assigned vi.hoisted is called inside vi.mock',
+      `\
 import { vi } from 'vitest'
 
 vi.mock('./mocked', async () => {
   const variable = await vi.hoisted(() => 1)
 })
-    `,
-    `
+`,
+    ],
+    [
+      'vi.mock inside vi.hoisted',
+      `\
 import { vi } from 'vitest'
 
 vi.hoisted(() => {
   vi.mock('./mocked')
 })
-    `,
-    `
+`,
+    ],
+    [
+      'vi.mock is called inside assigned vi.hoisted',
+      `\
 import { vi } from 'vitest'
 
 const values = vi.hoisted(() => {
   vi.mock('./mocked')
 })
-    `,
-    `
+`,
+    ],
+    [
+      'vi.mock is called inside awaited vi.hoisted',
+      `\
 import { vi } from 'vitest'
 
 await vi.hoisted(async () => {
   vi.mock('./mocked')
 })
-    `,
-    `
+`,
+    ],
+    [
+      'vi.mock is called inside assigned awaited vi.hoisted',
+      `\
 import { vi } from 'vitest'
 
 const values = await vi.hoisted(async () => {
   vi.mock('./mocked')
 })
-    `,
-  ])('correctly throws an error', (code) => {
+`,
+    ],
+    [
+      'vi.hoisted is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const values = vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+    [
+      'vi.hoisted is exported as default',
+      `\
+import { vi } from 'vitest'
+
+export default vi.hoisted(() => {
+  return {}
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is exported as named export',
+      `\
+import { vi } from 'vitest'
+
+export const values = await vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default await vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+  ])('correctly throws an error if %s', (_, code) => {
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
     expect(stripAnsi(error.frame)).toMatchSnapshot()
