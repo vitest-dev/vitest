@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "module": "node16",
-    "esModuleInterop": true,
     "rootDir": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "paths": {
       "#src/*": ["./src/*"]
-    }
+    },
+    "esModuleInterop": true
   }
 }

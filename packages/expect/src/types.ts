@@ -12,8 +12,21 @@ import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type ChaiPlugin = Chai.ChaiPlugin
 
-export type Tester = (a: any, b: any) => boolean | undefined
+export type Tester = (
+  this: TesterContext,
+  a: any,
+  b: any,
+  customTesters: Array<Tester>,
+) => boolean | undefined
 
+export interface TesterContext {
+  equals: (
+    a: unknown,
+    b: unknown,
+    customTesters?: Array<Tester>,
+    strictCheck?: boolean,
+  ) => boolean
+}
 export type { DiffOptions } from '@vitest/utils/diff'
 
 export interface MatcherHintOptions {
@@ -28,6 +41,7 @@ export interface MatcherHintOptions {
 }
 
 export interface MatcherState {
+  customTesters: Array<Tester>
   assertionCalls: number
   currentTestName?: string
   dontThrow?: () => void
@@ -80,6 +94,7 @@ export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersConta
   unreachable(message?: string): never
   soft<T>(actual: T, message?: string): Assertion<T>
   extend(expects: MatchersObject): void
+  addEqualityTesters(testers: Array<Tester>): void
   assertions(expected: number): void
   hasAssertions(): void
   anything(): any
@@ -171,7 +186,7 @@ export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, 
 
 declare global {
   // support augmenting jest.Matchers by other libraries
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace jest {
 
     // eslint-disable-next-line unused-imports/no-unused-vars

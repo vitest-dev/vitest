@@ -23,6 +23,7 @@ export function NormalizeURLPlugin(): Plugin {
 
       let updatedCode = code
       let match: RegExpExecArray | null
+      // eslint-disable-next-line no-cond-assign
       while ((match = assetImportMetaUrlRE.exec(cleanString))) {
         const { 0: exp, index } = match
         const metaUrlIndex = index + exp.indexOf('import.meta.url')

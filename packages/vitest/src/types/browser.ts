@@ -40,7 +40,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'webdriverio'
    */
-  provider?: 'webdriverio' | 'playwright' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
@@ -72,7 +72,7 @@ export interface BrowserConfigOptions {
    * Update ESM imports so they can be spied/stubbed with vi.spyOn.
    * Enabled by default when running in browser.
    *
-   * @default true
+   * @default false
    * @experimental
    */
   slowHijackESM?: boolean

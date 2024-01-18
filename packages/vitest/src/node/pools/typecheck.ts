@@ -96,7 +96,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
         setTimeout(() => {
           resolve(false)
           clearInterval(_i)
-        }, 500)
+        }, 500).unref()
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
@@ -114,6 +114,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   return {
+    name: 'typescript',
     runTests,
     async close() {
       const promises = ctx.projects.map(project => project.typechecker?.stop())

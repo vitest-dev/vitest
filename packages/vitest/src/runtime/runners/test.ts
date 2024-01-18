@@ -3,7 +3,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getWorkerState } from '../../utils'
+import { getFullName, getNames, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -27,15 +27,23 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
-  async onAfterRunFiles() {
-    const result = await this.snapshotClient.finishCurrentRun()
-    if (result)
-      await rpc().snapshotSaved(result)
-  }
-
-  onAfterRunSuite(suite: Suite) {
+  async onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
+
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // mark snapshots in skipped tests as not obsolete
+      for (const test of getTests(suite)) {
+        if (test.mode === 'skip') {
+          const name = getNames(test).slice(1).join(' > ')
+          this.snapshotClient.skipTestSnapshots(name)
+        }
+      }
+
+      const result = await this.snapshotClient.finishCurrentRun()
+      if (result)
+        await rpc().snapshotSaved(result)
+    }
   }
 
   onAfterRunTask(test: Test) {
@@ -52,25 +60,27 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   async onBeforeRunTask(test: Test) {
-    const name = getNames(test).slice(1).join(' > ')
-
     if (this.cancelRun)
       test.mode = 'skip'
 
-    if (test.mode !== 'run') {
-      this.snapshotClient.skipTestSnapshots(name)
+    if (test.mode !== 'run')
       return
-    }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.startCurrentRun(test.file!.filepath, name, this.workerState.config.snapshotOptions)
 
     this.workerState.current = test
   }
 
-  onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite) {
     if (this.cancelRun)
       suite.mode = 'skip'
+
+    // initialize snapshot state before running file suite
+    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+      // default "name" is irrelevant for Vitest since each snapshot assertion
+      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
+      await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
+    }
   }
 
   onBeforeTryTask(test: Test) {

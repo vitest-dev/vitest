@@ -13,6 +13,6 @@ describe('Preact Demo Test Suite', () => {
   it('click event', async () => {
     render(<BrowserRouter><App /></BrowserRouter>)
     fireEvent.click(screen.getByRole('button'))
-    expect(await screen.findByText(/count is: 1/i)).toBeInTheDocument()
+    expect(await screen.findByText(/count is:\s*1/i)).toBeInTheDocument()
   })
 })

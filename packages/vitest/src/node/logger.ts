@@ -3,6 +3,8 @@ import c from 'picocolors'
 import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
+import { toArray } from '../utils'
+import { highlightCode } from '../utils/colors'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
@@ -27,12 +29,13 @@ export class Logger {
   logUpdate = createLogUpdate(process.stdout)
 
   private _clearScreenPending: string | undefined
+  private _highlights = new Map<string, string>()
 
   constructor(
     public ctx: Vitest,
     public console = globalThis.console,
   ) {
-
+    this._highlights.clear()
   }
 
   log(...args: any[]) {
@@ -90,11 +93,29 @@ export class Logger {
     })
   }
 
+  clearHighlightCache(filename?: string) {
+    if (filename)
+      this._highlights.delete(filename)
+    else
+      this._highlights.clear()
+  }
+
+  highlight(filename: string, source: string) {
+    if (this._highlights.has(filename))
+      return this._highlights.get(filename)!
+    const code = highlightCode(filename, source)
+    this._highlights.set(filename, code)
+    return code
+  }
+
   printNoTestFound(filters?: string[]) {
     const config = this.ctx.config
     const comma = c.dim(', ')
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+    const projectsFilter = toArray(config.project)
+    if (projectsFilter.length)
+      this.console.error(c.dim('projects: ') + c.yellow(projectsFilter.join(comma)))
     this.ctx.projects.forEach((project) => {
       const config = project.config
       const name = project.getName()
@@ -145,7 +166,9 @@ export class Logger {
       const name = project.getName()
       const output = project.isCore() ? '' : ` [${name}]`
 
-      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${project.config.browser.api?.host || 'localhost'}:${c.bold(`${project.browser.config.server.port}`)}`)))
+      const resolvedUrls = project.browser.resolvedUrls
+      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+      this.log(c.dim(c.green(`     ${output} Browser runner started at ${new URL('/', origin)}`)))
     })
 
     if (this.ctx.config.ui)

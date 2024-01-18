@@ -37,7 +37,7 @@ function handleItemClick(task: Task, index: number, nestedIndex?: number) {
   <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
   <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
   <TaskItem
-    v-if="!search || caseInsensitiveMatch(task.name, search)"
+    v-if="!nested || !search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
     :task="task"
     :index="index"

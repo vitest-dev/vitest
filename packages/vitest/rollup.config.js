@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
@@ -12,28 +12,36 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 
-import pkg from './package.json' assert { type: 'json' }
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
-const entries = [
-  'src/index.ts',
-  'src/node/cli.ts',
-  'src/node/cli-wrapper.ts',
-  'src/node.ts',
-  'src/suite.ts',
-  'src/browser.ts',
-  'src/runners.ts',
-  'src/environments.ts',
-  'src/runtime/worker.ts',
-  'src/runtime/vm.ts',
-  'src/runtime/child.ts',
-  'src/runtime/entry.ts',
-  'src/runtime/entry-vm.ts',
-  'src/integrations/spy.ts',
-  'src/coverage.ts',
-  'src/public/utils.ts',
-  'src/public/execute.ts',
-  'src/public/reporters.ts',
-]
+const entries = {
+  'path': 'src/paths.ts',
+  'index': 'src/index.ts',
+  'cli': 'src/node/cli.ts',
+  'cli-wrapper': 'src/node/cli-wrapper.ts',
+  'node': 'src/node.ts',
+  'suite': 'src/suite.ts',
+  'browser': 'src/browser.ts',
+  'runners': 'src/runners.ts',
+  'environments': 'src/environments.ts',
+  'spy': 'src/integrations/spy.ts',
+  'coverage': 'src/coverage.ts',
+  'utils': 'src/public/utils.ts',
+  'execute': 'src/public/execute.ts',
+  'reporters': 'src/public/reporters.ts',
+  // TODO: advanced docs
+  'workers': 'src/workers.ts',
+
+  // for performance reasons we bundle them separately so we don't import everything at once
+  'worker': 'src/runtime/worker.ts',
+  'workers/forks': 'src/runtime/workers/forks.ts',
+  'workers/threads': 'src/runtime/workers/threads.ts',
+  'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
+  'workers/vmForks': 'src/runtime/workers/vmForks.ts',
+
+  'workers/runVmTests': 'src/runtime/runVmTests.ts',
+}
 
 const dtsEntries = {
   index: 'src/index.ts',
@@ -47,6 +55,7 @@ const dtsEntries = {
   utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
+  workers: 'src/workers.ts',
 }
 
 const external = [
@@ -56,7 +65,6 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
-  'rollup',
   'node:vm',
   'inspector',
   'vite-node/source-map',
@@ -65,6 +73,7 @@ const external = [
   'vite-node/constants',
   'vite-node/utils',
   '@vitest/utils/diff',
+  '@vitest/utils/ast',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
@@ -103,9 +112,9 @@ export default ({ watch }) => defineConfig([
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+            return `chunks/${parts.slice(-2).join('-')}.[hash].js`
         }
-        return 'vendor-[name].[hash].js'
+        return 'vendor/[name].[hash].js'
       },
     },
     external,
@@ -169,8 +178,7 @@ function licensePlugin() {
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
-        .sort(({ name: nameA }, { name: nameB }) =>
-          nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
+        .sort(({ name: nameA }, { name: nameB }) => nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )
         .map(
           ({

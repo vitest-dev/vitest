@@ -3,22 +3,22 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort } from '../constants'
+import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { isCI, toArray } from '../utils'
+import { isCI, stdProvider, toArray } from '../utils'
+import type { BuiltinPool } from '../types/pool-options'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
+import { builtinPools } from './pool'
 
-const extraInlineDeps = [
-  /^(?!.*(?:node_modules)).*\.mjs$/,
-  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
-  // Vite client
-  /vite\w*\/dist\/client\/env.mjs/,
-  // Nuxt
-  '@nuxt/test-utils',
-]
+function resolvePath(path: string, root: string) {
+  return normalize(
+    resolveModule(path, { paths: [root] })
+      ?? resolve(root, path),
+  )
+}
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
@@ -111,13 +111,27 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.maxWorkers)
+    resolved.maxWorkers = Number(resolved.maxWorkers)
+
+  if (resolved.minWorkers)
+    resolved.minWorkers = Number(resolved.minWorkers)
+
+  resolved.fileParallelism ??= true
+
+  if (!resolved.fileParallelism) {
+    // ignore user config, parallelism cannot be implemented without limiting workers
+    resolved.maxWorkers = 1
+    resolved.minWorkers = 1
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread = resolved.pool === 'threads' && resolved.poolOptions?.threads?.singleThread
     const isSingleFork = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
-    if (!isSingleThread && !isSingleFork) {
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(`You cannot use ${inspectOption} without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
+      throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
 
@@ -175,11 +189,12 @@ export function resolveConfig(
       resolved.server.deps![option] = resolved.deps[option] as any
   })
 
+  if (resolved.cliExclude)
+    resolved.exclude.push(...resolved.cliExclude)
+
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.server.deps.inline !== true) {
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr
     if (ssrOptions?.noExternal === true && resolved.server.deps.inline == null) {
       resolved.server.deps.inline = true
@@ -193,10 +208,8 @@ export function resolveConfig(
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(...resolved.deps.moduleDirectories)
 
-  if (resolved.runner) {
-    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
-      ?? resolve(resolved.root, resolved.runner)
-  }
+  if (resolved.runner)
+    resolved.runner = resolvePath(resolved.runner, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -209,6 +222,7 @@ export function resolveConfig(
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
+    expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
@@ -222,6 +236,8 @@ export function resolveConfig(
 
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
+
+  resolved.pool ??= 'threads'
 
   if (process.env.VITEST_MAX_THREADS) {
     resolved.poolOptions = {
@@ -258,6 +274,10 @@ export function resolveConfig(
         ...resolved.poolOptions?.forks,
         maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
       },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
+        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
+      },
     }
   }
 
@@ -268,8 +288,27 @@ export function resolveConfig(
         ...resolved.poolOptions?.forks,
         minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
       },
+      vmForks: {
+        ...resolved.poolOptions?.vmForks,
+        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
+      },
     }
   }
+
+  if (resolved.workspace) {
+    // if passed down from the CLI and it's relative, resolve relative to CWD
+    resolved.workspace = options.workspace && options.workspace[0] === '.'
+      ? resolve(process.cwd(), options.workspace)
+      : resolvePath(resolved.workspace, resolved.root)
+  }
+
+  if (!builtinPools.includes(resolved.pool as BuiltinPool))
+    resolved.pool = resolvePath(resolved.pool, resolved.root)
+  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(([glob, pool]) => {
+    if (!builtinPools.includes(pool as BuiltinPool))
+      pool = resolvePath(pool, resolved.root)
+    return [glob, pool]
+  })
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -296,10 +335,10 @@ export function resolveConfig(
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    normalize(
-      resolveModule(file, { paths: [resolved.root] })
-        ?? resolve(resolved.root, file),
-    ),
+    resolvePath(file, resolved.root),
+  )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    resolvePath(file, resolved.root),
   )
   resolved.coverage.exclude.push(...resolved.setupFiles.map(file => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`))
 
@@ -309,9 +348,7 @@ export function resolveConfig(
   ]
 
   if (resolved.diff) {
-    resolved.diff = normalize(
-      resolveModule(resolved.diff, { paths: [resolved.root] })
-        ?? resolve(resolved.root, resolved.diff))
+    resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 
@@ -372,13 +409,16 @@ export function resolveConfig(
   resolved.typecheck.enabled ??= false
 
   if (resolved.typecheck.enabled)
-    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
+    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.slowHijackESM ??= true
+  resolved.browser.slowHijackESM ??= false
   resolved.browser.isolate ??= true
+
+  if (resolved.browser.enabled && stdProvider === 'stackblitz')
+    resolved.browser.provider = 'none'
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,

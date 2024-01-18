@@ -13,7 +13,7 @@
     "@vue/test-utils": "latest",
     "jsdom": "latest",
     "vite": "latest",
-    "vite-plugin-ruby": "^3.0.12",
+    "vite-plugin-ruby": "^3.2.2",
     "vitest": "latest",
     "vue": "latest"
   },

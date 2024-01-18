@@ -102,6 +102,7 @@ function retrieveSourceMapURL(source: string) {
   // Keep executing the search to find the *last* sourceMappingURL to avoid
   // picking up sourceMappingURLs from comments, strings, etc.
   let lastMatch, match
+  // eslint-disable-next-line no-cond-assign
   while (match = re.exec(fileData)) lastMatch = match
   if (!lastMatch)
     return null
@@ -192,7 +193,9 @@ function mapSourcePosition(position: OriginalMapping) {
     // location in the original file.
     if (originalPosition.source !== null) {
       originalPosition.source = supportRelativeURL(
-        sourceMap.url, originalPosition.source)
+        sourceMap.url,
+        originalPosition.source,
+      )
       return originalPosition
     }
   }

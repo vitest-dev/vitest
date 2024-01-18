@@ -3,6 +3,7 @@ import * as nodeos from 'node:os'
 import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
+import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
@@ -33,7 +34,7 @@ function createWorkerChannel(project: WorkspaceProject) {
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: PoolProcessOptions): ProcessPool {
+export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -43,31 +44,38 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const maxThreads = ctx.config.poolOptions?.threads?.maxThreads ?? threadsCount
-  const minThreads = ctx.config.poolOptions?.threads?.minThreads ?? threadsCount
+  const poolOptions = ctx.config.poolOptions?.threads ?? {}
+
+  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
+
+  const worker = resolve(ctx.distPath, 'workers/threads.js')
 
   const options: TinypoolOptions = {
-    filename: workerPath,
+    filename: resolve(ctx.distPath, 'worker.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: ctx.config.poolOptions?.threads?.useAtomics ?? false,
+    useAtomics: poolOptions.useAtomics ?? false,
 
     maxThreads,
     minThreads,
 
     env,
-    execArgv,
+    execArgv: [
+      ...poolOptions.execArgv ?? [],
+      ...execArgv,
+    ],
 
     terminateTimeout: ctx.config.teardownTimeout,
+    concurrentTasksPerWorker: 1,
   }
 
-  if (ctx.config.poolOptions?.threads?.isolate ?? true) {
+  const isolated = poolOptions.isolate ?? true
+
+  if (isolated)
     options.isolateWorkers = true
-    options.concurrentTasksPerWorker = 1
-  }
 
-  if (ctx.config.poolOptions?.threads?.singleThread) {
-    options.concurrentTasksPerWorker = 1
+  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -82,6 +90,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
+        pool: 'threads',
+        worker,
         port: workerPort,
         config,
         files,
@@ -89,6 +99,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         environment,
         workerId,
         projectName: project.getName(),
+        providedContext: project.getProvidedContext(),
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
@@ -100,7 +111,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
-          ctx.state.cancelFiles(files, ctx.config.root)
+          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
 
         else
           throw error
@@ -110,9 +121,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         workerPort.close()
       }
     }
-
-    const Sequencer = ctx.config.sequence.sequencer
-    const sequencer = new Sequencer(ctx)
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
@@ -135,14 +143,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         workspaceMap.set(file, workspaceFiles)
       }
 
-      // it's possible that project defines a file that is also defined by another project
-      const { shard } = ctx.config
-
-      if (shard)
-        specs = await sequencer.shard(specs)
-
-      specs = await sequencer.sort(specs)
-
       const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
       const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
 
@@ -151,7 +151,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (ctx.config.poolOptions?.threads?.isolate ?? true) {
+        if (isolated) {
           results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
         }
@@ -204,12 +204,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env, workerPath }: Po
   }
 
   return {
+    name: 'threads',
     runTests: runWithFiles('run'),
-    close: async () => {
-      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
-      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
-      if (nodeVersion >= 16.17)
-        await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }

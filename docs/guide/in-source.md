@@ -1,8 +1,8 @@
 ---
-title: In-source testing | Guide
+title: In-Source Testing | Guide
 ---
 
-# In-source testing
+# In-Source Testing
 
 Vitest also provides a way to run tests within your source code along side the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
@@ -34,12 +34,13 @@ if (import.meta.vitest) {
 Update the `includeSource` config for Vitest to grab the files under `src/`:
 
 ```ts
-// vitest.config.ts
-import { defineConfig } from 'vitest/config'
+// vite.config.ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    includeSource: ['src/**/*.{js,ts}'],
+    includeSource: ['src/**/*.{js,ts}'], // [!code ++]
   },
 })
 ```
@@ -50,21 +51,22 @@ Then you can start to test!
 $ npx vitest
 ```
 
-## Production build
+## Production Build
 
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
 ```ts
-// vitest.config.ts
-import { defineConfig } from 'vitest/config'
+// vite.config.ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
 
 export default defineConfig({
+  test: {
+    includeSource: ['src/**/*.{js,ts}'],
+  },
   define: { // [!code ++]
     'import.meta.vitest': 'undefined', // [!code ++]
   }, // [!code ++]
-  test: {
-    includeSource: ['src/**/*.{js,ts}']
-  },
 })
 ```
 
@@ -90,7 +92,7 @@ Learn more: <a href="https://github.com/unjs/unbuild" target="_blank">unbuild</a
 </details>
 
 <details my2>
-<summary text-xl>rollup</summary>
+<summary text-xl>Rollup</summary>
 
 ```ts
 // rollup.config.js
@@ -106,7 +108,7 @@ export default {
 }
 ```
 
-Learn more: <a href="https://rollupjs.org/" target="_blank">rollup</a>
+Learn more: <a href="https://rollupjs.org/" target="_blank">Rollup</a>
 
 </details>
 

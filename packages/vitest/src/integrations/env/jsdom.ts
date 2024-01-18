@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
@@ -35,7 +34,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -49,7 +48,7 @@ export default <Environment>({
       cookieJar = false,
       ...restOptions
     } = jsdom as any
-    const dom = new JSDOM(
+    let dom = new JSDOM(
       html,
       {
         pretendToBeVisual,
@@ -98,6 +97,7 @@ export default <Environment>({
       teardown() {
         clearWindowErrors()
         dom.window.close()
+        dom = undefined as any
       },
     }
   },
@@ -107,7 +107,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,

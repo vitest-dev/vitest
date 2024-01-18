@@ -32,7 +32,7 @@ Alias to `vitest watch`.
 
 ### `vitest related`
 
-Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.ts')` or `import index from './index.ts`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.js')` or `import index from './index.js`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
 
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
@@ -73,15 +73,19 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--poolOptions <options>` | Specify pool options |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`)  |
 | `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`)  |
+| `--fileParallelism` | Should all test files run in parallel. Use --no-file-parallelism to disable (default: true) |
+| `--maxWorkers <workers>` | Maximum number of workers to run tests in |
+| `--minWorkers <workers>` | Minimum number of workers to run tests in |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
-| `--mode` | Override Vite mode (default: `test`) |
+| `--isolate` | Run every test file in isolation. To disable isolation, use --no-isolate (default: `true`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
+| `--workspace <path>` | Path to a workspace configuration file |
 | `--globals` | Inject APIs globally |
-| `--dom` | Mock browser api with happy-dom |
+| `--dom` | Mock browser API with happy-dom |
 | `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
@@ -96,9 +100,13 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
+| `--exclude <glob>` | Additional file globs to be excluded from test |
+| `--expand-snapshot-diff` | Show full diff when snapshot fails |
+| `--disable-console-intercept` | Disable automatic interception of console logging (default: `false`) |
 | `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
 | `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
+| `--project` | The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2` |
 | `-h, --help` | Display available CLI options |
 
 ::: tip

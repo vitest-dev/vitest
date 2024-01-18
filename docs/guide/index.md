@@ -14,27 +14,27 @@ You can learn more about the rationale behind the project in the [Why Vitest](./
 
 You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
-## Adding Vitest to your Project
+## Adding Vitest to Your Project
 
 <CourseLink href="https://vueschool.io/lessons/how-to-install-vitest?friend=vueuse">Learn how to install by Video</CourseLink>
 
 ::: code-group
-  ```bash [npm]
-  npm install -D vitest
-  ```
-  ```bash [yarn]
-  yarn add -D vitest
-  ```
-  ```bash [pnpm]
-  pnpm add -D vitest
-  ```
-  ```bash [bun]
-  bun add -D vitest
-  ```
+```bash [npm]
+npm install -D vitest
+```
+```bash [yarn]
+yarn add -D vitest
+```
+```bash [pnpm]
+pnpm add -D vitest
+```
+```bash [bun]
+bun add -D vitest
+```
 :::
 
 :::tip
-Vitest requires Vite >=v3.0.0 and Node >=v14.18
+Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
@@ -61,6 +61,10 @@ test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
 })
 ```
+
+::: tip
+By default, tests must contain ".test." or ".spec." in their file name.
+:::
 
 Next, in order to execute the test, add the following section to your `package.json`:
 

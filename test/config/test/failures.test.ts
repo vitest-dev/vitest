@@ -33,19 +33,19 @@ test('shard index must be smaller than count', async () => {
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('inspect cannot be used with multi-threading', async () => {
   const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('inspect-brk cannot be used with multi processing', async () => {
   const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('c8 coverage provider is not supported', async () => {
@@ -79,6 +79,29 @@ test('boolean coverage flag without dot notation, with more dot notation options
 
   expect(stderr).toMatch('Error: A boolean argument "--coverage" was used with dot notation arguments "--coverage.reporter".')
   expect(stderr).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
+})
+
+test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+      thresholds: {
+        autoUpdate: true,
+        lines: 0,
+      },
+    },
+  })
+
+  expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Expected config.test.coverage.thresholds to be an object')
+})
+
+test('boolean flag 100 should not crash CLI', async () => {
+  const { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+
+  expect(stderr).toMatch('ERROR: Coverage for lines (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for statements (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for branches (0%) does not meet global threshold (100%)')
 })
 
 test('boolean browser flag without dot notation, with more dot notation options', async () => {

@@ -3,8 +3,8 @@ import { importId } from './utils'
 
 const { Date, console } = globalThis
 
-export async function setupConsoleLogSpy() {
-  const { stringify, format, inspect } = await importId('vitest/utils') as typeof import('vitest/utils')
+export async function setupConsoleLogSpy(basePath: string) {
+  const { stringify, format, inspect } = await importId('vitest/utils', basePath) as typeof import('vitest/utils')
   const { log, info, error, dir, dirxml, trace, time, timeEnd, timeLog, warn, debug, count, countReset } = console
   const formatInput = (input: unknown) => {
     if (input instanceof Node)

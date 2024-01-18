@@ -1,6 +1,7 @@
-import type { BrowserProvider } from 'vitest/nide'
+import type { BrowserProvider } from 'vitest/node'
 
-declare var webdriverio: BrowserProvider
-declare var playwright: BrowserProvider
+declare const webdriverio: BrowserProvider
+declare const playwright: BrowserProvider
+declare const none: BrowserProvider
 
-export { webdriverio, playwright }
+export { webdriverio, playwright, none }

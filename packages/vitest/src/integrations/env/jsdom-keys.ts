@@ -181,14 +181,16 @@ const LIVING_KEYS = [
   'Image',
   'Audio',
   'Option',
+
+  'CSS',
 ]
 
 const OTHER_KEYS = [
   'addEventListener',
   'alert',
-  'atob',
+  // 'atob',
   'blur',
-  'btoa',
+  // 'btoa',
   'cancelAnimationFrame',
   /* 'clearInterval', */
   /* 'clearTimeout', */

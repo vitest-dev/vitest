@@ -1,8 +1,9 @@
+import os from 'node:os'
 import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
 import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
@@ -13,6 +14,7 @@ export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outpu
 const defaultCoverageExcludes = [
   'coverage/**',
   'dist/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
   '**/virtual:*',
@@ -41,6 +43,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
+  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
 }
 
 export const fakeTimersDefaults = {
@@ -59,6 +62,7 @@ export const fakeTimersDefaults = {
 
 const config = {
   allowOnly: !isCI,
+  isolate: true,
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
@@ -83,7 +87,7 @@ const config = {
   api: false,
   ui: false,
   uiBase: '/__vitest__/',
-  open: true,
+  open: !isCI,
   css: {
     include: [],
   },
@@ -97,6 +101,7 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-}
+  disableConsoleIntercept: false,
+} satisfies UserConfig
 
-export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
+export const configDefaults = Object.freeze(config)

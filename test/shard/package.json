@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-shard",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest run shard-test.test.ts"

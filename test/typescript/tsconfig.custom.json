@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
-  "exclude": [
-    "**/dist/**"
-  ],
   "include": [
     "**/fail.test-d.ts"
+  ],
+  "exclude": [
+    "**/dist/**"
   ]
 }

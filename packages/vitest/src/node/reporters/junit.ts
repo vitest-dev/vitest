@@ -4,6 +4,7 @@ import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/utils'
+import { getSuites } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -41,7 +42,9 @@ function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean)
     + 'uDAFF[\\uDFFE\\uDFFF])|(?:\\uDB3F[\\uDFFE\\uDFFF])|(?:\\uDB7F[\\uDFFE\\uDFFF])|(?:\\uDBBF'
     + '[\\uDFFE\\uDFFF])|(?:\\uDBFF[\\uDFFE\\uDFFF])(?:[\\0-\\t\\x0B\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
     + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
-    + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))', 'g')
+    + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
+      'g',
+    )
 
     value = value.replace(regex, '')
   }
@@ -57,7 +60,8 @@ function escapeXML(value: any): string {
       .replace(/'/g, '&apos;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;'),
-    true)
+    true,
+  )
 }
 
 function executionTime(durationMS: number) {
@@ -210,12 +214,20 @@ export class JUnitReporter implements Reporter {
             failures: stats.failures + Number(task.result?.state === 'fail'),
             skipped: stats.skipped + Number(task.mode === 'skip' || task.mode === 'todo'),
           }
-        },
-        {
+        }, {
           passed: 0,
           failures: 0,
           skipped: 0,
         })
+
+        // inject failed suites to surface errors during beforeAll/afterAll
+        const suites = getSuites(file)
+        for (const suite of suites) {
+          if (suite.result?.errors) {
+            tasks.push(suite)
+            stats.failures += 1
+          }
+        }
 
         // If there are no tests, but the file failed to load, we still want to report it as a failure
         if (tasks.length === 0 && file.result?.state === 'fail') {

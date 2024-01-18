@@ -288,8 +288,6 @@ export function createHotContext(
       addToMap(newListeners)
     },
 
-    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore added in vite 5
     off<T extends string>(
       event: T,
       cb: (payload: InferCustomEventPayload<T>) => void,

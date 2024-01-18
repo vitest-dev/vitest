@@ -6,7 +6,7 @@ import type { VitestEnvironment } from './config'
 import type { BenchmarkResult } from './benchmark'
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line ts/no-namespace
   namespace Chai {
     interface Assertion {
       containSubset(expected: any): Assertion

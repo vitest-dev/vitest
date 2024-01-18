@@ -50,6 +50,7 @@ export function getAllMockableProperties(obj: any, isModule: boolean, constructo
       if (descriptor)
         allProps.set(key, { key, descriptor })
     })
+  // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   // default is not specified in ownKeys, if module is interoped
   if (isModule && !allProps.has('default') && 'default' in obj) {
@@ -148,3 +149,14 @@ class AggregateErrorPonyfill extends Error {
   }
 }
 export { AggregateErrorPonyfill as AggregateError }
+
+export function isChildProcess(): boolean {
+  return typeof process !== 'undefined' && !!process.send
+}
+
+export function setProcessTitle(title: string) {
+  try {
+    process.title = `node (${title})`
+  }
+  catch {}
+}

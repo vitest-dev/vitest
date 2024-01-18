@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream'
 import { Console } from 'node:console'
 import { relative } from 'node:path'
-import { getSafeTimers } from '@vitest/utils'
+import { getColors, getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
 import type { WorkerGlobalState } from '../types'
 
@@ -128,7 +128,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
   return new Console({
     stdout,
     stderr,
-    colorMode: true,
+    colorMode: getColors().isColorSupported,
     groupIndentation: 2,
   })
 }

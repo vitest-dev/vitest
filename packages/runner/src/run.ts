@@ -183,13 +183,14 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
         test.mode = 'skip'
         test.result = { state: 'skip' }
         updateTask(test, runner)
+        setCurrentTest(undefined)
         return
       }
 
       try {
         await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
         await callCleanupHooks(beforeEachCleanups)
-        await callFixtureCleanup()
+        await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
@@ -328,7 +329,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
 
     if (suite.mode === 'run') {
-      if (!hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !hasTests(suite)) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
           const error = processError(new Error(`No test found in suite ${suite.name}`))

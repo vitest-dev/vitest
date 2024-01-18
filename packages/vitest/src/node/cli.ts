@@ -26,15 +26,21 @@ cli
   .option('--reporter <name>', 'Specify reporters')
   .option('--outputFile <filename/-s>', 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'Enable coverage report')
+  .option('--coverage.all', 'Whether to include all files, including the untested ones into report', { default: true })
   .option('--run', 'Disable watch mode')
   .option('--mode <name>', 'Override Vite mode (default: test)')
+  .option('--workspace <path>', 'Path to a workspace configuration file')
+  .option('--isolate', 'Run every test file in isolation. To disable isolation, use --no-isolate (default: true)')
   .option('--globals', 'Inject apis globally')
-  .option('--dom', 'Mock browser api with happy-dom')
+  .option('--dom', 'Mock browser API with happy-dom')
   .option('--browser [options]', 'Run tests in the browser (default: false)')
   .option('--pool <pool>', 'Specify pool, if not running in the browser (default: threads)')
   .option('--poolOptions <options>', 'Specify pool options')
   .option('--poolOptions.threads.isolate', 'Isolate tests in threads pool (default: true)')
   .option('--poolOptions.forks.isolate', 'Isolate tests in forks pool (default: true)')
+  .option('--fileParallelism', 'Should all test files run in parallel. Use --no-file-parallelism to disable (default: true)')
+  .option('--maxWorkers <workers>', 'Maximum number of workers to run tests in')
+  .option('--minWorkers <workers>', 'Minimum number of workers to run tests in')
   .option('--environment <env>', 'Specify runner environment, if not running in the browser (default: node)')
   .option('--passWithNoTests', 'Pass when no tests found')
   .option('--logHeapUsage', 'Show the size of heap for each test')
@@ -48,12 +54,16 @@ cli
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
   .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
-  .option('--bail <number>', 'Stop test execution when given number of tests have failed', { default: 0 })
-  .option('--retry <times>', 'Retry the test specific number of times if it fails', { default: 0 })
+  .option('--bail <number>', 'Stop test execution when given number of tests have failed (default: 0)')
+  .option('--retry <times>', 'Retry the test specific number of times if it fails (default: 0)')
   .option('--diff <path>', 'Path to a diff config that will be used to generate diff interface')
+  .option('--exclude <glob>', 'Additional file globs to be excluded from test')
+  .option('--expand-snapshot-diff', 'Show full diff when snapshot fails')
+  .option('--disable-console-intercept', 'Disable automatic interception of console logging (default: `false`)')
   .option('--typecheck [options]', 'Custom options for typecheck pool')
   .option('--typecheck.enabled', 'Enable typechecking alongside tests (default: false)')
   .option('--typecheck.only', 'Run only typecheck tests. This automatically enables typecheck (default: false)')
+  .option('--project <name>', 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2')
   .help()
 
 cli
@@ -75,6 +85,13 @@ cli
 cli
   .command('bench [...filters]')
   .action(benchmark)
+
+// TODO: remove in Vitest 2.0
+cli
+  .command('typecheck [...filters]')
+  .action(() => {
+    throw new Error(`Running typecheck via "typecheck" command is removed. Please use "--typecheck" to run your regular tests alongside typechecking, or "--typecheck.only" to run only typecheck tests.`)
+  })
 
 cli
   .command('[...filters]')
@@ -125,7 +142,7 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
-  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
+  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
 
@@ -140,10 +157,20 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
   else
     delete argv.config
 
+  if (argv.workspace)
+    argv.workspace = normalize(argv.workspace)
+  else
+    delete argv.workspace
+
   if (argv.dir)
     argv.dir = normalize(argv.dir)
   else
     delete argv.dir
+
+  if (argv.exclude) {
+    argv.cliExclude = toArray(argv.exclude)
+    delete argv.exclude
+  }
 
   if (argv.coverage) {
     const coverage = argv.coverage

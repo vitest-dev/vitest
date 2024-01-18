@@ -199,7 +199,7 @@ export interface InlineConfig {
    * Benchmark options.
    *
    * @default {}
-  */
+   */
   benchmark?: BenchmarkUserOptions
 
   /**
@@ -241,10 +241,10 @@ export interface InlineConfig {
   dir?: string
 
   /**
-  * Register apis globally
-  *
-  * @default false
-  */
+   * Register apis globally
+   *
+   * @default false
+   */
   globals?: boolean
 
   /**
@@ -281,6 +281,15 @@ export interface InlineConfig {
   environmentMatchGlobs?: [string, VitestEnvironment][]
 
   /**
+   * Run tests in an isolated environment. This option has no effect on vmThreads pool.
+   *
+   * Disabling this option might improve performance if your code doesn't rely on side effects.
+   *
+   * @default true
+   */
+  isolate?: boolean
+
+  /**
    * Pool used to run tests in.
    *
    * Supports 'threads', 'forks', 'vmThreads'
@@ -293,6 +302,23 @@ export interface InlineConfig {
    * Pool options
    */
   poolOptions?: PoolOptions
+
+  /**
+   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   */
+  maxWorkers?: number
+  /**
+   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+   */
+  minWorkers?: number
+
+  /**
+   * Should all test files run in parallel. Doesn't affect tests running in the same file.
+   * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+   *
+   * @default true
+   */
+  fileParallelism?: boolean
 
   /**
    * Automatically assign pool based on globs. The first match will be used.
@@ -308,6 +334,11 @@ export interface InlineConfig {
    * ]
    */
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
+
+  /**
+   * Path to a workspace configuration file
+   */
+  workspace?: string
 
   /**
    * Update snapshot
@@ -452,7 +483,6 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
-   * @internal WIP
    */
   ui?: boolean
 
@@ -592,7 +622,7 @@ export interface InlineConfig {
    * The number of milliseconds after which a test is considered slow and reported as such in the results.
    *
    * @default 300
-  */
+   */
   slowTestThreshold?: number
 
   /**
@@ -619,7 +649,7 @@ export interface InlineConfig {
   /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
-  */
+   */
   chaiConfig?: ChaiConfig
 
   /**
@@ -631,8 +661,24 @@ export interface InlineConfig {
    * Retry the test specific number of times if it fails.
    *
    * @default 0
-  */
+   */
   retry?: number
+
+  /**
+   * Show full diff when snapshot fails instead of a patch.
+   */
+  expandSnapshotDiff?: boolean
+
+  /**
+   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
+   * This is also required for console log preview on Vitest UI.
+   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
+   *
+   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   *
+   * @default false
+   */
+  disableConsoleIntercept?: boolean
 }
 
 export interface TypecheckConfig {
@@ -711,9 +757,19 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
+
+  /**
+   * Name of the project or projects to run.
+   */
+  project?: string | string[]
+
+  /**
+   * Additional exclude patterns
+   */
+  cliExclude?: string[]
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
   mode: VitestRunMode
 
   base?: string
@@ -735,6 +791,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  cliExclude?: string[]
 
   benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
   shard?: {
@@ -771,7 +828,6 @@ export type ProjectConfig = Omit<
   | 'update'
   | 'reporters'
   | 'outputFile'
-  | 'pool'
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
@@ -796,6 +852,11 @@ export type ProjectConfig = Omit<
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
+  poolOptions?: {
+    threads?: Pick<NonNullable<PoolOptions['threads']>, 'singleThread' | 'isolate'>
+    vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
+    forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
+  }
 }
 
 export type RuntimeConfig = Pick<
@@ -808,6 +869,11 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
-> & { sequence?: { hooks?: SequenceHooks } }
+> & {
+  sequence?: {
+    concurrent?: boolean
+    hooks?: SequenceHooks
+  }
+}
 
 export type { UserWorkspaceConfig } from '../config'

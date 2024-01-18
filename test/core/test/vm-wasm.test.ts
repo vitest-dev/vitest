@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:url'
+import { resolve } from 'node:path'
 import { expect, test, vi } from 'vitest'
 
 // TODO: currently not supported

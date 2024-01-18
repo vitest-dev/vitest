@@ -8,6 +8,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 // will import vitest declare test in module 'vite'
 export { configDefaults, defaultInclude, defaultExclude, coverageConfigDefaults } from './defaults'
 export { mergeConfig } from 'vite'
+export { extraInlineDeps } from './constants'
 
 export type { ConfigEnv, ViteUserConfig as UserConfig }
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
@@ -26,10 +27,12 @@ export function defineConfig(config: UserConfigExport): UserConfigExport {
   return config
 }
 
-export function defineProject(config: UserProjectConfigExport) {
+export function defineProject<T extends UserProjectConfigExport>(config: T): T {
   return config
 }
 
-export function defineWorkspace(config: (string | (UserProjectConfigExport & { extends?: string }))[]) {
+type Workspace = (string | (UserProjectConfigExport & { extends?: string }))
+
+export function defineWorkspace(config: Workspace[]): Workspace[] {
   return config
 }

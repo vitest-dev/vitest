@@ -86,7 +86,7 @@ const todos = []
 const archive = []
 
 export const myTest = test.extend({
-  todos: async ({ task }, use) => {
+  todos: async ({}, use) => {
     // setup the fixture before each test function
     todos.push(1, 2, 3)
 
@@ -104,12 +104,12 @@ Then we can import and use it.
 
 ```ts
 import { expect } from 'vitest'
-import { myTest } from './my-test.ts'
+import { myTest } from './my-test.js'
 
 myTest('add items to todos', ({ todos }) => {
   expect(todos.length).toBe(3)
 
-  todos.add(4)
+  todos.push(4)
   expect(todos.length).toBe(4)
 })
 

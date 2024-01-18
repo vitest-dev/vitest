@@ -13,5 +13,5 @@ test('resolved inline', async () => {
 
 test('rejected inline', async () => {
   await expect(reject()).rejects.toMatchInlineSnapshot('[Error: foo]')
-  await expect(reject()).rejects.toThrowErrorMatchingInlineSnapshot('"foo"')
+  await expect(reject()).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: foo]`)
 })

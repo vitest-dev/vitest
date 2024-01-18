@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-css",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "node testing.mjs",

@@ -1,6 +1,5 @@
 import { createServer } from 'vite'
 import { defaultBrowserPort } from '../../constants'
-import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
@@ -10,11 +9,12 @@ import { resolveFsAllow } from '../../node/plugins/utils'
 export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
   const root = project.config.root
 
-  await ensurePackageInstalled('@vitest/browser', root)
+  await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
 
   const configPath = typeof configFile === 'string' ? configFile : false
 
   const server = await createServer({
+    ...project.options, // spread project config inlined in root workspace config
     logLevel: 'error',
     mode: project.config.mode,
     configFile: configPath,
@@ -26,6 +26,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
       },
     },
     plugins: [
+      ...project.options?.plugins || [],
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {
@@ -39,7 +40,10 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           // browser never runs in middleware mode
           server.middlewareMode = false
 
-          config.server = server
+          config.server = {
+            ...config.server,
+            ...server,
+          }
           config.server.fs ??= {}
           config.server.fs.allow = config.server.fs.allow || []
           config.server.fs.allow.push(
@@ -53,6 +57,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             resolve: {
               alias: config.test?.alias,
             },
+            server: {
+              watch: null,
+            },
           }
         },
       },
@@ -61,7 +68,6 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   })
 
   await server.listen()
-  await server.watcher.close()
 
   ;(await import('../../api/setup')).setup(project, server)
 

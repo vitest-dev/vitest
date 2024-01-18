@@ -16,5 +16,8 @@ export default defineConfig({
       threads: { singleThread: true },
       vmThreads: { singleThread: true },
     },
+
+    // TODO: Fix flakiness and remove
+    allowOnly: true,
   },
 })

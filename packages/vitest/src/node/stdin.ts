@@ -1,8 +1,11 @@
 import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { isWindows, stdout } from '../utils'
+import { relative } from 'pathe'
+import { getTests, isWindows, stdout } from '../utils'
+import { toArray } from '../utils/base'
 import type { Vitest } from './core'
+import { WatchFilter } from './watch-filter'
 
 const keys = [
   [['a', 'return'], 'rerun all tests'],
@@ -11,6 +14,7 @@ const keys = [
   ['u', 'update snapshot'],
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
+  ['w', 'filter by a project name'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -76,6 +80,9 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // rerun only failed tests
     if (name === 'f')
       return ctx.rerunFailed()
+    // change project filter
+    if (name === 'w')
+      return inputProjectName()
     // change testNamePattern
     if (name === 't')
       return inputNamePattern()
@@ -90,27 +97,53 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input test name pattern (RegExp)',
-      initial: ctx.configOverride.testNamePattern?.source || '',
-    }])
+    const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
+    const filter = await watchFilter.filter((str: string) => {
+      const files = ctx.state.getFiles()
+      const tests = getTests(files)
+      try {
+        const reg = new RegExp(str)
+        return tests.map(test => test.name).filter(testName => testName.match(reg))
+      }
+      catch {
+        // `new RegExp` may throw error when input is invalid regexp
+        return []
+      }
+    })
+
     on()
-    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
+    await ctx.changeNamePattern(filter?.trim() || '', undefined, 'change pattern')
   }
 
-  async function inputFilePattern() {
+  async function inputProjectName() {
     off()
     const { filter = '' }: { filter: string } = await prompt([{
       name: 'filter',
       type: 'text',
-      message: 'Input filename pattern',
-      initial: latestFilename,
+      message: 'Input a single project name',
+      initial: toArray(ctx.configOverride.project)[0] || '',
     }])
-    latestFilename = filter.trim()
     on()
-    await ctx.changeFilenamePattern(filter.trim())
+    await ctx.changeProjectName(filter.trim())
+  }
+
+  async function inputFilePattern() {
+    off()
+
+    const watchFilter = new WatchFilter('Input filename pattern')
+
+    const filter = await watchFilter.filter(async (str: string) => {
+      const files = await ctx.globTestFiles([str])
+      return files.map(file =>
+        relative(ctx.config.root, file[1]),
+      )
+    })
+
+    on()
+
+    latestFilename = filter?.trim() || ''
+
+    await ctx.changeFilenamePattern(latestFilename)
   }
 
   let rl: readline.Interface | undefined

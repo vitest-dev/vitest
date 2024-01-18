@@ -38,13 +38,14 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const provider = project.browserProvider!
     providers.add(provider)
 
-    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser!.config.server.port}`
+    const resolvedUrls = project.browser?.resolvedUrls
+    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
     const paths = files.map(file => relative(project.config.root, file))
 
     if (project.config.browser.isolate) {
       for (const path of paths) {
         if (isCancelled) {
-          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root)
+          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root, project.config.name)
           break
         }
 
@@ -77,6 +78,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   }
 
   return {
+    name: 'browser',
     async close() {
       ctx.state.browserTestPromises.clear()
       await Promise.all([...providers].map(provider => provider.close()))

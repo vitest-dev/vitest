@@ -65,7 +65,8 @@ export class ViteNodeServer {
       }
       else if (options.deps.inline !== true) {
         options.deps.inline ??= []
-        options.deps.inline.push(...toArray(ssrOptions.noExternal))
+        const inline = options.deps.inline
+        options.deps.inline.push(...toArray(ssrOptions.noExternal).filter(dep => !inline.includes(dep)))
       }
     }
     if (process.env.VITE_NODE_DEBUG_DUMP) {
@@ -143,15 +144,13 @@ export class ViteNodeServer {
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
-      promiseMap.set(moduleId,
-        this._fetchModule(moduleId, mode)
-          .then((r) => {
-            return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-          })
-          .finally(() => {
-            promiseMap.delete(moduleId)
-          }),
-      )
+      promiseMap.set(moduleId, this._fetchModule(moduleId, mode)
+        .then((r) => {
+          return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+        })
+        .finally(() => {
+          promiseMap.delete(moduleId)
+        }))
     }
     return promiseMap.get(moduleId)!
   }
@@ -162,12 +161,10 @@ export class ViteNodeServer {
     const promiseMap = this.transformPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(id)) {
-      promiseMap.set(id,
-        this._transformRequest(id, filepath, mode)
-          .finally(() => {
-            promiseMap.delete(id)
-          }),
-      )
+      promiseMap.set(id, this._transformRequest(id, filepath, mode)
+        .finally(() => {
+          promiseMap.delete(id)
+        }))
     }
     return promiseMap.get(id)!
   }
@@ -198,6 +195,30 @@ export class ViteNodeServer {
     return 'web'
   }
 
+  private getChangedModule(
+    id: string,
+    file: string,
+  ) {
+    const module = this.server.moduleGraph.getModuleById(id) || this.server.moduleGraph.getModuleById(file)
+    if (module)
+      return module
+    const _modules = this.server.moduleGraph.getModulesByFile(file)
+    if (!_modules || !_modules.size)
+      return null
+    // find the latest changed module
+    const modules = [..._modules]
+    let mod = modules[0]
+    let latestMax = -1
+    for (const m of _modules) {
+      const timestamp = Math.max(m.lastHMRTimestamp, m.lastInvalidationTimestamp)
+      if (timestamp > latestMax) {
+        latestMax = timestamp
+        mod = m
+      }
+    }
+    return mod
+  }
+
   private async _fetchModule(id: string, transformMode: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
 
@@ -215,10 +236,16 @@ export class ViteNodeServer {
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
 
-    const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module ? module.lastHMRTimestamp : null
+    const moduleNode = this.getChangedModule(id, filePath)
     const cache = this.fetchCaches[transformMode].get(filePath)
-    if (timestamp && cache && cache.timestamp >= timestamp)
+
+    // lastUpdateTimestamp is the timestamp that marks the last time the module was changed
+    // if lastUpdateTimestamp is 0, then the module was not changed since the server started
+    // we test "timestamp === 0" for expressiveness, but it's not necessary
+    const timestamp = moduleNode
+      ? Math.max(moduleNode.lastHMRTimestamp, moduleNode.lastInvalidationTimestamp)
+      : 0
+    if (cache && (timestamp === 0 || cache.timestamp >= timestamp))
       return cache.result
 
     const time = Date.now()

@@ -1,4 +1,5 @@
 import url from 'node:url'
+import os from 'node:os'
 import { writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'pathe'
 import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
@@ -77,7 +78,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     tmpTsConfig.compilerOptions.emitDeclarationOnly = false
     tmpTsConfig.compilerOptions.incremental = true
     tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
-      __dirname,
+      process.versions.pnp ? join(os.tmpdir(), 'vitest') : __dirname,
       'tsconfig.tmp.tsbuildinfo',
     )
 

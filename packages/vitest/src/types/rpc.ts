@@ -1,6 +1,6 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { CancelReason } from '@vitest/runner'
-import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
+import type { EnvironmentOptions, Pool, ResolvedConfig, VitestEnvironment } from './config'
 import type { Environment, UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
 import type { File, TaskResultPack } from './tasks'
@@ -15,13 +15,12 @@ export interface RuntimeRPC {
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onFinished: (files: File[], errors?: unknown[]) => void
-  onWorkerExit: (error: unknown, code?: number) => void
   onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
-  onCollected: (files: File[]) => void
+  onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskUpdate: (pack: TaskResultPack[]) => void
+  onTaskUpdate: (pack: TaskResultPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
 
@@ -35,7 +34,6 @@ export interface RunnerRPC {
 
 export interface ContextTestEnvironment {
   name: VitestEnvironment
-  environment?: Environment
   transformMode?: TransformMode
   options: EnvironmentOptions | null
 }
@@ -46,9 +44,13 @@ export interface ResolvedTestEnvironment {
 }
 
 export interface ContextRPC {
+  pool: Pool
+  worker: string
+  workerId: number
   config: ResolvedConfig
   projectName: string
   files: string[]
-  invalidates?: string[]
   environment: ContextTestEnvironment
+  providedContext: Record<string, any>
+  invalidates?: string[]
 }

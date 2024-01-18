@@ -20,7 +20,7 @@ it('defaults URL to localhost:3000', () => {
 })
 
 it('disableCSSFileLoading is false by default because we didn\'t change options', () => {
-  expect(window.happyDOM.settings.disableCSSFileLoading).toBe(false)
+  expect(window.happyDOM?.settings.disableCSSFileLoading).toBe(false)
 })
 
 it('defined on self/window are defined on global', () => {

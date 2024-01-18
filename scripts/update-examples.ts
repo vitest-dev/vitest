@@ -6,7 +6,6 @@ import { notNullish } from '../packages/vitest/src/utils'
 
 const noOnlinePlayground = [
   'playwright',
-  'puppeteer', // e2e doesn't work in StackBlitz
 ]
 
 async function run() {

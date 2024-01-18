@@ -42,11 +42,12 @@ Next generation testing framework powered by Vite.
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
 - [Workspace](https://vitest.dev/guide/workspace) support
+- [expect-type](https://github.com/mmkal/expect-type) for type-level testing
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
 
-> Vitest requires Vite >=v3.0.0 and Node >=v14.18
+> Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
 
 
 ```ts
@@ -74,19 +75,19 @@ $ npx vitest
 
 ## Sponsors
 
-### Anthony Fu Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
-  </a>
-</p>
-
 ### Vladimir Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+  </a>
+</p>
+
+### Anthony Fu Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
   </a>
 </p>
 

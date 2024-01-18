@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-cwd",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "cd $(pwd)/.cache/projects/test && vitest run"

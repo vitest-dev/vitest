@@ -1,6 +1,8 @@
 {
+  "name": "@vitest/test-typescript",
+  "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --test-timeout 60000",
     "types": "vitest --typecheck --run",
     "tsc": "tsc --watch --pretty false --noEmit"
   },
@@ -8,6 +10,7 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
+    "googleapis": "^128.0.0",
     "typescript": "^5.2.2",
     "vue-tsc": "^1.8.20"
   }

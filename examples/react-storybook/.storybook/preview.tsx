@@ -5,6 +5,7 @@ import type { DecoratorFn } from '@storybook/react'
 // Disable `react-query` error logging
 setLogger({
   error: () => {},
+  // eslint-disable-next-line no-console
   log: (...params) => console.log(...params),
   warn: (...params) => console.warn(...params),
 })

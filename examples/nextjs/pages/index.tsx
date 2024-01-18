@@ -2,7 +2,7 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 
-const Home: NextPage = () =>
+const Home: NextPage = () => (
   <>
     <Head>
       <title>Create Next App</title>
@@ -21,7 +21,8 @@ const Home: NextPage = () =>
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by
+          {' '}
           <span>
             <Image src="https://assets.vercel.com/image/upload/q_auto/front/favicon/vercel/57x57.png" alt="Vercel Logo" width={72} height={16} />
           </span>
@@ -29,5 +30,6 @@ const Home: NextPage = () =>
       </footer>
     </main>
   </>
+)
 
 export default Home

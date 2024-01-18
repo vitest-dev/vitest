@@ -81,7 +81,7 @@ vitest -u
 
 ## File Snapshots
 
-When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escaping some characters (namely the double-quote `"` and backtick `\``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
+When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `\``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
 
 To improve this case, we introduce [`toMatchFileSnapshot()`](/api/expect#tomatchfilesnapshot) to explicitly snapshot in a file. This allows you to assign any file extension to the snapshot file, and making them more readable.
 
@@ -123,7 +123,13 @@ Example serializer module:
 expect.addSnapshotSerializer({
   serialize(val, config, indentation, depth, refs, printer) {
     // `printer` is a function that serializes a value using existing plugins.
-    return `Pretty foo: ${printer(val.foo)}`
+    return `Pretty foo: ${printer(
+      val.foo,
+      config,
+      indentation,
+      depth,
+      refs,
+    )}`
   },
   test(val) {
     return val && Object.prototype.hasOwnProperty.call(val, 'foo')
@@ -237,5 +243,32 @@ exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
 
 In Vitest, the equivalent snapshot will be:
 ```console
-exports[`toThrowErrorMatchingSnapshot > hint 1`] = `"error"`;
+exports[`toThrowErrorMatchingSnapshot > hint 1`] = `[Error: error]`;
+```
+
+#### 4. default `Error` snapshot is different for `toThrowErrorMatchingSnapshot` and `toThrowErrorMatchingInlineSnapshot`
+
+```js
+test('snapshot', () => {
+  //
+  // in Jest
+  //
+
+  expect(new Error('error')).toMatchInlineSnapshot(`[Error: error]`)
+
+  // Jest snapshots `Error.message` for `Error` instance
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingInlineSnapshot(`"error"`)
+
+  //
+  // in Vitest
+  //
+
+  expect(new Error('error')).toMatchInlineSnapshot(`[Error: error]`)
+
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingInlineSnapshot(`[Error: error]`)
+})
 ```

@@ -49,6 +49,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return seen.get(val)
 
   if (Array.isArray(val)) {
+    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparce arrays ([1,,3])
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
@@ -88,7 +89,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
 }
 
 function normalizeErrorMessage(message: string) {
-  return message.replace(/__vite_ssr_import_\d+__\./g, '')
+  return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
 export function processError(err: any, diffOptions?: DiffOptions) {
@@ -106,7 +107,7 @@ export function processError(err: any, diffOptions?: DiffOptions) {
     const clonedExpected = deepClone(err.expected, { forceWritable: true })
 
     const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
-    err.diff = diff(replacedExpected, replacedActual, diffOptions)
+    err.diff = diff(replacedExpected, replacedActual, { ...diffOptions, ...err.diffOptions })
   }
 
   if (typeof err.expected !== 'string')

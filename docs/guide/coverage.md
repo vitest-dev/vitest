@@ -70,6 +70,55 @@ export default defineConfig({
 })
 ```
 
+## Custom Coverage Reporter
+
+You can use custom coverage reporters by passing either the name of the package or absolute path in `test.coverage.reporter`:
+
+```ts
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      reporter: [
+        // Specify reporter using name of the NPM package
+        ['@vitest/custom-coverage-reporter', { someOption: true }],
+
+        // Specify reporter using local path
+        '/absolute/path/to/custom-reporter.cjs',
+      ],
+    },
+  },
+})
+```
+
+Custom reporters are loaded by Istanbul and must match its reporter interface. See [built-in reporters' implementation](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib) for reference.
+
+```js
+// custom-reporter.cjs
+const { ReportBase } = require('istanbul-lib-report')
+
+module.exports = class CustomReporter extends ReportBase {
+  constructor(opts) {
+    super()
+
+    // Options passed from configuration are available here
+    this.file = opts.file
+  }
+
+  onStart(root, context) {
+    this.contentWriter = context.writer.writeFile(this.file)
+    this.contentWriter.println('Start of custom coverage report')
+  }
+
+  onEnd() {
+    this.contentWriter.println('End of custom coverage report')
+    this.contentWriter.close()
+  }
+}
+```
+
 ## Custom Coverage Provider
 
 It's also possible to provide your custom coverage provider by passing `'custom'` in `test.coverage.provider`:
@@ -118,7 +167,7 @@ export default CustomCoverageProviderModule
 
 Please refer to the type definition for more details.
 
-## Changing the default coverage folder location
+## Changing the Default Coverage Folder Location
 
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
 
@@ -134,7 +183,7 @@ export default defineConfig({
 })
 ```
 
-## Ignoring code
+## Ignoring Code
 
 Both coverage providers have their own ways how to ignore code from coverage reports:
 
@@ -153,11 +202,11 @@ Beware that these ignore hints may now be included in final production build as 
 if (condition) {
 ```
 
-For `v8` this does not cause any issues. You can use `c8 ignore` comments with Typescript as usual:
+For `v8` this does not cause any issues. You can use `v8 ignore` comments with Typescript as usual:
 
 <!-- eslint-skip -->
 ```ts
-/* c8 ignore next 3 */
+/* v8 ignore next 3 */
 if (condition) {
 ```
 
@@ -171,7 +220,7 @@ Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](./ui).
 
 Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
 - enable `coverage.enabled=true` in your configuration or run Vitest with `--coverage.enabled=true` flag
-- add `html` to the `coverage.reporters` list: you can also enable `subdir` option to put coverage report in a subdirectory
+- add `html` to the `coverage.reporter` list: you can also enable `subdir` option to put coverage report in a subdirectory
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">

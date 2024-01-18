@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "jsx": "react",
-    "types": ["vitest/globals"]
+    "module": "node16",
+    "moduleResolution": "node16",
+    "types": ["vitest/globals"],
+    "esModuleInterop": true
   }
 }

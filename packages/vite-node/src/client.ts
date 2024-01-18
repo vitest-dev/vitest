@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { VALID_ID_PREFIX, cleanUrl, createImportMetaEnvProxy, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, createImportMetaEnvProxy, isInternalRequest, isNodeBuiltin, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -221,11 +221,6 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
-    // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
-    // should be checked before normalization, because it removes this prefix
-    // TODO: this is a hack, we should find a better way to handle this
-    if (importer && id.startsWith(VALID_ID_PREFIX))
-      importer = undefined
     const dep = normalizeRequestId(id, this.options.base)
     if (!this.shouldResolveId(dep))
       return [dep, dep]
@@ -233,17 +228,17 @@ export class ViteNodeRunner {
     if (!this.options.resolveId || exists)
       return [dep, path]
     const resolved = await this.options.resolveId(dep, importer)
-    // TODO: we need to better handle module resolution when different urls point to the same module
-    // if (!resolved) {
-    //   const error = new Error(
-    //     `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
-    //     + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
-    //     + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
-    //   )
-    //   Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
-    //   Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
-    //   throw error
-    // }
+    // supported since Vite 5-beta.19
+    if (resolved?.meta?.['vite:alias']?.noResolved) {
+      const error = new Error(
+        `Cannot find module '${id}'${importer ? ` imported from '${importer}'` : ''}.`
+        + '\n\n- If you rely on tsconfig.json\'s "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.'
+        + '\n- Make sure you don\'t have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors',
+      )
+      Object.defineProperty(error, 'code', { value: 'ERR_MODULE_NOT_FOUND', enumerable: true })
+      Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), { value: { id: dep, importer }, enumerable: false })
+      throw error
+    }
     const resolvedId = resolved ? normalizeRequestId(resolved.id, this.options.base) : dep
     return [resolvedId, resolvedId]
   }
@@ -308,6 +303,8 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
+    const SYMBOL_NOT_DEFINED = Symbol('not defined')
+    let moduleExports: unknown = SYMBOL_NOT_DEFINED
     // this proxy is triggered only on exports.{name} and module.exports access
     // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exports, {
@@ -331,12 +328,14 @@ export class ViteNodeRunner {
 
         // returns undefined, when accessing named exports, if default is not an object
         // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (isPrimitive(exports.default)) {
+        if (moduleExports !== SYMBOL_NOT_DEFINED && isPrimitive(moduleExports)) {
           defineExport(exports, p, () => undefined)
           return true
         }
 
-        exports.default[p] = value
+        if (!isPrimitive(exports.default))
+          exports.default[p] = value
+
         if (p !== 'default')
           defineExport(exports, p, () => value)
 
@@ -350,6 +349,7 @@ export class ViteNodeRunner {
       set exports(value) {
         exportAll(cjsExports, value)
         exports.default = value
+        moduleExports = value
       },
       get exports() {
         return cjsExports

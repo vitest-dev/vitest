@@ -2,7 +2,7 @@
 title: Browser Mode | Guide
 ---
 
-# Browser Mode (experimental)
+# Browser Mode <Badge type="warning">Experimental</Badge>
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
@@ -10,11 +10,11 @@ This page provides information about the experimental browser mode feature in th
 
 We developed the Vitest browser mode feature to help improve testing workflows and achieve more accurate and reliable test results. This experimental addition to our testing API allows developers to run tests in a native browser environment. In this section, we'll explore the motivations behind this feature and its benefits for testing.
 
-### Different ways of testing
+### Different Ways of Testing
 
 There are different ways to test JavaScript code. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, [jsdom](https://www.npmjs.com/package/jsdom) is an example of a spec implementation that simulates a browser environment by being used with a test runner like Jest or Vitest, while other testing tools such as [WebdriverIO](https://webdriver.io/) or [Cypress](https://www.cypress.io/) allow developers to test their applications in a real browser or in case of [Playwright](https://playwright.dev/) provide you a browser engine.
 
-### The simulation caveat
+### The Simulation Caveat
 
 Testing JavaScript programs in simulated environments such as jsdom or happy-dom has simplified the test setup and provided an easy-to-use API, making them suitable for many projects and increasing confidence in test results. However, it is crucial to keep in mind that these tools only simulate a browser environment and not an actual browser, which may result in some discrepancies between the simulated environment and the real environment. Therefore, false positives or negatives in test results may occur.
 
@@ -47,7 +47,7 @@ export default defineConfig({
 })
 ```
 
-## Browser Option Types:
+## Browser Option Types
 
 The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
 
@@ -61,7 +61,7 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
   - `webkit`
   - `chromium`
 
-## Cross-browser Testing:
+## Cross-Browser Testing
 
 When you specify a browser name in the browser option, Vitest will try to run the specified browser using [WebdriverIO](https://webdriver.io/) by default, and then run the tests there. This feature makes cross-browser testing easy to use and configure in environments like a CI. If you don't want to use WebdriverIO, you can configure the custom browser provider by using `browser.provider` option.
 
@@ -109,6 +109,7 @@ npx vitest --browser.name=chrome --browser.headless
 In this case, Vitest will run in headless mode using the Chrome browser.
 
 ## Limitations
+
 ### Thread Blocking Dialogs
 
 When using Vitest Browser, it's important to note that thread blocking dialogs like `alert` or `confirm` cannot be used natively. This is because they block the web page, which means Vitest cannot continue communicating with the page, causing the execution to hang.

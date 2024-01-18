@@ -42,7 +42,7 @@ export class CommonjsExecutor {
       Error: typeof Error
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    // eslint-disable-next-line ts/no-this-alias
     const executor = this
 
     this.Module = class Module {
@@ -139,8 +139,6 @@ export class CommonjsExecutor {
       static _resolveLookupPaths = _Module._resolveLookupPaths
       // @ts-expect-error not typed
       static globalPaths = _Module.globalPaths
-      // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-      // @ts-ignore not typed in lower versions
       static isBuiltin = _Module.isBuiltin
 
       static Module = Module
@@ -216,6 +214,7 @@ export class CommonjsExecutor {
     let currentExtension: string
     let index: number
     let startIndex = 0
+    // eslint-disable-next-line no-cond-assign
     while ((index = name.indexOf('.', startIndex)) !== -1) {
       startIndex = index + 1
       if (index === 0)

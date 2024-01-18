@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, Test } from '@vitest/runner'
+import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import { rpc } from './rpc'
 
@@ -11,8 +11,11 @@ interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
-export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
-  return class BrowserTestRunner extends original {
+export function createBrowserRunner(
+  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
+  coverageModule: CoverageHandler | null,
+): { new(options: BrowserRunnerOptions): VitestRunner } {
+  return class BrowserTestRunner extends VitestRunner {
     public config: ResolvedConfig
     hashMap = new Map<string, [test: boolean, timstamp: string]>()
 
@@ -23,10 +26,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     }
 
     async onAfterRunTask(task: Test) {
-      await super.onAfterRunTest?.(task)
-      task.result?.errors?.forEach((error) => {
-        console.error(error.message)
-      })
+      await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()
@@ -39,8 +39,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
       }
     }
 
-    async onAfterRunFiles() {
-      await super.onAfterRun?.()
+    async onAfterRunFiles(files: File[]) {
+      await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
       if (coverage) {
@@ -66,11 +66,12 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
         hash = Date.now().toString()
         this.hashMap.set(filepath, [false, hash])
       }
+      const base = this.config.base || '/'
 
       // on Windows we need the unit to resolve the test file
-      const importpath = /^\w:/.test(filepath)
-        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
-        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+      const prefix = `${base}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)
     }
   }

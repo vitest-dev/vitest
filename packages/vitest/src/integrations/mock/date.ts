@@ -55,11 +55,11 @@ class MockDate extends RealDate {
         break
     }
 
+    Object.setPrototypeOf(date, MockDate.prototype)
+
     return date
   }
 }
-
-// MockDate.prototype = RealDate.prototype
 
 MockDate.UTC = RealDate.UTC
 

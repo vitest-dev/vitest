@@ -6,15 +6,27 @@ const dir = dirname(fileURLToPath(import.meta.url))
 
 function noop() {}
 
+const provider = process.env.PROVIDER || 'webdriverio'
+const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+
 export default defineConfig({
+  server: {
+    headers: {
+      'x-custom': 'hello',
+    },
+  },
+  optimizeDeps: {
+    include: ['@vitest/cjs-lib'],
+  },
   test: {
     include: ['test/**.test.{ts,js}'],
     browser: {
       enabled: true,
-      name: process.env.BROWSER || 'chrome',
+      name: browser,
       headless: false,
-      provider: process.env.PROVIDER || 'webdriverio',
+      provider,
       isolate: false,
+      slowHijackESM: true,
     },
     alias: {
       '#src': resolve(dir, './src'),

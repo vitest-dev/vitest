@@ -4,10 +4,10 @@ import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import type { WorkspaceProject } from 'vitest/node'
 import { injectVitestModule } from './esmInjector'
 
-// don't expose type to not bundle it here
-export default (project: any, base = '/'): Plugin[] => {
+export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
@@ -17,8 +17,10 @@ export default (project: any, base = '/'): Plugin[] => {
       name: 'vitest:browser',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
+        }
       },
       async configureServer(server) {
         server.middlewares.use(
@@ -26,6 +28,13 @@ export default (project: any, base = '/'): Plugin[] => {
           sirv(resolve(distRoot, 'client'), {
             single: false,
             dev: true,
+            setHeaders(res, _pathname, _stats) {
+              const headers = server.config.server.headers
+              if (headers) {
+                for (const name in headers)
+                  res.setHeader(name, headers[name]!)
+              }
+            },
           }),
         )
       },
@@ -33,9 +42,24 @@ export default (project: any, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
-      config() {
+      async config() {
+        const {
+          include,
+          exclude,
+          includeSource,
+          dir,
+          root,
+        } = project.config
+        const projectRoot = dir || root
+        const entries = await project.globAllTestFiles(include, exclude, includeSource, projectRoot)
         return {
           optimizeDeps: {
+            entries: [
+              ...entries,
+              'vitest/utils',
+              'vitest/browser',
+              'vitest/runners',
+            ],
             exclude: [
               ...builtinModules,
               'vitest',
@@ -46,6 +70,7 @@ export default (project: any, base = '/'): Plugin[] => {
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
+              'vitest > @vitest/snapshot > pretty-format',
               'vitest > diff-sequences',
               'vitest > loupe',
               'vitest > pretty-format',
