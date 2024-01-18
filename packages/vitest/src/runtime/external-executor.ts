@@ -29,7 +29,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'module' | 'commonjs'
+  type: 'data' | 'network' | 'builtin' | 'vite' | 'module' | 'commonjs'
   url: string
   path: string
 }
@@ -153,6 +153,9 @@ export class ExternalModulesExecutor {
     if (identifier.startsWith('data:'))
       return { type: 'data', url: identifier, path: identifier }
 
+    if (/^(https?:)?\/\//.test(identifier))
+      return { type: 'network', url: identifier, path: identifier }
+
     const extension = extname(identifier)
     if (extension === '.node' || isNodeBuiltin(identifier))
       return { type: 'builtin', url: identifier, path: identifier }
@@ -185,6 +188,8 @@ export class ExternalModulesExecutor {
     switch (type) {
       case 'data':
         return this.esm.createDataModule(identifier)
+      case 'network':
+        return this.esm.createNetworkModule(identifier)
       case 'builtin': {
         const exports = this.require(identifier)
         return this.wrapCoreSynteticModule(identifier, exports)

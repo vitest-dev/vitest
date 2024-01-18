@@ -177,4 +177,22 @@ export class EsmExecutor {
 
     return this.createEsModule(identifier, code)
   }
+
+  // https://nodejs.org/api/esm.html#https-and-http-imports
+  // TODO: find reference implementation (node? deno?)
+  // TODO: default disabled to align with node?
+  // TODO: mime-type (json, wasm)? share code with `createDataModule` above?
+  // TODO: dynamic import?
+  public async createNetworkModule(identifier: string): Promise<VMModule> {
+    const cached = this.moduleCache.get(identifier)
+    if (cached)
+      return cached
+
+    const res = await fetch(identifier)
+    if (!res.ok)
+      throw new Error(`Fetch failed on network import: '${identifier}'`)
+
+    const code = await res.text()
+    return this.createEsModule(identifier, code)
+  }
 }
