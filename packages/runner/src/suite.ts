@@ -385,6 +385,40 @@ export function createTaskCollector(
     }
   }
 
+  // fixture at first argument so fixture extraction code becomes same
+  taskFn.each6 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
+    const test = this.withContext()
+    this.setContext('each', true)
+
+    // check { context: boolean }
+    const enableContext = !(Array.isArray(cases) && 'raw' in cases) && args[0]?.context
+
+    if (Array.isArray(cases) && 'raw' in cases && args.length)
+      cases = formatTemplateString(cases, args)
+
+    return (name: string | Function, fn: (...args: any[]) => void, options?: number | TestOptions) => {
+      const _name = formatName(name)
+      const arrayOnlyCases = cases.every(Array.isArray)
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+        const args = arrayOnlyCases ? items : [i]
+
+        let fnWrapper: any = () => fn(...args)
+        if (enableContext) {
+          fnWrapper = (testContext: any) => {
+            return fn(testContext, ...args)
+          }
+          // // TODO: what if the length is not uniform?
+          // (fnWrapper as any).__testEachItemLength = args.length
+          fnWrapper.toString = () => fn.toString()
+        }
+        test(formatTitle(_name, items, idx), fnWrapper, options)
+      })
+
+      this.setContext('each', undefined)
+    }
+  }
+
   taskFn.skipIf = function (this: TestAPI, condition: any) {
     return condition ? this.skip : this
   }

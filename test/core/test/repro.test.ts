@@ -172,44 +172,64 @@ myTest.concurrent.each5([['hello', 2], ['hi', 3]], { context: true })(
   },
 )
 
-;() => {
-  myTest.concurrent.each6([['hello'], ['hi']], { context: true })(
-    'myTest.each6-context-true %s',
-    async ({ expect, myFixture }, arg) => {
-      await sleep(200)
-      expect({ arg, myFixture }).toMatchSnapshot()
-    },
-  )
+myTest.concurrent.each6([['hello'], ['hi']], { context: true })(
+  'myTest.each6-context-true %s',
+  async ({ expect, myFixture }, arg) => {
+    await sleep(200)
+    expect({ arg, myFixture }).toMatchSnapshot()
+  },
+)
 
-  myTest.concurrent.each6([['hello'], ['hi']], { context: true })(
-    'myTest.each6-context-true %s',
-    async ({ expect, myFixture }, arg) => {
-      await sleep(200)
-      expect({ arg, myFixture }).toMatchSnapshot()
-    },
-  )
+myTest.concurrent.each6([['hello'], ['hi']], { context: true })(
+  'myTest.each6-context-true %s',
+  async ({ expect, myFixture }, arg) => {
+    await sleep(200)
+    expect({ arg, myFixture }).toMatchSnapshot()
+  },
+)
 
-  myTest.concurrent.each6([['hello', 2], ['hi', 3]], { context: true })(
-    'myTest.each6-context-true-multiple %s %s',
-    async ({ expect, myFixture }, argString, argNumber) => {
-      await sleep(200)
-      expect({ argString, argNumber, myFixture }).toMatchSnapshot()
-      expect(argString).toBeTypeOf('string')
-      expect(argNumber).toBeTypeOf('number')
-      argString satisfies string
-      argNumber satisfies number
-    },
-  )
+myTest.concurrent.each6([['hello', 2], ['hi', 3]], { context: true })(
+  'myTest.each6-context-true-multiple %s %s',
+  async ({ expect, myFixture }, argString, argNumber) => {
+    await sleep(200)
+    expect({ argString, argNumber, myFixture }).toMatchSnapshot()
+    expect(argString).toBeTypeOf('string')
+    expect(argNumber).toBeTypeOf('number')
+    argString satisfies string
+    argNumber satisfies number
+  },
+)
 
-  myTest.concurrent.each6([['hello', 2], ['hi', 3]], { context: true })(
-    'myTest.each6-context-true-multiple-spread %s %s',
-    async ({ expect, myFixture }, ...args) => {
-      await sleep(200)
-      expect(args[0]).toBeTypeOf('string')
-      expect(args[1]).toBeTypeOf('number')
-      args[0] satisfies string
-      args[1] satisfies number
-      myFixture satisfies number
-    },
-  )
-}
+myTest.concurrent.each6([['hello', 2], ['hi', 3]], { context: true })(
+  'myTest.each6-context-true-multiple-spread %s %s',
+  async ({ expect, myFixture }, ...args) => {
+    await sleep(200)
+    expect(args[0]).toBeTypeOf('string')
+    expect(args[1]).toBeTypeOf('number')
+    args[0] satisfies string
+    args[1] satisfies number
+    myFixture satisfies number
+  },
+)
+
+myTest.concurrent.each6([['hello', 2], ['hi', 3]])(
+  'myTest.each6-context-false-multiple %s %s',
+  async (argString, argNumber) => {
+    await sleep(200)
+    expect(argString).toBeTypeOf('string')
+    expect(argNumber).toBeTypeOf('number')
+    argString satisfies string
+    argNumber satisfies number
+  },
+)
+
+myTest.concurrent.each6([['hello', 2], ['hi', 3]])(
+  'myTest.each6-context-false-multiple-spread %s %s',
+  async (...args) => {
+    await sleep(200)
+    expect(args[0]).toBeTypeOf('string')
+    expect(args[1]).toBeTypeOf('number')
+    args[0] satisfies string
+    args[1] satisfies number
+  },
+)
