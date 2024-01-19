@@ -10,12 +10,6 @@ title: Workspace | Guide
 
 :::
 
-::: tip
-
-You can find a sample project in [Examples](/guide/#examples).
-
-:::
-
 Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
 
 ## Defining a Workspace
