@@ -26,3 +26,15 @@ test('without color', async () => {
   })
   expect(proc.stdout).toContain('\ntrue\n')
 })
+
+test('junit always strips ansi', async () => {
+  const proc = await execa('vitest', ['run', '--root=./fixtures/console-color', '--reporter', 'junit'], {
+    env: {
+      CI: '1',
+      FORCE_COLOR: '1',
+      NO_COLOR: undefined,
+      GITHUB_ACTIONS: undefined,
+    },
+  })
+  expect(proc.stdout).toMatch(/<system-out>\s*true\s*<\/system-out>/)
+})

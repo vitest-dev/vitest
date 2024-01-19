@@ -5,6 +5,7 @@ import { dirname, relative, resolve } from 'pathe'
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/utils'
 import { getSuites } from '@vitest/runner/utils'
+import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -166,7 +167,7 @@ export class JUnitReporter implements Reporter {
 
     await this.writeElement(`system-${type}`, {}, async () => {
       for (const log of logs)
-        await this.baseLog(escapeXML(log.content))
+        await this.baseLog(escapeXML(stripAnsi(log.content)))
     })
   }
 
