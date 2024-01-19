@@ -5,6 +5,14 @@ import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/ut
 vi.mock('fs')
 
 describe('current url', () => {
+  it('__filename is equal to import.meta.url', () => {
+    expect(__filename).toEqual(import.meta.filename)
+  })
+
+  it('__dirname is equal to import.meta.dirname', () => {
+    expect(__dirname).toEqual(import.meta.dirname)
+  })
+
   describe.runIf(!isWindows)('unix', () => {
     it('__filename', () => {
       expect(__filename.startsWith('file://')).toBe(false)

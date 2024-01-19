@@ -43,7 +43,7 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@types/node": "^18.18.9",
+    "@types/node": "^20.11.5",
     "@types/ws": "^8.5.9",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",

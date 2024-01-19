@@ -1,6 +1,8 @@
 /* eslint-disable antfu/no-cjs-exports */
 
 import type vm from 'node:vm'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { VMModule } from './types'
 import { SourceTextModule, SyntheticModule } from './utils'
@@ -62,8 +64,13 @@ export class EsmExecutor {
         importModuleDynamically: this.executor.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
-          meta.resolve = (specifier: string, importer?: string) => {
-            return this.executor.resolve(specifier, importer ?? mod.identifier)
+          if (mod.identifier.startsWith('file:')) {
+            const filename = fileURLToPath(mod.identifier)
+            meta.filename = filename
+            meta.dirname = dirname(filename)
+          }
+          meta.resolve = (specifier: string, importer?: string | URL) => {
+            return this.executor.resolve(specifier, importer != null ? importer.toString() : mod.identifier)
           }
         },
       },

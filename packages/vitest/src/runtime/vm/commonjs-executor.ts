@@ -76,6 +76,10 @@ export class CommonjsExecutor {
         return _require
       }
 
+      static register = () => {
+        throw new Error(`[vitest] "register" is not available when running in Vitest.`)
+      }
+
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const script = new vm.Script(cjsModule, {

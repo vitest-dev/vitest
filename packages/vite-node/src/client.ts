@@ -296,7 +296,14 @@ export class ViteNodeRunner {
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const href = pathToFileURL(modulePath).href
-    const meta = { url: href, env }
+    const __filename = fileURLToPath(href)
+    const __dirname = dirname(__filename)
+    const meta = {
+      url: href,
+      env,
+      filename: __filename,
+      dirname: __dirname,
+    }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
@@ -344,7 +351,6 @@ export class ViteNodeRunner {
     })
 
     Object.assign(mod, { code: transformed, exports })
-    const __filename = fileURLToPath(href)
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
@@ -388,7 +394,7 @@ export class ViteNodeRunner {
       exports: cjsExports,
       module: moduleProxy,
       __filename,
-      __dirname: dirname(__filename),
+      __dirname,
     })
 
     debugExecute(__filename)
