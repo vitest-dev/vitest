@@ -4,7 +4,7 @@ title: IDE Integrations | Guide
 
 # IDE Integrations
 
-## VS Code <Badge>Offical</Badge>
+## VS Code <Badge>Official</Badge>
 
 <p text-center>
 <img src="https://raw.githubusercontent.com/vitest-dev/vscode/main/img/cover.png" w-60>
