@@ -66,8 +66,8 @@ export class EsmExecutor {
           meta.url = mod.identifier
           if (mod.identifier.startsWith('file:')) {
             const filename = fileURLToPath(mod.identifier)
-            mod.filename = filename
-            mod.dirname = dirname(filename)
+            meta.filename = filename
+            meta.dirname = dirname(filename)
           }
           meta.resolve = (specifier: string, importer?: string | URL) => {
             return this.executor.resolve(specifier, importer != null ? importer.toString() : mod.identifier)
