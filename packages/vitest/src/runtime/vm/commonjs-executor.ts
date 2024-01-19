@@ -76,7 +76,7 @@ export class CommonjsExecutor {
         return _require
       }
 
-      static register() {
+      static register = () => {
         throw new Error(`[vitest] "register" is not available when running in Vitest.`)
       }
 
