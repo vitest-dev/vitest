@@ -1,8 +1,5 @@
-/// <reference types="vitest" />
+import { defineProject } from 'vitest/config'
 
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-  },
+export default defineProject({
+  test: {},
 })
