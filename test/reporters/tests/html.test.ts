@@ -47,7 +47,9 @@ describe('html reporter', async () => {
     const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
-    const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
+    const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'), (_key, value) => {
+      return typeof value === 'string' ? stripAnsi(value) : value
+    })
     resultJson.config = {} // doesn't matter for a test
     const file = resultJson.files[0]
     file.id = 0
