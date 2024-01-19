@@ -881,6 +881,18 @@ importers:
         specifier: latest
         version: 3.3.8(typescript@5.2.2)
 
+  examples/workspace:
+    devDependencies:
+      '@vitest/ui':
+        specifier: latest
+        version: link:../../packages/ui
+      vite:
+        specifier: ^5.0.0
+        version: 5.0.2(@types/node@18.18.9)(less@4.1.3)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   packages/browser:
     dependencies:
       '@vitest/utils':

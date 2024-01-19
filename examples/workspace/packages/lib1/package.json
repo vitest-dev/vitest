@@ -1,0 +1,6 @@
+{
+  "name": "@vitest/example-workspace-lib1",
+  "type": "module",
+  "private": true,
+  "license": "MIT"
+}
