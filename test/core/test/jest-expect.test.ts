@@ -1067,6 +1067,13 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(throwError).toThrow((expect as any).stringContainingCustom('xx')))
   snapshotError(() => expect(throwError).not.toThrow(expect.stringContaining('ll')))
   snapshotError(() => expect(throwError).not.toThrow((expect as any).stringContainingCustom('ll')))
+
+  snapshotError(() => expect(() => {
+    throw new Error('hello')
+  }).toThrow(expect.stringContaining('ll')))
+  snapshotError(() => expect(() => {
+    throw new Error('hello')
+  }).toThrow((expect as any).stringContainingCustom('ll')))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
