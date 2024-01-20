@@ -390,6 +390,8 @@ export class Vitest {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
       if (deps.has(filepath))
         return
+      deps.add(filepath)
+
       const mod = project.server.moduleGraph.getModuleById(filepath)
       const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed)
@@ -398,15 +400,13 @@ export class Vitest {
       await Promise.all(dependencies.map(async (dep) => {
         const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
-        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
-          deps.add(fsPath)
-
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath))
           await addImports([project, fsPath])
-        }
       }))
     }
 
     await addImports(filepath)
+    deps.delete(filepath[1])
 
     return deps
   }
