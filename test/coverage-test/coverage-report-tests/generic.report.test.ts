@@ -184,3 +184,10 @@ test('multi environment coverage is merged correctly', async () => {
   // Condition covered by both tests
   expect(lineCoverage[30]).toBe(2)
 })
+
+test('temporary files are removed after test', async () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).not.toContain('.tmp')
+})
