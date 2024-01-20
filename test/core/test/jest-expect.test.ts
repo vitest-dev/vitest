@@ -1074,6 +1074,14 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new Error('hello')
   }).toThrow((expect as any).stringContainingCustom('ll')))
+
+  // error constructor
+  class MyError1 extends Error {}
+  class MyError2 extends Error {}
+
+  snapshotError(() => expect(() => {
+    throw new MyError2('hello')
+  }).toThrow(MyError1))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

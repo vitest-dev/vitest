@@ -581,7 +581,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected error not to be instance of ${name}`,
         expected,
         thrown,
-        false,
       )
     }
 

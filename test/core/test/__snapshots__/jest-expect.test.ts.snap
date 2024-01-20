@@ -297,3 +297,16 @@ stringContainingCustom<ll>
   "message": "expected error to match asymmetric matcher",
 }
 `;
+
+exports[`asymmetric matcher error 23`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected: 
+[Function MyError1]
+
++ Received: 
+[Error: hello]",
+  "expected": "[Function MyError1]",
+  "message": "expected error to be instance of MyError1",
+}
+`;
