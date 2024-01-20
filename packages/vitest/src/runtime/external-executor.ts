@@ -71,11 +71,11 @@ export class ExternalModulesExecutor {
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
-    const identifier = await this.resolve(specifier, referencer)
+    const identifier = this.resolve(specifier, referencer)
     return await this.createModule(identifier)
   }
 
-  public async resolve(specifier: string, parent: string) {
+  public resolve(specifier: string, parent: string) {
     for (const resolver of this.resolvers) {
       const id = resolver(specifier, parent)
       if (id)

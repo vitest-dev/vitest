@@ -235,10 +235,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           },
         })
       }
-
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
     }
+
+    this.coverageFiles = new Map()
+    await fs.rm(this.coverageFilesDirectory, { recursive: true })
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
