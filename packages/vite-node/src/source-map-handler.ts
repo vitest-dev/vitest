@@ -11,14 +11,11 @@ import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 // Only install once if called multiple times
 let errorFormatterInstalled = false
 
-// If true, the caches are reset before a stack trace formatting operation
-const emptyCacheBetweenOperations = false
-
 // Maps a file path to a string containing the file contents
-let fileContentsCache: Record<string, string> = {}
+const fileContentsCache: Record<string, string> = {}
 
 // Maps a file path to a source map for that file
-let sourceMapCache: Record<string, { url: string | null; map: TraceMap | null }> = {}
+const sourceMapCache: Record<string, { url: string | null; map: TraceMap | null }> = {}
 
 // Regex for detecting source maps
 const reSourceMap = /^data:application\/json[^,]+base64,/
@@ -405,11 +402,6 @@ function wrapCallSite(frame: CallSite, state: State) {
 // This function is part of the V8 stack trace API, for more info see:
 // https://v8.dev/docs/stack-trace-api
 function prepareStackTrace(error: Error, stack: CallSite[]) {
-  if (emptyCacheBetweenOperations) {
-    fileContentsCache = {}
-    sourceMapCache = {}
-  }
-
   const name = error.name || 'Error'
   const message = error.message || ''
   const errorString = `${name}: ${message}`
