@@ -17,6 +17,7 @@ import { isChildProcess } from '../../utils/base'
 import { RealDate, mockDate, resetDate } from './date'
 
 export class FakeTimers {
+  private _global: typeof globalThis
   private _clock!: InstalledClock
   private _fakingTime: boolean
   private _fakingDate: boolean
@@ -37,6 +38,7 @@ export class FakeTimers {
 
     this._fakingTime = false
     this._fakeTimers = withGlobal(global)
+    this._global = global
   }
 
   clearAllTimers(): void {
@@ -138,13 +140,17 @@ export class FakeTimers {
       if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess())
         throw new Error('process.nextTick cannot be mocked inside child_process')
 
+      // setImmediate/clearImmediate is not possible to mock when it's not globally avaiable and it throws an internal error.
+      // this might be sinonjs/fake-timers's bug and inconsistent behavior, but for now, we simply filter out these two for browser testing.
+      // https://github.com/sinonjs/fake-timers/issues/277
+      // https://github.com/sinonjs/sinon/issues/2085
       const existingFakedMethods = (this._userConfig?.toFake || toFake).filter((method) => {
         switch (method) {
-          case 'hrtime':
-          case 'nextTick':
-            return typeof process !== 'undefined' && method in process && process[method]
+          case 'setImmediate':
+          case 'clearImmediate':
+            return method in this._global && this._global[method]
           default:
-            return method in globalThis && globalThis[method]
+            return true
         }
       })
 
