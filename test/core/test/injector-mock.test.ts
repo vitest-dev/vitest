@@ -1325,6 +1325,38 @@ export default await vi.hoisted(async () => {
 })
 `,
     ],
+    [
+      'vi.mock is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default vi.mock('./mocked')
+`,
+    ],
+    [
+      'vi.unmock is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default vi.unmock('./mocked')
+`,
+    ],
+    [
+      'vi.mock is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const mocked = vi.mock('./mocked')
+`,
+    ],
+    [
+      'vi.unmock is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const mocked = vi.unmock('./mocked')
+`,
+    ],
   ])('correctly throws an error if %s', (_, code) => {
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
