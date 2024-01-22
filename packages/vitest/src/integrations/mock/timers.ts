@@ -141,7 +141,7 @@ export class FakeTimers {
         throw new Error('process.nextTick cannot be mocked inside child_process')
 
       // setImmediate/clearImmediate is not possible to mock when it's not globally avaiable and it throws an internal error.
-      // this might be sinonjs/fake-timers's bug and inconsistent behavior, but for now, we simply filter out these two for browser testing.
+      // this might be @sinonjs/fake-timers's bug and inconsistent behavior, but for now, we silently filter out these two beforehand for browser testing.
       // https://github.com/sinonjs/fake-timers/issues/277
       // https://github.com/sinonjs/sinon/issues/2085
       const existingFakedMethods = (this._userConfig?.toFake || toFake).filter((method) => {
