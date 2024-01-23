@@ -119,6 +119,21 @@ describe('FakeTimers', () => {
       timers.useFakeTimers()
       expect(global.clearImmediate).not.toBe(origClearImmediate)
     })
+
+    it('mocks requestIdleCallback even if not on global', () => {
+      const global = { Date: FakeDate, clearTimeout, setTimeout };
+      const timers = new FakeTimers({ global, config: { toFake: ["requestIdleCallback"] }})
+      timers.useFakeTimers()
+      expect(global.requestIdleCallback).toBeDefined();
+    })
+
+    it('cannot mock setImmediate and clearImmediate if not on global', () => {
+      const global = { Date: FakeDate, clearTimeout, setTimeout };
+      const timers = new FakeTimers({ global, config: { toFake: ["setImmediate", "clearImmediate"] }})
+      timers.useFakeTimers()
+      expect(global.setImmediate).toBeUndefined();
+      expect(global.clearImmediate).toBeUndefined();
+    })
   })
 
   describe('runAllTicks', () => {
