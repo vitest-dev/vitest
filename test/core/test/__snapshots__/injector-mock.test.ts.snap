@@ -120,3 +120,43 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
       5| })
       6| "
 `;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as a named export 1`] = `"Cannot export the result of "vi.mock". Remove export declaration because "vi.mock" doesn't return anything."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as a named export 2`] = `
+"      1| import { vi } from 'vitest'
+      2| 
+      3| export const mocked = vi.mock('./mocked')
+       | ^
+      4| "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as default export 1`] = `"Cannot export the result of "vi.mock". Remove export declaration because "vi.mock" doesn't return anything."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as default export 2`] = `
+"      1| import { vi } from 'vitest'
+      2| 
+      3| export default vi.mock('./mocked')
+       | ^
+      4| "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as a named export 1`] = `"Cannot export the result of "vi.unmock". Remove export declaration because "vi.unmock" doesn't return anything."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as a named export 2`] = `
+"      1| import { vi } from 'vitest'
+      2| 
+      3| export const mocked = vi.unmock('./mocked')
+       | ^
+      4| "
+`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as default export 1`] = `"Cannot export the result of "vi.unmock". Remove export declaration because "vi.unmock" doesn't return anything."`;
+
+exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as default export 2`] = `
+"      1| import { vi } from 'vitest'
+      2| 
+      3| export default vi.unmock('./mocked')
+       | ^
+      4| "
+`;
