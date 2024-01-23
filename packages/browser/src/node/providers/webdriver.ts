@@ -1,8 +1,6 @@
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
 import type { RemoteOptions } from 'webdriverio'
 
-type Awaitable<T> = T | PromiseLike<T>
-
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = typeof webdriverBrowsers[number]
 
@@ -79,11 +77,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   async openPage(url: string) {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
-  }
-
-  // TODO
-  catchError(_cb: (error: Error) => Awaitable<void>) {
-    return () => {}
   }
 
   async close() {

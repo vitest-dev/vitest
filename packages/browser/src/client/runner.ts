@@ -1,11 +1,15 @@
 import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
+import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
+import { getConfig, importId } from './utils'
+import { BrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
-  browserHashMap: Map<string, [test: boolean, timstamp: string]>
 }
+
+export const browserHashMap = new Map<string, [test: boolean, timstamp: string]>()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
@@ -17,12 +21,11 @@ export function createBrowserRunner(
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends VitestRunner {
     public config: ResolvedConfig
-    hashMap = new Map<string, [test: boolean, timstamp: string]>()
+    hashMap = browserHashMap
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
-      this.hashMap = options.browserHashMap
     }
 
     async onAfterRunTask(task: Test) {
@@ -75,4 +78,27 @@ export function createBrowserRunner(
       await import(importpath)
     }
   }
+}
+
+let cachedRunner: VitestRunner | null = null
+
+export async function initiateRunner() {
+  if (cachedRunner)
+    return cachedRunner
+  const config = getConfig()
+  const [{ VitestTestRunner }, { takeCoverageInsideWorker, loadDiffConfig }] = await Promise.all([
+    importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
+    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+  ])
+  const BrowserRunner = createBrowserRunner(VitestTestRunner, {
+    takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+  })
+  if (!config.snapshotOptions.snapshotEnvironment)
+    config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
+  const runner = new BrowserRunner({
+    config,
+  })
+  runner.config.diffOptions = await loadDiffConfig(config, { executeId: importId } as VitestExecutor)
+  cachedRunner = runner
+  return runner
 }

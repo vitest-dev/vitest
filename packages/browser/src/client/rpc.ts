@@ -2,6 +2,7 @@ import type {
   getSafeTimers,
 } from '@vitest/utils'
 import type { VitestClient } from '@vitest/ws-client'
+import { importId } from './utils'
 
 const { get } = Reflect
 
@@ -42,6 +43,8 @@ export async function rpcDone() {
 export function createSafeRpc(client: VitestClient, getTimers: () => any): VitestClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
+      if (p === 'then')
+        return
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) => withSafeTimers(getTimers, async () => {
         const result = sendCall(...args)
@@ -59,7 +62,43 @@ export function createSafeRpc(client: VitestClient, getTimers: () => any): Vites
   })
 }
 
+function serializeError(unhandledError: any) {
+  return {
+    ...unhandledError,
+    name: unhandledError.name,
+    message: unhandledError.message,
+    stack: String(unhandledError.stack),
+  }
+}
+
+const url = new URL(location.href)
+const reloadTries = Number(url.searchParams.get('reloadTries') || '0')
+
+export async function loadSafeRpc(client: VitestClient) {
+  let safeRpc: typeof client.rpc
+  try {
+    // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
+    const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+    safeRpc = createSafeRpc(client, getSafeTimers)
+  }
+  catch (err: any) {
+    if (reloadTries >= 10) {
+      const error = serializeError(new Error('Vitest failed to load "vitest/utils" after 10 retries.'))
+      error.cause = serializeError(err)
+
+      throw error
+    }
+
+    const tries = reloadTries + 1
+    const newUrl = new URL(location.href)
+    newUrl.searchParams.set('reloadTries', String(tries))
+    location.href = newUrl.href
+    return
+  }
+  return safeRpc
+}
+
 export function rpc(): VitestClient['rpc'] {
   // @ts-expect-error not typed global
-  return globalThis.__vitest_worker__.safeRpc
+  return globalThis.__vitest_worker__.rpc
 }

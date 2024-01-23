@@ -1,11 +1,16 @@
 import { fileURLToPath } from 'node:url'
-
+import { readFile } from 'node:fs/promises'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import type { ResolvedConfig } from 'vitest'
 import type { WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
 import { injectVitestModule } from './esmInjector'
+
+function replacer(code: string, values: Record<string, string>) {
+  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
+}
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -23,18 +28,73 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         }
       },
       async configureServer(server) {
+        const testerHtml = readFile(resolve(distRoot, 'client/tester.html'), 'utf8')
+        const runnerHtml = readFile(resolve(distRoot, 'client/index.html'), 'utf8')
+        const injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8')
+        const favicon = `${base}favicon.svg`
+        server.middlewares.use((_req, res, next) => {
+          const headers = server.config.server.headers
+          if (headers) {
+            for (const name in headers)
+              res.setHeader(name, headers[name]!)
+          }
+          next()
+        })
+        server.middlewares.use(async (req, res, next) => {
+          if (!req.url)
+            return next()
+          const url = new URL(req.url, 'http://localhost')
+          if (!url.pathname.endsWith('__vitest_test__/tester.html') && url.pathname !== base)
+            return next()
+          const id = url.searchParams.get('__vitest_id')
+
+          // TODO: more handling, id is required
+          if (!id) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+
+          res.setHeader('Content-Type', 'text/html; charset=utf-8')
+
+          const injector = replacer(await injectorJs, {
+            __VITEST_CONFIG__: JSON.stringify(wrapConfig(project.getSerializableConfig())),
+          })
+
+          if (url.pathname === base) {
+            const html = replacer(await runnerHtml, {
+              __VITEST_FAVICON__: favicon,
+              __VITEST_TITLE__: 'Vitest Browser Runner',
+              __VITEST_INJECTOR__: injector,
+            })
+            res.write(html, 'utf-8')
+            res.end()
+            return
+          }
+
+          const testIndex = url.searchParams.get('__vitest_index')
+          const data = project.ctx.state.browserTestMap.get(id)
+          const test = testIndex && data?.paths[Number(testIndex)]
+          if (!test) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+          const html = replacer(await testerHtml, {
+            __VITEST_FAVICON__: favicon,
+            __VITEST_TITLE__: test,
+            __VITEST_TEST__: test,
+            __VITEST_INJECTOR__: injector,
+            __VITEST_TESTER__: `<script type="module">await __vitest_browser_runner__.runTest("${test}", "${id}")</script>`,
+          })
+          res.write(html, 'utf-8')
+          res.end()
+        })
         server.middlewares.use(
           base,
           sirv(resolve(distRoot, 'client'), {
             single: false,
             dev: true,
-            setHeaders(res, _pathname, _stats) {
-              const headers = server.config.server.headers
-              if (headers) {
-                for (const name in headers)
-                  res.setHeader(name, headers[name]!)
-              }
-            },
           }),
         )
 
@@ -157,4 +217,15 @@ function resolveCoverageFolder(project: WorkspaceProject) {
     return [root, `/${basename(root)}/`]
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+function wrapConfig(config: ResolvedConfig): ResolvedConfig {
+  return {
+    ...config,
+    // workaround RegExp serialization
+    testNamePattern:
+      config.testNamePattern
+        ? config.testNamePattern.toString() as any as RegExp
+        : undefined,
+  }
 }

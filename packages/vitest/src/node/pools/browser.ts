@@ -8,61 +8,52 @@ import type { BrowserProvider } from '../../types/browser'
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const waitForTest = async (provider: BrowserProvider, id: string) => {
+  const waitForTests = async (id: string, paths: string[]) => {
     const defer = createDefer()
-    ctx.state.browserTestPromises.set(id, defer)
-    const off = provider.catchError((error) => {
-      if (id !== 'no-isolate') {
-        Object.defineProperty(error, 'VITEST_TEST_PATH', {
-          value: id,
-        })
-      }
-      defer.reject(error)
+    ctx.state.browserTestMap.set(id, {
+      paths,
+      resolve: defer.resolve,
+      reject: defer.reject,
     })
-    try {
-      return await defer
-    }
-    finally {
-      off()
-    }
+    return await defer
   }
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
 
-    let isCancelled = false
-    project.ctx.onCancel(() => {
-      isCancelled = true
-    })
+    // let isCancelled = false
+    // project.ctx.onCancel(() => {
+    //   isCancelled = true
+    // })
 
     const provider = project.browserProvider!
     providers.add(provider)
 
     const resolvedUrls = project.browser?.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    const paths = files.map(file => relative(project.config.root, file))
 
-    if (project.config.browser.isolate) {
-      for (const path of paths) {
-        if (isCancelled) {
-          ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root, project.config.name)
-          break
-        }
+    const id = performance.now().toString()
 
-        const url = new URL('/', origin)
-        url.searchParams.append('path', path)
-        url.searchParams.set('id', path)
-        await provider.openPage(url.toString())
-        await waitForTest(provider, path)
-      }
-    }
-    else {
-      const url = new URL('/', origin)
-      url.searchParams.set('id', 'no-isolate')
-      paths.forEach(path => url.searchParams.append('path', path))
-      await provider.openPage(url.toString())
-      await waitForTest(provider, 'no-isolate')
-    }
+    const url = new URL('/', origin)
+    url.searchParams.set('__vitest_id', id)
+    url.searchParams.set('__vitest_length', String(files.length))
+    await provider.openPage(url.toString())
+    await waitForTests(id, files)
+
+    // if (project.config.browser.isolate) {
+    //   for (const path of paths) {
+    //     if (isCancelled) {
+    //       ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root, project.config.name)
+    //       break
+    //     }
+
+    //     const url = new URL('/', origin)
+    //     url.searchParams.append('path', path)
+    //     url.searchParams.set('id', path)
+    //     await provider.openPage(url.toString())
+    //     await waitForTest(provider, path)
+    //   }
+    // }
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
@@ -80,7 +71,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      ctx.state.browserTestPromises.clear()
+      ctx.state.browserTestMap.clear()
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
     },

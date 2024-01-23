@@ -22,10 +22,6 @@ export class NoneBrowserProvider implements BrowserProvider {
       throw new Error('You\'ve enabled headless mode for "none" provider but it doesn\'t support it.')
   }
 
-  catchError(_cb: (error: Error) => Awaitable<void>) {
-    return () => {}
-  }
-
   async openPage(_url: string) {
     this.open = true
     if (!this.ctx.browser)
