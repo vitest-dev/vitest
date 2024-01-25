@@ -97,3 +97,30 @@ describe('should fail', async () => {
     expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
   })
 })
+
+describe('ignoreSourceErrors', () => {
+  it('disabled', async () => {
+    const vitest = await runVitestCli(
+      {
+        cwd: resolve(__dirname, '../fixtures/source-error'),
+      },
+      '--run',
+    )
+    expect(vitest.stdout).toContain('Unhandled Errors')
+    expect(vitest.stderr).toContain('Unhandled Source Error')
+    expect(vitest.stderr).toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
+  })
+
+  it('enabled', async () => {
+    const vitest = await runVitestCli(
+      {
+        cwd: resolve(__dirname, '../fixtures/source-error'),
+      },
+      '--run',
+      '--typecheck.ignoreSourceErrors',
+    )
+    expect(vitest.stdout).not.toContain('Unhandled Errors')
+    expect(vitest.stderr).not.toContain('Unhandled Source Error')
+    expect(vitest.stderr).not.toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
+  })
+})
