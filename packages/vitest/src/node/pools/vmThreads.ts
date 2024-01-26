@@ -111,7 +111,7 @@ export function createVmThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessO
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
         if (error instanceof Error && /Failed to terminate worker/.test(error.message))
-          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}.`)
+          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`)
 
         // Intentionally cancelled
         else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
