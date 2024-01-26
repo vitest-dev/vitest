@@ -1,4 +1,5 @@
 import { setSafeTimers } from '@vitest/utils'
+import type { PrettyFormatPlugin } from '@vitest/utils/diff'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import type { ResolvedConfig } from '../types'
 import type { DiffOptions } from '../types/matcher-utils'
@@ -34,4 +35,24 @@ export async function loadDiffConfig(config: ResolvedConfig, executor: VitestExe
     return diffModule.default as DiffOptions
   else
     throw new Error(`invalid diff config file ${config.diff}. Must have a default export with config object`)
+}
+
+export async function loadSnapshotSerializers(config: ResolvedConfig, executor: VitestExecutor) {
+  const files = config.snapshotSerializers
+
+  const snapshotSerializers = await Promise.all(
+    files.map(async (file) => {
+      const mo = await executor.executeId(file)
+      if (!mo || typeof mo.default !== 'object' || mo.default === null)
+        throw new Error(`invalid snapshot serializer file ${file}. Must export a default object`)
+
+      const config = mo.default
+      if (typeof config.test !== 'function' || (typeof config.serialize !== 'function' && typeof config.print !== 'function'))
+        throw new Error(`invalid snapshot serializer ${file}. Must have the "test" and "serialize" or "print" methods`)
+
+      return config as PrettyFormatPlugin
+    }),
+  )
+
+  return snapshotSerializers
 }

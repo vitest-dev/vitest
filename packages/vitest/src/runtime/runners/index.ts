@@ -1,12 +1,13 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { resolve } from 'pathe'
+import { addSerializer } from '@vitest/snapshot'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { getWorkerState } from '../../utils/global'
 import { rpc } from '../rpc'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
-import { loadDiffConfig } from '../setup-common'
+import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
@@ -39,6 +40,9 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
     throw new Error('Runner must implement "importFile" method.')
 
   testRunner.config.diffOptions = await loadDiffConfig(config, executor)
+
+  const serializers = await loadSnapshotSerializers(config, executor)
+  serializers.forEach(serializer => addSerializer(serializer))
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate

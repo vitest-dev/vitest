@@ -7,7 +7,7 @@
 
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
-import type { PrettyFormatOptions } from 'pretty-format'
+import type { PrettyFormatOptions, Plugin as PrettyFormatPlugin } from 'pretty-format'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
@@ -21,6 +21,7 @@ import { diffStringsRaw, diffStringsUnified } from './printDiffs'
 import type { DiffOptions } from './types'
 
 export type { DiffOptions, DiffOptionsColor } from './types'
+export type { PrettyFormatPlugin }
 
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }

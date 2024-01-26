@@ -524,6 +524,11 @@ export interface InlineConfig {
   diff?: string
 
   /**
+   * Paths to snapshot serializer modules.
+   */
+  snapshotSerializers?: string[]
+
+  /**
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string
