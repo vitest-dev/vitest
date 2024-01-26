@@ -71,7 +71,11 @@ export class ExternalModulesExecutor {
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
-    const identifier = this.resolve(specifier, referencer)
+    let identifier = this.resolve(specifier, referencer) as string | Promise<string>
+
+    if (identifier instanceof Promise)
+      identifier = await identifier
+
     return await this.createModule(identifier)
   }
 
@@ -81,6 +85,8 @@ export class ExternalModulesExecutor {
       if (id)
         return id
     }
+
+    // import.meta.resolve can be asynchronous in older +18 Node versions
     return nativeResolve(specifier, parent)
   }
 
