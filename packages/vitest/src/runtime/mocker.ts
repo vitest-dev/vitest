@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs'
 import vm from 'node:vm'
-import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'pathe'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getType, highlight } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
