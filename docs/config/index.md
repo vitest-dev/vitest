@@ -611,7 +611,7 @@ By providing an object instead of a string you can define individual outputs whe
 ### pool<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
 - **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`
-- **Default:** `'threads'`
+- **Default:** `'forks'` (in v1 `'threads'`)
 - **CLI:** `--pool=threads`
 
 Pool used to run tests in.

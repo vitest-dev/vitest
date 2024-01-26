@@ -65,9 +65,8 @@ This error can happen when NodeJS's `fetch` is used with default [`pool: 'thread
 
 As work-around you can switch to [`pool: 'forks'`](/config/#forks) or [`pool: 'vmForks'`](/config/#vmforks).
 
-Specify `pool` in your configuration file:
-
-```ts
+::: code-group
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -76,12 +75,33 @@ export default defineConfig({
   },
 })
 ```
-
-Or in your `package.json` scripts:
-
-```diff
-scripts: {
--  "test": "vitest"
-+  "test": "vitest --pool=forks"
-}
+```bash [CLI]
+vitest --pool=forks
 ```
+:::
+
+## Segfaults and native code errors
+
+Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
+
+- `Segmentation fault (core dumped)`
+- `thread '<unnamed>' panicked at 'assertion failed`
+- `Abort trap: 6`
+- `internal error: entered unreachable code`
+
+In these cases the native module is likely not built to be multi-thread safe. As work-around, you can switch to `pool: 'forks'` which runs the test cases in multiple `node:child_process` instead of multiple `node:worker_threads`.
+
+::: code-group
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    pool: 'forks',
+  },
+})
+```
+```bash [CLI]
+vitest --pool=forks
+```
+:::
