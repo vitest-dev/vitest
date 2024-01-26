@@ -129,8 +129,8 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
             return result
           }
         },
-        async getModuleGraph(id: string): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, id)
+        async getModuleGraph(id: string, workspaceName?: string): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, id, workspaceName)
         },
         updateSnapshot(file?: File) {
           if (!file)
