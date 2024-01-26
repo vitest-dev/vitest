@@ -67,7 +67,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  pool: 'threads' as const,
+  pool: 'forks' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
