@@ -609,8 +609,8 @@ expect(obj.method).toHaveBeenCalled()
 ```ts
 import { mocked, original } from './some-path.js'
 
-vi.mock('./some-path.js', async () => {
-  const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
+vi.mock('./some-path.js', async (importOriginal) => {
+  const mod = await importOriginal()
   return {
     ...mod,
     mocked: vi.fn()
