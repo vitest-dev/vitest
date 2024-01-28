@@ -188,10 +188,12 @@ export class ExternalModulesExecutor {
   private async createModule(identifier: string): Promise<VMModule> {
     const { type, url, path } = this.getModuleInformation(identifier)
 
-    // check file since latest NodeJS's import.meta.resolve doesn't throw on non-existing path
-    if (type === 'module' || type === 'commonjs') {
-      if (!existsSync(path))
-        throw new Error(`[vitest:vm] Cannot find module '${path}'`)
+    // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
+    // https://github.com/nodejs/node/pull/49038
+    if ((type === 'module' || type === 'commonjs') && !existsSync(path)) {
+      const error = new Error(`Cannot find module '${path}'`)
+      ;(error as any).code = 'ERR_MODULE_NOT_FOUND'
+      throw error
     }
 
     switch (type) {

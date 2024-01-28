@@ -1,24 +1,17 @@
-import process from 'node:process'
 import { expect, it } from 'vitest'
 
 // @ts-expect-error untyped
 import * as notFound from '../src/external/not-found.js'
 
-const [major, minor] = process.version.slice(1).split('.').map(v => Number(v))
-
-it.runIf(major === 20 && minor >= 6)('path (node >= v20.6)', async () => {
-  await expect(() => notFound.importPath()).rejects.toMatchObject({
-    message: expect.stringMatching(/\[vitest:vm\] Cannot find module '.*?non-existing-path'/),
-  })
-})
-
-it.runIf(major === 20 && minor < 6)('path (node < v20.6)', async () => {
+it('path', async () => {
   await expect(() => notFound.importPath()).rejects.toMatchObject({
     code: 'ERR_MODULE_NOT_FOUND',
     message: expect.stringMatching(/Cannot find module '.*?non-existing-path'/),
   })
 })
 
+// NodeJs's import.meta.resolve throws ERR_MODULE_NOT_FOUND error only this case.
+// For other cases, similar errors are fabricated by Vitest to mimic NodeJs's behavior.
 it('package', async () => {
   await expect(() => notFound.importPackage()).rejects.toMatchObject({
     code: 'ERR_MODULE_NOT_FOUND',
@@ -28,12 +21,14 @@ it('package', async () => {
 
 it('builtin', async () => {
   await expect(() => notFound.importBuiltin()).rejects.toMatchObject({
-    message: '[vitest:vm] Cannot find module \'node:non-existing-builtin\'',
+    code: 'ERR_MODULE_NOT_FOUND',
+    message: 'Cannot find module \'node:non-existing-builtin\'',
   })
 })
 
 it('namespace', async () => {
   await expect(() => notFound.importNamespace()).rejects.toMatchObject({
-    message: '[vitest:vm] Cannot find module \'non-existing-namespace:xyz\'',
+    code: 'ERR_MODULE_NOT_FOUND',
+    message: 'Cannot find module \'non-existing-namespace:xyz\'',
   })
 })
