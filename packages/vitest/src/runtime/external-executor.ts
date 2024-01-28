@@ -3,7 +3,7 @@
 import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
-import { statSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 import type { RuntimeRPC } from '../types/rpc'
@@ -187,6 +187,12 @@ export class ExternalModulesExecutor {
 
   private async createModule(identifier: string): Promise<VMModule> {
     const { type, url, path } = this.getModuleInformation(identifier)
+
+    // check file since latest NodeJS's import.meta.resolve doesn't throw on non-existing path
+    if (type === 'module' || type === 'commonjs') {
+      if (!existsSync(path))
+        throw new Error(`[vitest:vm] Cannot find module '${path}'`)
+    }
 
     switch (type) {
       case 'data':
