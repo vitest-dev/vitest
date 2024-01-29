@@ -99,9 +99,8 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
   })
   let lastSuite: ParsedSuite = file
   const updateLatestSuite = (index: number) => {
-    const suite = lastSuite
-    while (lastSuite !== file && lastSuite.end < index)
-      lastSuite = suite.suite as ParsedSuite
+    while (lastSuite.suite && lastSuite.end < index)
+      lastSuite = lastSuite.suite as ParsedSuite
     return lastSuite
   }
   definitions.sort((a, b) => a.start - b.start).forEach((definition) => {
