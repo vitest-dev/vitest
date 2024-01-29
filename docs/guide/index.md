@@ -246,6 +246,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [iconify](https://github.com/iconify/iconify)
 - [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
 - [cz-git](https://github.com/Zhengqbbb/cz-git)
+- [ant-design-web3](https://github.com/ant-design/ant-design-web3)
 
 <!--
 For contributors:
