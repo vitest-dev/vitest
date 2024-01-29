@@ -19,10 +19,6 @@ import { setupCommonEnv } from './setup-common'
 export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
-  installSourcemapsSupport({
-    getSourceMap: source => workerState.moduleCache.getSourceMap(source),
-  })
-
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -48,6 +44,10 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     util,
     timers,
   }
+
+  installSourcemapsSupport({
+    getSourceMap: source => workerState.moduleCache.getSourceMap(source),
+  })
 
   await startCoverageInsideWorker(config.coverage, executor)
 
