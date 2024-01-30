@@ -166,7 +166,7 @@
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
     "@antfu/install-pkg": "^0.3.1",
-    "@edge-runtime/vm": "^3.1.7",
+    "@edge-runtime/vm": "^3.1.8",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/estree": "^1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",

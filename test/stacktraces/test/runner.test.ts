@@ -66,3 +66,14 @@ describe('stacktrace filtering', async () => {
     expect(stderr).toMatchSnapshot('stacktrace-filtering')
   }, 30000)
 })
+
+it('stacktrace in vmThreads', async () => {
+  const root = resolve(__dirname, '../fixtures')
+  const testFile = resolve(root, './error-with-stack.test.js')
+  const { stderr } = await runVitest({
+    root,
+    pool: 'vmThreads',
+  }, [testFile])
+
+  expect(stderr).toMatchSnapshot()
+}, 3000)
