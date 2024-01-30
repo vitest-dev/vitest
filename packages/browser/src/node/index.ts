@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url'
 
 import { resolve } from 'node:path'
-import { builtinModules } from 'node:module'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import type { WorkspaceProject } from 'vitest/node'
@@ -61,7 +60,6 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest/runners',
             ],
             exclude: [
-              ...builtinModules,
               'vitest',
               'vitest/utils',
               'vitest/browser',

@@ -11,9 +11,9 @@ const {
 } = await runVitest()
 
 await test('tests are actually running', async () => {
-  assert.ok(browserResultJson.testResults.length === 12, 'Not all the tests have been run')
-  assert.ok(passedTests.length === 10, 'Some tests failed')
-  assert.ok(failedTests.length === 2, 'Some tests have passed but should fail')
+  assert.equal(browserResultJson.testResults.length, 13, 'Not all the tests have been run')
+  assert.equal(passedTests.length, 11, 'Some tests failed')
+  assert.equal(failedTests.length, 2, 'Some tests have passed but should fail')
 
   assert.doesNotMatch(stderr, /Unhandled Error/, 'doesn\'t have any unhandled errors')
 })
