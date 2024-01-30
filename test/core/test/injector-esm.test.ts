@@ -15,8 +15,10 @@ test('default import', async () => {
   expect(
     injectSimpleCode('import foo from \'vue\';console.log(foo.bar)'),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    console.log(__vi_esm_0__.default.bar)"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    console.log(__vi_esm_0__.default.bar)
+    export { __vi_inject__ }"
   `)
 })
 
@@ -26,8 +28,10 @@ test('named import', async () => {
       'import { ref } from \'vue\';function foo() { return ref(0) }',
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function foo() { return __vi_esm_0__.ref(0) }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function foo() { return __vi_esm_0__.ref(0) }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -37,8 +41,10 @@ test('namespace import', async () => {
       'import * as vue from \'vue\';function foo() { return vue.ref(0) }',
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function foo() { return __vi_esm_0__.ref(0) }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function foo() { return __vi_esm_0__.ref(0) }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -173,8 +179,10 @@ test('hoist import to top', async () => {
       'path.resolve(\'server.js\');import path from \'node:path\';',
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'node:path'
-    __vi_esm_0__.default.resolve('server.js');"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'node:path'
+    __vi_esm_0__.default.resolve('server.js');
+    export { __vi_inject__ }"
   `)
 })
 
@@ -200,8 +208,10 @@ test('do not rewrite method definition', async () => {
     'import { fn } from \'vue\';class A { fn() { fn() } }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    class A { fn() { __vi_esm_0__.fn() } }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    class A { fn() { __vi_esm_0__.fn() } }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -210,8 +220,10 @@ test('do not rewrite when variable is in scope', async () => {
     'import { fn } from \'vue\';function A(){ const fn = () => {}; return { fn }; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A(){ const fn = () => {}; return { fn }; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A(){ const fn = () => {}; return { fn }; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -221,8 +233,10 @@ test('do not rewrite when variable is in scope with object destructuring', async
     'import { fn } from \'vue\';function A(){ let {fn, test} = {fn: \'foo\', test: \'bar\'}; return { fn }; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A(){ let {fn, test} = {fn: 'foo', test: 'bar'}; return { fn }; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A(){ let {fn, test} = {fn: 'foo', test: 'bar'}; return { fn }; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -232,8 +246,10 @@ test('do not rewrite when variable is in scope with array destructuring', async 
     'import { fn } from \'vue\';function A(){ let [fn, test] = [\'foo\', \'bar\']; return { fn }; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A(){ let [fn, test] = ['foo', 'bar']; return { fn }; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A(){ let [fn, test] = ['foo', 'bar']; return { fn }; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -244,8 +260,10 @@ test('rewrite variable in string interpolation in function nested arguments', as
     'import { fn } from \'vue\';function A({foo = `test${fn}`} = {}){ return {}; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A({foo = \`test\${__vi_esm_0__.fn}\`} = {}){ return {}; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A({foo = \`test\${__vi_esm_0__.fn}\`} = {}){ return {}; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -255,8 +273,10 @@ test('rewrite variables in default value of destructuring params', async () => {
     'import { fn } from \'vue\';function A({foo = fn}){ return {}; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A({foo = __vi_esm_0__.fn}){ return {}; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A({foo = __vi_esm_0__.fn}){ return {}; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -265,8 +285,10 @@ test('do not rewrite when function declaration is in scope', async () => {
     'import { fn } from \'vue\';function A(){ function fn() {}; return { fn }; }',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
-    function A(){ function fn() {}; return { fn }; }"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    function A(){ function fn() {}; return { fn }; }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -275,8 +297,10 @@ test('do not rewrite catch clause', async () => {
     'import {error} from \'./dependency\';try {} catch(error) {}',
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from './dependency'
-    try {} catch(error) {}"
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from './dependency'
+    try {} catch(error) {}
+    export { __vi_inject__ }"
   `)
 })
 
@@ -287,9 +311,11 @@ test('should declare variable for imported super class', async () => {
       'import { Foo } from \'./dependency\';' + 'class A extends Foo {}',
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from './dependency'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from './dependency'
     const Foo = __vi_esm_0__.Foo;
-    class A extends Foo {}"
+    class A extends Foo {}
+    export { __vi_inject__ }"
   `)
 
   // exported classes: should prepend the declaration at root level, before the
@@ -375,7 +401,8 @@ test('overwrite bindings', async () => {
         + 'function g() { const f = () => { const inject = true }; console.log(inject) }\n',
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
     const a = { inject: __vi_esm_0__.inject }
     const b = { test: __vi_esm_0__.inject }
     function c() { const { test: inject } = { test: true }; console.log(inject) }
@@ -383,14 +410,19 @@ test('overwrite bindings', async () => {
     function f() {  console.log(__vi_esm_0__.inject) }
     function e() { const { inject } = { inject: true } }
     function g() { const f = () => { const inject = true }; console.log(__vi_esm_0__.inject) }
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
 test('Empty array pattern', async () => {
   expect(
     injectSimpleCode('const [, LHS, RHS] = inMatch;'),
-  ).toMatchInlineSnapshot('"const [, LHS, RHS] = inMatch;"')
+  ).toMatchInlineSnapshot(`
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    const [, LHS, RHS] = inMatch;
+    export { __vi_inject__ }"
+  `)
 })
 
 test('function argument destructure', async () => {
@@ -404,13 +436,15 @@ function c({ _ = bar() + foo() }) {}
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foo'
 
 
     const a = ({ _ = __vi_esm_0__.foo() }) => {}
     function b({ _ = __vi_esm_0__.bar() }) {}
     function c({ _ = __vi_esm_0__.bar() + __vi_esm_0__.foo() }) {}
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -426,14 +460,16 @@ const a = () => {
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foo'
 
 
     const a = () => {
       const { type: n = 'bar' } = {}
       console.log(n)
     }
-    "
+
+    export { __vi_inject__ }"
   `)
 
   // #9585
@@ -449,7 +485,8 @@ const foo = {}
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foo'
 
 
     const foo = {}
@@ -457,7 +494,8 @@ const foo = {}
     {
       const { [__vi_esm_0__.n]: m } = foo
     }
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -492,7 +530,8 @@ objRest()
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
 
 
 
@@ -518,7 +557,8 @@ objRest()
     __vi_esm_0__.set()
     __vi_esm_0__.rest()
     __vi_esm_0__.objRest()
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -542,7 +582,8 @@ const obj = {
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foo'
 
 
 
@@ -557,7 +598,8 @@ const obj = {
       [bar]: () => {},
       bar(foo) {}
     }
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -574,7 +616,8 @@ class A {
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
 
 
 
@@ -584,7 +627,8 @@ class A {
       remove = 1
       add = null
     }
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -606,7 +650,8 @@ class A {
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foo'
 
 
 
@@ -619,7 +664,8 @@ class A {
       #foo() {}
       bar(foo) {}
     }
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -652,7 +698,8 @@ bbb()
 `,
     ),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'vue'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'vue'
 
 
 
@@ -676,7 +723,8 @@ bbb()
 
     __vi_esm_0__.aaa()
     __vi_esm_0__.bbb()
-    "
+
+    export { __vi_inject__ }"
   `)
 })
 
@@ -697,14 +745,16 @@ test('jsx', async () => {
   const result = await transformWithEsbuild(code, id)
   expect(injectSimpleCode(result.code))
     .toMatchInlineSnapshot(`
-      "import { __vi_inject__ as __vi_esm_0__ } from 'react'
+      "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+      import { __vi_inject__ as __vi_esm_0__ } from 'react'
       import { __vi_inject__ as __vi_esm_1__ } from 'foo'
 
 
       function Bar({ Slot: Slot2 = /* @__PURE__ */ __vi_esm_0__.default.createElement(__vi_esm_1__.Foo, null) }) {
         return /* @__PURE__ */ __vi_esm_0__.default.createElement(__vi_esm_0__.default.Fragment, null, /* @__PURE__ */ __vi_esm_0__.default.createElement(Slot2, null));
       }
-      "
+
+      export { __vi_inject__ }"
     `)
 })
 
@@ -777,7 +827,8 @@ for (const test in tests) {
   console.log(test)
 }`),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from './test.js'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from './test.js'
 
 
     for (const test of tests) {
@@ -788,7 +839,8 @@ for (const test in tests) {
     }
     for (const test in tests) {
       console.log(test)
-    }"
+    }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -892,7 +944,8 @@ function test() {
   return [foo, bar]
 }`),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foobar'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foobar'
 
 
     function test() {
@@ -900,7 +953,8 @@ function test() {
         var foo = () => { var why = 'would' }, bar = 'someone'
       }
       return [foo, bar]
-    }"
+    }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -919,7 +973,8 @@ function test() {
   return bar;
 }`),
   ).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from 'foobar'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from 'foobar'
 
 
     function test() {
@@ -930,7 +985,8 @@ function test() {
       }
       try {} catch (baz){ baz };
       return __vi_esm_0__.bar;
-    }"
+    }
+    export { __vi_inject__ }"
   `)
 })
 
@@ -947,7 +1003,8 @@ test('avoid binding ClassExpression', () => {
  `,
   )
   expect(result).toMatchInlineSnapshot(`
-    "import { __vi_inject__ as __vi_esm_0__ } from './foo'
+    "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
+    import { __vi_inject__ as __vi_esm_0__ } from './foo'
 
      
      console.log(__vi_esm_0__.default, __vi_esm_0__.Bar);
@@ -956,6 +1013,7 @@ test('avoid binding ClassExpression', () => {
        bar: class Bar {}
      }
      const Baz = class extends __vi_esm_0__.default {}
-     "
+     
+    export { __vi_inject__ }"
   `)
 })
