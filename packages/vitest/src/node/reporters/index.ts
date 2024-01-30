@@ -23,6 +23,8 @@ export {
 }
 export type { BaseReporter, Reporter }
 
+export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './json'
+
 export const ReportersMap = {
   'default': DefaultReporter,
   'basic': BasicReporter,
