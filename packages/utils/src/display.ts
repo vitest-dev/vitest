@@ -1,6 +1,6 @@
 // since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
 // @ts-expect-error doesn't have types
-import { inspect as loupe } from 'loupe'
+import * as loupe from 'loupe'
 
 interface LoupeOptions {
   showHidden?: boolean | undefined
@@ -101,7 +101,7 @@ export function format(...args: unknown[]) {
 export function inspect(obj: unknown, options: LoupeOptions = {}): string {
   if (options.truncate === 0)
     options.truncate = Number.POSITIVE_INFINITY
-  return loupe(obj, options)
+  return loupe.inspect(obj, options)
 }
 
 export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {

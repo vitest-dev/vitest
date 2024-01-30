@@ -11,10 +11,11 @@ const {
 } = await runVitest()
 
 await test('tests are actually running', async () => {
-  assert.equal(browserResultJson.testResults.length, 13, 'Not all the tests have been run')
-  assert.equal(passedTests.length, 11, 'Some tests failed')
+  assert.equal(browserResultJson.testResults.length, 14, 'Not all the tests have been run')
+  assert.equal(passedTests.length, 12, 'Some tests failed')
   assert.equal(failedTests.length, 2, 'Some tests have passed but should fail')
 
+  assert.doesNotMatch(stderr, /has been externalized for browser compatibility/, 'doesn\'t have any externalized modules')
   assert.doesNotMatch(stderr, /Unhandled Error/, 'doesn\'t have any unhandled errors')
 })
 
