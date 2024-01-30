@@ -34,7 +34,7 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       'vue',
       ...(testOptions.exclude || viteOptions?.exclude || []),
     ]
-    const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime'))
+    const runtime = currentInclude.filter(n => n.endsWith('jsx-dev-runtime') || n.endsWith('jsx-runtime'))
     exclude.push(...runtime)
 
     const include = (testOptions.include || viteOptions?.include || []).filter((n: string) => !exclude.includes(n))
