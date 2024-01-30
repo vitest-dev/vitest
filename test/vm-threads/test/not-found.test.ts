@@ -26,6 +26,8 @@ it('builtin', async () => {
   })
 })
 
+// this test fails before node 20.3.0 since it throws a different error (cf. https://github.com/nodejs/node/pull/47824)
+// > Only URLs with a scheme in: file and data are supported by the default ESM loader. Received protocol 'non-existing-namespace:'
 it('namespace', async () => {
   await expect(() => notFound.importNamespace()).rejects.toMatchObject({
     code: 'ERR_MODULE_NOT_FOUND',
