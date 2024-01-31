@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url'
 
 import { resolve } from 'node:path'
-import { builtinModules } from 'node:module'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import type { WorkspaceProject } from 'vitest/node'
@@ -61,24 +60,32 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest/runners',
             ],
             exclude: [
-              ...builtinModules,
               'vitest',
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
               '@vitest/utils',
+
+              // loupe is manually transformed
+              'loupe',
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
               'vitest > @vitest/snapshot > pretty-format',
               'vitest > diff-sequences',
-              'vitest > loupe',
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',
               'vitest > pretty-format > ansi-regex',
               'vitest > chai',
             ],
           },
+        }
+      },
+      transform(code, id) {
+        if (id.includes('loupe/loupe.js')) {
+          const exportsList = ['custom', 'inspect', 'registerConstructor', 'registerStringTag']
+          const codeAppend = exportsList.map(i => `export const ${i} = globalThis.loupe.${i}`).join('\n')
+          return `${code}\n${codeAppend}\nexport default globalThis.loupe`
         }
       },
       async resolveId(id) {

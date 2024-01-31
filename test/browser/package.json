@@ -16,6 +16,7 @@
     "@vitest/cjs-lib": "link:./cjs-lib",
     "execa": "^7.1.1",
     "safaridriver": "^0.0.4",
+    "url": "^0.11.3",
     "vitest": "workspace:*"
   }
 }

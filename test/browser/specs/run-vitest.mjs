@@ -20,7 +20,7 @@ export default async function runVitest(moreArgs = []) {
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)
 
-  const getPassed = results => results.filter(result => result.status === 'passed')
+  const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
   const getFailed = results => results.filter(result => result.status === 'failed')
 
   const passedTests = getPassed(browserResultJson.testResults)
