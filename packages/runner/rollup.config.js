@@ -22,7 +22,7 @@ const entries = {
 
 const plugins = [
   esbuild({
-    target: 'node14',
+    target: ['es2017', 'node14'],
   }),
   json(),
 ]

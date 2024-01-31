@@ -13,6 +13,7 @@ export default defineConfig({
     outDir: '../../dist/client',
     emptyOutDir: false,
     assetsDir: '__vitest_browser__',
+    target: ['es2017'],
   },
   plugins: [
     {

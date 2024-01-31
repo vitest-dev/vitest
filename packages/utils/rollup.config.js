@@ -31,7 +31,7 @@ const plugins = [
   }),
   json(),
   esbuild({
-    target: 'node14',
+    target: ['es2017', 'node14'],
   }),
   commonjs(),
 ]
