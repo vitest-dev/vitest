@@ -22,7 +22,11 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
 }
 
-export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions) {
+interface PrintErrorResult {
+  nearest?: ParsedStack
+}
+
+export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): Promise<PrintErrorResult | undefined> {
   const { showCodeFrame = true, fullStack = false, type } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
@@ -43,8 +47,10 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   }
 
   // Error may have occured even before the configuration was resolved
-  if (!project)
-    return printErrorMessage(e, logger)
+  if (!project) {
+    printErrorMessage(e, logger)
+    return
+  }
 
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
@@ -85,7 +91,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
     logger.error(c.yellow(e.frame))
   }
   else {
-    printStack(project, stacks, nearest, errorProperties, (s) => {
+    printStack(logger, project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
         logger.error(generateCodeFrame(sourceCode.length > 100_000 ? sourceCode : logger.highlight(nearest.file, sourceCode), 4, s))
@@ -116,6 +122,8 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+
+  return { nearest }
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -229,14 +237,13 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
 }
 
 function printStack(
+  logger: Logger,
   project: WorkspaceProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  const logger = project.ctx.logger
-
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)

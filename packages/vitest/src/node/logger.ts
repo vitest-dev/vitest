@@ -82,10 +82,10 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, options: ErrorOptions = {}) {
+  async printError(err: unknown, options: ErrorOptions = {}) {
     const { fullStack = false, type } = options
     const project = options.project ?? this.ctx.getCoreWorkspaceProject() ?? this.ctx.projects[0]
-    return printError(err, project, {
+    await printError(err, project, {
       fullStack,
       type,
       showCodeFrame: true,

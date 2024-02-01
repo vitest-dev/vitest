@@ -1,46 +1,63 @@
+import { Console } from 'node:console'
+import { Writable } from 'node:stream'
 import { getTasks } from '@vitest/runner/utils'
-import type { File, Reporter } from '../../types'
-import { getFullName } from '../../utils'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import stripAnsi from 'strip-ansi'
+import type { File, Reporter, Vitest } from '../../types'
+import { getFullName } from '../../utils'
 import { printError } from '../error'
+import { Logger } from '../logger'
+import type { WorkspaceProject } from '../workspace'
 
 export class GithubActionsReporter implements Reporter {
-  onFinished(files: File[] = []) {
+  ctx: Vitest = undefined!
+
+  onInit(ctx: Vitest) {
+    this.ctx = ctx
+  }
+
+  async onFinished(files: File[] = []) {
     for (const file of files) {
       const tasks = getTasks(file)
-      for (const suite of tasks) {
-        for (const error of suite.result?.errors ?? []) {
-          // TODO: do similar to `printError` (or just use whole thing with overriding `logger`?)
-          printError
-          stripAnsi
-
-          // TODO: StackTraceParserOptions from project
-          const stacks = parseErrorStacktrace(error)
-
-          // TODO: nearest to project
-          const stack = stacks[0]
-          if (!stack) {
+      const project = this.ctx.getProjectByTaskId(file.id)
+      for (const task of tasks) {
+        for (const error of task.result?.errors ?? []) {
+          const result = await printErrorWrapper(error, this.ctx, project)
+          const stack = result?.nearest
+          if (!stack)
             continue
-          }
 
-          // TODO: include diff
-          const message = error.stack ?? error.message
           const formatted = formatMessage({
             command: 'error',
             properties: {
-              file: stack.file,
-              title: getFullName(suite, ' > '),
+              file: stack.file, // TODO: need full path for workspace in sub directory?
+              title: getFullName(task, ' > '),
               line: String(stack.line),
               column: String(stack.column),
             },
-            message,
+            message: stripAnsi(result.output),
           })
-          console.log('\n' + formatted)
+          this.ctx.logger.log(`\n${formatted}`)
         }
       }
     }
   }
+}
+
+// use Logger with custom Console to extract messgage from `processError` util.
+// TODO: refactor `processError` to require single function `(message: string) => void` instead of full Logger?
+async function printErrorWrapper(error: unknown, ctx: Vitest, project: WorkspaceProject) {
+  let output = ''
+  const writable = new Writable({
+    write(chunk, _encoding, callback) {
+      output += String(chunk)
+      callback()
+    },
+  })
+  const result = await printError(error, project, {
+    showCodeFrame: false,
+    logger: new Logger(ctx, new Console(writable, writable)),
+  })
+  return { nearest: result?.nearest, output }
 }
 
 // workflow command formatting based on
