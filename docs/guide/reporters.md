@@ -417,6 +417,27 @@ export default defineConfig({
 ```
 :::
 
+### Github Actions Reporter
+
+Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
+to provide annotations for test failures.
+
+<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
+<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+
+
+Since `github-actions` reporter will be automatically disabled when `process.env.GITHUB_ACTIONS` is not defined, you can simply add it to reporters config and it won't affect local terminal output.
+
+:::code-group
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: ['default', 'github-actions']
+  },
+})
+```
+:::
+
 ## Custom Reporters
 
 You can use third-party custom reporters installed from NPM by specifying their package name in the reporters' option:
