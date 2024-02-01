@@ -1,4 +1,4 @@
-import { afterAll, assert, describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {
@@ -13,37 +13,3 @@ describe('suite name', () => {
     expect({ foo: 'bar' }).toMatchSnapshot()
   })
 })
-
-describe.runIf(process.env.TEST_GH_REPORTER)('error', () => {
-  afterAll(() => {
-    boomSuite()
-  })
-
-  it('stack', () => {
-    boom()
-  })
-
-  it('diff', () => {
-    expect({ hello: 'x' }).toEqual({ hello: 'y' })
-  })
-
-  it('unhandled', () => {
-    (async () => boomUnhandled())()
-  })
-})
-
-function boom() {
-  boomInner1()
-}
-
-function boomInner1() {
-  throw new Error('boom')
-}
-
-function boomSuite() {
-  throw new Error('boomSuite')
-}
-
-function boomUnhandled() {
-  throw new Error('boomUnhandled')
-}
