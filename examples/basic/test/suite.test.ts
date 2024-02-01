@@ -13,3 +13,21 @@ describe('suite name', () => {
     expect({ foo: 'bar' }).toMatchSnapshot()
   })
 })
+
+describe.runIf(process.env.TEST_GH_REPORTER)('error', () => {
+  it('stack', () => {
+    boom()
+  })
+
+  it('diff', () => {
+    expect({ hello: 'x' }).toEqual({ hello: 'y' })
+  })
+})
+
+function boom() {
+  boomInner1()
+}
+
+function boomInner1() {
+  throw new Error('boom')
+}
