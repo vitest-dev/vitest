@@ -652,7 +652,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 
 #### vmForks<NonProjectOption />
 
-Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`. 
+Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
 ### poolOptions<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
@@ -1662,25 +1662,15 @@ Format options for snapshot testing. These options are passed down to [`pretty-f
 ::: tip
 Beware that `plugins` field on this object will be ignored.
 
-If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API.
+If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API or [snapshotSerializers](#snapshotserializers-1-3-0) option.
 :::
 
-### resolveSnapshotPath<NonProjectOption />
+### snapshotSerializers<NonProjectOption /> <Badge type="info">1.3.0+</Badge>
 
-- **Type**: `(testPath: string, snapExtension: string) => string`
-- **Default**: stores snapshot files in `__snapshots__` directory
+- **Type:** `string[]`
+- **Default:** `[]`
 
-Overrides default snapshot path. For example, to store snapshots next to test files:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
-  },
-})
-```
+A list of paths to snapshot serializer modules for snapshot testing, useful if you want add custom snapshot serializers. See [Custom Serializer](/guide/snapshot#custom-serializer) for more information.
 
 ### allowOnly
 
