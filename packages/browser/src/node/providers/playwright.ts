@@ -46,10 +46,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.cachedBrowser = browser
     this.cachedPage = await browser.newPage(this.options?.page)
 
-    this.cachedPage.on('close', () => {
-      browser.close()
-    })
-
     return this.cachedPage
   }
 

@@ -51,9 +51,6 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         async onUnhandledError(error, type) {
           ctx.state.catchError(error, type)
         },
-        async onDone(testId) {
-          return ctx.state.browserTestMap.get(testId)?.resolve(true)
-        },
         async onCollected(files) {
           ctx.state.collectFiles(files)
           await ctx.report('onCollected', files)
@@ -137,15 +134,29 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         onCancel(reason) {
           ctx.cancelCurrentRun(reason)
         },
+        debug(...args) {
+          ctx.logger.console.debug(...args)
+        },
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
-        // browser should have a separate RPC in the future, UI doesn't care for provided context
-        getProvidedContext() {
-          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
-        },
         getUnhandledErrors() {
           return ctx.state.getUnhandledErrors()
+        },
+
+        // TODO: have a separate websocket conection for private browser API
+        getBrowserFiles() {
+          if (!('ctx' in vitestOrWorkspace))
+            throw new Error('`getBrowserTestFiles` is only available in the browser API')
+          return vitestOrWorkspace.browserState?.files ?? []
+        },
+        finishBrowserTests() {
+          if (!('ctx' in vitestOrWorkspace))
+            throw new Error('`finishBrowserTests` is only available in the browser API')
+          return vitestOrWorkspace.browserState?.resolve()
+        },
+        getProvidedContext() {
+          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
         },
       },
       {

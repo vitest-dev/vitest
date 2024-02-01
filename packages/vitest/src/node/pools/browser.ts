@@ -1,5 +1,4 @@
 import { createDefer } from '@vitest/utils'
-import { relative } from 'pathe'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { WorkspaceProject } from '../workspace'
@@ -8,19 +7,24 @@ import type { BrowserProvider } from '../../types/browser'
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const waitForTests = async (id: string, paths: string[]) => {
-    const defer = createDefer()
-    ctx.state.browserTestMap.set(id, {
-      paths,
-      resolve: defer.resolve,
+  const waitForTests = async (project: WorkspaceProject, files: string[]) => {
+    const defer = createDefer<void>()
+    project.browserState?.resolve()
+    project.browserState = {
+      files,
+      resolve: () => {
+        defer.resolve()
+        project.browserState = undefined
+      },
       reject: defer.reject,
-    })
+    }
     return await defer
   }
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
 
+    // TODO
     // let isCancelled = false
     // project.ctx.onCancel(() => {
     //   isCancelled = true
@@ -32,28 +36,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const resolvedUrls = project.browser?.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
-    const id = performance.now().toString()
+    if (!origin)
+      throw new Error(`Can't find browser origin URL for project "${project.config.name}"`)
 
-    const url = new URL('/', origin)
-    url.searchParams.set('__vitest_id', id)
-    url.searchParams.set('__vitest_length', String(files.length))
-    await provider.openPage(url.toString())
-    await waitForTests(id, files)
+    const promise = waitForTests(project, files)
 
-    // if (project.config.browser.isolate) {
-    //   for (const path of paths) {
-    //     if (isCancelled) {
-    //       ctx.state.cancelFiles(files.slice(paths.indexOf(path)), ctx.config.root, project.config.name)
-    //       break
-    //     }
-
-    //     const url = new URL('/', origin)
-    //     url.searchParams.append('path', path)
-    //     url.searchParams.set('id', path)
-    //     await provider.openPage(url.toString())
-    //     await waitForTest(provider, path)
-    //   }
-    // }
+    await provider.openPage(new URL('/', origin).toString())
+    await promise
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
@@ -71,7 +60,6 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      ctx.state.browserTestMap.clear()
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
     },

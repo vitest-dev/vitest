@@ -1,4 +1,3 @@
-import type { Awaitable } from 'vitest'
 import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
 
 export class NoneBrowserProvider implements BrowserProvider {

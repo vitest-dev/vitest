@@ -32,6 +32,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         const runnerHtml = readFile(resolve(distRoot, 'client/index.html'), 'utf8')
         const injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8')
         const favicon = `${base}favicon.svg`
+        const testerPrefix = `${base}__vitest_test__/__test__/`
         server.middlewares.use((_req, res, next) => {
           const headers = server.config.server.headers
           if (headers) {
@@ -44,21 +45,21 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           if (!req.url)
             return next()
           const url = new URL(req.url, 'http://localhost')
-          if (!url.pathname.endsWith('__vitest_test__/tester.html') && url.pathname !== base)
+          if (!url.pathname.startsWith(testerPrefix) && url.pathname !== base)
             return next()
-          const id = url.searchParams.get('__vitest_id')
 
-          // TODO: more handling, id is required
-          if (!id) {
-            res.statusCode = 404
-            res.end()
-            return
-          }
-
+          res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
 
+          const files = project.browserState?.files ?? []
+
+          const config = wrapConfig(project.getSerializableConfig())
+          config.env ??= {}
+          config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
+
           const injector = replacer(await injectorJs, {
-            __VITEST_CONFIG__: JSON.stringify(wrapConfig(project.getSerializableConfig())),
+            __VITEST_CONFIG__: JSON.stringify(config),
+            __VITEST_FILES__: JSON.stringify(files),
           })
 
           if (url.pathname === base) {
@@ -72,20 +73,20 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             return
           }
 
-          const testIndex = url.searchParams.get('__vitest_index')
-          const data = project.ctx.state.browserTestMap.get(id)
-          const test = testIndex && data?.paths[Number(testIndex)]
-          if (!test) {
-            res.statusCode = 404
-            res.end()
-            return
-          }
+          const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
+          // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
+          const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? 'window.__vi_files__' : JSON.stringify([decodedTestFile])
+
           const html = replacer(await testerHtml, {
             __VITEST_FAVICON__: favicon,
-            __VITEST_TITLE__: test,
-            __VITEST_TEST__: test,
+            __VITEST_TITLE__: 'Vitest Browser Tester',
             __VITEST_INJECTOR__: injector,
-            __VITEST_TESTER__: `<script type="module">await __vitest_browser_runner__.runTest("${test}", "${id}")</script>`,
+            __VITEST_APPEND__:
+            // TODO: have only a single global variable to not pollute the global scope
+`<script type="module">
+  window.__vi_running_tests__ = ${tests}
+  __vitest_browser_runner__.runTests(window.__vi_running_tests__)
+</script>`,
           })
           res.write(html, 'utf-8')
           res.end()
@@ -129,9 +130,11 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           optimizeDeps: {
             entries: [
               ...entries,
+              'vitest',
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
+              '@vitest/utils',
             ],
             exclude: [
               'vitest',

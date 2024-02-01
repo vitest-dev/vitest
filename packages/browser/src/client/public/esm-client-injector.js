@@ -48,8 +48,9 @@ window.__vi_module_cache__ = moduleCache
 window.__vi_wrap_module__ = wrapModule
 
 window.__vi_config__ = { __VITEST_CONFIG__ }
-if (__vi_config__.testNamePattern)
-  __vi_config__.testNamePattern = parseRegexp(__vi_config__.testNamePattern)
+if (window.__vi_config__.testNamePattern)
+  window.__vi_config__.testNamePattern = parseRegexp(window.__vi_config__.testNamePattern)
+window.__vi_files__ = { __VITEST_FILES__ }
 
 function parseRegexp(input) {
   // Parse input

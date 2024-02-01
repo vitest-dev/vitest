@@ -1,14 +1,13 @@
-import { client } from './client'
+import type { client } from './client'
+import { channel } from './client'
 import { importId } from './utils'
-
-const id = new URL(location.href).searchParams.get('__vitest_id')!
 
 function on(event: string, listener: (...args: any[]) => void) {
   window.addEventListener(event, listener)
   return () => window.removeEventListener(event, listener)
 }
 
-function serializeError(unhandledError: any) {
+export function serializeError(unhandledError: any) {
   return {
     ...unhandledError,
     name: unhandledError.name,
@@ -16,11 +15,16 @@ function serializeError(unhandledError: any) {
     stack: String(unhandledError.stack),
   }
 }
+
+function getFiles(): string[] {
+  // @ts-expect-error this is set in injector
+  return window.__vi_running_tests__
+}
+
 // we can't import "processError" yet because error might've been thrown before the module was loaded
 async function defaultErrorReport(type: string, unhandledError: any) {
   const error = serializeError(unhandledError)
-  await client.rpc.onUnhandledError(error, type)
-  await client.rpc.onDone(id)
+  channel.postMessage({ type: 'error', files: getFiles(), error, errorType: type })
 }
 
 function catchWindowErrors(cb: (e: ErrorEvent) => void) {
@@ -67,7 +71,4 @@ async function reportUnexpectedError(rpc: typeof client.rpc, type: string, error
   const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
   const processedError = processError(error)
   await rpc.onUnhandledError(processedError, type)
-  // TODO: don't fail if test is running
-  // if (!runningTests)
-  await rpc.onDone(id)
 }
