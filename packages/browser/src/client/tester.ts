@@ -3,7 +3,7 @@ import { channel, client, onCancel } from './client'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { browserHashMap, initiateRunner } from './runner'
-import { getConfig, importId } from './utils'
+import { getBrowserState, getConfig, importId } from './utils'
 import { loadSafeRpc } from './rpc'
 import { VitestBrowserClientMocker } from './mocker'
 import { registerUnexpectedErrors, registerUnhandledErrors, serializeError } from './unhandled'
@@ -88,8 +88,7 @@ async function prepareTestEnvironment(files: string[]) {
         throw new Error('Not called in the browser')
       },
     },
-    // @ts-expect-error untyped global for internal use
-    moduleCache: globalThis.__vi_module_cache__,
+    moduleCache: getBrowserState().moduleCache,
     rpc,
     durations: {
       environment: 0,
@@ -182,12 +181,5 @@ async function runTests(files: string[]) {
   }
 }
 
-async function invalid(id: string) {
-  channel.postMessage({ type: 'invalid', id })
-}
-
 // @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__ = {
-  runTests,
-  invalid,
-}
+window.__vitest_browser_runner__.runTests = runTests

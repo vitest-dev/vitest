@@ -2,16 +2,24 @@ import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 
 export async function importId(id: string) {
   const name = `${getConfig().base || '/'}@id/${id}`
-  // @ts-expect-error mocking vitest apis
-  return __vi_wrap_module__(import(name))
+  return getBrowserState().wrapModule(import(name))
 }
 
 export function getConfig(): ResolvedConfig {
-  // @ts-expect-error not typed global
-  return window.__vi_config__
+  return getBrowserState().config
 }
 
-export function getWorkerState(): WorkerGlobalState {
+interface BrowserRunnerState {
+  files: string[]
+  runningFiles: string[]
+  moduleCache: WorkerGlobalState['moduleCache']
+  config: ResolvedConfig
+  exportAll(): void
+  wrapModule(module: any): any
+  runTests(tests: string[]): Promise<void>
+}
+
+export function getBrowserState(): BrowserRunnerState {
   // @ts-expect-error not typed global
-  return window.__vi_worker_state__
+  return window.__vitest_browser_runner__
 }

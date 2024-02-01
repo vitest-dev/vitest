@@ -1,6 +1,6 @@
 import type { client } from './client'
 import { channel } from './client'
-import { importId } from './utils'
+import { getBrowserState, importId } from './utils'
 
 function on(event: string, listener: (...args: any[]) => void) {
   window.addEventListener(event, listener)
@@ -16,15 +16,10 @@ export function serializeError(unhandledError: any) {
   }
 }
 
-function getFiles(): string[] {
-  // @ts-expect-error this is set in injector
-  return window.__vi_running_tests__
-}
-
 // we can't import "processError" yet because error might've been thrown before the module was loaded
 async function defaultErrorReport(type: string, unhandledError: any) {
   const error = serializeError(unhandledError)
-  channel.postMessage({ type: 'error', files: getFiles(), error, errorType: type })
+  channel.postMessage({ type: 'error', files: getBrowserState().runningFiles, error, errorType: type })
 }
 
 function catchWindowErrors(cb: (e: ErrorEvent) => void) {

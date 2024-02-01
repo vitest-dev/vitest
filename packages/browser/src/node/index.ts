@@ -75,7 +75,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
 
           const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
-          const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? 'window.__vi_files__' : JSON.stringify([decodedTestFile])
+          const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
 
           const html = replacer(await testerHtml, {
             __VITEST_FAVICON__: favicon,
@@ -84,8 +84,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             __VITEST_APPEND__:
             // TODO: have only a single global variable to not pollute the global scope
 `<script type="module">
-  window.__vi_running_tests__ = ${tests}
-  __vitest_browser_runner__.runTests(window.__vi_running_tests__)
+  __vitest_browser_runner__.runningFiles = ${tests}
+  __vitest_browser_runner__.runTests(__vitest_browser_runner__.runningFiles)
 </script>`,
           })
           res.write(html, 'utf-8')

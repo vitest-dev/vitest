@@ -1,6 +1,6 @@
 import { channel, client } from './client'
 import { rpcDone } from './rpc'
-import { getConfig } from './utils'
+import { getBrowserState, getConfig } from './utils'
 
 const url = new URL(location.href)
 
@@ -45,18 +45,12 @@ interface IframeErrorEvent {
   files: string[]
 }
 
-interface IframeInvalidEvent {
-  type: 'invalid'
-  id: number
-}
-
-type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeInvalidEvent
+type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent
 
 client.ws.addEventListener('open', async () => {
   const config = getConfig()
   const container = document.querySelector('#vitest-tester') as HTMLDivElement
-  // @ts-expect-error this is set in injector
-  const testFiles = window.__vi_files__ as string[]
+  const testFiles = getBrowserState().files
 
   debug('test files', testFiles.join(', '))
 
