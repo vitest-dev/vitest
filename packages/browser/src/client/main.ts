@@ -211,6 +211,7 @@ async function prepareTestEnvironment(config: ResolvedConfig) {
     startTests,
     setupCommonEnv,
     loadDiffConfig,
+    loadSnapshotSerializers,
     takeCoverageInsideWorker,
   } = await importId('vitest/browser') as typeof import('vitest/browser')
 
@@ -228,6 +229,7 @@ async function prepareTestEnvironment(config: ResolvedConfig) {
     startTests,
     setupCommonEnv,
     loadDiffConfig,
+    loadSnapshotSerializers,
     executor,
     runner,
   }
@@ -244,7 +246,7 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     return
   }
 
-  const { startTests, setupCommonEnv, loadDiffConfig, executor, runner } = preparedData!
+  const { startTests, setupCommonEnv, loadDiffConfig, loadSnapshotSerializers, executor, runner } = preparedData!
 
   onCancel.then((reason) => {
     runner?.onCancel?.(reason)
@@ -255,6 +257,7 @@ async function runTests(paths: string[], config: ResolvedConfig) {
 
   try {
     runner.config.diffOptions = await loadDiffConfig(config, executor as VitestExecutor)
+    await loadSnapshotSerializers(config, executor as VitestExecutor)
 
     await setupCommonEnv(config)
     const files = paths.map((path) => {
