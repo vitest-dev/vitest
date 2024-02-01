@@ -377,10 +377,8 @@ export class Vitest {
       // populate once, update cache on watch
       await this.cache.stats.populateStats(this.config.root, files)
 
-      await this.runFiles(files)
+      await this.runFiles(files, true)
     }
-
-    await this.reportCoverage(true)
 
     if (this.config.watch)
       await this.report('onWatcherStart')
@@ -472,7 +470,7 @@ export class Vitest {
       await project.initializeGlobalSetup()
   }
 
-  async runFiles(paths: WorkspaceSpec[]) {
+  async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
@@ -492,6 +490,10 @@ export class Vitest {
       this.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
+
+      if (!this.isFirstRun && this.config.coverage.cleanOnRerun)
+        await this.coverageProvider?.clean()
+
       await this.initializeGlobalSetup(paths)
 
       try {
@@ -513,7 +515,10 @@ export class Vitest {
         // can be duplicate files if different projects are using the same file
         const specs = Array.from(new Set(paths.map(([, p]) => p)))
         await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
+        await this.reportCoverage(allTestsRun)
+
         this.runningPromise = undefined
+        this.isFirstRun = false
       })
 
     return await this.runningPromise
@@ -530,13 +535,8 @@ export class Vitest {
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
-    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-      await this.coverageProvider.clean()
-
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-    await this.reportCoverage(!trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -632,16 +632,11 @@ export class Vitest {
 
       this.changedTests.clear()
 
-      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-        await this.coverageProvider.clean()
-
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
       await this.report('onWatcherRerun', files, triggerLabel)
 
-      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-      await this.reportCoverage(false)
+      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
 
       await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)

@@ -5,6 +5,7 @@ import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
 import { startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import type { ResolvedConfig } from '../types'
@@ -43,6 +44,10 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     util,
     timers,
   }
+
+  installSourcemapsSupport({
+    getSourceMap: source => workerState.moduleCache.getSourceMap(source),
+  })
 
   await startCoverageInsideWorker(config.coverage, executor)
 

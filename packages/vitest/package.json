@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -166,7 +166,7 @@
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
     "@antfu/install-pkg": "^0.3.1",
-    "@edge-runtime/vm": "^3.1.7",
+    "@edge-runtime/vm": "^3.1.8",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/estree": "^1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",

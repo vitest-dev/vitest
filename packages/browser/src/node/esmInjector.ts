@@ -38,8 +38,6 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
 
   const hoistIndex = 0
 
-  let hasInjected = false
-
   // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
@@ -76,7 +74,6 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
   }
 
   function defineExport(position: number, name: string, local = name) {
-    hasInjected = true
     s.appendLeft(
       position,
       `\nObject.defineProperty(${viInjectedKey}, "${name}", `
@@ -170,7 +167,6 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
         // named hoistable/class exports
         // export default function foo() {}
         // export default class A {}
-        hasInjected = true
         const { name } = node.declaration.id
         s.remove(node.start, node.start + 15 /* 'export default '.length */)
         s.append(
@@ -180,7 +176,6 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       }
       else {
         // anonymous default exports
-        hasInjected = true
         s.update(
           node.start,
           node.start + 14 /* 'export default'.length */,
@@ -196,13 +191,10 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       s.remove(node.start, node.end)
       const importId = defineImportAll(node.source.value as string)
       // hoist re-exports near the defined import so they are immediately exported
-      if (node.exported) {
+      if (node.exported)
         defineExport(hoistIndex, node.exported.name, `${importId}`)
-      }
-      else {
-        hasInjected = true
+      else
         s.appendLeft(hoistIndex, `${viExportAllHelper}(${viInjectedKey}, ${importId});\n`)
-      }
     }
   }
 
@@ -244,11 +236,10 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
     },
   })
 
-  if (hasInjected) {
-    // make sure "__vi_injected__" is declared as soon as possible
-    s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
-    s.append(`\nexport { ${viInjectedKey} }`)
-  }
+  // make sure "__vi_injected__" is declared as soon as possible
+  // prepend even if file doesn't export anything
+  s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
+  s.append(`\nexport { ${viInjectedKey} }`)
 
   return {
     ast,
