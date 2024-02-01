@@ -37,6 +37,7 @@ export interface WebSocketHandlers {
   finishBrowserTests: () => void
   getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
+  triggerCommand: (command: string, payload: unknown[]) => Promise<void>
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {

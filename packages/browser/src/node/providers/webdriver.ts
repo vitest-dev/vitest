@@ -11,8 +11,9 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio'
 
-  private cachedBrowser: WebdriverIO.Browser | null = null
-  private browser!: WebdriverBrowser
+  public browser: WebdriverIO.Browser | null = null
+
+  private browserName!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
   private options?: RemoteOptions
@@ -23,17 +24,17 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async initialize(ctx: WorkspaceProject, { browser, options }: WebdriverProviderOptions) {
     this.ctx = ctx
-    this.browser = browser
+    this.browserName = browser
     this.options = options as RemoteOptions
   }
 
   async openBrowser() {
-    if (this.cachedBrowser)
-      return this.cachedBrowser
+    if (this.browser)
+      return this.browser
 
     const options = this.ctx.config.browser
 
-    if (this.browser === 'safari') {
+    if (this.browserName === 'safari') {
       if (options.headless)
         throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it.')
     }
@@ -41,19 +42,19 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const { remote } = await import('webdriverio')
 
     // TODO: close everything, if browser is closed from the outside
-    this.cachedBrowser = await remote({
+    this.browser = await remote({
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
     })
 
-    return this.cachedBrowser
+    return this.browser
   }
 
   private buildCapabilities() {
     const capabilities: RemoteOptions['capabilities'] = {
       ...this.options?.capabilities,
-      browserName: this.browser,
+      browserName: this.browserName,
     }
 
     const headlessMap = {
@@ -63,7 +64,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     } as const
 
     const options = this.ctx.config.browser
-    const browser = this.browser
+    const browser = this.browserName
     if (browser !== 'safari' && options.headless) {
       const [key, args] = headlessMap[browser]
       const currentValues = (this.options?.capabilities as any)?.[key] || {}
@@ -81,7 +82,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async close() {
     await Promise.all([
-      this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
+      this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])
     // TODO: right now process can only exit with timeout, if we use browser
     // needs investigating

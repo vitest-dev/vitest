@@ -103,6 +103,13 @@ export interface BrowserConfigOptions {
    * Scripts injected into the main window.
    */
   indexScripts?: BrowserScript[]
+
+  // TODO
+  commands?: Record<string, BrowserCommand>
+}
+
+interface BrowserCommand {
+  (payload: any, options: { provider: BrowserProvider; project: WorkspaceProject }): Awaitable<any>
 }
 
 export interface BrowserScript {

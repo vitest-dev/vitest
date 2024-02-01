@@ -11,9 +11,10 @@ export interface PlaywrightProviderOptions extends BrowserProviderInitialization
 export class PlaywrightBrowserProvider implements BrowserProvider {
   public name = 'playwright'
 
-  private cachedBrowser: Browser | null = null
-  private cachedPage: Page | null = null
-  private browser!: PlaywrightBrowser
+  public browser: Browser | null = null
+  public page: Page | null = null
+
+  private browserName!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
   private options?: {
@@ -27,26 +28,30 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   initialize(project: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
     this.ctx = project
-    this.browser = browser
+    this.browserName = browser
     this.options = options as any
   }
 
   private async openBrowserPage() {
-    if (this.cachedPage)
-      return this.cachedPage
+    if (this.page)
+      return this.page
 
     const options = this.ctx.config.browser
 
     const playwright = await import('playwright')
 
-    const browser = await playwright[this.browser].launch({
+    const browser = await playwright[this.browserName].launch({
       ...this.options?.launch,
       headless: options.headless,
     })
-    this.cachedBrowser = browser
-    this.cachedPage = await browser.newPage(this.options?.page)
+    this.browser = browser
+    this.page = await browser.newPage(this.options?.page)
 
-    return this.cachedPage
+    this.page.on('close', () => {
+      browser.close()
+    })
+
+    return this.page
   }
 
   async openPage(url: string) {
@@ -55,10 +60,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close() {
-    const page = this.cachedPage
-    this.cachedPage = null
-    const browser = this.cachedBrowser
-    this.cachedBrowser = null
+    const page = this.page
+    this.page = null
+    const browser = this.browser
+    this.browser = null
     await page?.close()
     await browser?.close()
   }

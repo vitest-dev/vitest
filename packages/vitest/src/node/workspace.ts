@@ -398,6 +398,10 @@ export class WorkspaceProject {
         ...this.server?.config.env,
         ...this.config.env,
       },
+      browser: {
+        ...this.ctx.config.browser,
+        commands: {},
+      },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 
