@@ -29,7 +29,7 @@ export class GithubActionsReporter implements Reporter {
           const formatted = formatMessage({
             command: 'error',
             properties: {
-              file: stack.file, // TODO: need full path for workspace in sub directory?
+              file: stack.file,
               title: getFullName(task, ' > '),
               line: String(stack.line),
               column: String(stack.column),

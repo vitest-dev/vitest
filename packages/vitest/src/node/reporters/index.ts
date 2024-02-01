@@ -8,8 +8,8 @@ import { TapReporter } from './tap'
 import { JUnitReporter } from './junit'
 import { TapFlatReporter } from './tap-flat'
 import { HangingProcessReporter } from './hanging-process'
+import { GithubActionsReporter } from './github-actions'
 import type { BaseReporter } from './base'
-export { GithubActionsReporter } from './github-actions'
 
 export {
   DefaultReporter,
@@ -21,6 +21,7 @@ export {
   JUnitReporter,
   TapFlatReporter,
   HangingProcessReporter,
+  GithubActionsReporter,
 }
 export type { BaseReporter, Reporter }
 
@@ -36,6 +37,7 @@ export const ReportersMap = {
   'tap-flat': TapFlatReporter,
   'junit': JUnitReporter,
   'hanging-process': HangingProcessReporter,
+  'github-actions': GithubActionsReporter,
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap
