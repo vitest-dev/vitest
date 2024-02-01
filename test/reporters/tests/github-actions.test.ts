@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 import { GithubActionsReporter } from '../../../packages/vitest/src/node/reporters'
