@@ -20,6 +20,9 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
 
 function createReporters(reporterReferences: Array<string | Reporter | BuiltinReporters>, ctx: Vitest) {
   const runner = ctx.runner
+  reporterReferences = reporterReferences.filter(reporter =>
+    !(reporter === 'github-actions' && !process.env.GITHUB_ACTIONS),
+  )
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance === 'html') {

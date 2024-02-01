@@ -1,9 +1,10 @@
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
+import { GithubActionsReporter } from '../../../packages/vitest/src/node/reporters'
 
-test('github-actions reporter', async () => {
+test(GithubActionsReporter, async () => {
   let { stdout, stderr, vitest } = await runVitest(
-    { reporters: 'github-actions', root: './fixtures' },
+    { reporters: new GithubActionsReporter(), root: './fixtures' },
     ['some-failing.test.ts'],
   )
   stdout = stdout.replace(vitest!.config.root, '__VITEST_ROOT__')
