@@ -32,6 +32,7 @@ export interface WebSocketHandlers {
   updateSnapshot(file?: File): Promise<void>
   getProvidedContext(): ProvidedContext
   getUnhandledErrors(): unknown[]
+  triggerCommand(command: string, payload: unknown[]): Promise<void>
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
