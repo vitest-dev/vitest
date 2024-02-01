@@ -9,6 +9,7 @@ import { JUnitReporter } from './junit'
 import { TapFlatReporter } from './tap-flat'
 import { HangingProcessReporter } from './hanging-process'
 import type { BaseReporter } from './base'
+export { GithubActionsReporter } from './github-actions'
 
 export {
   DefaultReporter,
