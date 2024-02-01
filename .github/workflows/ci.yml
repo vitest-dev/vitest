@@ -48,6 +48,19 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+  test-gh-reporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - run: pnpm i
+      - run: pnpm build
+      - run: TEST_GH_REPORTER=1 pnpm -C examples/basic test -- --reporter=github-actions
+
   test:
     runs-on: ${{ matrix.os }}
 
