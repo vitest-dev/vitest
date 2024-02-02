@@ -488,7 +488,7 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--isolate=false`](#isolate-1-1-0) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
+If you are running Vitest with [`--isolate=false`](#isolate-1-1-0) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped, but is still running sequentially.
 
 Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
 
