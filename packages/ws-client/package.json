@@ -39,7 +39,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "0.2.14",
+    "birpc": "0.2.15",
     "flatted": "^3.2.9",
     "ws": "^8.14.2"
   },

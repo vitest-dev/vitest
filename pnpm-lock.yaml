@@ -1196,8 +1196,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2
       birpc:
-        specifier: 0.2.14
-        version: 0.2.14
+        specifier: 0.2.15
+        version: 0.2.15
       codemirror:
         specifier: ^5.65.16
         version: 5.65.16
@@ -1397,8 +1397,8 @@ importers:
         specifier: ^8.1.5
         version: 8.1.5
       birpc:
-        specifier: 0.2.14
-        version: 0.2.14
+        specifier: 0.2.15
+        version: 0.2.15
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -1470,8 +1470,8 @@ importers:
   packages/ws-client:
     dependencies:
       birpc:
-        specifier: 0.2.14
-        version: 0.2.14
+        specifier: 0.2.15
+        version: 0.2.15
       flatted:
         specifier: ^3.2.9
         version: 3.2.9
@@ -12376,8 +12376,8 @@ packages:
     dev: true
     optional: true
 
-  /birpc@0.2.14:
-    resolution: {integrity: sha512-37FHE8rqsYM5JEKCnXFyHpBCzvgHEExwVVTq+nUmloInU7l8ezD1TpOhKpS8oe1DTYFqEK27rFZVKG43oTqXRA==}
+  /birpc@0.2.15:
+    resolution: {integrity: sha512-LuZgWLW6DB1zenkfJuF4/kfSZdazOR2xaMSzeqgvfbNIwECwV1AJso9wpNje79uaRU86Obbujv4qtDnwoOLQww==}
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
