@@ -1,11 +1,10 @@
-import { createDefer } from '@vitest/utils'
+import { createDefer, isObject } from '@vitest/utils'
 import { getFixture } from './map'
-import type { TestContext } from './types'
+import type { FixtureOptions, TestContext } from './types'
 
-export interface FixtureItem {
+export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
-  index: number
   /**
    * Indicates whether the fixture is a function
    */
@@ -17,15 +16,22 @@ export interface FixtureItem {
 }
 
 export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
+  const fixtureOptionKeys = ['auto']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures)
-    .map(([prop, value], index) => {
-      const isFn = typeof value === 'function'
-      return {
-        prop,
-        value,
-        index,
-        isFn,
+    .map(([prop, value]) => {
+      const fixtureItem = { value } as FixtureItem
+
+      if (Array.isArray(value) && value.length >= 2
+      && isObject(value[1])
+      && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))) {
+        // fixture with options
+        Object.assign(fixtureItem, value[1])
+        fixtureItem.value = value[0]
       }
+
+      fixtureItem.prop = prop
+      fixtureItem.isFn = typeof fixtureItem.value === 'function'
+      return fixtureItem
     })
 
   if (Array.isArray(context.fixtures))
@@ -67,7 +73,8 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       return fn(context)
 
     const usedProps = getUsedProps(fn)
-    if (!usedProps.length)
+    const hasAutoFixture = fixtures.some(({ auto }) => auto)
+    if (!usedProps.length && !hasAutoFixture)
       return fn(context)
 
     if (!fixtureValueMaps.get(context))
@@ -78,7 +85,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       cleanupFnArrayMap.set(context, [])
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
 
-    const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
+    const usedFixtures = fixtures.filter(({ prop, auto }) => auto || usedProps.includes(prop))
     const pendingFixtures = resolveDeps(usedFixtures)
 
     if (!pendingFixtures.length)

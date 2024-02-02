@@ -210,7 +210,14 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & Extend
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
 }
 
-export type Use<T> = (value: T) => Promise<void>
+export interface FixtureOptions {
+  /**
+   * Whether to automatically set up current fixture, even though it's not being used in tests.
+   */
+  auto?: boolean
+}
+
+export type Use<T> = (value?: T) => Promise<void>
 export type FixtureFn<T, K extends keyof T, ExtraContext> =
   (context: Omit<T, K> & ExtraContext, use: Use<T[K]>) => Promise<void>
 export type Fixture<T, K extends keyof T, ExtraContext = {}> =
@@ -218,7 +225,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = {}> =
     ? (T[K] extends any ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>> : never)
     : T[K] | (T[K] extends any ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>> : never)
 export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
-  [K in keyof T]: Fixture<T, K, ExtraContext & ExtendedContext<Test>>
+  [K in keyof T]: Fixture<T, K, ExtraContext & ExtendedContext<Test>> | [Fixture<T, K, ExtraContext & ExtendedContext<Test>>, FixtureOptions?]
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
