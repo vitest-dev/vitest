@@ -12,7 +12,7 @@ import { parseErrorStacktrace } from '../../utils/source-map'
 
 type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
-interface Callsite { line: number; column: number }
+interface Callsite { line: number; column: number; file: string }
 const StatusMap: Record<TaskState, Status> = {
   fail: 'failed',
   only: 'pending',
@@ -193,6 +193,9 @@ export class JsonReporter implements Reporter {
     if (!frame)
       return
 
-    return { line: frame.line, column: frame.column }
+    let file = ''
+    if (error.stacks && error.stacks.length)
+      file = error.stacks[0].file
+    return { line: frame.line, column: frame.column, file }
   }
 }
