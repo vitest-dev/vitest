@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, test, vi } from 'vitest'
 const mockServer = { setup: vi.fn(), teardown: vi.fn() }
 const FnA = vi.fn()
 
-export const myTest = test.extend({
+const myTest = test.extend({
   autoFixture: [async ({}, use) => {
     await mockServer.setup()
     await use()
