@@ -34,7 +34,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     autoReconnect = true,
     reconnectInterval = 2000,
     reconnectTries = 10,
-    connectTimeout = 5_000,
+    connectTimeout = 60000,
     reactive = v => v,
     WebSocketConstructor = globalThis.WebSocket,
   } = options
