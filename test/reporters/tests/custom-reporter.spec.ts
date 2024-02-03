@@ -75,4 +75,10 @@ describe('custom reporters', () => {
     expect(stdout).not.includes('hello from package reporter')
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
+
+  test('custom reporter with options', async () => {
+    const { stdout } = await runVitest({ root, reporters: [[customTsReporterPath, { some: { custom: 'option here' } }]], include: ['tests/reporters.spec.ts'] })
+    expect(stdout).includes('hello from custom reporter')
+    expect(stdout).includes('custom reporter options {"some":{"custom":"option here"}}')
+  }, TIMEOUT)
 })

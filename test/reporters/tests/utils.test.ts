@@ -24,21 +24,21 @@ describe('Reporter Utils', () => {
   })
 
   test('passing the name of a single built-in reporter returns a new instance', async () => {
-    const promisedReporters = await createReporters(['default'], ctx)
+    const promisedReporters = await createReporters([['default', {}]], ctx)
     expect(promisedReporters).toHaveLength(1)
     const reporter = promisedReporters[0]
     expect(reporter).toBeInstanceOf(DefaultReporter)
   })
 
   test('passing in the path to a custom reporter returns a new instance', async () => {
-    const promisedReporters = await createReporters(([customReporterPath]), ctx)
+    const promisedReporters = await createReporters(([[customReporterPath, {}]]), ctx)
     expect(promisedReporters).toHaveLength(1)
     const customReporter = promisedReporters[0]
     expect(customReporter).toBeInstanceOf(TestReporter)
   })
 
   test('passing in a mix of built-in and custom reporters works', async () => {
-    const promisedReporters = await createReporters(['default', customReporterPath], ctx)
+    const promisedReporters = await createReporters([['default', {}], [customReporterPath, {}]], ctx)
     expect(promisedReporters).toHaveLength(2)
     const defaultReporter = promisedReporters[0]
     expect(defaultReporter).toBeInstanceOf(DefaultReporter)

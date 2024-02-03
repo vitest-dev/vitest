@@ -12,6 +12,12 @@ import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
 
+export interface JUnitOptions {
+  outputFile?: string
+  classname?: string
+  suiteName?: string
+}
+
 function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
@@ -80,11 +86,16 @@ export class JUnitReporter implements Reporter {
   private logger!: IndentedLogger<Promise<void>>
   private _timeStart = new Date()
   private fileFd?: fs.FileHandle
+  private options: JUnitOptions
+
+  constructor(options: JUnitOptions) {
+    this.options = options
+  }
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile = getOutputFile(this.ctx.config, 'junit')
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)
@@ -173,7 +184,8 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        classname: process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
+        classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
         name: task.name,
         time: getDuration(task),
       }, async () => {
@@ -258,7 +270,8 @@ export class JUnitReporter implements Reporter {
       stats.failures += file.stats.failures
       return stats
     }, {
-      name: process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { suiteName: 'something' }]]"
+      name: this.options.suiteName || process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
       tests: 0,
       failures: 0,
       errors: 0, // we cannot detect those
