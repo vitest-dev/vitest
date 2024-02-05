@@ -59,3 +59,13 @@ test('emits <failure> when beforeAll/afterAll failed', async () => {
   stdout = stdout.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
   expect(stdout).toMatchSnapshot()
 })
+
+test('write testsuite name relative to root config', async () => {
+  let { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/better-testsuite-name' })
+  stdout = stdout.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+
+  const space1 = '<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">'
+  const space2 = '<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">'
+  expect(stdout).toContain(space1)
+  expect(stdout).toContain(space2)
+})
