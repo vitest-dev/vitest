@@ -268,7 +268,7 @@ export class JUnitReporter implements Reporter {
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
-          name: file.name,
+          name: relative(this.ctx.config.root, file.filepath),
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
