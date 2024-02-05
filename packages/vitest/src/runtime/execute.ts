@@ -69,7 +69,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
   const getTransformMode = () => {
-    return state().environment.transformMode ?? 'ssr'
+    return state().environment?.transformMode ?? 'ssr'
   }
 
   return await createVitestExecutor({
