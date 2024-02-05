@@ -43,29 +43,57 @@ test('calc the duration used by junit', () => {
 test('emits <failure> if a test has a syntax error', async () => {
   const { stdout } = await runVitest({ reporters: 'junit', root }, ['with-syntax-error'])
 
-  let xml = stdout
+  const xml = stabilizeReport(stdout)
 
-  // clear timestamp and hostname
-  xml = xml.replace(/timestamp="[^"]+"/, 'timestamp="TIMESTAMP"')
-  xml = xml.replace(/hostname="[^"]+"/, 'hostname="HOSTNAME"')
-
-  expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="TIMESTAMP" hostname="HOSTNAME" tests="1" failures="1" errors="0" skipped="0" time="0">')
+  expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">')
   expect(xml).toContain('<failure')
 })
 
 test('emits <failure> when beforeAll/afterAll failed', async () => {
-  let { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/suite-hook-failure' })
-  // reduct non-deterministic output
-  stdout = stdout.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
-  expect(stdout).toMatchSnapshot()
+  const { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/suite-hook-failure' })
+
+  const xml = stabilizeReport(stdout)
+
+  expect(xml).toMatchSnapshot()
 })
 
 test('write testsuite name relative to root config', async () => {
-  let { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/better-testsuite-name' })
-  stdout = stdout.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+  const { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/better-testsuite-name' })
 
-  const space1 = '<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">'
-  const space2 = '<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">'
-  expect(stdout).toContain(space1)
-  expect(stdout).toContain(space2)
+  const xml = stabilizeReport(stdout)
+
+  expect(xml).toContain('<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
+  expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
 })
+
+test('options.classname changes classname property', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { classname: 'some-custom-classname' }]],
+    root: './fixtures/default',
+    include: ['a.test.ts'],
+  })
+
+  const xml = stabilizeReport(stdout)
+
+  // All classname attributes should have the custom value
+  expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
+  expect(xml.match(/<testcase classname="/g)).toHaveLength(13)
+  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(13)
+})
+
+test('options.suiteName changes name property', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { suiteName: 'some-custom-suiteName' }]],
+    root: './fixtures/default',
+    include: ['a.test.ts'],
+  })
+
+  const xml = stabilizeReport(stdout)
+
+  expect(xml).not.toContain('<testsuites name="vitest tests"')
+  expect(xml).toContain('<testsuites name="some-custom-suiteName"')
+})
+
+function stabilizeReport(report: string) {
+  return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+}

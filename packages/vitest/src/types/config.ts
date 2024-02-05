@@ -3,7 +3,7 @@ import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
-import type { BuiltinReporters } from '../node/reporters'
+import type { BuiltinReporterOptions, BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -189,6 +189,15 @@ interface DepsOptions {
   moduleDirectories?: string[]
 }
 
+type InlineReporter = Reporter
+type ReporterName = BuiltinReporters | 'html' | (string & {})
+type ReporterWithOptions<Name extends ReporterName = ReporterName> =
+  Name extends keyof BuiltinReporterOptions
+    ? BuiltinReporterOptions[Name] extends never
+      ? [Name, {}]
+      : [Name, Partial<BuiltinReporterOptions[Name]>]
+    : [Name, Record<string, unknown>]
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -365,8 +374,9 @@ export interface InlineConfig {
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters.
    */
-  reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
+  reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
+  // TODO: v2.0.0 Remove in favor of custom reporter options, e.g. "reporters: [['json', { outputFile: 'some-dir/file.html' }]]"
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
@@ -786,7 +796,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   pool: Pool
   poolOptions?: PoolOptions
 
-  reporters: (Reporter | BuiltinReporters)[]
+  reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
 

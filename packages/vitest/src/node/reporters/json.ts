@@ -62,9 +62,18 @@ export interface JsonTestResults {
   // wasInterrupted: boolean
 }
 
+export interface JsonOptions {
+  outputFile?: string
+}
+
 export class JsonReporter implements Reporter {
   start = 0
   ctx!: Vitest
+  options: JsonOptions
+
+  constructor(options: JsonOptions) {
+    this.options = options
+  }
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
@@ -162,7 +171,7 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'json')
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)

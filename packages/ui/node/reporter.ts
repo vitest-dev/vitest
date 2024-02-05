@@ -9,6 +9,10 @@ import { stringify } from 'flatted'
 import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
+export interface HTMLOptions {
+  outputFile?: string
+}
+
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
 }
@@ -37,6 +41,11 @@ export default class HTMLReporter implements Reporter {
   start = 0
   ctx!: Vitest
   reportUIPath!: string
+  options: HTMLOptions
+
+  constructor(options: HTMLOptions) {
+    this.options = options
+  }
 
   async onInit(ctx: Vitest) {
     this.ctx = ctx
@@ -60,7 +69,7 @@ export default class HTMLReporter implements Reporter {
   }
 
   async writeReport(report: string) {
-    const htmlFile = getOutputFile(this.ctx.config) || 'html/index.html'
+    const htmlFile = this.options.outputFile || getOutputFile(this.ctx.config) || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 
