@@ -1,6 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { hostname } from 'node:os'
-import path from 'node:path'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
@@ -269,7 +268,7 @@ export class JUnitReporter implements Reporter {
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
-          name: path.relative(this.ctx.config.root, file.filepath),
+          name: relative(this.ctx.config.root, file.filepath),
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
