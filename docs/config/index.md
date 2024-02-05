@@ -488,7 +488,7 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--threads=false`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
+If you are running Vitest with [`--isolate=false`](#isolate-1-1-0) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped, but is still running sequentially.
 
 Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
 
@@ -558,7 +558,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     poolMatchGlobs: [
-      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--threads` for them,
+      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--pool=threads` for them,
       ['**/tests/worker-specific/**', 'threads'],
       // run all tests in "browser" directory in an actual browser
       ['**/tests/browser/**', 'browser'],
@@ -652,7 +652,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 
 #### vmForks<NonProjectOption />
 
-Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`. 
+Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
 ### poolOptions<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
 
@@ -995,7 +995,7 @@ Changing setup files will trigger rerun of all tests.
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads.
 
 :::tip
-Note, that if you are running [`--threads=false`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--isolate=false`](#isolate-1-1-0), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
 :::
 
 For example, you may rely on a global variable:
