@@ -1672,6 +1672,23 @@ If you need to extend snapshot serializer via pretty-format plugins, please, use
 
 A list of paths to snapshot serializer modules for snapshot testing, useful if you want add custom snapshot serializers. See [Custom Serializer](/guide/snapshot#custom-serializer) for more information.
 
+### resolveSnapshotPath<NonProjectOption />
+
+- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Default**: stores snapshot files in `__snapshots__` directory
+
+Overrides default snapshot path. For example, to store snapshots next to test files:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
+  },
+})
+```
+
 ### allowOnly
 
 - **Type**: `boolean`
