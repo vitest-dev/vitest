@@ -55,7 +55,7 @@
     "fast-glob": "^3.3.2",
     "lint-staged": "^15.1.0",
     "magic-string": "^0.30.5",
-    "npm-run-all2": "^5.0.0",
+    "npm-run-all2": "^5.0.2",
     "pathe": "^1.1.1",
     "rimraf": "^5.0.5",
     "rollup": "^4.4.0",
