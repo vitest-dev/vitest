@@ -256,8 +256,11 @@ async function runTests(paths: string[], config: ResolvedConfig) {
     config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
-    runner.config.diffOptions = await loadDiffConfig(config, executor as VitestExecutor)
-    await loadSnapshotSerializers(config, executor as VitestExecutor)
+    const [diffOptions] = await Promise.all([
+      loadDiffConfig(config, executor as VitestExecutor),
+      loadSnapshotSerializers(config, executor as VitestExecutor),
+    ])
+    runner.config.diffOptions = diffOptions
 
     await setupCommonEnv(config)
     const files = paths.map((path) => {
