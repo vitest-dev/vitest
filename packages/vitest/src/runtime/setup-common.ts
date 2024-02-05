@@ -1,6 +1,6 @@
 import { setSafeTimers } from '@vitest/utils'
-import type { PrettyFormatPlugin } from '@vitest/utils/diff'
 import { addSerializer } from '@vitest/snapshot'
+import type { SnapshotSerializer } from '@vitest/snapshot'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import type { ResolvedConfig } from '../types'
 import type { DiffOptions } from '../types/matcher-utils'
@@ -51,7 +51,7 @@ export async function loadSnapshotSerializers(config: ResolvedConfig, executor: 
       if (typeof config.test !== 'function' || (typeof config.serialize !== 'function' && typeof config.print !== 'function'))
         throw new Error(`invalid snapshot serializer in ${file}. Must have a 'test' method along with either a 'serialize' or 'print' method.`)
 
-      return config as PrettyFormatPlugin
+      return config as SnapshotSerializer
     }),
   )
 
