@@ -157,6 +157,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
+        onTimeoutError(functionName) {
+          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
+        },
       },
     )
 
