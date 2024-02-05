@@ -75,7 +75,7 @@
     "birpc": "0.2.14",
     "codemirror": "^5.65.16",
     "codemirror-theme-vars": "^0.1.2",
-    "cypress": "^13.6.2",
+    "cypress": "^13.6.4",
     "d3-graph-controller": "^3.0.4",
     "floating-vue": "^2.0.0-y.0",
     "splitpanes": "^3.1.5",
