@@ -1,5 +1,3 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import vm from 'node:vm'
 import { Module as _Module, createRequire } from 'node:module'
 import { basename, dirname, extname } from 'pathe'

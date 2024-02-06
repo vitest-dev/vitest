@@ -1,4 +1,6 @@
 import { setSafeTimers } from '@vitest/utils'
+import { addSerializer } from '@vitest/snapshot'
+import type { SnapshotSerializer } from '@vitest/snapshot'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import type { ResolvedConfig } from '../types'
 import type { DiffOptions } from '../types/matcher-utils'
@@ -34,4 +36,24 @@ export async function loadDiffConfig(config: ResolvedConfig, executor: VitestExe
     return diffModule.default as DiffOptions
   else
     throw new Error(`invalid diff config file ${config.diff}. Must have a default export with config object`)
+}
+
+export async function loadSnapshotSerializers(config: ResolvedConfig, executor: VitestExecutor) {
+  const files = config.snapshotSerializers
+
+  const snapshotSerializers = await Promise.all(
+    files.map(async (file) => {
+      const mo = await executor.executeId(file)
+      if (!mo || typeof mo.default !== 'object' || mo.default === null)
+        throw new Error(`invalid snapshot serializer file ${file}. Must export a default object`)
+
+      const config = mo.default
+      if (typeof config.test !== 'function' || (typeof config.serialize !== 'function' && typeof config.print !== 'function'))
+        throw new Error(`invalid snapshot serializer in ${file}. Must have a 'test' method along with either a 'serialize' or 'print' method.`)
+
+      return config as SnapshotSerializer
+    }),
+  )
+
+  snapshotSerializers.forEach(serializer => addSerializer(serializer))
 }

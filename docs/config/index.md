@@ -1662,8 +1662,15 @@ Format options for snapshot testing. These options are passed down to [`pretty-f
 ::: tip
 Beware that `plugins` field on this object will be ignored.
 
-If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API.
+If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API or [snapshotSerializers](#snapshotserializers-1-3-0) option.
 :::
+
+### snapshotSerializers<NonProjectOption /> <Badge type="info">1.3.0+</Badge>
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+A list of paths to snapshot serializer modules for snapshot testing, useful if you want add custom snapshot serializers. See [Custom Serializer](/guide/snapshot#custom-serializer) for more information.
 
 ### resolveSnapshotPath<NonProjectOption />
 

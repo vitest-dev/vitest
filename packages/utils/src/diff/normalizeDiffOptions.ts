@@ -45,9 +45,11 @@ function getCompareKeys(compareKeys?: CompareKeys): CompareKeys {
 }
 
 function getContextLines(contextLines?: number): number {
-  return (typeof contextLines === 'number'
-  && Number.isSafeInteger(contextLines)
-  && contextLines >= 0)
+  return (
+    typeof contextLines === 'number'
+    && Number.isSafeInteger(contextLines)
+    && contextLines >= 0
+  )
     ? contextLines
     : DIFF_CONTEXT_DEFAULT
 }

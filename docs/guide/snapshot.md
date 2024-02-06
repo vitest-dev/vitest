@@ -117,7 +117,7 @@ You can learn more in the [`examples/image-snapshot`](https://github.com/vitest-
 
 You can add your own logic to alter how your snapshots are serialized. Like Jest, Vitest has default serializers for built-in JavaScript types, HTML elements, ImmutableJS and for React elements.
 
-Example serializer module:
+You can explicitly add custom serializer by using [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API.
 
 ```ts
 expect.addSnapshotSerializer({
@@ -133,6 +133,39 @@ expect.addSnapshotSerializer({
   },
   test(val) {
     return val && Object.prototype.hasOwnProperty.call(val, 'foo')
+  },
+})
+```
+
+We also support [snapshotSerializers](/config/#snapshotserializers-1-3-0) option to implicitly add custom serializers.
+
+```ts
+import { SnapshotSerializer } from 'vitest'
+
+export default {
+  serialize(val, config, indentation, depth, refs, printer) {
+    // `printer` is a function that serializes a value using existing plugins.
+    return `Pretty foo: ${printer(
+      val.foo,
+      config,
+      indentation,
+      depth,
+      refs,
+    )}`
+  },
+  test(val) {
+    return val && Object.prototype.hasOwnProperty.call(val, 'foo')
+  },
+} satisfies SnapshotSerializer
+```
+
+
+```ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    snapshotSerializers: ['path/to/custom-serializer.ts']
   },
 })
 ```

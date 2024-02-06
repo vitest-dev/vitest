@@ -11,7 +11,7 @@ export interface Emitter<Events extends Record<EventType, unknown>> {
 }
 
 export type HMREmitter = Emitter<{
-  'message': HMRPayload
+  message: HMRPayload
 }> & EventEmitter
 
 declare module 'vite' {

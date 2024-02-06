@@ -1,5 +1,3 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import type vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
