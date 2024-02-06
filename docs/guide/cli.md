@@ -80,7 +80,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--minWorkers <workers>` | Minimum number of workers to run tests in |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
-| `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
+| `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation](https://github.com/cacjs/cac#dot-nested-options) you can specify individual outputs for multiple reporters |
 | `--coverage` | Enable coverage report |
 | `--coverage.all` | Whether to include all files, including the untested ones into report (default: `true`) |
 | `--coverage.provider` | Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom" |
@@ -127,7 +127,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation](https://github.com/cacjs/cac#dot-nested-options) to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--sequence.concurrent [concurrent]` | Make tests run in parallel (default: false) |
 | `--sequence.seed <seed>` | Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit https://en.wikipedia.org/wiki/Random_seed for more information |
 | `--sequence.hooks <order>` | Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit https://vitest.dev/config/#sequence-hooks for more information (default: "parallel") |
@@ -163,6 +163,12 @@ Boolean options can be negated with `no-` prefix. Specifying the value as `false
 vitest --no-api
 vitest --api=false
 ```
+
+By default, Vitest only prints non-nested commands. To see all possible options, use `--expand-help` when calling `--help`:
+
+```
+vitest --help --expand-help
+```
 :::
 
 ### changed
@@ -197,5 +203,3 @@ vitest --api=false
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
-
-[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

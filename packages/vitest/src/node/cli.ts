@@ -112,7 +112,7 @@ cli
 
     const defaultOutput = options.body
       .split('\n')
-      .filter(line => /--\S+\./.test(line) === false)
+      .filter(line => /^\s+--\S+\./.test(line) === false)
       .join('\n')
 
     // Filter out options with dot-notation if --help is not called with a subcommand (default behavior)
@@ -121,7 +121,7 @@ cli
       return info
     }
 
-    if (subcommands.length === 1 && subcommands[0] === '--expand-help')
+    if (subcommands.length === 1 && (subcommands[0] === '--expand-help' || subcommands[0] === '--expandHelp'))
       return info
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
@@ -141,7 +141,7 @@ cli
       const subcommand = subcommands[i]
 
       // --help --expand-help can't be called with multiple subcommands and is handled above
-      if (subcommand === '--expand-help') {
+      if (subcommand === '--expand-help' || subcommand === '--expandHelp') {
         addBannerWarning('--expand-help subcommand ignored because, when used with --help, it must be the only subcommand')
         continue
       }
