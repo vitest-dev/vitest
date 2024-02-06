@@ -1,5 +1,3 @@
-import { createCLI } from './cac'
+import { createCLI } from './cli/cac'
 
-const cli = createCLI()
-
-cli.parse()
+createCLI().parse()

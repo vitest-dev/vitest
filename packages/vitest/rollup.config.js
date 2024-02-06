@@ -19,7 +19,7 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/index.ts',
   'cli': 'src/node/cli.ts',
-  'cli-wrapper': 'src/node/cli-wrapper.ts',
+  'cli-wrapper': 'src/node/cli/cli-wrapper.ts',
   'node': 'src/node.ts',
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',

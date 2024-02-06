@@ -5,7 +5,7 @@
 import { fileURLToPath } from 'node:url'
 import c from 'picocolors'
 import { execa } from 'execa'
-import { EXIT_CODE_RESTART } from '../constants'
+import { EXIT_CODE_RESTART } from '../../constants'
 
 const ENTRY = new URL('./cli.js', import.meta.url)
 
@@ -62,7 +62,7 @@ async function main() {
   // if not specified, don't run through spawn,
   // because it prints stderr messages in the wrong order compared to stdout
   if (retries <= 0) {
-    await import('./cli')
+    await import('../cli')
     return
   }
 

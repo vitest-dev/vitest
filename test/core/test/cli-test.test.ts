@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { createCLI } from '../../../packages/vitest/src/node/cac'
+import { createCLI } from 'vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 

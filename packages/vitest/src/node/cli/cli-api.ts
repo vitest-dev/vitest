@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { EXIT_CODE_RESTART } from '../constants'
-import { CoverageProviderMap } from '../integrations/coverage'
-import { getEnvPackageName } from '../integrations/env'
-import type { UserConfig, Vitest, VitestRunMode } from '../types'
-import { createVitest } from './create'
-import { registerConsoleShortcuts } from './stdin'
-import type { VitestOptions } from './core'
+import { EXIT_CODE_RESTART } from '../../constants'
+import { CoverageProviderMap } from '../../integrations/coverage'
+import { getEnvPackageName } from '../../integrations/env'
+import type { UserConfig, Vitest, VitestRunMode } from '../../types'
+import { createVitest } from '../create'
+import { registerConsoleShortcuts } from '../stdin'
+import type { VitestOptions } from '../core'
 
 export interface CliOptions extends UserConfig {
   /**

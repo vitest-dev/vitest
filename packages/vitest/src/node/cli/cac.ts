@@ -1,14 +1,14 @@
 import { normalize } from 'pathe'
 import cac, { type CAC } from 'cac'
 import c from 'picocolors'
-import { version } from '../../package.json'
-import { toArray } from '../utils'
-import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../types'
+import { version } from '../../../package.json'
+import { toArray } from '../../utils'
+import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../../types'
+import { divider } from '../reporters/renderers/utils'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
-import { divider } from './reporters/renderers/utils'
-import type { CLIOption } from './config/schema'
-import { cliOptionsConfig } from './config/schema'
+import type { CLIOption } from './cli-config'
+import { cliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
