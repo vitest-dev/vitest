@@ -164,9 +164,9 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     const result
       = this.sample.length === 0
       || (Array.isArray(other)
-        && this.sample.every(item =>
-          other.some(another => equals(item, another, matcherContext.customTesters)),
-        ))
+      && this.sample.every(item =>
+        other.some(another => equals(item, another, matcherContext.customTesters)),
+      ))
 
     return this.inverse ? !result : result
   }
@@ -185,7 +185,7 @@ export class Any extends AsymmetricMatcher<any> {
     if (typeof sample === 'undefined') {
       throw new TypeError(
         'any() expects to be passed a constructor function. '
-          + 'Please pass one or use anything() to match any object.',
+        + 'Please pass one or use anything() to match any object.',
       )
     }
     super(sample)

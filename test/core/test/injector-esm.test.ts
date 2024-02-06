@@ -323,8 +323,8 @@ test('should declare variable for imported super class', async () => {
   expect(
     injectSimpleCode(
       'import { Foo } from \'./dependency\';'
-        + 'export default class A extends Foo {}\n'
-        + 'export class B extends Foo {}',
+      + 'export default class A extends Foo {}\n'
+      + 'export class B extends Foo {}',
     ),
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
@@ -364,7 +364,7 @@ test('should handle default export variants', async () => {
   expect(
     injectSimpleCode(
       'export default function foo() {}\n'
-        + 'foo.prototype = Object.prototype;',
+      + 'foo.prototype = Object.prototype;',
     ),
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
@@ -392,13 +392,13 @@ test('overwrite bindings', async () => {
   expect(
     injectSimpleCode(
       'import { inject } from \'vue\';'
-        + 'const a = { inject }\n'
-        + 'const b = { test: inject }\n'
-        + 'function c() { const { test: inject } = { test: true }; console.log(inject) }\n'
-        + 'const d = inject\n'
-        + 'function f() {  console.log(inject) }\n'
-        + 'function e() { const { inject } = { inject: true } }\n'
-        + 'function g() { const f = () => { const inject = true }; console.log(inject) }\n',
+      + 'const a = { inject }\n'
+      + 'const b = { test: inject }\n'
+      + 'function c() { const { test: inject } = { test: true }; console.log(inject) }\n'
+      + 'const d = inject\n'
+      + 'function f() {  console.log(inject) }\n'
+      + 'function e() { const { inject } = { inject: true } }\n'
+      + 'function g() { const f = () => { const inject = true }; console.log(inject) }\n',
     ),
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
