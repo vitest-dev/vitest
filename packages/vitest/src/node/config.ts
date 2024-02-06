@@ -234,6 +234,12 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
+  resolved.snapshotSerializers ??= []
+  resolved.snapshotSerializers = resolved.snapshotSerializers.map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
+
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
