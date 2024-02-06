@@ -130,6 +130,12 @@ test('correctly normalizes methods to be an array', async () => {
   })
 })
 
+test('all coverage enable options are working correctly', () => {
+  expect(getArguments(['--coverage']).coverage).toEqual({ enabled: true })
+  expect(getArguments(['--coverage.enabled', '--coverage.all=false']).coverage).toEqual({ enabled: true, all: false })
+  expect(getArguments(['--coverage.enabled', '--coverage.all']).coverage).toEqual({ enabled: true, all: true })
+})
+
 test('fails when an array is passed down for a single value', async () => {
   expect(() => getArguments(['--coverage.provider', 'v8', '--coverage.provider', 'istanbul']))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>"]`)
