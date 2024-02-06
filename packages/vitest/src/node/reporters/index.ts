@@ -40,16 +40,16 @@ export const ReportersMap = {
 export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
-  default: never
-  basic: never
-  verbose: never
-  dot: never
-  json: JsonOptions
-  tap: never
+  'default': never
+  'basic': never
+  'verbose': never
+  'dot': never
+  'json': JsonOptions
+  'tap': never
   'tap-flat': never
-  junit: JUnitOptions
+  'junit': JUnitOptions
   'hanging-process': never
-  html: { outputFile?: string } // TODO: Any better place for defining this UI package's reporter options?
+  'html': { outputFile?: string } // TODO: Any better place for defining this UI package's reporter options?
 }
 
 export * from './benchmark'

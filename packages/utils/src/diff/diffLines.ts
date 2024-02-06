@@ -83,9 +83,9 @@ function printAnnotation({
 
 export function printDiffLines(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
   return printAnnotation(options, countChanges(diffs))
-  + (options.expand
-    ? joinAlignedDiffsExpand(diffs, options)
-    : joinAlignedDiffsNoExpand(diffs, options))
+    + (options.expand
+      ? joinAlignedDiffsExpand(diffs, options)
+      : joinAlignedDiffsNoExpand(diffs, options))
 }
 
 // Compare two arrays of strings line-by-line. Format as comparison lines.

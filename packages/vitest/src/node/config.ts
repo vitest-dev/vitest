@@ -16,7 +16,7 @@ import { builtinPools } from './pool'
 function resolvePath(path: string, root: string) {
   return normalize(
     resolveModule(path, { paths: [root] })
-      ?? resolve(root, path),
+    ?? resolve(root, path),
   )
 }
 

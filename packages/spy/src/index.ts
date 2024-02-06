@@ -320,8 +320,8 @@ export const mocks = new Set<MockInstance>()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return typeof fn === 'function'
-  && '_isMockFunction' in fn
-  && fn._isMockFunction
+    && '_isMockFunction' in fn
+    && fn._isMockFunction
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(

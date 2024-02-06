@@ -281,8 +281,8 @@ export default class SnapshotState {
     //  * There's no snapshot file or a file without this snapshot on a CI environment.
     if (
       (hasSnapshot && this._updateSnapshot === 'all')
-       || ((!hasSnapshot || !snapshotIsPersisted)
-         && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+      || ((!hasSnapshot || !snapshotIsPersisted)
+      && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
     ) {
       if (this._updateSnapshot === 'all') {
         if (!pass) {

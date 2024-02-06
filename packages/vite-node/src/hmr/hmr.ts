@@ -156,8 +156,8 @@ function warnFailedFetch(err: Error, path: string | string[]) {
 
   console.error(
     `[hmr] Failed to reload ${path}. `
-      + 'This could be due to syntax errors or importing non-existent '
-      + 'modules. (see errors above)',
+    + 'This could be due to syntax errors or importing non-existent '
+    + 'modules. (see errors above)',
   )
 }
 
