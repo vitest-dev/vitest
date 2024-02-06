@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
 import { createCLI } from '../../../packages/vitest/src/node/cac'
 
-const cli = createCLI()
+const vitestCli = createCLI()
 
 function getArguments(commands: string[]) {
-  return cli.parse(['node', '/index.js', ...commands], {
+  return vitestCli.parse(['node', '/index.js', ...commands], {
     run: false,
   }).options
 }
@@ -12,20 +12,30 @@ function getArguments(commands: string[]) {
 const enabled = { enabled: true }
 const disabled = { enabled: false }
 
+function cli(options: Record<string, any>) {
+  return {
+    // cac always adds this option
+    '--': [],
+    // since we expose `color` as `no-color`, it is always exposed
+    'color': true,
+    ...options,
+  }
+}
+
 test('top level nested options return boolean', async () => {
-  expect(getArguments(['--coverage', '--browser', '--typecheck'])).toMatchObject({
+  expect(getArguments(['--coverage', '--browser', '--typecheck'])).toEqual(cli({
     coverage: enabled,
     browser: enabled,
     typecheck: enabled,
-  })
+  }))
 })
 
 test('negated top level nested options return boolean', async () => {
-  expect(getArguments(['--no-coverage', '--no-browser', '--no-typecheck'])).toMatchObject({
+  expect(getArguments(['--no-coverage', '--no-browser', '--no-typecheck'])).toEqual(cli({
     coverage: disabled,
     browser: disabled,
     typecheck: disabled,
-  })
+  }))
 })
 
 test('nested coverage options have correct types', async () => {
