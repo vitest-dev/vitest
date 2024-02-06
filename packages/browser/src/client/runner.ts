@@ -86,7 +86,7 @@ export async function initiateRunner() {
   if (cachedRunner)
     return cachedRunner
   const config = getConfig()
-  const [{ VitestTestRunner }, { takeCoverageInsideWorker, loadDiffConfig }] = await Promise.all([
+  const [{ VitestTestRunner }, { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers }] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
@@ -98,7 +98,12 @@ export async function initiateRunner() {
   const runner = new BrowserRunner({
     config,
   })
-  runner.config.diffOptions = await loadDiffConfig(config, { executeId: importId } as VitestExecutor)
+  const executor = { executeId: importId } as VitestExecutor
+  const [diffOptions] = await Promise.all([
+    loadDiffConfig(config, executor),
+    loadSnapshotSerializers(config, executor),
+  ])
+  runner.config.diffOptions = diffOptions
   cachedRunner = runner
   return runner
 }
