@@ -24,6 +24,7 @@
     // manually bumping
     "node",
     "vite",
+    "cac",
     // we patch these packages
     "@types/chai",
     "@sinonjs/fake-timers",

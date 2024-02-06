@@ -13,6 +13,14 @@ export interface CliOptions extends UserConfig {
    * Override the watch mode
    */
   run?: boolean
+  /**
+   * Retry the test suite if it crashes due to a segfault (default: true)
+   */
+  segfaultRetry?: number
+  /**
+   * Removes colors from the console output
+   */
+  color?: boolean
 }
 
 /**

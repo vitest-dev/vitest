@@ -1,0 +1,19 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 7c1c4440c6ed22a3829f828364b06669c56b31c9..5aae1f9be571d273a94f5cc9c5843394955be74a 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -405,8 +405,13 @@ ${section.body}` : section.body;
+   checkOptionValue() {
+     const {options: parsedOptions, globalCommand} = this.cli;
+     const options = [...globalCommand.options, ...this.options];
++    console.log(parsedOptions)
+     for (const option of options) {
+-      const value = parsedOptions[option.name.split(".")[0]];
++      // skip dot names because only top level options are required
++      if (option.name.includes('.')) {
++        continue;
++      }
++      const value = parsedOptions[option.name];
+       if (option.required) {
+         const hasNegated = options.some((o) => o.negated && o.names.includes(option.name));
+         if (value === true || value === false && !hasNegated) {

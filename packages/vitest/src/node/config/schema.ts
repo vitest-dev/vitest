@@ -1,0 +1,497 @@
+import { defaultBrowserPort, defaultPort } from '../../constants'
+import type { ApiConfig } from '../../types/config'
+import type { ForksOptions, ThreadsOptions, VmOptions, WorkerContextOptions } from '../../types/pool-options'
+import type { CliOptions } from '../cli-api'
+
+type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends never | RegExp | unknown[]
+  ? never
+  : V
+
+export type CLIOption<Value> = {
+  description: string
+  alias?: string
+  shorthand?: string
+  default?: unknown
+} &
+// require subcommands for nested options
+(NestedOption<Value> extends never ? {} : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
+// require argument for non-boolean options
+(NonNullable<Value> extends boolean ? {} : { argument: string })
+
+type CLIOptions<Config extends {}> = {
+  [Key in keyof Config as NonNullable<Config[Key]> extends Function ? never : Key]-?: CLIOption<Config[Key]> | null
+}
+
+type VitestCLIOptions = CLIOptions<CliOptions>
+
+const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
+  port: {
+    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${port}`,
+    argument: '[port]',
+  },
+  host: {
+    description: 'Specify which IP addresses the server should listen on. Set this to 0.0.0.0 or true to listen on all addresses, including LAN and public addresses',
+    argument: '[host]',
+  },
+  strictPort: {
+    description: 'Set to true to exit if port is already in use, instead of automatically trying the next available port',
+  },
+  middlewareMode: null,
+})
+
+const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
+  isolate: {
+    description: 'Isolate tests in threads pool (default: true)',
+  },
+  singleThread: {
+    description: 'Run tests inside a single thread (default: false)',
+  },
+  maxThreads: {
+    description: 'Maximum number of threads to run tests in',
+    argument: '<workers>',
+  },
+  minThreads: {
+    description: 'Minimum number of threads to run tests in',
+    argument: '<workers>',
+  },
+  useAtomics: {
+    description: 'Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: false)',
+  },
+  execArgv: null,
+}
+
+const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
+  isolate: {
+    description: 'Isolate tests in threads pool (default: true)',
+  },
+  singleFork: {
+    description: 'Run tests inside a single child_process (default: false)',
+  },
+  maxForks: {
+    description: 'Maximum number of processes to run tests in',
+    argument: '<workers>',
+  },
+  minForks: {
+    description: 'Minimum number of processes to run tests in',
+    argument: '<workers>',
+  },
+  execArgv: null,
+}
+
+export const cliOptionsConfig: VitestCLIOptions = {
+  root: {
+    description: 'Root path',
+    shorthand: 'r',
+    argument: '<path>',
+  },
+  config: {
+    shorthand: 'c',
+    description: 'Path to config file',
+    argument: '<path>',
+  },
+  update: {
+    shorthand: 'u',
+    description: 'Update snapshot',
+  },
+  watch: {
+    shorthand: 'w',
+    description: 'Enable watch mode',
+  },
+  testNamePattern: {
+    description: 'Run tests with full names matching the specified regexp pattern',
+    argument: '<pattern>',
+    shorthand: 't',
+  },
+  dir: {
+    description: 'Base directory to scan for the test files',
+    argument: '<path>',
+  },
+  ui: {
+    description: 'Enable UI',
+  },
+  open: {
+    description: 'Open UI automatically (default: !process.env.CI)',
+  },
+  api: {
+    argument: '[port]',
+    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
+    subcommands: apiConfig(defaultPort),
+  },
+  silent: {
+    description: 'Silent console output from tests',
+  },
+  hideSkippedTests: {
+    description: 'Hide logs for skipped tests',
+  },
+  reporters: {
+    alias: 'reporter',
+    description: 'Specify reporters',
+    argument: '<name>',
+    subcommands: null, // don't support custom objects
+  },
+  outputFile: {
+    argument: '<filename/-s>',
+    description: 'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: --outputFile.tap=./tap.txt)',
+    subcommands: null,
+  },
+  coverage: {
+    description: 'Enable coverage report',
+    argument: '', // empty string means boolean
+    subcommands: {
+      all: {
+        description: 'Whether to include all files, including the untested ones into report',
+        default: true,
+      },
+      provider: {
+        description: 'Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom"',
+        argument: '<name>',
+      },
+      enabled: {
+        description: 'Enables coverage collection. Can be overridden using the --coverage CLI option. This option is not available for custom providers (default: false)',
+      },
+      include: {
+        description: 'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. This option is not available for custom providers (default: **)',
+        argument: '<pattern>',
+      },
+      exclude: {
+        description: 'Files to be excluded in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: Visit https://vitest.dev/config/#coverage-exclude)',
+        argument: '<pattern>',
+      },
+      extension: {
+        description: 'Extension to be included in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: [".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"])',
+        argument: '<extension>',
+      },
+      clean: {
+        description: 'Clean coverage results before running tests. This option is not available for custom providers (default: true)',
+      },
+      cleanOnRerun: {
+        description: 'Clean coverage report on watch rerun. This option is not available for custom providers (default: true)',
+      },
+      reportsDirectory: {
+        description: 'Directory to write coverage report to. This option is not available for custom providers (default: ./coverage)',
+        argument: '<path>',
+      },
+      reporter: {
+        description: 'Coverage reporters to use. Visit https://vitest.dev/config/#coverage-reporter for more information. This option is not available for custom providers (default: ["text", "html", "clover", "json"])',
+        argument: '<name>',
+        subcommands: null, // don't support custom objects
+      },
+      reportOnFailure: {
+        description: 'Generate coverage report even when tests fail. This option is not available for custom providers (default: false)',
+      },
+      allowExternal: {
+        description: 'Collect coverage of files outside the project root. This option is not available for custom providers (default: false)',
+      },
+      skipFull: {
+        description: 'Do not show files with 100% statement, branch, and function coverage. This option is not available for custom providers (default: false)',
+      },
+      thresholds: {
+        description: 'Configure coverage thresholds',
+        argument: '<treasholds>',
+        subcommands: {
+          perFile: {
+            description: 'Check thresholds per file. See --coverage.thresholds.lines, --coverage.thresholds.functions, --coverage.thresholds.branches and --coverage.thresholds.statements for the actual thresholds. This option is not available for custom providers (default: false)',
+          },
+          autoUpdate: {
+            description: 'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds. This option is not available for custom providers (default: false)',
+          },
+          lines: {
+            description: 'Threshold for lines. Visit https://github.com/istanbuljs/nyc#coverage-thresholds for more information. This option is not available for custom providers',
+            argument: '<number>',
+          },
+          functions: {
+            description: 'Threshold for functions. Visit https://github.com/istanbuljs/nyc#coverage-thresholds for more information. This option is not available for custom providers',
+            argument: '<number>',
+          },
+          branches: {
+            description: 'Threshold for branches. Visit https://github.com/istanbuljs/nyc#coverage-thresholds for more information. This option is not available for custom providers',
+            argument: '<number>',
+          },
+          statements: {
+            description: 'Threshold for statements. Visit https://github.com/istanbuljs/nyc#coverage-thresholds for more information. This option is not available for custom providers',
+            argument: '<number>',
+          },
+          100: {
+            description: 'Shortcut to set all coverage thresholds to 100. This option is only available for the v8 provider (default: false)',
+          },
+        },
+      },
+      ignoreClassMethods: {
+        description: 'Array of class method names to ignore for coverage. Visit https://github.com/istanbuljs/nyc#ignoring-methods for more information. This option is only available for the istanbul providers (default: [])',
+        argument: '<name>',
+      },
+      processingConcurrency: {
+        description: 'Concurrency limit used when processing the coverage results. (default min between 20 and the nubmer of CPUs)',
+        argument: '<number>',
+      },
+      customProviderModule: {
+        description: 'Specifies the module name or path for the custom coverage provider module. Visit https://vitest.dev/guide/coverage.html#custom-coverage-provider for more information. This option is only available for custom providers',
+        argument: '<path>',
+      },
+      // TODO: suport watermarks via a special command?
+      // CAC requires --watermarks.statements=50 --watermarks.statements=80 for "statements:[50,80]" which looks rediculous
+      watermarks: null,
+    },
+  },
+  mode: {
+    description: 'Override Vite mode (default: test or benchmark)',
+    argument: '<name>',
+  },
+  workspace: {
+    description: 'Path to a workspace configuration file',
+    argument: '<path>',
+  },
+  isolate: {
+    description: 'Run every test file in isolation. To disable isolation, use --no-isolate (default: true)',
+  },
+  globals: {
+    description: 'Inject apis globally',
+  },
+  dom: {
+    description: 'Mock browser API with happy-dom',
+  },
+  browser: {
+    description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
+    argument: '', // allow boolean
+    subcommands: {
+      enabled: {
+        description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
+      },
+      name: {
+        description: 'Run all tests in a specific browser. Some browsers are only available for specific providers (see --browser.provider). Visit https://vitest.dev/config/#browser-name for more information',
+        argument: '<name>',
+      },
+      headless: {
+        description: 'Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: process.env.CI)',
+      },
+      api: {
+        description: 'Specify options for the browser API server. Does not affect the --api option',
+        argument: '[port]',
+        subcommands: apiConfig(defaultBrowserPort),
+      },
+      provider: {
+        description: 'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", or the path to a custom provider. Visit https://vitest.dev/config/#browser-provider for more information (default: "webdriverio")',
+        argument: '<name>',
+        subcommands: null, // don't support custom objects
+      },
+      providerOptions: {
+        description: 'Options that are passed down to a browser provider. Visit https://vitest.dev/config/#browser-provideroptions-1-0-0 for more information',
+        argument: '<options>',
+        subcommands: null, // don't support custom objects
+      },
+      slowHijackESM: {
+        description: 'Let Vitest use its own module resolution on the browser to enable APIs such as vi.mock and vi.spyOn. Visit https://vitest.dev/config/#browser-slowhijackesm for more information (default: false)',
+      },
+      isolate: {
+        description: 'Run every browser test file in isolation. To disable isolation, use --browser.isolate=false (default: true)',
+      },
+    },
+  },
+  pool: {
+    description: 'Specify pool, if not running in the browser (default: threads)',
+    argument: '<pool>',
+    subcommands: null, // don't support custom objects
+  },
+  poolOptions: {
+    description: 'Specify pool options',
+    argument: '<options>',
+    // we use casting here because TypeScript (for some reason) makes this into CLIOption<unknown>
+    // even when using casting, these types fail if the new option is added which is good
+    subcommands: {
+      threads: {
+        description: 'Specify threads pool options',
+        argument: '<options>',
+        subcommands: poolThreadsCommands,
+      } as CLIOption<ThreadsOptions & WorkerContextOptions>,
+      vmThreads: {
+        description: 'Specify VM threads pool options',
+        argument: '<options>',
+        subcommands: {
+          ...poolThreadsCommands,
+          memoryLimit: {
+            description: 'Memory limit for VM threads pool. If you see memory leaks, try to tinker this value.',
+            argument: '<limit>',
+          },
+        },
+      } as CLIOption<ThreadsOptions & VmOptions>,
+      forks: {
+        description: 'Specify forks pool options',
+        argument: '<options>',
+        subcommands: poolForksCommands,
+      } as CLIOption<ForksOptions & WorkerContextOptions>,
+      vmForks: {
+        description: 'Specify VM forks pool options',
+        argument: '<options>',
+        subcommands: {
+          ...poolForksCommands,
+          memoryLimit: {
+            description: 'Memory limit for VM forks pool. If you see memory leaks, try to tinker this value.',
+            argument: '<limit>',
+          },
+        },
+      } as CLIOption<ForksOptions & VmOptions>,
+    },
+  },
+  fileParallelism: {
+    description: 'Should all test files run in parallel. Use --no-file-parallelism to disable (default: true)',
+  },
+  maxWorkers: {
+    description: 'Maximum number of workers to run tests in',
+    argument: '<workers>',
+  },
+  minWorkers: {
+    description: 'Minimum number of workers to run tests in',
+    argument: '<workers>',
+  },
+  environment: {
+    description: 'Specify runner environment, if not running in the browser (default: node)',
+    argument: '<name>',
+    subcommands: null, // don't support custom objects
+  },
+  passWithNoTests: {
+    description: 'Pass when no tests are found',
+  },
+  logHeapUsage: {
+    description: 'Show the size of heap for each test when running in node',
+  },
+  allowOnly: {
+    description: 'Allow tests and suites that are marked as only (default: !process.env.CI)',
+  },
+  dangerouslyIgnoreUnhandledErrors: {
+    description: 'Ignore any unhandled errors that occur',
+  },
+  shard: {
+    description: 'Test suite shard to execute in a format of <index>/<count>',
+    argument: '<shards>',
+  },
+  changed: {
+    description: 'Run tests that are affected by the changed files (default: false)',
+    argument: '[since]',
+  },
+  sequence: {
+    description: 'Options for how tests should be sorted',
+    argument: '<options>',
+    subcommands: {
+      shuffle: {
+        description: 'Run tests in a random order. Enabling this option will impact Vitest\'s cache and have a performance impact. May be useful to find tests that accidentally depend on another run previously (default: false)',
+      },
+      concurrent: {
+        description: 'Make tests run in parallel (default: false)',
+      },
+      seed: {
+        description: 'Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit https://en.wikipedia.org/wiki/Random_seed for more information',
+        argument: '<seed>',
+      },
+      hooks: {
+        description: 'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit https://vitest.dev/config/#sequence-hooks for more information (default: "parallel")',
+        argument: '<order>',
+      },
+      setupFiles: {
+        description: 'Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: "parallel")',
+        argument: '<order>',
+      },
+    },
+  },
+  inspect: {
+    description: 'Enable Node.js inspector',
+  },
+  inspectBrk: {
+    description: 'Enable Node.js inspector with break',
+  },
+  testTimeout: {
+    description: 'Default timeout of a test in milliseconds (default: 5000)',
+    argument: '<timeout>',
+  },
+  bail: {
+    description: 'Stop test execution when given number of tests have failed (default: 0)',
+    argument: '<number>',
+  },
+  retry: {
+    description: 'Retry the test specific number of times if it fails (default: 0)',
+    argument: '<times>',
+  },
+  diff: {
+    description: 'Path to a diff config that will be used to generate diff interface',
+    argument: '<path>',
+  },
+  exclude: {
+    description: 'Additional file globs to be excluded from test',
+    argument: '<glob>',
+  },
+  expandSnapshotDiff: {
+    description: 'Show full diff when snapshot fails',
+  },
+  disableConsoleIntercept: {
+    description: 'Disable automatic interception of console logging (default: false)',
+  },
+  typecheck: {
+    description: 'Enable typechecking alongside tests (default: false)',
+    argument: '', // allow boolean
+    subcommands: {
+      enabled: {
+        description: 'Enable typechecking alongside tests (default: false)',
+      },
+      only: {
+        description: 'Run only typecheck tests. This automatically enables typecheck (default: false)',
+      },
+      checker: {
+        description: 'Specify the typechecker to use. Available values are: "tcs" and "vue-tsc" and a path to an executable (default: "tsc")',
+        argument: '<name>',
+        subcommands: null,
+      },
+      allowJs: {
+        description: 'Allow JavaScript files to be typechecked. By default takes the value from tsconfig.json',
+      },
+      ignoreSourceErrors: {
+        description: 'Ignore type errors from source files',
+      },
+      tsconfig: {
+        description: 'Path to a custom tsconfig file',
+        argument: '<path>',
+      },
+      include: null,
+      exclude: null,
+    },
+  },
+  project: {
+    description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2',
+    argument: '<name>',
+  },
+  slowTestThreshold: {
+    description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
+    argument: '<threshold>',
+  },
+  teardownTimeout: {
+    description: 'Default timeout of a teardown function in milliseconds (default: 10000)',
+    argument: '<timeout>',
+  },
+
+  // CLI only options
+  run: {
+    description: 'Disable watch mode',
+  },
+  segfaultRetry: {
+    description: 'Retry the test suite if it crashes due to a segfault (default: true)',
+    argument: '<times>',
+    default: 0,
+  },
+  color: {
+    description: 'Removes colors from the console output',
+    alias: 'no-color',
+  },
+
+  // disable CLI options
+  cliExclude: null,
+  server: null,
+  setupFiles: null,
+  globalSetup: null,
+  snapshotFormat: null,
+  snapshotSerializers: null,
+  includeSource: null,
+  watchExclude: null,
+  alias: null,
+  env: null,
+  environmentMatchGlobs: null,
+  environmentOptions: null,
+  unstubEnvs: null,
+}

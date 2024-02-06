@@ -16,6 +16,9 @@ patchedDependencies:
   '@types/chai@4.3.6':
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
+  cac@6.7.14:
+    hash: mzgauqgmnjqk3ehmwnyarwc4ee
+    path: patches/cac@6.7.14.patch
 
 importers:
 
@@ -1268,7 +1271,7 @@ importers:
     dependencies:
       cac:
         specifier: ^6.7.14
-        version: 6.7.14
+        version: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
@@ -1315,9 +1318,6 @@ importers:
       acorn-walk:
         specifier: ^8.3.2
         version: 8.3.2
-      cac:
-        specifier: ^6.7.14
-        version: 6.7.14
       chai:
         specifier: ^4.3.10
         version: 4.3.10
@@ -1400,6 +1400,9 @@ importers:
       birpc:
         specifier: 0.2.15
         version: 0.2.15
+      cac:
+        specifier: ^6.7.14
+        version: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -9913,11 +9916,33 @@ packages:
     hasBin: true
     dependencies:
       '@ampproject/remapping': 2.2.1
-      '@rollup/pluginutils': 5.0.5(rollup@4.9.6)
+      '@rollup/pluginutils': 5.0.5(rollup@2.79.1)
       '@unocss/config': 0.57.4
       '@unocss/core': 0.57.4
       '@unocss/preset-uno': 0.57.4
-      cac: 6.7.14
+      cac: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
+      chokidar: 3.5.3
+      colorette: 2.0.20
+      consola: 3.2.3
+      fast-glob: 3.3.2
+      magic-string: 0.30.5
+      pathe: 1.1.1
+      perfect-debounce: 1.0.0
+    transitivePeerDependencies:
+      - rollup
+    dev: true
+
+  /@unocss/cli@0.57.4(rollup@4.4.0):
+    resolution: {integrity: sha512-8g00ZV1iZIEmgSqmIycvEesIXt8KFQHUCI64D9cqf3UEcWgEoRqUZOjhVozHbhfDe+yg9s6D9E++arLn1wAvzg==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@ampproject/remapping': 2.2.1
+      '@rollup/pluginutils': 5.0.5(rollup@4.4.0)
+      '@unocss/config': 0.57.4
+      '@unocss/core': 0.57.4
+      '@unocss/preset-uno': 0.57.4
+      cac: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
       chokidar: 3.5.3
       colorette: 2.0.20
       consola: 3.2.3
@@ -10105,7 +10130,7 @@ packages:
     engines: {node: '>=16.14.0'}
     hasBin: true
     dependencies:
-      cac: 6.7.14
+      cac: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
       colorette: 2.0.20
       consola: 3.2.3
       sharp: 0.32.6
@@ -12508,7 +12533,7 @@ packages:
     dependencies:
       '@jsdevtools/ez-spawn': 3.0.4
       c12: 1.5.1
-      cac: 6.7.14
+      cac: 6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee)
       fast-glob: 3.3.2
       prompts: 2.4.2
       semver: 7.5.4
@@ -12570,9 +12595,10 @@ packages:
       yargs-parser: 20.2.9
     dev: true
 
-  /cac@6.7.14:
+  /cac@6.7.14(patch_hash=mzgauqgmnjqk3ehmwnyarwc4ee):
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
+    patched: true
 
   /cacache@12.0.4:
     resolution: {integrity: sha512-a0tMB40oefvuInr4Cwb3GerbL9xTj1D5yg0T5xrjGCGyfvbxseIXX7BAO/u/hIXdafzOI5JC3wDwHyf24buOAQ==}
