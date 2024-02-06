@@ -26,6 +26,23 @@ export default defineConfig({
 })
 ```
 
+Some reporters can be customized by passing additional options to them. Reporter specific options are described in sections below.
+
+:::tip
+Since Vitest v1.3.0
+:::
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      'default',
+      ['junit', { suiteName: 'UI tests' }]
+    ],
+  },
+})
+```
+
 ## Reporter Output
 
 By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/#outputfile) either in your Vite configuration file or via CLI.
@@ -234,7 +251,18 @@ AssertionError: expected 5 to be 4 // Object.is equality
     </testsuite>
 </testsuites>
 ```
-The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively.
+
+The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively. These can also be customized via reporter options:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['junit', { suiteName: 'custom suite name', classname: 'custom-classname' }]
+    ]
+  },
+})
+```
 
 ### JSON Reporter
 

@@ -1,9 +1,9 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { Reporter, Vitest } from '../../types'
+import type { Reporter, ResolvedConfig, Vitest } from '../../types'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
-async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ViteNodeRunner): Promise<new () => C> {
+async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ViteNodeRunner): Promise<new (options?: unknown) => C> {
   let customReporterModule: { default: new () => C }
   try {
     customReporterModule = await runner.executeId(path)
@@ -18,27 +18,30 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
   return customReporterModule.default
 }
 
-function createReporters(reporterReferences: Array<string | Reporter | BuiltinReporters>, ctx: Vitest) {
+function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: Vitest) {
   const runner = ctx.runner
   reporterReferences = reporterReferences.filter(reporter =>
     !(reporter === 'github-actions' && !process.env.GITHUB_ACTIONS),
   )
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
-    if (typeof referenceOrInstance === 'string') {
-      if (referenceOrInstance === 'html') {
+    if (Array.isArray(referenceOrInstance)) {
+      const [reporterName, reporterOptions] = referenceOrInstance
+
+      if (reporterName === 'html') {
         await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
-        return new CustomReporter()
+        return new CustomReporter(reporterOptions)
       }
-      else if (referenceOrInstance in ReportersMap) {
-        const BuiltinReporter = ReportersMap[referenceOrInstance as BuiltinReporters]
-        return new BuiltinReporter()
+      else if (reporterName in ReportersMap) {
+        const BuiltinReporter = ReportersMap[reporterName as BuiltinReporters]
+        return new BuiltinReporter(reporterOptions)
       }
       else {
-        const CustomReporter = await loadCustomReporterModule(referenceOrInstance, runner)
-        return new CustomReporter()
+        const CustomReporter = await loadCustomReporterModule(reporterName, runner)
+        return new CustomReporter(reporterOptions)
       }
     }
+
     return referenceOrInstance
   })
   return Promise.all(promisedReporters)

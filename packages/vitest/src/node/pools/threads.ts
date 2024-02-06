@@ -26,6 +26,9 @@ function createWorkerChannel(project: WorkspaceProject) {
       on(fn) {
         port.on('message', fn)
       },
+      onTimeoutError(functionName) {
+        throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
+      },
     },
   )
 

@@ -78,6 +78,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     on: fn => (onMessage = fn),
     serialize: stringify,
     deserialize: parse,
+    onTimeoutError(functionName) {
+      throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
+    },
   }
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
