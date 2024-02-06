@@ -20,10 +20,6 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
 
 function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: Vitest) {
   const runner = ctx.runner
-  // automatically disable github-actions reporter
-  reporterReferences = reporterReferences.filter(reporter =>
-    !(Array.isArray(reporter) && reporter[0] === 'github-actions' && !process.env.GITHUB_ACTIONS),
-  )
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (Array.isArray(referenceOrInstance)) {
       const [reporterName, reporterOptions] = referenceOrInstance

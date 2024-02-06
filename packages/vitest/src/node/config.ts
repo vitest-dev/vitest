@@ -395,6 +395,11 @@ export function resolveConfig(
         }
       }
     }
+
+    // automatically disable github-actions reporter
+    resolved.reporters = resolved.reporters.filter(reporter =>
+      !(Array.isArray(reporter) && reporter[0] === 'github-actions' && !process.env.GITHUB_ACTIONS),
+    )
   }
 
   if (mode !== 'benchmark') {
