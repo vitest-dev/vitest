@@ -180,14 +180,14 @@ function handleImportOutsideModuleError(stack: string, logger: Logger) {
 function printModuleWarningForPackage(logger: Logger, path: string, name: string) {
   logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-+ `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
-+ 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-+ '\n\n'
-+ 'As a temporary workaround you can try to inline the package by updating your config:'
-+ '\n\n'
-+ c.gray(c.dim('// vitest.config.js'))
-+ '\n'
-+ c.green(`export default {
+    + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
+    + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
+    + '\n\n'
+    + 'As a temporary workaround you can try to inline the package by updating your config:'
+    + '\n\n'
+    + c.gray(c.dim('// vitest.config.js'))
+    + '\n'
+    + c.green(`export default {
   test: {
     server: {
       deps: {
@@ -204,7 +204,7 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 function printModuleWarningForSourceCode(logger: Logger, path: string) {
   logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-+ 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
+    + 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
   ))
 }
 

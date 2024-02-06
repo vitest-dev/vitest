@@ -157,7 +157,7 @@ export function esmWalker(
               // assignment of a destructuring variable
               if (
                 (parent?.type === 'TemplateLiteral'
-                  && parent?.expressions.includes(child))
+                && parent?.expressions.includes(child))
                 || (parent?.type === 'CallExpression' && parent?.callee === child)
               )
                 return
@@ -210,8 +210,8 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   if (
     parent.type === 'CatchClause'
     || ((parent.type === 'VariableDeclarator'
-      || parent.type === 'ClassDeclaration')
-      && parent.id === id)
+    || parent.type === 'ClassDeclaration')
+    && parent.id === id)
   )
     return false
 

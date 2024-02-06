@@ -40,14 +40,14 @@ else {
 }
 
 export interface CliOptions {
-  root?: string
-  script?: boolean
-  config?: string
-  mode?: string
-  watch?: boolean
-  options?: ViteNodeServerOptionsCLI
-  version?: boolean
-  help?: boolean
+  'root'?: string
+  'script'?: boolean
+  'config'?: string
+  'mode'?: string
+  'watch'?: boolean
+  'options'?: ViteNodeServerOptionsCLI
+  'version'?: boolean
+  'help'?: boolean
   '--'?: string[]
 }
 

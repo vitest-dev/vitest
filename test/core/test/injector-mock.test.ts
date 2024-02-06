@@ -476,8 +476,8 @@ vi.mock('./mock.js', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `import { Foo } from './dependency';`
-        + `export default class A extends Foo {}\n`
-        + `export class B extends Foo {}`,
+      + `export default class A extends Foo {}\n`
+      + `export class B extends Foo {}`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
@@ -512,7 +512,7 @@ vi.mock('./mock.js', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `export default function foo() {}\n`
-        + `foo.prototype = Object.prototype;`,
+      + `foo.prototype = Object.prototype;`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
@@ -550,13 +550,13 @@ vi.mock('./mock.js', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `import { inject } from 'vue';`
-        + `const a = { inject }\n`
-        + `const b = { test: inject }\n`
-        + `function c() { const { test: inject } = { test: true }; console.log(inject) }\n`
-        + `const d = inject\n`
-        + `function f() {  console.log(inject) }\n`
-        + `function e() { const { inject } = { inject: true } }\n`
-        + `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
+      + `const a = { inject }\n`
+      + `const b = { test: inject }\n`
+      + `function c() { const { test: inject } = { test: true }; console.log(inject) }\n`
+      + `const d = inject\n`
+      + `function f() {  console.log(inject) }\n`
+      + `function e() { const { inject } = { inject: true } }\n`
+      + `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')

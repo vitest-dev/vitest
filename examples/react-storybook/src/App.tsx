@@ -19,12 +19,12 @@ export function App() {
       <h1>Storybook Testing Example</h1>
       {isLoading && <span aria-label="loading">Loading...</span>}
       {isSuccess
-        && data!.map(post => (
-          <article key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{post.body}</p>
-          </article>
-        ))}
+      && data!.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.body}</p>
+        </article>
+      ))}
       {isError && <span>Error loading posts</span>}
     </main>
   )
