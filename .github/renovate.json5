@@ -30,6 +30,6 @@
     // TODO: update when chai is updated to 5.0
     "loupe",
     // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
-    "log-update",
+    "log-update"
   ]
 }
