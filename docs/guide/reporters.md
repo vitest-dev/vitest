@@ -454,7 +454,7 @@ to provide annotations for test failures.
 <img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
 
 
-Since `github-actions` reporter will be automatically disabled when `process.env.GITHUB_ACTIONS` is not defined, you can simply add it to reporters config and it won't affect local terminal output.
+Since `github-actions` reporter will be automatically disabled when `process.env.GITHUB_ACTIONS` is not defined, you can simply add `github-actions` to `reporters` config without affecting terminal output during local testing.
 
 :::code-group
 ```ts [vitest.config.ts]
