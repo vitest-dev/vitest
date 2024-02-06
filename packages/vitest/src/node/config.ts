@@ -396,10 +396,9 @@ export function resolveConfig(
       }
     }
 
-    // automatically disable github-actions reporter
-    resolved.reporters = resolved.reporters.filter(reporter =>
-      !(Array.isArray(reporter) && reporter[0] === 'github-actions' && !process.env.GITHUB_ACTIONS),
-    )
+    // automatically enable github-actions reporter
+    if (process.env.GITHUB_ACTIONS && !resolved.reporters.some(v => Array.isArray(v) && v[0] === 'github-actions'))
+      resolved.reporters.push(['github-actions', {}])
   }
 
   if (mode !== 'benchmark') {
