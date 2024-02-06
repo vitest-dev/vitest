@@ -12,6 +12,8 @@ export type CLIOption<Value> = {
   alias?: string
   shorthand?: string
   default?: unknown
+  transform?: (value: unknown) => unknown
+  array?: boolean
 } &
 // require subcommands for nested options
 (NestedOption<Value> extends never ? {} : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
@@ -78,6 +80,12 @@ const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
   execArgv: null,
 }
 
+function transformNestedBoolean(value: unknown) {
+  if (typeof value === 'boolean')
+    return { enabled: value }
+  return value
+}
+
 export const cliOptionsConfig: VitestCLIOptions = {
   root: {
     description: 'Root path',
@@ -137,6 +145,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   coverage: {
     description: 'Enable coverage report',
     argument: '', // empty string means boolean
+    transform: transformNestedBoolean,
     subcommands: {
       all: {
         description: 'Whether to include all files, including the untested ones into report',
@@ -152,10 +161,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
       include: {
         description: 'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. This option is not available for custom providers (default: **)',
         argument: '<pattern>',
+        array: true,
       },
       exclude: {
         description: 'Files to be excluded in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: Visit https://vitest.dev/config/#coverage-exclude)',
         argument: '<pattern>',
+        array: true,
       },
       extension: {
         description: 'Extension to be included in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: [".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"])',
@@ -219,6 +230,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ignoreClassMethods: {
         description: 'Array of class method names to ignore for coverage. Visit https://github.com/istanbuljs/nyc#ignoring-methods for more information. This option is only available for the istanbul providers (default: [])',
         argument: '<name>',
+        array: true,
       },
       processingConcurrency: {
         description: 'Concurrency limit used when processing the coverage results. (default min between 20 and the nubmer of CPUs)',
@@ -253,6 +265,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   browser: {
     description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
     argument: '', // allow boolean
+    transform: transformNestedBoolean,
     subcommands: {
       enabled: {
         description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
@@ -427,6 +440,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   typecheck: {
     description: 'Enable typechecking alongside tests (default: false)',
     argument: '', // allow boolean
+    transform: transformNestedBoolean,
     subcommands: {
       enabled: {
         description: 'Enable typechecking alongside tests (default: false)',

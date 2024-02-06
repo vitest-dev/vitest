@@ -16,7 +16,19 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
   if ('argument' in option)
     command += ` ${option.argument}`
 
-  cli.option(command, option.description)
+  function transform(value: unknown) {
+    if (!option.array && Array.isArray(value))
+      throw new Error(`Expected a single value for option "${command}"`)
+    if (option.transform)
+      return option.transform(value)
+    if (option.array)
+      return toArray(value)
+    return value
+  }
+
+  cli.option(command, option.description, {
+    type: transform,
+  })
 
   if ('subcommands' in option && option.subcommands) {
     for (const commandName in option.subcommands) {

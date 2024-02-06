@@ -9,19 +9,22 @@ function getArguments(commands: string[]) {
   }).options
 }
 
+const enabled = { enabled: true }
+const disabled = { enabled: false }
+
 test('top level nested options return boolean', async () => {
   expect(getArguments(['--coverage', '--browser', '--typecheck'])).toMatchObject({
-    coverage: true,
-    browser: true,
-    typecheck: true,
+    coverage: enabled,
+    browser: enabled,
+    typecheck: enabled,
   })
 })
 
 test('negated top level nested options return boolean', async () => {
   expect(getArguments(['--no-coverage', '--no-browser', '--no-typecheck'])).toMatchObject({
-    coverage: false,
-    browser: false,
-    typecheck: false,
+    coverage: disabled,
+    browser: disabled,
+    typecheck: disabled,
   })
 })
 
@@ -97,5 +100,34 @@ test('nested coverage options have correct types', async () => {
       autoUpdate: true,
       100: true,
     },
+  })
+})
+
+test('correctly normalizes methods to be an array', async () => {
+  expect(getArguments([
+    '--coverage.ignoreClassMethods',
+    'method2',
+    '--coverage.include',
+    'pattern',
+    '--coverage.exclude',
+    'pattern',
+  ])).toMatchObject({
+    coverage: {
+      ignoreClassMethods: ['method2'],
+      include: ['pattern'],
+      exclude: ['pattern'],
+    },
+  })
+})
+
+test('fails when an array is passed down for a single value', async () => {
+  expect(() => getArguments(['--coverage.provider', 'v8', '--coverage.provider', 'istanbul']))
+    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>"]`)
+})
+
+test('even if coverage is boolean, don\'t fail', () => {
+  expect(getArguments(['--coverage', '--coverage.provider', 'v8']).coverage).toEqual({
+    enabled: true,
+    provider: 'v8',
   })
 })
