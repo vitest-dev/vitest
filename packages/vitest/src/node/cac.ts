@@ -26,9 +26,11 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
     return value
   }
 
-  cli.option(command, option.description, {
-    type: transform,
-  })
+  if (option.description) {
+    cli.option(command, option.description, {
+      type: transform,
+    })
+  }
 
   if ('subcommands' in option && option.subcommands) {
     for (const commandName in option.subcommands) {

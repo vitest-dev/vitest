@@ -8,7 +8,7 @@ type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends never | Re
   : V
 
 export type CLIOption<Value> = {
-  description: string
+  description: string | null
   alias?: string
   shorthand?: string
   default?: unknown
@@ -197,8 +197,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Do not show files with 100% statement, branch, and function coverage. This option is not available for custom providers (default: false)',
       },
       thresholds: {
-        description: 'Configure coverage thresholds',
-        argument: '<treasholds>',
+        description: null,
+        argument: '', // no displayed
         subcommands: {
           perFile: {
             description: 'Check thresholds per file. See --coverage.thresholds.lines, --coverage.thresholds.functions, --coverage.thresholds.branches and --coverage.thresholds.statements for the actual thresholds. This option is not available for custom providers (default: false)',
