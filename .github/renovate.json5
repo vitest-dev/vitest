@@ -1,7 +1,7 @@
 {
-  "extends": ["config:base", "schedule:weekly"],
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base", "schedule:weekly", "group:allNonMajor"],
   "labels": ["dependencies"],
-  "pin": false,
   "rangeStrategy": "bump",
   "packageRules": [
     {
@@ -21,11 +21,8 @@
     }
   ],
   "ignoreDeps": [
-    // wait for ecosystem to upgrade to React v18
-    "@testing-library/react",
-    "@testing-library/user-event",
+    // manually bumping
     "node",
-    // user can install any version
     "vite",
     // we patch these packages
     "@types/chai",
@@ -34,7 +31,5 @@
     "loupe",
     // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
     "log-update",
-    // we update types for node when we bump the minimal version
-    "@types/node"
   ]
 }
