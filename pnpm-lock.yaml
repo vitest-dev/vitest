@@ -17,7 +17,7 @@ patchedDependencies:
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
   cac@6.7.14:
-    hash: ircj6uz3m7mu6yrzl4fmdqi4su
+    hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
 
 importers:
@@ -1271,7 +1271,7 @@ importers:
     dependencies:
       cac:
         specifier: ^6.7.14
-        version: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+        version: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
@@ -1402,7 +1402,7 @@ importers:
         version: 0.2.15
       cac:
         specifier: ^6.7.14
-        version: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+        version: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -9920,7 +9920,7 @@ packages:
       '@unocss/config': 0.57.4
       '@unocss/core': 0.57.4
       '@unocss/preset-uno': 0.57.4
-      cac: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       chokidar: 3.5.3
       colorette: 2.0.20
       consola: 3.2.3
@@ -9942,7 +9942,7 @@ packages:
       '@unocss/config': 0.57.4
       '@unocss/core': 0.57.4
       '@unocss/preset-uno': 0.57.4
-      cac: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       chokidar: 3.5.3
       colorette: 2.0.20
       consola: 3.2.3
@@ -10130,7 +10130,7 @@ packages:
     engines: {node: '>=16.14.0'}
     hasBin: true
     dependencies:
-      cac: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       colorette: 2.0.20
       consola: 3.2.3
       sharp: 0.32.6
@@ -12533,7 +12533,7 @@ packages:
     dependencies:
       '@jsdevtools/ez-spawn': 3.0.4
       c12: 1.5.1
-      cac: 6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       fast-glob: 3.3.2
       prompts: 2.4.2
       semver: 7.5.4
@@ -12595,7 +12595,7 @@ packages:
       yargs-parser: 20.2.9
     dev: true
 
-  /cac@6.7.14(patch_hash=ircj6uz3m7mu6yrzl4fmdqi4su):
+  /cac@6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem):
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
     patched: true

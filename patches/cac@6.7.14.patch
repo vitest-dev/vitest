@@ -21,7 +21,7 @@ index 84dcb6642e6633419d94a81f5764f90d10273cfc..a811fd5e7904a6204a15912ad549eae8
      run, }?: {
          run?: boolean | undefined;
 diff --git a/dist/index.mjs b/dist/index.mjs
-index 7c1c4440c6ed22a3829f828364b06669c56b31c9..546a2ff54a1bb3c74a1fc157638b9a5b48f375f8 100644
+index 7c1c4440c6ed22a3829f828364b06669c56b31c9..3d742db1a0b9c943152464916d7f241b7e1942c3 100644
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
 @@ -182,25 +182,24 @@ const camelcase = (input) => {
@@ -62,11 +62,9 @@ index 7c1c4440c6ed22a3829f828364b06669c56b31c9..546a2ff54a1bb3c74a1fc157638b9a5b
    }
  };
  const getFileName = (input) => {
-@@ -405,8 +404,13 @@ ${section.body}` : section.body;
-   checkOptionValue() {
+@@ -406,7 +405,11 @@ ${section.body}` : section.body;
      const {options: parsedOptions, globalCommand} = this.cli;
      const options = [...globalCommand.options, ...this.options];
-+    console.log(parsedOptions)
      for (const option of options) {
 -      const value = parsedOptions[option.name.split(".")[0]];
 +      // skip dot names because only top level options are required
@@ -77,7 +75,7 @@ index 7c1c4440c6ed22a3829f828364b06669c56b31c9..546a2ff54a1bb3c74a1fc157638b9a5b
        if (option.required) {
          const hasNegated = options.some((o) => o.negated && o.names.includes(option.name));
          if (value === true || value === false && !hasNegated) {
-@@ -571,19 +575,17 @@ class CAC extends EventEmitter {
+@@ -571,19 +574,17 @@ class CAC extends EventEmitter {
            options[name] = cliOption.config.default;
          }
        }
