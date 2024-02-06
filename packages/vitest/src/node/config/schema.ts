@@ -471,14 +471,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2',
     argument: '<name>',
   },
-  slowTestThreshold: {
-    description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
-    argument: '<threshold>',
-  },
-  teardownTimeout: {
-    description: 'Default timeout of a teardown function in milliseconds (default: 10000)',
-    argument: '<timeout>',
-  },
+  // slowTestThreshold: {
+  //   description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
+  //   argument: '<threshold>',
+  // },
+  // teardownTimeout: {
+  //   description: 'Default timeout of a teardown function in milliseconds (default: 10000)',
+  //   argument: '<timeout>',
+  // },
 
   // CLI only options
   run: {
@@ -508,4 +508,26 @@ export const cliOptionsConfig: VitestCLIOptions = {
   environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
+  related: null,
+  restoreMocks: null,
+  runner: null,
+  mockReset: null,
+  forceRerunTriggers: null,
+  unstubGlobals: null,
+  uiBase: null,
+  benchmark: null,
+  name: null,
+  include: null,
+  testTransformMode: null,
+  hookTimeout: null,
+  fakeTimers: null,
+  cache: null,
+  chaiConfig: null,
+  clearMocks: null,
+  css: null,
+  maxConcurrency: null,
+  poolMatchGlobs: null,
+  deps: null,
+  slowTestThreshold: null,
+  teardownTimeout: null,
 }
