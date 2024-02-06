@@ -82,6 +82,13 @@ export interface BrowserConfigOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Run test files in parallel. Fallbacks to `test.fileParallelism`.
+   *
+   * @default test.fileParallelism
+   */
+  fileParallelism?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
