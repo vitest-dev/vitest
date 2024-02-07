@@ -853,6 +853,10 @@ afterEach(async () => {
 
 Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
+::: tip
+Vitest 1.3.0 added [`onTestFinished`](##ontestfinished-1-3-0) hook. You can call it during the test execution to cleanup any state after the test has finished running.
+:::
+
 ### beforeAll
 
 - **Type:** `beforeAll(fn: () => Awaitable<void>, timeout?: number)`
@@ -906,3 +910,96 @@ afterAll(async () => {
 ```
 
 Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
+
+## Test Hooks
+
+Vitest provides a few hooks that you can call _during_ the test execution to cleanup the state when the test has finished runnning.
+
+::: warning
+These hooks will throw an error if they are called outside of the test body.
+:::
+
+### onTestFinished <Badge type="info">1.3.0+</Badge>
+
+This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
+
+```ts
+import { onTestFinished, test } from 'vitest'
+
+test('performs a query', () => {
+  const db = connectDb()
+  onTestFinished(() => db.close())
+  db.query('SELECT * FROM users')
+})
+```
+
+::: warning
+If you are running tests concurrently, you should always use `onTestFinished` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
+
+```ts
+import { test } from 'vitest'
+
+test.concurrent('performs a query', (t) => {
+  const db = connectDb()
+  t.onTestFinished(() => db.close())
+  db.query('SELECT * FROM users')
+})
+```
+:::
+
+This hook is particularly useful when creating reusable logic:
+
+```ts
+// this can be in a separate file
+function getTestDb() {
+  const db = connectMockedDb()
+  onTestFinished(() => db.close())
+  return db
+}
+
+test('performs a user query', async () => {
+  const db = getTestDb()
+  expect(
+    await db.query('SELECT * from users').perform()
+  ).toEqual([])
+})
+
+test('performs an organization query', async () => {
+  const db = getTestDb()
+  expect(
+    await db.query('SELECT * from organizations').perform()
+  ).toEqual([])
+})
+```
+
+### onTestFailed
+
+This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
+
+```ts
+import { onTestFailed, test } from 'vitest'
+
+test('performs a query', () => {
+  const db = connectDb()
+  onTestFailed((e) => {
+    console.log(e.result.errors)
+  })
+  db.query('SELECT * FROM users')
+})
+```
+
+::: warning
+If you are running tests concurrently, you should always use `onTestFailed` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
+
+```ts
+import { test } from 'vitest'
+
+test.concurrent('performs a query', (t) => {
+  const db = connectDb()
+  onTestFailed((result) => {
+    console.log(result.errors)
+  })
+  db.query('SELECT * FROM users')
+})
+```
+:::

@@ -210,8 +210,21 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
     }
   }
 
-  if (test.result.state === 'fail')
-    await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+  try {
+    await Promise.all(test.onFinished?.map(fn => fn(test.result!)) || [])
+  }
+  catch (e) {
+    failTask(test.result, e, runner.config.diffOptions)
+  }
+
+  if (test.result.state === 'fail') {
+    try {
+      await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+    }
+    catch (e) {
+      failTask(test.result, e, runner.config.diffOptions)
+    }
+  }
 
   // if test is marked to be failed, flip the result
   if (test.fails) {
