@@ -209,10 +209,7 @@ export class ExternalModulesExecutor {
       case 'vite':
         return await this.vite.createViteModule(url)
       case 'wasm':
-        return await this.esm.loadWebAssemblyModule(
-          this.fs.readBuffer(path),
-          url,
-        )
+        return await this.esm.createWebAssemblyModule(url, this.fs.readBuffer(path))
       case 'module':
         return await this.esm.createEsModule(url, this.fs.readFile(path))
       case 'commonjs': {

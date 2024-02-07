@@ -8,12 +8,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// latest wasm-bindgen's bundler target exposes setter to avoid cyclic import
-// https://github.com/rustwasm/wasm-bindgen/pull/3152
-let wasm
-export function __wbg_set_wasm(val) {
-  wasm = val
-}
+import * as wasm from './index_bg.wasm'
 
 const LTextDecoder
   = typeof TextDecoder === 'undefined'

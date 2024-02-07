@@ -77,6 +77,15 @@ export class EsmExecutor {
     return m
   }
 
+  public async createWebAssemblyModule(fileUrl: string, code: Buffer) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached)
+      return cached
+    const m = this.loadWebAssemblyModule(code, fileUrl)
+    this.moduleCache.set(fileUrl, m)
+    return m
+  }
+
   public async loadWebAssemblyModule(source: Buffer, identifier: string) {
     const cached = this.moduleCache.get(identifier)
     if (cached)
@@ -87,7 +96,6 @@ export class EsmExecutor {
     const exports = WebAssembly.Module.exports(wasmModule)
     const imports = WebAssembly.Module.imports(wasmModule)
 
-    // TODO: module lookup should be delayed until linking to handle cyclic import?
     const moduleLookup: Record<string, VMModule> = {}
     for (const { module } of imports) {
       if (moduleLookup[module] === undefined) {
