@@ -3,8 +3,9 @@ import { createCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 
-function getArguments(commands: string[]) {
-  return vitestCli.parse(['node', '/index.js', ...commands], {
+function parseArguments(commands: string) {
+  const cliArgs = commands.trim().replace(/\s+/g, ' ').split(' ')
+  return vitestCli.parse(['node', '/index.js', ...cliArgs], {
     run: false,
   }).options
 }
@@ -23,7 +24,7 @@ function cli(options: Record<string, any>) {
 }
 
 test('top level nested options return boolean', async () => {
-  expect(getArguments(['--coverage', '--browser', '--typecheck'])).toEqual(cli({
+  expect(parseArguments('--coverage --browser --typecheck')).toEqual(cli({
     coverage: enabled,
     browser: enabled,
     typecheck: enabled,
@@ -31,7 +32,7 @@ test('top level nested options return boolean', async () => {
 })
 
 test('negated top level nested options return boolean', async () => {
-  expect(getArguments(['--no-coverage', '--no-browser', '--no-typecheck'])).toEqual(cli({
+  expect(parseArguments('--no-coverage --no-browser --no-typecheck')).toEqual(cli({
     coverage: disabled,
     browser: disabled,
     typecheck: disabled,
@@ -39,55 +40,33 @@ test('negated top level nested options return boolean', async () => {
 })
 
 test('nested coverage options have correct types', async () => {
-  expect(getArguments([
-    // booleans
-    '--coverage.all',
-    '--coverage.enabled=',
-    'true',
-    '--coverage.clean',
-    'false',
-    '--coverage.cleanOnRerun',
-    'true',
-    '--coverage.reportOnFailure',
-    '--coverage.allowExternal',
-    'false',
-    '--coverage.skipFull',
-    '--coverage.thresholds.autoUpdate',
-    'true',
-    '--coverage.thresholds.perFile',
-    // even if non-boolean is set, it should be true
-    '--coverage.thresholds.100',
-    '25',
+  expect(parseArguments(`
+    --coverage.all
+    --coverage.enabled=true
+    --coverage.clean false
+    --coverage.cleanOnRerun true
+    --coverage.reportOnFailure
+    --coverage.allowExternal false
+    --coverage.skipFull
+    --coverage.thresholds.autoUpdate true
+    --coverage.thresholds.perFile
+    ${/* even non-boolean should be treated as boolean */ ''}
+    --coverage.thresholds.100 25
 
-    // text
-    '--coverage.provider',
-    'v8',
-    '--coverage.reporter',
-    'text',
-    '--coverage.reportsDirectory',
-    '.\\dist\\coverage',
-    '--coverage.customProviderModule',
-    './folder/coverage.js',
+    --coverage.provider v8
+    --coverage.reporter text
+    --coverage.reportsDirectory .\\dist\\coverage
+    --coverage.customProviderModule=./folder/coverage.js
 
-    // array
-    '--coverage.ignoreClassMethods',
-    'method1',
-    '--coverage.ignoreClassMethods',
-    'method2',
+    --coverage.ignoreClassMethods method1
+    --coverage.ignoreClassMethods method2
 
-    // numbers
-    '--coverage.processingConcurrency',
-    '2',
-
-    '--coverage.thresholds.statements',
-    '80',
-    '--coverage.thresholds.lines',
-    '100',
-    '--coverage.thresholds.functions',
-    '30',
-    '--coverage.thresholds.branches',
-    '25',
-  ]).coverage).toEqual({
+    --coverage.processingConcurrency 2
+    --coverage.thresholds.statements 80
+    --coverage.thresholds.lines 100
+    --coverage.thresholds.functions 30
+    --coverage.thresholds.branches 25
+  `).coverage).toEqual({
     enabled: true,
     reporter: 'text',
     all: true,
@@ -114,14 +93,11 @@ test('nested coverage options have correct types', async () => {
 })
 
 test('correctly normalizes methods to be an array', async () => {
-  expect(getArguments([
-    '--coverage.ignoreClassMethods',
-    'method2',
-    '--coverage.include',
-    'pattern',
-    '--coverage.exclude',
-    'pattern',
-  ])).toMatchObject({
+  expect(parseArguments(`
+    --coverage.ignoreClassMethods method2
+    --coverage.include pattern
+    --coverage.exclude pattern
+  `)).toMatchObject({
     coverage: {
       ignoreClassMethods: ['method2'],
       include: ['pattern'],
@@ -131,18 +107,18 @@ test('correctly normalizes methods to be an array', async () => {
 })
 
 test('all coverage enable options are working correctly', () => {
-  expect(getArguments(['--coverage']).coverage).toEqual({ enabled: true })
-  expect(getArguments(['--coverage.enabled', '--coverage.all=false']).coverage).toEqual({ enabled: true, all: false })
-  expect(getArguments(['--coverage.enabled', '--coverage.all']).coverage).toEqual({ enabled: true, all: true })
+  expect(parseArguments('--coverage').coverage).toEqual({ enabled: true })
+  expect(parseArguments('--coverage.enabled --coverage.all=false').coverage).toEqual({ enabled: true, all: false })
+  expect(parseArguments('--coverage.enabled --coverage.all').coverage).toEqual({ enabled: true, all: true })
 })
 
 test('fails when an array is passed down for a single value', async () => {
-  expect(() => getArguments(['--coverage.provider', 'v8', '--coverage.provider', 'istanbul']))
+  expect(() => parseArguments('--coverage.provider v8 --coverage.provider istanbul'))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>"]`)
 })
 
 test('even if coverage is boolean, don\'t fail', () => {
-  expect(getArguments(['--coverage', '--coverage.provider', 'v8']).coverage).toEqual({
+  expect(parseArguments('--coverage --coverage.provider v8').coverage).toEqual({
     enabled: true,
     provider: 'v8',
   })
