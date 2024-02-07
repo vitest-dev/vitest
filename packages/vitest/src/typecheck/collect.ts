@@ -72,7 +72,7 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
     }
     return null
   }
-  walkAst(ast, {
+  walkAst(ast as any, {
     CallExpression(node) {
       const { callee } = node as any
       const name = getName(callee)
