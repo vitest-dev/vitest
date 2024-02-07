@@ -65,11 +65,12 @@
     "simple-git-hooks": "^2.9.0",
     "tsx": "^4.6.1",
     "typescript": "^5.2.2",
-    "vite": "^5.0.0",
+    "vite": "^5.0.12",
     "vitest": "workspace:*"
   },
   "pnpm": {
     "overrides": {
+      "rollup": "$rollup",
       "vite": "$vite",
       "vitest": "workspace:*"
     },
