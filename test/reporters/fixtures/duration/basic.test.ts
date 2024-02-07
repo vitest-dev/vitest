@@ -1,11 +1,10 @@
 import { test } from 'vitest';
 
-test('fast', async () => {
-  await sleep(10)
+test('fast', () => {
 });
 
 test('slow', async () => {
-  await sleep(200)
+  await sleep(300)
 });
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
