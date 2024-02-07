@@ -11,7 +11,6 @@ export interface WebSocketHandlers {
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void
-  onDone(name: string): void
   onCancel(reason: CancelReason): void
   getCountOfFailedTests(): number
   sendLog(log: UserConsoleLog): void
@@ -32,6 +31,10 @@ export interface WebSocketHandlers {
   updateSnapshot(file?: File): Promise<void>
   getProvidedContext(): ProvidedContext
   getUnhandledErrors(): unknown[]
+
+  finishBrowserTests(): void
+  getBrowserFiles(): string[]
+  debug(...args: string[]): void
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
