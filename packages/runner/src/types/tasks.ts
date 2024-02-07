@@ -150,16 +150,17 @@ interface TestEachFunction {
   ) => void
 }
 
+interface TestCollectorCallable<C = {}> {
+  <ExtraContext extends C>(name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions): void
+  <ExtraContext extends C>(name: string | Function, options?: TestOptions, fn?: TestFunction<ExtraContext>): void
+}
+
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
-  // TODO: better function type, allow one or the other
-  [name: string | Function, optionsOrFn?: TestOptions | TestFunction<ExtraContext>, optionsOrTest?: number | TestOptions | TestFunction<ExtraContext>],
-  void,
-  {
-    each: TestEachFunction
-    <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
-  }
->
+  TestCollectorCallable<ExtraContext>
+> & {
+  each: TestEachFunction
+}
 
 export interface TestOptions {
   /**
@@ -241,15 +242,17 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
+interface SuiteCollectorCallable<ExtraContext = {}> {
+  (name: string | Function, fn?: SuiteFactory<ExtraContext>, options?: number | TestOptions): SuiteCollector<ExtraContext>
+  (name: string | Function, options: TestOptions, fn?: SuiteFactory<ExtraContext>): SuiteCollector<ExtraContext>
+}
+
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
-  [name: string | Function, factory?: SuiteFactory<ExtraContext>, options?: number | TestOptions],
-  SuiteCollector<ExtraContext>,
-  {
-    each: TestEachFunction
-    <T extends ExtraContext>(name: string | Function, factory?: SuiteFactory<T>): SuiteCollector<T>
-  }
->
+  SuiteCollectorCallable<ExtraContext>
+> & {
+  each: TestEachFunction
+}
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   each: SuiteEachFunction
