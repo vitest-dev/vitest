@@ -181,7 +181,7 @@
     "cli-truncate": "^4.0.0",
     "expect-type": "^0.17.3",
     "fast-glob": "^3.3.2",
-    "find-up": "^6.3.0",
+    "find-up": "^7.0.0",
     "flatted": "^3.2.9",
     "get-tsconfig": "^4.7.2",
     "happy-dom": "^12.10.3",
