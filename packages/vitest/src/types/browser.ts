@@ -83,6 +83,13 @@ export interface BrowserConfigOptions {
    * @default true
    */
   isolate?: boolean
+
+  // TODO
+  commands?: Record<string, BrowserCommand>
+}
+
+interface BrowserCommand {
+  (payload: any, options: { provider: BrowserProvider; project: WorkspaceProject }): Awaitable<any>
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

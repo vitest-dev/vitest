@@ -143,6 +143,14 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
+        triggerCommand(command: string, payload: unknown[]) {
+          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browserProvider)
+            throw new Error('Commands are only available for browser tests.')
+          const commands = vitestOrWorkspace.config.browser?.commands
+          if (!commands || !commands[command])
+            throw new Error(`Unknown command "${command}".`)
+          return commands[command](payload, { project: vitestOrWorkspace, provider: vitestOrWorkspace.browserProvider })
+        },
         // browser should have a separate RPC in the future, UI doesn't care for provided context
         getProvidedContext() {
           return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)

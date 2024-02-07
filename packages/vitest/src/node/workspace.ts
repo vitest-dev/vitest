@@ -368,6 +368,10 @@ export class WorkspaceProject {
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
       alias: [],
+      browser: {
+        ...this.ctx.config.browser,
+        commands: {},
+      },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 
