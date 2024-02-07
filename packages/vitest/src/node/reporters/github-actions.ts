@@ -29,6 +29,9 @@ export class GithubActionsReporter implements Reporter {
       const tasks = getTasks(file)
       const project = this.ctx.getProjectByTaskId(file.id)
       for (const task of tasks) {
+        if (task.result?.state !== 'fail')
+          continue
+
         const title = getFullName(task, ' > ')
         for (const error of task.result?.errors ?? []) {
           projectErrors.push({
