@@ -152,7 +152,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^4.3.10",
+    "chai": "^5.1.0",
     "debug": "^4.3.4",
     "execa": "^8.0.1",
     "magic-string": "^0.30.5",
