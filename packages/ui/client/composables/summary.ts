@@ -11,8 +11,8 @@ export const filesSuccess = computed(() => files.value.filter(f => f.result?.sta
 export const filesIgnore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
 export const filesRunning = computed(() => files.value.filter(f =>
   !filesFailed.value.includes(f)
-    && !filesSuccess.value.includes(f)
-    && !filesIgnore.value.includes(f),
+  && !filesSuccess.value.includes(f)
+  && !filesIgnore.value.includes(f),
 ))
 export const filesSkipped = computed(() => filesIgnore.value.filter(f => f.mode === 'skip'))
 export const filesSnapshotFailed = computed(() => files.value.filter(hasFailedSnapshot))

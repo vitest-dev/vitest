@@ -41,8 +41,8 @@ interface MockContext {
 
 function isSpecialProp(prop: Key, parentType: string) {
   return parentType.includes('Function')
-      && typeof prop === 'string'
-      && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
+    && typeof prop === 'string'
+    && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
 }
 
 export class VitestMocker {
@@ -185,8 +185,8 @@ export class VitestMocker {
     catch (err) {
       const vitestError = this.createError(
         '[vitest] There was an error when mocking a module. '
-      + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
-      + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
+        + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
+        + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
       )
       vitestError.cause = err
       throw vitestError

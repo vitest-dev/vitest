@@ -77,7 +77,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
     s.appendLeft(
       position,
       `\nObject.defineProperty(${viInjectedKey}, "${name}", `
-        + `{ enumerable: true, configurable: true, get(){ return ${local} }});`,
+      + `{ enumerable: true, configurable: true, get(){ return ${local} }});`,
     )
   }
 
@@ -171,7 +171,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
         s.remove(node.start, node.start + 15 /* 'export default '.length */)
         s.append(
           `\nObject.defineProperty(${viInjectedKey}, "default", `
-            + `{ enumerable: true, configurable: true, value: ${name} });`,
+          + `{ enumerable: true, configurable: true, value: ${name} });`,
         )
       }
       else {
