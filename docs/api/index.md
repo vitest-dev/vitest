@@ -854,7 +854,7 @@ afterEach(async () => {
 Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
 ::: tip
-Vitest 1.3.0 added [`onTestFinished`](#ontestfinished) hook. You can call it during the test execution to cleanup any state after the test has finished running.
+Vitest 1.3.0 added [`onTestFinished`](##ontestfinished-1-3-0) hook. You can call it during the test execution to cleanup any state after the test has finished running.
 :::
 
 ### beforeAll
@@ -959,12 +959,16 @@ function getTestDb() {
 
 test('performs a user query', async () => {
   const db = getTestDb()
-  expect(await db.query('SELECT * from users').perform()).toEqual([])
+  expect(
+    await db.query('SELECT * from users').perform()
+  ).toEqual([])
 })
 
 test('performs an organization query', async () => {
   const db = getTestDb()
-  expect(await db.query('SELECT * from organizations').perform()).toEqual([])
+  expect(
+    await db.query('SELECT * from organizations').perform()
+  ).toEqual([])
 })
 ```
 
@@ -992,8 +996,8 @@ import { test } from 'vitest'
 
 test.concurrent('performs a query', (t) => {
   const db = connectDb()
-  onTestFailed((e) => {
-    console.log(e.result.errors)
+  onTestFailed((result) => {
+    console.log(result.errors)
   })
   db.query('SELECT * FROM users')
 })
