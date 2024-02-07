@@ -8,7 +8,6 @@ test.describe('ui', () => {
   let vitest: Vitest | undefined
 
   test.beforeAll(async () => {
-    delete process.env.GITHUB_ACTIONS
     vitest = await startVitest('test', [], { watch: true, ui: true, open: false, api: { port }, coverage: { enabled: true } })
     expect(vitest).toBeDefined()
   })
