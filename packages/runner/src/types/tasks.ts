@@ -153,7 +153,7 @@ interface TestEachFunction {
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   // TODO: better function type, allow one or the other
-  [name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction],
+  [name: string | Function, optionsOrFn?: TestOptions | TestFunction<ExtraContext>, optionsOrTest?: number | TestOptions | TestFunction<ExtraContext>],
   void,
   {
     each: TestEachFunction
