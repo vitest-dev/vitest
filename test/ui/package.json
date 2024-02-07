@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test-e2e": "playwright test",
+    "test-e2e": "GITHUB_ACTIONS=false playwright test",
     "test-fixtures": "vitest"
   },
   "devDependencies": {
