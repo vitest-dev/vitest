@@ -14,6 +14,7 @@ export type CLIOption<Value> = {
   default?: unknown
   transform?: (value: unknown) => unknown
   array?: boolean
+  normalize?: boolean
 } &
 // require subcommands for nested options
 (NestedOption<Value> extends never ? {} : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
@@ -91,11 +92,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Root path',
     shorthand: 'r',
     argument: '<path>',
+    normalize: true,
   },
   config: {
     shorthand: 'c',
     description: 'Path to config file',
     argument: '<path>',
+    normalize: true,
   },
   update: {
     shorthand: 'u',
@@ -113,6 +116,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   dir: {
     description: 'Base directory to scan for the test files',
     argument: '<path>',
+    normalize: true,
   },
   ui: {
     description: 'Enable UI',
@@ -156,55 +160,56 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<name>',
       },
       enabled: {
-        description: 'Enables coverage collection. Can be overridden using the --coverage CLI option. This option is not available for custom providers (default: false)',
+        description: 'Enables coverage collection. Can be overridden using the --coverage CLI option (default: false)',
       },
       include: {
-        description: 'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. This option is not available for custom providers (default: **)',
+        description: 'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: **)',
         argument: '<pattern>',
         array: true,
       },
       exclude: {
-        description: 'Files to be excluded in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: Visit https://vitest.dev/config/#coverage-exclude)',
+        description: 'Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit https://vitest.dev/config/#coverage-exclude)',
         argument: '<pattern>',
         array: true,
       },
       extension: {
-        description: 'Extension to be included in coverage. May be specified more than once when using multiple extensions. This option is not available for custom providers (default: [".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"])',
+        description: 'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: [".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"])',
         argument: '<extension>',
       },
       clean: {
-        description: 'Clean coverage results before running tests. This option is not available for custom providers (default: true)',
+        description: 'Clean coverage results before running tests (default: true)',
       },
       cleanOnRerun: {
-        description: 'Clean coverage report on watch rerun. This option is not available for custom providers (default: true)',
+        description: 'Clean coverage report on watch rerun (default: true)',
       },
       reportsDirectory: {
-        description: 'Directory to write coverage report to. This option is not available for custom providers (default: ./coverage)',
+        description: 'Directory to write coverage report to (default: ./coverage)',
         argument: '<path>',
+        normalize: true,
       },
       reporter: {
-        description: 'Coverage reporters to use. Visit https://vitest.dev/config/#coverage-reporter for more information. This option is not available for custom providers (default: ["text", "html", "clover", "json"])',
+        description: 'Coverage reporters to use. Visit https://vitest.dev/config/#coverage-reporter for more information (default: ["text", "html", "clover", "json"])',
         argument: '<name>',
         subcommands: null, // don't support custom objects
       },
       reportOnFailure: {
-        description: 'Generate coverage report even when tests fail. This option is not available for custom providers (default: false)',
+        description: 'Generate coverage report even when tests fail (default: false)',
       },
       allowExternal: {
-        description: 'Collect coverage of files outside the project root. This option is not available for custom providers (default: false)',
+        description: 'Collect coverage of files outside the project root (default: false)',
       },
       skipFull: {
-        description: 'Do not show files with 100% statement, branch, and function coverage. This option is not available for custom providers (default: false)',
+        description: 'Do not show files with 100% statement, branch, and function coverage (default: false)',
       },
       thresholds: {
         description: null,
         argument: '', // no displayed
         subcommands: {
           perFile: {
-            description: 'Check thresholds per file. See --coverage.thresholds.lines, --coverage.thresholds.functions, --coverage.thresholds.branches and --coverage.thresholds.statements for the actual thresholds. This option is not available for custom providers (default: false)',
+            description: 'Check thresholds per file. See --coverage.thresholds.lines, --coverage.thresholds.functions, --coverage.thresholds.branches and --coverage.thresholds.statements for the actual thresholds (default: false)',
           },
           autoUpdate: {
-            description: 'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds. This option is not available for custom providers (default: false)',
+            description: 'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: false)',
           },
           lines: {
             description: 'Threshold for lines. Visit https://github.com/istanbuljs/nyc#coverage-thresholds for more information. This option is not available for custom providers',
@@ -239,6 +244,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       customProviderModule: {
         description: 'Specifies the module name or path for the custom coverage provider module. Visit https://vitest.dev/guide/coverage.html#custom-coverage-provider for more information. This option is only available for custom providers',
         argument: '<path>',
+        normalize: true,
       },
       // TODO: suport watermarks via a special command?
       // CAC requires --watermarks.statements=50 --watermarks.statements=80 for "statements:[50,80]" which looks rediculous
@@ -252,6 +258,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   workspace: {
     description: 'Path to a workspace configuration file',
     argument: '<path>',
+    normalize: true,
   },
   isolate: {
     description: 'Run every test file in isolation. To disable isolation, use --no-isolate (default: true)',
@@ -265,7 +272,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
   browser: {
     description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
     argument: '', // allow boolean
-    transform: transformNestedBoolean,
+    transform(browser) {
+      if (typeof browser === 'boolean')
+        return { enabled: browser }
+      if (typeof browser === 'string')
+        return { enabled: true, name: browser }
+      return browser
+    },
     subcommands: {
       enabled: {
         description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
@@ -426,6 +439,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   diff: {
     description: 'Path to a diff config that will be used to generate diff interface',
     argument: '<path>',
+    normalize: true,
   },
   exclude: {
     description: 'Additional file globs to be excluded from test',
@@ -462,6 +476,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       tsconfig: {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',
+        normalize: true,
       },
       include: null,
       exclude: null,

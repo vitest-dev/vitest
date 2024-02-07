@@ -3,7 +3,7 @@ import cac, { type CAC } from 'cac'
 import c from 'picocolors'
 import { version } from '../../../package.json'
 import { toArray } from '../../utils'
-import type { BaseCoverageOptions, CoverageIstanbulOptions, Vitest, VitestRunMode } from '../../types'
+import type { Vitest, VitestRunMode } from '../../types'
 import { divider } from '../reporters/renderers/utils'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
@@ -23,6 +23,8 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
       return option.transform(value)
     if (option.array)
       return toArray(value)
+    if (option.normalize)
+      return normalize(String(value))
     return value
   }
 
@@ -177,42 +179,11 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
 }
 
 function normalizeCliOptions(argv: CliOptions): CliOptions {
-  if (argv.root)
-    argv.root = normalize(argv.root)
-  else
-    delete argv.root
-
-  if (argv.config)
-    argv.config = normalize(argv.config)
-  else
-    delete argv.config
-
-  if (argv.workspace)
-    argv.workspace = normalize(argv.workspace)
-  else
-    delete argv.workspace
-
-  if (argv.dir)
-    argv.dir = normalize(argv.dir)
-  else
-    delete argv.dir
-
   if (argv.exclude) {
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
   }
 
-  if (argv.coverage) {
-    const coverage = argv.coverage
-    if (coverage.exclude)
-      coverage.exclude = toArray(coverage.exclude)
-
-    if ((coverage as BaseCoverageOptions).include)
-      (coverage as BaseCoverageOptions).include = toArray((coverage as BaseCoverageOptions).include)
-
-    if ((coverage as CoverageIstanbulOptions).ignoreClassMethods)
-      (coverage as CoverageIstanbulOptions).ignoreClassMethods = toArray((coverage as CoverageIstanbulOptions).ignoreClassMethods)
-  }
   return argv
 }
 

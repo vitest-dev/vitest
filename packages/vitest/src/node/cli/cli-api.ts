@@ -45,29 +45,12 @@ export async function startVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  if (typeof options.coverage === 'boolean')
-    options.coverage = { enabled: options.coverage }
-
-  // running "vitest --browser", assumes browser name is set in the config
-  if (typeof options.browser === 'boolean')
-    options.browser = { enabled: options.browser } as any
-
-  // running "vitest --browser=chrome"
-  if (typeof options.browser === 'string')
-    options.browser = { enabled: true, name: options.browser }
-
   // running "vitest --browser.headless"
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
-  if (typeof options.typecheck === 'boolean')
-    options.typecheck = { enabled: true }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck ??= {}
-    options.typecheck.only = true
-    options.typecheck.enabled = true
-  }
+  if (typeof options.typecheck?.only === 'boolean')
+    options.typecheck.enabled ??= true
 
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
