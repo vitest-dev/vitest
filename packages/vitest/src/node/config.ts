@@ -1,4 +1,3 @@
-import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
@@ -12,6 +11,7 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
+import { resolveModule } from './pkg'
 
 function resolvePath(path: string, root: string) {
   return normalize(
