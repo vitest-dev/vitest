@@ -6,8 +6,6 @@ on:
       - main
 
   pull_request:
-    branches:
-      - main
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
