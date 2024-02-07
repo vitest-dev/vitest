@@ -403,7 +403,7 @@ export function resolveConfig(
     }
 
     // automatically enable github-actions reporter
-    if (process.env.GITHUB_ACTIONS && !resolved.reporters.some(v => Array.isArray(v) && v[0] === 'github-actions'))
+    if (process.env.GITHUB_ACTIONS === 'true' && !resolved.reporters.some(v => Array.isArray(v) && v[0] === 'github-actions'))
       resolved.reporters.push(['github-actions', {}])
   }
 
