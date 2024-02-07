@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { createCLI } from 'vitest/src/node/cli/cac.js'
+import { createCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 
@@ -65,9 +65,9 @@ test('nested coverage options have correct types', async () => {
     '--coverage.reporter',
     'text',
     '--coverage.reportsDirectory',
-    './coverage',
+    '.\\dist\\coverage',
     '--coverage.customProviderModule',
-    './coverage.js',
+    './folder/coverage.js',
 
     // array
     '--coverage.ignoreClassMethods',
@@ -94,8 +94,8 @@ test('nested coverage options have correct types', async () => {
     provider: 'v8',
     clean: false,
     cleanOnRerun: true,
-    reportsDirectory: './coverage',
-    customProviderModule: './coverage.js',
+    reportsDirectory: 'dist/coverage',
+    customProviderModule: 'folder/coverage.js',
     reportOnFailure: true,
     allowExternal: false,
     skipFull: true,
