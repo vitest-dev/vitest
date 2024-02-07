@@ -75,7 +75,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        external: ['tinyspy', /src\/external/, /esm\/esm/, /\.wasm$/, /src\/wasm-bindgen\//],
+        external: ['tinyspy', /src\/external/, /esm\/esm/, /\.wasm$/],
         inline: ['inline-lib'],
       },
     },
