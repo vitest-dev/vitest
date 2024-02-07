@@ -11,6 +11,7 @@ test.describe('html report', () => {
 
   test.beforeAll(async () => {
     // generate vitest html report
+    delete process.env.GITHUB_ACTIONS
     await startVitest('test', [], { run: true, reporters: 'html', coverage: { enabled: true, reportsDirectory: 'html/coverage' } })
 
     // run vite preview server
