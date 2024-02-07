@@ -27,7 +27,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'module' | 'commonjs'
+  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs'
   url: string
   path: string
 }
@@ -165,7 +165,7 @@ export class ExternalModulesExecutor {
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
     const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
 
-    let type: 'module' | 'commonjs' | 'vite'
+    let type: 'module' | 'commonjs' | 'vite' | 'wasm'
     if (this.vite.canResolve(fileUrl)) {
       type = 'vite'
     }
@@ -174,6 +174,11 @@ export class ExternalModulesExecutor {
     }
     else if (extension === '.cjs') {
       type = 'commonjs'
+    }
+    else if (extension === '.wasm') {
+      // still experimental on NodeJS --experimental-wasm-modules
+      // cf. ESM_FILE_FORMAT(url) in https://nodejs.org/api/esm.html
+      type = 'wasm'
     }
     else {
       const pkgData = this.findNearestPackageData(normalize(pathUrl))
@@ -203,6 +208,11 @@ export class ExternalModulesExecutor {
       }
       case 'vite':
         return await this.vite.createViteModule(url)
+      case 'wasm':
+        return await this.esm.loadWebAssemblyModule(
+          this.fs.readBuffer(path),
+          url,
+        )
       case 'module':
         return await this.esm.createEsModule(url, this.fs.readFile(path))
       case 'commonjs': {

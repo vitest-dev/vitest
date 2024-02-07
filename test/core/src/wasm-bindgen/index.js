@@ -8,6 +8,10 @@
 // folder source: https://github.com/rustwasm/wasm-bindgen/tree/4f865308afbe8d2463968457711ad356bae63b71/examples/hello_world
 // docs: https://rustwasm.github.io/docs/wasm-bindgen/examples/hello-world.html
 
-// eslint-disable-next-line unused-imports/no-unused-imports, import/newline-after-import
+// for this to work on vm, both index_bg.js and index_bg.wasm need to be externalized
+
 import * as wasm from './index_bg.wasm'
+import { __wbg_set_wasm } from './index_bg.js'
+
+__wbg_set_wasm(wasm)
 export * from './index_bg.js'

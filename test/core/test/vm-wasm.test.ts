@@ -7,7 +7,7 @@ import { expect, test, vi } from 'vitest'
 // @ts-expect-error wasm is not typed
 import { add } from '../src/add.wasm'
 
-const wasmFileBuffer = readFileSync(resolve(__dirname, './src/add.wasm'))
+const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/add.wasm'))
 
 test('supports native wasm imports', () => {
   expect(add(1, 2)).toBe(3)
