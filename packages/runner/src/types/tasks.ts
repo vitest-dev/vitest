@@ -152,7 +152,8 @@ interface TestEachFunction {
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
-  [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
+  // TODO: better function type, allow one or the other
+  [name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction],
   void,
   {
     each: TestEachFunction
@@ -189,6 +190,22 @@ export interface TestOptions {
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
    */
   sequential?: boolean
+  /**
+   * Whether the test should be skipped.
+   */
+  skip?: boolean
+  /**
+   * Should this test be the only one running in a suite.
+   */
+  only?: boolean
+  /**
+   * Whether the test should be skipped and marked as a todo.
+   */
+  todo?: boolean
+  /**
+   * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
+   */
+  fails?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {

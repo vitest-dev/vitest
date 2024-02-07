@@ -11,11 +11,11 @@ import { getCurrentTest } from './test-state'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function (name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
+  function (name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction) {
     if (getCurrentTest())
       throw new Error('Calling the test function inside another test function is not allowed. Please put it inside "describe" or "suite" so it can be properly collected.')
 
-    getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
+    getCurrentSuite().test.fn.call(this, formatName(name), optionsOrFn, optionsOrTest)
   },
 )
 
@@ -104,13 +104,40 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     return task
   }
 
-  const test = createTest(function (name: string | Function, fn = noop, options = {}) {
-    if (typeof options === 'number')
-      options = { timeout: options }
+  const test = createTest(function (name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction) {
+    let options: TestOptions = {}
+    let fn: TestFunction = () => {}
+
+    // it('', () => {}, { retry: 2 })
+    if (typeof optionsOrTest === 'object') {
+      // it('', { retry: 2 }, { retry: 3 })
+      if (typeof optionsOrFn === 'object')
+        throw new TypeError('Cannot use two objects as arguments. Please provide options and a function callback.')
+      // TODO: more info, add a name
+      // console.warn('The third argument is deprecated. Please use the second argument for options.')
+      options = optionsOrTest
+    }
+    // it('', () => {}, 1000)
+    else if (typeof optionsOrTest === 'number') {
+      options = { timeout: optionsOrTest }
+    }
+    // it('', { retry: 2 }, () => {})
+    else if (typeof optionsOrFn === 'object') {
+      options = optionsOrFn
+    }
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object')
       options = Object.assign({}, suiteOptions, options)
+
+    if (typeof optionsOrFn === 'function') {
+      if (typeof optionsOrTest === 'function')
+        throw new TypeError('Cannot use two functions as arguments. Please use the second argument for options.')
+      fn = optionsOrFn
+    }
+    else if (typeof optionsOrTest === 'function') {
+      fn = optionsOrTest
+    }
 
     // inherit concurrent / sequential from suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
@@ -279,8 +306,8 @@ export function createTaskCollector(
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
     const _context = mergeContextFixtures(fixtures, context)
 
-    return createTest(function fn(name: string | Function, fn?: TestFunction, options?: number | TestOptions) {
-      getCurrentSuite().test.fn.call(this, formatName(name), fn, options)
+    return createTest(function fn(name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction) {
+      getCurrentSuite().test.fn.call(this, formatName(name), optionsOrFn, optionsOrTest)
     }, _context)
   }
 
@@ -299,8 +326,8 @@ function createTest(fn: (
   (
     this: Record<'concurrent' | 'sequential' | 'skip' | 'only' | 'todo' | 'fails' | 'each', boolean | undefined> & { fixtures?: FixtureItem[] },
     title: string,
-    fn?: TestFunction,
-    options?: number | TestOptions
+    optionsOrFn?: TestOptions | TestFunction,
+    optionsOrTest?: number | TestOptions | TestFunction,
   ) => void
 ), context?: Record<string, any>) {
   return createTaskCollector(fn, context) as TestAPI
