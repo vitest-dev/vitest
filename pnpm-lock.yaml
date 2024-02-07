@@ -9916,29 +9916,7 @@ packages:
     hasBin: true
     dependencies:
       '@ampproject/remapping': 2.2.1
-      '@rollup/pluginutils': 5.0.5(rollup@2.79.1)
-      '@unocss/config': 0.57.4
-      '@unocss/core': 0.57.4
-      '@unocss/preset-uno': 0.57.4
-      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
-      chokidar: 3.5.3
-      colorette: 2.0.20
-      consola: 3.2.3
-      fast-glob: 3.3.2
-      magic-string: 0.30.5
-      pathe: 1.1.1
-      perfect-debounce: 1.0.0
-    transitivePeerDependencies:
-      - rollup
-    dev: true
-
-  /@unocss/cli@0.57.4(rollup@4.4.0):
-    resolution: {integrity: sha512-8g00ZV1iZIEmgSqmIycvEesIXt8KFQHUCI64D9cqf3UEcWgEoRqUZOjhVozHbhfDe+yg9s6D9E++arLn1wAvzg==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dependencies:
-      '@ampproject/remapping': 2.2.1
-      '@rollup/pluginutils': 5.0.5(rollup@4.4.0)
+      '@rollup/pluginutils': 5.0.5(rollup@4.9.6)
       '@unocss/config': 0.57.4
       '@unocss/core': 0.57.4
       '@unocss/preset-uno': 0.57.4
