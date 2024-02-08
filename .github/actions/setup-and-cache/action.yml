@@ -46,7 +46,7 @@ runs:
       run: echo "Failed to resolve package versions. See log above." && exit 1
 
     - name: Cache Cypress v${{ steps.resolve-package-versions.outputs.CYPRESS_VERSION }}
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: cypress-cache
       with:
         path: ${{ env.CYPRESS_CACHE_FOLDER }}
@@ -55,7 +55,7 @@ runs:
           ${{ runner.os }}-cypress-
 
     - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: playwright-cache
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
