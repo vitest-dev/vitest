@@ -1,18 +1,26 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { EXIT_CODE_RESTART } from '../constants'
-import { CoverageProviderMap } from '../integrations/coverage'
-import { getEnvPackageName } from '../integrations/env'
-import type { UserConfig, Vitest, VitestRunMode } from '../types'
-import { createVitest } from './create'
-import { registerConsoleShortcuts } from './stdin'
-import type { VitestOptions } from './core'
+import { EXIT_CODE_RESTART } from '../../constants'
+import { CoverageProviderMap } from '../../integrations/coverage'
+import { getEnvPackageName } from '../../integrations/env'
+import type { UserConfig, Vitest, VitestRunMode } from '../../types'
+import { createVitest } from '../create'
+import { registerConsoleShortcuts } from '../stdin'
+import type { VitestOptions } from '../core'
 
 export interface CliOptions extends UserConfig {
   /**
    * Override the watch mode
    */
   run?: boolean
+  /**
+   * Retry the test suite if it crashes due to a segfault (default: true)
+   */
+  segfaultRetry?: number
+  /**
+   * Removes colors from the console output
+   */
+  color?: boolean
 }
 
 /**
@@ -37,29 +45,12 @@ export async function startVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  if (typeof options.coverage === 'boolean')
-    options.coverage = { enabled: options.coverage }
-
-  // running "vitest --browser", assumes browser name is set in the config
-  if (typeof options.browser === 'boolean')
-    options.browser = { enabled: options.browser } as any
-
-  // running "vitest --browser=chrome"
-  if (typeof options.browser === 'string')
-    options.browser = { enabled: true, name: options.browser }
-
   // running "vitest --browser.headless"
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
     options.browser.enabled = true
 
-  if (typeof options.typecheck === 'boolean')
-    options.typecheck = { enabled: true }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck ??= {}
-    options.typecheck.only = true
-    options.typecheck.enabled = true
-  }
+  if (typeof options.typecheck?.only === 'boolean')
+    options.typecheck.enabled ??= true
 
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
