@@ -21,7 +21,7 @@ declare module 'vite' {
 
 export function createHmrEmitter(): HMREmitter {
   const emitter = new EventEmitter()
-  return emitter
+  return emitter as HMREmitter
 }
 
 export function viteNodeHmrPlugin(): Plugin {
