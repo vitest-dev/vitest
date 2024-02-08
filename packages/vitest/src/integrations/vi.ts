@@ -512,8 +512,9 @@ function createVitest(): VitestUtils {
       return _mocker.importMock(path, getImporter())
     },
 
-    mocked<T>(item: T, _options = {}): MaybeMocked<T> {
-      return item as any
+    // this is typed in the interface so it's not necessary to type it here
+    mocked<T>(item: T, _options = {}): any {
+      return item
     },
 
     isMockFunction(fn: any): fn is MockInstance {

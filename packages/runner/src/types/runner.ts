@@ -1,5 +1,5 @@
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { Custom, ExtendedContext, File, SequenceHooks, SequenceSetupFiles, Suite, TaskContext, TaskPopulated, TaskResultPack, Test } from './tasks'
+import type { Custom, ExtendedContext, File, SequenceHooks, SequenceSetupFiles, Suite, Task, TaskContext, TaskPopulated, TaskResultPack, Test } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -53,19 +53,19 @@ export interface VitestRunner {
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTask?: (test: TaskPopulated) => unknown
+  onBeforeRunTask?: (test: Task) => unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTask?: (test: TaskPopulated, options: { retry: number; repeats: number }) => unknown
+  onBeforeTryTask?: (test: Task, options: { retry: number; repeats: number }) => unknown
   /**
    * Called after result and state are set.
    */
-  onAfterRunTask?: (test: TaskPopulated) => unknown
+  onAfterRunTask?: (test: Task) => unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTask?: (test: TaskPopulated, options: { retry: number; repeats: number }) => unknown
+  onAfterTryTask?: (test: Task, options: { retry: number; repeats: number }) => unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -85,7 +85,7 @@ export interface VitestRunner {
    * If defined, will be called instead of usual Vitest handling. Useful, if you have your custom test function.
    * "before" and "after" hooks will not be ignored.
    */
-  runTask?: (test: TaskPopulated) => Promise<void>
+  runTask?: (test: Task) => Promise<void>
 
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
