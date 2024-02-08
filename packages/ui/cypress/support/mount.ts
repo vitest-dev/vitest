@@ -28,7 +28,7 @@ declare global {
       /**
        * Install all vue plugins and globals then mount
        */
-      mount<Props = any>(comp: Component<Props>, options?: unknown): Cypress.Chainable<any>
+      mount: <Props = any>(comp: Component<Props>, options?: unknown) => Cypress.Chainable<any>
     }
   }
 }

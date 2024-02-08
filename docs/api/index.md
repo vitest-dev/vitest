@@ -209,7 +209,6 @@ test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
 
 When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
 
-
 ```ts
 test.concurrent('test 1', async ({ expect }) => {
   expect(foo).toMatchSnapshot()

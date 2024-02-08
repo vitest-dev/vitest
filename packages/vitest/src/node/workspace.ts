@@ -72,8 +72,8 @@ export class WorkspaceProject {
 
   browserState: {
     files: string[]
-    resolve(): void
-    reject(v: unknown): void
+    resolve: () => void
+    reject: (v: unknown) => void
   } | undefined
 
   testFilesList: string[] | null = null

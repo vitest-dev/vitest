@@ -1,4 +1,4 @@
-import type { CancelReason, Custom, ExtendedContext, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, Suite, Task, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -46,7 +46,7 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  onAfterRunTask(test: Test) {
+  onAfterRunTask(test: Task) {
     this.snapshotClient.clearTest()
 
     if (this.config.logHeapUsage && typeof process !== 'undefined')
@@ -59,7 +59,7 @@ export class VitestTestRunner implements VitestRunner {
     this.cancelRun = true
   }
 
-  async onBeforeRunTask(test: Test) {
+  async onBeforeRunTask(test: Task) {
     if (this.cancelRun)
       test.mode = 'skip'
 
@@ -83,28 +83,28 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  onBeforeTryTask(test: Test) {
+  onBeforeTryTask(test: Task) {
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
-      testPath: test.suite.file?.filepath,
+      testPath: test.suite?.file?.filepath,
       currentTestName: getFullName(test),
       snapshotState: this.snapshotClient.snapshotState,
     }, (globalThis as any)[GLOBAL_EXPECT])
   }
 
-  onAfterTryTask(test: Test) {
+  onAfterTryTask(test: Task) {
     const {
       assertionCalls,
       expectedAssertionsNumber,
       expectedAssertionsNumberErrorGen,
       isExpectingAssertions,
       isExpectingAssertionsError,
-      // @ts-expect-error local is untyped
-    } = test.context._local
+      // @ts-expect-error _local is untyped
+    } = 'context' in test && test.context._local
       ? test.context.expect.getState()
       : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)

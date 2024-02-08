@@ -24,8 +24,8 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
-  waitForConnection(): Promise<void>
-  reconnect(): Promise<void>
+  waitForConnection: () => Promise<void>
+  reconnect: () => Promise<void>
 }
 
 export function createClient(url: string, options: VitestClientOptions = {}) {

@@ -193,19 +193,19 @@ export interface TestOptions {
 
 interface ExtendedAPI<ExtraContext> {
   each: TestEachFunction
-  skipIf(condition: any): ChainableTestAPI<ExtraContext>
-  runIf(condition: any): ChainableTestAPI<ExtraContext>
+  skipIf: (condition: any) => ChainableTestAPI<ExtraContext>
+  runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
 export type CustomAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & ExtendedAPI<ExtraContext> & {
-  extend<T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>): CustomAPI<{
+  extend: <T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>) => CustomAPI<{
     [K in keyof T | keyof ExtraContext]:
     K extends keyof T ? T[K] :
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
 }
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & ExtendedAPI<ExtraContext> & {
-  extend<T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>): TestAPI<{
+  extend: <T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>) => TestAPI<{
     [K in keyof T | keyof ExtraContext]:
     K extends keyof T ? T[K] :
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
@@ -236,8 +236,8 @@ type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   each: SuiteEachFunction
-  skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
-  runIf(condition: any): ChainableSuiteAPI<ExtraContext>
+  skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
+  runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
 export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>

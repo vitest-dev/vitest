@@ -35,8 +35,8 @@ interface TestExclude {
     excludeNodeModules?: boolean
     relativePath?: boolean
   }): {
-    shouldInstrument(filePath: string): boolean
-    glob(cwd: string): Promise<string[]>
+    shouldInstrument: (filePath: string) => boolean
+    glob: (cwd: string) => Promise<string[]>
   }
 }
 

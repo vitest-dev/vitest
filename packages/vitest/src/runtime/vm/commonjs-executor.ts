@@ -14,7 +14,7 @@ interface CommonjsExecutorOptions {
 const _require = createRequire(import.meta.url)
 
 interface PrivateNodeModule extends NodeModule {
-  _compile(code: string, filename: string): void
+  _compile: (code: string, filename: string) => void
 }
 
 const requiresCache = new WeakMap<NodeModule, NodeRequire>()
