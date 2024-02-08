@@ -1,11 +1,16 @@
 import { fileURLToPath } from 'node:url'
-
+import { readFile } from 'node:fs/promises'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import type { ResolvedConfig } from 'vitest'
 import type { WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
 import { injectVitestModule } from './esmInjector'
+
+function replacer(code: string, values: Record<string, string>) {
+  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
+}
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -23,18 +28,74 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         }
       },
       async configureServer(server) {
+        const testerHtml = readFile(resolve(distRoot, 'client/tester.html'), 'utf8')
+        const runnerHtml = readFile(resolve(distRoot, 'client/index.html'), 'utf8')
+        const injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8')
+        const favicon = `${base}favicon.svg`
+        const testerPrefix = `${base}__vitest_test__/__test__/`
+        server.middlewares.use((_req, res, next) => {
+          const headers = server.config.server.headers
+          if (headers) {
+            for (const name in headers)
+              res.setHeader(name, headers[name]!)
+          }
+          next()
+        })
+        server.middlewares.use(async (req, res, next) => {
+          if (!req.url)
+            return next()
+          const url = new URL(req.url, 'http://localhost')
+          if (!url.pathname.startsWith(testerPrefix) && url.pathname !== base)
+            return next()
+
+          res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+          res.setHeader('Content-Type', 'text/html; charset=utf-8')
+
+          const files = project.browserState?.files ?? []
+
+          const config = wrapConfig(project.getSerializableConfig())
+          config.env ??= {}
+          config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
+
+          const injector = replacer(await injectorJs, {
+            __VITEST_CONFIG__: JSON.stringify(config),
+            __VITEST_FILES__: JSON.stringify(files),
+          })
+
+          if (url.pathname === base) {
+            const html = replacer(await runnerHtml, {
+              __VITEST_FAVICON__: favicon,
+              __VITEST_TITLE__: 'Vitest Browser Runner',
+              __VITEST_INJECTOR__: injector,
+            })
+            res.write(html, 'utf-8')
+            res.end()
+            return
+          }
+
+          const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
+          // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
+          const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
+
+          const html = replacer(await testerHtml, {
+            __VITEST_FAVICON__: favicon,
+            __VITEST_TITLE__: 'Vitest Browser Tester',
+            __VITEST_INJECTOR__: injector,
+            __VITEST_APPEND__:
+            // TODO: have only a single global variable to not pollute the global scope
+`<script type="module">
+  __vitest_browser_runner__.runningFiles = ${tests}
+  __vitest_browser_runner__.runTests(__vitest_browser_runner__.runningFiles)
+</script>`,
+          })
+          res.write(html, 'utf-8')
+          res.end()
+        })
         server.middlewares.use(
           base,
           sirv(resolve(distRoot, 'client'), {
             single: false,
             dev: true,
-            setHeaders(res, _pathname, _stats) {
-              const headers = server.config.server.headers
-              if (headers) {
-                for (const name in headers)
-                  res.setHeader(name, headers[name]!)
-              }
-            },
           }),
         )
 
@@ -69,9 +130,11 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           optimizeDeps: {
             entries: [
               ...entries,
+              'vitest',
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
+              '@vitest/utils',
             ],
             exclude: [
               'vitest',
@@ -157,4 +220,15 @@ function resolveCoverageFolder(project: WorkspaceProject) {
     return [root, `/${basename(root)}/`]
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+function wrapConfig(config: ResolvedConfig): ResolvedConfig {
+  return {
+    ...config,
+    // workaround RegExp serialization
+    testNamePattern:
+      config.testNamePattern
+        ? config.testNamePattern.toString() as any as RegExp
+        : undefined,
+  }
 }

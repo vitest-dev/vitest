@@ -42,14 +42,11 @@ export interface ContextExecutorOptions {
 
 const bareVitestRegexp = /^@?vitest(\/|$)/
 
-export async function startVitestExecutor(options: ContextExecutorOptions) {
-  // @ts-expect-error injected untyped global
-  const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
-  const rpc = () => state().rpc
+const dispose: (() => void)[] = []
 
-  process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
-  }
+function listenForErrors(state: () => WorkerGlobalState) {
+  dispose.forEach(fn => fn())
+  dispose.length = 0
 
   function catchError(err: unknown, type: string) {
     const worker = state()
@@ -60,13 +57,31 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         error.VITEST_TEST_PATH = relative(state().config.root, worker.filepath)
       error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
-    rpc().onUnhandledError(error, type)
+    state().rpc.onUnhandledError(error, type)
   }
 
-  process.setMaxListeners(25)
+  const uncaughtException = (e: Error) => catchError(e, 'Uncaught Exception')
+  const unhandledRejection = (e: Error) => catchError(e, 'Unhandled Rejection')
 
-  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
-  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
+  process.on('uncaughtException', uncaughtException)
+  process.on('unhandledRejection', unhandledRejection)
+
+  dispose.push(() => {
+    process.off('uncaughtException', uncaughtException)
+    process.off('unhandledRejection', unhandledRejection)
+  })
+}
+
+export async function startVitestExecutor(options: ContextExecutorOptions) {
+  // @ts-expect-error injected untyped global
+  const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
+  const rpc = () => state().rpc
+
+  process.exit = (code = process.exitCode || 0): never => {
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
+  }
+
+  listenForErrors(state)
 
   const getTransformMode = () => {
     return state().environment.transformMode ?? 'ssr'

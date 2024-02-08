@@ -12,7 +12,6 @@ export interface BrowserProvider {
   getSupportedBrowsers(): readonly string[]
   initialize(ctx: WorkspaceProject, options: BrowserProviderInitializationOptions): Awaitable<void>
   openPage(url: string): Awaitable<void>
-  catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
   close(): Awaitable<void>
 }
 
@@ -83,6 +82,13 @@ export interface BrowserConfigOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Run test files in parallel. Fallbacks to `test.fileParallelism`.
+   *
+   * @default test.fileParallelism
+   */
+  fileParallelism?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

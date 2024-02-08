@@ -6,7 +6,7 @@ import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/ut
 
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
-const viExportAllHelper = '__vi_export_all__'
+const viExportAllHelper = '__vitest_browser_runner__.exportAll'
 
 const skipHijack = [
   '/@vite/client',
@@ -230,7 +230,7 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       // s.update(node.start, node.end, viImportMetaKey)
     },
     onDynamicImport(node) {
-      const replace = '__vi_wrap_module__(import('
+      const replace = '__vitest_browser_runner__.wrapModule(import('
       s.overwrite(node.start, (node.source as Positioned<Expression>).start, replace)
       s.overwrite(node.end - 1, node.end, '))')
     },

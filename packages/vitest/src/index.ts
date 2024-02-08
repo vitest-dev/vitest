@@ -8,6 +8,7 @@ export {
   afterAll,
   afterEach,
   onTestFailed,
+  onTestFinished,
 } from '@vitest/runner'
 export { bench } from './runtime/benchmark'
 

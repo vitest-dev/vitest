@@ -26,6 +26,7 @@ export interface TaskPopulated extends TaskBase {
   result?: TaskResult
   fails?: boolean
   onFailed?: OnTestFailedHandler[]
+  onFinished?: OnTestFinishedHandler[]
   /**
    * Store promises (from async expects) to wait for them before finishing the test
    */
@@ -297,6 +298,11 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   onTestFailed: (fn: OnTestFailedHandler) => void
 
   /**
+   * Extract hooks on test failed
+   */
+  onTestFinished: (fn: OnTestFinishedHandler) => void
+
+  /**
    * Mark tests as skipped. All execution after this call will be skipped.
    */
   skip: () => void
@@ -305,6 +311,7 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
 export type ExtendedContext<T extends Custom | Test> = TaskContext<T> & TestContext
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
+export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'

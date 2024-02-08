@@ -126,9 +126,9 @@ test('export * from', async () => {
   ).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     const { __vi_inject__: __vi_esm_0__ } = await import("vue");
-    __vi_export_all__(__vi_inject__, __vi_esm_0__);
+    __vitest_browser_runner__.exportAll(__vi_inject__, __vi_esm_0__);
     const { __vi_inject__: __vi_esm_1__ } = await import("react");
-    __vi_export_all__(__vi_inject__, __vi_esm_1__);
+    __vitest_browser_runner__.exportAll(__vi_inject__, __vi_esm_1__);
 
 
     export { __vi_inject__ }"
@@ -167,7 +167,7 @@ test('export then import minified', async () => {
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
     import { __vi_inject__ as __vi_esm_0__ } from 'vue'
     const { __vi_inject__: __vi_esm_1__ } = await import("vue");
-    __vi_export_all__(__vi_inject__, __vi_esm_1__);
+    __vitest_browser_runner__.exportAll(__vi_inject__, __vi_esm_1__);
 
     export { __vi_inject__ }"
   `)
@@ -198,7 +198,7 @@ test('dynamic import', async () => {
   )
   expect(result).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
-    const i = () => __vi_wrap_module__(import('./foo'))
+    const i = () => __vitest_browser_runner__.wrapModule(import('./foo'))
     export { __vi_inject__ }"
   `)
 })

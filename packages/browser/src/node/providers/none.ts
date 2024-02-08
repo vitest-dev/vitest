@@ -1,4 +1,3 @@
-import type { Awaitable } from 'vitest'
 import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
 
 export class NoneBrowserProvider implements BrowserProvider {
@@ -20,10 +19,6 @@ export class NoneBrowserProvider implements BrowserProvider {
     this.open = false
     if (ctx.config.browser.headless)
       throw new Error('You\'ve enabled headless mode for "none" provider but it doesn\'t support it.')
-  }
-
-  catchError(_cb: (error: Error) => Awaitable<void>) {
-    return () => {}
   }
 
   async openPage(_url: string) {
