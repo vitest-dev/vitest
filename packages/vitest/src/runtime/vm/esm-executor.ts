@@ -157,7 +157,7 @@ export class EsmExecutor {
       if (encoding !== 'base64')
         throw new Error(`Invalid data URI encoding: ${encoding}`)
 
-      const module = await this.loadWebAssemblyModule(
+      const module = this.loadWebAssemblyModule(
         Buffer.from(match.groups.code, 'base64'),
         identifier,
       )
