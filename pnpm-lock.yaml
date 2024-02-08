@@ -1209,8 +1209,8 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       floating-vue:
-        specifier: ^2.0.0-y.0
-        version: 2.0.0-y.0(vue@3.3.8)
+        specifier: ^5.2.2
+        version: 5.2.2(vue@3.3.8)
       splitpanes:
         specifier: ^3.1.5
         version: 3.1.5
@@ -5574,14 +5574,20 @@ packages:
       fast-json-stringify: 5.2.0
     dev: true
 
-  /@floating-ui/core@0.3.1:
-    resolution: {integrity: sha512-ensKY7Ub59u16qsVIFEo2hwTCqZ/r9oZZFh51ivcLGHfUwTn8l1Xzng8RJUe91H/UP8PeqeBronAGx0qmzwk2g==}
+  /@floating-ui/core@1.6.0:
+    resolution: {integrity: sha512-PcF++MykgmTj3CIyOQbKA/hDzOAiqI3mhuoN44WRCopIs1sgoDoU4oty4Jtqaj/y3oDU6fnVSm4QG0a3t5i0+g==}
+    dependencies:
+      '@floating-ui/utils': 0.2.1
     dev: true
 
-  /@floating-ui/dom@0.1.10:
-    resolution: {integrity: sha512-4kAVoogvQm2N0XE0G6APQJuCNuErjOfPW8Ux7DFxh8+AfugWflwVJ5LDlHOwrwut7z/30NUvdtHzQ3zSip4EzQ==}
+  /@floating-ui/dom@1.1.1:
+    resolution: {integrity: sha512-TpIO93+DIujg3g7SykEAGZMDtbJRrmnYRCNYSjJlvIbGhBjRSNTLVbNeDQBrzy9qDgUbiWdc7KA0uZHZ2tJmiw==}
     dependencies:
-      '@floating-ui/core': 0.3.1
+      '@floating-ui/core': 1.6.0
+    dev: true
+
+  /@floating-ui/utils@0.2.1:
+    resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
     dev: true
 
   /@gar/promisify@1.1.3:
@@ -16285,12 +16291,16 @@ packages:
   /flatted@3.2.9:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
 
-  /floating-vue@2.0.0-y.0(vue@3.3.8):
-    resolution: {integrity: sha512-UpJquQIlP0Z5978RYwGN3qsE6jhxxCt7ltzE1mV2m9GwsZ6y7IaIOAszWqALC+OqWhdPad/0GYxoQYGLC0y+Ow==}
+  /floating-vue@5.2.2(vue@3.3.8):
+    resolution: {integrity: sha512-afW+h2CFafo+7Y9Lvw/xsqjaQlKLdJV7h1fCHfcYQ1C4SVMlu7OAekqWgu5d4SgvkBVU0pVpLlVsrSTBURFRkg==}
     peerDependencies:
+      '@nuxt/kit': ^3.2.0
       vue: ^3.2.0
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
     dependencies:
-      '@floating-ui/dom': 0.1.10
+      '@floating-ui/dom': 1.1.1
       vue: 3.3.8(typescript@5.2.2)
       vue-resize: 2.0.0-alpha.1(vue@3.3.8)
     dev: true

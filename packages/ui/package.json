@@ -77,7 +77,7 @@
     "codemirror-theme-vars": "^0.1.2",
     "cypress": "^13.6.2",
     "d3-graph-controller": "^3.0.4",
-    "floating-vue": "^2.0.0-y.0",
+    "floating-vue": "^5.2.2",
     "splitpanes": "^3.1.5",
     "unocss": "^0.57.4",
     "unplugin-auto-import": "^0.16.7",
