@@ -228,7 +228,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
             argument: '<number>',
           },
           100: {
-            description: 'Shortcut to set all coverage thresholds to 100. This option is only available for the v8 provider (default: false)',
+            description: 'Shortcut to set all coverage thresholds to 100 (default: false)',
           },
         },
       },
@@ -238,7 +238,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         array: true,
       },
       processingConcurrency: {
-        description: 'Concurrency limit used when processing the coverage results. (default min between 20 and the nubmer of CPUs)',
+        description: 'Concurrency limit used when processing the coverage results. (default min between 20 and the number of CPUs)',
         argument: '<number>',
       },
       customProviderModule: {
