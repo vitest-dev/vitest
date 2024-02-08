@@ -6,4 +6,5 @@ export type {
   SnapshotResult,
   UncheckedSnapshot,
   SnapshotSummary,
+  SnapshotSerializer,
 } from '@vitest/snapshot'

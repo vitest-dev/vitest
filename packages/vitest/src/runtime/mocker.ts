@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import vm from 'node:vm'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
-import { getColors, getType } from '@vitest/utils'
+import { getType, highlight } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
@@ -41,8 +41,8 @@ interface MockContext {
 
 function isSpecialProp(prop: Key, parentType: string) {
   return parentType.includes('Function')
-      && typeof prop === 'string'
-      && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
+    && typeof prop === 'string'
+    && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
 }
 
 export class VitestMocker {
@@ -113,9 +113,11 @@ export class VitestMocker {
     return this.executor.state.filepath || 'global'
   }
 
-  private createError(message: string) {
+  private createError(message: string, codeFrame?: string) {
     const Error = this.primitives.Error
-    return new Error(message)
+    const error = new Error(message)
+    Object.assign(error, { codeFrame })
+    return error
   }
 
   public getMocks() {
@@ -183,8 +185,8 @@ export class VitestMocker {
     catch (err) {
       const vitestError = this.createError(
         '[vitest] There was an error when mocking a module. '
-      + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
-      + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
+        + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
+        + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
       )
       vitestError.cause = err
       throw vitestError
@@ -208,18 +210,17 @@ export class VitestMocker {
         else if (!(prop in target)) {
           if (this.filterPublicKeys.includes(prop))
             return undefined
-          const c = getColors()
           throw this.createError(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
-            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n\n'
-            + `${c.green(`vi.mock("${mockpath}", async (importOriginal) => {
+            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n',
+            highlight(`vi.mock("${mockpath}", async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
     // your mocked methods
   }
-})`)}\n`,
+})`),
           )
         }
 
@@ -407,10 +408,21 @@ export class VitestMocker {
     this.deleteCachedItem(id)
   }
 
-  public mockPath(originalId: string, path: string, external: string | null, factory?: MockFactory) {
-    const suitefile = this.getSuiteFilepath()
+  public mockPath(originalId: string, path: string, external: string | null, factory: MockFactory | undefined) {
     const id = this.normalizePath(path)
 
+    // const { config } = this.executor.state
+    // const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
+    // const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
+
+    // TODO: find a good way to throw this error even in non-isolated mode
+    // if (throwIfExists && (isIsolatedThreads || isIsolatedForks || config.pool === 'vmThreads')) {
+    //   const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
+    //   if (cached && cached.importers.size)
+    //     throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers.values()].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
+    // }
+
+    const suitefile = this.getSuiteFilepath()
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
 
@@ -484,11 +496,11 @@ export class VitestMocker {
       return mock
   }
 
-  public queueMock(id: string, importer: string, factory?: MockFactory) {
-    VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
+  public queueMock(id: string, importer: string, factory?: MockFactory, throwIfCached = false) {
+    VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory, throwIfCached })
   }
 
-  public queueUnmock(id: string, importer: string) {
-    VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
+  public queueUnmock(id: string, importer: string, throwIfCached = false) {
+    VitestMocker.pendingIds.push({ type: 'unmock', id, importer, throwIfCached })
   }
 }

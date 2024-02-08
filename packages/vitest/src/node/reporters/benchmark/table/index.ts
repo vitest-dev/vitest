@@ -1,12 +1,11 @@
 import c from 'picocolors'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
-import type { ListRendererOptions } from '../../renderers/listRenderer'
-import { createTableRenderer } from './tableRender'
+import { type TableRendererOptions, createTableRenderer } from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
-  rendererOptions: ListRendererOptions = {} as any
+  rendererOptions: TableRendererOptions = {} as any
 
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
@@ -22,6 +21,7 @@ export class TableReporter extends BaseReporter {
     if (this.isTTY) {
       this.rendererOptions.logger = this.ctx.logger
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createTableRenderer(files, this.rendererOptions).start()

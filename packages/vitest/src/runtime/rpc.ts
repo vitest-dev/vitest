@@ -1,7 +1,9 @@
 import {
   getSafeTimers,
 } from '@vitest/utils'
-import type { BirpcReturn } from 'birpc'
+import type { CancelReason } from '@vitest/runner'
+import { createBirpc } from 'birpc'
+import type { BirpcOptions, BirpcReturn } from 'birpc'
 import { getWorkerState } from '../utils/global'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types'
@@ -51,6 +53,40 @@ export async function rpcDone() {
     return
   const awaitable = Array.from(promises)
   return Promise.all(awaitable)
+}
+
+export function createRuntimeRpc(options: Pick<BirpcOptions<RuntimeRPC>, 'on' | 'post' | 'serialize' | 'deserialize'>) {
+  let setCancel = (_reason: CancelReason) => {}
+  const onCancel = new Promise<CancelReason>((resolve) => {
+    setCancel = resolve
+  })
+
+  const rpc = createSafeRpc(createBirpc<RuntimeRPC, RunnerRPC>(
+    {
+      onCancel: setCancel,
+    },
+    {
+      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
+      onTimeoutError(functionName, args) {
+        let message = `[vitest-worker]: Timeout calling "${functionName}"`
+
+        if (functionName === 'fetch' || functionName === 'transform' || functionName === 'resolveId')
+          message += ` with "${JSON.stringify(args)}"`
+
+        // JSON.stringify cannot serialize Error instances
+        if (functionName === 'onUnhandledError')
+          message += ` with "${args[0]?.message || args[0]}"`
+
+        throw new Error(message)
+      },
+      ...options,
+    },
+  ))
+
+  return {
+    rpc,
+    onCancel,
+  }
 }
 
 export function createSafeRpc(rpc: WorkerRPC) {

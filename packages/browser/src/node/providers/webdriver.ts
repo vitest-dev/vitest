@@ -1,8 +1,6 @@
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
 import type { RemoteOptions } from 'webdriverio'
 
-type Awaitable<T> = T | PromiseLike<T>
-
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = typeof webdriverBrowsers[number]
 
@@ -14,7 +12,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio'
 
   private cachedBrowser: WebdriverIO.Browser | null = null
-  private stopSafari: () => void = () => {}
   private browser!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
@@ -39,14 +36,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     if (this.browser === 'safari') {
       if (options.headless)
         throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it.')
-
-      const safaridriver = await import('safaridriver')
-      safaridriver.start({ diagnose: true })
-      this.stopSafari = () => safaridriver.stop()
-
-      process.on('beforeExit', () => {
-        safaridriver.stop()
-      })
     }
 
     const { remote } = await import('webdriverio')
@@ -90,14 +79,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     await browserInstance.url(url)
   }
 
-  // TODO
-  catchError(_cb: (error: Error) => Awaitable<void>) {
-    return () => {}
-  }
-
   async close() {
     await Promise.all([
-      this.stopSafari(),
       this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
     ])
     // TODO: right now process can only exit with timeout, if we use browser

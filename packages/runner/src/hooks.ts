@@ -1,4 +1,4 @@
-import type { OnTestFailedHandler, SuiteHooks, TaskPopulated } from './types'
+import type { OnTestFailedHandler, OnTestFinishedHandler, SuiteHooks, TaskPopulated } from './types'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
 import { withTimeout } from './context'
@@ -27,6 +27,11 @@ export const onTestFailed = createTestHook<OnTestFailedHandler>('onTestFailed', 
   test.onFailed.push(handler)
 })
 
+export const onTestFinished = createTestHook<OnTestFinishedHandler>('onTestFinished', (test, handler) => {
+  test.onFinished ||= []
+  test.onFinished.push(handler)
+})
+
 function createTestHook<T>(name: string, handler: (test: TaskPopulated, handler: T) => void) {
   return (fn: T) => {
     const current = getCurrentTest()
@@ -34,6 +39,6 @@ function createTestHook<T>(name: string, handler: (test: TaskPopulated, handler:
     if (!current)
       throw new Error(`Hook ${name}() can only be called inside a test`)
 
-    handler(current, fn)
+    return handler(current, fn)
   }
 }

@@ -3,7 +3,6 @@ import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from './ty
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!
-  resolvedPaths = new Set<string>()
   extension = '.snap'
 
   constructor(public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>) {
@@ -30,7 +29,6 @@ export class SnapshotManager {
     })
 
     const path = resolver(testPath, this.extension)
-    this.resolvedPaths.add(path)
     return path
   }
 

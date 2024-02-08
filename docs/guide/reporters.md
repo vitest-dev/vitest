@@ -26,6 +26,23 @@ export default defineConfig({
 })
 ```
 
+Some reporters can be customized by passing additional options to them. Reporter specific options are described in sections below.
+
+:::tip
+Since Vitest v1.3.0
+:::
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      'default',
+      ['junit', { suiteName: 'UI tests' }]
+    ],
+  },
+})
+```
+
 ## Reporter Output
 
 By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/#outputfile) either in your Vite configuration file or via CLI.
@@ -234,7 +251,18 @@ AssertionError: expected 5 to be 4 // Object.is equality
     </testsuite>
 </testsuites>
 ```
-The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively.
+
+The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively. These can also be customized via reporter options:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['junit', { suiteName: 'custom suite name', classname: 'custom-classname' }]
+    ]
+  },
+})
+```
 
 ### JSON Reporter
 
@@ -416,6 +444,16 @@ export default defineConfig({
 })
 ```
 :::
+
+### Github Actions Reporter <Badge type="info">1.3.0+</Badge>
+
+Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
+to provide annotations for test failures. This reporter is automatically enabled when `process.env.GITHUB_ACTIONS === 'true'`, thus it doesn't require any configuration.
+
+<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
+<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+
+
 
 ## Custom Reporters
 

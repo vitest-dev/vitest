@@ -5,10 +5,6 @@ import type { WorkspaceProject } from '../workspace'
 export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
   return {
-    async onWorkerExit(error, code) {
-      await ctx.logger.printError(error, { type: 'Unexpected Exit', fullStack: true })
-      process.exit(code || 1)
-    },
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
     },
@@ -35,28 +31,28 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
-      return project.report('onPathsCollected', paths)
+      return ctx.report('onPathsCollected', paths)
     },
     onCollected(files) {
       ctx.state.collectFiles(files)
-      return project.report('onCollected', files)
+      return ctx.report('onCollected', files)
     },
     onAfterSuiteRun(meta) {
       ctx.coverageProvider?.onAfterSuiteRun(meta)
     },
     onTaskUpdate(packs) {
       ctx.state.updateTasks(packs)
-      return project.report('onTaskUpdate', packs)
+      return ctx.report('onTaskUpdate', packs)
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)
-      return project.report('onUserConsoleLog', log)
+      ctx.report('onUserConsoleLog', log)
     },
     onUnhandledError(err, type) {
       ctx.state.catchError(err, type)
     },
     onFinished(files) {
-      return project.report('onFinished', files, ctx.state.getUnhandledErrors())
+      return ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
     },
     onCancel(reason) {
       ctx.cancelCurrentRun(reason)

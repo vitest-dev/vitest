@@ -12,6 +12,12 @@ import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
 
+export interface JUnitOptions {
+  outputFile?: string
+  classname?: string
+  suiteName?: string
+}
+
 function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
@@ -36,13 +42,13 @@ function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean)
     // remove everything discouraged by XML 1.0 specifications
     regex = new RegExp(
       '([\\x7F-\\x84]|[\\x86-\\x9F]|[\\uFDD0-\\uFDEF]|(?:\\uD83F[\\uDFFE\\uDFFF])|(?:\\uD87F[\\uDF'
-    + 'FE\\uDFFF])|(?:\\uD8BF[\\uDFFE\\uDFFF])|(?:\\uD8FF[\\uDFFE\\uDFFF])|(?:\\uD93F[\\uDFFE\\uD'
-    + 'FFF])|(?:\\uD97F[\\uDFFE\\uDFFF])|(?:\\uD9BF[\\uDFFE\\uDFFF])|(?:\\uD9FF[\\uDFFE\\uDFFF])'
-    + '|(?:\\uDA3F[\\uDFFE\\uDFFF])|(?:\\uDA7F[\\uDFFE\\uDFFF])|(?:\\uDABF[\\uDFFE\\uDFFF])|(?:\\'
-    + 'uDAFF[\\uDFFE\\uDFFF])|(?:\\uDB3F[\\uDFFE\\uDFFF])|(?:\\uDB7F[\\uDFFE\\uDFFF])|(?:\\uDBBF'
-    + '[\\uDFFE\\uDFFF])|(?:\\uDBFF[\\uDFFE\\uDFFF])(?:[\\0-\\t\\x0B\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
-    + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
-    + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
+      + 'FE\\uDFFF])|(?:\\uD8BF[\\uDFFE\\uDFFF])|(?:\\uD8FF[\\uDFFE\\uDFFF])|(?:\\uD93F[\\uDFFE\\uD'
+      + 'FFF])|(?:\\uD97F[\\uDFFE\\uDFFF])|(?:\\uD9BF[\\uDFFE\\uDFFF])|(?:\\uD9FF[\\uDFFE\\uDFFF])'
+      + '|(?:\\uDA3F[\\uDFFE\\uDFFF])|(?:\\uDA7F[\\uDFFE\\uDFFF])|(?:\\uDABF[\\uDFFE\\uDFFF])|(?:\\'
+      + 'uDAFF[\\uDFFE\\uDFFF])|(?:\\uDB3F[\\uDFFE\\uDFFF])|(?:\\uDB7F[\\uDFFE\\uDFFF])|(?:\\uDBBF'
+      + '[\\uDFFE\\uDFFF])|(?:\\uDBFF[\\uDFFE\\uDFFF])(?:[\\0-\\t\\x0B\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
+      + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
+      + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
       'g',
     )
 
@@ -80,11 +86,16 @@ export class JUnitReporter implements Reporter {
   private logger!: IndentedLogger<Promise<void>>
   private _timeStart = new Date()
   private fileFd?: fs.FileHandle
+  private options: JUnitOptions
+
+  constructor(options: JUnitOptions) {
+    this.options = options
+  }
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile = getOutputFile(this.ctx.config, 'junit')
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)
@@ -173,7 +184,8 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        classname: process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
+        classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
         name: task.name,
         time: getDuration(task),
       }, async () => {
@@ -258,7 +270,8 @@ export class JUnitReporter implements Reporter {
       stats.failures += file.stats.failures
       return stats
     }, {
-      name: process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { suiteName: 'something' }]]"
+      name: this.options.suiteName || process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
       tests: 0,
       failures: 0,
       errors: 0, // we cannot detect those
@@ -268,7 +281,7 @@ export class JUnitReporter implements Reporter {
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
-          name: file.name,
+          name: relative(this.ctx.config.root, file.filepath),
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,

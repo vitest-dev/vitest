@@ -20,7 +20,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     if (!project.config.typecheck.ignoreSourceErrors)
       sourceErrors.forEach(error => ctx.state.catchError(error, 'Unhandled Source Error'))
 
-    const processError = !hasFailed(files) && checker.getExitCode()
+    const processError = !hasFailed(files) && !sourceErrors.length && checker.getExitCode()
     if (processError) {
       const error = new Error(checker.getOutput())
       error.stack = ''

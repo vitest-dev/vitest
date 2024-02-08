@@ -15,7 +15,7 @@ import { FakeTimers } from '../../../../packages/vitest/src/integrations/mock/ti
 
 class FakeDate extends Date {}
 
-const isChildProcess = globalThis.__vitest_worker__.isChildProcess
+const isChildProcess = !!process.send
 
 describe('FakeTimers', () => {
   afterEach(() => {
@@ -118,6 +118,21 @@ describe('FakeTimers', () => {
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.clearImmediate).not.toBe(origClearImmediate)
+    })
+
+    it('mocks requestIdleCallback even if not on global', () => {
+      const global = { Date: FakeDate, clearTimeout, setTimeout };
+      const timers = new FakeTimers({ global, config: { toFake: ["requestIdleCallback"] }})
+      timers.useFakeTimers()
+      expect(global.requestIdleCallback).toBeDefined();
+    })
+
+    it('cannot mock setImmediate and clearImmediate if not on global', () => {
+      const global = { Date: FakeDate, clearTimeout, setTimeout };
+      const timers = new FakeTimers({ global, config: { toFake: ["setImmediate", "clearImmediate"] }})
+      timers.useFakeTimers()
+      expect(global.setImmediate).toBeUndefined();
+      expect(global.clearImmediate).toBeUndefined();
     })
   })
 

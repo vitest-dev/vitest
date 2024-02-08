@@ -6,7 +6,7 @@ import remapping from '@ampproject/remapping'
 
 const provider = process.argv[1 + process.argv.indexOf('--provider')]
 
-export default defineConfig({
+export default defineConfig(() => ({
   plugins: [
     vue(),
     /*
@@ -79,6 +79,7 @@ export default defineConfig({
         ['html'],
         ['lcov', {}],
         ['json', { file: 'custom-json-report-name.json' }],
+        [resolve('./custom-reporter.cjs'), { file: 'custom-reporter-output.md' }],
       ],
 
       // These will be updated by tests and reseted back by generic.report.test.ts
@@ -103,4 +104,4 @@ export default defineConfig({
       './src/another-setup.ts',
     ],
   },
-})
+}))

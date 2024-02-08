@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "rootDir": ".",
-    "module": "node16",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "paths": {
       "#src/*": ["./src/*"]
     },

@@ -3,7 +3,7 @@ import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
-import type { BuiltinReporters } from '../node/reporters'
+import type { BuiltinReporterOptions, BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -189,6 +189,15 @@ interface DepsOptions {
   moduleDirectories?: string[]
 }
 
+type InlineReporter = Reporter
+type ReporterName = BuiltinReporters | 'html' | (string & {})
+type ReporterWithOptions<Name extends ReporterName = ReporterName> =
+  Name extends keyof BuiltinReporterOptions
+    ? BuiltinReporterOptions[Name] extends never
+      ? [Name, {}]
+      : [Name, Partial<BuiltinReporterOptions[Name]>]
+    : [Name, Record<string, unknown>]
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -365,8 +374,9 @@ export interface InlineConfig {
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters.
    */
-  reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
+  reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
+  // TODO: v2.0.0 Remove in favor of custom reporter options, e.g. "reporters: [['json', { outputFile: 'some-dir/file.html' }]]"
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
@@ -524,6 +534,11 @@ export interface InlineConfig {
   diff?: string
 
   /**
+   * Paths to snapshot serializer modules.
+   */
+  snapshotSerializers?: string[]
+
+  /**
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string
@@ -668,6 +683,17 @@ export interface InlineConfig {
    * Show full diff when snapshot fails instead of a patch.
    */
   expandSnapshotDiff?: boolean
+
+  /**
+   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
+   * This is also required for console log preview on Vitest UI.
+   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
+   *
+   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   *
+   * @default false
+   */
+  disableConsoleIntercept?: boolean
 }
 
 export interface TypecheckConfig {
@@ -775,7 +801,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   pool: Pool
   poolOptions?: PoolOptions
 
-  reporters: (Reporter | BuiltinReporters)[]
+  reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
 
@@ -817,7 +843,6 @@ export type ProjectConfig = Omit<
   | 'update'
   | 'reporters'
   | 'outputFile'
-  | 'pool'
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
@@ -842,6 +867,11 @@ export type ProjectConfig = Omit<
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
+  poolOptions?: {
+    threads?: Pick<NonNullable<PoolOptions['threads']>, 'singleThread' | 'isolate'>
+    vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
+    forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
+  }
 }
 
 export type RuntimeConfig = Pick<

@@ -1,35 +1,35 @@
 import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
+import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
+import { getConfig, importId } from './utils'
+import { BrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
-  browserHashMap: Map<string, [test: boolean, timstamp: string]>
 }
+
+export const browserHashMap = new Map<string, [test: boolean, timstamp: string]>()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
 export function createBrowserRunner(
-  original: { new(config: ResolvedConfig): VitestRunner },
+  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
   coverageModule: CoverageHandler | null,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
-  return class BrowserTestRunner extends original {
+  return class BrowserTestRunner extends VitestRunner {
     public config: ResolvedConfig
-    hashMap = new Map<string, [test: boolean, timstamp: string]>()
+    hashMap = browserHashMap
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
-      this.hashMap = options.browserHashMap
     }
 
     async onAfterRunTask(task: Test) {
       await super.onAfterRunTask?.(task)
-      task.result?.errors?.forEach((error) => {
-        console.error(error.message)
-      })
 
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()
@@ -69,12 +69,41 @@ export function createBrowserRunner(
         hash = Date.now().toString()
         this.hashMap.set(filepath, [false, hash])
       }
+      const base = this.config.base || '/'
 
       // on Windows we need the unit to resolve the test file
-      const importpath = /^\w:/.test(filepath)
-        ? `/@fs/${filepath}?${test ? 'browserv' : 'v'}=${hash}`
-        : `${filepath}?${test ? 'browserv' : 'v'}=${hash}`
+      const prefix = `${base}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)
     }
   }
+}
+
+let cachedRunner: VitestRunner | null = null
+
+export async function initiateRunner() {
+  if (cachedRunner)
+    return cachedRunner
+  const config = getConfig()
+  const [{ VitestTestRunner }, { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers }] = await Promise.all([
+    importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
+    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+  ])
+  const BrowserRunner = createBrowserRunner(VitestTestRunner, {
+    takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+  })
+  if (!config.snapshotOptions.snapshotEnvironment)
+    config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
+  const runner = new BrowserRunner({
+    config,
+  })
+  const executor = { executeId: importId } as VitestExecutor
+  const [diffOptions] = await Promise.all([
+    loadDiffConfig(config, executor),
+    loadSnapshotSerializers(config, executor),
+  ])
+  runner.config.diffOptions = diffOptions
+  cachedRunner = runner
+  return runner
 }

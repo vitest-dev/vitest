@@ -1,5 +1,6 @@
-import { getColors, stringify } from '@vitest/utils'
-import type { MatcherHintOptions } from './types'
+import { getColors, getType, stringify } from '@vitest/utils'
+import type { MatcherHintOptions, Tester } from './types'
+import { JEST_MATCHERS_OBJECT } from './constants'
 
 export { diff } from '@vitest/utils/diff'
 export { stringify }
@@ -100,4 +101,22 @@ export function getMatcherUtils() {
     printReceived,
     printExpected,
   }
+}
+
+export function addCustomEqualityTesters(newTesters: Array<Tester>): void {
+  if (!Array.isArray(newTesters)) {
+    throw new TypeError(
+      `expect.customEqualityTesters: Must be set to an array of Testers. Was given "${getType(
+        newTesters,
+      )}"`,
+    )
+  }
+
+  (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters.push(
+    ...newTesters,
+  )
+}
+
+export function getCustomEqualityTesters(): Array<Tester> {
+  return (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters
 }

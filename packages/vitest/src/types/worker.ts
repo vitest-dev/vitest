@@ -8,7 +8,6 @@ import type { ContextRPC, RunnerRPC, RuntimeRPC } from './rpc'
 import type { Environment } from './general'
 
 export interface WorkerContext extends ContextRPC {
-  workerId: number
   port: MessagePort
 }
 
@@ -38,5 +37,4 @@ export interface WorkerGlobalState {
     environment: number
     prepare: number
   }
-  isChildProcess?: boolean
 }

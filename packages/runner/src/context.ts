@@ -59,6 +59,11 @@ export function createTestContext<T extends Test | Custom>(test: T, runner: Vite
     test.onFailed.push(fn)
   }
 
+  context.onTestFinished = (fn) => {
+    test.onFinished ||= []
+    test.onFinished.push(fn)
+  }
+
   return runner.extendTaskContext?.(context) as ExtendedContext<T> || context
 }
 

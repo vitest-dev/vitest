@@ -13,6 +13,7 @@ export default antfu(
       'test/core/src/self',
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
+      'test/network-imports/public/slash@3.0.0.js',
       'examples/**/mockServiceWorker.js',
     ],
   },
@@ -22,6 +23,8 @@ export default antfu(
       'node/prefer-global/buffer': 'off',
       'node/prefer-global/process': 'off',
       'no-empty-pattern': 'off',
+      'antfu/indent-binary-ops': 'off',
+      'style/member-delimiter-style': ['error', { multiline: { delimiter: 'none' }, singleline: { delimiter: 'semi' } }],
 
       'ts/no-invalid-this': 'off',
 

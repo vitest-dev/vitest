@@ -22,7 +22,11 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
 }
 
-export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions) {
+interface PrintErrorResult {
+  nearest?: ParsedStack
+}
+
+export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): Promise<PrintErrorResult | undefined> {
   const { showCodeFrame = true, fullStack = false, type } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
@@ -43,8 +47,10 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   }
 
   // Error may have occured even before the configuration was resolved
-  if (!project)
-    return printErrorMessage(e, logger)
+  if (!project) {
+    printErrorMessage(e, logger)
+    return
+  }
 
   const parserOptions: StackTraceParserOptions = {
     // only browser stack traces require remapping
@@ -58,9 +64,14 @@ export async function printError(error: unknown, project: WorkspaceProject | und
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
-    : stacks.find(stack =>
-      project.getModuleById(stack.file)
-      && existsSync(stack.file),
+    : stacks.find((stack) => {
+      try {
+        return project.server && project.getModuleById(stack.file) && existsSync(stack.file)
+      }
+      catch {
+        return false
+      }
+    },
     )
 
   const errorProperties = getErrorProperties(e)
@@ -68,6 +79,8 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   if (type)
     printErrorType(type, project.ctx)
   printErrorMessage(e, logger)
+  if (e.codeFrame)
+    logger.error(`${e.codeFrame}\n`)
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff)
@@ -78,10 +91,10 @@ export async function printError(error: unknown, project: WorkspaceProject | und
     logger.error(c.yellow(e.frame))
   }
   else {
-    printStack(project, stacks, nearest, errorProperties, (s) => {
+    printStack(logger, project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        logger.error(generateCodeFrame(sourceCode, 4, s.line, s.column))
+        logger.error(generateCodeFrame(sourceCode.length > 100_000 ? sourceCode : logger.highlight(nearest.file, sourceCode), 4, s))
       }
     })
   }
@@ -95,7 +108,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   if (testName) {
     logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
-    + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+    + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.'))
   }
   if (afterEnvTeardown) {
     logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
@@ -109,6 +122,8 @@ export async function printError(error: unknown, project: WorkspaceProject | und
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+
+  return { nearest }
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -124,6 +139,7 @@ const skipErrorProperties = new Set([
   'type',
   'showDiff',
   'diff',
+  'codeFrame',
   'actual',
   'expected',
   'diffOptions',
@@ -172,14 +188,14 @@ function handleImportOutsideModuleError(stack: string, logger: Logger) {
 function printModuleWarningForPackage(logger: Logger, path: string, name: string) {
   logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-+ `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
-+ 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-+ '\n\n'
-+ 'As a temporary workaround you can try to inline the package by updating your config:'
-+ '\n\n'
-+ c.gray(c.dim('// vitest.config.js'))
-+ '\n'
-+ c.green(`export default {
+    + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
+    + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
+    + '\n\n'
+    + 'As a temporary workaround you can try to inline the package by updating your config:'
+    + '\n\n'
+    + c.gray(c.dim('// vitest.config.js'))
+    + '\n'
+    + c.green(`export default {
   test: {
     server: {
       deps: {
@@ -196,7 +212,7 @@ function printModuleWarningForPackage(logger: Logger, path: string, name: string
 function printModuleWarningForSourceCode(logger: Logger, path: string) {
   logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-+ 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
+    + 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
   ))
 }
 
@@ -221,14 +237,13 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
 }
 
 function printStack(
+  logger: Logger,
   project: WorkspaceProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  const logger = project.ctx.logger
-
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)
@@ -249,11 +264,10 @@ function printStack(
 export function generateCodeFrame(
   source: string,
   indent = 0,
-  lineNumber: number,
-  columnNumber: number,
+  loc: { line: number; column: number } | number,
   range = 2,
 ): string {
-  const start = positionToOffset(source, lineNumber, columnNumber)
+  const start = typeof loc === 'object' ? positionToOffset(source, loc.line, loc.column) : loc
   const end = start
   const lines = source.split(lineSplitRE)
   const nl = /\r\n/.test(source) ? 2 : 1

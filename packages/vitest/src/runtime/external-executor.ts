@@ -1,12 +1,10 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
-import { statSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
-import type { ExecuteOptions } from './execute'
+import type { RuntimeRPC } from '../types/rpc'
 import type { VMModule, VMSyntheticModule } from './vm/types'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import type { FileMap } from './vm/file-map'
@@ -16,12 +14,16 @@ import { ViteExecutor } from './vm/vite-executor'
 
 const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 
+// always defined when we use vm pool
 const nativeResolve = import.meta.resolve!
 
-export interface ExternalModulesExecutorOptions extends ExecuteOptions {
+export interface ExternalModulesExecutorOptions {
   context: vm.Context
   fileMap: FileMap
   packageCache: Map<string, any>
+  transform: RuntimeRPC['transform']
+  interopDefault?: boolean
+  viteClientModule: Record<string, unknown>
 }
 
 interface ModuleInformation {
@@ -55,7 +57,7 @@ export class ExternalModulesExecutor {
       esmExecutor: this.esm,
       context: this.context,
       transform: options.transform,
-      viteClientModule: options.requestStubs!['/@vite/client'],
+      viteClientModule: options.viteClientModule,
     })
     this.resolvers = [this.vite.resolve]
   }
@@ -67,16 +69,22 @@ export class ExternalModulesExecutor {
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
-    const identifier = await this.resolve(specifier, referencer)
+    let identifier = this.resolve(specifier, referencer) as string | Promise<string>
+
+    if (identifier instanceof Promise)
+      identifier = await identifier
+
     return await this.createModule(identifier)
   }
 
-  public async resolve(specifier: string, parent: string) {
+  public resolve(specifier: string, parent: string) {
     for (const resolver of this.resolvers) {
       const id = resolver(specifier, parent)
       if (id)
         return id
     }
+
+    // import.meta.resolve can be asynchronous in older +18 Node versions
     return nativeResolve(specifier, parent)
   }
 
@@ -177,6 +185,14 @@ export class ExternalModulesExecutor {
 
   private async createModule(identifier: string): Promise<VMModule> {
     const { type, url, path } = this.getModuleInformation(identifier)
+
+    // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
+    // https://github.com/nodejs/node/pull/49038
+    if ((type === 'module' || type === 'commonjs') && !existsSync(path)) {
+      const error = new Error(`Cannot find module '${path}'`)
+      ;(error as any).code = 'ERR_MODULE_NOT_FOUND'
+      throw error
+    }
 
     switch (type) {
       case 'data':

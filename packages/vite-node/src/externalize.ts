@@ -95,8 +95,9 @@ async function _shouldExternalize(
     return id
 
   // data: should be processed by native import,
-  // since it is a feature of ESM
-  if (id.startsWith('data:'))
+  // since it is a feature of ESM.
+  // also externalize network imports since nodejs allows it when --experimental-network-imports
+  if (id.startsWith('data:') || /^(https?:)?\/\//.test(id))
     return id
 
   id = patchWindowsImportPath(id)

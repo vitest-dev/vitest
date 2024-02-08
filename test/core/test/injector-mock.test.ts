@@ -1,6 +1,7 @@
 import { parseAst } from 'rollup/parseAst'
-import { expect, test } from 'vitest'
-import { describe } from 'node:test'
+import { describe, expect, it, test } from 'vitest'
+import stripAnsi from 'strip-ansi'
+import { getDefaultColors } from '@vitest/utils'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {
@@ -99,13 +100,71 @@ describe('transform', () => {
   }
   test('default import', async () => {
     expect(
-      await hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`),
+      hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
       vi.mock('faker');
       const __vi_import_0__ = await import('vue')
 
       console.log(__vi_import_0__.default.bar)"
+    `)
+  })
+
+  test('can use imported variables inside the mock', () => {
+    expect(
+      hoistMocks(`
+import { vi } from 'vitest'
+import user from './user'
+import { admin } from './admin'
+vi.mock('./mock.js', () => ({
+  getSession: vi.fn().mockImplementation(() => ({
+    user,
+    admin: admin,
+  }))
+}))
+`, './test.js', parse)?.code.trim(),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      vi.mock('./mock.js', () => ({
+        getSession: vi.fn().mockImplementation(() => ({
+          user: __vi_import_0__.default,
+          admin: __vi_import_1__.admin,
+        }))
+      }))
+      const __vi_import_0__ = await import('./user')
+      const __vi_import_1__ = await import('./admin')"
+    `)
+  })
+
+  test('can use hoisted variables inside the mock', () => {
+    expect(
+      hoistMocks(`
+import { vi } from 'vitest'
+const { user, admin } = await vi.hoisted(async () => {
+  const { default: user } = await import('./user')
+  const { admin } = await import('./admin')
+  return { user, admin }
+})
+vi.mock('./mock.js', () => {
+  getSession: vi.fn().mockImplementation(() => ({
+    user,
+    admin: admin,
+  }))
+})
+`, './test.js', parse)?.code.trim(),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      const { user, admin } = await vi.hoisted(async () => {
+        const { default: user } = await import('./user')
+        const { admin } = await import('./admin')
+        return { user, admin }
+      })
+      vi.mock('./mock.js', () => {
+        getSession: vi.fn().mockImplementation(() => ({
+          user,
+          admin: admin,
+        }))
+      })"
     `)
   })
 
@@ -417,8 +476,8 @@ describe('transform', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `import { Foo } from './dependency';`
-        + `export default class A extends Foo {}\n`
-        + `export class B extends Foo {}`,
+      + `export default class A extends Foo {}\n`
+      + `export class B extends Foo {}`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
@@ -453,7 +512,7 @@ describe('transform', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `export default function foo() {}\n`
-        + `foo.prototype = Object.prototype;`,
+      + `foo.prototype = Object.prototype;`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
@@ -491,13 +550,13 @@ describe('transform', () => {
     expect(
       await hoistSimpleCodeWithoutMocks(
       `import { inject } from 'vue';`
-        + `const a = { inject }\n`
-        + `const b = { test: inject }\n`
-        + `function c() { const { test: inject } = { test: true }; console.log(inject) }\n`
-        + `const d = inject\n`
-        + `function f() {  console.log(inject) }\n`
-        + `function e() { const { inject } = { inject: true } }\n`
-        + `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
+      + `const a = { inject }\n`
+      + `const b = { test: inject }\n`
+      + `function c() { const { test: inject } = { test: true }; console.log(inject) }\n`
+      + `const d = inject\n`
+      + `function f() {  console.log(inject) }\n`
+      + `function e() { const { inject } = { inject: true } }\n`
+      + `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
       ),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
@@ -1123,5 +1182,184 @@ console.log(foo + 2)
       export * from './b'
       console.log(__vi_import_0__.foo + 2)"
     `)
+  })
+
+  test('handle single "await vi.hoisted"', async () => {
+    expect(
+      hoistSimpleCode(`
+import { vi } from 'vitest';
+1234;
+await vi
+  .hoisted(() => {});
+    `),
+    ).toMatchInlineSnapshot(`
+      "const { vi } = await import('vitest')
+      await vi
+        .hoisted(() => {});
+
+
+      1234;"
+    `)
+  })
+})
+
+describe('throws an error when nodes are incompatible', () => {
+  const getErrorWhileHoisting = (code: string) => {
+    try {
+      hoistMocks(code, '/test.js', parse, getDefaultColors())?.code.trim()
+    }
+    catch (err: any) {
+      return err
+    }
+  }
+
+  it.each([
+    [
+      'vi.hoisted is called inside vi.mock',
+      `\
+import { vi } from 'vitest'
+
+vi.mock('./mocked', () => {
+  const variable = vi.hoisted(() => 1)
+  console.log(variable)
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is called inside vi.mock',
+      `\
+import { vi } from 'vitest'
+
+vi.mock('./mocked', async () => {
+  await vi.hoisted(() => 1)
+})
+`,
+    ],
+    [
+      'awaited assigned vi.hoisted is called inside vi.mock',
+      `\
+import { vi } from 'vitest'
+
+vi.mock('./mocked', async () => {
+  const variable = await vi.hoisted(() => 1)
+})
+`,
+    ],
+    [
+      'vi.mock inside vi.hoisted',
+      `\
+import { vi } from 'vitest'
+
+vi.hoisted(() => {
+  vi.mock('./mocked')
+})
+`,
+    ],
+    [
+      'vi.mock is called inside assigned vi.hoisted',
+      `\
+import { vi } from 'vitest'
+
+const values = vi.hoisted(() => {
+  vi.mock('./mocked')
+})
+`,
+    ],
+    [
+      'vi.mock is called inside awaited vi.hoisted',
+      `\
+import { vi } from 'vitest'
+
+await vi.hoisted(async () => {
+  vi.mock('./mocked')
+})
+`,
+    ],
+    [
+      'vi.mock is called inside assigned awaited vi.hoisted',
+      `\
+import { vi } from 'vitest'
+
+const values = await vi.hoisted(async () => {
+  vi.mock('./mocked')
+})
+`,
+    ],
+    [
+      'vi.hoisted is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const values = vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+    [
+      'vi.hoisted is exported as default',
+      `\
+import { vi } from 'vitest'
+
+export default vi.hoisted(() => {
+  return {}
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is exported as named export',
+      `\
+import { vi } from 'vitest'
+
+export const values = await vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+    [
+      'awaited vi.hoisted is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default await vi.hoisted(async () => {
+  return {}
+})
+`,
+    ],
+    [
+      'vi.mock is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default vi.mock('./mocked')
+`,
+    ],
+    [
+      'vi.unmock is exported as default export',
+      `\
+import { vi } from 'vitest'
+
+export default vi.unmock('./mocked')
+`,
+    ],
+    [
+      'vi.mock is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const mocked = vi.mock('./mocked')
+`,
+    ],
+    [
+      'vi.unmock is exported as a named export',
+      `\
+import { vi } from 'vitest'
+
+export const mocked = vi.unmock('./mocked')
+`,
+    ],
+  ])('correctly throws an error if %s', (_, code) => {
+    const error = getErrorWhileHoisting(code)
+    expect(error.message).toMatchSnapshot()
+    expect(stripAnsi(error.frame)).toMatchSnapshot()
   })
 })

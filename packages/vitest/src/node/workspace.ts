@@ -7,7 +7,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -25,7 +25,7 @@ interface InitializeProjectOptions extends UserWorkspaceConfig {
 }
 
 export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: InitializeProjectOptions) {
-  const project = new WorkspaceProject(workspacePath, ctx)
+  const project = new WorkspaceProject(workspacePath, ctx, options)
 
   const configFile = options.extends
     ? resolve(dirname(options.workspaceConfigPath), options.extends)
@@ -70,6 +70,12 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
 
+  browserState: {
+    files: string[]
+    resolve(): void
+    reject(v: unknown): void
+  } | undefined
+
   testFilesList: string[] | null = null
 
   private _globalSetups: GlobalSetupFile[] | undefined
@@ -78,6 +84,7 @@ export class WorkspaceProject {
   constructor(
     public path: string | number,
     public ctx: Vitest,
+    public options?: InitializeProjectOptions,
   ) { }
 
   getName(): string {
@@ -256,10 +263,10 @@ export class WorkspaceProject {
 
     if (filters.length) {
       return testFiles.filter((t) => {
-        const testFile = relative(dir, t)
+        const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-          return testFile.includes(f) || testFile.includes(relativePath)
+          return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
     }
@@ -309,22 +316,34 @@ export class WorkspaceProject {
     await this.initBrowserServer(this.server.config.configFile)
   }
 
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.ctx.report(name, ...args)
-  }
-
   isBrowserEnabled() {
     return isBrowserEnabled(this.config)
   }
 
   getSerializableConfig() {
     const optimizer = this.config.deps?.optimizer
+    const poolOptions = this.config.poolOptions
+
+    // Resolve from server.config to avoid comparing against default value
+    const isolate = this.server?.config?.test?.isolate
+
     return deepMerge({
       ...this.config,
       coverage: this.ctx.config.coverage,
 
-      pool: this.ctx.config.pool,
-      poolOptions: this.ctx.config.poolOptions,
+      poolOptions: {
+        forks: {
+          singleFork: poolOptions?.forks?.singleFork ?? this.ctx.config.poolOptions?.forks?.singleFork ?? false,
+          isolate: poolOptions?.forks?.isolate ?? isolate ?? this.ctx.config.poolOptions?.forks?.isolate ?? true,
+        },
+        threads: {
+          singleThread: poolOptions?.threads?.singleThread ?? this.ctx.config.poolOptions?.threads?.singleThread ?? false,
+          isolate: poolOptions?.threads?.isolate ?? isolate ?? this.ctx.config.poolOptions?.threads?.isolate ?? true,
+        },
+        vmThreads: {
+          singleThread: poolOptions?.vmThreads?.singleThread ?? this.ctx.config.poolOptions?.vmThreads?.singleThread ?? false,
+        },
+      },
 
       reporters: [],
       deps: {
@@ -374,7 +393,7 @@ export class WorkspaceProject {
       return
     if (this.browserProvider)
       return
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    const Provider = await getBrowserProvider(this.config.browser, this)
     this.browserProvider = new Provider()
     const browser = this.config.browser.name
     const supportedBrowsers = this.browserProvider.getSupportedBrowsers()

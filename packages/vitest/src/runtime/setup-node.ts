@@ -55,7 +55,8 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
     getSourceMap: source => state.moduleCache.getSourceMap(source),
   })
 
-  await setupConsoleLogSpy(state)
+  if (!config.disableConsoleIntercept)
+    await setupConsoleLogSpy(state)
 }
 
 export async function setupConsoleLogSpy(state: WorkerGlobalState) {

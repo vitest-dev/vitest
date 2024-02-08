@@ -48,7 +48,7 @@ export default <Environment>({
       cookieJar = false,
       ...restOptions
     } = jsdom as any
-    const dom = new JSDOM(
+    let dom = new JSDOM(
       html,
       {
         pretendToBeVisual,
@@ -97,6 +97,7 @@ export default <Environment>({
       teardown() {
         clearWindowErrors()
         dom.window.close()
+        dom = undefined as any
       },
     }
   },
