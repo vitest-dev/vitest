@@ -1,5 +1,16 @@
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { Custom, ExtendedContext, File, SequenceHooks, SequenceSetupFiles, Suite, Task, TaskContext, TaskPopulated, TaskResultPack, Test } from './tasks'
+import type {
+  Custom,
+  ExtendedContext,
+  File,
+  SequenceHooks,
+  SequenceSetupFiles,
+  Suite,
+  Task,
+  TaskContext,
+  TaskResultPack,
+  Test,
+} from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -31,7 +42,10 @@ export interface VitestRunnerConstructor {
   new(config: VitestRunnerConfig): VitestRunner
 }
 
-export type CancelReason = 'keyboard-input' | 'test-failure' | string & Record<string, never>
+export type CancelReason =
+  | 'keyboard-input'
+  | 'test-failure'
+  | string & Record<string, never>
 
 export interface VitestRunner {
   /**
@@ -65,7 +79,10 @@ export interface VitestRunner {
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTask?: (test: Task, options: { retry: number; repeats: number }) => unknown
+  onAfterTryTask?: (
+    test: Task,
+    options: { retry: number; repeats: number }
+  ) => unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -108,7 +125,9 @@ export interface VitestRunner {
    *
    * @see https://vitest.dev/advanced/runner.html#your-task-function
    */
-  extendTaskContext?: <T extends Test | Custom>(context: TaskContext<T>) => ExtendedContext<T>
+  extendTaskContext?: <T extends Test | Custom>(
+    context: TaskContext<T>
+  ) => ExtendedContext<T>
   /**
    * Called, when files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */

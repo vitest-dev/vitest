@@ -24,8 +24,14 @@ export default antfu(
       'node/prefer-global/process': 'off',
       'no-empty-pattern': 'off',
       'antfu/indent-binary-ops': 'off',
-      'style/member-delimiter-style': ['error', { multiline: { delimiter: 'none' }, singleline: { delimiter: 'semi' } }],
       'unused-imports/no-unused-imports': 'error',
+      'style/member-delimiter-style': [
+        'error',
+        {
+          multiline: { delimiter: 'none' },
+          singleline: { delimiter: 'semi' },
+        },
+      ],
 
       'ts/no-invalid-this': 'off',
 

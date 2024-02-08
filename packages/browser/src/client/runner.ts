@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
+import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
@@ -16,10 +16,10 @@ interface CoverageHandler {
 }
 
 export function createBrowserRunner(
-  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
+  runnerClass: { new(config: ResolvedConfig): VitestRunner },
   coverageModule: CoverageHandler | null,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
-  return class BrowserTestRunner extends VitestRunner {
+  return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: ResolvedConfig
     hashMap = browserHashMap
 
@@ -28,7 +28,7 @@ export function createBrowserRunner(
       this.config = options.config
     }
 
-    async onAfterRunTask(task: Test) {
+    onAfterRunTask = async (task: Task) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
@@ -42,7 +42,7 @@ export function createBrowserRunner(
       }
     }
 
-    async onAfterRunFiles(files: File[]) {
+    onAfterRunFiles = async (files: File[]) => {
       await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
@@ -55,15 +55,15 @@ export function createBrowserRunner(
       }
     }
 
-    onCollected(files: File[]): unknown {
+    onCollected = (files: File[]): unknown => {
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate(task: TaskResultPack[]): Promise<void> {
+    onTaskUpdate = (task: TaskResultPack[]): Promise<void> => {
       return rpc().onTaskUpdate(task)
     }
 
-    async importFile(filepath: string) {
+    importFile = async (filepath: string) => {
       let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
       if (hash === '') {
         hash = Date.now().toString()

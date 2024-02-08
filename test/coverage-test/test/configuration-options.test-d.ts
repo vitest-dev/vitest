@@ -120,7 +120,7 @@ test('provider module', () => {
             processingConcurrency: 1,
           }
         },
-        clean(_: boolean) {},
+        clean(_?: boolean) {},
         onBeforeFilesRun() {},
         onAfterSuiteRun({ coverage: _coverage }) {},
         reportCoverage() {},
