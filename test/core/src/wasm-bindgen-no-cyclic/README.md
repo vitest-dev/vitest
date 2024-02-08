@@ -1,7 +1,7 @@
 The recent version of the wasm-bindgen bundler output does not use cyclic imports between wasm and js.
 
 For this non-cyclic version to work, both `index_bg.js` and `index_bg.wasm` need to be externalized
-since otherwise a dual package hazard happens on `index_bg.js`.
+since otherwise a dual package hazard on `index_bg.js` would make it non-functional.
 
 The code is copied from https://github.com/rustwasm/wasm-bindgen/tree/8198d2d25920e1f4fc593e9f8eb9d199e004d731/examples/hello_world
 
