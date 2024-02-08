@@ -121,22 +121,22 @@
     "jsdom": "*"
   },
   "peerDependenciesMeta": {
+    "@edge-runtime/vm": {
+      "optional": true
+    },
     "@types/node": {
       "optional": true
     },
-    "@vitest/ui": {
+    "@vitest/browser": {
       "optional": true
     },
-    "@vitest/browser": {
+    "@vitest/ui": {
       "optional": true
     },
     "happy-dom": {
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "@edge-runtime/vm": {
       "optional": true
     }
   },

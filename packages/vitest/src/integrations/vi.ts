@@ -18,76 +18,76 @@ export interface VitestUtils {
   /**
    * Checks if fake timers are enabled.
    */
-  isFakeTimers(): boolean
+  isFakeTimers: () => boolean
   /**
    * This method wraps all further calls to timers until [`vi.useRealTimers()`](https://vitest.dev/api/vi#vi-userealtimers) is called.
    */
-  useFakeTimers(config?: FakeTimerInstallOpts): VitestUtils
+  useFakeTimers: (config?: FakeTimerInstallOpts) => VitestUtils
   /**
    * Restores mocked timers to their original implementations. All timers that were scheduled before will be discarded.
    */
-  useRealTimers(): VitestUtils
+  useRealTimers: () => VitestUtils
   /**
    * This method will call every timer that was initiated after [`vi.useFakeTimers`](https://vitest.dev/api/vi#vi-usefaketimers) call.
    * It will not fire any timer that was initiated during its call.
    */
-  runOnlyPendingTimers(): VitestUtils
+  runOnlyPendingTimers: () => VitestUtils
   /**
    * This method will asynchronously call every timer that was initiated after [`vi.useFakeTimers`](https://vitest.dev/api/vi#vi-usefaketimers) call, even asynchronous ones.
    * It will not fire any timer that was initiated during its call.
    */
-  runOnlyPendingTimersAsync(): Promise<VitestUtils>
+  runOnlyPendingTimersAsync: () => Promise<VitestUtils>
   /**
    * This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired.
    * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
    */
-  runAllTimers(): VitestUtils
+  runAllTimers: () => VitestUtils
   /**
    * This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
    * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
    */
-  runAllTimersAsync(): Promise<VitestUtils>
+  runAllTimersAsync: () => Promise<VitestUtils>
   /**
    * Calls every microtask that was queued by `process.nextTick`. This will also run all microtasks scheduled by themselves.
    */
-  runAllTicks(): VitestUtils
+  runAllTicks: () => VitestUtils
   /**
    * This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first.
    */
-  advanceTimersByTime(ms: number): VitestUtils
+  advanceTimersByTime: (ms: number) => VitestUtils
   /**
    * This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first. This will include and await asynchronously set timers.
    */
-  advanceTimersByTimeAsync(ms: number): Promise<VitestUtils>
+  advanceTimersByTimeAsync: (ms: number) => Promise<VitestUtils>
   /**
    * Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
    */
-  advanceTimersToNextTimer(): VitestUtils
+  advanceTimersToNextTimer: () => VitestUtils
   /**
    * Will call next available timer and wait until it's resolved if it was set asynchronously. Useful to make assertions between each timer call.
    */
-  advanceTimersToNextTimerAsync(): Promise<VitestUtils>
+  advanceTimersToNextTimerAsync: () => Promise<VitestUtils>
   /**
    * Get the number of waiting timers.
    */
-  getTimerCount(): number
+  getTimerCount: () => number
   /**
    * If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers.
    * If fake timers are not enabled, this method will only mock `Date.*` and `new Date()` calls.
    */
-  setSystemTime(time: number | string | Date): VitestUtils
+  setSystemTime: (time: number | string | Date) => VitestUtils
   /**
    * Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
    */
-  getMockedSystemTime(): Date | null
+  getMockedSystemTime: () => Date | null
   /**
    * When using `vi.useFakeTimers`, `Date.now` calls are mocked. If you need to get real time in milliseconds, you can call this function.
    */
-  getRealSystemTime(): number
+  getRealSystemTime: () => number
   /**
    * Removes all timers that are scheduled to run. These timers will never run in the future.
    */
-  clearAllTimers(): VitestUtils
+  clearAllTimers: () => VitestUtils
 
   /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
@@ -172,7 +172,7 @@ export interface VitestUtils {
    *
    * If used with [`vi.mock`](https://vitest.dev/api/vi#vi-mock), both will be hoisted in the order they are defined in.
    */
-  hoisted<T>(factory: () => T): T
+  hoisted: <T>(factory: () => T) => T
 
   /**
    * Mocks every import call to the module even if it was already statically imported.
@@ -184,7 +184,7 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  mock(path: string, factory?: MockFactoryWithHelper): void
+  mock: (path: string, factory?: MockFactoryWithHelper) => void
 
   /**
    * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
@@ -192,7 +192,7 @@ export interface VitestUtils {
    * This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  unmock(path: string): void
+  unmock: (path: string) => void
 
   /**
    * Mocks every subsequent [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) call.
@@ -203,14 +203,14 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  doMock(path: string, factory?: MockFactoryWithHelper): void
+  doMock: (path: string, factory?: MockFactoryWithHelper) => void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
    * Unlike [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock), this method is not hoisted to the top of the file.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  doUnmock(path: string): void
+  doUnmock: (path: string) => void
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -223,7 +223,7 @@ export interface VitestUtils {
    * })
    * @param path Path to the module. Can be aliased, if your config supports it
    */
-  importActual<T = ESModuleExports>(path: string): Promise<T>
+  importActual: <T = ESModuleExports>(path: string) => Promise<T>
 
   /**
    * Imports a module with all of its properties and nested properties mocked.
@@ -236,7 +236,7 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
-  importMock<T = ESModuleExports>(path: string): Promise<MaybeMockedDeep<T>>
+  importMock: <T = ESModuleExports>(path: string) => Promise<MaybeMockedDeep<T>>
 
   /**
    * Type helper for TypeScript. Just returns the object that was passed.
@@ -255,60 +255,54 @@ export interface VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  mocked<T>(item: T, deep?: false): MaybeMocked<T>
-  mocked<T>(item: T, deep: true): MaybeMockedDeep<T>
-  mocked<T>(item: T, options: { partial?: false; deep?: false }): MaybeMocked<T>
-  mocked<T>(item: T, options: { partial?: false; deep: true }): MaybeMockedDeep<T>
-  mocked<T>(item: T, options: { partial: true; deep?: false }): MaybePartiallyMocked<T>
-  mocked<T>(item: T, options: { partial: true; deep: true }): MaybePartiallyMockedDeep<T>
-  mocked<T>(item: T): MaybeMocked<T>
+  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) & (<T>(item: T, deep: true) => MaybeMockedDeep<T>) & (<T>(item: T, options: { partial?: false; deep?: false }) => MaybeMocked<T>) & (<T>(item: T, options: { partial?: false; deep: true }) => MaybeMockedDeep<T>) & (<T>(item: T, options: { partial: true; deep?: false }) => MaybePartiallyMocked<T>) & (<T>(item: T, options: { partial: true; deep: true }) => MaybePartiallyMockedDeep<T>) & (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
    */
-  isMockFunction(fn: any): fn is MockInstance
+  isMockFunction: (fn: any) => fn is MockInstance
 
   /**
    * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function. This will only empty `.mock` state, it will not reset implementation.
    *
    * It is useful if you need to clean up mock between different assertions.
    */
-  clearAllMocks(): VitestUtils
+  clearAllMocks: () => VitestUtils
 
   /**
    * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function. This will empty `.mock` state, reset "once" implementations and force the base implementation to return `undefined` when invoked.
    *
    * This is useful when you want to completely reset a mock to the default state.
    */
-  resetAllMocks(): VitestUtils
+  resetAllMocks: () => VitestUtils
 
   /**
    * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function. This will restore all original implementations.
    */
-  restoreAllMocks(): VitestUtils
+  restoreAllMocks: () => VitestUtils
 
   /**
    * Makes value available on global namespace.
    * Useful, if you want to have global variables available, like `IntersectionObserver`.
    * You can return it back to original value with `vi.unstubAllGlobals`, or by enabling `unstubGlobals` config option.
    */
-  stubGlobal(name: string | symbol | number, value: unknown): VitestUtils
+  stubGlobal: (name: string | symbol | number, value: unknown) => VitestUtils
 
   /**
    * Changes the value of `import.meta.env` and `process.env`.
    * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
-  stubEnv(name: string, value: string): VitestUtils
+  stubEnv: (name: string, value: string) => VitestUtils
 
   /**
    * Reset the value to original value that was available before first `vi.stubGlobal` was called.
    */
-  unstubAllGlobals(): VitestUtils
+  unstubAllGlobals: () => VitestUtils
 
   /**
    * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
    */
-  unstubAllEnvs(): VitestUtils
+  unstubAllEnvs: () => VitestUtils
 
   /**
    * Resets modules registry by clearing the cache of all modules. This allows modules to be reevaluated when reimported.
@@ -316,24 +310,24 @@ export interface VitestUtils {
    *
    * This method does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock) or [`vi.doUnmock`](https://vitest.dev/api/vi#vi-dounmock).
    */
-  resetModules(): VitestUtils
+  resetModules: () => VitestUtils
 
   /**
    * Wait for all imports to load. Useful, if you have a synchronous call that starts
    * importing a module that you cannot await otherwise.
    * Will also wait for new imports, started during the wait.
    */
-  dynamicImportSettled(): Promise<void>
+  dynamicImportSettled: () => Promise<void>
 
   /**
    * Updates runtime config. You can only change values that are used when executing tests.
    */
-  setConfig(config: RuntimeConfig): void
+  setConfig: (config: RuntimeConfig) => void
 
   /**
    * If config was changed with `vi.setConfig`, this will reset it to the original state.
    */
-  resetConfig(): void
+  resetConfig: () => void
 }
 
 function createVitest(): VitestUtils {

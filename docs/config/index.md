@@ -702,7 +702,6 @@ Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment var
 
 Run all tests with the same environment inside a single worker thread. This will disable built-in module isolation (your source code or [inlined](#deps-inline) code will still be reevaluated for each test), but can improve test performance.
 
-
 :::warning
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
@@ -781,7 +780,6 @@ Isolate environment for each test file.
 - **Default:** `false`
 
 Run all tests with the same environment inside a single child process. This will disable built-in module isolation (your source code or [inlined](#deps-inline) code will still be reevaluated for each test), but can improve test performance.
-
 
 :::warning
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses child processes not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
@@ -880,7 +878,6 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 :::warning
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
-
 
 #### poolOptions.vmForks<NonProjectOption />
 
@@ -1062,7 +1059,6 @@ declare module 'vitest' {
 }
 ```
 :::
-
 
 ### watchExclude<NonProjectOption />
 
@@ -1557,10 +1553,10 @@ Path to a provider that will be used when running browser tests. Vitest provides
 ```ts
 export interface BrowserProvider {
   name: string
-  getSupportedBrowsers(): readonly string[]
-  initialize(ctx: Vitest, options: { browser: string; options?: BrowserProviderOptions }): Awaitable<void>
-  openPage(url: string): Awaitable<void>
-  close(): Awaitable<void>
+  getSupportedBrowsers: () => readonly string[]
+  initialize: (ctx: Vitest, options: { browser: string; options?: BrowserProviderOptions }) => Awaitable<void>
+  openPage: (url: string) => Awaitable<void>
+  close: () => Awaitable<void>
 }
 ```
 

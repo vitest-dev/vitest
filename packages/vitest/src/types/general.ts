@@ -18,19 +18,19 @@ export interface ModuleCache {
 }
 
 export interface EnvironmentReturn {
-  teardown(global: any): Awaitable<void>
+  teardown: (global: any) => Awaitable<void>
 }
 
 export interface VmEnvironmentReturn {
-  getVmContext(): { [key: string]: any }
-  teardown(): Awaitable<void>
+  getVmContext: () => { [key: string]: any }
+  teardown: () => Awaitable<void>
 }
 
 export interface Environment {
   name: string
   transformMode: 'web' | 'ssr'
-  setupVM?(options: Record<string, any>): Awaitable<VmEnvironmentReturn>
-  setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
+  setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
+  setup: (global: any, options: Record<string, any>) => Awaitable<EnvironmentReturn>
 }
 
 export interface UserConsoleLog {

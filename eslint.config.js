@@ -43,6 +43,12 @@ export default antfu(
     },
   },
   {
+    files: [`packages/*/*.{js,mjs,d.ts}`],
+    rules: {
+      'antfu/no-import-dist': 'off',
+    },
+  },
+  {
     files: [`packages/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [

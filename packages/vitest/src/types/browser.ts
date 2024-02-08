@@ -9,10 +9,10 @@ export interface BrowserProviderInitializationOptions {
 
 export interface BrowserProvider {
   name: string
-  getSupportedBrowsers(): readonly string[]
-  initialize(ctx: WorkspaceProject, options: BrowserProviderInitializationOptions): Awaitable<void>
-  openPage(url: string): Awaitable<void>
-  close(): Awaitable<void>
+  getSupportedBrowsers: () => readonly string[]
+  initialize: (ctx: WorkspaceProject, options: BrowserProviderInitializationOptions) => Awaitable<void>
+  openPage: (url: string) => Awaitable<void>
+  close: () => Awaitable<void>
 }
 
 export interface BrowserProviderModule {
