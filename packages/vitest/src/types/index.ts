@@ -24,6 +24,7 @@ export type {
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+export type * as Mocks from '../integrations/spy-types'
 
 export type {
   ExpectStatic,

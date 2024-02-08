@@ -22,7 +22,9 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface MockContext<TArgs, TReturns> {
+export type MockContext<TArgs extends any[], TReturns> = __MockContext<(...args: TArgs) => TReturns>
+
+interface __MockContext<T extends Procedure> {
   /**
    * This is an array containing all arguments for each call. One item of the array is the arguments of that call.
    *
@@ -37,11 +39,11 @@ export interface MockContext<TArgs, TReturns> {
    *   ['arg3'], // second call
    * ]
    */
-  calls: TArgs[]
+  calls: Parameters<T>[]
   /**
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
    */
-  instances: TReturns[]
+  instances: ReturnType<T>[]
   /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
@@ -85,13 +87,14 @@ export interface MockContext<TArgs, TReturns> {
    *   },
    * ]
    */
-  results: MockResult<TReturns>[]
+  results: MockResult<ReturnType<T>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
-  lastCall: TArgs | undefined
+  lastCall: Parameters<T> | undefined
 }
 
+// TODO: jest has stricter default using (...args: unknown[]) => unknown
 type Procedure = (...args: any[]) => any
 
 type Methods<T> = keyof {
@@ -109,7 +112,9 @@ type Classes<T> = {
  */
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> extends MockInstance<TArgs, TReturns> {}
 
-export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
+export type MockInstance<TArgs extends any[] = any[], TReturns = any> = __MockInstance<(...args: TArgs) => TReturns>
+
+interface __MockInstance<T extends Procedure = Procedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
@@ -121,7 +126,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
-  mock: MockContext<TArgs, TReturns>
+  mock: __MockContext<T>
   /**
    * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
    *
@@ -147,14 +152,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
+  getMockImplementation(): T | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: ((...args: TArgs) => TReturns)): this
+  mockImplementation(fn: T): this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -162,7 +167,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: ((...args: TArgs) => TReturns)): this
+  mockImplementationOnce(fn: T): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -174,7 +179,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T>(fn: ((...args: TArgs) => TReturns), cb: () => T): T extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: T, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
   /**
    * Use this if you need to return `this` context from the method without invoking actual implementation.
    */
@@ -182,7 +187,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Accepts a value that will be returned whenever the mock function is called.
    */
-  mockReturnValue(obj: TReturns): this
+  mockReturnValue(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
@@ -197,14 +202,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(obj: TReturns): this
+  mockReturnValueOnce(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be resolved when async function is called.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(obj: Awaited<TReturns>): this
+  mockResolvedValue(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
    * @example
@@ -217,7 +222,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(obj: Awaited<TReturns>): this
+  mockResolvedValueOnce(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
@@ -237,6 +242,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * await asyncMock() // throws "Async error"
    */
   mockRejectedValueOnce(obj: any): this
+}
+
+// single function genertic version which is used by Jest and seems more convenient to use.
+// for now this is exposed under a separate namespace on vitest to avoid breaking change,
+// but eventually it can replace the old ones.
+export interface __Mock<T extends Procedure = Procedure> extends __MockInstance<T> {
+  new (...args: Parameters<T>): ReturnType<T>
+  (...args: Parameters<T>): ReturnType<T>
 }
 
 export interface Mock<TArgs extends any[] = any, TReturns = any> extends MockInstance<TArgs, TReturns> {
