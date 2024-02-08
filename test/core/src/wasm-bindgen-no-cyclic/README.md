@@ -11,5 +11,5 @@ npm run build
 # then
 # 1. copy `examples/hello_world/pkg` to this directory
 # 2. add { "type": "module" } to `package.json`
-#    (this will be automatically done after https://github.com/rustwasm/wasm-pack/pull/1061)
+#    (this will be automatically included after https://github.com/rustwasm/wasm-pack/pull/1061)
 ```
