@@ -87,6 +87,7 @@ const dir = dirname(fileURLToPath(import.meta.url))
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
+    exportConditions: ['node'],
   }),
   json(),
   commonjs(),
