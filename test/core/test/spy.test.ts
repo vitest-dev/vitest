@@ -15,7 +15,7 @@ describe('spyOn', () => {
 
   test('infers a class correctly', () => {
     vi.spyOn(mock, 'HelloWorld').mockImplementationOnce(() => {
-      const Mock = vi.fn()
+      const Mock = vi.fn<any>()
       Mock.prototype.hello = vi.fn(() => 'hello world')
       return new Mock()
     })
