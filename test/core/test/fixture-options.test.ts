@@ -3,16 +3,18 @@ import { afterAll, beforeEach, describe, expect, test, vi } from 'vitest'
 const mockServer = { setup: vi.fn(), teardown: vi.fn() }
 const FnA = vi.fn()
 
-const myTest = test.extend({
+const myTest = test.extend<{
+  autoFixture: void
+  normalFixture: any[]
+}>({
   autoFixture: [async ({}, use) => {
     await mockServer.setup()
     await use()
     await mockServer.teardown()
   }, { auto: true }],
 
-  normalFixture: [async ({}, use) => {
+  normalFixture: [async () => {
     await FnA()
-    await use()
   }, {}],
 })
 
