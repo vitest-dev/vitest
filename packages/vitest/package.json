@@ -148,7 +148,7 @@
     "@vitest/utils": "workspace:*",
     "acorn-walk": "^8.3.2",
     "cac": "^6.7.14",
-    "chai": "^4.3.10",
+    "chai": "^5.0.3",
     "debug": "^4.3.4",
     "execa": "^8.0.1",
     "local-pkg": "^0.5.0",

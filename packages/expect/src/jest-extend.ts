@@ -1,4 +1,4 @@
-import { util } from 'chai'
+import { use, util } from 'chai'
 import type {
   ChaiPlugin,
   ExpectStatic,
@@ -139,6 +139,6 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'extend', (expect: ExpectStatic, expects: MatchersObject) => {
-    chai.use(JestExtendPlugin(expect, expects))
+    use(JestExtendPlugin(expect, expects))
   })
 }
