@@ -6,6 +6,7 @@
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
     "test:webdriverio": "PROVIDER=webdriverio node --test --test-concurrency=1 specs/",
     "test:playwright": "PROVIDER=playwright node --test --test-concurrency=1 specs/",
+    "test:happy-dom": "PROVIDER=happy-dom node --test --test-concurrency=1 specs/runner.test.mjs",
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari node --test --test-concurrency=1 specs/",
     "test-fixtures": "vitest",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"

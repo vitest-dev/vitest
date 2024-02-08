@@ -921,6 +921,9 @@ importers:
       '@wdio/protocols':
         specifier: ^8.22.0
         version: 8.22.0
+      happy-dom:
+        specifier: ^13.3.8
+        version: 13.3.8
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2

@@ -21,9 +21,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
     // watch is handled by Vitest
     server: {
       hmr: false,
-      watch: {
-        ignored: ['**/**'],
-      },
+      watch: null,
     },
     plugins: [
       ...project.options?.plugins || [],

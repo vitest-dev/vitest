@@ -30,6 +30,9 @@
     "./providers/playwright": {
       "types": "./providers/playwright.d.ts"
     },
+    "./providers/happyDom": {
+      "types": "./providers/happyDom.d.ts"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -50,12 +53,16 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "happy-dom": "*",
     "playwright": "*",
     "vitest": "^1.0.0",
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
     "webdriverio": {
+      "optional": true
+    },
+    "happy-dom": {
       "optional": true
     },
     "safaridriver": {
@@ -76,6 +83,7 @@
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^8.22.0",
+    "happy-dom": "^13.3.8",
     "periscopic": "^4.0.2",
     "playwright": "^1.41.0",
     "playwright-core": "^1.41.0",

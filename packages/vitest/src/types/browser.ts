@@ -39,7 +39,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'webdriverio'
    */
-  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'none' | 'happy-dom' | (string & {})
 
   /**
    * Options that are passed down to a browser provider.

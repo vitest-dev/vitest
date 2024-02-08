@@ -1,18 +1,20 @@
 import type { WorkspaceProject } from '../node/workspace'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
 
-const builtinProviders = ['webdriverio', 'playwright', 'none']
+const builtinProviders = ['webdriverio', 'playwright', 'none', 'happy-dom']
 
 export async function getBrowserProvider(options: ResolvedBrowserOptions, project: WorkspaceProject): Promise<BrowserProviderModule> {
   if (options.provider == null || builtinProviders.includes(options.provider)) {
     await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', project.config.root)
     const providers = await project.runner.executeId('@vitest/browser/providers') as {
+      happyDom: BrowserProviderModule
       webdriverio: BrowserProviderModule
       playwright: BrowserProviderModule
       none: BrowserProviderModule
     }
-    const provider = (options.provider || 'webdriverio') as 'webdriverio' | 'playwright' | 'none'
-    return providers[provider]
+    const provider = (options.provider || 'webdriverio') as 'webdriverio' | 'playwright' | 'none' | 'happy-dom'
+    const providerKey = provider === 'happy-dom' ? 'happyDom' : provider
+    return providers[providerKey]
   }
 
   let customProviderModule
