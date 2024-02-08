@@ -217,7 +217,7 @@ export interface FixtureOptions {
   auto?: boolean
 }
 
-export type Use<T> = (value?: T) => Promise<void>
+export type Use<T> = (value: T) => Promise<void>
 export type FixtureFn<T, K extends keyof T, ExtraContext> =
   (context: Omit<T, K> & ExtraContext, use: Use<T[K]>) => Promise<void>
 export type Fixture<T, K extends keyof T, ExtraContext = {}> =
