@@ -1422,8 +1422,8 @@ importers:
         specifier: ^4.7.2
         version: 4.7.2
       happy-dom:
-        specifier: ^12.10.3
-        version: 12.10.3
+        specifier: ^13.3.8
+        version: 13.3.8
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -17139,6 +17139,15 @@ packages:
       iconv-lite: 0.6.3
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+    dev: true
+
+  /happy-dom@13.3.8:
+    resolution: {integrity: sha512-RAbq4oYfJNkVan1m1F3jfA4YEyRY0/ASoNvZsNJbuX85jIypidmsz9jQZD7Tqz0VXA2MhAGfcsh5oshwmwNYSg==}
+    engines: {node: '>=16.0.0'}
+    dependencies:
+      entities: 4.5.0
+      webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
     dev: true
 
