@@ -1462,8 +1462,8 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       '@types/ungap__structured-clone':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^1.2.0
+        version: 1.2.0
       '@ungap/structured-clone':
         specifier: ^1.2.0
         version: 1.2.0
@@ -9612,8 +9612,8 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /@types/ungap__structured-clone@0.3.3:
-    resolution: {integrity: sha512-RNmhIPwoip6K/zZOv3ypksTAqaqLEXvlNSXKyrC93xMSOAHZCR7PifW6xKZCwkbbnbM9dwB9X56PPoNTlNwEqw==}
+  /@types/ungap__structured-clone@1.2.0:
+    resolution: {integrity: sha512-ZoaihZNLeZSxESbk9PUAPZOlSpcKx81I1+4emtULDVmBLkYutTcMlCj2K9VNlf9EWODxdO6gkAqEaLorXwZQVA==}
     dev: true
 
   /@types/unist@2.0.6:
