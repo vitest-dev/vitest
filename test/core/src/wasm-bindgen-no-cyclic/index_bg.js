@@ -1,6 +1,3 @@
-/* eslint-disable eslint-comments/no-unlimited-disable */
-/* eslint-disable */
-
 let wasm;
 export function __wbg_set_wasm(val) {
     wasm = val;
@@ -117,3 +114,4 @@ export function __wbg_alert_9ea5a791b0d4c7a3() { return logError(function (arg0,
 export function __wbindgen_throw(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
+
