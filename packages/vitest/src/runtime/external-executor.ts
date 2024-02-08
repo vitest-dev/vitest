@@ -177,7 +177,7 @@ export class ExternalModulesExecutor {
     }
     else if (extension === '.wasm') {
       // still experimental on NodeJS --experimental-wasm-modules
-      // cf. ESM_FILE_FORMAT(url) in https://nodejs.org/api/esm.html
+      // cf. ESM_FILE_FORMAT(url) in https://nodejs.org/docs/latest-v20.x/api/esm.html#resolution-algorithm
       type = 'wasm'
     }
     else {
@@ -193,7 +193,7 @@ export class ExternalModulesExecutor {
 
     // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
     // https://github.com/nodejs/node/pull/49038
-    if ((type === 'module' || type === 'commonjs') && !existsSync(path)) {
+    if ((type === 'module' || type === 'commonjs' || type === 'wasm') && !existsSync(path)) {
       const error = new Error(`Cannot find module '${path}'`)
       ;(error as any).code = 'ERR_MODULE_NOT_FOUND'
       throw error
