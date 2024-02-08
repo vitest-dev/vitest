@@ -7,7 +7,7 @@ import { expect, test, vi } from 'vitest'
 // @ts-expect-error wasm is not typed
 import { add } from '../src/add.wasm'
 
-const wasmFileBuffer = readFileSync(resolve(__dirname, './src/add.wasm'))
+const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/add.wasm'))
 
 test('supports native wasm imports', () => {
   expect(add(1, 2)).toBe(3)
@@ -54,7 +54,7 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
   ).rejects.toThrow('Invalid data URI encoding: charset=utf-8')
 })
 
-test('supports wasm files that import js resources (wasm-bindgen)', async () => {
+test('supports wasm/js cyclic import (old wasm-bindgen output)', async () => {
   globalThis.alert = vi.fn()
 
   // @ts-expect-error not typed
@@ -62,4 +62,13 @@ test('supports wasm files that import js resources (wasm-bindgen)', async () => 
   greet('World')
 
   expect(globalThis.alert).toHaveBeenCalledWith('Hello, World!')
+})
+
+test('supports wasm-bindgen', async () => {
+  globalThis.alert = vi.fn()
+
+  const { greet } = await import('../src/wasm-bindgen-no-cyclic/index.js')
+  greet('No Cyclic')
+
+  expect(globalThis.alert).toHaveBeenCalledWith('Hello, No Cyclic!')
 })
