@@ -1179,8 +1179,8 @@ importers:
         specifier: ^0.57.4
         version: 0.57.4
       '@vitejs/plugin-vue':
-        specifier: ^4.4.1
-        version: 4.4.1(vite@5.0.12)(vue@3.3.8)
+        specifier: ^5.0.3
+        version: 5.0.3(vite@5.0.12)(vue@3.3.8)
       '@vitejs/plugin-vue-jsx':
         specifier: ^3.0.2
         version: 3.0.2(vite@5.0.12)(vue@3.3.8)
@@ -10210,17 +10210,6 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-vue@4.4.1(vite@5.0.12)(vue@3.3.8):
-    resolution: {integrity: sha512-HCQG8VDFDM7YDAdcj5QI5DvUi+r6xvo9LgvYdk7LSkUNwdpempdB5horkMSZsbdey9Ywsf5aaU8kEPw9M5kREA==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    peerDependencies:
-      vite: ^5.0.12
-      vue: ^3.2.25
-    dependencies:
-      vite: 5.0.12(@types/node@20.11.5)(less@4.1.3)
-      vue: 3.3.8(typescript@5.2.2)
-    dev: true
-
   /@vitejs/plugin-vue@4.5.0(vite@5.0.12)(vue@3.3.8):
     resolution: {integrity: sha512-a2WSpP8X8HTEww/U00bU4mX1QpLINNuz/2KMNpLsdu3BzOpak3AGI1CJYBTXcc4SPhaD0eNRUp7IyQK405L5dQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -10241,6 +10230,17 @@ packages:
     dependencies:
       vite: 5.0.12(@types/node@20.11.5)(less@4.1.3)
       vue: 3.4.5(typescript@5.2.2)
+    dev: true
+
+  /@vitejs/plugin-vue@5.0.3(vite@5.0.12)(vue@3.3.8):
+    resolution: {integrity: sha512-b8S5dVS40rgHdDrw+DQi/xOM9ed+kSRZzfm1T74bMmBDCd8XO87NKlFYInzCtwvtWwXZvo1QxE2OSspTATWrbA==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.0.12
+      vue: ^3.2.25
+    dependencies:
+      vite: 5.0.12(@types/node@20.11.5)(less@4.1.3)
+      vue: 3.3.8(typescript@5.2.2)
     dev: true
 
   /@volar/language-core@1.10.4:
