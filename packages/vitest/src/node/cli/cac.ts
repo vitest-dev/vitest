@@ -28,13 +28,20 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
     return value
   }
 
+  const hasSubcommands = 'subcommands' in option && option.subcommands
+
   if (option.description) {
-    cli.option(command, option.description, {
+    let description = option.description
+
+    if (hasSubcommands)
+      description += `. Use '--help --${commandName}' for more info.`
+
+    cli.option(command, description, {
       type: transform,
     })
   }
 
-  if ('subcommands' in option && option.subcommands) {
+  if (hasSubcommands) {
     for (const commandName in option.subcommands) {
       const subcommand = option.subcommands[commandName]
       if (subcommand)
@@ -56,7 +63,13 @@ export function createCLI() {
   }
 
   cli.help((info) => {
+    const helpSection = info.find(current => current.title?.startsWith('For more info, run any command'))
+
+    if (helpSection)
+      helpSection.body += '\n  $ vitest --help --expand-help'
+
     const options = info.find(current => current.title === 'Options')
+
     if (typeof options !== 'object')
       return info
 
