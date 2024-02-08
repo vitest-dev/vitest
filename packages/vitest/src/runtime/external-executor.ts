@@ -27,7 +27,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'module' | 'commonjs'
+  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs'
   url: string
   path: string
 }
@@ -165,7 +165,7 @@ export class ExternalModulesExecutor {
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
     const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
 
-    let type: 'module' | 'commonjs' | 'vite'
+    let type: 'module' | 'commonjs' | 'vite' | 'wasm'
     if (this.vite.canResolve(fileUrl)) {
       type = 'vite'
     }
@@ -174,6 +174,11 @@ export class ExternalModulesExecutor {
     }
     else if (extension === '.cjs') {
       type = 'commonjs'
+    }
+    else if (extension === '.wasm') {
+      // still experimental on NodeJS --experimental-wasm-modules
+      // cf. ESM_FILE_FORMAT(url) in https://nodejs.org/docs/latest-v20.x/api/esm.html#resolution-algorithm
+      type = 'wasm'
     }
     else {
       const pkgData = this.findNearestPackageData(normalize(pathUrl))
@@ -188,7 +193,7 @@ export class ExternalModulesExecutor {
 
     // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
     // https://github.com/nodejs/node/pull/49038
-    if ((type === 'module' || type === 'commonjs') && !existsSync(path)) {
+    if ((type === 'module' || type === 'commonjs' || type === 'wasm') && !existsSync(path)) {
       const error = new Error(`Cannot find module '${path}'`)
       ;(error as any).code = 'ERR_MODULE_NOT_FOUND'
       throw error
@@ -203,6 +208,8 @@ export class ExternalModulesExecutor {
       }
       case 'vite':
         return await this.vite.createViteModule(url)
+      case 'wasm':
+        return await this.esm.createWebAssemblyModule(url, this.fs.readBuffer(path))
       case 'module':
         return await this.esm.createEsModule(url, this.fs.readFile(path))
       case 'commonjs': {

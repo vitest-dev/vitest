@@ -22,7 +22,7 @@ basic-foo.test.ts
 basic/foo.test.ts
 ```
 
-You can also use the `-t, --testNamePattern <pattern>	` option to filter tests by full name. This can be helpful when you want to filter by the name defined within a file rather than the filename itself.
+You can also use the `-t, --testNamePattern <pattern>` option to filter tests by full name. This can be helpful when you want to filter by the name defined within a file rather than the filename itself.
 
 ## Specifying a Timeout
 

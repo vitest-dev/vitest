@@ -19,7 +19,6 @@ All `@vitest/*` sub packages require Vitest version 1.0.
 
 Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
 
-
 1. Quotes are no longer escaped:
 
 ```diff
@@ -43,7 +42,6 @@ There were also [changes](https://github.com/vitest-dev/vitest/pull/4076) to `@v
 - You no longer need to extend `SnapshotClient` just to override `equalityCheck` method: just pass it down as `isEqual` when initiating an instance
 - `client.setTest` was renamed to `client.startCurrentRun`
 - `client.resetCurrent` was renamed to `client.finishCurrentRun`
-
 
 ### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
 
@@ -144,7 +142,6 @@ A few types were removed in favor of Jest-style "Mock" naming.
 ::: warning
 `SpyInstance` is deprecated in favor of `MockInstance` and will be removed in the next major release.
 :::
-
 
 ### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
 

@@ -36,7 +36,7 @@ export interface PoolOptions extends Record<string, unknown> {
   vmForks?: ForksOptions & VmOptions
 }
 
-interface ThreadsOptions {
+export interface ThreadsOptions {
   /** Minimum amount of threads to use */
   minThreads?: number
 
@@ -60,7 +60,7 @@ interface ThreadsOptions {
   useAtomics?: boolean
 }
 
-interface ForksOptions {
+export interface ForksOptions {
   /** Minimum amount of child processes to use */
   minForks?: number
 
@@ -75,7 +75,7 @@ interface ForksOptions {
   singleFork?: boolean
 }
 
-interface WorkerContextOptions {
+export interface WorkerContextOptions {
   /**
    * Isolate test environment by recycling `worker_threads` or `child_process` after each test
    *
@@ -97,7 +97,7 @@ interface WorkerContextOptions {
   execArgv?: string[]
 }
 
-interface VmOptions {
+export interface VmOptions {
   /**
    * Specifies the memory limit for `worker_thread` or `child_process` before they are recycled.
    * If you see memory leaks, try to tinker this value.

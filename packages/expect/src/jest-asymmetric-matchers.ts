@@ -6,10 +6,10 @@ import { diff, getCustomEqualityTesters, getMatcherUtils, stringify } from './je
 import { equals, isA, iterableEquality, pluralize, subsetEquality } from './jest-utils'
 
 export interface AsymmetricMatcherInterface {
-  asymmetricMatch(other: unknown): boolean
-  toString(): string
-  getExpectedType?(): string
-  toAsymmetricMatcher?(): string
+  asymmetricMatch: (other: unknown) => boolean
+  toString: () => string
+  getExpectedType?: () => string
+  toAsymmetricMatcher?: () => string
 }
 
 export abstract class AsymmetricMatcher<

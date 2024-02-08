@@ -58,8 +58,8 @@ type ChainableBenchmarkAPI = ChainableFunction<
   void
 >
 export type BenchmarkAPI = ChainableBenchmarkAPI & {
-  skipIf(condition: any): ChainableBenchmarkAPI
-  runIf(condition: any): ChainableBenchmarkAPI
+  skipIf: (condition: any) => ChainableBenchmarkAPI
+  runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
 export {

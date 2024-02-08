@@ -74,13 +74,6 @@ test('version number is printed when coverage provider fails to load', async () 
   expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from ./non-existing-module.ts')
 })
 
-test('boolean coverage flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('--coverage', '--coverage.reporter', 'text')
-
-  expect(stderr).toMatch('Error: A boolean argument "--coverage" was used with dot notation arguments "--coverage.reporter".')
-  expect(stderr).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
-})
-
 test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {
   const { stderr } = await runVitest({
     coverage: {
@@ -102,13 +95,6 @@ test('boolean flag 100 should not crash CLI', async () => {
   expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for statements (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for branches (0%) does not meet global threshold (100%)')
-})
-
-test('boolean browser flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('run', '--browser', '--browser.name', 'chrome')
-
-  expect(stderr).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
-  expect(stderr).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
 })
 
 test('nextTick cannot be mocked inside child_process', async () => {

@@ -55,13 +55,13 @@
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
-    "webdriverio": {
+    "playwright": {
       "optional": true
     },
     "safaridriver": {
       "optional": true
     },
-    "playwright": {
+    "webdriverio": {
       "optional": true
     }
   },

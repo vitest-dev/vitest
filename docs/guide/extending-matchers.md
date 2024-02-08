@@ -29,7 +29,7 @@ If you are using TypeScript, since Vitest 0.31.0 you can extend default `Asserti
 import type { Assertion, AsymmetricMatchersContaining } from 'vitest'
 
 interface CustomMatchers<R = unknown> {
-  toBeFoo(): R
+  toBeFoo: () => R
 }
 
 declare module 'vitest' {

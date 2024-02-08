@@ -225,7 +225,7 @@ function mapEvalOrigin(origin: string): string {
 }
 
 interface CallSite extends NodeJS.CallSite {
-  getScriptNameOrSourceURL(): string
+  getScriptNameOrSourceURL: () => string
 }
 
 // This is copied almost verbatim from the V8 source code at

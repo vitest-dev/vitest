@@ -3,7 +3,7 @@ import { assertTypes, deepClone, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
-import { ModuleCacheMap } from '../../../packages/vite-node/dist/client'
+import { ModuleCacheMap } from '../../../packages/vite-node/src/client'
 
 describe('assertTypes', () => {
   test('the type of value should be number', () => {
