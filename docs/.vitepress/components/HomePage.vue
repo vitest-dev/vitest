@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { VPTeamMembers, VPHomeSponsors } from 'vitepress/theme'
-import { teamMembers } from '../contributors'
+import { VPHomeSponsors } from 'vitepress/theme'
 import { sponsors } from '../sponsors'
 </script>
 
@@ -8,14 +7,6 @@ import { sponsors } from '../sponsors'
   <div class="content">
     <div class="content-container">
       <main class="main">
-        <div class="vp-doc" flex flex-col items-center>
-          <h2 id="meet-the-team" op50 font-normal p="t-10 b-2">
-            Meet The Team
-          </h2>
-          <div w-full p-10>
-            <VPTeamMembers size="small" :members="teamMembers" />
-          </div>
-        </div>
         <VPHomeSponsors
           v-if="sponsors"
           message="Vitest is free and open source, made possible by wonderful sponsors."

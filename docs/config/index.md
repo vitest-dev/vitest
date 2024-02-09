@@ -4,90 +4,9 @@ outline: deep
 
 # Configuring Vitest
 
-## Configuration
-
-`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing or your main app doesn't rely on Vite specifically, you could either:
-
-- Create `vitest.config.ts`, which will have the higher priority and will override the configuration from `vite.config.ts`
-- Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test`/`benchmark` if not overridden) to conditionally apply different configuration in `vite.config.ts`
-
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
-
-Using `defineConfig` from `vite` you should follow this:
-
-```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    // ... Specify options here.
-  },
-})
-```
-
-Using `defineConfig` from `vitest/config` you should follow this:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    // ... Specify options here.
-  },
-})
-```
-
-You can retrieve Vitest's default options to expand them if needed:
-
-```ts
-import { configDefaults, defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    exclude: [...configDefaults.exclude, 'packages/template/*'],
-  },
-})
-```
-
-When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
-
-```ts
-import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config'
-
-export default mergeConfig(viteConfig, defineConfig({
-  test: {
-    exclude: ['packages/template/*'],
-  },
-}))
-```
+To create a Vitest configuration file, follow [the guide](/config/file). Make sure you understand how Vitest config resolution works before proceeding.
 
 ::: warning
-`mergeConfig` helper is available in Vitest since v0.30.0. You can import it from `vite` directly, if you use lower version.
-:::
-
-If your Vite config is defined as a function, you can define the config like this:
-```ts
-import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config'
-
-export default defineConfig(configEnv => mergeConfig(
-  viteConfig(configEnv),
-  defineConfig({
-    test: {
-      exclude: ['packages/template/*'],
-    },
-  })
-))
-```
-
-## Options
-
-:::tip
-In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
-
 _All_ listed options here are located on a `test` property inside the config:
 
 ```ts
@@ -100,6 +19,8 @@ export default defineConfig({
 :::
 
 ::: tip
+In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+
 All configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
 :::
 
@@ -107,15 +28,23 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 
 - **Type:** `string[]`
 - **Default:** `['**/*.{test,spec}.?(c|m)[jt]s?(x)']`
+- **CLI:** `vitest [...include]`, `vitest **/*.test.js`
 
-Files to include in the test run, using glob pattern.
+A list of glob patterns that match your test files.
 
 ### exclude
 
 - **Type:** `string[]`
 - **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
+- **CLI:** `vitest --exclude "**/excluded-file"`
 
-Files to exclude from the test run, using glob pattern.
+A list of glob patterns that should be excluded from your test files.
+
+::: warning
+This option does not affect coverage. If you need to remove certain files from the coverage report, use [`coverage.exclude`](#coverage-exclude).
+
+This is the only option that doesn't override your configuration if you provide it with a CLI flag. All glob patterns added via `--exclude` flag will be added to the config's `exclude`.
+:::
 
 ### includeSource
 
