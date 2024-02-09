@@ -57,12 +57,12 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
     expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm;charset=utf-8,oops: WebAssembly.compile(): expected magic word 00 61 73 6d, found 6f 6f 70 73 @+0]`)
 })
 
-async function getError(f: () => Promise<void>) {
+async function getError(f: () => unknown) {
   try {
     await f()
-    expect.unreachable()
   }
   catch (e) {
     return e
   }
+  expect.unreachable()
 }
