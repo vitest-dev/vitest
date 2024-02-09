@@ -137,7 +137,14 @@ test('array options', () => {
     }
   `)
 
-  expect(parseArguments('--reporter json --reporter=default --coverage.reporter=json --coverage.reporter html --coverage.extension=ts --coverage.extension=tsx')).toMatchInlineSnapshot(`
+  expect(parseArguments(`
+  --reporter json 
+  --reporter=default 
+  --coverage.reporter=json 
+  --coverage.reporter html 
+  --coverage.extension=ts 
+  --coverage.extension=tsx
+  `)).toMatchInlineSnapshot(`
     {
       "coverage": {
         "extension": [
@@ -155,4 +162,47 @@ test('array options', () => {
       ],
     }
   `)
+})
+
+test('hookTimeout is parsed correctly', () => {
+  expect(parseArguments('--hookTimeout 1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hook-timeout 1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hook-timeout=1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hookTimeout=1000')).toEqual({ hookTimeout: 1000 })
+})
+
+test('teardownTimeout is parsed correctly', () => {
+  expect(parseArguments('--teardownTimeout 1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardown-timeout 1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardownTimeout=1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardown-timeout=1000')).toEqual({ teardownTimeout: 1000 })
+})
+
+test('slowTestThreshold is parsed correctly', () => {
+  expect(parseArguments('--slowTestThreshold 1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slow-test-threshold 1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slowTestThreshold=1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slow-test-threshold=1000')).toEqual({ slowTestThreshold: 1000 })
+})
+
+test('maxConcurrency is parsed correctly', () => {
+  expect(parseArguments('--maxConcurrency 1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--max-concurrency 1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--maxConcurrency=1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
+})
+
+test('cache is parsed correctly', () => {
+  expect(parseArguments('--cache')).toEqual({ cache: {} })
+  expect(parseArguments('--no-cache')).toEqual({ cache: false })
+
+  expect(parseArguments('--cache.dir=./test/cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
+  expect(parseArguments('--cache.dir ./test/cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
+  expect(parseArguments('--cache.dir .\\test\\cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
 })

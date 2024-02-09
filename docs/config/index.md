@@ -957,7 +957,7 @@ Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minT
 
 - **Type:** `number`
 - **Default:** `5000`
-- **CLI:** `--test-timeout=5000`
+- **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
 Default timeout of a test in milliseconds
 
@@ -965,6 +965,7 @@ Default timeout of a test in milliseconds
 
 - **Type:** `number`
 - **Default:** `10000`
+- **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
 Default timeout of a hook in milliseconds
 
@@ -972,6 +973,7 @@ Default timeout of a hook in milliseconds
 
 - **Type:** `number`
 - **Default:** `10000`
+- **CLI:** `--teardown-timeout=5000`, `--teardownTimeout=5000`
 
 Default timeout to wait for close when Vitest shuts down, in milliseconds
 
@@ -1783,6 +1785,7 @@ By default, Vitest exports a proxy, bypassing CSS Modules processing. If you rel
 
 - **Type**: `number`
 - **Default**: `5`
+- **CLI**: `--max-concurrency=10`, `--maxConcurrency=10`
 
 A number of tests that are allowed to run at the same time marked with `test.concurrent`.
 
@@ -1791,6 +1794,7 @@ Test above this limit will be queued to run when available slot appears.
 ### cache<NonProjectOption />
 
 - **Type**: `false | { dir? }`
+- **CLI**: `--no-cache`, `--cache=false`
 
 Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
 
@@ -1798,6 +1802,7 @@ Options to configure Vitest cache policy. At the moment Vitest stores cache for 
 
 - **Type**: `string`
 - **Default**: `node_modules/.vitest`
+- **CLI**: `--cache.dir=./cache`
 
 Path to cache directory.
 
@@ -1946,6 +1951,7 @@ Path to custom tsconfig, relative to the project root.
 
 - **Type**: `number`
 - **Default**: `300`
+- **CLI**: `--slow-test-threshold=<number>`, `--slowTestThreshold=<number>`
 
 The number of milliseconds after which a test is considered slow and reported as such in the results.
 
