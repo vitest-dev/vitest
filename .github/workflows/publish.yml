@@ -1,4 +1,4 @@
-name: Public Package
+name: Publish Package
 
 on:
   push:
@@ -27,12 +27,12 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-          cache: "pnpm"
+          cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile --prefer-offline
         env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Build
         run: pnpm build
