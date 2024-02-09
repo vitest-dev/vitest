@@ -38,6 +38,9 @@
     "./globals": {
       "types": "./globals.d.ts"
     },
+    "./jsdom": {
+      "types": "./jsdom.d.ts"
+    },
     "./importMeta": {
       "types": "./importMeta.d.ts"
     },

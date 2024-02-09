@@ -512,7 +512,15 @@ export default <Environment>{
 Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
 
 ::: tip
-Since Vitest 1.3.0 jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](https://github.com/jsdom/jsdom) instance.
+Since Vitest 1.3.0 jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](https://github.com/jsdom/jsdom) instance. If you want TypeScript to recognize it, you can add `vitest/jsdom` to your `tsconfig.json` when you use this environment:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vitest/jsdom"]
+  }
+}
+```
 :::
 
 ### environmentOptions
