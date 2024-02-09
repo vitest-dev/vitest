@@ -12,7 +12,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        external: [/\.wasm$/],
+        external: [/\.wasm$/, /\/wasm-bindgen-no-cyclic\/index_bg.js/],
       },
     },
   },
