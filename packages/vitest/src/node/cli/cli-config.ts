@@ -140,6 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Specify reporters',
     argument: '<name>',
     subcommands: null, // don't support custom objects
+    array: true,
   },
   outputFile: {
     argument: '<filename/-s>',

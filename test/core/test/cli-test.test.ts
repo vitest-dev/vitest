@@ -119,3 +119,14 @@ test('even if coverage is boolean, don\'t fail', () => {
     provider: 'v8',
   })
 })
+
+test('array options', () => {
+  expect(parseArguments('--reporter json --reporter=default')).toMatchInlineSnapshot(`
+    {
+      "reporter": [
+        "json",
+        "default",
+      ],
+    }
+  `)
+})
