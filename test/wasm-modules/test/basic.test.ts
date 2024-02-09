@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
+
+// @ts-expect-error wasm is not typed
 import { add } from '../src/add.wasm'
+
+const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/add.wasm'))
 
 test('supports native wasm imports', () => {
   expect(add(1, 2)).toBe(3)
@@ -13,22 +17,20 @@ test('supports native wasm imports', () => {
   expect(add(2 ** 31 - 1, 1)).toBe(-(2 ** 31))
 
   // invalid or missing arguments are treated as 0
-  const addAny = add as any
-  expect(addAny('hello', 'world')).toBe(0)
-  expect(addAny()).toBe(0)
-  expect(addAny(null)).toBe(0)
-  expect(addAny({}, [])).toBe(0)
+  expect(add('hello', 'world')).toBe(0)
+  expect(add()).toBe(0)
+  expect(add(null)).toBe(0)
+  expect(add({}, [])).toBe(0)
 
   // redundant arguments are silently ignored
-  expect(addAny(1, 2, 3)).toBe(3)
+  expect(add(1, 2, 3)).toBe(3)
 })
 
 test('supports dynamic wasm imports', async () => {
-  const { add } = await import('../src/add.wasm')
-  expect(add(1, 2)).toBe(3)
+  // @ts-expect-error wasm is not typed
+  const { add: dynamicAdd } = await import('../src/add.wasm')
+  expect(dynamicAdd(1, 2)).toBe(3)
 })
-
-const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/add.wasm'))
 
 test('supports imports from "data:application/wasm" URI with base64 encoding', async () => {
   const importedWasmModule = await import(
@@ -66,3 +68,22 @@ async function getError(f: () => unknown) {
   }
   expect.unreachable()
 }
+
+test('supports wasm/js cyclic import (old wasm-bindgen output)', async () => {
+  globalThis.alert = vi.fn()
+
+  // @ts-expect-error not typed
+  const { greet } = await import('../src/wasm-bindgen/index.js')
+  greet('World')
+
+  expect(globalThis.alert).toHaveBeenCalledWith('Hello, World!')
+})
+
+test('supports wasm-bindgen', async () => {
+  globalThis.alert = vi.fn()
+
+  const { greet } = await import('../src/wasm-bindgen-no-cyclic/index.js')
+  greet('No Cyclic')
+
+  expect(globalThis.alert).toHaveBeenCalledWith('Hello, No Cyclic!')
+})
