@@ -64,7 +64,7 @@ test('nested coverage options have correct types', async () => {
     --coverage.thresholds.branches 25
   `).coverage).toEqual({
     enabled: true,
-    reporter: 'text',
+    reporter: ['text'],
     all: true,
     provider: 'v8',
     clean: false,
@@ -118,4 +118,41 @@ test('even if coverage is boolean, don\'t fail', () => {
     enabled: true,
     provider: 'v8',
   })
+})
+
+test('array options', () => {
+  expect(parseArguments('--reporter json --coverage.reporter=html --coverage.extension ts')).toMatchInlineSnapshot(`
+    {
+      "coverage": {
+        "extension": [
+          "ts",
+        ],
+        "reporter": [
+          "html",
+        ],
+      },
+      "reporter": [
+        "json",
+      ],
+    }
+  `)
+
+  expect(parseArguments('--reporter json --reporter=default --coverage.reporter=json --coverage.reporter html --coverage.extension=ts --coverage.extension=tsx')).toMatchInlineSnapshot(`
+    {
+      "coverage": {
+        "extension": [
+          "ts",
+          "tsx",
+        ],
+        "reporter": [
+          "json",
+          "html",
+        ],
+      },
+      "reporter": [
+        "json",
+        "default",
+      ],
+    }
+  `)
 })
