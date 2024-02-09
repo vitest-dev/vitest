@@ -419,12 +419,13 @@ export function resolveConfig(
       resolved.reporters = Array.from(new Set(toArray(cliReporters))).filter(Boolean).map(reporter => [reporter, {}])
   }
 
-  if (!resolved.reporters.length)
+  if (!resolved.reporters.length) {
     resolved.reporters.push(['default', {}])
 
-  // automatically enable github-actions reporter
-  if (process.env.GITHUB_ACTIONS === 'true' && !resolved.reporters.some(v => Array.isArray(v) && v[0] === 'github-actions'))
-    resolved.reporters.push(['github-actions', {}])
+    // also enable github-actions reporter as a default
+    if (process.env.GITHUB_ACTIONS === 'true')
+      resolved.reporters.push(['github-actions', {}])
+  }
 
   if (resolved.changed)
     resolved.passWithNoTests ??= true
