@@ -11,7 +11,7 @@ export default antfu(
       '**/bench.json',
       '**/fixtures',
       'test/core/src/self',
-      'test/core/src/wasm-bindgen-no-cyclic',
+      'test/wasm-modules/src/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',

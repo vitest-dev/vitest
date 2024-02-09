@@ -140,6 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Specify reporters',
     argument: '<name>',
     subcommands: null, // don't support custom objects
+    array: true,
   },
   outputFile: {
     argument: '<filename/-s>',
@@ -175,6 +176,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       extension: {
         description: 'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: [".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"])',
         argument: '<extension>',
+        array: true,
       },
       clean: {
         description: 'Clean coverage results before running tests (default: true)',
@@ -191,6 +193,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Coverage reporters to use. Visit https://vitest.dev/config/#coverage-reporter for more information (default: ["text", "html", "clover", "json"])',
         argument: '<name>',
         subcommands: null, // don't support custom objects
+        array: true,
       },
       reportOnFailure: {
         description: 'Generate coverage report even when tests fail (default: false)',

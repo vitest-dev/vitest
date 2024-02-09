@@ -59,9 +59,6 @@ export default defineConfig({
     env: {
       CUSTOM_ENV: 'foo',
     },
-    poolMatchGlobs: [
-      ['**/vm-wasm.test.ts', 'vmThreads'],
-    ],
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot'))
         return path + extension
@@ -75,7 +72,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        external: ['tinyspy', /src\/external/, /esm\/esm/, /\.wasm$/, /\/wasm-bindgen-no-cyclic\/index_bg/],
+        external: ['tinyspy', /src\/external/, /esm\/esm/],
         inline: ['inline-lib'],
       },
     },

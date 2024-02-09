@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect, test, vi } from 'vitest'
 
-// TODO: currently not supported
-
 // @ts-expect-error wasm is not typed
 import { add } from '../src/add.wasm'
 
@@ -41,18 +39,35 @@ test('supports imports from "data:application/wasm" URI with base64 encoding', a
   expect(importedWasmModule.add(0, 42)).toBe(42)
 })
 
+// TODO: error message is different on vm
+const isVm = process.execArgv.includes('--experimental-vm-modules')
+
 test('imports from "data:application/wasm" URI without explicit encoding fail', async () => {
-  await expect(() =>
-    import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`),
-  ).rejects.toThrow('Missing data URI encoding')
+  const error = await getError(() => import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`))
+  if (isVm)
+    expect(error).toMatchInlineSnapshot(`[Error: Missing data URI encoding]`)
+  else
+    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm,AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABags=: WebAssembly.compile(): expected magic word 00 61 73 6d, found 41 47 46 7a @+0]`)
 })
 
 test('imports from "data:application/wasm" URI with invalid encoding fail', async () => {
-  await expect(() =>
-    // @ts-expect-error import is not typed
-    import('data:application/wasm;charset=utf-8,oops'),
-  ).rejects.toThrow('Invalid data URI encoding: charset=utf-8')
+  // @ts-expect-error import is not typed
+  const error = await getError(() => import('data:application/wasm;charset=utf-8,oops'))
+  if (isVm)
+    expect(error).toMatchInlineSnapshot(`[Error: Invalid data URI encoding: charset=utf-8]`)
+  else
+    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm;charset=utf-8,oops: WebAssembly.compile(): expected magic word 00 61 73 6d, found 6f 6f 70 73 @+0]`)
 })
+
+async function getError(f: () => unknown) {
+  try {
+    await f()
+  }
+  catch (e) {
+    return e
+  }
+  expect.unreachable()
+}
 
 test('supports wasm/js cyclic import (old wasm-bindgen output)', async () => {
   globalThis.alert = vi.fn()
