@@ -110,7 +110,7 @@ test('all coverage enable options are working correctly', () => {
 
 test('fails when an array is passed down for a single value', async () => {
   expect(() => parseArguments('--coverage.provider v8 --coverage.provider istanbul'))
-    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>"]`)
+    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
 })
 
 test('even if coverage is boolean, don\'t fail', () => {
