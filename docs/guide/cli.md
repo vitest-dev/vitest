@@ -135,7 +135,8 @@ vitest --api=false
 
   Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. If you want to compare it with a branch `--changed=origin/develop`.  You can also pass commit hash or branch name.
+  > But remember, if you changed the `package.json`, all tests will be run.
 
   If paired with the `forceRerunTriggers` config option it will run the whole test suite if a match is found.
 
