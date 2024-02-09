@@ -112,8 +112,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
-    "prepublishOnly": "pnpm build"
+    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",

@@ -31,8 +31,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
-    "prepublishOnly": "pnpm build"
+    "dev": "rollup -c --watch"
   },
   "dependencies": {
     "@vitest/spy": "workspace:*",

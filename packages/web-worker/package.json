@@ -35,7 +35,6 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**'",
-    "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

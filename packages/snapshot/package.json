@@ -39,8 +39,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
-    "prepublishOnly": "pnpm build"
+    "dev": "rollup -c --watch"
   },
   "dependencies": {
     "magic-string": "^0.30.5",
