@@ -62,6 +62,11 @@ test('nested coverage options have correct types', async () => {
     --coverage.thresholds.lines 100
     --coverage.thresholds.functions 30
     --coverage.thresholds.branches 25
+
+    --coverage.watermarks.statements 50,80
+    --coverage.watermarks.lines=30,40
+    --coverage.watermarks.branches=70,80
+    --coverage.watermarks.functions 20,60
   `).coverage).toEqual({
     enabled: true,
     reporter: ['text'],
@@ -84,6 +89,12 @@ test('nested coverage options have correct types', async () => {
       perFile: true,
       autoUpdate: true,
       100: true,
+    },
+    watermarks: {
+      statements: [50, 80],
+      lines: [30, 40],
+      branches: [70, 80],
+      functions: [20, 60],
     },
   })
 })
@@ -110,7 +121,7 @@ test('all coverage enable options are working correctly', () => {
 
 test('fails when an array is passed down for a single value', async () => {
   expect(() => parseArguments('--coverage.provider v8 --coverage.provider istanbul'))
-    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>"]`)
+    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
 })
 
 test('even if coverage is boolean, don\'t fail', () => {
@@ -137,7 +148,14 @@ test('array options', () => {
     }
   `)
 
-  expect(parseArguments('--reporter json --reporter=default --coverage.reporter=json --coverage.reporter html --coverage.extension=ts --coverage.extension=tsx')).toMatchInlineSnapshot(`
+  expect(parseArguments(`
+  --reporter json 
+  --reporter=default 
+  --coverage.reporter=json 
+  --coverage.reporter html 
+  --coverage.extension=ts 
+  --coverage.extension=tsx
+  `)).toMatchInlineSnapshot(`
     {
       "coverage": {
         "extension": [
@@ -155,4 +173,47 @@ test('array options', () => {
       ],
     }
   `)
+})
+
+test('hookTimeout is parsed correctly', () => {
+  expect(parseArguments('--hookTimeout 1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hook-timeout 1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hook-timeout=1000')).toEqual({ hookTimeout: 1000 })
+  expect(parseArguments('--hookTimeout=1000')).toEqual({ hookTimeout: 1000 })
+})
+
+test('teardownTimeout is parsed correctly', () => {
+  expect(parseArguments('--teardownTimeout 1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardown-timeout 1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardownTimeout=1000')).toEqual({ teardownTimeout: 1000 })
+  expect(parseArguments('--teardown-timeout=1000')).toEqual({ teardownTimeout: 1000 })
+})
+
+test('slowTestThreshold is parsed correctly', () => {
+  expect(parseArguments('--slowTestThreshold 1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slow-test-threshold 1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slowTestThreshold=1000')).toEqual({ slowTestThreshold: 1000 })
+  expect(parseArguments('--slow-test-threshold=1000')).toEqual({ slowTestThreshold: 1000 })
+})
+
+test('maxConcurrency is parsed correctly', () => {
+  expect(parseArguments('--maxConcurrency 1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--max-concurrency 1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--maxConcurrency=1000')).toEqual({ maxConcurrency: 1000 })
+  expect(parseArguments('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
+})
+
+test('cache is parsed correctly', () => {
+  expect(parseArguments('--cache')).toEqual({ cache: {} })
+  expect(parseArguments('--no-cache')).toEqual({ cache: false })
+
+  expect(parseArguments('--cache.dir=./test/cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
+  expect(parseArguments('--cache.dir ./test/cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
+  expect(parseArguments('--cache.dir .\\test\\cache.json')).toEqual({
+    cache: { dir: 'test/cache.json' },
+  })
 })

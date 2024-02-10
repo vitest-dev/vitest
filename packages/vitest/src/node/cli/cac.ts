@@ -17,8 +17,12 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
     command += ` ${option.argument}`
 
   function transform(value: unknown) {
-    if (!option.array && Array.isArray(value))
-      throw new Error(`Expected a single value for option "${command}"`)
+    if (!option.array && Array.isArray(value)) {
+      const received = value.map(s => typeof s === 'string' ? `"${s}"` : s).join(', ')
+      throw new Error(
+        `Expected a single value for option "${command}", received [${received}]`,
+      )
+    }
     if (option.transform)
       return option.transform(value)
     if (option.array)

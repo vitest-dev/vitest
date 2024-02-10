@@ -81,6 +81,12 @@ const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
   execArgv: null,
 }
 
+function watermarkTransform(value: unknown) {
+  if (typeof value === 'string')
+    return value.split(',').map(Number)
+  return value
+}
+
 function transformNestedBoolean(value: unknown) {
   if (typeof value === 'boolean')
     return { enabled: value }
@@ -249,9 +255,32 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         normalize: true,
       },
-      // TODO: suport watermarks via a special command?
-      // CAC requires --watermarks.statements=50 --watermarks.statements=80 for "statements:[50,80]" which looks rediculous
-      watermarks: null,
+      watermarks: {
+        description: null,
+        argument: '', // no displayed
+        subcommands: {
+          statements: {
+            description: 'High and low watermarks for statements in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          lines: {
+            description: 'High and low watermarks for lines in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          branches: {
+            description: 'High and low watermarks for branches in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          functions: {
+            description: 'High and low watermarks for functions in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+        },
+      },
     },
   },
   mode: {
@@ -434,6 +463,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Default timeout of a test in milliseconds (default: 5000)',
     argument: '<timeout>',
   },
+  hookTimeout: {
+    description: 'Default hook timeout in milliseconds (default: 10000)',
+    argument: '<timeout>',
+  },
   bail: {
     description: 'Stop test execution when given number of tests have failed (default: 0)',
     argument: '<number>',
@@ -492,14 +525,35 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2',
     argument: '<name>',
   },
-  // slowTestThreshold: {
-  //   description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
-  //   argument: '<threshold>',
-  // },
-  // teardownTimeout: {
-  //   description: 'Default timeout of a teardown function in milliseconds (default: 10000)',
-  //   argument: '<timeout>',
-  // },
+  slowTestThreshold: {
+    description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
+    argument: '<threshold>',
+  },
+  teardownTimeout: {
+    description: 'Default timeout of a teardown function in milliseconds (default: 10000)',
+    argument: '<timeout>',
+  },
+  cache: {
+    description: 'Enable cache',
+    argument: '', // allow only boolean
+    subcommands: {
+      dir: {
+        description: 'Path to the cache directory',
+        argument: '<path>',
+        normalize: true,
+      },
+    },
+    // cache can only be "false" or an object
+    transform(cache) {
+      if (cache)
+        return {}
+      return cache
+    },
+  },
+  maxConcurrency: {
+    description: 'Maximum number of concurrent tests in a suite (default: 5)',
+    argument: '<number>',
+  },
 
   // CLI only options
   run: {
@@ -537,18 +591,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
   unstubGlobals: null,
   uiBase: null,
   benchmark: null,
-  name: null,
   include: null,
   testTransformMode: null,
-  hookTimeout: null,
   fakeTimers: null,
-  cache: null,
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  maxConcurrency: null,
   poolMatchGlobs: null,
   deps: null,
-  slowTestThreshold: null,
-  teardownTimeout: null,
+  name: null,
 }
