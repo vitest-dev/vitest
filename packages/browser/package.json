@@ -46,7 +46,7 @@
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
     "dev:node": "rollup -c --watch --watch.include 'src/node/**'",
-    "dev": "rimraf dist && run-p dev:node dev:client",
+    "dev": "rimraf dist && pnpm run --stream '/^dev:/'",
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
