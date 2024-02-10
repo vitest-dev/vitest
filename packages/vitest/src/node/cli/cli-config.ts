@@ -81,6 +81,12 @@ const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
   execArgv: null,
 }
 
+function watermarkTransform(value: unknown) {
+  if (typeof value === 'string')
+    return value.split(',').map(Number)
+  return value
+}
+
 function transformNestedBoolean(value: unknown) {
   if (typeof value === 'boolean')
     return { enabled: value }
@@ -249,9 +255,32 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         normalize: true,
       },
-      // TODO: suport watermarks via a special command?
-      // CAC requires --watermarks.statements=50 --watermarks.statements=80 for "statements:[50,80]" which looks rediculous
-      watermarks: null,
+      watermarks: {
+        description: null,
+        argument: '', // no displayed
+        subcommands: {
+          statements: {
+            description: 'High and low watermarks for statements in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          lines: {
+            description: 'High and low watermarks for lines in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          branches: {
+            description: 'High and low watermarks for branches in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+          functions: {
+            description: 'High and low watermarks for functions in the format of <high>,<low>',
+            argument: '<watermarks>',
+            transform: watermarkTransform,
+          },
+        },
+      },
     },
   },
   mode: {

@@ -62,6 +62,11 @@ test('nested coverage options have correct types', async () => {
     --coverage.thresholds.lines 100
     --coverage.thresholds.functions 30
     --coverage.thresholds.branches 25
+
+    --coverage.watermarks.statements 50,80
+    --coverage.watermarks.lines=30,40
+    --coverage.watermarks.branches=70,80
+    --coverage.watermarks.functions 20,60
   `).coverage).toEqual({
     enabled: true,
     reporter: ['text'],
@@ -84,6 +89,12 @@ test('nested coverage options have correct types', async () => {
       perFile: true,
       autoUpdate: true,
       100: true,
+    },
+    watermarks: {
+      statements: [50, 80],
+      lines: [30, 40],
+      branches: [70, 80],
+      functions: [20, 60],
     },
   })
 })

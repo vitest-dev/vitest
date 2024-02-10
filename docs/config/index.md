@@ -1413,6 +1413,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 ```
 
 - **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.watermarks.statements=50,80`, `--coverage.watermarks.branches=50,80`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
