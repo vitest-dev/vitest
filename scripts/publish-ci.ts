@@ -30,6 +30,6 @@ const releaseTag = version.includes('beta')
 console.log('Publishing version', version, 'with tag', releaseTag)
 
 if (releaseTag)
-  await $`pnpm -r publish --access public --tag ${releaseTag}`
+  await $`pnpm -r publish --provenance --access public --tag ${releaseTag}`
 else
-  await $`pnpm -r publish --access public`
+  await $`pnpm -r publish --provenance --access public`
