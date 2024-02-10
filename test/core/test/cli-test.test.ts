@@ -222,13 +222,25 @@ test('cache is parsed correctly', () => {
   })
 })
 
-test('browser as boolean', () => {
+test('browser as implicit boolean', () => {
   const { options, args } = parseArguments('--browser', false, true)
   expect(options).toEqual({ browser: { enabled: true } })
   expect(args).toEqual([])
 })
 
-test('browser as string', () => {
+test('browser as explicit boolean', () => {
+  const { options, args } = parseArguments('--browser=true', false, true)
+  expect(options).toEqual({ browser: { enabled: true } })
+  expect(args).toEqual([])
+})
+
+test('browser as explicit boolean with space', () => {
+  const { options, args } = parseArguments('--browser true', false, true)
+  expect(options).toEqual({ browser: { enabled: true } })
+  expect(args).toEqual([])
+})
+
+test('browser by name', () => {
   const { options, args } = parseArguments('--browser=firefox', false, true)
 
   expect(args).toEqual([])
