@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
-    "dev:ui": "run-p dev dev:client",
+    "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component",
     "prepublishOnly": "pnpm build"
