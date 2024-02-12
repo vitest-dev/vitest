@@ -307,6 +307,41 @@ interface TestEachFunction6<ExtraContext> {
   ) => void
 }
 
+interface TestFunctionWithEachArgs<EachArgs extends unknown[], Context> {
+  (
+    name: string | Function,
+    fn: (...args: [...EachArgs, Context]) => Awaitable<void>,
+    options: TestOptions & { context: true },
+  ): void
+  (
+    name: string | Function,
+    fn: (...args: EachArgs) => Awaitable<void>,
+    options?: number | (TestOptions & { context?: false }),
+  ): void
+}
+
+interface TestEachFunction7<ExtraContext> {
+  // each([[1, 2], [3, 4]])
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>):
+  TestFunctionWithEachArgs<T, ExtendedContext<Test> & ExtraContext>
+
+  // each([[1, 2], [3, 4, 5]])
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>):
+  TestFunctionWithEachArgs<ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext>
+
+  // test.each([1, 2, 3])
+  <T>(cases: ReadonlyArray<T>):
+  TestFunctionWithEachArgs<[T], ExtendedContext<Test> & ExtraContext>
+
+  // test.each`
+  //    a  |  b
+  //   {1} | {2}
+  //   {3} | {4}
+  // `
+  (...args: [TemplateStringsArray, ...any]):
+  TestFunctionWithEachArgs<[any], ExtendedContext<Test> & ExtraContext>
+}
+
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
@@ -318,6 +353,7 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
     each4: TestEachFunction4<ExtraContext>
     each5: TestEachFunction5<ExtraContext>
     each6: TestEachFunction6<ExtraContext>
+    each7: TestEachFunction7<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >

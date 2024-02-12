@@ -138,6 +138,84 @@ exports[`myTest.each6-context-true-multiple hi 3 1`] = `
 }
 `;
 
+exports[`myTest.each7-context-array-2-spread-true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+}
+`;
+
+exports[`myTest.each7-context-array-2-spread-true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+}
+`;
+
+exports[`myTest.each7-context-array-2-true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-array-2-true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-array-true hello 1`] = `
+{
+  "arg": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-array-true hi 1`] = `
+{
+  "arg": "hi",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-single-true hello 1`] = `
+{
+  "arg": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-single-true hi 1`] = `
+{
+  "arg": "hi",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-template-true 'hello' 2 1`] = `
+{
+  "arg": {
+    "a": "hello",
+    "b": 2,
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-template-true 'hi' 3 1`] = `
+{
+  "arg": {
+    "a": "hi",
+    "b": 3,
+  },
+  "myFixture": 1234,
+}
+`;
+
 exports[`test.each2 hello 1`] = `
 [
   "hello",
