@@ -193,7 +193,7 @@ myTest.concurrent.each7([['hello', 2], ['hi', 3]])(
   { context: true },
 )
 
-// "const" case works slightly differently in terms of type-inference
+// "const" case uses different type overload internally, but should work same for users.
 myTest.concurrent.each7([['hello', 2], ['hi', 3]] as const)(
   'myTest.each7-context-array-3-false %s %s',
   (...args) => {
