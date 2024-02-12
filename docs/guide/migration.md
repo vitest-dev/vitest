@@ -189,7 +189,7 @@ const { cloneDeep } = await vi.importActual('lodash/cloneDeep') // [!code ++]
 ### Accessing the Return Values of a Mocked Promise
 
 Both Jest and Vitest store the results of all mock calls in the [`mock.results`](/api/mock.html#mock-results) array, where the return values of each call are stored in the `value` property.
-However, when mocking or spying on a promise (e.g. using `mockResolvedValue`), in Jest the `value` property will be a promise, while in Vitest, it will be the return value.
+However, when mocking or spying on a promise (e.g. using `mockResolvedValue`), in Jest the `value` property will be a promise, while in Vitest, it will become a resolved value when a promise is resolved.
 
 ```ts
 await expect(spy.mock.results[0].value).resolves.toBe(123) // [!code --]
