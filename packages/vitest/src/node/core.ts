@@ -723,8 +723,6 @@ export class Vitest {
     if (this.config.forceRerunTriggers.length)
       watcher.add(this.config.forceRerunTriggers)
 
-    watcher.unwatch(this.config.watchExclude)
-
     watcher.on('change', onChange)
     watcher.on('unlink', onUnlink)
     watcher.on('add', onAdd)

@@ -131,8 +131,6 @@ export class Logger {
         this.console.error(c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)))
       }
     })
-    if (config.watchExclude)
-      this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
     if (config.watch && (config.changed || config.related?.length)) {
       this.log(`No affected ${config.mode} files found\n`)

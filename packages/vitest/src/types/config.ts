@@ -429,11 +429,6 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Glob pattern of file paths to be ignore from triggering watch rerun
-   */
-  watchExclude?: string[]
-
-  /**
    * Glob patter of file paths that will trigger the whole suite rerun
    *
    * Useful if you are testing calling CLI commands
@@ -846,7 +841,6 @@ export type ProjectConfig = Omit<
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
-  | 'watchExclude'
   | 'forceRerunTriggers'
   | 'testNamePattern'
   | 'ui'
