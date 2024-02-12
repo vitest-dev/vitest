@@ -175,7 +175,7 @@ jobs:
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
         env:
-          EDGEDRIVER_VERSION: ${{ steps.setup-edge.outputs.edge-version }}
+          EDGEDRIVER_VERSION: '121.0.2277.113'
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
