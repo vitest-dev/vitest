@@ -262,14 +262,20 @@ function createSuite() {
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, optionsOrFn: ((...args: T[]) => void) | TestOptions, fnOrOptions?: ((...args: T[]) => void) | number | TestOptions) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
+
+      const { options, handler } = parseArguments(
+        optionsOrFn,
+        fnOrOptions,
+      )
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
         arrayOnlyCases
-          ? suite(formatTitle(_name, items, idx), () => fn(...items), options)
-          : suite(formatTitle(_name, items, idx), () => fn(i), options)
+          ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
+          : suite(formatTitle(_name, items, idx), options, () => handler(i))
       })
 
       this.setContext('each', undefined)
@@ -311,8 +317,8 @@ export function createTaskCollector(
         const items = Array.isArray(i) ? i : [i]
 
         arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), () => handler(...items), options)
-          : test(formatTitle(_name, items, idx), () => handler(i), options)
+          ? test(formatTitle(_name, items, idx), options, () => handler(...items))
+          : test(formatTitle(_name, items, idx), options, () => handler(i))
       })
 
       this.setContext('each', undefined)
