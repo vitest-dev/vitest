@@ -3,7 +3,6 @@ import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { ContextRPC } from '../types/rpc'
 import { loadEnvironment } from '../integrations/env/loader'
-import type { WorkerGlobalState } from '../types/worker'
 import { isChildProcess, setProcessTitle } from '../utils/base'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
@@ -20,8 +19,6 @@ export async function run(ctx: ContextRPC) {
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
-
-  let state: WorkerGlobalState | null = null
 
   try {
     // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
@@ -46,7 +43,7 @@ export async function run(ctx: ContextRPC) {
     if (ctx.environment.transformMode)
       environment.transformMode = ctx.environment.transformMode
 
-    state = {
+    const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
@@ -70,9 +67,5 @@ export async function run(ctx: ContextRPC) {
   finally {
     await rpcDone().catch(() => {})
     inspectorCleanup()
-    if (state) {
-      state.environment = null as any
-      state = null
-    }
   }
 }

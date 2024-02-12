@@ -3,7 +3,7 @@ import test from 'node:test'
 import { execa } from 'execa'
 
 test('filter', async () => {
-  const result = await execa(
+  let result = execa(
     'npx',
     [
       'vitest',
@@ -21,6 +21,15 @@ test('filter', async () => {
       },
     },
   )
+  if (process.env.VITEST_BROWSER_DEBUG) {
+    result.stderr.on('data', (data) => {
+      process.stderr.write(data.toString())
+    })
+    result.stdout.on('data', (data) => {
+      process.stdout.write(data.toString())
+    })
+  }
+  result = await result
   assert.match(result.stdout, /✓ test\/basic.test.ts > basic 2/)
   assert.match(result.stdout, /Test Files {2}1 passed/)
   assert.match(result.stdout, /Tests {2}1 passed | 3 skipped/)

@@ -9,10 +9,10 @@ class TestError extends Error {}
 
 // For expect.extend
 interface CustomMatchers<R = unknown> {
-  toBeDividedBy(divisor: number): R
-  toBeTestedAsync(): Promise<R>
-  toBeTestedSync(): R
-  toBeTestedPromise(): R
+  toBeDividedBy: (divisor: number) => R
+  toBeTestedAsync: () => Promise<R>
+  toBeTestedSync: () => R
+  toBeTestedPromise: () => R
 }
 
 declare module 'vitest' {
@@ -24,7 +24,7 @@ declare global {
   // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
-      toBeJestCompatible(): R
+      toBeJestCompatible: () => R
     }
   }
 }
@@ -1057,6 +1057,31 @@ it('asymmetric matcher error', () => {
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))
+
+  // error message on `toThrow(asymmetricMatcher)` failure
+  function throwError() {
+    // eslint-disable-next-line no-throw-literal
+    throw 'hello'
+  }
+  snapshotError(() => expect(throwError).toThrow(expect.stringContaining('xx')))
+  snapshotError(() => expect(throwError).toThrow((expect as any).stringContainingCustom('xx')))
+  snapshotError(() => expect(throwError).not.toThrow(expect.stringContaining('ll')))
+  snapshotError(() => expect(throwError).not.toThrow((expect as any).stringContainingCustom('ll')))
+
+  snapshotError(() => expect(() => {
+    throw new Error('hello')
+  }).toThrow(expect.stringContaining('ll')))
+  snapshotError(() => expect(() => {
+    throw new Error('hello')
+  }).toThrow((expect as any).stringContainingCustom('ll')))
+
+  // error constructor
+  class MyError1 extends Error {}
+  class MyError2 extends Error {}
+
+  snapshotError(() => expect(() => {
+    throw new MyError2('hello')
+  }).toThrow(MyError1))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

@@ -435,9 +435,9 @@ function hasPropertyInObject(object: object, key: string): boolean {
 
 function isObjectWithKeys(a: any) {
   return isObject(a)
-  && !(a instanceof Error)
-  && !(Array.isArray(a))
-  && !(a instanceof Date)
+    && !(a instanceof Error)
+    && !(Array.isArray(a))
+    && !(a instanceof Date)
 }
 
 export function subsetEquality(object: unknown, subset: unknown, customTesters: Array<Tester> = []): boolean | undefined {

@@ -151,7 +151,7 @@ const myTest = test.extend({
 
 // todosFn will not run
 myTest('', () => {})
-myTets('', ({ archive }) => {})
+myTest('', ({ archive }) => {})
 
 // todosFn will run
 myTest('', ({ todos }) => {})

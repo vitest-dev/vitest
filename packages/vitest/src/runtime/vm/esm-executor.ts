@@ -1,6 +1,6 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import type vm from 'node:vm'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { VMModule } from './types'
 import { SourceTextModule, SyntheticModule } from './utils'
@@ -62,12 +62,26 @@ export class EsmExecutor {
         importModuleDynamically: this.executor.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
           meta.url = mod.identifier
-          meta.resolve = (specifier: string, importer?: string) => {
-            return this.executor.resolve(specifier, importer ?? mod.identifier)
+          if (mod.identifier.startsWith('file:')) {
+            const filename = fileURLToPath(mod.identifier)
+            meta.filename = filename
+            meta.dirname = dirname(filename)
+          }
+          meta.resolve = (specifier: string, importer?: string | URL) => {
+            return this.executor.resolve(specifier, importer != null ? importer.toString() : mod.identifier)
           }
         },
       },
     )
+    this.moduleCache.set(fileUrl, m)
+    return m
+  }
+
+  public async createWebAssemblyModule(fileUrl: string, code: Buffer) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached)
+      return cached
+    const m = this.loadWebAssemblyModule(code, fileUrl)
     this.moduleCache.set(fileUrl, m)
     return m
   }
@@ -85,23 +99,21 @@ export class EsmExecutor {
     const moduleLookup: Record<string, VMModule> = {}
     for (const { module } of imports) {
       if (moduleLookup[module] === undefined) {
-        const resolvedModule = await this.executor.resolveModule(
+        moduleLookup[module] = await this.executor.resolveModule(
           module,
           identifier,
         )
-
-        moduleLookup[module] = await this.evaluateModule(resolvedModule)
       }
     }
 
     const syntheticModule = new SyntheticModule(
       exports.map(({ name }) => name),
-      () => {
+      async () => {
         const importsObject: WebAssembly.Imports = {}
         for (const { module, name } of imports) {
           if (!importsObject[module])
             importsObject[module] = {}
-
+          await this.evaluateModule(moduleLookup[module])
           importsObject[module][name] = (moduleLookup[module].namespace as any)[name]
         }
         const wasmInstance = new WebAssembly.Instance(
@@ -145,7 +157,7 @@ export class EsmExecutor {
       if (encoding !== 'base64')
         throw new Error(`Invalid data URI encoding: ${encoding}`)
 
-      const module = await this.loadWebAssemblyModule(
+      const module = this.loadWebAssemblyModule(
         Buffer.from(match.groups.code, 'base64'),
         identifier,
       )

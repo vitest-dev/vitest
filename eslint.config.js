@@ -11,6 +11,7 @@ export default antfu(
       '**/bench.json',
       '**/fixtures',
       'test/core/src/self',
+      'test/wasm-modules/src/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
@@ -23,6 +24,15 @@ export default antfu(
       'node/prefer-global/buffer': 'off',
       'node/prefer-global/process': 'off',
       'no-empty-pattern': 'off',
+      'antfu/indent-binary-ops': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'style/member-delimiter-style': [
+        'error',
+        {
+          multiline: { delimiter: 'none' },
+          singleline: { delimiter: 'semi' },
+        },
+      ],
 
       'ts/no-invalid-this': 'off',
 
@@ -37,6 +47,12 @@ export default antfu(
       ],
 
       'import/no-named-as-default': 'off',
+    },
+  },
+  {
+    files: [`packages/*/*.{js,mjs,d.ts}`],
+    rules: {
+      'antfu/no-import-dist': 'off',
     },
   },
   {
@@ -70,6 +86,7 @@ export default antfu(
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
       'import/first': 'off',
+      'unused-imports/no-unused-imports': 'off',
     },
   },
   {

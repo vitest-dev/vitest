@@ -21,7 +21,7 @@ To fix this issue you can either:
 - enable the 'globals' options`
 
 const API_NOT_FOUND_CHECK = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
-+ `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+  + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
@@ -162,6 +162,25 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     }
   }
 
+  function assertNotDefaultExport(node: Positioned<CallExpression>, error: string) {
+    const defaultExport = findNodeAround(ast, node.start, 'ExportDefaultDeclaration')?.node as Positioned<ExportDefaultDeclaration> | undefined
+    if (defaultExport?.declaration === node || (defaultExport?.declaration.type === 'AwaitExpression' && defaultExport.declaration.argument === node))
+      throw createSyntaxError(defaultExport, error)
+  }
+
+  function assertNotNamedExport(node: Positioned<VariableDeclaration>, error: string) {
+    const nodeExported = findNodeAround(ast, node.start, 'ExportNamedDeclaration')?.node as Positioned<ExportNamedDeclaration> | undefined
+    if (nodeExported?.declaration === node)
+      throw createSyntaxError(nodeExported, error)
+  }
+
+  function getVariableDeclaration(node: Positioned<CallExpression>) {
+    const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
+    const init = declarationNode?.declarations[0]?.init
+    if (init && (init === node || (init.type === 'AwaitExpression' && init.argument === node)))
+      return declarationNode
+  }
+
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
@@ -197,38 +216,21 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
       ) {
         const methodName = node.callee.property.name
 
-        if (methodName === 'mock' || methodName === 'unmock')
+        if (methodName === 'mock' || methodName === 'unmock') {
+          const method = `${node.callee.object.name}.${methodName}`
+          assertNotDefaultExport(node, `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`)
+          const declarationNode = getVariableDeclaration(node)
+          if (declarationNode)
+            assertNotNamedExport(declarationNode, `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`)
           hoistedNodes.push(node)
+        }
 
         if (methodName === 'hoisted') {
-          // check it's not a default export
-          const defaultExport = findNodeAround(ast, node.start, 'ExportDefaultDeclaration')?.node as Positioned<ExportDefaultDeclaration> | undefined
-          if (defaultExport?.declaration === node || (defaultExport?.declaration.type === 'AwaitExpression' && defaultExport.declaration.argument === node))
-            throw createSyntaxError(defaultExport, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
+          assertNotDefaultExport(node, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
 
-          const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as Positioned<VariableDeclaration> | undefined
-          const init = declarationNode?.declarations[0]?.init
-          const isViHoisted = (node: CallExpression) => {
-            return node.callee.type === 'MemberExpression'
-              && isIdentifier(node.callee.object)
-              && (node.callee.object.name === 'vi' || node.callee.object.name === 'vitest')
-              && isIdentifier(node.callee.property)
-              && node.callee.property.name === 'hoisted'
-          }
-
-          const canMoveDeclaration = (init
-            && init.type === 'CallExpression'
-            && isViHoisted(init)) /* const v = vi.hoisted() */
-            || (init
-                && init.type === 'AwaitExpression'
-                && init.argument.type === 'CallExpression'
-                && isViHoisted(init.argument)) /* const v = await vi.hoisted() */
-
-          if (canMoveDeclaration) {
-            // export const variable = vi.hoisted()
-            const nodeExported = findNodeAround(ast, declarationNode.start, 'ExportNamedDeclaration')?.node as Positioned<ExportNamedDeclaration> | undefined
-            if (nodeExported?.declaration === declarationNode)
-              throw createSyntaxError(nodeExported, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
+          const declarationNode = getVariableDeclaration(node)
+          if (declarationNode) {
+            assertNotNamedExport(declarationNode, 'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.')
             // hoist "const variable = vi.hoisted(() => {})"
             hoistedNodes.push(declarationNode)
           }

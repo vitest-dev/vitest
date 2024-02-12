@@ -228,7 +228,7 @@ import * as mod from './foobar.js'
 vi.spyOn(mod, 'foo')
 vi.mock('./foobar.js', async (importOriginal) => {
   return {
-    ...await importOriginal(),
+    ...await importOriginal<typeof import('./foobar.js')>(),
     // this will only affect "foo" outside of the original module
     foo: () => 'mocked'
   }
@@ -361,7 +361,6 @@ describe('get a list of todo items', () => {
 Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
 
 Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses the [`@mswjs/interceptors`](https://github.com/mswjs/interceptors) library. To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
-
 
 ### Configuration
 
@@ -609,8 +608,8 @@ expect(obj.method).toHaveBeenCalled()
 ```ts
 import { mocked, original } from './some-path.js'
 
-vi.mock('./some-path.js', async () => {
-  const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
+vi.mock('./some-path.js', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('./some-path.js')>()
   return {
     ...mod,
     mocked: vi.fn()

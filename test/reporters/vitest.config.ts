@@ -7,5 +7,9 @@ export default defineConfig({
     chaiConfig: {
       truncateThreshold: 0,
     },
+    typecheck: {
+      enabled: true,
+      include: ['./tests/configuration-options.test-d.ts'],
+    },
   },
 })

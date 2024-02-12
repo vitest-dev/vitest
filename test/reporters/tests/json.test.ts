@@ -11,10 +11,18 @@ describe('json reporter', async () => {
 
     const data = JSON.parse(stdout)
 
-    expect(data.testResults).toHaveLength(1)
-    expect(data.testResults[0].assertionResults).toHaveLength(1)
+    expect(data.testResults).toHaveLength(2)
 
-    const result = data.testResults[0].assertionResults[0]
+    const failedImport = data.testResults.find((r: any) => r.name.includes('json-fail-import.test'))!
+    const failedTest = data.testResults.find((r: any) => r.name.includes('json-fail.test'))!
+
+    expect(failedTest.assertionResults).toHaveLength(1)
+    expect(failedImport.assertionResults).toHaveLength(0)
+
+    expect(failedTest.status).toBe('failed')
+    expect(failedImport.status).toBe('failed')
+
+    const result = failedTest.assertionResults[0]
     delete result.duration
     expect(result).toMatchSnapshot()
   }, 40000)

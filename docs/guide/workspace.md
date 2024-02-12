@@ -4,6 +4,12 @@ title: Workspace | Guide
 
 # Workspace
 
+::: tip Sample Project
+
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/workspace) - [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/workspace?initialPath=__vitest__/)
+
+:::
+
 Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
 
 ## Defining a Workspace

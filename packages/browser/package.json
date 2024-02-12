@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -46,7 +46,7 @@
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
     "dev:node": "rollup -c --watch --watch.include 'src/node/**'",
-    "dev": "rimraf dist && run-p dev:node dev:client",
+    "dev": "rimraf dist && pnpm run --stream '/^dev:/'",
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
@@ -55,13 +55,13 @@
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
-    "webdriverio": {
+    "playwright": {
       "optional": true
     },
     "safaridriver": {
       "optional": true
     },
-    "playwright": {
+    "webdriverio": {
       "optional": true
     }
   },

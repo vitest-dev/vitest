@@ -26,6 +26,7 @@ export interface TaskPopulated extends TaskBase {
   result?: TaskResult
   fails?: boolean
   onFailed?: OnTestFailedHandler[]
+  onFinished?: OnTestFinishedHandler[]
   /**
    * Store promises (from async expects) to wait for them before finishing the test
    */
@@ -354,19 +355,19 @@ export interface TestOptions {
 
 interface ExtendedAPI<ExtraContext> {
   each: TestEachFunction
-  skipIf(condition: any): ChainableTestAPI<ExtraContext>
-  runIf(condition: any): ChainableTestAPI<ExtraContext>
+  skipIf: (condition: any) => ChainableTestAPI<ExtraContext>
+  runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
 export type CustomAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & ExtendedAPI<ExtraContext> & {
-  extend<T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>): CustomAPI<{
+  extend: <T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>) => CustomAPI<{
     [K in keyof T | keyof ExtraContext]:
     K extends keyof T ? T[K] :
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
 }
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & ExtendedAPI<ExtraContext> & {
-  extend<T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>): TestAPI<{
+  extend: <T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>) => TestAPI<{
     [K in keyof T | keyof ExtraContext]:
     K extends keyof T ? T[K] :
       K extends keyof ExtraContext ? ExtraContext[K] : never }>
@@ -397,8 +398,8 @@ type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   each: SuiteEachFunction
-  skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
-  runIf(condition: any): ChainableSuiteAPI<ExtraContext>
+  skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
+  runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
 export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
@@ -459,6 +460,11 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   onTestFailed: (fn: OnTestFailedHandler) => void
 
   /**
+   * Extract hooks on test failed
+   */
+  onTestFinished: (fn: OnTestFinishedHandler) => void
+
+  /**
    * Mark tests as skipped. All execution after this call will be skipped.
    */
   skip: () => void
@@ -467,6 +473,7 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
 export type ExtendedContext<T extends Custom | Test> = TaskContext<T> & TestContext
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
+export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'

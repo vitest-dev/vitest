@@ -70,6 +70,12 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
 
+  browserState: {
+    files: string[]
+    resolve: () => void
+    reject: (v: unknown) => void
+  } | undefined
+
   testFilesList: string[] | null = null
 
   private _globalSetups: GlobalSetupFile[] | undefined

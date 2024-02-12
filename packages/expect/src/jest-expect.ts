@@ -581,7 +581,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected error not to be instance of ${name}`,
         expected,
         thrown,
-        false,
       )
     }
 
@@ -601,9 +600,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         thrown && matcher.asymmetricMatch(thrown),
         'expected error to match asymmetric matcher',
         'expected error not to match asymmetric matcher',
-        matcher.toString(),
+        matcher,
         thrown,
-        false,
       )
     }
 

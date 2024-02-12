@@ -22,7 +22,7 @@ const StatusMap: Record<TaskState, Status> = {
   todo: 'todo',
 }
 
-interface FormattedAssertionResult {
+export interface JsonAssertionResult {
   ancestorTitles: Array<string>
   fullName: string
   status: Status
@@ -32,18 +32,18 @@ interface FormattedAssertionResult {
   location?: Callsite | null
 }
 
-interface FormattedTestResult {
+export interface JsonTestResult {
   message: string
   name: string
   status: 'failed' | 'passed'
   startTime: number
   endTime: number
-  assertionResults: Array<FormattedAssertionResult>
+  assertionResults: Array<JsonAssertionResult>
   // summary: string
   // coverage: unknown
 }
 
-interface FormattedTestResults {
+export interface JsonTestResults {
   numFailedTests: number
   numFailedTestSuites: number
   numPassedTests: number
@@ -55,16 +55,25 @@ interface FormattedTestResults {
   numTotalTestSuites: number
   startTime: number
   success: boolean
-  testResults: Array<FormattedTestResult>
+  testResults: Array<JsonTestResult>
   // coverageMap?: CoverageMap | null | undefined
   // numRuntimeErrorTestSuites: number
   // snapshot: SnapshotSummary
   // wasInterrupted: boolean
 }
 
+export interface JsonOptions {
+  outputFile?: string
+}
+
 export class JsonReporter implements Reporter {
   start = 0
   ctx!: Vitest
+  options: JsonOptions
+
+  constructor(options: JsonOptions) {
+    this.options = options
+  }
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
@@ -83,7 +92,7 @@ export class JsonReporter implements Reporter {
     const numPassedTests = numTotalTests - numFailedTests
     const numPendingTests = tests.filter(t => t.result?.state === 'run').length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
-    const testResults: Array<FormattedTestResult> = []
+    const testResults: Array<JsonTestResult> = []
 
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
@@ -111,7 +120,7 @@ export class JsonReporter implements Reporter {
           duration: t.result?.duration,
           failureMessages: t.result?.errors?.map(e => e.message) || [],
           location: await this.getFailureLocation(t),
-        } as FormattedAssertionResult
+        } as JsonAssertionResult
       }))
 
       if (tests.some(t => t.result?.state === 'run')) {
@@ -120,12 +129,13 @@ export class JsonReporter implements Reporter {
         + 'Please report it to https://github.com/vitest-dev/vitest/issues')
       }
 
+      const hasFailedTests = tests.some(t => t.result?.state === 'fail')
+
       testResults.push({
         assertionResults,
         startTime,
         endTime,
-        status: tests.some(t =>
-          t.result?.state === 'fail')
+        status: file.result?.state === 'fail' || hasFailedTests
           ? 'failed'
           : 'passed',
         message: file.result?.errors?.[0]?.message ?? '',
@@ -133,7 +143,7 @@ export class JsonReporter implements Reporter {
       })
     }
 
-    const result: FormattedTestResults = {
+    const result: JsonTestResults = {
       numTotalTestSuites,
       numPassedTestSuites,
       numFailedTestSuites,
@@ -161,7 +171,7 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'json')
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)

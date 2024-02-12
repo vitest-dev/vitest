@@ -21,7 +21,7 @@ export class BaseCoverageProvider {
   updateThresholds({ thresholds: allThresholds, perFile, configurationFile }: {
     thresholds: ResolvedThreshold[]
     perFile?: boolean
-    configurationFile: { read(): unknown; write(): void }
+    configurationFile: { read: () => unknown; write: () => void }
   }) {
     let updatedThresholds = false
 

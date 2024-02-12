@@ -6,7 +6,7 @@ import type { Expression, ImportDeclaration, Node, Positioned } from '@vitest/ut
 
 const viInjectedKey = '__vi_inject__'
 // const viImportMetaKey = '__vi_import_meta__' // to allow overwrite
-const viExportAllHelper = '__vi_export_all__'
+const viExportAllHelper = '__vitest_browser_runner__.exportAll'
 
 const skipHijack = [
   '/@vite/client',
@@ -37,8 +37,6 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
   const declaredConst = new Set<string>()
 
   const hoistIndex = 0
-
-  let hasInjected = false
 
   // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
@@ -76,11 +74,10 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
   }
 
   function defineExport(position: number, name: string, local = name) {
-    hasInjected = true
     s.appendLeft(
       position,
       `\nObject.defineProperty(${viInjectedKey}, "${name}", `
-        + `{ enumerable: true, configurable: true, get(){ return ${local} }});`,
+      + `{ enumerable: true, configurable: true, get(){ return ${local} }});`,
     )
   }
 
@@ -170,17 +167,15 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
         // named hoistable/class exports
         // export default function foo() {}
         // export default class A {}
-        hasInjected = true
         const { name } = node.declaration.id
         s.remove(node.start, node.start + 15 /* 'export default '.length */)
         s.append(
           `\nObject.defineProperty(${viInjectedKey}, "default", `
-            + `{ enumerable: true, configurable: true, value: ${name} });`,
+          + `{ enumerable: true, configurable: true, value: ${name} });`,
         )
       }
       else {
         // anonymous default exports
-        hasInjected = true
         s.update(
           node.start,
           node.start + 14 /* 'export default'.length */,
@@ -196,13 +191,10 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       s.remove(node.start, node.end)
       const importId = defineImportAll(node.source.value as string)
       // hoist re-exports near the defined import so they are immediately exported
-      if (node.exported) {
+      if (node.exported)
         defineExport(hoistIndex, node.exported.name, `${importId}`)
-      }
-      else {
-        hasInjected = true
+      else
         s.appendLeft(hoistIndex, `${viExportAllHelper}(${viInjectedKey}, ${importId});\n`)
-      }
     }
   }
 
@@ -238,17 +230,16 @@ export function injectVitestModule(code: string, id: string, parse: PluginContex
       // s.update(node.start, node.end, viImportMetaKey)
     },
     onDynamicImport(node) {
-      const replace = '__vi_wrap_module__(import('
+      const replace = '__vitest_browser_runner__.wrapModule(import('
       s.overwrite(node.start, (node.source as Positioned<Expression>).start, replace)
       s.overwrite(node.end - 1, node.end, '))')
     },
   })
 
-  if (hasInjected) {
-    // make sure "__vi_injected__" is declared as soon as possible
-    s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
-    s.append(`\nexport { ${viInjectedKey} }`)
-  }
+  // make sure "__vi_injected__" is declared as soon as possible
+  // prepend even if file doesn't export anything
+  s.prepend(`const ${viInjectedKey} = { [Symbol.toStringTag]: "Module" };\n`)
+  s.append(`\nexport { ${viInjectedKey} }`)
 
   return {
     ast,

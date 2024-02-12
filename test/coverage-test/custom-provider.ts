@@ -52,7 +52,7 @@ class CustomCoverageProvider implements CoverageProvider {
     this.calls.add(`initialized ${ctx ? 'with' : 'without'} context`)
   }
 
-  clean(force: boolean) {
+  clean(force?: boolean) {
     this.calls.add(`clean ${force ? 'with' : 'without'} force`)
   }
 

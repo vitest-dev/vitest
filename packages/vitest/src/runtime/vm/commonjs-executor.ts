@@ -1,5 +1,3 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import vm from 'node:vm'
 import { Module as _Module, createRequire } from 'node:module'
 import { basename, dirname, extname } from 'pathe'
@@ -16,7 +14,7 @@ interface CommonjsExecutorOptions {
 const _require = createRequire(import.meta.url)
 
 interface PrivateNodeModule extends NodeModule {
-  _compile(code: string, filename: string): void
+  _compile: (code: string, filename: string) => void
 }
 
 const requiresCache = new WeakMap<NodeModule, NodeRequire>()
@@ -74,6 +72,10 @@ export class CommonjsExecutor {
         const _require = Module.createRequire(this.id)
         requiresCache.set(this, _require)
         return _require
+      }
+
+      static register = () => {
+        throw new Error(`[vitest] "register" is not available when running in Vitest.`)
       }
 
       _compile(code: string, filename: string) {

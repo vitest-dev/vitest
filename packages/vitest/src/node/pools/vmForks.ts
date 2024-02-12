@@ -38,6 +38,9 @@ function createChildProcessChannel(project: WorkspaceProject) {
       on(fn) {
         emitter.on(events.response, fn)
       },
+      onTimeoutError(functionName) {
+        throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
+      },
     },
   )
 

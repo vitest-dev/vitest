@@ -9,6 +9,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
+import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -215,7 +216,7 @@ export class Vitest {
       return [await this.createCoreProject()]
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
-      default: (string | UserWorkspaceConfig)[]
+      default: ReturnType<typeof defineWorkspace>
     }
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default))
@@ -225,10 +226,20 @@ export class Vitest {
     const projectsOptions: UserWorkspaceConfig[] = []
 
     for (const project of workspaceModule.default) {
-      if (typeof project === 'string')
+      if (typeof project === 'string') {
         workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
-      else
-        projectsOptions.push(project)
+      }
+      else if (typeof project === 'function') {
+        projectsOptions.push(await project({
+          command: this.server.config.command,
+          mode: this.server.config.mode,
+          isPreview: false,
+          isSsrBuild: false,
+        }))
+      }
+      else {
+        projectsOptions.push(await project)
+      }
     }
 
     const globOptions: fg.Options = {
@@ -377,10 +388,8 @@ export class Vitest {
       // populate once, update cache on watch
       await this.cache.stats.populateStats(this.config.root, files)
 
-      await this.runFiles(files)
+      await this.runFiles(files, true)
     }
-
-    await this.reportCoverage(true)
 
     if (this.config.watch)
       await this.report('onWatcherStart')
@@ -390,6 +399,8 @@ export class Vitest {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
       if (deps.has(filepath))
         return
+      deps.add(filepath)
+
       const mod = project.server.moduleGraph.getModuleById(filepath)
       const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed)
@@ -398,15 +409,13 @@ export class Vitest {
       await Promise.all(dependencies.map(async (dep) => {
         const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
-        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
-          deps.add(fsPath)
-
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath))
           await addImports([project, fsPath])
-        }
       }))
     }
 
     await addImports(filepath)
+    deps.delete(filepath[1])
 
     return deps
   }
@@ -472,7 +481,7 @@ export class Vitest {
       await project.initializeGlobalSetup()
   }
 
-  async runFiles(paths: WorkspaceSpec[]) {
+  async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
@@ -492,6 +501,10 @@ export class Vitest {
       this.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
+
+      if (!this.isFirstRun && this.config.coverage.cleanOnRerun)
+        await this.coverageProvider?.clean()
+
       await this.initializeGlobalSetup(paths)
 
       try {
@@ -513,7 +526,10 @@ export class Vitest {
         // can be duplicate files if different projects are using the same file
         const specs = Array.from(new Set(paths.map(([, p]) => p)))
         await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
+        await this.reportCoverage(allTestsRun)
+
         this.runningPromise = undefined
+        this.isFirstRun = false
       })
 
     return await this.runningPromise
@@ -530,13 +546,8 @@ export class Vitest {
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
-    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-      await this.coverageProvider.clean()
-
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-    await this.reportCoverage(!trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -632,16 +643,11 @@ export class Vitest {
 
       this.changedTests.clear()
 
-      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-        await this.coverageProvider.clean()
-
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
       await this.report('onWatcherRerun', files, triggerLabel)
 
-      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-      await this.reportCoverage(false)
+      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
 
       await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
