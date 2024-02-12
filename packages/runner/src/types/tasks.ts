@@ -113,6 +113,14 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     : 'fallback']
 
 interface EachFunctionReturn<T extends any[]> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  (
+    name: string | Function,
+    fn: (...args: T) => Awaitable<void>,
+    options: TestOptions,
+  ): void
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
