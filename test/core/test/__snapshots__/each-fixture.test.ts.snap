@@ -1,80 +1,80 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`myTest.each7-context-array-2-spread-true hello 2 1`] = `
-{
-  "argNumber": 2,
-  "argString": "hello",
-}
-`;
-
-exports[`myTest.each7-context-array-2-spread-true hi 3 1`] = `
-{
-  "argNumber": 3,
-  "argString": "hi",
-}
-`;
-
-exports[`myTest.each7-context-array-2-true hello 2 1`] = `
-{
-  "argNumber": 2,
-  "argString": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each7-context-array-2-true hi 3 1`] = `
-{
-  "argNumber": 3,
-  "argString": "hi",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each7-context-array-3-true hello 2 1`] = `
-{
-  "argNumber": 2,
-  "argString": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each7-context-array-3-true hi 3 1`] = `
-{
-  "argNumber": 3,
-  "argString": "hi",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each7-context-array-true hello 1`] = `
+exports[`array 1 context true hello 1`] = `
 {
   "arg": "hello",
   "myFixture": 1234,
 }
 `;
 
-exports[`myTest.each7-context-array-true hi 1`] = `
+exports[`array 1 context true hi 1`] = `
 {
   "arg": "hi",
   "myFixture": 1234,
 }
 `;
 
-exports[`myTest.each7-context-single-true hello 1`] = `
+exports[`array 2 context true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`array 2 context true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+  "myFixture": 1234,
+}
+`;
+
+exports[`array 3 context true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`array 3 context true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+  "myFixture": 1234,
+}
+`;
+
+exports[`array 4 context true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+}
+`;
+
+exports[`array 4 context true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+}
+`;
+
+exports[`single context true hello 1`] = `
 {
   "arg": "hello",
   "myFixture": 1234,
 }
 `;
 
-exports[`myTest.each7-context-single-true hi 1`] = `
+exports[`single context true hi 1`] = `
 {
   "arg": "hi",
   "myFixture": 1234,
 }
 `;
 
-exports[`myTest.each7-context-template-true 'hello' 2 1`] = `
+exports[`template context true 'hello' 2 1`] = `
 {
   "arg": {
     "a": "hello",
@@ -84,7 +84,7 @@ exports[`myTest.each7-context-template-true 'hello' 2 1`] = `
 }
 `;
 
-exports[`myTest.each7-context-template-true 'hi' 3 1`] = `
+exports[`template context true 'hi' 3 1`] = `
 {
   "arg": {
     "a": "hi",
