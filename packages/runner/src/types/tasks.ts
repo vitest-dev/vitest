@@ -157,10 +157,11 @@ interface TestCollectorCallable<C = {}> {
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
-  TestCollectorCallable<ExtraContext>
-> & {
-  each: TestEachFunction
-}
+  TestCollectorCallable<ExtraContext>,
+  {
+    each: TestEachFunction
+  }
+>
 
 export interface TestOptions {
   /**
@@ -249,10 +250,11 @@ interface SuiteCollectorCallable<ExtraContext = {}> {
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
-  SuiteCollectorCallable<ExtraContext>
-> & {
-  each: TestEachFunction
-}
+  SuiteCollectorCallable<ExtraContext>,
+  {
+    each: TestEachFunction
+  }
+>
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   each: SuiteEachFunction
