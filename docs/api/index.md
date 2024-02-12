@@ -32,10 +32,38 @@ interface TestOptions {
 }
 ```
 
+Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
+
+```ts
+import { test } from 'vitest'
+
+test('flaky test', () => {}, { retry: 3 }) // [!code --]
+test('flaky test', { retry: 3 }, () => {}) // [!code ++]
+```
+
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
+:::
+
+Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+
+:::code-group
+```ts [dot-syntax]
+import { test } from 'vitest'
+
+test.skip('skipped test', () => {
+  // some logic that fails right now
+})
+```
+```ts [object-syntax <Badge type="info">1.3.0+</Badge>]
+import { test } from 'vitest'
+
+test('skipped test', { skip: true }, () => {
+  // some logic that fails right now
+})
+```
 :::
 
 ## test
