@@ -81,6 +81,6 @@
     "playwright-core": "^1.41.0",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
-    "webdriverio": "^8.22.1"
+    "webdriverio": "^8.31.1"
   }
 }
