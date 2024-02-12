@@ -68,4 +68,6 @@ export const globalApis = [
   'afterAll',
   'beforeEach',
   'afterEach',
+  'onTestFinished',
+  'onTestFailed',
 ]
