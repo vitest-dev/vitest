@@ -303,10 +303,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   browser: {
     description: 'Run tests in the browser. Equivalent to --browser.enabled (default: false)',
-    argument: '', // allow boolean
+    argument: '<name>',
     transform(browser) {
       if (typeof browser === 'boolean')
         return { enabled: browser }
+      if (browser === 'true' || browser === 'false')
+        return { enabled: browser !== 'false' }
       if (typeof browser === 'string')
         return { enabled: true, name: browser }
       return browser
