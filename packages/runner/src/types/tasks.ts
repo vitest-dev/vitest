@@ -257,10 +257,11 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
-    each: TestEachFunction
+    // each: TestEachFunction
     each3: TestEachFunction3<ExtraContext>
     each5: TestEachFunction5<ExtraContext>
     each7: TestEachFunction7<ExtraContext>
+    each: TestEachFunction7<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >

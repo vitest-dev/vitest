@@ -356,6 +356,7 @@ export function createTaskCollector(
       this.setContext('each', undefined)
     }
   }
+  taskFn.each = taskFn.each7
 
   taskFn.skipIf = function (this: TestAPI, condition: any) {
     return condition ? this.skip : this
