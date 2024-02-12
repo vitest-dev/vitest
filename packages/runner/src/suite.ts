@@ -267,7 +267,7 @@ export function createTaskCollector(
             return fn(...args, testContext)
           }
           // monkey-patch for fixture extraction
-          (fnWrapper as any).__testEachItemLength = args.length
+          (fnWrapper as any).__VITEST_TEST_EACH_ARGS_LENGTH__ = args.length
           fnWrapper.toString = () => fn.toString()
         }
         test(formatTitle(_name, items, idx), fnWrapper, options)
