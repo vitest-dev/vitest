@@ -174,6 +174,10 @@ interface TestEachFunction {
 }
 
 interface TestCollectorCallable<C = {}> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  <ExtraContext extends C>(name: string | Function, fn: TestFunction<ExtraContext>, options: TestOptions): void
   <ExtraContext extends C>(name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions): void
   <ExtraContext extends C>(name: string | Function, options?: TestOptions, fn?: TestFunction<ExtraContext>): void
 }
@@ -267,6 +271,10 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
 interface SuiteCollectorCallable<ExtraContext = {}> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  (name: string | Function, fn: SuiteFactory<ExtraContext>, options: TestOptions): SuiteCollector<ExtraContext>
   (name: string | Function, fn?: SuiteFactory<ExtraContext>, options?: number | TestOptions): SuiteCollector<ExtraContext>
   (name: string | Function, options: TestOptions, fn?: SuiteFactory<ExtraContext>): SuiteCollector<ExtraContext>
 }
