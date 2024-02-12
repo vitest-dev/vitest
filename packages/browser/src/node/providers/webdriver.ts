@@ -43,7 +43,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     // TODO: close everything, if browser is closed from the outside
     this.cachedBrowser = await remote({
       ...this.options,
-      logLevel: 'error',
+      logLevel: 'debug',
       capabilities: this.buildCapabilities(),
     })
 
