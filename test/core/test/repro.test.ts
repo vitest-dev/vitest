@@ -193,6 +193,29 @@ myTest.concurrent.each7([['hello', 2], ['hi', 3]])(
   { context: true },
 )
 
+// "const" case works slightly differently in terms of type-inference
+myTest.concurrent.each7([['hello', 2], ['hi', 3]] as const)(
+  'myTest.each7-context-array-3-false %s %s',
+  (...args) => {
+    expect(args[0]).toBeTypeOf('string')
+    expect(args[1]).toBeTypeOf('number')
+    args satisfies [string, number]
+  },
+)
+
+myTest.concurrent.each7([['hello', 2], ['hi', 3]] as const)(
+  'myTest.each7-context-array-3-true %s %s',
+  async (argString, argNumber, { expect, myFixture }) => {
+    await sleep(200)
+    expect({ argString, argNumber, myFixture }).toMatchSnapshot()
+    expect(argString).toBeTypeOf('string')
+    expect(argNumber).toBeTypeOf('number')
+    argString satisfies string
+    argNumber satisfies number
+  },
+  { context: true },
+)
+
 // type is correct but it's not possible to access fixture
 myTest.concurrent.each7([['hello', 2], ['hi', 3]])(
   'myTest.each7-context-array-2-spread-true %s %s',

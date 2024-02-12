@@ -230,14 +230,14 @@ interface TestFunctionWithEachArgs<EachArgs extends unknown[], Context> {
 }
 
 interface TestEachFunction7<ExtraContext> {
-  // test.each([[1, 2], [3, 4]])
+  // test.each([["1", 2], ["3", 4]])
   // test.each([[1, 2], [3, 4, 5]])
   <T extends any[] | [any]>(cases: ReadonlyArray<T>):
   TestFunctionWithEachArgs<T, ExtendedContext<Test> & ExtraContext>
 
-  // TODO: when is this used?
-  // <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>):
-  // TestFunctionWithEachArgs<ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext>
+  // test.each([["1", 2], ["3", 4]] as const)
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>):
+  TestFunctionWithEachArgs<ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext>
 
   // test.each([1, 2, 3])
   <T>(cases: ReadonlyArray<T>):

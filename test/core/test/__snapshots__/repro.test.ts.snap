@@ -92,6 +92,22 @@ exports[`myTest.each7-context-array-2-true hi 3 1`] = `
 }
 `;
 
+exports[`myTest.each7-context-array-3-true hello 2 1`] = `
+{
+  "argNumber": 2,
+  "argString": "hello",
+  "myFixture": 1234,
+}
+`;
+
+exports[`myTest.each7-context-array-3-true hi 3 1`] = `
+{
+  "argNumber": 3,
+  "argString": "hi",
+  "myFixture": 1234,
+}
+`;
+
 exports[`myTest.each7-context-array-true hello 1`] = `
 {
   "arg": "hello",
