@@ -14,7 +14,7 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
     console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`)
   else
     // enable by default
-    testOptions.enabled ??= true
+    testOptions.enabled ??= false
   if (!allowed || testOptions?.enabled !== true) {
     newConfig.cacheDir = undefined
     newConfig.optimizeDeps = {
