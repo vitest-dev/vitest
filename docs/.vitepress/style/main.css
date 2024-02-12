@@ -106,6 +106,22 @@ img.resizable-img {
   height: unset;
 }
 
+.VPTeamMembersItem.medium .profile .data .affiliation {
+  min-height: unset;
+}
+.VPTeamMembersItem.medium .profile .data .desc {
+  min-height: unset;
+}
+/* fix height ~ 2 lines of text: 3 cards per row */
+@media (min-width: 648px) {
+  .VPTeamMembersItem.medium .profile .data .affiliation {
+    min-height: 4rem;
+  }
+  .VPTeamMembersItem.medium .profile .data .desc {
+    min-height: 4rem;
+  }
+}
+
 /* fix height ~ 2 lines of text: 3 or more cards per row */
 .VPTeamMembersItem.small .profile .data .affiliation {
   min-height: 3rem;

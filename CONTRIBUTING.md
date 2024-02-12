@@ -87,6 +87,17 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 
 - Use `pnpm run lint:fix` to format files according to the project guidelines.
 
+## Maintenance Guidelines
+
+> The following section is mostly for maintainers who have commit access, but it's helpful to go through if you intend to make non-trivial contributions to the codebase.
+
+### Issue Triaging Workflow
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./.github/issue-workflow-dark.png">
+  <img src="./.github/issue-workflow.png">
+</picture>
+
 ## Notes on Dependencies
 
 Vitest aims to be lightweight, and this includes being aware of the number of npm dependencies and their size.
