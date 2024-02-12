@@ -251,10 +251,10 @@ export function createTaskCollector(
     const test = this.withContext()
     this.setContext('each', true)
 
-    if (Array.isArray(cases) && 'raw' in cases && args.length)
+    if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | Function, fn: (...args: any[]) => void, options?: number | (TestOptions & { context?: boolean })) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | (TestOptions & { context?: boolean })) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
