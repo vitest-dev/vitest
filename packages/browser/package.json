@@ -75,7 +75,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.22.0",
+    "@wdio/protocols": "^8.29.7",
     "periscopic": "^4.0.2",
     "playwright": "^1.41.0",
     "playwright-core": "^1.41.0",

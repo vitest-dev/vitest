@@ -919,8 +919,8 @@ importers:
         specifier: workspace:*
         version: link:../ws-client
       '@wdio/protocols':
-        specifier: ^8.22.0
-        version: 8.22.0
+        specifier: ^8.29.7
+        version: 8.29.7
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2
@@ -10715,10 +10715,6 @@ packages:
       loglevel: 1.8.1
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.1.0
-    dev: true
-
-  /@wdio/protocols@8.22.0:
-    resolution: {integrity: sha512-2y5lTYAAzQWvExL1FGCe6gujVpOpTxk+czT0Qx0j0iUlfdOwp9gWVLYl8ochTJHzfeM45GHvuZ/ndT52grsTtg==}
     dev: true
 
   /@wdio/protocols@8.23.0:
