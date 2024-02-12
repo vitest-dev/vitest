@@ -346,6 +346,7 @@ export function createTaskCollector(
           fnWrapper = (testContext: any) => {
             return fn(...args, testContext)
           }
+          // monkey-patch for fixture extraction
           (fnWrapper as any).__testEachItemLength = args.length
           fnWrapper.toString = () => fn.toString()
         }
