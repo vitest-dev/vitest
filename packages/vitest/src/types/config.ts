@@ -430,6 +430,7 @@ export interface InlineConfig {
 
   /**
    * Glob pattern of file paths to be ignore from triggering watch rerun
+   * @deprecated Use server.watch.ignored instead
    */
   watchExclude?: string[]
 

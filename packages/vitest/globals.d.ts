@@ -13,5 +13,7 @@ declare global {
   const afterAll: typeof import('vitest')['afterAll']
   const beforeEach: typeof import('vitest')['beforeEach']
   const afterEach: typeof import('vitest')['afterEach']
+  const onTestFailed: typeof import('vitest')['onTestFailed']
+  const onTestFinished: typeof import('vitest')['onTestFinished']
 }
 export {}

@@ -3,9 +3,9 @@ import { createCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 
-function parseArguments(commands: string, full = false) {
+function parseArguments(commands: string, full = false, includeArgs = false) {
   const cliArgs = commands.trim().replace(/\s+/g, ' ').split(' ')
-  const { options } = vitestCli.parse(['node', '/index.js', ...cliArgs], {
+  const { options, args } = vitestCli.parse(['node', '/index.js', ...cliArgs], {
     run: false,
   })
   // remove -- and color from the options since they are always present
@@ -13,6 +13,10 @@ function parseArguments(commands: string, full = false) {
     delete options['--']
     delete options.color
   }
+
+  if (includeArgs)
+    return { options, args }
+
   return options
 }
 
@@ -149,11 +153,11 @@ test('array options', () => {
   `)
 
   expect(parseArguments(`
-  --reporter json 
-  --reporter=default 
-  --coverage.reporter=json 
-  --coverage.reporter html 
-  --coverage.extension=ts 
+  --reporter json
+  --reporter=default
+  --coverage.reporter=json
+  --coverage.reporter html
+  --coverage.extension=ts
   --coverage.extension=tsx
   `)).toMatchInlineSnapshot(`
     {
@@ -216,4 +220,29 @@ test('cache is parsed correctly', () => {
   expect(parseArguments('--cache.dir .\\test\\cache.json')).toEqual({
     cache: { dir: 'test/cache.json' },
   })
+})
+
+test('browser as implicit boolean', () => {
+  const { options, args } = parseArguments('--browser', false, true)
+  expect(options).toEqual({ browser: { enabled: true } })
+  expect(args).toEqual([])
+})
+
+test('browser as explicit boolean', () => {
+  const { options, args } = parseArguments('--browser=true', false, true)
+  expect(options).toEqual({ browser: { enabled: true } })
+  expect(args).toEqual([])
+})
+
+test('browser as explicit boolean with space', () => {
+  const { options, args } = parseArguments('--browser true', false, true)
+  expect(options).toEqual({ browser: { enabled: true } })
+  expect(args).toEqual([])
+})
+
+test('browser by name', () => {
+  const { options, args } = parseArguments('--browser=firefox', false, true)
+
+  expect(args).toEqual([])
+  expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
 })
