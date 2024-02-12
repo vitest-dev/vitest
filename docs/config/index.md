@@ -1003,6 +1003,7 @@ declare module 'vitest' {
 
 - **Type:** `string[]`
 - **Default:** `['**/node_modules/**', '**/dist/**']`
+- **Deprecated** use [`server.watch.ignored`](https://vitejs.dev/config/server-options.html#server-watch)
 
 Glob pattern of file paths to be ignored from triggering watch rerun.
 
