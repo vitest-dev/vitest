@@ -150,29 +150,6 @@ interface TestEachFunction {
   ) => void
 }
 
-interface TestEachFunction2<ExtraContext> {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T) => TestFunction<ExtraContext>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => TestFunction<ExtraContext>,
-    options?: number | TestOptions,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T[]) => TestFunction<ExtraContext>,
-    options?: number | TestOptions,
-  ) => void
-  (...args: [TemplateStringsArray, ...any]): (
-    name: string | Function,
-    fn: (...args: any[]) => TestFunction<ExtraContext>,
-    options?: number | TestOptions,
-  ) => void
-}
-
 interface TestEachFunction3<ExtraContext> {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string | Function,
@@ -192,30 +169,6 @@ interface TestEachFunction3<ExtraContext> {
   (...args: [TemplateStringsArray, ...any]): (
     name: string | Function,
     fn: TestFunction<ExtraContext & { args: any[] }>,
-    options?: number | TestOptions,
-  ) => void
-}
-
-// TODO: does typescript inference work?
-interface TestEachFunction4<ExtraContext> {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: [T, ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: [...ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: [...T[], ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  (...args: [TemplateStringsArray, ...any]): (
-    name: string | Function,
-    fn: (...args: [...any[], ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
 }
@@ -247,50 +200,6 @@ interface TestEachFunction5<ExtraContext> {
   <T>(cases: ReadonlyArray<T>, options: { context: true }): (
     name: string | Function,
     fn: (...args: [...T[], ExtendedContext<Test> & ExtraContext]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-
-  // TODO: template string cannot support { context } option
-  (...args: [TemplateStringsArray, ...any]): (
-    name: string | Function,
-    fn: (...args: any[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-}
-
-// context at first argument easier to infer types? (and also easier fixture extraction?)
-interface TestEachFunction6<ExtraContext> {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>, options: { context: true }): (
-    name: string | Function,
-    fn: (context: ExtendedContext<Test> & ExtraContext, ...args: T) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-
-  // TODO: not tested?
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>, options: { context: true }): (
-    name: string | Function,
-    fn: (context: ExtendedContext<Test> & ExtraContext, ...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-
-  <T>(cases: ReadonlyArray<T>, options: { context: true }): (
-    name: string | Function,
-    fn: (context: ExtendedContext<Test> & ExtraContext, ...args: T[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
@@ -349,11 +258,8 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   void,
   {
     each: TestEachFunction
-    each2: TestEachFunction2<ExtraContext>
     each3: TestEachFunction3<ExtraContext>
-    each4: TestEachFunction4<ExtraContext>
     each5: TestEachFunction5<ExtraContext>
-    each6: TestEachFunction6<ExtraContext>
     each7: TestEachFunction7<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }

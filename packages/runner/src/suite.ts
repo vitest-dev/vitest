@@ -269,32 +269,6 @@ export function createTaskCollector(
     }
   }
 
-  // TODO: typing overload
-
-  // easy but probably ugly higher order function API
-  taskFn.each2 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const test = this.withContext()
-    this.setContext('each', true)
-
-    if (Array.isArray(cases) && args.length)
-      cases = formatTemplateString(cases, args)
-
-    return (name: string | Function, fn: (...args: T[]) => (context: unknown) => void, options?: number | TestOptions) => {
-      const _name = formatName(name)
-      const arrayOnlyCases = cases.every(Array.isArray)
-      cases.forEach((i, idx) => {
-        const items = Array.isArray(i) ? i : [i]
-
-        arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), fn(...items), options)
-          : test(formatTitle(_name, items, idx), fn(i), options)
-      })
-
-      this.setContext('each', undefined)
-    }
-  }
-
-  // wrapper function to inject "each arg" + patch `toString` for fixture extraction
   taskFn.each3 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
     this.setContext('each', true)
@@ -308,7 +282,6 @@ export function createTaskCollector(
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
-        // TODO: test failure stack might become ugly?
         const fnWrapper = (testContext: any) => {
           testContext.args = arrayOnlyCases ? items : [i]
           return fn(testContext)
@@ -322,36 +295,6 @@ export function createTaskCollector(
     }
   }
 
-  // "each arg" at the last argument + fixture extraction trickery
-  taskFn.each4 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const test = this.withContext()
-    this.setContext('each', true)
-
-    if (Array.isArray(cases) && args.length)
-      cases = formatTemplateString(cases, args)
-
-    return (name: string | Function, fn: (...args: any[]) => void, options?: number | TestOptions) => {
-      const _name = formatName(name)
-      const arrayOnlyCases = cases.every(Array.isArray)
-      cases.forEach((i, idx) => {
-        const items = Array.isArray(i) ? i : [i]
-        const args = arrayOnlyCases ? items : [i]
-
-        const fnWrapper = (testContext: any) => {
-          return fn(...args, testContext)
-        }
-        // TODO: what if the length is not uniform?
-        (fnWrapper as any).__testEachItemLength = args.length
-        fnWrapper.toString = () => fn.toString()
-
-        test(formatTitle(_name, items, idx), fnWrapper, options)
-      })
-
-      this.setContext('each', undefined)
-    }
-  }
-
-  // check { context: boolean } flag + same as "each4" above
   taskFn.each5 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
     this.setContext('each', true)
@@ -374,7 +317,6 @@ export function createTaskCollector(
           fnWrapper = (testContext: any) => {
             return fn(...args, testContext)
           }
-          // TODO: what if the length is not uniform?
           (fnWrapper as any).__testEachItemLength = args.length
           fnWrapper.toString = () => fn.toString()
         }
@@ -385,41 +327,6 @@ export function createTaskCollector(
     }
   }
 
-  // fixture at first argument so fixture extraction code becomes same
-  taskFn.each6 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
-    const test = this.withContext()
-    this.setContext('each', true)
-
-    // check { context: boolean }
-    const enableContext = !(Array.isArray(cases) && 'raw' in cases) && args[0]?.context
-
-    if (Array.isArray(cases) && 'raw' in cases && args.length)
-      cases = formatTemplateString(cases, args)
-
-    return (name: string | Function, fn: (...args: any[]) => void, options?: number | TestOptions) => {
-      const _name = formatName(name)
-      const arrayOnlyCases = cases.every(Array.isArray)
-      cases.forEach((i, idx) => {
-        const items = Array.isArray(i) ? i : [i]
-        const args = arrayOnlyCases ? items : [i]
-
-        let fnWrapper: any = () => fn(...args)
-        if (enableContext) {
-          fnWrapper = (testContext: any) => {
-            return fn(testContext, ...args)
-          }
-          // // TODO: what if the length is not uniform?
-          // (fnWrapper as any).__testEachItemLength = args.length
-          fnWrapper.toString = () => fn.toString()
-        }
-        test(formatTitle(_name, items, idx), fnWrapper, options)
-      })
-
-      this.setContext('each', undefined)
-    }
-  }
-
-  // check `TestOption.context`
   taskFn.each7 = function<T>(this: { withContext: () => SuiteAPI; setContext: (key: string, value: boolean | undefined) => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
     this.setContext('each', true)

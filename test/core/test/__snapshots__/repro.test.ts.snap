@@ -1,23 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`myTest.each2 hello 1`] = `
-{
-  "args": [
-    "hello",
-  ],
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each2 hi 1`] = `
-{
-  "args": [
-    "hi",
-  ],
-  "myFixture": 1234,
-}
-`;
-
 exports[`myTest.each3 hello 1`] = `
 {
   "args": [
@@ -32,20 +14,6 @@ exports[`myTest.each3 hi 1`] = `
   "args": [
     "hi",
   ],
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each4 hello 1`] = `
-{
-  "arg": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each4 hi 1`] = `
-{
-  "arg": "hi",
   "myFixture": 1234,
 }
 `;
@@ -87,50 +55,6 @@ exports[`myTest.each5-context-true-multiple hello 2 1`] = `
 `;
 
 exports[`myTest.each5-context-true-multiple hi 3 1`] = `
-{
-  "argNumber": 3,
-  "argString": "hi",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true hello 1`] = `
-{
-  "arg": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true hello 2`] = `
-{
-  "arg": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true hi 1`] = `
-{
-  "arg": "hi",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true hi 2`] = `
-{
-  "arg": "hi",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true-multiple hello 2 1`] = `
-{
-  "argNumber": 2,
-  "argString": "hello",
-  "myFixture": 1234,
-}
-`;
-
-exports[`myTest.each6-context-true-multiple hi 3 1`] = `
 {
   "argNumber": 3,
   "argString": "hi",
@@ -216,18 +140,6 @@ exports[`myTest.each7-context-template-true 'hi' 3 1`] = `
 }
 `;
 
-exports[`test.each2 hello 1`] = `
-[
-  "hello",
-]
-`;
-
-exports[`test.each2 hi 1`] = `
-[
-  "hi",
-]
-`;
-
 exports[`test.each3 hello 1`] = `
 [
   "hello",
@@ -239,10 +151,6 @@ exports[`test.each3 hi 1`] = `
   "hi",
 ]
 `;
-
-exports[`test.each4 hello 1`] = `"hello"`;
-
-exports[`test.each4 hi 1`] = `"hi"`;
 
 exports[`test.each5-context-true hello 1`] = `"hello"`;
 
