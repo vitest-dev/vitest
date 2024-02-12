@@ -56,6 +56,46 @@ export function createSuiteHooks() {
   }
 }
 
+function parseArguments<T extends (...args: any[]) => any>(
+  optionsOrFn: T | object | undefined,
+  optionsOrTest: object | T | number | undefined,
+) {
+  let options: TestOptions = {}
+  let fn: T = (() => {}) as T
+
+  // it('', () => {}, { retry: 2 })
+  if (typeof optionsOrTest === 'object') {
+    // it('', { retry: 2 }, { retry: 3 })
+    if (typeof optionsOrFn === 'object')
+      throw new TypeError('Cannot use two objects as arguments. Please provide options and a function callback in that order.')
+      // TODO: more info, add a name
+      // console.warn('The third argument is deprecated. Please use the second argument for options.')
+    options = optionsOrTest
+  }
+  // it('', () => {}, 1000)
+  else if (typeof optionsOrTest === 'number') {
+    options = { timeout: optionsOrTest }
+  }
+  // it('', { retry: 2 }, () => {})
+  else if (typeof optionsOrFn === 'object') {
+    options = optionsOrFn
+  }
+
+  if (typeof optionsOrFn === 'function') {
+    if (typeof optionsOrTest === 'function')
+      throw new TypeError('Cannot use two functions as arguments. Please use the second argument for options.')
+    fn = optionsOrFn as T
+  }
+  else if (typeof optionsOrTest === 'function') {
+    fn = optionsOrTest as T
+  }
+
+  return {
+    options,
+    handler: fn,
+  }
+}
+
 // implementations
 function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, shuffle?: boolean, each?: boolean, suiteOptions?: TestOptions) {
   const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
@@ -105,39 +145,14 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   const test = createTest(function (name: string | Function, optionsOrFn?: TestOptions | TestFunction, optionsOrTest?: number | TestOptions | TestFunction) {
-    let options: TestOptions = {}
-    let fn: TestFunction = () => {}
-
-    // it('', () => {}, { retry: 2 })
-    if (typeof optionsOrTest === 'object') {
-      // it('', { retry: 2 }, { retry: 3 })
-      if (typeof optionsOrFn === 'object')
-        throw new TypeError('Cannot use two objects as arguments. Please provide options and a function callback in that order.')
-      // TODO: more info, add a name
-      // console.warn('The third argument is deprecated. Please use the second argument for options.')
-      options = optionsOrTest
-    }
-    // it('', () => {}, 1000)
-    else if (typeof optionsOrTest === 'number') {
-      options = { timeout: optionsOrTest }
-    }
-    // it('', { retry: 2 }, () => {})
-    else if (typeof optionsOrFn === 'object') {
-      options = optionsOrFn
-    }
+    let { options, handler } = parseArguments(
+      optionsOrFn,
+      optionsOrTest,
+    )
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object')
       options = Object.assign({}, suiteOptions, options)
-
-    if (typeof optionsOrFn === 'function') {
-      if (typeof optionsOrTest === 'function')
-        throw new TypeError('Cannot use two functions as arguments. Please use the second argument for options.')
-      fn = optionsOrFn
-    }
-    else if (typeof optionsOrTest === 'function') {
-      fn = optionsOrTest
-    }
 
     // inherit concurrent / sequential from suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
@@ -145,7 +160,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     const test = task(
       formatName(name),
-      { ...this, ...options, handler: fn as any },
+      { ...this, ...options, handler },
     ) as unknown as Test
 
     test.type = 'test'
@@ -224,19 +239,10 @@ function createSuite() {
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     const currentSuite = getCurrentSuite()
 
-    let options: TestOptions = {}
-    let factory: SuiteFactory = () => {}
-
-    if (typeof optionsOrFactory === 'object') {
-      if (typeof factoryOrOptions === 'object')
-        throw new TypeError('Cannot use two objects as arguments. Please provide options and a function callback in that order.')
-      // TODO: more info, add a name
-      // console.warn('The third argument is deprecated. Please use the second argument for options.')
-      options = optionsOrFactory
-    }
-    else if (typeof optionsOrFactory === 'number') {
-      options = { timeout: optionsOrFactory }
-    }
+    let { options, handler: factory } = parseArguments(
+      factoryOrOptions,
+      optionsOrFactory,
+    )
 
     // inherit options from current suite
     if (currentSuite?.options)
@@ -245,15 +251,6 @@ function createSuite() {
     // inherit concurrent / sequential from current suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
     options.sequential = this.sequential || (!this.concurrent && options?.sequential)
-
-    if (typeof factoryOrOptions === 'function') {
-      if (typeof optionsOrFactory === 'function')
-        throw new TypeError('Cannot use two functions as arguments. Please use the second argument for options.')
-      factory = factoryOrOptions
-    }
-    else if (typeof optionsOrFactory === 'function') {
-      factory = optionsOrFactory
-    }
 
     return createSuiteCollector(formatName(name), factory, mode, this.shuffle, this.each, options)
   }
@@ -301,15 +298,21 @@ export function createTaskCollector(
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, optionsOrFn: ((...args: T[]) => void) | TestOptions, fnOrOptions?: ((...args: T[]) => void) | number | TestOptions) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
+
+      const { options, handler } = parseArguments(
+        optionsOrFn,
+        fnOrOptions,
+      )
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
         arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), () => fn(...items), options)
-          : test(formatTitle(_name, items, idx), () => fn(i), options)
+          ? test(formatTitle(_name, items, idx), () => handler(...items), options)
+          : test(formatTitle(_name, items, idx), () => handler(i), options)
       })
 
       this.setContext('each', undefined)

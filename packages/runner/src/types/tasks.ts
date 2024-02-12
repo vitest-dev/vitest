@@ -133,20 +133,43 @@ interface TestEachFunction {
     fn: (...args: T) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    options: TestOptions,
+    fn: (...args: T) => Awaitable<void>,
+  ) => void
+
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string | Function,
     fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    options: TestOptions,
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
+  ) => void
+
   <T>(cases: ReadonlyArray<T>): (
     name: string | Function,
     fn: (...args: T[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string | Function,
+    options: TestOptions,
+    fn: (...args: T[]) => Awaitable<void>,
+  ) => void
+
   (...args: [TemplateStringsArray, ...any]): (
     name: string | Function,
     fn: (...args: any[]) => Awaitable<void>,
     options?: number | TestOptions,
+  ) => void
+  (...args: [TemplateStringsArray, ...any]): (
+    name: string | Function,
+    options: TestOptions,
+    fn: (...args: any[]) => Awaitable<void>,
   ) => void
 }
 
