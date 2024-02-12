@@ -98,7 +98,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       relativePath: !this.options.allowExternal,
     })
 
-    this.coverageFilesDirectory = resolve(this.options.reportsDirectory, '.tmp')
+    const shard = this.ctx.config.shard
+    const tempDirectory = `.tmp${shard ? `-${shard.index}-${shard.count}` : ''}`
+
+    this.coverageFilesDirectory = resolve(this.options.reportsDirectory, tempDirectory)
   }
 
   resolveOptions() {

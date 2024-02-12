@@ -43,6 +43,14 @@ const testCases = [
     },
     assertionConfig: null,
   },
+  {
+    testConfig: {
+      name: 'temp directory with shard',
+      include: ['option-tests/shard.test.ts'],
+      shard: '1/4',
+    },
+    assertionConfig: null,
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
