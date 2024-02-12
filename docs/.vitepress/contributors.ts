@@ -111,6 +111,18 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Team member of Vitest & UnoCSS',
   },
   {
+    avatar: contributorsAvatars.zxch3n,
+    name: 'Zixuan Chen',
+    github: 'zxch3n',
+    mastodon: 'https://elk.zone/hachyderm.io/@zx',
+    twitter: 'zxch3n',
+    title: 'A fullstack developer',
+    desc: 'Working on CRDTs & local-first software',
+  },
+]
+
+const plainTeamEmeritiMembers: CoreTeam[] = [
+  {
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
@@ -126,15 +138,6 @@ const plainTeamMembers: CoreTeam[] = [
     mastodon: 'https://elk.zone/fosstodon.org/@demivan',
     title: 'A tech lead, fullstack developer',
     desc: 'Author of fluent-vue',
-  },
-  {
-    avatar: contributorsAvatars.zxch3n,
-    name: 'Zixuan Chen',
-    github: 'zxch3n',
-    mastodon: 'https://elk.zone/hachyderm.io/@zx',
-    twitter: 'zxch3n',
-    title: 'A fullstack developer',
-    desc: 'Working on CRDTs & local-first software',
   },
   {
     avatar: contributorsAvatars.poyoho,
@@ -155,5 +158,6 @@ const plainTeamMembers: CoreTeam[] = [
 ]
 
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
+const teamEmeritiMembers = plainTeamEmeritiMembers.map(tm => createLinks(tm))
 
-export { teamMembers }
+export { teamMembers, teamEmeritiMembers }
