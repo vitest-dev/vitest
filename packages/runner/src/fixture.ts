@@ -170,7 +170,7 @@ function getUsedProps(fn: Function) {
 
   let first: string
   if ('__testEachItemLength' in fn) {
-    // TODO: what if `test.each` item arguments are spread?
+    // `test.each` uses a last argument for fixture
     first = args[(fn as any).__testEachItemLength]
     if (!first)
       return []
