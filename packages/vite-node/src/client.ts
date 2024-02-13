@@ -305,15 +305,21 @@ export class ViteNodeRunner {
       dirname: __dirname,
     }
     if (typeof import.meta.resolve !== 'undefined') {
-      // This feature requires users to enable "--experimental-import-meta-resolve"
-      // even on the latest NodeJS since it relies on 2nd argument `parent`.
-      // For vite-node cjs users, this feature is not available.
-      // Normally writing `import.meta` in CJS would cause a syntax error,
-      // but here Rollup replaces `import.meta.resolve` with `undefined`,
-      // so that is not an issue.
-      (meta as any).resolve
-        = (specifier: string, parent?: string | URL) =>
-          import.meta.resolve(specifier, parent ?? href)
+      // check if 2nd argument feature is available
+      let ok = false
+      try {
+        const testParent = import.meta.resolve('.', new URL('./__test_parent__/', import.meta.url))
+        // old Node returns Promise
+        ok = typeof testParent === 'string' && testParent.endsWith('/__test_parent__/')
+      }
+      catch {
+        // old Node throws when invalid path
+      }
+      if (ok) {
+        (meta as any).resolve
+          = (specifier: string, parent?: string | URL) =>
+            import.meta.resolve(specifier, parent ?? href)
+      }
     }
 
     const exports = Object.create(null)
