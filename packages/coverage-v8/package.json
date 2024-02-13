@@ -52,10 +52,10 @@
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^4.0.1",
     "istanbul-reports": "^3.1.6",
-    "magic-string": "^0.30.5",
+    "magic-string": "^0.30.7",
     "magicast": "^0.3.3",
     "picocolors": "^1.0.0",
-    "std-env": "^3.5.0",
+    "std-env": "^3.7.0",
     "test-exclude": "^6.0.0",
     "v8-to-istanbul": "^9.2.0"
   },
@@ -65,7 +65,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
-    "pathe": "^1.1.1",
+    "pathe": "^1.1.2",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }

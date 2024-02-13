@@ -62,7 +62,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
-    "pathe": "^1.1.1",
+    "pathe": "^1.1.2",
     "vitest": "workspace:*"
   }
 }

@@ -37,7 +37,7 @@
   "dependencies": {
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^4.3.10"
+    "chai": "^4.4.1"
   },
   "devDependencies": {
     "@types/chai": "4.3.6",
