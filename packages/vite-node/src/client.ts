@@ -308,8 +308,8 @@ export class ViteNodeRunner {
       // check if 2nd argument feature is available
       let ok = false
       try {
-        const testParent = import.meta.resolve('.', new URL('./__test_parent__/', import.meta.url))
         // old Node returns Promise
+        const testParent = await import.meta.resolve('.', new URL('./__test_parent__/', import.meta.url))
         ok = typeof testParent === 'string' && testParent.endsWith('/__test_parent__/')
       }
       catch {
