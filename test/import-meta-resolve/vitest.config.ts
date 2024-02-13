@@ -10,7 +10,8 @@ export default defineConfig({
         execArgv: ['--experimental-import-meta-resolve'],
       },
       vmThreads: {
-        execArgv: ['--experimental-import-meta-resolve'],
+        // vmThreads already enables this flag
+        // execArgv: ['--experimental-import-meta-resolve'],
       },
     },
   },
