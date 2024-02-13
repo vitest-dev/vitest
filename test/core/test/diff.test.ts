@@ -61,7 +61,7 @@ test('display multiline line string diff', () => {
   `)
 })
 
-test('assymmetric matcher in object', () => {
+test('asymmetric matcher in object', () => {
   setupColors(getDefaultColors())
   expect(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() })).toMatchInlineSnapshot(`
     "- Expected
@@ -75,7 +75,7 @@ test('assymmetric matcher in object', () => {
   `)
 })
 
-test('assymmetric matcher in array', () => {
+test('asymmetric matcher in array', () => {
   setupColors(getDefaultColors())
   expect(getErrorDiff([0, 'foo'], [1, expect.anything()])).toMatchInlineSnapshot(`
     "- Expected
@@ -89,7 +89,7 @@ test('assymmetric matcher in array', () => {
   `)
 })
 
-test('assymmetric matcher in nested', () => {
+test('asymmetric matcher in nested', () => {
   setupColors(getDefaultColors())
   expect(
     getErrorDiff(
