@@ -1,6 +1,7 @@
 import { expect, test, vi } from 'vitest'
 import { getDefaultColors, setupColors } from '@vitest/utils'
 import { diff } from '@vitest/utils/diff'
+import { processError } from '@vitest/runner'
 import { displayDiff } from '../../../packages/vitest/src/node/error'
 
 test('displays object diff', () => {
@@ -59,3 +60,68 @@ test('display multiline line string diff', () => {
     "
   `)
 })
+
+test('asymmetric matcher in object', () => {
+  setupColors(getDefaultColors())
+  expect(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() })).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      Object {
+    -   "x": 1,
+    +   "x": 0,
+        "y": Anything,
+      }"
+  `)
+})
+
+test('asymmetric matcher in array', () => {
+  setupColors(getDefaultColors())
+  expect(getErrorDiff([0, 'foo'], [1, expect.anything()])).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      Array [
+    -   1,
+    +   0,
+        Anything,
+      ]"
+  `)
+})
+
+test('asymmetric matcher in nested', () => {
+  setupColors(getDefaultColors())
+  expect(
+    getErrorDiff(
+      [{ x: 0, y: 'foo' }, [0, 'bar']],
+      [{ x: 1, y: expect.anything() }, [1, expect.anything()]],
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      Array [
+        Object {
+    -     "x": 1,
+    +     "x": 0,
+          "y": Anything,
+        },
+        Array [
+    -     1,
+    +     0,
+          Anything,
+        ],
+      ]"
+  `)
+})
+
+function getErrorDiff(actual: unknown, expected: unknown) {
+  try {
+    expect(actual).toEqual(expected)
+  }
+  catch (e) {
+    const error = processError(e)
+    return error.diff
+  }
+  expect.unreachable()
+}
