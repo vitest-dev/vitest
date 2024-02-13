@@ -1824,6 +1824,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/import-meta-resolve:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/mixed-pools:
     devDependencies:
       vitest:
