@@ -304,7 +304,7 @@ export class ViteNodeRunner {
       filename: __filename,
       dirname: __dirname,
       // this requires users to enable "--experimental-import-meta-resolve" even on the latest NodeJS since it uses 2nd argument `parent`.
-      // TODO: how to guard "import.meta" syntax error on vite-node cjs users?
+      // `import.meta.resolve` becomes `undefined` for vite-node cjs build. So this won't cause syntax error on cjs.
       resolve: (specifier: string, parent?: string | URL) => import.meta.resolve(specifier, parent ?? href),
     }
     const exports = Object.create(null)
