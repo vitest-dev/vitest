@@ -85,7 +85,7 @@
   "dependencies": {
     "cac": "^6.7.14",
     "debug": "^4.3.4",
-    "pathe": "^1.1.1",
+    "pathe": "^1.1.2",
     "picocolors": "^1.0.0",
     "vite": "^5.0.0"
   },

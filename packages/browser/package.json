@@ -67,18 +67,18 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.5",
+    "magic-string": "^0.30.7",
     "sirv": "^2.0.4"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.9",
+    "@types/ws": "^8.5.10",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^8.29.7",
     "periscopic": "^4.0.2",
-    "playwright": "^1.41.0",
-    "playwright-core": "^1.41.0",
+    "playwright": "^1.41.2",
+    "playwright-core": "^1.41.2",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
     "webdriverio": "^8.31.1"

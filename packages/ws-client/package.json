@@ -41,7 +41,7 @@
   "dependencies": {
     "birpc": "0.2.15",
     "flatted": "^3.2.9",
-    "ws": "^8.14.2"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*"
