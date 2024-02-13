@@ -365,7 +365,17 @@ test.each`
 })
 ```
 
-If you want to have access to `TestContext`, use `describe.each` with a single test.
+If you want to have access to [`TestContext`](/guide/test-context.html),
+you need to explicitly enable it by `{ context: true }`.
+
+```ts
+test.concurrent.each([
+  [1, 1],
+  [2, 3],
+])('add(%i, %i)', (a, b, { expect }) => {
+  expect(a + b).toMatchSnapshot()
+}, { context: true })
+```
 
 ::: tip
 Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.

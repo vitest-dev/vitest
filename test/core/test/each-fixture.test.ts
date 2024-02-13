@@ -155,3 +155,10 @@ myTest.concurrent.each`
   },
   { context: true },
 )
+
+test.concurrent.each([
+  [1, 1],
+  [2, 3],
+])('docs example - add(%i, %i)', (a, b, { expect }) => {
+  expect(a + b).toMatchSnapshot()
+}, { context: true })

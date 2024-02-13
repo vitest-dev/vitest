@@ -60,6 +60,10 @@ exports[`array 4 context true hi 3 1`] = `
 }
 `;
 
+exports[`docs example - add(1, 1) 1`] = `2`;
+
+exports[`docs example - add(2, 3) 1`] = `5`;
+
 exports[`single context true hello 1`] = `
 {
   "arg": "hello",
