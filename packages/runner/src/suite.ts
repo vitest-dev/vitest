@@ -254,15 +254,23 @@ export function createTaskCollector(
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | Function, fn: (...args: T[]) => void, options?: number | (TestOptions & { context?: boolean })) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
+        const args = arrayOnlyCases ? items : [i]
 
-        arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), () => fn(...items), options)
-          : test(formatTitle(_name, items, idx), () => fn(i), options)
+        let fnWrapper: any = () => fn(...args)
+        if (typeof options === 'object' && options.context) {
+          fnWrapper = (testContext: any) => {
+            return fn(...args, testContext)
+          }
+          // monkey-patch for fixture extraction
+          (fnWrapper as any).__VITEST_TEST_EACH_ARGS_LENGTH__ = args.length
+          fnWrapper.toString = () => fn.toString()
+        }
+        test(formatTitle(_name, items, idx), fnWrapper, options)
       })
 
       this.setContext('each', undefined)

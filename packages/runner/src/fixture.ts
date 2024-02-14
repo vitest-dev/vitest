@@ -168,7 +168,17 @@ function getUsedProps(fn: Function) {
   if (!args.length)
     return []
 
-  const first = args[0]
+  let first: string
+  if ('__VITEST_TEST_EACH_ARGS_LENGTH__' in fn) {
+    // `test.each` uses a last argument for context/fixture
+    first = args[(fn as any).__VITEST_TEST_EACH_ARGS_LENGTH__]
+    if (!first)
+      return []
+  }
+  else {
+    first = args[0]
+  }
+
   if (!(first.startsWith('{') && first.endsWith('}')))
     throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
 

@@ -112,42 +112,62 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     ? 10
                     : 'fallback']
 
-interface SuiteEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+interface EachFunctionReturn<Args extends unknown[]> {
+  (
     name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T[]) => Awaitable<void>,
-  ) => void
+    fn: (...args: Args) => Awaitable<void>,
+    options?: number | TestOptions,
+  ): void
 }
 
-interface TestEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+interface EachFunctionReturnWithContext<Args extends unknown[], Context> {
+  (
     name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    fn: (...args: [...Args, Context]) => Awaitable<void>,
+    options: TestOptions & { context: true },
+  ): void
+  (
     name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
-    name: string | Function,
-    fn: (...args: T[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  (...args: [TemplateStringsArray, ...any]): (
-    name: string | Function,
-    fn: (...args: any[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
+    fn: (...args: Args) => Awaitable<void>,
+    options?: number | (TestOptions & { context?: false }),
+  ): void
+}
+
+interface SuiteEachFunction {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>):
+  EachFunctionReturn<T>
+
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>):
+  EachFunctionReturn<ExtractEachCallbackArgs<T>>
+
+  <T>(cases: ReadonlyArray<T>):
+  EachFunctionReturn<[T]>
+
+  (...args: [TemplateStringsArray, ...any]):
+  EachFunctionReturn<[any]>
+}
+
+interface TestEachFunction<ExtraContext> {
+  // test.each([["1", 2], ["3", 4]])
+  // test.each([[1, 2], [3, 4, 5]])
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>):
+  EachFunctionReturnWithContext<T, ExtendedContext<Test> & ExtraContext>
+
+  // test.each([["1", 2], ["3", 4]] as const)
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>):
+  EachFunctionReturnWithContext<ExtractEachCallbackArgs<T>, ExtendedContext<Test> & ExtraContext>
+
+  // test.each([1, 2, 3])
+  <T>(cases: ReadonlyArray<T>):
+  EachFunctionReturnWithContext<[T], ExtendedContext<Test> & ExtraContext>
+
+  // test.each`
+  //    a  |  b
+  //   {1} | {2}
+  //   {3} | {4}
+  // `
+  (...args: [TemplateStringsArray, ...any]):
+  EachFunctionReturnWithContext<[any], ExtendedContext<Test> & ExtraContext>
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
@@ -155,7 +175,7 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
-    each: TestEachFunction
+    each: TestEachFunction<ExtraContext>
     <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >
@@ -192,7 +212,6 @@ export interface TestOptions {
 }
 
 interface ExtendedAPI<ExtraContext> {
-  each: TestEachFunction
   skipIf: (condition: any) => ChainableTestAPI<ExtraContext>
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
@@ -229,13 +248,12 @@ type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   [name: string | Function, factory?: SuiteFactory<ExtraContext>, options?: number | TestOptions],
   SuiteCollector<ExtraContext>,
   {
-    each: TestEachFunction
+    each: SuiteEachFunction
     <T extends ExtraContext>(name: string | Function, factory?: SuiteFactory<T>): SuiteCollector<T>
   }
 >
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
-  each: SuiteEachFunction
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
