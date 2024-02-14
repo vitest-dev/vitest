@@ -357,7 +357,10 @@ export class WorkspaceProject {
           },
         },
       },
-      snapshotOptions: this.ctx.config.snapshotOptions,
+      snapshotOptions: {
+        ...this.ctx.config.snapshotOptions,
+        resolveSnapshotPath: undefined,
+      },
       onConsoleLog: undefined!,
       onStackTrace: undefined!,
       sequence: {
