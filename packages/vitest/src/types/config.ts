@@ -508,7 +508,7 @@ export interface InlineConfig {
   /**
    * Open UI automatically.
    *
-   * @default true
+   * @default false
    */
   open?: boolean
 
