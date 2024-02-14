@@ -10,7 +10,8 @@ test('--update works for workspace project', async () => {
   const { stdout, exitCode } = await runVitest({
     update: true,
     root: 'test/fixtures/workspace',
+    workspace: 'vitest.workspace.ts',
   })
-  expect(stdout).include('Snapshots  1 updated')
-  expect(exitCode).toBe(0)
+  expect.soft(stdout).include('Snapshots  1 updated')
+  expect.soft(exitCode).toBe(0)
 })
