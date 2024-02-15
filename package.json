@@ -64,7 +64,7 @@
     "simple-git-hooks": "^2.9.0",
     "tsx": "^4.6.1",
     "typescript": "^5.2.2",
-    "vite": "^5.0.12",
+    "vite": "^5.1.1",
     "vitest": "workspace:*"
   },
   "pnpm": {
