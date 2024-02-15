@@ -32,15 +32,42 @@ interface TestOptions {
 }
 ```
 
+Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
+
+```ts
+import { test } from 'vitest'
+
+test('flaky test', () => {}, { retry: 3 }) // [!code --]
+test('flaky test', { retry: 3 }, () => {}) // [!code ++]
+```
+
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
+Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+
+:::code-group
+```ts [dot-syntax]
+import { test } from 'vitest'
+
+test.skip('skipped test', () => {
+  // some logic that fails right now
+})
+```
+```ts [object-syntax <Badge type="info">1.3.0+</Badge>]
+import { test } from 'vitest'
+
+test('skipped test', { skip: true }, () => {
+  // some logic that fails right now
+})
+```
+:::
+
 ## test
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it`
 
 `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
@@ -57,7 +84,6 @@ test('should work as expected', () => {
 
 ### test.extend <Badge type="info">0.32.3+</Badge>
 
-- **Type:** `<T extends Record<string, any>>(fixtures: Fixtures<T>): TestAPI<ExtraContext & T>`
 - **Alias:** `it.extend`
 
 Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context.html#test-extend) for more information.
@@ -87,7 +113,6 @@ myTest('add item', ({ todos }) => {
 
 ### test.skip
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.skip`
 
 If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
@@ -115,7 +140,6 @@ test('skipped test', (context) => {
 
 ### test.skipIf
 
-- **Type:** `(condition: any) => Test`
 - **Alias:** `it.skipIf`
 
 In some cases you might run tests multiple times with different environments, and some of the tests might be environment-specific. Instead of wrapping the test code with `if`, you can use `test.skipIf` to skip the test whenever the condition is truthy.
@@ -136,7 +160,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.runIf
 
-- **Type:** `(condition: any) => Test`
 - **Alias:** `it.runIf`
 
 Opposite of [test.skipIf](#test-skipif).
@@ -157,7 +180,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.only
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.only`
 
 Use `test.only` to only run certain tests in a given suite. This is useful when debugging.
@@ -182,7 +204,6 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 ### test.concurrent
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.concurrent`
 
 `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
@@ -224,7 +245,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.sequential
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
+- **Alias:** `it.sequential`
 
 `test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
@@ -248,7 +269,6 @@ describe.concurrent('suite', () => {
 
 ### test.todo
 
-- **Type:** `(name: string | Function) => void`
 - **Alias:** `it.todo`
 
 Use `test.todo` to stub tests to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
@@ -260,7 +280,6 @@ test.todo('unimplemented test')
 
 ### test.fails
 
-- **Type:** `(name: string | Function, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.fails`
 
 Use `test.fails` to indicate that an assertion will fail explicitly.
@@ -282,7 +301,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### test.each
 
-- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]) => void`
 - **Alias:** `it.each`
 
 Use `test.each` when you need to run the same test with different variables.
@@ -570,7 +588,7 @@ describe('numberToCurrency', () => {
 
 ### describe.skip
 
-- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+- **Alias:** `suite.skip`
 
 Use `describe.skip` in a suite to avoid running a particular describe block.
 
@@ -587,7 +605,7 @@ describe.skip('skipped suite', () => {
 
 ### describe.skipIf
 
-- **Type:** `(condition: any) => void`
+- **Alias:** `suite.skipIf`
 
 In some cases, you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
 
@@ -607,7 +625,7 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 ### describe.runIf
 
-- **Type:** `(condition: any) => void`
+- **Alias:** `suite.runIf`
 
 Opposite of [describe.skipIf](#describe-skipif).
 
@@ -653,7 +671,7 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 ### describe.concurrent
 
-- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+- **Alias:** `suite.concurrent`
 
 `describe.concurrent` in a suite marks every tests as concurrent
 
@@ -694,7 +712,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.sequential
 
-- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+- **Alias:** `suite.sequential`
 
 `describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
@@ -712,7 +730,7 @@ describe.concurrent('suite', () => {
 
 ### describe.shuffle
 
-- **Type:** `(name: string | Function, fn: TestFunction, options?: number | TestOptions) => void`
+- **Alias:** `suite.shuffle`
 
 Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
@@ -733,7 +751,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.todo
 
-- **Type:** `(name: string | Function) => void`
+- **Alias:** `suite.todo`
 
 Use `describe.todo` to stub suites to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
 
@@ -744,7 +762,7 @@ describe.todo('unimplemented suite')
 
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]): (name: string | Function, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
+- **Alias:** `suite.each`
 
 Use `describe.each` if you have more than one test that depends on the same data.
 
