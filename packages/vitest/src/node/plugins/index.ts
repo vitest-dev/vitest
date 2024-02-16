@@ -96,7 +96,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
             },
-          }
+          },
         }
 
         // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
