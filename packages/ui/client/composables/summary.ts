@@ -37,6 +37,8 @@ export const time = computed(() => {
     acc += Math.max(0, t.collectDuration || 0)
     acc += Math.max(0, t.setupDuration || 0)
     acc += Math.max(0, t.result?.duration || 0)
+    acc += Math.max(0, t.environmentLoad || 0)
+    acc += Math.max(0, t.prepareDuration || 0)
     return acc
   }, 0)
 
