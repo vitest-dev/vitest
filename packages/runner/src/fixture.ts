@@ -21,9 +21,11 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
     .map(([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
 
-      if (Array.isArray(value) && value.length >= 2
-      && isObject(value[1])
-      && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))) {
+      if (
+        Array.isArray(value) && value.length >= 2
+        && isObject(value[1])
+        && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))
+      ) {
         // fixture with options
         Object.assign(fixtureItem, value[1])
         fixtureItem.value = value[0]
