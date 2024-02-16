@@ -58,8 +58,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
-    "prepublishOnly": "pnpm build"
+    "dev": "rollup -c --watch"
   },
   "dependencies": {
     "diff-sequences": "^29.6.3",

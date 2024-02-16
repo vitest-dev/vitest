@@ -42,8 +42,7 @@
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
     "test:run": "cypress run --component",
-    "test:open": "cypress open --component",
-    "prepublishOnly": "pnpm build"
+    "test:open": "cypress open --component"
   },
   "peerDependencies": {
     "vitest": "workspace:*"
