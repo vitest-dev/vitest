@@ -736,7 +736,7 @@ vi.useRealTimers()
 
 ### vi.useFakeTimers
 
-- **Type:** `() => Vitest`
+- **Type:** `(config?: FakeTimerInstallOpts) => Vitest`
 
 To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
