@@ -1,4 +1,4 @@
-import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import { searchForWorkspaceRoot } from 'vite'
 import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
 import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
@@ -45,14 +45,6 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       exclude,
       include,
     }
-
-    // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
-    // https://github.com/vitejs/vite/pull/15184
-    // but explicit `disabled: false` is needed for SSR on v5.0
-    // https://github.com/vitejs/vite/discussions/13839#discussioncomment-8078714
-    const [major, minor] = viteVersion.split('.').map(Number)
-    if (major >= 5 && minor < 1)
-      newConfig.optimizeDeps.disabled = false
   }
 
   return newConfig
