@@ -1,8 +1,5 @@
 import { defineConfig } from 'vitest/config'
 
-// cf.
-// https://stackblitz.com/edit/vitest-dev-vitest-8wf26p?file=test%2Fssr.test.ts
-
 export default defineConfig({
   optimizeDeps: {
     include: ['@vitest/test-dep-url'],
