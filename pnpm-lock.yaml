@@ -1292,7 +1292,7 @@ importers:
   packages/vitest:
     dependencies:
       '@vitest/browser':
-        specifier: ^1.0.0
+        specifier: workspace:*
         version: link:../browser
       '@vitest/expect':
         specifier: workspace:*
@@ -1307,7 +1307,7 @@ importers:
         specifier: workspace:*
         version: link:../spy
       '@vitest/ui':
-        specifier: ^1.0.0
+        specifier: workspace:*
         version: link:../ui
       '@vitest/utils':
         specifier: workspace:*
