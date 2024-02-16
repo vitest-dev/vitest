@@ -10,6 +10,7 @@ export default (ctx: Vitest): ProcessPool => {
     name: 'custom',
     async runTests(specs) {
       console.warn('[pool] printing:', options.print)
+      console.warn('[pool] array option', options.array)
       for await (const [project, file] of specs) {
         ctx.state.clearFiles(project)
         const methods = createMethodsRPC(project)
