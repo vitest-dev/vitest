@@ -38,7 +38,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: pnpm run publish-ci {{ github.ref_name }}
+        run: pnpm run publish-ci ${{ github.ref_name }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
