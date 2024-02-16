@@ -10,6 +10,9 @@ export default defineConfig({
     },
   },
   test: {
+    chaiConfig: {
+      truncateThreshold: 1000,
+    },
     deps: {
       optimizer: {
         web: {
