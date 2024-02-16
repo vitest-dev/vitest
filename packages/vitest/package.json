@@ -118,8 +118,8 @@
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@types/node": "^18.0.0 || >=20.0.0",
-    "@vitest/browser": "^1.0.0",
-    "@vitest/ui": "^1.0.0",
+    "@vitest/browser": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*"
   },
