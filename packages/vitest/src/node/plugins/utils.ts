@@ -13,7 +13,7 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
   if (!allowed && testOptions?.enabled === true)
     console.warn(`Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`)
   else
-    // enable by default
+    // disabled by default
     testOptions.enabled ??= false
   if (!allowed || testOptions?.enabled !== true) {
     newConfig.cacheDir = undefined
@@ -50,6 +50,17 @@ export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | u
       include,
     }
   }
+
+  // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
+  // https://github.com/vitejs/vite/pull/15184
+  if (major >= 5 && minor >= 1) {
+    if (newConfig.optimizeDeps.disabled) {
+      newConfig.optimizeDeps.noDiscovery = true
+      newConfig.optimizeDeps.include = []
+    }
+    delete newConfig.optimizeDeps.disabled
+  }
+
   return newConfig
 }
 
