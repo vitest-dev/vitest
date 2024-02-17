@@ -440,7 +440,7 @@ test('assert.isObject', () => {
 
 - **Type:** `<T>(value: T, message?: string) => void`
 
-Asserts that `value` is an object of type Object (as revealed by Object.prototype.toString). The assertion does not match subclassed objects.
+Asserts that `value` is not an object of type Object (as revealed by Object.prototype.toString). The assertion does not match subclassed objects.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -552,7 +552,7 @@ test('assert.isNotNumber', () => {
 
 - **Type:** `<T>(value: T, message?: string) => void`
 
-Asserts that `value` is a finite number(not NaN, Infinity).
+Asserts that `value` is a finite number (not NaN, Infinity).
 
 ```ts
 import { assert, test } from 'vitest'
@@ -658,7 +658,7 @@ test('assert.instanceOf', () => {
 
 - **Type:** `<T>(value: T, constructor: Function, message?: string) => void`
 
-Asserts that `value` is an instance of `constructor`.
+Asserts that `value` is not an instance of `constructor`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -746,7 +746,7 @@ test('assert.deepInclude', () => {
   - `<T>(haystack: readonly T[] | ReadonlySet<T> | ReadonlyMap<any, T>, needle: T, message?: string) => void`
   - `<T>(haystack: T, needle: T extends WeakSet<any> ? never : Partial<T>, message?: string) => void`
 
-Asserts that `haystack` includes `needle`. Can be used to assert the absence of a value in an array or a subset of properties in an object. Deep equality is used.
+Asserts that `haystack` does not includes `needle`. Can be used to assert the absence of a value in an array or a subset of properties in an object. Deep equality is used.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -779,7 +779,7 @@ test('assert.nestedInclude', () => {
 
 - **Type:** `(haystack: any, needle: any, message?: string) => void`
 
-Asserts that `haystack` does not includes `needle`. Can be used to assert the inclusion of a subset of properties in an object. Enables the use of dot- and bracket-notation for referencing nested properties. ‘[]’ and ‘.’ in property names can be escaped using double backslashes.
+Asserts that `haystack` does not include `needle`. Can be used to assert the inclusion of a subset of properties in an object. Enables the use of dot- and bracket-notation for referencing nested properties. ‘[]’ and ‘.’ in property names can be escaped using double backslashes.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -921,8 +921,8 @@ Asserts that `object` has a direct or inherited property named by `property`
 import { assert, test } from 'vitest'
 
 test('assert.property', () => {
-  assert.property({ tea: { green: 'matcha' } })
-  assert.property({ tea: { green: 'matcha' } })
+  assert.property({ tea: { green: 'matcha' } }, 'tea')
+  assert.property({ tea: { green: 'matcha' } }, 'toString')
 })
 ```
 
@@ -936,7 +936,7 @@ Asserts that `object` does not have a direct or inherited property named by `pro
 import { assert, test } from 'vitest'
 
 test('assert.notProperty', () => {
-  assert.notProperty({ tea: { green: 'matcha' } })
+  assert.notProperty({ tea: { green: 'matcha' } }, 'coffee')
 })
 ```
 
@@ -950,7 +950,7 @@ Asserts that `object` has a direct or inherited property named by `property` wit
 import { assert, test } from 'vitest'
 
 test('assert.notPropertyVal', () => {
-  assert.propertyVal({ tea: 'is good' })
+  assert.propertyVal({ tea: 'is good' }, 'tea', 'is good')
 })
 ```
 
@@ -964,8 +964,8 @@ Asserts that `object` does not have a direct or inherited property named by `pro
 import { assert, test } from 'vitest'
 
 test('assert.notPropertyVal', () => {
-  assert.notPropertyVal({ tea: 'is good' })
-  assert.notPropertyVal({ tea: 'is good' })
+  assert.notPropertyVal({ tea: 'is good' }, 'tea', 'is bad')
+  assert.notPropertyVal({ tea: 'is good' }, 'coffee', 'is good')
 })
 ```
 
@@ -1037,7 +1037,7 @@ Asserts that `object` has a property named by `property` with value given by `va
 import { assert, test } from 'vitest'
 
 test('assert.nestedPropertyVal', () => {
-  assert.nestedPropertyVal({ tea: { green: 'matcha' } }, 'tea.green')
+  assert.nestedPropertyVal({ tea: { green: 'matcha' } }, 'tea.green', 'matcha')
 })
 ```
 
