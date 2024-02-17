@@ -119,6 +119,14 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'A fullstack developer',
     desc: 'Working on CRDTs & local-first software',
   },
+  {
+    avatar: contributorsAvatars['hi-ogawa'],
+    name: 'Hiroshi Ogawa',
+    github: 'hi-ogawa',
+    twitter: 'hiroshi_18181',
+    title: 'Open source enthusiast',
+    desc: 'Team member of Vitest',
+  },
 ]
 
 const plainTeamEmeritiMembers: CoreTeam[] = [
@@ -146,14 +154,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     twitter: '@yoho_po',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
-  },
-  {
-    avatar: contributorsAvatars['hi-ogawa'],
-    name: 'Hiroshi Ogawa',
-    github: 'hi-ogawa',
-    twitter: 'hiroshi_18181',
-    title: 'Open source enthusiast',
-    desc: 'Team member of Vitest',
   },
 ]
 
