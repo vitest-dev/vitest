@@ -358,7 +358,8 @@ export class WorkspaceProject {
         },
       },
       snapshotOptions: {
-        ...this.config.snapshotOptions,
+        ...this.ctx.config.snapshotOptions,
+        expand: this.config.snapshotOptions.expand ?? this.ctx.config.snapshotOptions.expand,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,

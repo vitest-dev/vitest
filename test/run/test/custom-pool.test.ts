@@ -6,6 +6,7 @@ test('can run custom pools with Vitest', async () => {
 
   expect(vitest.stderr).toMatchInlineSnapshot(`
     "[pool] printing: options are respected
+    [pool] array option [ 1, 2, 3 ]
     [pool] running tests for custom-pool-test in /pool-custom-fixtures/tests/custom-not-run.spec.ts
     [pool] custom pool is closed!
     "
