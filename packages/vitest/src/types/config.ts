@@ -608,7 +608,12 @@ export interface InlineConfig {
    * Options for configuring cache policy.
    * @default { dir: 'node_modules/.vite' }
    */
-  cache?: false
+  cache?: false | {
+    /**
+     * @deprecated Use Vite's `cacheDir` instead.
+     */
+    dir: string
+  }
 
   /**
    * Options for configuring the order of running tests.
