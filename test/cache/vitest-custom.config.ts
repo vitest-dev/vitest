@@ -1,9 +1,6 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  test: {
-    cache: {
-      dir: 'cache/.vitest-custom',
-    },
-  },
+  cacheDir: 'cache/.vitest-custom',
+  test: {},
 })
