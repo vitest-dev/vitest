@@ -538,20 +538,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
   cache: {
     description: 'Enable cache',
     argument: '', // allow only boolean
-    subcommands: {
-      dir: {
-        description: 'Path to the cache directory',
-        argument: '<path>',
-        normalize: true,
-      },
-    },
     // cache can only be "false" or an object
     transform(cache) {
       if (cache)
         return {}
       return cache
     },
-  },
+  } as VitestCLIOptions['cache'],
   maxConcurrency: {
     description: 'Maximum number of concurrent tests in a suite (default: 5)',
     argument: '<number>',
