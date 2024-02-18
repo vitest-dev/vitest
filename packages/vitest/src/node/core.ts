@@ -292,6 +292,7 @@ export class Vitest {
       'sequence',
       'testTimeout',
       'pool',
+      'update',
       'globals',
       'expandSnapshotDiff',
       'disableConsoleIntercept',

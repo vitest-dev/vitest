@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -112,14 +112,13 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
-    "prepublishOnly": "pnpm build"
+    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@types/node": "^18.0.0 || >=20.0.0",
-    "@vitest/browser": "^1.0.0",
-    "@vitest/ui": "^1.0.0",
+    "@vitest/browser": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*"
   },

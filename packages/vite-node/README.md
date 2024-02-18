@@ -6,7 +6,7 @@
 vite-node
 </h1>
 <p align="center">
-Vite as Node runtime.<br>The engine powers <a href="https://github.com/vitest-dev/vitest">Vitest</a> and <a href="https://github.com/nuxt/framework">Nuxt 3 Dev SSR</a>.
+Vite as Node runtime.<br>The engine that powers <a href="https://github.com/vitest-dev/vitest">Vitest</a> and <a href="https://github.com/nuxt/framework">Nuxt 3 Dev SSR</a>.
 <p>
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vite-node?color=FCC72B&label="></a>

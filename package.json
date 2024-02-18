@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "private": true,
   "packageManager": "pnpm@8.10.3",
   "description": "Next generation testing framework powered by Vite",
@@ -21,8 +21,8 @@
     "docs:contributors": "tsx scripts/update-contributors.ts",
     "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
-    "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public",
-    "release:beta": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release && pnpm -r publish --access public --tag beta",
+    "publish-ci": "tsx scripts/publish-ci.ts",
+    "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release",
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
@@ -65,7 +65,8 @@
     "tsx": "^4.6.1",
     "typescript": "^5.2.2",
     "vite": "^5.0.12",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "zx": "^7.2.3"
   },
   "pnpm": {
     "overrides": {
