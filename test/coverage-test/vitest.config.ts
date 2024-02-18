@@ -1,4 +1,5 @@
 import { resolve } from 'pathe'
+import swc from 'unplugin-swc'
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import MagicString from 'magic-string'
@@ -12,6 +13,7 @@ export default defineConfig(_ => ({
     vue(),
     MultiTransformPlugin(),
     VirtualFilesPlugin(),
+    DecoratorsPlugin(),
   ],
   define: {
     MY_CONSTANT: '"my constant"',
@@ -111,6 +113,32 @@ function VirtualFilesPlugin(): Plugin {
           export default virtualFile;
         `
       }
+    },
+  }
+}
+
+function DecoratorsPlugin(): Plugin {
+  const plugin = swc.vite({
+    jsc: {
+      target: 'esnext',
+      parser: {
+        syntax: 'typescript',
+        decorators: true,
+      },
+      transform: {
+        legacyDecorator: true,
+        decoratorMetadata: true,
+      },
+    },
+  })
+
+  return {
+    name: 'custom-swc-decorator',
+    enforce: 'pre',
+    transform(code, id, options) {
+      if (id.endsWith('decorators.ts'))
+        // @ts-expect-error -- Ignore complex type
+        return plugin.transform(code, id, options)
     },
   }
 }

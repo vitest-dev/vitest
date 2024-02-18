@@ -115,6 +115,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const sourceMap = pluginCtx.getCombinedSourcemap()
     sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
 
+    // Exclude SWC's decorators that are left in source maps
+    sourceCode = sourceCode.replaceAll('_ts_decorate', '/* istanbul ignore next */_ts_decorate')
+
     const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
     const map = this.instrumenter.lastSourceMap() as any
 
