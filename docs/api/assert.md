@@ -706,7 +706,7 @@ test('assert.include', () => {
   - `<T extends object>(haystack: WeakSet<T>, needle: T, message?: string) => void`
   - `<T>(haystack: T, needle: Partial<T>, message?: string) => void`
 
-Asserts that `haystack` dose not includes `needle`. Can be used to assert the absence of a value in an array, a substring in a string, or a subset of properties in an object.
+Asserts that `haystack` does not include `needle`. It can be used to assert the absence of a value in an array, a substring in a string, or a subset of properties in an object.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -746,7 +746,7 @@ test('assert.deepInclude', () => {
   - `<T>(haystack: readonly T[] | ReadonlySet<T> | ReadonlyMap<any, T>, needle: T, message?: string) => void`
   - `<T>(haystack: T, needle: T extends WeakSet<any> ? never : Partial<T>, message?: string) => void`
 
-Asserts that `haystack` does not includes `needle`. Can be used to assert the absence of a value in an array or a subset of properties in an object. Deep equality is used.
+Asserts that `haystack` does not include `needle`. It can be used to assert the absence of a value in an array or a subset of properties in an object. Deep equality is used.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1619,7 +1619,7 @@ test('assert.changes', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, change: number, message?: string) => void`
 
-Asserts that a `modifier` changes the `object` of a `property` by an `change`.
+Asserts that a `modifier` changes the `object` of a `property` by a `change`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1651,7 +1651,7 @@ test('assert.doesNotChange', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, change:number, message?: string) => void`
 
-Asserts that a `modifier` does not change the `object` of a `property` or of a `modifier` return value by an `change`.
+Asserts that a `modifier` does not change the `object` of a `property` or of a `modifier` return value by a `change`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1747,7 +1747,7 @@ test('assert.decreases', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, change: number, message?: string) => void`
 
-Asserts that a `modifier` decreases a numeric `object`'s `property` or a `modifier` return value by an `change`.
+Asserts that a `modifier` decreases a numeric `object`'s `property` or a `modifier` return value by a `change`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1763,7 +1763,7 @@ test('assert.decreasesBy', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, message?: string) => void`
 
-Asserts that a `modifier` dose not decreases a numeric `object`'s `property`.
+Asserts that a `modifier` dose not decrease a numeric `object`'s `property`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1779,7 +1779,7 @@ test('assert.doesNotDecrease', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, change: number, message?: string) => void`
 
-Asserts that a `modifier` does not decreases a numeric `object`'s `property` or a `modifier` return value by an `change`.
+Asserts that a `modifier` does not decrease a numeric `object`'s `property` or a `modifier` return value by a `change`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1795,7 +1795,7 @@ test('assert.doesNotDecreaseBy', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, change: number, message?: string) => void`
 
-Asserts that a `modifier` does not decreases a numeric `object`'s `property` or a `modifier` return value by an `change`.
+Asserts that a `modifier` does not decrease a numeric `object`'s `property` or a `modifier` return value by a `change`.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1928,7 +1928,7 @@ test('assert.isNotFrozen', () => {
 - **Type:** `<T>(target: T, message?: string) => void`
 - **Alias:** `empty`
 
-Asserts that the `target` does not contain any values. For arrays and strings, it checks the length property. For Map and Set instances, it checks the size property. For non-function objects, it gets the count of own enumerable string keys.
+Asserts that the `target` does not contain any values. For arrays and strings, it checks the length property. For Map and Set instances, it checks the size property. For non-function objects, it gets the count of its own enumerable string keys.
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1946,7 +1946,7 @@ test('assert.isEmpty', () => {
 - **Type:** `<T>(object: T, message?: string) => void`
 - **Alias:** `notEmpty`
 
-Asserts that the `target` contains values. For arrays and strings, it checks the length property. For Map and Set instances, it checks the size property. For non-function objects, it gets the count of own enumerable string keys.
+Asserts that the `target` contains values. For arrays and strings, it checks the length property. For Map and Set instances, it checks the size property. For non-function objects, it gets the count of its own enumerable string keys.
 
 ```ts
 import { assert, test } from 'vitest'
