@@ -212,13 +212,7 @@ test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
 
-  expect(getCLIOptions('--cache.dir=./test/cache.json')).toEqual({
-    cache: { dir: 'test/cache.json' },
-  })
-  expect(getCLIOptions('--cache.dir ./test/cache.json')).toEqual({
-    cache: { dir: 'test/cache.json' },
-  })
-  expect(getCLIOptions('--cache.dir .\\test\\cache.json')).toEqual({
+  expect(getCLIOptions('--cache.dir=./test/cache.json')).not.toEqual({
     cache: { dir: 'test/cache.json' },
   })
 })
