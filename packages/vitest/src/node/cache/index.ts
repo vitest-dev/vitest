@@ -5,7 +5,6 @@ import { resolve } from 'pathe'
 import { loadConfigFromFile } from 'vite'
 import { configFiles } from '../../constants'
 import type { CliOptions } from '../cli/cli-api'
-import { slash } from '../../utils'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
 
@@ -21,11 +20,10 @@ export class VitestCache {
     return this.stats.getStats(key)
   }
 
-  static resolveCacheDir(root: string, dir: string | undefined, projectName: string | undefined) {
-    const baseDir = slash(dir || 'node_modules/.vitest')
+  static resolveCacheDir(dir: string, projectName: string | undefined) {
     return projectName
-      ? resolve(root, baseDir, crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'))
-      : resolve(root, baseDir)
+      ? resolve(dir, crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'))
+      : dir
   }
 
   static async clearCache(options: CliOptions) {
@@ -47,7 +45,7 @@ export class VitestCache {
     if (cache === false)
       throw new Error('Cache is disabled')
 
-    const cachePath = VitestCache.resolveCacheDir(root, cache?.dir, projectName)
+    const cachePath = VitestCache.resolveCacheDir(config!.cacheDir!, projectName)
 
     let cleared = false
 

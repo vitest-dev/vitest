@@ -606,11 +606,9 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vitest' }
+   * @default { dir: 'node_modules/.vite' }
    */
-  cache?: false | {
-    dir?: string
-  }
+  cache?: false
 
   /**
    * Options for configuring the order of running tests.
@@ -816,6 +814,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   cache: {
+    /**
+     * @deprecated
+     */
     dir: string
   } | false
 

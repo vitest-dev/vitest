@@ -7,7 +7,6 @@ import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
-import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
@@ -436,9 +435,13 @@ export function resolveConfig(
     resolved.css.modules.classNameStrategy ??= 'stable'
   }
 
-  resolved.cache ??= { dir: '' }
-  if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
+  if (resolved.cache && resolved.cache.dir) {
+    console.warn(
+      c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated. Use vite's "cacheDir" instead.`,
+      ),
+    )
+  }
 
   resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
