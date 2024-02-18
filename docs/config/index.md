@@ -521,7 +521,7 @@ Update snapshot files. This will update all changed snapshots and delete obsolet
 ### watch<NonProjectOption />
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `!process.env.CI`
 - **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
@@ -1397,7 +1397,7 @@ test('doNotRun', () => {
 ### open<NonProjectOption />
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `!process.env.CI`
 - **CLI:** `--open`, `--open=false`
 
 Open Vitest UI (WIP)
@@ -1647,7 +1647,7 @@ export default defineConfig({
 ### allowOnly
 
 - **Type**: `boolean`
-- **Default**: `false`
+- **Default**: `!process.env.CI`
 - **CLI:** `--allowOnly`, `--allowOnly=false`
 
 Allow tests and suites that are marked as only.
