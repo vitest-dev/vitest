@@ -71,7 +71,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: AriPerkkio/setup-chrome@macos-14-build
+      - uses: browser-actions/setup-chrome@v1
 
       - name: Install
         run: pnpm i
