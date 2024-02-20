@@ -51,6 +51,7 @@ const WRAPPER_LENGTH = 185
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
+const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes"(\s|.)+?]\),/g
 const DEFAULT_PROJECT = Symbol.for('default-project')
 
 const debug = createDebug('vitest:coverage')
@@ -312,7 +313,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       originalSource: sourcesContent,
       source: code || sourcesContent,
       sourceMap: {
-        sourcemap: removeViteHelpersFromSourceMaps(code, {
+        sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
           sources: [url],
@@ -363,21 +364,24 @@ async function transformCoverage(coverageMap: CoverageMap) {
 /**
  * Remove generated code from the source maps:
  * - Vite's export helpers: e.g. `Object.defineProperty(__vite_ssr_exports__, "sum", { enumerable: true, configurable: true, get(){ return sum }});`
+ * - SWC's decorator metadata: e.g. `_ts_metadata("design:paramtypes", [\ntypeof Request === "undefined" ? Object : Request\n]),`
  */
-function removeViteHelpersFromSourceMaps(source: string | undefined, map: EncodedSourceMap) {
-  if (!source || !source.match(VITE_EXPORTS_LINE_PATTERN))
+function excludeGeneratedCode(source: string | undefined, map: EncodedSourceMap) {
+  if (!source)
     return map
 
-  const sourceWithoutHelpers = new MagicString(source)
-  sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  if (!source.match(VITE_EXPORTS_LINE_PATTERN) && !source.match(DECORATOR_METADATA_PATTERN))
+    return map
 
-  const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
-    hires: 'boundary',
-  })
+  const trimmed = new MagicString(source)
+  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match => '\n'.repeat(match.split('\n').length - 1))
 
-  // A merged source map where the first one excludes helpers
+  const trimmedMap = trimmed.generateMap({ hires: 'boundary' })
+
+  // A merged source map where the first one excludes generated parts
   const combinedMap = remapping(
-    [{ ...mapWithoutHelpers, version: 3 }, map],
+    [{ ...trimmedMap, version: 3 }, map],
     () => null,
   )
 
