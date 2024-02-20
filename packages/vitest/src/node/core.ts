@@ -16,6 +16,7 @@ import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
+import { WebSocketReporter } from '../api/setup'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -800,8 +801,14 @@ export class Vitest {
     if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
       return
 
-    if (this.coverageProvider)
+    if (this.coverageProvider) {
       await this.coverageProvider.reportCoverage({ allTestsRun })
+      // notify coverage iframe reload
+      for (const reporter of this.reporters) {
+        if (reporter instanceof WebSocketReporter)
+          reporter.onFinishedReportCoverage()
+      }
+    }
   }
 
   async close() {

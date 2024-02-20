@@ -32,7 +32,7 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-By default Vitest runs tests in multiple threads using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If your tests are running code that is not compatible with multi-threading, you can switch to [`--pool=forks`](/config/#pool-1-0-0) which runs tests in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via Tinypool.
+By default Vitest runs test files in multiple threads using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If your tests are running code that is not compatible with multi-threading, you can switch to [`--pool=forks`](/config/#pool-1-0-0) which runs tests in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via Tinypool.
 
 To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions-1-0-0).
 
