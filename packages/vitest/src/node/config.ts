@@ -16,7 +16,7 @@ import { builtinPools } from './pool'
 function resolvePath(path: string, root: string) {
   return normalize(
     resolveModule(path, { paths: [root] })
-      ?? resolve(root, path),
+    ?? resolve(root, path),
   )
 }
 
@@ -234,6 +234,12 @@ export function resolveConfig(
     snapshotEnvironment: null as any,
   }
 
+  resolved.snapshotSerializers ??= []
+  resolved.snapshotSerializers = resolved.snapshotSerializers.map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
+
   if (options.resolveSnapshotPath)
     delete (resolved as UserConfig).resolveSnapshotPath
 
@@ -358,21 +364,68 @@ export function resolveConfig(
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
+  /*
+   * Reporters can be defined in many different ways:
+   * { reporter: 'json' }
+   * { reporter: { onFinish() { method() } } }
+   * { reporter: ['json', { onFinish() { method() } }] }
+   * { reporter: [[ 'json' ]] }
+   * { reporter: [[ 'json' ], 'html'] }
+   * { reporter: [[ 'json', { outputFile: 'test.json' } ], 'html'] }
+  */
+  if (options.reporters) {
+    if (!Array.isArray(options.reporters)) {
+      // Reporter name, e.g. { reporters: 'json' }
+      if (typeof options.reporters === 'string')
+        resolved.reporters = [[options.reporters, {}]]
+      // Inline reporter e.g. { reporters: { onFinish() { method() } } }
+      else
+        resolved.reporters = [options.reporters]
+    }
+    // It's an array of reporters
+    else {
+      resolved.reporters = []
+
+      for (const reporter of options.reporters) {
+        if (Array.isArray(reporter)) {
+          // Reporter with options, e.g. { reporters: [ [ 'json', { outputFile: 'test.json' } ] ] }
+          resolved.reporters.push([reporter[0], reporter[1] || {}])
+        }
+        else if (typeof reporter === 'string') {
+          // Reporter name in array, e.g. { reporters: ["html", "json"]}
+          resolved.reporters.push([reporter, {}])
+        }
+        else {
+          // Inline reporter, e.g. { reporter: [{ onFinish() { method() } }] }
+          resolved.reporters.push(reporter)
+        }
+      }
+    }
+  }
+
   if (mode !== 'benchmark') {
     // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
     // it is passed down as "vitest --reporter ../reporter.js"
-    const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
+    const reportersFromCLI = resolved.reporter
+
+    const cliReporters = toArray(reportersFromCLI || []).map((reporter: string) => {
       // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
       if (/^\.\.?\//.test(reporter))
         return resolve(process.cwd(), reporter)
       return reporter
     })
-    const reporters = cliReporters.length ? cliReporters : resolved.reporters
-    resolved.reporters = Array.from(new Set(toArray(reporters as 'json'[]))).filter(Boolean)
+
+    if (cliReporters.length)
+      resolved.reporters = Array.from(new Set(toArray(cliReporters))).filter(Boolean).map(reporter => [reporter, {}])
   }
 
-  if (!resolved.reporters.length)
-    resolved.reporters.push('default')
+  if (!resolved.reporters.length) {
+    resolved.reporters.push(['default', {}])
+
+    // also enable github-actions reporter as a default
+    if (process.env.GITHUB_ACTIONS === 'true')
+      resolved.reporters.push(['github-actions', {}])
+  }
 
   if (resolved.changed)
     resolved.passWithNoTests ??= true

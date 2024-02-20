@@ -9,7 +9,6 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import MagicString from 'magic-string'
-import type { ProxifiedModule } from 'magicast'
 import { parseModule } from 'magicast'
 import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
@@ -35,8 +34,8 @@ interface TestExclude {
     excludeNodeModules?: boolean
     relativePath?: boolean
   }): {
-    shouldInstrument(filePath: string): boolean
-    glob(cwd: string): Promise<string[]>
+    shouldInstrument: (filePath: string) => boolean
+    glob: (cwd: string) => Promise<string[]>
   }
 }
 
@@ -101,7 +100,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       relativePath: !this.options.allowExternal,
     })
 
-    this.coverageFilesDirectory = resolve(this.options.reportsDirectory, '.tmp')
+    const shard = this.ctx.config.shard
+    const tempDirectory = `.tmp${shard ? `-${shard.index}-${shard.count}` : ''}`
+
+    this.coverageFilesDirectory = resolve(this.options.reportsDirectory, tempDirectory)
   }
 
   resolveOptions() {
@@ -159,7 +161,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       for (const [transformMode, filenames] of Object.entries(coveragePerProject) as [AfterSuiteRunMeta['transformMode'], Filename[]][]) {
         let merged: RawCoverage = { result: [] }
 
-        for (const chunk of toSlices(filenames, this.options.processingConcurrency)) {
+        for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (debug.enabled) {
             index += chunk.length
             debug('Covered files %d/%d', index, total)
@@ -195,7 +197,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       watermarks: this.options.watermarks,
     })
 
-    if (hasTerminalReporter(this.options.reporter))
+    if (this.hasTerminalReporter(this.options.reporter))
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
@@ -229,10 +231,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         this.updateThresholds({
           thresholds: resolvedThresholds,
           perFile: this.options.thresholds.perFile,
-          configurationFile: {
-            write: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
-            read: () => resolveConfig(configModule),
-          },
+          configurationFile: configModule,
+          onUpdate: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
         })
       }
     }
@@ -252,7 +252,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     let merged: RawCoverage = { result: [] }
     let index = 0
 
-    for (const chunk of toSlices(uncoveredFiles, this.options.processingConcurrency)) {
+    for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
         index += chunk.length
         debug('Uncovered files %d/%d', index, uncoveredFiles.length)
@@ -331,7 +331,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
 
-    for (const chunk of toSlices(scriptCoverages, this.options.processingConcurrency)) {
+    for (const chunk of this.toSlices(scriptCoverages, this.options.processingConcurrency)) {
       if (debug.enabled) {
         index += chunk.length
         debug('Converting %d/%d', index, scriptCoverages.length)
@@ -406,54 +406,4 @@ function normalizeTransformResults(fetchCache: Map<string, { result: FetchResult
   }
 
   return normalized
-}
-
-function hasTerminalReporter(reporters: Options['reporter']) {
-  return reporters.some(([reporter]) =>
-    reporter === 'text'
-    || reporter === 'text-summary'
-    || reporter === 'text-lcov'
-    || reporter === 'teamcity')
-}
-
-function toSlices<T>(array: T[], size: number): T[][] {
-  return array.reduce<T[][]>((chunks, item) => {
-    const index = Math.max(0, chunks.length - 1)
-    const lastChunk = chunks[index] || []
-    chunks[index] = lastChunk
-
-    if (lastChunk.length >= size)
-      chunks.push([item])
-
-    else
-      lastChunk.push(item)
-
-    return chunks
-  }, [])
-}
-
-function resolveConfig(configModule: ProxifiedModule<any>) {
-  const mod = configModule.exports.default
-
-  try {
-    // Check for "export default { test: {...} }"
-    if (mod.$type === 'object')
-      return mod
-
-    if (mod.$type === 'function-call') {
-      // "export default defineConfig({ test: {...} })"
-      if (mod.$args[0].$type === 'object')
-        return mod.$args[0]
-
-      // "export default defineConfig(() => ({ test: {...} }))"
-      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
-        return mod.$args[0].$body
-    }
-  }
-  catch (error) {
-    // Reduce magicast's verbose errors to readable ones
-    throw new Error(error instanceof Error ? error.message : String(error))
-  }
-
-  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
 }

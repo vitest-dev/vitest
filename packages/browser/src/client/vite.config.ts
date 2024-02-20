@@ -13,6 +13,12 @@ export default defineConfig({
     outDir: '../../dist/client',
     emptyOutDir: false,
     assetsDir: '__vitest_browser__',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, './index.html'),
+        tester: resolve(__dirname, './tester.html'),
+      },
+    },
   },
   plugins: [
     {
@@ -33,7 +39,7 @@ export default defineConfig({
         if (fs.existsSync(browser))
           fs.rmSync(browser, { recursive: true })
 
-        fs.mkdirSync(browser)
+        fs.mkdirSync(browser, { recursive: true })
         fs.mkdirSync(resolve(browser, 'assets'))
 
         files.forEach((f) => {

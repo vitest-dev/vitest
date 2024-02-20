@@ -6,22 +6,22 @@ import type { Plugin } from 'vite'
 export default defineWorkspace([
   'space_2',
   './space_*/*.config.ts',
-  {
+  async () => ({
     test: {
       name: 'happy-dom',
       root: './space_shared',
       environment: 'happy-dom',
       setupFiles: ['./setup.jsdom.ts'],
     },
-  },
-  {
+  }),
+  Promise.resolve({
     test: {
       name: 'node',
       root: './space_shared',
       environment: 'node',
       setupFiles: ['./setup.node.ts'],
     },
-  },
+  }),
 
   // Projects testing pool and poolOptions
   {

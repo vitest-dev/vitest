@@ -31,9 +31,9 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
   })
 
   errorWithXml.stack = 'Error: error message that has XML in it <tag>\n'
-    + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
-    + '    at /vitest/test/core/test/<bracket-name>.ts:3:11\n'
-    + '    at etc....'
+  + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
+  + '    at /vitest/test/core/test/<bracket-name>.ts:3:11\n'
+  + '    at etc....'
 
   const tasks: Task[] = [
     {

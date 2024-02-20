@@ -9,11 +9,14 @@ export interface BrowserProviderInitializationOptions {
 
 export interface BrowserProvider {
   name: string
-  getSupportedBrowsers(): readonly string[]
-  initialize(ctx: WorkspaceProject, options: BrowserProviderInitializationOptions): Awaitable<void>
-  openPage(url: string): Awaitable<void>
-  catchError(cb: (error: Error) => Awaitable<void>): () => Awaitable<void>
-  close(): Awaitable<void>
+  getSupportedBrowsers: () => readonly string[]
+  openPage: (url: string) => Awaitable<void>
+  close: () => Awaitable<void>
+  // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
+  initialize(
+    ctx: WorkspaceProject,
+    options: BrowserProviderInitializationOptions
+  ): Awaitable<void>
 }
 
 export interface BrowserProviderModule {
@@ -83,6 +86,13 @@ export interface BrowserConfigOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Run test files in parallel. Fallbacks to `test.fileParallelism`.
+   *
+   * @default test.fileParallelism
+   */
+  fileParallelism?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

@@ -21,7 +21,7 @@ To fix this issue you can either:
 - enable the 'globals' options`
 
 const API_NOT_FOUND_CHECK = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
-+ `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+  + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'

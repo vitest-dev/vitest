@@ -161,6 +161,32 @@ myTest('', ({ todos }) => {})
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
 :::
 
+#### Automatic fixture
+
+::: warning
+This feature is available since Vitest 1.3.0.
+:::
+
+Vitest also supports the tuple syntax for fixtures, allowing you to pass options for each fixture. For example, you can use it to explicitly initialize a fixture, even if it's not being used in tests.
+
+```ts
+import { test as base } from 'vitest'
+
+const test = base.extend({
+  fixture: [
+    async ({}, use) => {
+      // this function will run
+      setup()
+      await use()
+      teardown()
+    },
+    { auto: true } // Mark as an automatic fixture
+  ],
+})
+
+test('', () => {})
+```
+
 #### TypeScript
 
 To provide fixture types for all your custom contexts, you can pass the fixtures type as a generic.

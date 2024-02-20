@@ -5,7 +5,7 @@ import type { ResolvedConfig } from '../types/config'
 
 export interface GlobalSetupContext {
   config: ResolvedConfig
-  provide<T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]): void
+  provide: <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => void
 }
 
 export interface GlobalSetupFile {

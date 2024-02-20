@@ -40,7 +40,7 @@ describe('html reporter', async () => {
   }, 120000)
 
   it('resolves to "failing" status for test file "json-fail"', async () => {
-    const [expected, testFile, basePath] = ['failing', 'json-fail', 'html/fail']
+    const [expected, testFile, basePath] = ['failing', 'json-fail.test', 'html/fail']
 
     await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
 

@@ -22,7 +22,6 @@ Next generation testing framework powered by Vite.
 <a href="https://cn.vitest.dev">中文文档</a>
 </p>
 
-
 <h4 align="center">
 
 </h4>
@@ -47,8 +46,7 @@ Next generation testing framework powered by Vite.
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
 
-> Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
-
+> Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'

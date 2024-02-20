@@ -1,5 +1,3 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import type vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
@@ -79,6 +77,15 @@ export class EsmExecutor {
     return m
   }
 
+  public async createWebAssemblyModule(fileUrl: string, code: Buffer) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached)
+      return cached
+    const m = this.loadWebAssemblyModule(code, fileUrl)
+    this.moduleCache.set(fileUrl, m)
+    return m
+  }
+
   public async loadWebAssemblyModule(source: Buffer, identifier: string) {
     const cached = this.moduleCache.get(identifier)
     if (cached)
@@ -92,23 +99,21 @@ export class EsmExecutor {
     const moduleLookup: Record<string, VMModule> = {}
     for (const { module } of imports) {
       if (moduleLookup[module] === undefined) {
-        const resolvedModule = await this.executor.resolveModule(
+        moduleLookup[module] = await this.executor.resolveModule(
           module,
           identifier,
         )
-
-        moduleLookup[module] = await this.evaluateModule(resolvedModule)
       }
     }
 
     const syntheticModule = new SyntheticModule(
       exports.map(({ name }) => name),
-      () => {
+      async () => {
         const importsObject: WebAssembly.Imports = {}
         for (const { module, name } of imports) {
           if (!importsObject[module])
             importsObject[module] = {}
-
+          await this.evaluateModule(moduleLookup[module])
           importsObject[module][name] = (moduleLookup[module].namespace as any)[name]
         }
         const wasmInstance = new WebAssembly.Instance(
@@ -152,7 +157,7 @@ export class EsmExecutor {
       if (encoding !== 'base64')
         throw new Error(`Invalid data URI encoding: ${encoding}`)
 
-      const module = await this.loadWebAssemblyModule(
+      const module = this.loadWebAssemblyModule(
         Buffer.from(match.groups.code, 'base64'),
         identifier,
       )

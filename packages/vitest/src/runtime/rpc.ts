@@ -67,6 +67,18 @@ export function createRuntimeRpc(options: Pick<BirpcOptions<RuntimeRPC>, 'on' | 
     },
     {
       eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
+      onTimeoutError(functionName, args) {
+        let message = `[vitest-worker]: Timeout calling "${functionName}"`
+
+        if (functionName === 'fetch' || functionName === 'transform' || functionName === 'resolveId')
+          message += ` with "${JSON.stringify(args)}"`
+
+        // JSON.stringify cannot serialize Error instances
+        if (functionName === 'onUnhandledError')
+          message += ` with "${args[0]?.message || args[0]}"`
+
+        throw new Error(message)
+      },
       ...options,
     },
   ))

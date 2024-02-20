@@ -37,16 +37,14 @@ export function createPool(ctx: Vitest): ProcessPool {
   }
 
   function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
-    if (project.config.browser.enabled)
-      return 'browser'
-
     if (project.config.typecheck.enabled) {
       for (const glob of project.config.typecheck.include) {
         if (mm.isMatch(file, glob, { cwd: project.config.root }))
           return 'typescript'
       }
     }
-
+    if (project.config.browser.enabled)
+      return 'browser'
     return project.config.pool
   }
 

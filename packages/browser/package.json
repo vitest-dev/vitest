@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -46,22 +46,21 @@
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
     "dev:node": "rollup -c --watch --watch.include 'src/node/**'",
-    "dev": "rimraf dist && run-p dev:node dev:client",
-    "prepublishOnly": "pnpm build"
+    "dev": "rimraf dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
     "playwright": "*",
-    "vitest": "^1.0.0",
+    "vitest": "workspace:*",
     "webdriverio": "*"
   },
   "peerDependenciesMeta": {
-    "webdriverio": {
+    "playwright": {
       "optional": true
     },
     "safaridriver": {
       "optional": true
     },
-    "playwright": {
+    "webdriverio": {
       "optional": true
     }
   },
@@ -75,12 +74,12 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.22.0",
+    "@wdio/protocols": "^8.29.7",
     "periscopic": "^4.0.2",
     "playwright": "^1.41.0",
     "playwright-core": "^1.41.0",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
-    "webdriverio": "^8.22.1"
+    "webdriverio": "^8.32.2"
   }
 }

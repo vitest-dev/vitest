@@ -19,7 +19,6 @@ All `@vitest/*` sub packages require Vitest version 1.0.
 
 Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
 
-
 1. Quotes are no longer escaped:
 
 ```diff
@@ -43,7 +42,6 @@ There were also [changes](https://github.com/vitest-dev/vitest/pull/4076) to `@v
 - You no longer need to extend `SnapshotClient` just to override `equalityCheck` method: just pass it down as `isEqual` when initiating an instance
 - `client.setTest` was renamed to `client.startCurrentRun`
 - `client.resetCurrent` was renamed to `client.finishCurrentRun`
-
 
 ### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
 
@@ -145,7 +143,6 @@ A few types were removed in favor of Jest-style "Mock" naming.
 `SpyInstance` is deprecated in favor of `MockInstance` and will be removed in the next major release.
 :::
 
-
 ### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
 
 `vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
@@ -187,6 +184,16 @@ If you are only partially mocking a package, you might have previously used Jest
 ```ts
 const { cloneDeep } = jest.requireActual('lodash/cloneDeep') // [!code --]
 const { cloneDeep } = await vi.importActual('lodash/cloneDeep') // [!code ++]
+```
+
+### Accessing the Return Values of a Mocked Promise
+
+Both Jest and Vitest store the results of all mock calls in the [`mock.results`](/api/mock.html#mock-results) array, where the return values of each call are stored in the `value` property.
+However, when mocking or spying on a promise (e.g. using `mockResolvedValue`), in Jest the `value` property will be a promise, while in Vitest, it will become a resolved value when a promise is resolved.
+
+```ts
+await expect(spy.mock.results[0].value).resolves.toBe(123) // [!code --]
+expect(spy.mock.results[0].value).toBe(123) // [!code ++]
 ```
 
 ### Envs

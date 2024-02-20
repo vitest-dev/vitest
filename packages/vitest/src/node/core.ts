@@ -9,6 +9,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
+import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -215,7 +216,7 @@ export class Vitest {
       return [await this.createCoreProject()]
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
-      default: (string | UserWorkspaceConfig)[]
+      default: ReturnType<typeof defineWorkspace>
     }
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default))
@@ -225,10 +226,20 @@ export class Vitest {
     const projectsOptions: UserWorkspaceConfig[] = []
 
     for (const project of workspaceModule.default) {
-      if (typeof project === 'string')
+      if (typeof project === 'string') {
         workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
-      else
-        projectsOptions.push(project)
+      }
+      else if (typeof project === 'function') {
+        projectsOptions.push(await project({
+          command: this.server.config.command,
+          mode: this.server.config.mode,
+          isPreview: false,
+          isSsrBuild: false,
+        }))
+      }
+      else {
+        projectsOptions.push(await project)
+      }
     }
 
     const globOptions: fg.Options = {
@@ -281,6 +292,7 @@ export class Vitest {
       'sequence',
       'testTimeout',
       'pool',
+      'update',
       'globals',
       'expandSnapshotDiff',
       'disableConsoleIntercept',

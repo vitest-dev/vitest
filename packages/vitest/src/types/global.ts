@@ -9,12 +9,22 @@ declare global {
   // eslint-disable-next-line ts/no-namespace
   namespace Chai {
     interface Assertion {
-      containSubset(expected: any): Assertion
+      containSubset: (expected: any) => Assertion
     }
     interface Assert {
-      containSubset(val: any, exp: any, msg?: string): void
+      containSubset: (val: any, exp: any, msg?: string) => void
     }
   }
+}
+
+interface SnapshotMatcher<T> {
+  <U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
+  (message?: string): void
+}
+
+interface InlineSnapshotMatcher<T> {
+  <U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
+  (message?: string): void
 }
 
 declare module '@vitest/expect' {
@@ -24,20 +34,17 @@ declare module '@vitest/expect' {
   }
 
   interface ExpectStatic {
-    addSnapshotSerializer(plugin: PrettyFormatPlugin): void
+    addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
   interface Assertion<T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
-    matchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
-    matchSnapshot(message?: string): void
-    toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
-    toMatchSnapshot(message?: string): void
-    toMatchInlineSnapshot<U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
-    toMatchInlineSnapshot(snapshot?: string, message?: string): void
-    toThrowErrorMatchingSnapshot(message?: string): void
-    toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void
-    toMatchFileSnapshot(filepath: string, message?: string): Promise<void>
+    matchSnapshot: SnapshotMatcher<T>
+    toMatchSnapshot: SnapshotMatcher<T>
+    toMatchInlineSnapshot: InlineSnapshotMatcher<T>
+    toThrowErrorMatchingSnapshot: (message?: string) => void
+    toThrowErrorMatchingInlineSnapshot: (snapshot?: string, message?: string) => void
+    toMatchFileSnapshot: (filepath: string, message?: string) => Promise<void>
   }
 }
 

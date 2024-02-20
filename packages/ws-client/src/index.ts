@@ -14,6 +14,7 @@ export interface VitestClientOptions {
   autoReconnect?: boolean
   reconnectInterval?: number
   reconnectTries?: number
+  connectTimeout?: number
   reactive?: <T>(v: T) => T
   ref?: <T>(v: T) => { value: T }
   WebSocketConstructor?: typeof WebSocket
@@ -23,8 +24,8 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
-  waitForConnection(): Promise<void>
-  reconnect(): Promise<void>
+  waitForConnection: () => Promise<void>
+  reconnect: () => Promise<void>
 }
 
 export function createClient(url: string, options: VitestClientOptions = {}) {
@@ -33,6 +34,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     autoReconnect = true,
     reconnectInterval = 2000,
     reconnectTries = 10,
+    connectTimeout = 60000,
     reactive = v => v,
     WebSocketConstructor = globalThis.WebSocket,
   } = options
@@ -78,6 +80,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     on: fn => (onMessage = fn),
     serialize: stringify,
     deserialize: parse,
+    onTimeoutError(functionName) {
+      throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
+    },
   }
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
@@ -95,10 +100,17 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   }
 
   function registerWS() {
-    openPromise = new Promise((resolve) => {
+    openPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`Cannot connect to the server in ${connectTimeout / 1000} seconds`))
+      }, connectTimeout)?.unref?.()
+      if (ctx.ws.OPEN === ctx.ws.readyState)
+        resolve()
+      // still have a listener even if it's already open to update tries
       ctx.ws.addEventListener('open', () => {
         tries = reconnectTries
         resolve()
+        clearTimeout(timeout)
       })
     })
     ctx.ws.addEventListener('message', (v) => {

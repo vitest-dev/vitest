@@ -9,7 +9,7 @@ export default async function runVitest(moreArgs = []) {
   if (browser !== 'safari')
     argv.push('--browser.headless')
 
-  const { stderr, stdout } = await execa('npx', argv.concat(moreArgs), {
+  const result = execa('npx', argv.concat(moreArgs), {
     env: {
       ...process.env,
       CI: 'true',
@@ -17,10 +17,19 @@ export default async function runVitest(moreArgs = []) {
     },
     reject: false,
   })
+  if (process.env.VITEST_BROWSER_DEBUG) {
+    result.stderr.on('data', (data) => {
+      process.stderr.write(data.toString())
+    })
+    result.stdout.on('data', (data) => {
+      process.stdout.write(data.toString())
+    })
+  }
+  const { stderr, stdout } = await result
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)
 
-  const getPassed = results => results.filter(result => result.status === 'passed')
+  const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
   const getFailed = results => results.filter(result => result.status === 'failed')
 
   const passedTests = getPassed(browserResultJson.testResults)

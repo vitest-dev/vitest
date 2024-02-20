@@ -113,11 +113,11 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
-  getMockName(): string
+  getMockName: () => string
   /**
    * Sets internal mock name. Useful to see the name of the mock if an assertion fails.
    */
-  mockName(n: string): this
+  mockName: (n: string) => this
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
@@ -127,19 +127,19 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * It is useful if you need to clean up mock between different assertions.
    */
-  mockClear(): this
+  mockClear: () => this
   /**
    * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations.
    *
    * This is useful when you want to completely reset a mock to the default state.
    */
-  mockReset(): this
+  mockReset: () => this
   /**
    * Does what `mockReset` does and restores inner implementation to the original function.
    *
    * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
    */
-  mockRestore(): void
+  mockRestore: () => void
   /**
    * Returns current mock implementation if there is one.
    *
@@ -147,14 +147,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
+  getMockImplementation: () => ((...args: TArgs) => TReturns) | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: ((...args: TArgs) => TReturns)): this
+  mockImplementation: (fn: ((...args: TArgs) => TReturns)) => this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -162,7 +162,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: ((...args: TArgs) => TReturns)): this
+  mockImplementationOnce: (fn: ((...args: TArgs) => TReturns)) => this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -174,15 +174,15 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T>(fn: ((...args: TArgs) => TReturns), cb: () => T): T extends Promise<unknown> ? Promise<this> : this
+  withImplementation: <T>(fn: ((...args: TArgs) => TReturns), cb: () => T) => T extends Promise<unknown> ? Promise<this> : this
   /**
    * Use this if you need to return `this` context from the method without invoking actual implementation.
    */
-  mockReturnThis(): this
+  mockReturnThis: () => this
   /**
    * Accepts a value that will be returned whenever the mock function is called.
    */
-  mockReturnValue(obj: TReturns): this
+  mockReturnValue: (obj: TReturns) => this
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
@@ -197,14 +197,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(obj: TReturns): this
+  mockReturnValueOnce: (obj: TReturns) => this
   /**
    * Accepts a value that will be resolved when async function is called.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(obj: Awaited<TReturns>): this
+  mockResolvedValue: (obj: Awaited<TReturns>) => this
   /**
    * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
    * @example
@@ -217,14 +217,14 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(obj: Awaited<TReturns>): this
+  mockResolvedValueOnce: (obj: Awaited<TReturns>) => this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
    * const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
    * await asyncMock() // throws 'Async error'
    */
-  mockRejectedValue(obj: any): this
+  mockRejectedValue: (obj: any) => this
   /**
    * Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
    * @example
@@ -236,7 +236,7 @@ export interface MockInstance<TArgs extends any[] = any[], TReturns = any> {
    * await asyncMock() // first call
    * await asyncMock() // throws "Async error"
    */
-  mockRejectedValueOnce(obj: any): this
+  mockRejectedValueOnce: (obj: any) => this
 }
 
 export interface Mock<TArgs extends any[] = any, TReturns = any> extends MockInstance<TArgs, TReturns> {
@@ -320,8 +320,8 @@ export const mocks = new Set<MockInstance>()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return typeof fn === 'function'
-  && '_isMockFunction' in fn
-  && fn._isMockFunction
+    && '_isMockFunction' in fn
+    && fn._isMockFunction
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(

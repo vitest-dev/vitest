@@ -1,15 +1,13 @@
-export type ChainableFunction<T extends string, Args extends any[], R = any, E = {}> = {
-  (...args: Args): R
+export type ChainableFunction<T extends string, F extends (...args: any) => any, C = {}> = F & {
+  [x in T]: ChainableFunction<T, F, C>
 } & {
-  [x in T]: ChainableFunction<T, Args, R, E>
-} & {
-  fn: (this: Record<T, any>, ...args: Args) => R
-} & E
+  fn: (this: Record<T, any>, ...args: Parameters<F>) => ReturnType<F>
+} & C
 
-export function createChainable<T extends string, Args extends any[], R = any, E = {}>(
+export function createChainable<T extends string, Args extends any[], R = any>(
   keys: T[],
   fn: (this: Record<T, any>, ...args: Args) => R,
-): ChainableFunction<T, Args, R, E> {
+): ChainableFunction<T, (...args: Args) => R> {
   function create(context: Record<T, any>) {
     const chain = function (this: any, ...args: Args) {
       return fn.apply(context, args)

@@ -1,5 +1,5 @@
 import type { MessagePort } from 'node:worker_threads'
-import type { CancelReason, Test } from '@vitest/runner'
+import type { CancelReason, Task } from '@vitest/runner'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
@@ -25,7 +25,7 @@ export interface WorkerGlobalState {
   ctx: ContextRPC
   config: ResolvedConfig
   rpc: WorkerRPC
-  current?: Test
+  current?: Task
   filepath?: string
   environment: Environment
   environmentTeardownRun?: boolean

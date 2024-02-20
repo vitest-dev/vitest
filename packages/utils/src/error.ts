@@ -141,7 +141,7 @@ function isAsymmetricMatcher(data: any) {
 function isReplaceable(obj1: any, obj2: any) {
   const obj1Type = getType(obj1)
   const obj2Type = getType(obj2)
-  return obj1Type === obj2Type && obj1Type === 'Object'
+  return obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
 }
 
 export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakSet(), expectedReplaced = new WeakSet()) {

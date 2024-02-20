@@ -1,8 +1,6 @@
 import type { Browser, LaunchOptions, Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
 
-type Awaitable<T> = T | PromiseLike<T>
-
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = typeof playwrightBrowsers[number]
 
@@ -48,18 +46,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.cachedBrowser = browser
     this.cachedPage = await browser.newPage(this.options?.page)
 
-    this.cachedPage.on('close', () => {
-      browser.close()
-    })
-
     return this.cachedPage
-  }
-
-  catchError(cb: (error: Error) => Awaitable<void>) {
-    this.cachedPage?.on('pageerror', cb)
-    return () => {
-      this.cachedPage?.off('pageerror', cb)
-    }
   }
 
   async openPage(url: string) {

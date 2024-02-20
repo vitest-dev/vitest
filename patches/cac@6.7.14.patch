@@ -1,0 +1,101 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 84dcb6642e6633419d94a81f5764f90d10273cfc..a811fd5e7904a6204a15912ad549eae89ec697e9 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
+ 
+ interface OptionConfig {
+     default?: any;
+-    type?: any[];
++    type?: any;
+ }
+ declare class Option {
+     rawName: string;
+@@ -173,7 +173,7 @@ declare class CAC extends EventEmitter {
+     /**
+      * Parse argv
+      */
+-    parse(argv?: string[], { 
++    parse(argv?: string[], {
+     /** Whether to run the action for matched command */
+     run, }?: {
+         run?: boolean | undefined;
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 7c1c4440c6ed22a3829f828364b06669c56b31c9..3d742db1a0b9c943152464916d7f241b7e1942c3 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -182,25 +182,24 @@ const camelcase = (input) => {
+     return p1 + p2.toUpperCase();
+   });
+ };
+-const setDotProp = (obj, keys, val) => {
++const setDotProp = (obj, keys, val, transforms) => {
+   let i = 0;
+   let length = keys.length;
+   let t = obj;
+   let x;
++  let convertKey = (i) => {
++    let key = keys[i]
++    i--;
++    while(i >= 0) {
++      key = keys[i] + '.' + key;
++      i--;
++    }
++    return key
++  }
+   for (; i < length; ++i) {
+     x = t[keys[i]];
+-    t = t[keys[i]] = i === length - 1 ? val : x != null ? x : !!~keys[i + 1].indexOf(".") || !(+keys[i + 1] > -1) ? {} : [];
+-  }
+-};
+-const setByType = (obj, transforms) => {
+-  for (const key of Object.keys(transforms)) {
+-    const transform = transforms[key];
+-    if (transform.shouldTransform) {
+-      obj[key] = Array.prototype.concat.call([], obj[key]);
+-      if (typeof transform.transformFunction === "function") {
+-        obj[key] = obj[key].map(transform.transformFunction);
+-      }
+-    }
++    const transform = transforms[convertKey(i)] || ((v) => v);
++    t = t[keys[i]] = transform(i === length - 1 ? val : x != null ? x : !!~keys[i + 1].indexOf(".") || !(+keys[i + 1] > -1) ? {} : []);
+   }
+ };
+ const getFileName = (input) => {
+@@ -406,7 +405,11 @@ ${section.body}` : section.body;
+     const {options: parsedOptions, globalCommand} = this.cli;
+     const options = [...globalCommand.options, ...this.options];
+     for (const option of options) {
+-      const value = parsedOptions[option.name.split(".")[0]];
++      // skip dot names because only top level options are required
++      if (option.name.includes('.')) {
++        continue;
++      }
++      const value = parsedOptions[option.name];
+       if (option.required) {
+         const hasNegated = options.some((o) => o.negated && o.names.includes(option.name));
+         if (value === true || value === false && !hasNegated) {
+@@ -571,19 +574,17 @@ class CAC extends EventEmitter {
+           options[name] = cliOption.config.default;
+         }
+       }
+-      if (Array.isArray(cliOption.config.type)) {
++      if (cliOption.config.type != null) {
+         if (transforms[cliOption.name] === void 0) {
+-          transforms[cliOption.name] = Object.create(null);
+-          transforms[cliOption.name]["shouldTransform"] = true;
+-          transforms[cliOption.name]["transformFunction"] = cliOption.config.type[0];
++          transforms[cliOption.name] = cliOption.config.type;
+         }
+       }
+     }
+     for (const key of Object.keys(parsed)) {
+       if (key !== "_") {
+         const keys = key.split(".");
+-        setDotProp(options, keys, parsed[key]);
+-        setByType(options, transforms);
++        setDotProp(options, keys, parsed[key], transforms);
++        // setByType(options, transforms);
+       }
+     }
+     return {

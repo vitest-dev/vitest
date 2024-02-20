@@ -98,17 +98,37 @@ export default withPwa(defineConfig({
       { text: 'Config', link: '/config/', activeMatch: '^/config/' },
       { text: 'Advanced', link: '/advanced/api', activeMatch: '^/advanced/' },
       {
-        text: `v${version}`,
+        text: 'Resources',
         items: [
           {
-            text: 'Release Notes ',
-            link: releases,
+            text: 'Team',
+            link: '/team',
           },
           {
-            text: 'Contributing ',
-            link: contributing,
+            items: [
+              {
+                text: 'X (formerly Twitter)',
+                link: twitter,
+              },
+              {
+                text: 'Discord Chat',
+                link: discord,
+              },
+              {
+                text: 'Releases ',
+                link: releases,
+              },
+              {
+                text: 'Contributing ',
+                link: contributing,
+              },
+            ],
           },
         ],
+      },
+      {
+        text: `v${version}`,
+        link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
       },
     ],
 
@@ -116,7 +136,6 @@ export default withPwa(defineConfig({
       // TODO: bring sidebar of apis and config back
       '/advanced': [
         {
-          text: 'Advanced',
           items: [
             {
               text: 'Vitest Node API',
@@ -141,9 +160,8 @@ export default withPwa(defineConfig({
           ],
         },
       ],
-      '/': [
+      '/guide/': [
         {
-          text: 'Guide',
           items: [
             {
               text: 'Why Vitest',
@@ -239,8 +257,9 @@ export default withPwa(defineConfig({
             },
           ],
         },
+      ],
+      '/api/': [
         {
-          text: 'API',
           items: [
             {
               text: 'Test API Reference',
@@ -268,9 +287,14 @@ export default withPwa(defineConfig({
             },
           ],
         },
+      ],
+      '/config/': [
         {
-          text: 'Config',
           items: [
+            {
+              text: 'Config File',
+              link: '/config/file',
+            },
             {
               text: 'Config Reference',
               link: '/config/',

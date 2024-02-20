@@ -4,28 +4,32 @@ import { Pane, Splitpanes } from 'splitpanes'
 import { coverageUrl, coverageVisible, initializeNavigation } from '../composables/navigation'
 
 const dashboardVisible = initializeNavigation()
-const mainSizes = reactive([33, 67])
-const detailSizes = reactive([33, 67])
+const mainSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-mainSizes', [33, 67], {
+  initOnMounted: true,
+})
+const detailSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-detailSizes', [33, 67], {
+  initOnMounted: true,
+})
 
 const onMainResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
-    mainSizes[i] = e.size
+    mainSizes.value[i] = e.size
   })
 }, 0)
 const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
-    detailSizes[i] = e.size
+    detailSizes.value[i] = e.size
   })
 }, 0)
 
 function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
-  mainSizes[0] = (100 * panelWidth) / width
-  mainSizes[1] = 100 - mainSizes[0]
+  mainSizes.value[0] = (100 * panelWidth) / width
+  mainSizes.value[1] = 100 - mainSizes.value[0]
   // initialize suite width with the same navigation panel width in pixels (adjust its % inside detail's split pane)
-  detailSizes[0] = (100 * panelWidth) / (width - panelWidth)
-  detailSizes[1] = 100 - detailSizes[0]
+  detailSizes.value[0] = (100 * panelWidth) / (width - panelWidth)
+  detailSizes.value[1] = 100 - detailSizes.value[0]
 }
 </script>
 

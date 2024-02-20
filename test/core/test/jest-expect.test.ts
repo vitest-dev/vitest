@@ -9,10 +9,10 @@ class TestError extends Error {}
 
 // For expect.extend
 interface CustomMatchers<R = unknown> {
-  toBeDividedBy(divisor: number): R
-  toBeTestedAsync(): Promise<R>
-  toBeTestedSync(): R
-  toBeTestedPromise(): R
+  toBeDividedBy: (divisor: number) => R
+  toBeTestedAsync: () => Promise<R>
+  toBeTestedSync: () => R
+  toBeTestedPromise: () => R
 }
 
 declare module 'vitest' {
@@ -24,7 +24,7 @@ declare global {
   // eslint-disable-next-line ts/no-namespace
   namespace jest {
     interface Matchers<R> {
-      toBeJestCompatible(): R
+      toBeJestCompatible: () => R
     }
   }
 }

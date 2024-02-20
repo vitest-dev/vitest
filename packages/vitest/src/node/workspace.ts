@@ -70,6 +70,12 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
   browserProvider: BrowserProvider | undefined
 
+  browserState: {
+    files: string[]
+    resolve: () => void
+    reject: (v: unknown) => void
+  } | undefined
+
   testFilesList: string[] | null = null
 
   private _globalSetups: GlobalSetupFile[] | undefined
@@ -352,7 +358,8 @@ export class WorkspaceProject {
         },
       },
       snapshotOptions: {
-        ...this.config.snapshotOptions,
+        ...this.ctx.config.snapshotOptions,
+        expand: this.config.snapshotOptions.expand ?? this.ctx.config.snapshotOptions.expand,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
