@@ -556,9 +556,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Maximum number of concurrent tests in a suite (default: 5)',
     argument: '<number>',
   },
-  clearScreen: {
-    description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
-  },
 
   // CLI only options
   run: {
@@ -572,6 +569,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   color: {
     description: 'Removes colors from the console output',
     alias: 'no-color',
+  },
+  clearScreen: {
+    description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
   },
 
   // disable CLI options
