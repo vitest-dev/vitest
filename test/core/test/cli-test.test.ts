@@ -258,6 +258,7 @@ test('browser by name', () => {
 
 test('clearScreen', async () => {
   const examples = [
+    // vitest cli | vite clearScreen
     ['--clearScreen', undefined],
     ['--clearScreen', true],
     ['--clearScreen', false],
@@ -268,13 +269,15 @@ test('clearScreen', async () => {
     ['', true],
     ['', false],
   ] as const
-  const results = examples.map(async ([vitest, vite]) => {
-    const vitestConfig = getCLIOptions(vitest)
-    const viteConfig = await viteResolveConfig({ configFile: false, clearScreen: vite }, 'serve')
-    const config = resolveConfig('test', vitestConfig, viteConfig)
+  const baseViteConfig = await viteResolveConfig({ configFile: false }, 'serve')
+  const results = examples.map(([vitestClearScreen, viteClearScreen]) => {
+    const config = resolveConfig('test', getCLIOptions(vitestClearScreen), {
+      ...baseViteConfig,
+      clearScreen: viteClearScreen,
+    })
     return config.clearScreen
   })
-  expect(await Promise.all(results)).toMatchInlineSnapshot(`
+  expect(results).toMatchInlineSnapshot(`
     [
       true,
       true,
