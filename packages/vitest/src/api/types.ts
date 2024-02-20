@@ -39,4 +39,5 @@ export interface WebSocketHandlers {
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
   onCancel: (reason: CancelReason) => void
+  onFinishedReportCoverage: () => void
 }

@@ -70,6 +70,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     onFinished(files, errors) {
       handlers.onFinished?.(files, errors)
     },
+    onFinishedReportCoverage() {
+      handlers.onFinishedReportCoverage?.()
+    },
     onCancel(reason: CancelReason) {
       handlers.onCancel?.(reason)
     },
