@@ -301,7 +301,7 @@ export function resolveConfig(
     }
   }
 
-  if (resolved.workspace) {
+  if (typeof resolved.workspace === 'string' && typeof options.workspace === 'string') {
     // if passed down from the CLI and it's relative, resolve relative to CWD
     resolved.workspace = options.workspace && options.workspace[0] === '.'
       ? resolve(process.cwd(), options.workspace)

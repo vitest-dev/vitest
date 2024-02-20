@@ -6,6 +6,7 @@ import type { ViteNodeServerOptions } from 'vite-node'
 import type { BuiltinReporterOptions, BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
+import type { UserConfigWorkspaceDefinition } from '../config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { HappyDOMOptions } from './happy-dom-options'
@@ -345,9 +346,9 @@ export interface InlineConfig {
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
-   * Path to a workspace configuration file
+   * Workspace configuration or a path to a workspace configuration file
    */
-  workspace?: string
+  workspace?: string | UserConfigWorkspaceDefinition[]
 
   /**
    * Update snapshot

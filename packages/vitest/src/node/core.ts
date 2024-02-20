@@ -215,9 +215,11 @@ export class Vitest {
     if (!workspaceConfigPath)
       return [await this.createCoreProject()]
 
-    const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
-      default: ReturnType<typeof defineWorkspace>
-    }
+    const workspaceModule = typeof workspaceConfigPath === 'string'
+      ? await this.runner.executeFile(workspaceConfigPath) as {
+        default: ReturnType<typeof defineWorkspace>
+      }
+      : { default: workspaceConfigPath }
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default))
       throw new Error(`Workspace config file ${workspaceConfigPath} must export a default array of project paths.`)
@@ -309,17 +311,20 @@ export class Vitest {
       return acc
     }, {} as UserConfig)
 
+    const configPath = typeof workspaceConfigPath === 'string'
+      ? workspaceConfigPath
+      : (this.server.config.configFile || this.config.root)
     const projects = filteredWorkspaces.map(async (workspacePath) => {
       // don't start a new server, but reuse existing one
       if (
         this.server.config.configFile === workspacePath
       )
         return this.createCoreProject()
-      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
+      return initializeProject(workspacePath, this, { workspaceConfigPath: configPath, test: cliOverrides })
     })
 
     projectsOptions.forEach((options, index) => {
-      projects.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
+      projects.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath: configPath, test: cliOverrides }) as any))
     })
 
     if (!projects.length)
