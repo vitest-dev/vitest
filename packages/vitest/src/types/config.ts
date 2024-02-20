@@ -783,6 +783,11 @@ export interface UserConfig extends InlineConfig {
    * Additional exclude patterns
    */
   cliExclude?: string[]
+
+  /**
+   * Override vite config's clearScreen from cli
+   */
+  clearScreen?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {

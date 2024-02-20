@@ -54,7 +54,7 @@ export class Logger {
   }
 
   clearFullScreen(message: string) {
-    if (this.ctx.server.config.clearScreen === false) {
+    if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }
@@ -63,7 +63,7 @@ export class Logger {
   }
 
   clearScreen(message: string, force = false) {
-    if (this.ctx.server.config.clearScreen === false) {
+    if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }

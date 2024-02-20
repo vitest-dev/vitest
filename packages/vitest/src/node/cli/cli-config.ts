@@ -556,6 +556,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Maximum number of concurrent tests in a suite (default: 5)',
     argument: '<number>',
   },
+  clearScreen: {
+    description: 'allow/disable clear screen when logging',
+  },
 
   // CLI only options
   run: {
