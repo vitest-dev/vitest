@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { createCLI, normalizeCLI } from '../../../packages/vitest/src/node/cli/cac.js'
+import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 
@@ -254,8 +254,8 @@ test('browser by name', () => {
   expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
 })
 
-test('public normalizeCLI works correctly', () => {
-  expect(normalizeCLI('vitest dev')).toEqual({
+test('public parseCLI works correctly', () => {
+  expect(parseCLI('vitest dev')).toEqual({
     filter: [],
     options: {
       'watch': true,
@@ -263,7 +263,7 @@ test('public normalizeCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(normalizeCLI('vitest watch')).toEqual({
+  expect(parseCLI('vitest watch')).toEqual({
     filter: [],
     options: {
       'watch': true,
@@ -271,7 +271,7 @@ test('public normalizeCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(normalizeCLI('vitest run')).toEqual({
+  expect(parseCLI('vitest run')).toEqual({
     filter: [],
     options: {
       'run': true,
@@ -279,7 +279,7 @@ test('public normalizeCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(normalizeCLI('vitest related ./some-files.js')).toEqual({
+  expect(parseCLI('vitest related ./some-files.js')).toEqual({
     filter: [],
     options: {
       'passWithNoTests': true,
@@ -289,7 +289,7 @@ test('public normalizeCLI works correctly', () => {
     },
   })
 
-  expect(normalizeCLI('vitest --coverage --browser=chrome')).toEqual({
+  expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
     filter: [],
     options: {
       'coverage': { enabled: true },
@@ -299,7 +299,7 @@ test('public normalizeCLI works correctly', () => {
     },
   })
 
-  expect(normalizeCLI('vitest ./tests.js --coverage')).toEqual({
+  expect(parseCLI('vitest ./tests.js --coverage')).toEqual({
     filter: ['./tests.js'],
     options: {
       'coverage': { enabled: true },
@@ -308,7 +308,7 @@ test('public normalizeCLI works correctly', () => {
     },
   })
 
-  expect(normalizeCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
+  expect(parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
     filter: ['./tests.js'],
     options: {
       'coverage': { enabled: true },
@@ -319,6 +319,6 @@ test('public normalizeCLI works correctly', () => {
   })
 
   expect(() => {
-    normalizeCLI('node --test --coverage --browser --typecheck')
+    parseCLI('node --test --coverage --browser --typecheck')
   }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
 })

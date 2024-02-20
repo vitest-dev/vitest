@@ -178,7 +178,7 @@ export function createCLI(options: CLIOptions = {}) {
   return cli
 }
 
-export function normalizeCLI(argv: string | string[], config: CLIOptions = {}): {
+export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
