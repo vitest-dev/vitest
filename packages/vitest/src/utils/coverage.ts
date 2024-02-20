@@ -18,14 +18,15 @@ export class BaseCoverageProvider {
   /**
    * Check if current coverage is above configured thresholds and bump the thresholds if needed
    */
-  updateThresholds({ thresholds: allThresholds, perFile, configurationFile }: {
+  updateThresholds({ thresholds: allThresholds, perFile, configurationFile, onUpdate }: {
     thresholds: ResolvedThreshold[]
     perFile?: boolean
-    configurationFile: { read: () => unknown; write: () => void }
+    configurationFile: unknown // ProxifiedModule from magicast
+    onUpdate: () => void
   }) {
     let updatedThresholds = false
 
-    const config = configurationFile.read()
+    const config = resolveConfig(configurationFile)
     assertConfigurationModule(config)
 
     for (const { coverageMap, thresholds, name } of allThresholds) {
@@ -63,7 +64,7 @@ export class BaseCoverageProvider {
     if (updatedThresholds) {
       // eslint-disable-next-line no-console
       console.log('Updating thresholds to configuration file. You may want to push with updated coverage thresholds.')
-      configurationFile.write()
+      onUpdate()
     }
   }
 
@@ -200,6 +201,30 @@ export class BaseCoverageProvider {
 
     return resolvedReporters
   }
+
+  hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']) {
+    return reporters.some(([reporter]) =>
+      reporter === 'text'
+      || reporter === 'text-summary'
+      || reporter === 'text-lcov'
+      || reporter === 'teamcity')
+  }
+
+  toSlices<T>(array: T[], size: number): T[][] {
+    return array.reduce<T[][]>((chunks, item) => {
+      const index = Math.max(0, chunks.length - 1)
+      const lastChunk = chunks[index] || []
+      chunks[index] = lastChunk
+
+      if (lastChunk.length >= size)
+        chunks.push([item])
+
+      else
+        lastChunk.push(item)
+
+      return chunks
+    }, [])
+  }
 }
 
 /**
@@ -227,4 +252,30 @@ function assertConfigurationModule(config: unknown): asserts config is { test: {
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Unable to parse thresholds from configuration file: ${message}`)
   }
+}
+
+function resolveConfig(configModule: any) {
+  const mod = configModule.exports.default
+
+  try {
+    // Check for "export default { test: {...} }"
+    if (mod.$type === 'object')
+      return mod
+
+    if (mod.$type === 'function-call') {
+      // "export default defineConfig({ test: {...} })"
+      if (mod.$args[0].$type === 'object')
+        return mod.$args[0]
+
+      // "export default defineConfig(() => ({ test: {...} }))"
+      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
+        return mod.$args[0].$body
+    }
+  }
+  catch (error) {
+    // Reduce magicast's verbose errors to readable ones
+    throw new Error(error instanceof Error ? error.message : String(error))
+  }
+
+  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
 }

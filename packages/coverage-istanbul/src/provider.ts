@@ -4,7 +4,6 @@ import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, Repo
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
-import type { ProxifiedModule } from 'magicast'
 import { parseModule } from 'magicast'
 import createDebug from 'debug'
 import libReport from 'istanbul-lib-report'
@@ -172,7 +171,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       for (const filenames of [coveragePerProject.ssr, coveragePerProject.web]) {
         const coverageMapByTransformMode = libCoverage.createCoverageMap({})
 
-        for (const chunk of toSlices(filenames, this.options.processingConcurrency)) {
+        for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (debug.enabled) {
             index += chunk.length
             debug('Covered files %d/%d', index, total)
@@ -206,7 +205,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       watermarks: this.options.watermarks,
     })
 
-    if (hasTerminalReporter(this.options.reporter))
+    if (this.hasTerminalReporter(this.options.reporter))
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
@@ -240,10 +239,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         this.updateThresholds({
           thresholds: resolvedThresholds,
           perFile: this.options.thresholds.perFile,
-          configurationFile: {
-            write: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
-            read: () => resolveConfig(configModule),
-          },
+          configurationFile: configModule,
+          onUpdate: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
         })
       }
     }
@@ -337,54 +334,4 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
-}
-
-function hasTerminalReporter(reporters: Options['reporter']) {
-  return reporters.some(([reporter]) =>
-    reporter === 'text'
-    || reporter === 'text-summary'
-    || reporter === 'text-lcov'
-    || reporter === 'teamcity')
-}
-
-function toSlices<T>(array: T[], size: number): T[][] {
-  return array.reduce<T[][]>((chunks, item) => {
-    const index = Math.max(0, chunks.length - 1)
-    const lastChunk = chunks[index] || []
-    chunks[index] = lastChunk
-
-    if (lastChunk.length >= size)
-      chunks.push([item])
-
-    else
-      lastChunk.push(item)
-
-    return chunks
-  }, [])
-}
-
-function resolveConfig(configModule: ProxifiedModule<any>) {
-  const mod = configModule.exports.default
-
-  try {
-    // Check for "export default { test: {...} }"
-    if (mod.$type === 'object')
-      return mod
-
-    if (mod.$type === 'function-call') {
-      // "export default defineConfig({ test: {...} })"
-      if (mod.$args[0].$type === 'object')
-        return mod.$args[0]
-
-      // "export default defineConfig(() => ({ test: {...} }))"
-      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
-        return mod.$args[0].$body
-    }
-  }
-  catch (error) {
-    // Reduce magicast's verbose errors to readable ones
-    throw new Error(error instanceof Error ? error.message : String(error))
-  }
-
-  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
 }
