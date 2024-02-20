@@ -133,7 +133,7 @@ test('async callback', () => {
 })
 ```
 
-Note that this method takes precedence over the [`mockImplementationOnce`](https://vitest.dev/api/mock.html#mockimplementationonce).
+Note that this method takes precedence over the [`mockImplementationOnce`](#mockimplementationonce).
 
 ## mockRejectedValue
 
@@ -179,7 +179,7 @@ Does what `mockReset` does and restores inner implementation to the original fun
 
 Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
 
-If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoreMocks) setting in config.
+If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoremocks) setting in config.
 
 ## mockResolvedValue
 

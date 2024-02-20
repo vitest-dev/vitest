@@ -87,7 +87,7 @@ export default defineBuildConfig({
 })
 ```
 
-Learn more: <a href="https://github.com/unjs/unbuild" target="_blank">unbuild</a>
+Learn more: [unbuild](https://github.com/unjs/unbuild)
 
 </details>
 
@@ -108,7 +108,7 @@ export default {
 }
 ```
 
-Learn more: <a href="https://rollupjs.org/" target="_blank">Rollup</a>
+Learn more: [Rollup](https://rollupjs.org/)
 
 </details>
 
