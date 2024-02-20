@@ -32,9 +32,9 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-By default Vitest runs test files in multiple threads using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If your tests are running code that is not compatible with multi-threading, you can switch to [`--pool=forks`](/config/#pool-1-0-0) which runs tests in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via Tinypool.
+By default Vitest runs test files in multiple threads using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If your tests are running code that is not compatible with multi-threading, you can switch to [`--pool=forks`](/config/#pool) which runs tests in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via Tinypool.
 
-To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions-1-0-0).
+To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions).
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
@@ -42,7 +42,7 @@ Vitest also isolates each file's environment so env mutations in one file don't 
 
 Vitest provided many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
 
-Learn more about [Test Filtering](./filtering.md).
+Learn more about [Test Filtering](/guide/filtering).
 
 ## Running Tests Concurrently
 
@@ -75,7 +75,7 @@ describe.concurrent('suite', () => {
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
 
 ::: warning
-When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
 :::
 
 ## Snapshot
@@ -185,7 +185,7 @@ if (import.meta.vitest) {
 
 Learn more at [In-source testing](/guide/in-source).
 
-## Benchmarking <Badge type="warning">Experimental</Badge>
+## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
 Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
 function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
@@ -210,7 +210,7 @@ describe('sort', () => {
 })
 ```
 
-## Type Testing <Badge type="warning">Experimental</Badge>
+## Type Testing <Badge type="warning">Experimental</Badge> {#type-testing}
 
 Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 

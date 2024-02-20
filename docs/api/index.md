@@ -82,7 +82,7 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend <Badge type="info">0.32.3+</Badge>
+### test.extend <Badge type="info">0.32.3+</Badge> {#test-extended}
 
 - **Alias:** `it.extend`
 
@@ -693,7 +693,7 @@ describe.only.concurrent(/* ... */) // or describe.concurrent.only(/* ... */)
 describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
 ```
 
-When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
 
 ```ts
 describe.concurrent('suite', () => {
@@ -871,7 +871,7 @@ afterEach(async () => {
 Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
 ::: tip
-Vitest 1.3.0 added [`onTestFinished`](##ontestfinished-1-3-0) hook. You can call it during the test execution to cleanup any state after the test has finished running.
+Vitest 1.3.0 added [`onTestFinished`](#ontestfinished) hook. You can call it during the test execution to cleanup any state after the test has finished running.
 :::
 
 ### beforeAll
@@ -936,7 +936,7 @@ Vitest provides a few hooks that you can call _during_ the test execution to cle
 These hooks will throw an error if they are called outside of the test body.
 :::
 
-### onTestFinished <Badge type="info">1.3.0+</Badge>
+### onTestFinished <Badge type="info">1.3.0+</Badge> {#ontestfinished}
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 

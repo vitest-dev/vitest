@@ -8,7 +8,7 @@ title: Getting Started | Guide
 
 Vitest is a next generation testing framework powered by Vite.
 
-You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
+You can learn more about the rationale behind the project in the [Why Vitest](/guide/why) section.
 
 ## Trying Vitest Online
 
@@ -209,7 +209,7 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 To run tests once without watching for file changes, use `vitest run`.
 You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
 
-Learn more about the [Command Line Interface](./cli.md)
+Learn more about the [Command Line Interface](/guide/cli)
 
 ## IDE Integrations
 
@@ -217,7 +217,7 @@ We also provided a official extension for Visual Studio Code to enhance your tes
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
 
-Learn more about [IDE Integrations](./ide.md)
+Learn more about [IDE Integrations](/guide/ide)
 
 ## Examples
 

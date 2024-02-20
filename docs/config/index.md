@@ -55,7 +55,7 @@ Include globs for in-source test files.
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-### server <Badge type="info">0.34.0+</Badge>
+### server <Badge type="info">0.34.0+</Badge> {#server}
 
 - **Type:** `{ sourcemap?, deps?, ... }`
 
@@ -134,7 +134,7 @@ Directory to save cache files.
 
 Handling for dependencies resolution.
 
-#### deps.optimizer <Badge type="info">0.34.0+</Badge>
+#### deps.optimizer <Badge type="info">0.34.0+</Badge> {#deps-optimizer}
 
 - **Type:** `{ ssr?, web? }`
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
@@ -148,7 +148,7 @@ When Vitest encounters the external library listed in `include`, it will be bund
 - Your `alias` configuration is now respected inside bundled packages
 - Code in your tests is running closer to how it's running in the browser
 
-Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#transformmode).
+Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#testtransformmode).
 
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
@@ -167,7 +167,7 @@ Enable dependency optimization.
 This option only works with Vite 4.3.2 and higher.
 :::
 
-#### deps.web <Badge type="info">0.34.2+</Badge>
+#### deps.web <Badge type="info">0.34.2+</Badge> {#deps-web}
 
 - **Type:** `{ transformAssets?, ... }`
 
@@ -185,7 +185,7 @@ Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like
 This module will have a default export equal to the path to the asset, if no query is specified.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
 #### deps.web.transformCss
@@ -198,7 +198,7 @@ Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like 
 If CSS files are disabled with [`css`](#css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
 #### deps.web.transformGlobPattern
@@ -211,7 +211,7 @@ Regexp pattern to match external files that should be transformed.
 By default, files inside `node_modules` are externalized and not transformed, unless it's CSS or an asset, and corresponding option is not disabled.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmForks) pools.
+At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
 #### deps.interopDefault
@@ -242,7 +242,7 @@ By default, Vitest assumes you are using a bundler to bypass this and will not f
 - **Type:** `string[]`
 - **Default**: `['node_modules']`
 
-A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/#root) of the project.
+A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](#root) of the project.
 
 This option will also affect if a file should be treated as a module when externalizing dependencies. By default, Vitest imports external modules with native Node.js bypassing Vite transformation step.
 
@@ -417,7 +417,7 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--isolate=false`](#isolate-1-1-0) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped, but is still running sequentially.
+If you are running Vitest with [`--isolate=false`](#isolate) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped, but is still running sequentially.
 
 Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
 
@@ -484,7 +484,7 @@ export default defineConfig({
 })
 ```
 
-### poolMatchGlobs <Badge type="info">0.29.4+</Badge>
+### poolMatchGlobs <Badge type="info">0.29.4+</Badge> {#poolmatchglobs}
 
 - **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
 - **Default:** `[]`
@@ -549,7 +549,7 @@ Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter in
 Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
-### pool<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
+### pool<NonProjectOption /> <Badge type="info">1.0.0+</Badge> {#pool}
 
 - **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`
 - **Default:** `'threads'`
@@ -595,7 +595,7 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 
 Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
-### poolOptions<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
+### poolOptions<NonProjectOption /> <Badge type="info">1.0.0+</Badge> {#pooloptions}
 
 - **Type:** `Record<'threads' | 'forks' | 'vmThreads' | 'vmForks', {}>`
 - **Default:** `{}`
@@ -637,7 +637,7 @@ Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment var
 - **Type:** `boolean`
 - **Default:** `false`
 
-Run all tests with the same environment inside a single worker thread. This will disable built-in module isolation (your source code or [inlined](#deps-inline) code will still be reevaluated for each test), but can improve test performance.
+Run all tests with the same environment inside a single worker thread. This will disable built-in module isolation (your source code or [inlined](#server-deps-inline) code will still be reevaluated for each test), but can improve test performance.
 
 :::warning
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
@@ -716,7 +716,7 @@ Isolate environment for each test file.
 - **Type:** `boolean`
 - **Default:** `false`
 
-Run all tests with the same environment inside a single child process. This will disable built-in module isolation (your source code or [inlined](#deps-inline) code will still be reevaluated for each test), but can improve test performance.
+Run all tests with the same environment inside a single child process. This will disable built-in module isolation (your source code or [inlined](#server-deps-inline) code will still be reevaluated for each test), but can improve test performance.
 
 :::warning
 Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses child processes not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
@@ -866,7 +866,7 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-### fileParallelism <Badge type="info">1.1.0+</Badge>
+### fileParallelism <Badge type="info">1.1.0+</Badge> {#fileparallelism}
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -878,13 +878,13 @@ Should all test files run in parallel. Setting this to `false` will override `ma
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
 :::
 
-### maxWorkers <Badge type="info">1.1.0+</Badge>
+### maxWorkers <Badge type="info">1.1.0+</Badge> {#maxworkers}
 
 - **Type:** `number`
 
 Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
 
-### minWorkers <Badge type="info">1.1.0+</Badge>
+### minWorkers <Badge type="info">1.1.0+</Badge> {#minworkers}
 
 - **Type:** `number`
 
@@ -935,7 +935,7 @@ Changing setup files will trigger rerun of all tests.
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads.
 
 :::tip
-Note, that if you are running [`--isolate=false`](#isolate-1-1-0), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--isolate=false`](#isolate), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
 :::
 
 For example, you may rely on a global variable:
@@ -1185,7 +1185,7 @@ Since Vitest 1.2.0, you can also pass custom coverage reporters. See [Guide - Cu
 
 Since Vitest 0.31.0, you can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
-#### coverage.reportOnFailure <Badge type="info">0.31.2+</Badge>
+#### coverage.reportOnFailure <Badge type="info">0.31.2+</Badge> {#coverage-reportonfailure}
 
 - **Type:** `boolean`
 - **Default:** `false` (since Vitest `0.34.0`)
@@ -1201,7 +1201,7 @@ Generate coverage report even when tests fail.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
-Collect coverage of files outside the [project `root`](https://vitest.dev/config/#root).
+Collect coverage of files outside the [project `root`](#root).
 
 #### coverage.skipFull
 
@@ -1410,13 +1410,13 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
-### browser <Badge type="info">0.29.4+</Badge>
+### browser <Badge type="info">0.29.4+</Badge> {#browser}
 
 - **Type:** `{ enabled?, name?, provider?, headless?, api?, slowHijackESM? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
-Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](/config/#browser-provider) option.
+Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](#browser-provider) option.
 
 ::: tip NOTE
 Read more about testing in a real browser in the [guide page](/guide/browser).
@@ -1432,7 +1432,7 @@ This is an experimental feature. Breaking changes might not follow SemVer, pleas
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser.enabled=false`
 
-Run all tests inside a browser by default. Can be overridden with [`poolMatchGlobs`](/config/#poolmatchglobs) option.
+Run all tests inside a browser by default. Can be overridden with [`poolMatchGlobs`](#poolmatchglobs) option.
 
 #### browser&#46;name
 
@@ -1461,10 +1461,10 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
-### browser.fileParallelism <Badge type="info">1.3.0+</Badge>
+### browser.fileParallelism <Badge type="info">1.3.0+</Badge> {#browser-fileparallelism}
 
 - **Type:** `boolean`
-- **Default:** the same as [`fileParallelism`](#fileparallelism-110)
+- **Default:** the same as [`fileParallelism`](#fileparallelism)
 - **CLI:** `--browser.fileParallelism=false`
 
 Create all test iframes at the same time so they are running in parallel.
@@ -1472,7 +1472,7 @@ Create all test iframes at the same time so they are running in parallel.
 This makes it impossible to use interactive APIs (like clicking or hovering) because there are several iframes on the screen at the same time, but if your tests don't rely on those APIs, it might be much faster to just run all of them at the same time.
 
 ::: tip
-If you disabled isolation via [`browser.isolate=false`](#browserisolate), your test files will still run one after another because of the nature of the test runner.
+If you disabled isolation via [`browser.isolate=false`](#browser-isolate), your test files will still run one after another because of the nature of the test runner.
 :::
 
 #### browser.api
@@ -1481,7 +1481,7 @@ If you disabled isolation via [`browser.isolate=false`](#browserisolate), your t
 - **Default:** `63315`
 - **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
 
-Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](/config/#api) option.
+Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option.
 
 #### browser.provider
 
@@ -1502,10 +1502,10 @@ export interface BrowserProvider {
 ```
 
 ::: warning
-This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
+This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](#browser) option.
 :::
 
-#### browser.providerOptions <Badge type="info">1.0.0+</Badge>
+#### browser.providerOptions <Badge type="info">1.0.0+</Badge> {#browser-provideroptions}
 
 - **Type:** `BrowserProviderOptions`
 
@@ -1540,7 +1540,7 @@ To have a better type safety when using built-in providers, you can add one of t
 ```
 :::
 
-#### browser.slowHijackESM <Badge type="info">0.31.0+</Badge>
+#### browser.slowHijackESM <Badge type="info">0.31.0+</Badge> {#browser-slowhijackesm}
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -1572,21 +1572,21 @@ Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. T
 
 Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
-### unstubEnvs <Badge type="info">0.26.0+</Badge>
+### unstubEnvs <Badge type="info">0.26.0+</Badge> {#unstubenvs}
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
-### unstubGlobals <Badge type="info">0.26.0+</Badge>
+### unstubGlobals <Badge type="info">0.26.0+</Badge> {#unstubglobals}
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### testTransformMode <Badge type="info">0.34.0+</Badge>
+### testTransformMode <Badge type="info">0.34.0+</Badge> {#testtransformmode}
 
  - **Type:** `{ web?, ssr? }`
 
@@ -1617,10 +1617,10 @@ Format options for snapshot testing. These options are passed down to [`pretty-f
 ::: tip
 Beware that `plugins` field on this object will be ignored.
 
-If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API or [snapshotSerializers](#snapshotserializers-1-3-0) option.
+If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API or [snapshotSerializers](#snapshotserializers) option.
 :::
 
-### snapshotSerializers<NonProjectOption /> <Badge type="info">1.3.0+</Badge>
+### snapshotSerializers<NonProjectOption /> <Badge type="info">1.3.0+</Badge> {#snapshotserializers}
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -1776,7 +1776,7 @@ If you want tests to run randomly, you can enable it with this option, or CLI ar
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 
-#### sequence.concurrent <Badge type="info">0.32.2+</Badge>
+#### sequence.concurrent <Badge type="info">0.32.2+</Badge> {#sequence-concurrent}
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -1804,7 +1804,7 @@ Changes the order in which hooks are executed.
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
-#### sequence.setupFiles <Badge type="info">0.29.3+</Badge>
+#### sequence.setupFiles <Badge type="info">0.29.3+</Badge> {#sequence-setupfiles}
 
 - **Type**: `'list' | 'parallel'`
 - **Default**: `'parallel'`
@@ -1819,7 +1819,7 @@ Changes the order in which setup files are executed.
 
 Options for configuring [typechecking](/guide/testing-types) test environment.
 
-#### typecheck.enabled <Badge type="info">1.0.0+</Badge>
+#### typecheck.enabled <Badge type="info">1.0.0+</Badge> {#typecheck-enabled}
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -1827,7 +1827,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 Enable typechecking alongside your regular tests.
 
-#### typecheck.only <Badge type="info">1.0.0+</Badge>
+#### typecheck.only <Badge type="info">1.0.0+</Badge> {#typecheck-only}
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -1894,7 +1894,7 @@ Path to custom tsconfig, relative to the project root.
 
 The number of milliseconds after which a test is considered slow and reported as such in the results.
 
-### chaiConfig <Badge type="info">0.30.0+</Badge>
+### chaiConfig <Badge type="info">0.30.0+</Badge> {#chaiconfig}
 
 - **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`
 - **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40 }`
@@ -1924,7 +1924,7 @@ Sets length threshold for actual and expected values in assertion errors. If thi
 
 This config option affects truncating values in `test.each` titles and inside the assertion error message.
 
-### bail <Badge type="info">0.31.0+</Badge>
+### bail <Badge type="info">0.31.0+</Badge> {#bail}
 
 - **Type:** `number`
 - **Default:** `0`
@@ -1934,7 +1934,7 @@ Stop test execution when given number of tests have failed.
 
 By default Vitest will run all of your test cases even if some of them fail. This may not be desired for CI builds where you are only interested in 100% successful builds and would like to stop test execution as early as possible when test failures occur. The `bail` option can be used to speed up CI runs by preventing it from running more tests when failures have occurred.
 
-### retry <Badge type="info">0.32.3+</Badge>
+### retry <Badge type="info">0.32.3+</Badge> {#retry}
 
 - **Type:** `number`
 - **Default:** `0`
@@ -1963,7 +1963,7 @@ export default defineConfig({
 })
 ```
 
-### onStackTrace<NonProjectOption /> <Badge type="info">1.0.0+</Badge>
+### onStackTrace<NonProjectOption /> <Badge type="info">1.0.0+</Badge> {#onstacktrace}
 
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
 
@@ -1990,7 +1990,7 @@ export default defineConfig({
 })
 ```
 
-### diff <Badge type="info">0.34.5+</Badge>
+### diff <Badge type="info">0.34.5+</Badge> {#diff}
 
 - **Type:** `string`
 - **CLI:** `--diff=<value>`
@@ -2071,7 +2071,7 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
-### workspace<NonProjectOption /> <Badge type="info">1.1.0+</Badge>
+### workspace<NonProjectOption /> <Badge type="info">1.1.0+</Badge> {#workspace}
 
 - **Type:** `string`
 - **CLI:** `--workspace=./file.js`
@@ -2079,7 +2079,7 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
-### isolate <Badge type="info">1.1.0+</Badge>
+### isolate <Badge type="info">1.1.0+</Badge> {#isolate}
 
 - **Type:** `boolean`
 - **Default:** `true`

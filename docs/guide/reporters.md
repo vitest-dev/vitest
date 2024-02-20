@@ -444,7 +444,7 @@ export default defineConfig({
 ```
 :::
 
-### Github Actions Reporter <Badge type="info">1.3.0+</Badge>
+### Github Actions Reporter <Badge type="info">1.3.0+</Badge> {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
 to provide annotations for test failures. This reporter is automatically enabled with a [`default`](#default-reporter) reporter when `process.env.GITHUB_ACTIONS === 'true'`.
