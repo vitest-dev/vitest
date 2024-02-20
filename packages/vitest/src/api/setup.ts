@@ -162,7 +162,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onCancel'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
         onTimeoutError(functionName) {
@@ -223,6 +223,12 @@ class WebSocketReporter implements Reporter {
   onFinished(files?: File[], errors?: unknown[]) {
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors)
+    })
+  }
+
+  onFinishedReportCoverage() {
+    this.clients.forEach((client) => {
+      client.onFinishedReportCoverage?.()
     })
   }
 

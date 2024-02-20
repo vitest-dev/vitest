@@ -37,6 +37,6 @@ export interface WebSocketHandlers {
   debug: (...args: string[]) => void
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onFinishedReportCoverage' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
   onCancel: (reason: CancelReason) => void
 }
