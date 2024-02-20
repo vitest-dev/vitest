@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
+import { resolveConfig as viteResolveConfig } from 'vite'
 import { createCLI } from '../../../packages/vitest/src/node/cli/cac.js'
+import { resolveConfig } from '../../../packages/vitest/src/node/config.js'
 
 const vitestCli = createCLI()
 
@@ -252,4 +254,37 @@ test('browser by name', () => {
 
   expect(args).toEqual([])
   expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
+})
+
+test('clearScreen', async () => {
+  const examples = [
+    ['--clearScreen', undefined],
+    ['--clearScreen', true],
+    ['--clearScreen', false],
+    ['--no-clearScreen', undefined],
+    ['--no-clearScreen', true],
+    ['--no-clearScreen', false],
+    ['', undefined],
+    ['', true],
+    ['', false],
+  ] as const
+  const results = examples.map(async ([vitest, vite]) => {
+    const vitestConfig = getCLIOptions(vitest)
+    const viteConfig = await viteResolveConfig({ configFile: false, clearScreen: vite }, 'serve')
+    const config = resolveConfig('test', vitestConfig, viteConfig)
+    return config.clearScreen
+  })
+  expect(await Promise.all(results)).toMatchInlineSnapshot(`
+    [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+    ]
+  `)
 })
