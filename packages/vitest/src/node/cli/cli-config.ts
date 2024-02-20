@@ -557,7 +557,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<number>',
   },
   clearScreen: {
-    description: 'allow/disable clear screen when logging',
+    description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
   },
 
   // CLI only options

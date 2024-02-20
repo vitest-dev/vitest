@@ -103,6 +103,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--exclude <glob>` | Additional file globs to be excluded from test |
 | `--expand-snapshot-diff` | Show full diff when snapshot fails |
 | `--disable-console-intercept` | Disable automatic interception of console logging (default: `false`) |
+| `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
 | `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
 | `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
