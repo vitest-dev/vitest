@@ -183,7 +183,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
   ctx.reporters.push(new WebSocketReporter(ctx, wss, clients))
 }
 
-class WebSocketReporter implements Reporter {
+export class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
