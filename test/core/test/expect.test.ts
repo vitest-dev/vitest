@@ -1,6 +1,7 @@
+import nodeAssert from 'node:assert'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -269,5 +270,114 @@ describe('recursive custom equality tester', () => {
     expect(mockFn).toHaveReturnedWith([person1, person2])
     expect(mockFn).toHaveLastReturnedWith([person1, person2])
     expect(mockFn).toHaveNthReturnedWith(1, [person1, person2])
+  })
+})
+
+describe('Error equality', () => {
+  class MyError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  class YourError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  const strictErrorTester: Tester = function (a: unknown, b: unknown, customTesters) {
+    // const a instanceof Error && b instanceof Error
+    const aOk = a instanceof Error
+    const bOk = b instanceof Error
+    if (aOk && bOk) {
+      // cf. assert.deepStrictEqual https://nodejs.org/api/assert.html#comparison-details_1
+      // > [[Prototype]] of objects are compared using the === operator.
+      // > Only enumerable "own" properties are considered.
+      // > Error names and messages are always compared, even if these are not enumerable properties.
+      return (
+        Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+        && a.name === b.name
+        && a.message === b.message
+        && this.equals({ ...a }, { ...b }, customTesters)
+      )
+    }
+    return aOk !== bOk ? false : undefined
+  }
+
+  test('basic', () => {
+    {
+      // different custom property
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hi', 'b')
+      expect(e1).toEqual(e2)
+      expect(e1).toStrictEqual(e2)
+      assert.deepEqual(e1, e2)
+      nodeAssert.notDeepStrictEqual(e1, e2)
+    }
+
+    {
+      // different message
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hello', 'a')
+      expect(e1).not.toEqual(e2)
+      expect(e1).not.toStrictEqual(e2)
+      assert.notDeepEqual(e1, e2)
+      nodeAssert.notDeepStrictEqual(e1, e2)
+    }
+
+    {
+      // different class
+      const e1 = new MyError('hello', 'a')
+      const e2 = new YourError('hello', 'a')
+      expect(e1).toEqual(e2)
+      expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+      assert.deepEqual(e1, e2)
+      nodeAssert.notDeepStrictEqual(e1, e2)
+    }
+
+    {
+      // same
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hi', 'a')
+      expect(e1).toEqual(e2)
+      expect(e1).toStrictEqual(e2)
+      assert.deepEqual(e1, e2)
+      nodeAssert.deepStrictEqual(e1, e2)
+    }
+
+    expect.addEqualityTesters([strictErrorTester])
+
+    {
+      // different custom property
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hi', 'b')
+      expect(e1).not.toEqual(e2) // changed
+      expect(e1).not.toStrictEqual(e2) // changed
+    }
+
+    {
+      // different message
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hello', 'a')
+      expect(e1).not.toEqual(e2)
+      expect(e1).not.toStrictEqual(e2)
+    }
+
+    {
+      // different class
+      const e1 = new MyError('hello', 'a')
+      const e2 = new YourError('hello', 'a')
+      expect(e1).not.toEqual(e2) // changed
+      expect(e1).not.toStrictEqual(e2)
+    }
+
+    {
+      // same
+      const e1 = new MyError('hi', 'a')
+      const e2 = new MyError('hi', 'a')
+      expect(e1).toEqual(e2)
+      expect(e1).toStrictEqual(e2)
+    }
   })
 })
