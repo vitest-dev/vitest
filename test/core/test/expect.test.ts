@@ -287,7 +287,6 @@ describe('Error equality', () => {
   }
 
   const strictErrorTester: Tester = function (a: unknown, b: unknown, customTesters) {
-    // const a instanceof Error && b instanceof Error
     const aOk = a instanceof Error
     const bOk = b instanceof Error
     if (aOk && bOk) {
