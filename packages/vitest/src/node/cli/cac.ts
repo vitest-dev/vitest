@@ -54,7 +54,11 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
   }
 }
 
-export function createCLI() {
+interface CLIOptions {
+  allowUnknownOptions?: boolean
+}
+
+export function createCLI(options: CLIOptions = {}) {
   const cli = cac('vitest')
 
   cli
@@ -141,23 +145,23 @@ export function createCLI() {
   })
 
   cli
-    .command('run [...filters]')
+    .command('run [...filters]', undefined, options)
     .action(run)
 
   cli
-    .command('related [...filters]')
+    .command('related [...filters]', undefined, options)
     .action(runRelated)
 
   cli
-    .command('watch [...filters]')
+    .command('watch [...filters]', undefined, options)
     .action(watch)
 
   cli
-    .command('dev [...filters]')
+    .command('dev [...filters]', undefined, options)
     .action(watch)
 
   cli
-    .command('bench [...filters]')
+    .command('bench [...filters]', undefined, options)
     .action(benchmark)
 
   // TODO: remove in Vitest 2.0
@@ -168,10 +172,37 @@ export function createCLI() {
     })
 
   cli
-    .command('[...filters]')
+    .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
   return cli
+}
+
+export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
+  filter: string[]
+  options: CliOptions
+} {
+  const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
+  if (arrayArgs[0] !== 'vitest')
+    throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
+  arrayArgs[0] = '/index.js'
+  arrayArgs.unshift('node')
+  let { args, options } = createCLI(config).parse(arrayArgs, {
+    run: false,
+  })
+  if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev')
+    options.watch = true
+  if (arrayArgs[2] === 'run')
+    options.run = true
+  if (arrayArgs[2] === 'related') {
+    options.related = args
+    options.passWithNoTests ??= true
+    args = []
+  }
+  return {
+    filter: args as string[],
+    options,
+  }
 }
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {

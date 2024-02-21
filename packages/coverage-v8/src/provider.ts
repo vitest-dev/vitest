@@ -9,7 +9,6 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import MagicString from 'magic-string'
-import type { ProxifiedModule } from 'magicast'
 import { parseModule } from 'magicast'
 import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
@@ -52,6 +51,7 @@ const WRAPPER_LENGTH = 185
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
+const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes"(\s|.)+?]\),/g
 const DEFAULT_PROJECT = Symbol.for('default-project')
 
 const debug = createDebug('vitest:coverage')
@@ -162,7 +162,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       for (const [transformMode, filenames] of Object.entries(coveragePerProject) as [AfterSuiteRunMeta['transformMode'], Filename[]][]) {
         let merged: RawCoverage = { result: [] }
 
-        for (const chunk of toSlices(filenames, this.options.processingConcurrency)) {
+        for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (debug.enabled) {
             index += chunk.length
             debug('Covered files %d/%d', index, total)
@@ -198,7 +198,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       watermarks: this.options.watermarks,
     })
 
-    if (hasTerminalReporter(this.options.reporter))
+    if (this.hasTerminalReporter(this.options.reporter))
       this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
 
     for (const reporter of this.options.reporter) {
@@ -232,10 +232,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         this.updateThresholds({
           thresholds: resolvedThresholds,
           perFile: this.options.thresholds.perFile,
-          configurationFile: {
-            write: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
-            read: () => resolveConfig(configModule),
-          },
+          configurationFile: configModule,
+          onUpdate: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
         })
       }
     }
@@ -255,7 +253,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     let merged: RawCoverage = { result: [] }
     let index = 0
 
-    for (const chunk of toSlices(uncoveredFiles, this.options.processingConcurrency)) {
+    for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
         index += chunk.length
         debug('Uncovered files %d/%d', index, uncoveredFiles.length)
@@ -315,7 +313,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       originalSource: sourcesContent,
       source: code || sourcesContent,
       sourceMap: {
-        sourcemap: removeViteHelpersFromSourceMaps(code, {
+        sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
           sources: [url],
@@ -334,7 +332,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
 
-    for (const chunk of toSlices(scriptCoverages, this.options.processingConcurrency)) {
+    for (const chunk of this.toSlices(scriptCoverages, this.options.processingConcurrency)) {
       if (debug.enabled) {
         index += chunk.length
         debug('Converting %d/%d', index, scriptCoverages.length)
@@ -366,21 +364,24 @@ async function transformCoverage(coverageMap: CoverageMap) {
 /**
  * Remove generated code from the source maps:
  * - Vite's export helpers: e.g. `Object.defineProperty(__vite_ssr_exports__, "sum", { enumerable: true, configurable: true, get(){ return sum }});`
+ * - SWC's decorator metadata: e.g. `_ts_metadata("design:paramtypes", [\ntypeof Request === "undefined" ? Object : Request\n]),`
  */
-function removeViteHelpersFromSourceMaps(source: string | undefined, map: EncodedSourceMap) {
-  if (!source || !source.match(VITE_EXPORTS_LINE_PATTERN))
+function excludeGeneratedCode(source: string | undefined, map: EncodedSourceMap) {
+  if (!source)
     return map
 
-  const sourceWithoutHelpers = new MagicString(source)
-  sourceWithoutHelpers.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  if (!source.match(VITE_EXPORTS_LINE_PATTERN) && !source.match(DECORATOR_METADATA_PATTERN))
+    return map
 
-  const mapWithoutHelpers = sourceWithoutHelpers.generateMap({
-    hires: 'boundary',
-  })
+  const trimmed = new MagicString(source)
+  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match => '\n'.repeat(match.split('\n').length - 1))
 
-  // A merged source map where the first one excludes helpers
+  const trimmedMap = trimmed.generateMap({ hires: 'boundary' })
+
+  // A merged source map where the first one excludes generated parts
   const combinedMap = remapping(
-    [{ ...mapWithoutHelpers, version: 3 }, map],
+    [{ ...trimmedMap, version: 3 }, map],
     () => null,
   )
 
@@ -409,54 +410,4 @@ function normalizeTransformResults(fetchCache: Map<string, { result: FetchResult
   }
 
   return normalized
-}
-
-function hasTerminalReporter(reporters: Options['reporter']) {
-  return reporters.some(([reporter]) =>
-    reporter === 'text'
-    || reporter === 'text-summary'
-    || reporter === 'text-lcov'
-    || reporter === 'teamcity')
-}
-
-function toSlices<T>(array: T[], size: number): T[][] {
-  return array.reduce<T[][]>((chunks, item) => {
-    const index = Math.max(0, chunks.length - 1)
-    const lastChunk = chunks[index] || []
-    chunks[index] = lastChunk
-
-    if (lastChunk.length >= size)
-      chunks.push([item])
-
-    else
-      lastChunk.push(item)
-
-    return chunks
-  }, [])
-}
-
-function resolveConfig(configModule: ProxifiedModule<any>) {
-  const mod = configModule.exports.default
-
-  try {
-    // Check for "export default { test: {...} }"
-    if (mod.$type === 'object')
-      return mod
-
-    if (mod.$type === 'function-call') {
-      // "export default defineConfig({ test: {...} })"
-      if (mod.$args[0].$type === 'object')
-        return mod.$args[0]
-
-      // "export default defineConfig(() => ({ test: {...} }))"
-      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
-        return mod.$args[0].$body
-    }
-  }
-  catch (error) {
-    // Reduce magicast's verbose errors to readable ones
-    throw new Error(error instanceof Error ? error.message : String(error))
-  }
-
-  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
 }

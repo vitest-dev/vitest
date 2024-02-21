@@ -29,6 +29,12 @@ export const client = (function createVitestClient() {
           testRunState.value = 'idle'
           unhandledErrors.value = (errors || []).map(parseError)
         },
+        onFinishedReportCoverage() {
+          // reload coverage iframe
+          const iframe = document.querySelector('iframe#vitest-ui-coverage')
+          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow)
+            iframe.contentWindow.location.reload()
+        },
       },
     })
   }

@@ -24,6 +24,7 @@
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-report": "^3.0.1",
     "magicast": "^0.3.3",
+    "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "latest",

@@ -18,7 +18,7 @@ This section describes the API that you can use when [mocking a module](/guide/m
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
 
-Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference them inside `vi.mock`.
+Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
@@ -29,7 +29,7 @@ Vitest will not mock modules that were imported inside a [setup file](/config/#s
 :::
 
 ::: warning
-The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub <a href="https://github.com/vitest-dev/vitest/issues/3046">issue</a>.
+The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub [issue](https://github.com/vitest-dev/vitest/issues/3046).
 :::
 
 If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
@@ -386,7 +386,7 @@ Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clea
 
 - **Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
 
-Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](/#vi-fn). It returns a [mock function](/api/mock).
+Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](#vi-fn). It returns a [mock function](/api/mock).
 
 ```ts
 let apples = 0
@@ -421,7 +421,7 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
-### vi.stubEnv <Badge type="info">0.26.0+</Badge>
+### vi.stubEnv <Badge type="info">0.26.0+</Badge> {#vi-stubenv}
 
 - **Type:** `(name: string, value: string) => Vitest`
 
@@ -449,7 +449,7 @@ import.meta.env.MODE = 'test'
 ```
 :::
 
-### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge>
+### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge> {#vi-unstuballenvs}
 
 - **Type:** `() => Vitest`
 
@@ -507,7 +507,7 @@ window.innerWidth = 100
 ```
 :::
 
-### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge>
+### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge> {#vi-unstuballglobals}
 
 - **Type:** `() => Vitest`
 
@@ -749,7 +749,7 @@ Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `proce
 It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
-### vi.isFakeTimers <Badge type="info">0.34.5+</Badge>
+### vi.isFakeTimers <Badge type="info">0.34.5+</Badge> {#vi-isfaketimers}
 
 - **Type:** `() => boolean`
 
@@ -765,7 +765,7 @@ When timers are run out, you may call this method to return mocked timers to its
 
 A set of useful helper functions that Vitest provides.
 
-### vi.waitFor <Badge type="info">0.34.5+</Badge>
+### vi.waitFor <Badge type="info">0.34.5+</Badge> {#vi-waitfor}
 
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 
@@ -824,7 +824,7 @@ test('Element exists in a DOM', async () => {
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
 
-### vi.waitUntil <Badge type="info">0.34.5+</Badge>
+### vi.waitUntil <Badge type="info">0.34.5+</Badge> {#vi-waituntil}
 
 - **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
 
@@ -849,7 +849,7 @@ test('Element render correctly', async () => {
 })
 ```
 
-### vi.hoisted <Badge type="info">0.31.0+</Badge>
+### vi.hoisted <Badge type="info">0.31.0+</Badge> {#vi-hoisted}
 
 - **Type**: `<T>(factory: () => T) => T`
 

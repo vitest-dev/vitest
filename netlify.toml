@@ -13,6 +13,11 @@ from = "/new"
 to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
 status = 302
 
+[[redirects]]
+from = "/vscode"
+to = "https://marketplace.visualstudio.com/items?itemName=vitest.explorer"
+status = 302
+
 [[headers]]
 for = "/manifest.webmanifest"
 
