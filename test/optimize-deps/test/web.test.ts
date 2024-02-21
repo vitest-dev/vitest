@@ -6,5 +6,5 @@ import { expect, test } from 'vitest'
 import { importMetaUrl } from '@vitest/test-dep-url'
 
 test('import.meta.url', () => {
-  expect(importMetaUrl).toContain('/node_modules/.vitest/deps/')
+  expect(importMetaUrl).toContain('/node_modules/.vite/deps/')
 })
