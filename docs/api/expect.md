@@ -388,7 +388,7 @@ test('stocks are not the same', () => {
 ```
 
 :::warning
-A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+A _deep equality_ will not be performed for `Error` objects. Only the `message` property of an Error is considered for equality. To customize equality to check properties other than `message`, use [`expect.addEqualityTesters`](#expect-addequalitytesters). To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
 :::
 
 ## toStrictEqual
