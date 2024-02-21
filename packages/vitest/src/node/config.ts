@@ -11,6 +11,7 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
+import { VitestCache } from './cache'
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -435,12 +436,16 @@ export function resolveConfig(
     resolved.css.modules.classNameStrategy ??= 'stable'
   }
 
-  if (resolved.cache && resolved.cache.dir) {
-    console.warn(
-      c.yellow(
+  if (resolved.cache !== false) {
+    if (resolved.cache && resolved.cache.dir) {
+      console.warn(
+        c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated. Use vite's "cacheDir" instead.`,
-      ),
-    )
+        ),
+      )
+    }
+
+    resolved.cache = { dir: VitestCache.resolveCacheDir(viteConfig.cacheDir, resolved.name) }
   }
 
   resolved.sequence ??= {} as any

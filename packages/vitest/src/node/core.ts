@@ -151,7 +151,7 @@ export class Vitest {
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
 
-    this.cache.results.setConfig(resolved.root, server.config.cacheDir)
+    this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
       await this.cache.results.readFromCache()
     }

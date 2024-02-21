@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { dirname, relative, resolve } from 'pathe'
-import type { File } from '../../types'
+import type { File, ResolvedConfig } from '../../types'
 import { version } from '../../../package.json'
 
 export interface SuiteResultCache {
@@ -19,9 +19,10 @@ export class ResultsCache {
     return this.cachePath
   }
 
-  setConfig(root: string, cacheDir: string) {
+  setConfig(root: string, config: ResolvedConfig['cache']) {
     this.root = root
-    this.cachePath = resolve(cacheDir, 'results.json')
+    if (config)
+      this.cachePath = resolve(config.dir, 'results.json')
   }
 
   getResults(key: string) {

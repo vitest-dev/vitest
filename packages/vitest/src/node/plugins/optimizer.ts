@@ -8,8 +8,8 @@ export function VitestOptimizer(): Plugin {
       order: 'post',
       handler(viteConfig) {
         const testConfig = viteConfig.test || {}
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, viteConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, viteConfig)
+        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
+        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
 
         viteConfig.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
