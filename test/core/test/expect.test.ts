@@ -286,25 +286,11 @@ describe('Error equality', () => {
     }
   }
 
-  const strictErrorTester: Tester = function (a: unknown, b: unknown, customTesters) {
-    const aOk = a instanceof Error
-    const bOk = b instanceof Error
-    if (aOk && bOk) {
-      // cf. assert.deepStrictEqual https://nodejs.org/api/assert.html#comparison-details_1
-      // > [[Prototype]] of objects are compared using the === operator.
-      // > Only enumerable "own" properties are considered.
-      // > Error names and messages are always compared, even if these are not enumerable properties.
-      return (
-        Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
-        && a.name === b.name
-        && a.message === b.message
-        && this.equals({ ...a }, { ...b }, customTesters)
-      )
-    }
-    return aOk !== bOk ? false : undefined
-  }
-
   test('basic', () => {
+    //
+    // default behavior
+    //
+
     {
       // different custom property
       const e1 = new MyError('hi', 'a')
@@ -345,7 +331,31 @@ describe('Error equality', () => {
       nodeAssert.deepStrictEqual(e1, e2)
     }
 
-    expect.addEqualityTesters([strictErrorTester])
+    //
+    // stricter behavior with custom equality tester
+    //
+
+    expect.addEqualityTesters(
+      [
+        function tester(a, b, customTesters) {
+          const aOk = a instanceof Error
+          const bOk = b instanceof Error
+          if (aOk && bOk) {
+            // cf. assert.deepStrictEqual https://nodejs.org/api/assert.html#comparison-details_1
+            // > [[Prototype]] of objects are compared using the === operator.
+            // > Only enumerable "own" properties are considered.
+            // > Error names and messages are always compared, even if these are not enumerable properties.
+            return (
+              Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+              && a.name === b.name
+              && a.message === b.message
+              && this.equals({ ...a }, { ...b }, customTesters)
+            )
+          }
+          return aOk !== bOk ? false : undefined
+        },
+      ],
+    )
 
     {
       // different custom property
