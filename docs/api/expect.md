@@ -730,7 +730,7 @@ test('matches snapshot', () => {
 })
 ```
 
-## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge>
+## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge> {#tomatchfilesnapshot}
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
 
@@ -1094,7 +1094,7 @@ test('all assertions are called', async () => {
 })
 ```
 ::: warning
-When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## expect.hasAssertions
@@ -1208,7 +1208,7 @@ test('"id" is a number', () => {
 })
 ```
 
-## expect.closeTo <Badge type="info">1.0.0+</Badge>
+## expect.closeTo <Badge type="info">1.0.0+</Badge> {#expect-closeto}
 
 - **Type:** `(expected: any, precision?: number) => any`
 
@@ -1380,7 +1380,7 @@ test('custom matchers', () => {
 ```
 
 ::: tip
-If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupFiles).
+If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupfiles).
 :::
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
@@ -1406,7 +1406,7 @@ Don't forget to include the ambient declaration file in your `tsconfig.json`.
 If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
 :::
 
-## expect.addEqualityTesters <Badge type="info">1.2.0+</Badge>
+## expect.addEqualityTesters <Badge type="info">1.2.0+</Badge> {#expect-addequalitytesters}
 
 - **Type:** `(tester: Array<Tester>) => void`
 

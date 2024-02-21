@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { resolveConfig as viteResolveConfig } from 'vite'
-import { createCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config.js'
+import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
 
@@ -290,4 +290,73 @@ test('clearScreen', async () => {
       false,
     ]
   `)
+})
+
+test('public parseCLI works correctly', () => {
+  expect(parseCLI('vitest dev')).toEqual({
+    filter: [],
+    options: {
+      'watch': true,
+      '--': [],
+      'color': true,
+    },
+  })
+  expect(parseCLI('vitest watch')).toEqual({
+    filter: [],
+    options: {
+      'watch': true,
+      '--': [],
+      'color': true,
+    },
+  })
+  expect(parseCLI('vitest run')).toEqual({
+    filter: [],
+    options: {
+      'run': true,
+      '--': [],
+      'color': true,
+    },
+  })
+  expect(parseCLI('vitest related ./some-files.js')).toEqual({
+    filter: [],
+    options: {
+      'passWithNoTests': true,
+      'related': ['./some-files.js'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
+    filter: [],
+    options: {
+      'coverage': { enabled: true },
+      'browser': { enabled: true, name: 'chrome' },
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest ./tests.js --coverage')).toEqual({
+    filter: ['./tests.js'],
+    options: {
+      'coverage': { enabled: true },
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
+    filter: ['./tests.js'],
+    options: {
+      'coverage': { enabled: true },
+      'customOptions': true,
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(() => {
+    parseCLI('node --test --coverage --browser --typecheck')
+  }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
 })
