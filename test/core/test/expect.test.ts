@@ -363,6 +363,7 @@ describe('Error equality', () => {
       const e2 = new MyError('hi', 'b')
       expect(e1).not.toEqual(e2) // changed
       expect(e1).not.toStrictEqual(e2) // changed
+      assert.deepEqual(e1, e2) // chai assert is still same
     }
 
     {
