@@ -271,10 +271,12 @@ test('clearScreen', async () => {
   ] as const
   const baseViteConfig = await viteResolveConfig({ configFile: false }, 'serve')
   const results = examples.map(([vitestClearScreen, viteClearScreen]) => {
-    const config = resolveConfig('test', getCLIOptions(vitestClearScreen), {
+    const viteConfig = {
       ...baseViteConfig,
       clearScreen: viteClearScreen,
-    })
+    }
+    const vitestConfig = getCLIOptions(vitestClearScreen)
+    const config = resolveConfig('test', vitestConfig, viteConfig)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`
