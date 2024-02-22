@@ -993,24 +993,25 @@ it('toHaveProperty error diff', () => {
   `)
 })
 
+function snapshotError(f: () => unknown) {
+  try {
+    f()
+  }
+  catch (error) {
+    const e = processError(error)
+    expect({
+      message: e.message,
+      diff: e.diff,
+      expected: e.expected,
+      actual: e.actual,
+    }).toMatchSnapshot()
+    return
+  }
+  expect.unreachable()
+}
+
 it('asymmetric matcher error', () => {
   setupColors(getDefaultColors())
-
-  function snapshotError(f: () => unknown) {
-    try {
-      f()
-      return expect.unreachable()
-    }
-    catch (error) {
-      const e = processError(error)
-      expect({
-        message: e.message,
-        diff: e.diff,
-        expected: e.expected,
-        actual: e.actual,
-      }).toMatchSnapshot()
-    }
-  }
 
   expect.extend({
     stringContainingCustom(received: unknown, other: string) {
@@ -1082,6 +1083,11 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new MyError2('hello')
   }).toThrow(MyError1))
+})
+
+it('toMatch/toContain diff', () => {
+  snapshotError(() => expect('hello'.repeat(20)).toMatch('world'))
+  snapshotError(() => expect('hello'.repeat(20)).toMatch(/world/))
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

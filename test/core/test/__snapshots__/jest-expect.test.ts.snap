@@ -310,3 +310,29 @@ exports[`asymmetric matcher error 23`] = `
   "message": "expected error to be instance of MyError1",
 }
 `;
+
+exports[`toMatch/toContain diff 1`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected
++ Received
+
+- world
++ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "expected": "world",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
+}
+`;
+
+exports[`toMatch/toContain diff 2`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected: 
+/world/
+
++ Received: 
+"hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
+  "expected": "/world/",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to match /world/",
+}
+`;

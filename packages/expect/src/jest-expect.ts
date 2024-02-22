@@ -170,10 +170,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toMatch', function (expected: string | RegExp) {
-    if (typeof expected === 'string')
-      return this.include(expected)
-    else
-      return this.match(expected)
+    const actual = this._obj as string
+    return this.assert(
+      typeof expected === 'string'
+        ? actual.includes(expected)
+        : actual.match(expected),
+      `expected #{this} to match #{exp}`,
+      `expected #{this} not to match #{exp}`,
+      expected,
+      actual,
+    )
   })
   def('toContain', function (item) {
     const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
