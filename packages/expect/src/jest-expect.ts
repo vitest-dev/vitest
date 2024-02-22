@@ -209,6 +209,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         actual.value,
       )
     }
+    // handle simple case on our own using `this.assert` to include diff in error message
+    if (typeof actual === 'string' && typeof item === 'string') {
+      return this.assert(
+        actual.includes(item),
+        `expected #{this} to contain #{exp}`,
+        `expected #{this} not to contain #{exp}`,
+        item,
+        actual,
+      )
+    }
     // make "actual" indexable to have compatibility with jest
     if (actual != null && typeof actual !== 'string')
       utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))

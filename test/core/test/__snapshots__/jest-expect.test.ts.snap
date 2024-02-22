@@ -320,11 +320,24 @@ exports[`toMatch/toContain diff 1`] = `
 - world
 + hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
   "expected": "world",
-  "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to contain 'world'",
 }
 `;
 
 exports[`toMatch/toContain diff 2`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected
++ Received
+
+- world
++ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "expected": "world",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
+}
+`;
+
+exports[`toMatch/toContain diff 3`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
   "diff": "- Expected: 

@@ -1086,6 +1086,7 @@ it('asymmetric matcher error', () => {
 })
 
 it('toMatch/toContain diff', () => {
+  snapshotError(() => expect('hello'.repeat(20)).toContain('world'))
   snapshotError(() => expect('hello'.repeat(20)).toMatch('world'))
   snapshotError(() => expect('hello'.repeat(20)).toMatch(/world/))
 })
