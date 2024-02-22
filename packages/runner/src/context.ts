@@ -68,5 +68,5 @@ export function createTestContext<T extends Test | Custom>(test: T, runner: Vite
 }
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {
-  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nIf this is a long-running ${isHook ? 'hook' : 'test'}, pass a timeout value as the last argument or configure it globally with "${isHook ? 'hookTimeout' : 'testTimeout'}".`
+  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nIf this is a long-running ${isHook ? 'hook' : 'test'}, pass a timeout value in the options argument or configure it globally with "${isHook ? 'hookTimeout' : 'testTimeout'}".`
 }
