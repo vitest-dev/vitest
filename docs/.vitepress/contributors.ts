@@ -111,15 +111,6 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Team member of Vitest & UnoCSS',
   },
   {
-    avatar: contributorsAvatars.zxch3n,
-    name: 'Zixuan Chen',
-    github: 'zxch3n',
-    mastodon: 'https://elk.zone/hachyderm.io/@zx',
-    twitter: 'zxch3n',
-    title: 'A fullstack developer',
-    desc: 'Working on CRDTs & local-first software',
-  },
-  {
     avatar: contributorsAvatars['hi-ogawa'],
     name: 'Hiroshi Ogawa',
     github: 'hi-ogawa',
@@ -154,6 +145,15 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     twitter: '@yoho_po',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
+  },
+  {
+    avatar: contributorsAvatars.zxch3n,
+    name: 'Zixuan Chen',
+    github: 'zxch3n',
+    mastodon: 'https://elk.zone/hachyderm.io/@zx',
+    twitter: 'zxch3n',
+    title: 'A fullstack developer',
+    desc: 'Working on CRDTs & local-first software',
   },
 ]
 
