@@ -42,8 +42,6 @@ WebdriverIO comes with the same advantages as Cypress allowing you to test your 
 
 [@web/test-runner](https://modern-web.dev/docs/test-runner/overview/) runs tests inside a headless browser, providing the same execution environment as your web application without the need for mocking out browser APIs or the DOM. This also makes it possible to debug inside a real browser using the devtools, although there is no UI shown for stepping through the test, as there is in Cypress tests.
 
-There is a watch mode, but it is not as intelligent as that of Vitest, and may not always re-run the tests you want.
-
 To use @web/test-runner with a Vite project, use [@remcovaes/web-test-runner-vite-plugin](https://github.com/remcovaes/web-test-runner-vite-plugin). @web/test-runner does not include assertion or mocking libraries, so it is up to you to add them.
 
 ## uvu
