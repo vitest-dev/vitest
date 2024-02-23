@@ -51,7 +51,7 @@ const WRAPPER_LENGTH = 185
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
-const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes"(\s|.)+?]\),/g
+const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes", \[[^\]]*?\]\),*/g
 const DEFAULT_PROJECT = Symbol.for('default-project')
 
 const debug = createDebug('vitest:coverage')
