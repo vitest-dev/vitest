@@ -1768,13 +1768,29 @@ Sharding is happening before sorting, and only if `--shard` option is provided.
 
 #### sequence.shuffle
 
-- **Type**: `boolean`
+- **Type**: `boolean | { files?, tests? }`
 - **Default**: `false`
 - **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
 
-If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
+If you want files and tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
-Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your files and tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+
+#### sequence.shuffle.files <Badge type="info">1.4.0+</Badge> {#sequence-shuffle-files}
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
+
+Whether to randomize files, be aware that long running tests will not start earlier if you enable this option.
+
+#### sequence.shuffle.tests <Badge type="info">1.4.0+</Badge> {#sequence-shuffle-tests}
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.shuffle.tests`, `--sequence.shuffle.tests=false`
+
+Whether to randomize tests.
 
 #### sequence.concurrent <Badge type="info">0.32.2+</Badge> {#sequence-concurrent}
 
