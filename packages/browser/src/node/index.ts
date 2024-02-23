@@ -149,6 +149,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             include: [
               'vitest > @vitest/utils > pretty-format',
               'vitest > @vitest/snapshot > pretty-format',
+              'vitest > @vitest/snapshot > magic-string',
               'vitest > diff-sequences',
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',
