@@ -441,6 +441,11 @@ export function resolveConfig(
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
 
   resolved.sequence ??= {} as any
+  if (resolved.sequence.shuffle && typeof resolved.sequence.shuffle === 'object') {
+    const { files, tests } = resolved.sequence.shuffle
+    resolved.sequence.sequencer ??= files ? RandomSequencer : BaseSequencer
+    resolved.sequence.shuffle = files || tests
+  }
   if (!resolved.sequence?.sequencer) {
     // CLI flag has higher priority
     resolved.sequence.sequencer = resolved.sequence.shuffle

@@ -436,7 +436,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<options>',
     subcommands: {
       shuffle: {
-        description: 'Run tests in a random order. Enabling this option will impact Vitest\'s cache and have a performance impact. May be useful to find tests that accidentally depend on another run previously (default: false)',
+        description: 'Run files and tests in a random order. Enabling this option will impact Vitest\'s cache and have a performance impact. May be useful to find tests that accidentally depend on another run previously (default: false)',
+        argument: '',
+        subcommands: {
+          files: {
+            description: 'Run files in a random order. Long running tests will not start earlier if you enable this option. (default: false)',
+          },
+          tests: {
+            description: 'Run tests in a random oder (default: false)',
+          },
+        },
       },
       concurrent: {
         description: 'Make tests run in parallel (default: false)',
