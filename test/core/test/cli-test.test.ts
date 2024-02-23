@@ -321,4 +321,13 @@ test('public parseCLI works correctly', () => {
   expect(() => {
     parseCLI('node --test --coverage --browser --typecheck')
   }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
+
+  expect(parseCLI('vitest --sequence.shuffle.files --sequence.shuffle.tests=false')).toEqual({
+    filter: [],
+    options: {
+      'sequence': { shuffle: { files: true, tests: false } },
+      '--': [],
+      'color': true,
+    },
+  })
 })
