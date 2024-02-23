@@ -215,7 +215,7 @@ Learn more about the [Command Line Interface](/guide/cli)
 
 We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
-[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
+[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
 Learn more about [IDE Integrations](/guide/ide)
 
