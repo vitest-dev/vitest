@@ -32,7 +32,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('6 Pass 0 Fail 6 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(

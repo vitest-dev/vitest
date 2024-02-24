@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import { it } from "vitest";
-import { prettyDOM } from "@testing-library/dom"
+import { afterAll, beforeAll, it, describe, expect } from "vitest";
+import { prettyDOM } from "@testing-library/dom";
 
 // https://github.com/vitest-dev/vitest/issues/2765
 it('regexp', () => {
@@ -30,4 +30,43 @@ it('html-pretty', () => {
     </form>
   `.replaceAll(/\n */gm, ""); // strip new liens
   console.log(prettyDOM(div))
+})
+
+
+beforeAll(() => {
+  console.log('beforeAll')
+  console.error('beforeAll')
+})
+
+afterAll(() => {
+  console.log('afterAll')
+  console.error('afterAll')
+})
+
+describe('suite', () => {
+  beforeAll(() => {
+    console.log('beforeAll')
+    console.error('beforeAll')
+  })
+
+  afterAll(() => {
+    console.log('afterAll')
+    console.error('afterAll')
+  })
+
+  describe('nested suite', () => {
+    beforeAll(() => {
+      console.log('beforeAll')
+      console.error('beforeAll')
+    })
+
+    afterAll(() => {
+      console.log('afterAll')
+      console.error('afterAll')
+    })
+
+    it('test', () => {
+      expect(true).toBe(true)
+    })
+  })
 })

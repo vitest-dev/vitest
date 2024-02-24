@@ -23,7 +23,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('6 Pass 0 Fail 6 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -61,6 +61,9 @@ test.describe('ui', () => {
     await page.getByText('fixtures/console.test.ts').click()
     await page.getByTestId('btn-console').click()
     await page.getByText('/(?<char>\\w)/').click()
+
+    expect(await page.getByText('beforeAll').all()).toHaveLength(6)
+    expect(await page.getByText('afterAll').all()).toHaveLength(6)
   })
 
   test('file-filter', async ({ page }) => {
