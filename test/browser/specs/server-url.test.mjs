@@ -13,11 +13,10 @@ test('server-url http', async () => {
   assert.match(result.stdout, /Test Files {2}1 passed/)
 })
 
-// this test is skipped since browser warns self-signed https and it requires manual interaction.
-// you can toggle "skip" to verify it locally.
-test('server-url https', { skip: true }, async () => {
-  const result = await execa('npx', ['vitest', 'run', '--root=./fixtures/server-url'], {
+test('server-url https', async () => {
+  const result = await execa('npx', ['vitest', 'run', '--root=./fixtures/server-url', '--browser.headless'], {
     env: {
+      CI: '1',
       NO_COLOR: '1',
       TEST_HTTPS: '1',
     },
