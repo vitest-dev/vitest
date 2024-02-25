@@ -163,7 +163,17 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.projects = projects
     this.resolvedProjects = projects
-    const filteredProjects = toArray(resolved.project)
+    const filteredProjects = toArray(resolved.project).reduce((acc, s) => {
+      if (s.includes('*')) {
+        const pattern = new RegExp(`^${s.replace(/\*/, '.*')}`)
+        const included = projects.filter(p => pattern.test(p.getName())).map(p => p.getName())
+        acc.push(...included)
+      }
+      else {
+        acc.push(s)
+      }
+      return acc
+    }, [] as string[])
     if (filteredProjects.length)
       this.projects = this.projects.filter(p => filteredProjects.includes(p.getName()))
     if (!this.coreWorkspaceProject)
