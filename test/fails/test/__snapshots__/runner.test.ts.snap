@@ -33,7 +33,7 @@ exports[`should fail nested-suite.test.ts > nested-suite.test.ts 1`] = `"Asserti
 
 exports[`should fail primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 
-exports[`should fail snapshot-with-not.test.ts > snapshot-with-not.test.ts 1`] = `"AssertionError: Expected not to match snapshot"`;
+exports[`should fail snapshot-with-not.test.ts > snapshot-with-not.test.ts 1`] = `"Error: Expected not to match snapshot"`;
 
 exports[`should fail stall.test.ts > stall.test.ts 1`] = `
 "TypeError: failure

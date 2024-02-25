@@ -1,4 +1,3 @@
-import { AssertionError } from 'node:assert'
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
@@ -142,7 +141,7 @@ export class SnapshotClient {
 
     if (!pass) {
       if (isNot)
-        throw new AssertionError({ message: `Expected not to match snapshot` })
+        throw new Error(`Expected not to match snapshot`)
 
       throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
     }
