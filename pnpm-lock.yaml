@@ -26,7 +26,7 @@ importers:
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^2.6.4
-        version: 2.6.4(@vue/compiler-sfc@3.4.5)(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest)
+        version: 2.6.4(@vue/compiler-sfc@3.4.19)(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest)
       '@antfu/ni':
         specifier: ^0.21.12
         version: 0.21.12
@@ -147,7 +147,7 @@ importers:
         version: 4.7.1
       unocss:
         specifier: ^0.57.4
-        version: 0.57.4(postcss@8.4.32)(rollup@4.9.6)(vite@5.0.12)
+        version: 0.57.4(postcss@8.4.35)(rollup@4.9.6)(vite@5.0.12)
       unplugin-vue-components:
         specifier: ^0.25.2
         version: 0.25.2(rollup@4.9.6)(vue@3.3.8)
@@ -158,8 +158,8 @@ importers:
         specifier: ^0.16.7
         version: 0.16.7(vite@5.0.12)(workbox-build@7.0.0)(workbox-window@7.0.0)
       vitepress:
-        specifier: 1.0.0-rc.39
-        version: 1.0.0-rc.39(@types/node@20.11.5)(postcss@8.4.32)(search-insights@2.9.0)(typescript@5.2.2)
+        specifier: ^1.0.0-rc.39
+        version: 1.0.0-rc.39(@types/node@20.11.5)(postcss@8.4.35)(search-insights@2.9.0)(typescript@5.2.2)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -1240,7 +1240,7 @@ importers:
         version: 3.1.5
       unocss:
         specifier: ^0.57.4
-        version: 0.57.4(postcss@8.4.32)(rollup@4.9.6)(vite@5.0.12)
+        version: 0.57.4(postcss@8.4.35)(rollup@4.9.6)(vite@5.0.12)
       unplugin-auto-import:
         specifier: ^0.16.7
         version: 0.16.7(@vueuse/core@10.6.1)(rollup@4.9.6)
@@ -1252,7 +1252,7 @@ importers:
         version: 5.0.12(@types/node@20.11.5)(less@4.1.3)
       vite-plugin-pages:
         specifier: ^0.31.0
-        version: 0.31.0(@vue/compiler-sfc@3.4.5)(vite@5.0.12)
+        version: 0.31.0(@vue/compiler-sfc@3.4.19)(vite@5.0.12)
       vue:
         specifier: ^3.3.8
         version: 3.3.8(typescript@5.2.2)
@@ -2293,7 +2293,7 @@ packages:
       '@jridgewell/gen-mapping': 0.3.2
       '@jridgewell/trace-mapping': 0.3.18
 
-  /@antfu/eslint-config@2.6.4(@vue/compiler-sfc@3.4.5)(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest):
+  /@antfu/eslint-config@2.6.4(@vue/compiler-sfc@3.4.19)(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest):
     resolution: {integrity: sha512-dMD/QC5KWS1OltdpKLhfZM7W7y7zils85opk8d4lyNr7yn0OFjZs7eMYtcC6DrrN2kQ1JrFvBM7uB0QdWn5PUQ==}
     hasBin: true
     peerDependencies:
@@ -2347,7 +2347,7 @@ packages:
       eslint-plugin-vitest: 0.3.22(@typescript-eslint/eslint-plugin@6.21.0)(eslint@8.54.0)(typescript@5.2.2)(vitest@packages+vitest)
       eslint-plugin-vue: 9.21.1(eslint@8.54.0)
       eslint-plugin-yml: 1.12.2(eslint@8.54.0)
-      eslint-processor-vue-blocks: 0.1.1(@vue/compiler-sfc@3.4.5)(eslint@8.54.0)
+      eslint-processor-vue-blocks: 0.1.1(@vue/compiler-sfc@3.4.19)(eslint@8.54.0)
       globals: 13.24.0
       jsonc-eslint-parser: 2.4.0
       local-pkg: 0.5.0
@@ -10255,7 +10255,7 @@ packages:
       sirv: 2.0.4
     dev: true
 
-  /@unocss/postcss@0.57.4(postcss@8.4.32):
+  /@unocss/postcss@0.57.4(postcss@8.4.35):
     resolution: {integrity: sha512-ggq8JS4rvgvW2QXjLGwg+m8e4YcmvOtbUS6C7UCrP8pmUqBCpbnTmLi6inpBbBuCN5WokecNZS5f3C4EwNMOMA==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -10267,7 +10267,7 @@ packages:
       css-tree: 2.3.1
       fast-glob: 3.3.2
       magic-string: 0.30.5
-      postcss: 8.4.32
+      postcss: 8.4.35
     dev: true
 
   /@unocss/preset-attributify@0.57.4:
@@ -10601,16 +10601,6 @@ packages:
       source-map-js: 1.0.2
     dev: true
 
-  /@vue/compiler-core@3.4.5:
-    resolution: {integrity: sha512-Daka7P1z2AgKjzuueWXhwzIsKu0NkLB6vGbNVEV2iJ8GJTrzraZo/Sk4GWCMRtd/qVi3zwnk+Owbd/xSZbwHtQ==}
-    dependencies:
-      '@babel/parser': 7.23.6
-      '@vue/shared': 3.4.5
-      entities: 4.5.0
-      estree-walker: 2.0.2
-      source-map-js: 1.0.2
-    dev: true
-
   /@vue/compiler-dom@3.3.8:
     resolution: {integrity: sha512-+PPtv+p/nWDd0AvJu3w8HS0RIm/C6VGBIRe24b9hSyNWOAPEUosFZ5diwawwP8ip5sJ8n0Pe87TNNNHnvjs0FQ==}
     dependencies:
@@ -10622,13 +10612,6 @@ packages:
     dependencies:
       '@vue/compiler-core': 3.4.19
       '@vue/shared': 3.4.19
-    dev: true
-
-  /@vue/compiler-dom@3.4.5:
-    resolution: {integrity: sha512-J8YlxknJVd90SXFJ4HwGANSAXsx5I0lK30sO/zvYV7s5gXf7gZR7r/1BmZ2ju7RGH1lnc6bpBc6nL61yW+PsAQ==}
-    dependencies:
-      '@vue/compiler-core': 3.4.5
-      '@vue/shared': 3.4.5
     dev: true
 
   /@vue/compiler-sfc@2.7.10:
@@ -10667,20 +10650,6 @@ packages:
       source-map-js: 1.0.2
     dev: true
 
-  /@vue/compiler-sfc@3.4.5:
-    resolution: {integrity: sha512-jauvkDuSSUbP0ebhfNqljhShA90YEfX/0wZ+w40oZF43IjGyWYjqYaJbvMJwGOd+9+vODW6eSvnk28f0SGV7OQ==}
-    dependencies:
-      '@babel/parser': 7.23.6
-      '@vue/compiler-core': 3.4.5
-      '@vue/compiler-dom': 3.4.5
-      '@vue/compiler-ssr': 3.4.5
-      '@vue/shared': 3.4.5
-      estree-walker: 2.0.2
-      magic-string: 0.30.5
-      postcss: 8.4.32
-      source-map-js: 1.0.2
-    dev: true
-
   /@vue/compiler-ssr@3.3.8:
     resolution: {integrity: sha512-hXCqQL/15kMVDBuoBYpUnSYT8doDNwsjvm3jTefnXr+ytn294ySnT8NlsFHmTgKNjwpuFy7XVV8yTeLtNl/P6w==}
     dependencies:
@@ -10692,13 +10661,6 @@ packages:
     dependencies:
       '@vue/compiler-dom': 3.4.19
       '@vue/shared': 3.4.19
-    dev: true
-
-  /@vue/compiler-ssr@3.4.5:
-    resolution: {integrity: sha512-DDdEcDzj2lWTMfUMMtEpLDhURai9LhM0zSZ219jCt7b2Vyl0/jy3keFgCPMitG0V1S1YG4Cmws3lWHWdxHQOpg==}
-    dependencies:
-      '@vue/compiler-dom': 3.4.5
-      '@vue/shared': 3.4.5
     dev: true
 
   /@vue/devtools-api@6.5.1:
@@ -10796,10 +10758,6 @@ packages:
 
   /@vue/shared@3.4.19:
     resolution: {integrity: sha512-/KliRRHMF6LoiThEy+4c1Z4KB/gbPrGjWwJR+crg2otgrf/egKzRaCPvJ51S5oetgsgXLfc4Rm5ZgrKHZrtMSw==}
-    dev: true
-
-  /@vue/shared@3.4.5:
-    resolution: {integrity: sha512-6XptuzlMvN4l4cDnDw36pdGEV+9njYkQ1ZE0Q6iZLwrKefKaOJyiFmcP3/KBDHbt72cJZGtllAc1GaHe6XGAyg==}
     dev: true
 
   /@vue/test-utils@2.0.2(vue@3.3.8):
@@ -15831,13 +15789,13 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-processor-vue-blocks@0.1.1(@vue/compiler-sfc@3.4.5)(eslint@8.54.0):
+  /eslint-processor-vue-blocks@0.1.1(@vue/compiler-sfc@3.4.19)(eslint@8.54.0):
     resolution: {integrity: sha512-9+dU5lU881log570oBwpelaJmOfOzSniben7IWEDRYQPPWwlvaV7NhOtsTuUWDqpYT+dtKKWPsgz4OkOi+aZnA==}
     peerDependencies:
       '@vue/compiler-sfc': ^3.3.0
       eslint: ^8.50.0
     dependencies:
-      '@vue/compiler-sfc': 3.4.5
+      '@vue/compiler-sfc': 3.4.19
       eslint: 8.54.0
     dev: true
 
@@ -26111,7 +26069,7 @@ packages:
       detect-node: 2.1.0
     dev: false
 
-  /unocss@0.57.4(postcss@8.4.32)(rollup@4.9.6)(vite@5.0.12):
+  /unocss@0.57.4(postcss@8.4.35)(rollup@4.9.6)(vite@5.0.12):
     resolution: {integrity: sha512-rf5eiCVb8957rqzCyRxLzljeYguVMS70X322/Z1sYhosKhh8SBBMsC/TrZEf5o8LTn/MbFN9fVizEtbUKaFjUg==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -26127,7 +26085,7 @@ packages:
       '@unocss/cli': 0.57.4(rollup@4.9.6)
       '@unocss/core': 0.57.4
       '@unocss/extractor-arbitrary-variants': 0.57.4
-      '@unocss/postcss': 0.57.4(postcss@8.4.32)
+      '@unocss/postcss': 0.57.4(postcss@8.4.35)
       '@unocss/preset-attributify': 0.57.4
       '@unocss/preset-icons': 0.57.4
       '@unocss/preset-mini': 0.57.4
@@ -26517,7 +26475,7 @@ packages:
       vfile-message: 2.0.4
     dev: true
 
-  /vite-plugin-pages@0.31.0(@vue/compiler-sfc@3.4.5)(vite@5.0.12):
+  /vite-plugin-pages@0.31.0(@vue/compiler-sfc@3.4.19)(vite@5.0.12):
     resolution: {integrity: sha512-fw3onBfVTXQI7rOzAbSZhmfwvk50+3qNnGZpERjmD93c8nEjrGLyd53eFXYMxcJV4KA1vzi4qIHt2+6tS4dEMw==}
     peerDependencies:
       '@vue/compiler-sfc': ^2.7.0 || ^3.0.0
@@ -26527,7 +26485,7 @@ packages:
         optional: true
     dependencies:
       '@types/debug': 4.1.12
-      '@vue/compiler-sfc': 3.4.5
+      '@vue/compiler-sfc': 3.4.19
       debug: 4.3.4(supports-color@8.1.1)
       deep-equal: 2.2.1
       extract-comments: 1.1.0
@@ -26684,7 +26642,7 @@ packages:
       vite: 5.0.12(@types/node@20.11.5)(less@4.1.3)
     dev: true
 
-  /vitepress@1.0.0-rc.39(@types/node@20.11.5)(postcss@8.4.32)(search-insights@2.9.0)(typescript@5.2.2):
+  /vitepress@1.0.0-rc.39(@types/node@20.11.5)(postcss@8.4.35)(search-insights@2.9.0)(typescript@5.2.2):
     resolution: {integrity: sha512-EcgoRlAAp37WOxUOYv45oxyhLrcy3Upey+mKpqW3ldsg6Ol4trPndRBk2GO0QiSvEKlb9BMerk49D/bFICN6kg==}
     hasBin: true
     peerDependencies:
@@ -26706,7 +26664,7 @@ packages:
       focus-trap: 7.5.4
       mark.js: 8.11.1
       minisearch: 6.3.0
-      postcss: 8.4.32
+      postcss: 8.4.35
       shikiji: 0.9.19
       shikiji-core: 0.9.19
       shikiji-transformers: 0.9.19
