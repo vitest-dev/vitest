@@ -18,7 +18,7 @@ export function getSnapshotClient(): SnapshotClient {
   return _client
 }
 
-function getError(expected: () => void | Error, promise: string | undefined) {
+function getError(expected: () => void | Error, promise: string | undefined, isNot: boolean = false) {
   if (typeof expected !== 'function') {
     if (!promise)
       throw new Error(`expected must be a function, received ${typeof expected}`)
@@ -34,7 +34,8 @@ function getError(expected: () => void | Error, promise: string | undefined) {
     return e
   }
 
-  throw new Error('snapshot function didn\'t throw')
+  if (!isNot)
+    throw new Error('snapshot function didn\'t throw')
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
@@ -153,15 +154,20 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const error = utils.flag(this, 'error')
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
+      const isNot = utils.flag(this, 'negate')
+      const received = getError(expected, promise, isNot)
+      if (isNot && !(received instanceof Error))
+        return
 
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
 
       getSnapshotClient().assert({
-        received: getError(expected, promise),
+        received,
         message,
         inlineSnapshot,
         isInline: true,
+        isNot,
         error,
         errorMessage,
         ...getTestNames(test),

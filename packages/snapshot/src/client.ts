@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert'
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
@@ -33,6 +34,7 @@ interface AssertOptions {
   name?: string
   message?: string
   isInline?: boolean
+  isNot?: boolean
   properties?: object
   inlineSnapshot?: string
   error?: Error
@@ -96,6 +98,7 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
+      isNot,
     } = options
     let { received } = options
 
@@ -131,13 +134,18 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
+      isNot,
       error,
       inlineSnapshot,
       rawSnapshot,
     })
 
-    if (!pass)
+    if (!pass) {
+      if (isNot)
+        throw new AssertionError({ message: `Expected not to match snapshot` })
+
       throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
+    }
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {

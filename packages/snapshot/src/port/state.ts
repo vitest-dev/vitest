@@ -224,6 +224,7 @@ export default class SnapshotState {
     key,
     inlineSnapshot,
     isInline,
+    isNot,
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
@@ -258,7 +259,9 @@ export default class SnapshotState {
         ? rawSnapshot.content
         : this._snapshotData[key]
     const expectedTrimmed = prepareExpected(expected)
-    const pass = expectedTrimmed === prepareExpected(receivedSerialized)
+    let pass = expectedTrimmed === prepareExpected(receivedSerialized)
+    if (isNot)
+      pass = !pass
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || this._fileExists || (rawSnapshot && rawSnapshot.content != null)
 
