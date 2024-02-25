@@ -841,6 +841,7 @@ export class Vitest {
           results.filter(r => r.status === 'rejected').forEach((err) => {
             this.logger.error('error during close', (err as PromiseRejectedResult).reason)
           })
+          this.logger.logUpdate.done() // restore terminal cursor
         })
       })()
     }
