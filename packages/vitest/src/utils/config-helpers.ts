@@ -22,13 +22,19 @@ export function getOutputFile(config: PotentialConfig | undefined, reporter: Bui
  */
 export function wrapSerializableConfig(config: ResolvedConfig) {
   let testNamePattern = config.testNamePattern
+  let defines = config.defines
 
   // v8 serialize does not support regex
   if (testNamePattern && typeof testNamePattern !== 'string')
     testNamePattern = `${REGEXP_WRAP_PREFIX}${testNamePattern.toString()}` as unknown as RegExp
 
+  // v8 serialize drops properties with undefined value
+  if (defines)
+    defines = { keys: Object.keys(defines), original: defines }
+
   return {
     ...config,
     testNamePattern,
+    defines,
   } as ResolvedConfig
 }

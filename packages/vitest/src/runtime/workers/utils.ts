@@ -41,5 +41,16 @@ export function unwrapSerializableConfig(config: ResolvedConfig) {
       config.testNamePattern = parseRegexp(testNamePattern.slice(REGEXP_WRAP_PREFIX.length))
   }
 
+  if (config.defines && Array.isArray(config.defines.keys) && config.defines.original) {
+    const { keys, original } = config.defines
+    const defines: ResolvedConfig['defines'] = {}
+
+    // Apply all keys from the original. Entries which had undefined value are missing from original now
+    for (const key of keys)
+      defines[key] = original[key]
+
+    config.defines = defines
+  }
+
   return config
 }
