@@ -127,13 +127,6 @@ test('throwing expect should be a function', async () => {
   }).toThrow(/expected must be a function/)
 })
 
-test('throwing inline snapshots with not', async () => {
-  expect(() => {}).not.toThrowErrorMatchingInlineSnapshot()
-  expect(() => {
-    throw new Error('hi')
-  }).not.toThrowErrorMatchingInlineSnapshot(`[Error: hello]`)
-})
-
 test('properties inline snapshot', () => {
   const user = {
     createdAt: new Date(),

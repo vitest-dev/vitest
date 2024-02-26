@@ -1,7 +1,11 @@
 import { expect, test } from "vitest"
 
-test('', async () => {
-  expect(() => {
-    throw new Error('hi')
-  }).not.toThrowErrorMatchingInlineSnapshot(`[Error: hi]`)
+test.each([
+  'toMatchSnapshot',
+  'toMatchFileSnapshot',
+  'toMatchInlineSnapshot',
+  'toThrowErrorMatchingSnapshot',
+  'toThrowErrorMatchingInlineSnapshot',
+])('%s should fail with not', (api) => {
+  (expect(0).not as any)[api]()
 })

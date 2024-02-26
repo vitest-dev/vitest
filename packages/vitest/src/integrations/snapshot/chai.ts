@@ -18,7 +18,7 @@ export function getSnapshotClient(): SnapshotClient {
   return _client
 }
 
-function getError(expected: () => void | Error, promise: string | undefined, isNot: boolean = false) {
+function getError(expected: () => void | Error, promise: string | undefined) {
   if (typeof expected !== 'function') {
     if (!promise)
       throw new Error(`expected must be a function, received ${typeof expected}`)
@@ -34,8 +34,7 @@ function getError(expected: () => void | Error, promise: string | undefined, isN
     return e
   }
 
-  if (!isNot)
-    throw new Error('snapshot function didn\'t throw')
+  throw new Error('snapshot function didn\'t throw')
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
@@ -53,6 +52,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       chai.Assertion.prototype,
       key,
       function (this: Record<string, unknown>, properties?: object, message?: string) {
+        const isNot = utils.flag(this, 'negate')
+        if (isNot)
+          throw new Error(`${key} cannot be used with "not"`)
         const expected = utils.flag(this, 'object')
         const test = utils.flag(this, 'vitest-test')
         if (typeof properties === 'string' && typeof message === 'undefined') {
@@ -76,6 +78,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
     function (this: Record<string, unknown>, file: string, message?: string) {
+      const isNot = utils.flag(this, 'negate')
+      if (isNot)
+        throw new Error('toMatchFileSnapshot cannot be used with "not"')
       const expected = utils.flag(this, 'object')
       const test = utils.flag(this, 'vitest-test') as Test
       const errorMessage = utils.flag(this, 'message')
@@ -99,6 +104,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
     function __INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
+      const isNot = utils.flag(this, 'negate')
+      if (isNot)
+        throw new Error('toMatchInlineSnapshot cannot be used with "not"')
       const test = utils.flag(this, 'vitest-test')
       const isInsideEach = test && (test.each || test.suite?.each)
       if (isInsideEach)
@@ -130,6 +138,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
     function (this: Record<string, unknown>, message?: string) {
+      const isNot = utils.flag(this, 'negate')
+      if (isNot)
+        throw new Error('toThrowErrorMatchingSnapshot cannot be used with "not"')
       const expected = utils.flag(this, 'object')
       const test = utils.flag(this, 'vitest-test')
       const promise = utils.flag(this, 'promise') as string | undefined
@@ -146,6 +157,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
     function __INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
+      const isNot = utils.flag(this, 'negate')
+      if (isNot)
+        throw new Error('toThrowErrorMatchingInlineSnapshot cannot be used with "not"')
       const test = utils.flag(this, 'vitest-test')
       const isInsideEach = test && (test.each || test.suite?.each)
       if (isInsideEach)
@@ -154,10 +168,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const error = utils.flag(this, 'error')
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
-      const isNot = utils.flag(this, 'negate')
-      const received = getError(expected, promise, isNot)
-      if (isNot && !(received instanceof Error))
-        return
+      const received = getError(expected, promise)
 
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
@@ -167,7 +178,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         message,
         inlineSnapshot,
         isInline: true,
-        isNot,
         error,
         errorMessage,
         ...getTestNames(test),

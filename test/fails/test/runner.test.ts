@@ -14,7 +14,7 @@ it.each(files)('should fail %s', async (file) => {
   const msg = String(stderr)
     .split(/\n/g)
     .reverse()
-    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest') && !/\d\|/.test(i))
+    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
     .map(i => i.trim().replace(root, '<rootDir>'),
     ).join('\n')
   expect(msg).toMatchSnapshot(file)

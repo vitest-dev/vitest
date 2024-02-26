@@ -97,7 +97,6 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
-      isNot,
     } = options
     let { received } = options
 
@@ -133,18 +132,13 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
-      isNot,
       error,
       inlineSnapshot,
       rawSnapshot,
     })
 
-    if (!pass) {
-      if (isNot)
-        throw new Error(`Expected not to match snapshot`)
-
+    if (!pass)
       throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
-    }
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {
