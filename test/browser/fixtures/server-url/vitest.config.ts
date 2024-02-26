@@ -9,6 +9,16 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 const provider = process.env.PROVIDER || 'webdriverio';
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome');
 
+// ignore https errors due to self-signed certificate from plugin-basic-ssl
+// https://playwright.dev/docs/api/class-browser#browser-new-context-option-ignore-https-errors
+// https://webdriver.io/docs/configuration/#strictssl and acceptInsecureCerts in https://webdriver.io/docs/api/browser/#properties
+const providerOptions = (function () {
+  switch (provider) {
+    case 'playwright': return { page: { ignoreHTTPSErrors: true } }
+    case 'webdriverio': return { strictSSL: false, capabilities: { acceptInsecureCerts: true } }
+  }
+})()
+
 export default defineConfig({
   plugins: [
     !!process.env.TEST_HTTPS && basicSsl(),
@@ -18,6 +28,7 @@ export default defineConfig({
       enabled: true,
       provider,
       name: browser,
+      providerOptions,
     },
   },
   // separate cacheDir from test/browser/vite.config.ts
