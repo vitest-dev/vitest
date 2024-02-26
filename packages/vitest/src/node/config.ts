@@ -444,7 +444,7 @@ export function resolveConfig(
   if (resolved.sequence.shuffle && typeof resolved.sequence.shuffle === 'object') {
     const { files, tests } = resolved.sequence.shuffle
     resolved.sequence.sequencer ??= files ? RandomSequencer : BaseSequencer
-    resolved.sequence.shuffle = files || tests
+    resolved.sequence.shuffle = tests
   }
   if (!resolved.sequence?.sequencer) {
     // CLI flag has higher priority
