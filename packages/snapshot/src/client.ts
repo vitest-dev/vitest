@@ -33,7 +33,6 @@ interface AssertOptions {
   name?: string
   message?: string
   isInline?: boolean
-  isNot?: boolean
   properties?: object
   inlineSnapshot?: string
   error?: Error
