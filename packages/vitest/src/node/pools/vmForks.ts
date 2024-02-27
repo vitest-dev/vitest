@@ -12,6 +12,7 @@ import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
+import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
@@ -47,12 +48,6 @@ function createChildProcessChannel(project: WorkspaceProject) {
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 
   return { channel, cleanup }
-}
-
-function stringifyRegex(input: RegExp | string): string {
-  if (typeof input === 'string')
-    return input
-  return `$$vitest:${input.toString()}`
 }
 
 export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
@@ -149,14 +144,8 @@ export function createVmForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
           return configs.get(project)!
 
         const _config = project.getSerializableConfig()
+        const config = wrapSerializableConfig(_config)
 
-        const config = {
-          ..._config,
-          // v8 serialize does not support regex
-          testNamePattern: _config.testNamePattern
-            ? stringifyRegex(_config.testNamePattern)
-            : undefined,
-        } as ResolvedConfig
         configs.set(project, config)
         return config
       }

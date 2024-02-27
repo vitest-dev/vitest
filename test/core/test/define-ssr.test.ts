@@ -3,6 +3,10 @@ import { afterAll, expect, test } from 'vitest'
 declare let __DEFINE__: string
 declare let __JSON__: any
 declare let __MODE__: string
+declare let __UNDEFINED__: undefined
+declare let __NULL__: null
+declare let __ZERO__: 0
+declare let __FALSE__: false
 declare let SOME: {
   VARIABLE: string
   SOME: {
@@ -63,4 +67,11 @@ test('dotted defines are processed by Vite, but cannot be reassigned', () => {
   expect(SOME.SOME.VARIABLE).toBe('nested variable')
   SOME.VARIABLE = 'new variable'
   expect(SOME.VARIABLE).not.toBe('new variable')
+})
+
+test('falsy defines are passed', () => {
+  expect(__UNDEFINED__).toBe(undefined)
+  expect(__NULL__).toBe(null)
+  expect(__ZERO__).toBe(0)
+  expect(__FALSE__).toBe(false)
 })
