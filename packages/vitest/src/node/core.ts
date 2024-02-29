@@ -382,10 +382,6 @@ export class Vitest {
       }
     }
 
-    // all subsequent runs will treat this as a fresh run
-    this.config.changed = false
-    this.config.related = undefined
-
     if (files.length) {
       // populate once, update cache on watch
       await this.cache.stats.populateStats(this.config.root, files)
@@ -532,6 +528,10 @@ export class Vitest {
 
         this.runningPromise = undefined
         this.isFirstRun = false
+
+        // all subsequent runs will treat this as a fresh run
+        this.config.changed = false
+        this.config.related = undefined
       })
 
     return await this.runningPromise

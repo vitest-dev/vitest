@@ -253,11 +253,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    // Load, instrument and collect empty coverages from all files which
-    // are not already in the coverage map
-    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+
+    if (this.ctx.config.changed)
+      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+
     const uncoveredFiles = includedFiles
-      .map(file => resolve(this.ctx.config.root, file))
       .filter(file => !coveredFiles.includes(file))
 
     const cacheKey = new Date().getTime()
