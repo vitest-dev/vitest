@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import pkg from 'vite-node/package.json'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
 const entryPath = resolve(__dirname, '../src/cli-parse-args.js')
@@ -44,5 +44,8 @@ it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', asy
   const cli = await runViteNodeCli('--watch', entryPath)
   await cli.waitForStdout('test 1')
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
-  await cli.waitForStdout('test 2')
+  await vi.waitUntil(() => {
+    editFile(entryPath, c => c)
+    return cli.stdout.includes('test 2')
+  })
 })

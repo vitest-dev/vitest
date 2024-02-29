@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { test, vi } from 'vitest'
 import { resolve } from 'pathe'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
@@ -11,7 +11,12 @@ test('hmr.accept works correctly', async () => {
 
   editFile(scriptFile, content => content.replace('Hello!', 'Hello world!'))
 
-  await viteNode.waitForStderr('Hello world!')
+  // re-save until hmr (race condition since Vite 5.1 ?)
+  await vi.waitUntil(() => {
+    editFile(scriptFile, c => c)
+    return viteNode.stderr.includes('Hello world!')
+  })
+
   await viteNode.waitForStderr('Accept')
   await viteNode.waitForStdout(`[vite-node] hot updated: ${scriptFile}`)
 })
