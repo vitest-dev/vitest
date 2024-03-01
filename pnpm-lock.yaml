@@ -30,6 +30,9 @@ importers:
       '@antfu/ni':
         specifier: ^0.21.12
         version: 0.21.12
+      '@playwright/test':
+        specifier: ^1.41.0
+        version: 1.41.0
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
         version: 25.0.7(rollup@4.9.6)
@@ -2018,9 +2021,6 @@ importers:
 
   test/ui:
     devDependencies:
-      '@playwright/test':
-        specifier: ^1.41.0
-        version: 1.41.0
       '@testing-library/dom':
         specifier: ^9.3.3
         version: 9.3.3
