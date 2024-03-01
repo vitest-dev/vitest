@@ -11,7 +11,7 @@ import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import { hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
@@ -165,7 +165,7 @@ export class Vitest {
     this.resolvedProjects = projects
     const filteredProjects = toArray(resolved.project).reduce((acc, s) => {
       if (s.includes('*')) {
-        const pattern = new RegExp(`^${s.replace(/\*/, '.*')}`)
+        const pattern = wildcardPatternToRegExp(s)
         const included = projects.filter(p => pattern.test(p.getName())).map(p => p.getName())
         acc.push(...included)
       }
