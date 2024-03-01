@@ -15,7 +15,7 @@
     "@vitest/browser": "workspace:*",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "execa": "^7.1.1",
-    "playwright": "^1.41.0",
+    "playwright": "^1.42.0",
     "url": "^0.11.3",
     "vitest": "workspace:*",
     "webdriverio": "^8.32.2"
