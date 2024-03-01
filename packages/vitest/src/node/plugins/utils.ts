@@ -2,8 +2,8 @@ import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
 import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
-import { rootDir } from '../../paths'
 import { VitestCache } from '../cache'
+import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(_testOptions: DepsOptimizationOptions | undefined, viteOptions: DepOptimizationOptions | undefined, testConfig: InlineConfig) {
   const testOptions = _testOptions || {}

@@ -7,11 +7,11 @@ import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
+import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
-import { VitestCache } from './cache'
 
 function resolvePath(path: string, root: string) {
   return normalize(
