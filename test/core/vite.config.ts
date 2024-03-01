@@ -32,6 +32,10 @@ export default defineConfig({
     '__MODE__': 'process.env.MODE',
     'SOME.VARIABLE': '"variable"',
     'SOME.SOME.VARIABLE': '"nested variable"',
+    '__UNDEFINED__': undefined,
+    '__NULL__': null,
+    '__ZERO__': 0,
+    '__FALSE__': false,
   },
   resolve: {
     alias: [
