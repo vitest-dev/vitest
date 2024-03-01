@@ -211,10 +211,6 @@ test('maxConcurrency is parsed correctly', () => {
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
-
-  expect(getCLIOptions('--cache.dir=./test/cache.json')).not.toEqual({
-    cache: { dir: 'test/cache.json' },
-  })
 })
 
 test('typecheck correctly passes down arguments', () => {
