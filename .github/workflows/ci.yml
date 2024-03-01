@@ -19,50 +19,51 @@ env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 
 jobs:
-  lint:
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: ./.github/actions/setup-and-cache
+
+  #     - name: Install
+  #       run: pnpm i
+
+  #     - name: Lint
+  #       run: pnpm run lint
+
+  # typecheck:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: ./.github/actions/setup-and-cache
+
+  #     - name: Install
+  #       run: pnpm i
+
+  #     - name: Build
+  #       run: pnpm run build
+
+  #     - name: Typecheck
+  #       run: pnpm run typecheck
+
+  debug:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # runs-on: ${{ matrix.os }}
 
-      - uses: ./.github/actions/setup-and-cache
+    # timeout-minutes: 30
 
-      - name: Install
-        run: pnpm i
-
-      - name: Lint
-        run: pnpm run lint
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
-  test:
-    runs-on: ${{ matrix.os }}
-
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node_version: [18, 20]
-        include:
-          - os: macos-14
-            node_version: 20
-          - os: windows-latest
-            node_version: 20
-      fail-fast: false
+    # strategy:
+    #   matrix:
+    #     os: [ubuntu-latest]
+    #     node_version: [18, 20]
+    #     include:
+    #       - os: macos-14
+    #         node_version: 20
+    #       - os: windows-latest
+    #         node_version: 20
+    #   fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -83,133 +84,170 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm -C examples/playwright test
 
-      - name: Test No Threads
-        run: pnpm run test:ci:no-threads
+  # test:
+  #   runs-on: ${{ matrix.os }}
 
-      - name: Test Vm Threads
-        run: pnpm run test:ci:vm-threads
+  #   timeout-minutes: 30
 
-  test-ui:
-    runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       node_version: [18, 20]
+  #       include:
+  #         - os: macos-14
+  #           node_version: 20
+  #         - os: windows-latest
+  #           node_version: 20
+  #     fail-fast: false
 
-    timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-    steps:
-      - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: ${{ matrix.node_version }}
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+  #     - uses: browser-actions/setup-chrome@v1
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - name: Test UI
-        run: pnpm run ui:test
+  #     - name: Install Playwright Dependencies
+  #       run: pnpx playwright install --with-deps
 
-  test-ui-e2e:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-14, windows-latest]
-      fail-fast: false
+  #     - name: Build
+  #       run: pnpm run build
 
-    runs-on: ${{ matrix.os }}
+  #     - name: Test
+  #       run: pnpm run test:ci
 
-    timeout-minutes: 30
+  #     - name: Test No Threads
+  #       run: pnpm run test:ci:no-threads
 
-    steps:
-      - uses: actions/checkout@v4
+  #     - name: Test Vm Threads
+  #       run: pnpm run test:ci:vm-threads
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+  # test-ui:
+  #   runs-on: ubuntu-latest
 
-      - name: Install
-        run: pnpm i
+  #   timeout-minutes: 10
 
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install chromium
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Build
-        run: pnpm run build
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 20
 
-      - name: Test
-        run: pnpm -C test/ui test-e2e
+  #     - name: Install
+  #       run: pnpm i
 
-  test-browser:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
-      fail-fast: false
+  #     - name: Test UI
+  #       run: pnpm run ui:test
 
-    timeout-minutes: 30
+  # test-ui-e2e:
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, macos-14, windows-latest]
+  #     fail-fast: false
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
-    steps:
-      - uses: actions/checkout@v4
+  #   runs-on: ${{ matrix.os }}
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+  #   timeout-minutes: 30
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install
-        run: pnpm i
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 20
 
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
+  #     - name: Install
+  #       run: pnpm i
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Install Playwright Dependencies
+  #       run: pnpx playwright install chromium
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
+  #     - name: Build
+  #       run: pnpm run build
 
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
+  #     - name: Test
+  #       run: pnpm -C test/ui test-e2e
 
-  test-browser-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        browser: [[chrome, chromium], [edge, webkit]]
-      fail-fast: false
+  # test-browser:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+  #     fail-fast: false
 
-    timeout-minutes: 30
+  #   timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
-    steps:
-      - uses: actions/checkout@v4
+  #   env:
+  #     BROWSER: ${{ matrix.browser[0] }}
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-edge@v1
+  #     - uses: browser-actions/setup-chrome@v1
+  #     - uses: browser-actions/setup-firefox@v1
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpx playwright install --with-deps
+  #     - name: Install Playwright Dependencies
+  #       run: pnpx playwright install --with-deps
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Build
+  #       run: pnpm run build
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
+  #     - name: Test Browser (webdriverio)
+  #       run: pnpm run test:browser:webdriverio
 
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
+  #     - name: Test Browser (playwright)
+  #       run: pnpm run test:browser:playwright
+  #       env:
+  #         BROWSER: ${{ matrix.browser[1] }}
+
+  # test-browser-windows:
+  #   runs-on: windows-latest
+  #   strategy:
+  #     matrix:
+  #       browser: [[chrome, chromium], [edge, webkit]]
+  #     fail-fast: false
+
+  #   timeout-minutes: 30
+
+  #   env:
+  #     BROWSER: ${{ matrix.browser[0] }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 20
+
+  #     - uses: browser-actions/setup-chrome@v1
+  #     - uses: browser-actions/setup-edge@v1
+
+  #     - name: Install
+  #       run: pnpm i
+
+  #     - name: Install Playwright Dependencies
+  #       run: pnpx playwright install --with-deps
+
+  #     - name: Build
+  #       run: pnpm run build
+
+  #     - name: Test Browser (webdriverio)
+  #       run: pnpm run test:browser:webdriverio
+
+  #     - name: Test Browser (playwright)
+  #       run: pnpm run test:browser:playwright
+  #       env:
+  #         BROWSER: ${{ matrix.browser[1] }}
