@@ -2021,9 +2021,6 @@ importers:
 
   test/ui:
     devDependencies:
-      '@playwright/test':
-        specifier: ^1.41.0
-        version: 1.41.0
       '@testing-library/dom':
         specifier: ^9.3.3
         version: 9.3.3
