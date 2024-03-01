@@ -32,16 +32,17 @@ export function diffStringsUnified(a: string, b: string, options?: DiffOptions):
     const isMultiline = a.includes('\n') || b.includes('\n')
 
     // getAlignedDiffs assumes that a newline was appended to the strings.
-    const diffs = diffStringsRaw(
+    const [diffs, truncated] = diffStringsRaw(
       isMultiline ? `${a}\n` : a,
       isMultiline ? `${b}\n` : b,
       true, // cleanupSemantic
+      options,
     )
 
     if (hasCommonDiff(diffs, isMultiline)) {
       const optionsNormalized = normalizeDiffOptions(options)
       const lines = getAlignedDiffs(diffs, optionsNormalized.changeColor)
-      return printDiffLines(lines, optionsNormalized)
+      return printDiffLines(lines, truncated, optionsNormalized)
     }
   }
 
@@ -51,11 +52,11 @@ export function diffStringsUnified(a: string, b: string, options?: DiffOptions):
 
 // Compare two strings character-by-character.
 // Optionally clean up small common substrings, also known as chaff.
-export function diffStringsRaw(a: string, b: string, cleanup: boolean): Array<Diff> {
-  const diffs = diffStrings(a, b)
+export function diffStringsRaw(a: string, b: string, cleanup: boolean, options?: DiffOptions): [Array<Diff>, boolean] {
+  const [diffs, truncated] = diffStrings(a, b, options)
 
   if (cleanup)
     cleanupSemantic(diffs) // impure function
 
-  return diffs
+  return [diffs, truncated]
 }

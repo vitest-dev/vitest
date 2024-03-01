@@ -12,6 +12,7 @@ import type { DiffOptions, DiffOptionsNormalized } from './types'
 export const noColor = (string: string): string => string
 
 const DIFF_CONTEXT_DEFAULT = 5
+const DIFF_TRUNCATE_THRESHOLD_DEFAULT = 0 // not truncate
 
 function getDefaultOptions(): DiffOptionsNormalized {
   const c = getColors()
@@ -35,6 +36,9 @@ function getDefaultOptions(): DiffOptionsNormalized {
     includeChangeCounts: false,
     omitAnnotationLines: false,
     patchColor: c.yellow,
+    truncateThreshold: DIFF_TRUNCATE_THRESHOLD_DEFAULT,
+    truncateAnnotation: '... Diff result is truncated',
+    truncateAnnotationColor: noColor,
   }
 }
 
