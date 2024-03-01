@@ -1,30 +1,23 @@
 import { expect, test } from 'vitest'
-
 import { runVitestCli } from '../../test-utils'
 
 test.each([
-  'project*',
-  'space*',
-])('should match projects correctly: %s', async (project) => {
+  { pattern: 'project_1', expected: ['project_1'] },
+  { pattern: '*', expected: ['project_1', 'project_2', 'space_1'] },
+  { pattern: '*j*', expected: ['project_1', 'project_2'] },
+  { pattern: 'project*', expected: ['project_1', 'project_2'] },
+  { pattern: 'space*', expected: ['space_1'] },
+])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
   const { stdout, stderr } = await runVitestCli(
     'run',
     '--root',
     'fixtures/project',
     '--project',
-    project,
+    pattern,
   )
 
   expect(stderr).toBeFalsy()
   expect(stdout).toBeTruthy()
 
-  if (project === 'project*') {
-    expect(stdout).toContain('project_1')
-    expect(stdout).toContain('project_2')
-    expect(stdout).not.toContain('space_1')
-  }
-  else {
-    expect(stdout).toContain('space_1')
-    expect(stdout).not.toContain('project_1')
-    expect(stdout).not.toContain('project_2')
-  }
+  expected.forEach(name => expect(stdout).toContain(name))
 })
