@@ -1735,7 +1735,7 @@ Test above this limit will be queued to run when available slot appears.
 - **Type**: `false`
 - **CLI**: `--no-cache`, `--cache=false`
 
-Use this option if you want to disable the cache feature. At the moment Vitest stores cache file in Vite's [cacheDir](https://vitejs.dev/config/shared-options.html#cachedir) for test results to run the longer and failed tests first.
+Use this option if you want to disable the cache feature. At the moment Vitest stores cache for test results to run the longer and failed tests first.
 
 ### sequence
 
