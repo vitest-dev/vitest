@@ -437,15 +437,19 @@ export function resolveConfig(
   }
 
   if (resolved.cache !== false) {
+    let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
+
     if (resolved.cache && resolved.cache.dir) {
       console.warn(
         c.yellow(
-        `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated. Use vite's "cacheDir" instead.`,
+        `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
         ),
       )
+
+      cacheDir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
     }
 
-    resolved.cache = { dir: VitestCache.resolveCacheDir(viteConfig.cacheDir, resolved.name) }
+    resolved.cache = { dir: cacheDir }
   }
 
   resolved.sequence ??= {} as any

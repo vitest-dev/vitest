@@ -612,11 +612,11 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vite' }
+   * @default 'node_modules/.vite/vitest'
    */
   cache?: false | {
     /**
-     * @deprecated Use Vite's `cacheDir` instead.
+     * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
      */
     dir: string
   }
