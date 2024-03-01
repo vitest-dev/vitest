@@ -68,11 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
+      # - uses: ./.github/actions/setup-and-cache
+      #   with:
+      #     node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@v1
+      # - uses: browser-actions/setup-chrome@v1
 
       - name: Install
         run: pnpm i
