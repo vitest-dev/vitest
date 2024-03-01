@@ -170,10 +170,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toMatch', function (expected: string | RegExp) {
-    if (typeof expected === 'string')
-      return this.include(expected)
-    else
-      return this.match(expected)
+    const actual = this._obj as string
+    return this.assert(
+      typeof expected === 'string'
+        ? actual.includes(expected)
+        : actual.match(expected),
+      `expected #{this} to match #{exp}`,
+      `expected #{this} not to match #{exp}`,
+      expected,
+      actual,
+    )
   })
   def('toContain', function (item) {
     const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
@@ -201,6 +207,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected "${actual.value}" not to contain "${item}"`,
         expectedClassList,
         actual.value,
+      )
+    }
+    // handle simple case on our own using `this.assert` to include diff in error message
+    if (typeof actual === 'string' && typeof item === 'string') {
+      return this.assert(
+        actual.includes(item),
+        `expected #{this} to contain #{exp}`,
+        `expected #{this} not to contain #{exp}`,
+        item,
+        actual,
       )
     }
     // make "actual" indexable to have compatibility with jest

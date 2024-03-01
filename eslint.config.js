@@ -16,6 +16,7 @@ export default antfu(
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
       'examples/**/mockServiceWorker.js',
+      'examples/sveltekit/.svelte-kit',
     ],
   },
   {

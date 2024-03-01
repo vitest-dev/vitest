@@ -526,6 +526,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   project: {
     description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2',
     argument: '<name>',
+    array: true,
   },
   slowTestThreshold: {
     description: 'Threshold in milliseconds for a test to be considered slow (default: 300)',
