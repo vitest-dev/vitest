@@ -836,7 +836,7 @@ test('spy function', () => {
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
-This assertion checks if a function was called with certain parameters at it's last invocation. Requires a spy function to be passed to `expect`.
+This assertion checks if a function was called with certain parameters at its last invocation. Requires a spy function to be passed to `expect`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -950,7 +950,7 @@ test('spy function returns a product', () => {
 
 - **Type**: `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a value with certain parameters on it's last invoking. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a value with certain parameters on its last invoking. Requires a spy function to be passed to `expect`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
