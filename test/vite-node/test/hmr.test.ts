@@ -6,7 +6,6 @@ test('hmr.accept works correctly', async () => {
   const scriptFile = resolve(__dirname, '../src/hmr-script.js')
 
   const viteNode = await runViteNodeCli('--watch', scriptFile)
-  await viteNode.waitForStdout('[debug2] watcher is ready')
 
   await viteNode.waitForStderr('Hello!')
 

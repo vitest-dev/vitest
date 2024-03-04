@@ -154,7 +154,7 @@ async function run(files: string[], options: CliOptions = {}) {
 
       await waitForWatched(files)
       // eslint-disable-next-line no-console
-      console.log('[debug2] watcher is ready')
+      console.log('[debug] watcher is ready')
     }
   }
 }
