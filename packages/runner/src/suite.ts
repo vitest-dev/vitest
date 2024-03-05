@@ -1,4 +1,5 @@
 import { format, isObject, objDisplay, objectAttr } from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import type { Custom, CustomAPI, File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustomOptions, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
@@ -103,7 +104,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   let suite: Suite
 
-  initSuite()
+  initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const task: Custom = {
@@ -164,6 +165,20 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     ) as unknown as Test
 
     test.type = 'test'
+
+    if (runner.config.includeTaskLocation || true) {
+      const limit = Error.stackTraceLimit
+      Error.stackTraceLimit = 4
+      const error = new Error('stacktrace').stack!
+      Error.stackTraceLimit = limit
+      const stack = parseSingleStack(error.split('\n')[4])
+      if (stack) {
+        test.location = {
+          line: stack.line,
+          column: stack.column,
+        }
+      }
+    }
   })
 
   const collector: SuiteCollector = {
@@ -183,7 +198,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     getHooks(suite)[name].push(...fn as any)
   }
 
-  function initSuite() {
+  function initSuite(includeLocation: boolean) {
     if (typeof suiteOptions === 'number')
       suiteOptions = { timeout: suiteOptions }
 
@@ -199,13 +214,27 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       projectName: '',
     }
 
+    if (runner && includeLocation && (runner.config.includeTaskLocation || true)) {
+      const limit = Error.stackTraceLimit
+      Error.stackTraceLimit = 5
+      const error = new Error('stacktrace').stack!
+      Error.stackTraceLimit = limit
+      const stack = parseSingleStack(error.split('\n')[5])
+      if (stack) {
+        suite.location = {
+          line: stack.line,
+          column: stack.column,
+        }
+      }
+    }
+
     setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
     tasks.length = 0
     factoryQueue.length = 0
-    initSuite()
+    initSuite(false)
   }
 
   async function collect(file?: File) {
