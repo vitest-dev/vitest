@@ -26,19 +26,25 @@ export const it = test
 
 let runner: VitestRunner
 let defaultSuite: SuiteCollector
+let currentTestFilepath: string
 
 export function getDefaultSuite() {
   return defaultSuite
+}
+
+export function getTestFilepath() {
+  return currentTestFilepath
 }
 
 export function getRunner() {
   return runner
 }
 
-export function clearCollectorContext(currentRunner: VitestRunner) {
+export function clearCollectorContext(filepath: string, currentRunner: VitestRunner) {
   if (!defaultSuite)
     defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
   runner = currentRunner
+  currentTestFilepath = filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -141,6 +147,17 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       ))
     }
 
+    if (runner.config.includeTaskLocation || true) {
+      const limit = Error.stackTraceLimit
+      // custom can be called from any place, let's assume the limit is 10 stacks
+      Error.stackTraceLimit = 10
+      const error = new Error('stacktrace').stack!
+      Error.stackTraceLimit = limit
+      const stack = findStackTrace(error)
+      if (stack)
+        task.location = stack
+    }
+
     tasks.push(task)
     return task
   }
@@ -165,20 +182,6 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     ) as unknown as Test
 
     test.type = 'test'
-
-    if (runner.config.includeTaskLocation) {
-      const limit = Error.stackTraceLimit
-      Error.stackTraceLimit = 4
-      const error = new Error('stacktrace').stack!
-      Error.stackTraceLimit = limit
-      const stack = parseSingleStack(error.split('\n')[4])
-      if (stack) {
-        test.location = {
-          line: stack.line,
-          column: stack.column,
-        }
-      }
-    }
   })
 
   const collector: SuiteCollector = {
@@ -425,4 +428,17 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+function findStackTrace(error: string) {
+  const lines = error.split('\n').slice(1)
+  for (const line of lines) {
+    const stack = parseSingleStack(line)
+    if (stack && stack.file === getTestFilepath()) {
+      return {
+        line: stack.line,
+        column: stack.column,
+      }
+    }
+  }
 }
