@@ -142,9 +142,6 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest/browser',
               'vitest/runners',
               '@vitest/utils',
-
-              // loupe is manually transformed
-              'loupe',
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
@@ -153,16 +150,11 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',
               'vitest > pretty-format > ansi-regex',
+              'vitest > @vitest/utils > loupe',
+              'vitest > @vitest/expect > chai',
               'vitest > chai',
             ],
           },
-        }
-      },
-      transform(code, id) {
-        if (id.includes('loupe/loupe.js')) {
-          const exportsList = ['custom', 'inspect', 'registerConstructor', 'registerStringTag']
-          const codeAppend = exportsList.map(i => `export const ${i} = globalThis.loupe.${i}`).join('\n')
-          return `${code}\n${codeAppend}\nexport default globalThis.loupe`
         }
       },
       async resolveId(id) {

@@ -31,6 +31,11 @@ export async function setupConsoleLogSpy() {
     return base(...args)
   }
   const stderr = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
+    // silence warning from loupe's node util.inspect with deps optimization
+    // https://github.com/vitejs/vite/blob/0c0aeaeb3f12d2cdc3c47557da209416c8d48fb7/packages/vite/src/node/optimizer/esbuildDepPlugin.ts#L227
+    if (typeof args[0] === 'string' && args[0].startsWith('Module "util" has been externalized for browser compatibility. Cannot access "util.inspect" in client code.'))
+      return base(...args)
+
     sendLog('stderr', processLog(args))
     return base(...args)
   }
