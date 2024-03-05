@@ -147,7 +147,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       ))
     }
 
-    if (runner.config.includeTaskLocation || true) {
+    if (runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
       // custom can be called from any place, let's assume the limit is 10 stacks
       Error.stackTraceLimit = 10
@@ -431,7 +431,9 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
 }
 
 function findStackTrace(error: string) {
-  const lines = error.split('\n').slice(1)
+  // first line is the error message
+  // and the first 3 stacks are always from the collector
+  const lines = error.split('\n').slice(4)
   for (const line of lines) {
     const stack = parseSingleStack(line)
     if (stack && stack.file === getTestFilepath()) {
