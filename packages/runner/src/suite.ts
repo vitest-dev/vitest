@@ -166,7 +166,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     test.type = 'test'
 
-    if (runner.config.includeTaskLocation || true) {
+    if (runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
       Error.stackTraceLimit = 4
       const error = new Error('stacktrace').stack!
@@ -214,7 +214,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       projectName: '',
     }
 
-    if (runner && includeLocation && (runner.config.includeTaskLocation || true)) {
+    if (runner && includeLocation && runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
       Error.stackTraceLimit = 5
       const error = new Error('stacktrace').stack!
