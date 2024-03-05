@@ -13,8 +13,7 @@ export default defineConfig({
       },
     },
     onConsoleLog(log) {
-      if (log.includes('Failed to load'))
-        return false
+      return !log.includes('Failed to load')
     },
   },
 })
