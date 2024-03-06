@@ -580,7 +580,7 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
