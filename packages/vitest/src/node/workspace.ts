@@ -382,7 +382,7 @@ export class WorkspaceProject {
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
       alias: [],
-      includeTaskLocation: this.ctx.config.includeTaskLocation ?? this.config.includeTaskLocation,
+      includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 
