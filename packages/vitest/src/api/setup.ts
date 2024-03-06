@@ -113,6 +113,22 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getConfig() {
           return vitestOrWorkspace.config
         },
+        async getBrowserFileSourceMap(id, options) {
+          if (!('ctx' in vitestOrWorkspace))
+            return undefined
+          const mod = vitestOrWorkspace.browser?.moduleGraph.getModuleById(id)
+          if (!mod)
+            return undefined
+
+          const ssr = !!options?.ssr
+          // should technically only be a single module because we don't load test files with multiple modules
+          if (ssr && mod.ssrTransformResult)
+            return mod.ssrTransformResult.map
+          if (mod.transformResult)
+            return mod.transformResult.map
+
+          return undefined
+        },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
           if (result) {

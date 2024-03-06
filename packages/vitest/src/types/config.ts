@@ -709,7 +709,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  includeTaskLocations?: boolean
+  includeTaskLocation?: boolean
 }
 
 export interface TypecheckConfig {

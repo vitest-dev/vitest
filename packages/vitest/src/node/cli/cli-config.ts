@@ -603,5 +603,5 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocations: null,
+  includeTaskLocation: null,
 }

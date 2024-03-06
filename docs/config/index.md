@@ -2093,7 +2093,7 @@ Disabling this option might [improve performance](/guide/improving-performance) 
 You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
 :::
 
-### includeTaskLocations <Badge type="info">1.4.0+</Badge> {#includeTaskLocations}
+### includeTaskLocation <Badge type="info">1.4.0+</Badge> {#includeTaskLocation}
 
 - **Type:** `boolean`
 - **Default:** `false`
