@@ -129,9 +129,10 @@ describe('jest mock compat layer', () => {
 
     spy.mockRestore()
 
-    expect(spy.getMockImplementation()).toBe(undefined)
-
     expect(spy.mock.results).toEqual([])
+
+    expect(spy.getMockImplementation()).toBe(originalFn)
+    expect(spy()).toEqual('original')
   })
 
   it('implementation async fn', async () => {
@@ -257,7 +258,7 @@ describe('jest mock compat layer', () => {
 
     obj.setter = 'last'
 
-    expect(spy.getMockImplementation()).toBe(undefined)
+    expect(spy.getMockImplementation()).toBe(Object.getOwnPropertyDescriptor(obj, 'setter')?.set)
 
     expect(setValue).toBe('last')
   })
@@ -346,11 +347,15 @@ describe('jest mock compat layer', () => {
   it('.mockRestore() should restore initial implementation', () => {
     const testFn = vi.fn(() => true)
     expect(testFn()).toBe(true)
+    expect(testFn.getMockImplementation()).toBeDefined()
+    expect(testFn.getMockImplementation()?.()).toBe(true)
 
     testFn.mockReturnValue(false)
     expect(testFn()).toBe(false)
 
     testFn.mockRestore()
     expect(testFn()).toBe(true)
+    expect(testFn.getMockImplementation()).toBeDefined()
+    expect(testFn.getMockImplementation()?.()).toBe(true)
   })
 })
