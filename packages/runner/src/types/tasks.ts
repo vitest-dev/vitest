@@ -133,14 +133,14 @@ interface EachFunctionReturn<T extends any[]> {
   ): void
 }
 
-interface TestEachFunction {
+export interface TestEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<ExtractEachCallbackArgs<T>>
   <T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
-interface TestCollectorCallable<C = {}> {
+export interface TestCollectorCallable<C = {}> {
   /**
    * @deprecated Use options as the second argument instead
    */
@@ -204,7 +204,7 @@ export interface TestOptions {
   fails?: boolean
 }
 
-interface ExtendedAPI<ExtraContext> {
+export interface ExtendedAPI<ExtraContext> {
   skipIf: (condition: any) => ChainableTestAPI<ExtraContext>
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
