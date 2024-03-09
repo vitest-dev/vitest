@@ -3,6 +3,9 @@ import type { Task } from 'vitest'
 
 const props = defineProps<{
   task: Task
+  index: number
+  nestedIndex?: number
+  onItemClick?: (task: Task, index: number, nestedIndex?: number) => void
 }>()
 
 const duration = computed(() => {
@@ -20,6 +23,7 @@ const duration = computed(() => {
     border-rounded
     cursor-pointer
     hover="bg-active"
+    @click="onItemClick?.(task, index, nestedIndex)"
   >
     <StatusIcon :task="task" mr-2 />
     <div v-if="task.type === 'suite' && task.meta.typecheck" i-logos:typescript-icon flex-shrink-0 mr-2 />

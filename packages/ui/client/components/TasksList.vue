@@ -120,9 +120,10 @@ function matchTasks(tasks: Task[], search: string): boolean {
             </div>
           </template>
           <TaskTree
-            v-for="task in failed"
+            v-for="(task, index) in failed"
             :key="task.id"
             :task="task"
+            :index="index"
             :nested="nested"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
@@ -136,9 +137,10 @@ function matchTasks(tasks: Task[], search: string): boolean {
             </div>
           </template>
           <TaskTree
-            v-for="task in throttledRunning"
+            v-for="(task, index) in throttledRunning"
             :key="task.id"
             :task="task"
+            :index="index"
             :nested="nested"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
@@ -152,9 +154,10 @@ function matchTasks(tasks: Task[], search: string): boolean {
             </div>
           </template>
           <TaskTree
-            v-for="task in success"
+            v-for="(task, index) in success"
             :key="task.id"
             :task="task"
+            :index="index"
             :nested="nested"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
@@ -168,9 +171,10 @@ function matchTasks(tasks: Task[], search: string): boolean {
             </div>
           </template>
           <TaskTree
-            v-for="task in skipped"
+            v-for="(task, index) in skipped"
             :key="task.id"
             :task="task"
+            :index="index"
             :nested="nested"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
@@ -182,9 +186,10 @@ function matchTasks(tasks: Task[], search: string): boolean {
       <!-- flat -->
       <template v-else>
         <TaskTree
-          v-for="task in filtered"
+          v-for="(task, index) in filtered"
           :key="task.id"
           :task="task"
+          :index="index"
           :nested="nested"
           :search="search"
           :class="activeFileId === task.id ? 'bg-active' : ''"
