@@ -2110,19 +2110,136 @@ exports[`istanbul json report 1`] = `
     "b": {
       "0": [
         0,
-        1,
+        0,
       ],
       "1": [
         0,
-        1,
+        0,
       ],
       "2": [
-        1,
+        0,
+        0,
+      ],
+      "3": [
+        0,
+        0,
+      ],
+      "4": [
+        0,
+        0,
+      ],
+      "5": [
+        0,
         0,
       ],
     },
     "branchMap": {
       "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 5,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 13,
+          },
+          "start": {
+            "column": 2,
+            "line": 10,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "2": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 18,
+          },
+          "start": {
+            "column": 2,
+            "line": 15,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "3": {
         "loc": {
           "end": {
             "column": 3,
@@ -2157,7 +2274,7 @@ exports[`istanbul json report 1`] = `
         ],
         "type": "if",
       },
-      "1": {
+      "4": {
         "loc": {
           "end": {
             "column": 3,
@@ -2192,7 +2309,7 @@ exports[`istanbul json report 1`] = `
         ],
         "type": "if",
       },
-      "2": {
+      "5": {
         "loc": {
           "end": {
             "column": 3,
@@ -2229,8 +2346,9 @@ exports[`istanbul json report 1`] = `
       },
     },
     "f": {
-      "0": 1,
-      "1": 2,
+      "0": 0,
+      "1": 0,
+      "2": 0,
     },
     "fnMap": {
       "0": {
@@ -2246,17 +2364,40 @@ exports[`istanbul json report 1`] = `
         },
         "loc": {
           "end": {
-            "column": 1,
+            "column": null,
             "line": 19,
           },
           "start": {
-            "column": 35,
+            "column": 40,
             "line": 1,
           },
         },
         "name": "(anonymous_0)",
       },
       "1": {
+        "decl": {
+          "end": {
+            "column": 16,
+            "line": 21,
+          },
+          "start": {
+            "column": 9,
+            "line": 21,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 21,
+          },
+          "start": {
+            "column": 16,
+            "line": 21,
+          },
+        },
+        "name": "noop",
+      },
+      "2": {
         "decl": {
           "end": {
             "column": 13,
@@ -2282,19 +2423,27 @@ exports[`istanbul json report 1`] = `
     },
     "path": "<process-cwd>/src/original.ts",
     "s": {
-      "0": 1,
-      "1": 1,
+      "0": 0,
+      "1": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
       "2": 0,
-      "3": 1,
-      "4": 1,
+      "3": 0,
+      "4": 0,
       "5": 0,
-      "6": 1,
-      "7": 1,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
     },
     "statementMap": {
       "0": {
         "end": {
-          "column": 1,
+          "column": null,
           "line": 19,
         },
         "start": {
@@ -2304,7 +2453,7 @@ exports[`istanbul json report 1`] = `
       },
       "1": {
         "end": {
-          "column": 3,
+          "column": null,
           "line": 5,
         },
         "start": {
@@ -2312,7 +2461,7 @@ exports[`istanbul json report 1`] = `
           "line": 2,
         },
       },
-      "2": {
+      "10": {
         "end": {
           "column": 11,
           "line": 4,
@@ -2322,7 +2471,7 @@ exports[`istanbul json report 1`] = `
           "line": 4,
         },
       },
-      "3": {
+      "11": {
         "end": {
           "column": 9,
           "line": 8,
@@ -2332,7 +2481,7 @@ exports[`istanbul json report 1`] = `
           "line": 8,
         },
       },
-      "4": {
+      "12": {
         "end": {
           "column": 3,
           "line": 13,
@@ -2342,7 +2491,7 @@ exports[`istanbul json report 1`] = `
           "line": 10,
         },
       },
-      "5": {
+      "13": {
         "end": {
           "column": 11,
           "line": 12,
@@ -2352,7 +2501,7 @@ exports[`istanbul json report 1`] = `
           "line": 12,
         },
       },
-      "6": {
+      "14": {
         "end": {
           "column": 3,
           "line": 18,
@@ -2362,7 +2511,7 @@ exports[`istanbul json report 1`] = `
           "line": 15,
         },
       },
-      "7": {
+      "15": {
         "end": {
           "column": 11,
           "line": 17,
@@ -2370,6 +2519,86 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 4,
           "line": 17,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 4,
+        },
+        "start": {
+          "column": 4,
+          "line": 4,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 13,
+        },
+        "start": {
+          "column": 2,
+          "line": 10,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 4,
+          "line": 12,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 18,
+        },
+        "start": {
+          "column": 2,
+          "line": 15,
+        },
+      },
+      "7": {
+        "end": {
+          "column": null,
+          "line": 17,
+        },
+        "start": {
+          "column": 4,
+          "line": 17,
+        },
+      },
+      "8": {
+        "end": {
+          "column": 1,
+          "line": 19,
+        },
+        "start": {
+          "column": 21,
+          "line": 1,
+        },
+      },
+      "9": {
+        "end": {
+          "column": 3,
+          "line": 5,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
         },
       },
     },

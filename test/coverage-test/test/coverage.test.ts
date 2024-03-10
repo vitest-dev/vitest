@@ -8,7 +8,6 @@ import { useImportEnv } from '../src/importEnv'
 import { second } from '../src/function-count'
 import MultiSuite from '../src/multi-suite'
 import { DecoratorsTester } from '../src/decorators'
-import * as transpiled from '../src/transpiled.js'
 
 // @ts-expect-error -- untyped virtual file provided by custom plugin
 import virtualFile2 from '\0vitest-custom-virtual-file-2'
@@ -78,6 +77,9 @@ test('decorators', () => {
   new DecoratorsTester().method('cover line')
 })
 
-test('pre-transpiled code with source maps to original', () => {
+// Istanbul fails to follow source maps on windows
+test.skipIf(globalThis.process?.env.COVERAGE_PROVIDER === 'istanbul')('pre-transpiled code with source maps to original', async () => {
+  const transpiled = await import('../src/transpiled.js')
+
   transpiled.hello()
 })
