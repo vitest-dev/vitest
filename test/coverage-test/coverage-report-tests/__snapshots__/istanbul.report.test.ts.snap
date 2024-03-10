@@ -2106,6 +2106,274 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/original.ts": {
+    "b": {
+      "0": [
+        0,
+        1,
+      ],
+      "1": [
+        0,
+        1,
+      ],
+      "2": [
+        1,
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 5,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 13,
+          },
+          "start": {
+            "column": 2,
+            "line": 10,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "2": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 18,
+          },
+          "start": {
+            "column": 2,
+            "line": 15,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+        ],
+        "type": "if",
+      },
+    },
+    "f": {
+      "0": 1,
+      "1": 2,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 22,
+            "line": 1,
+          },
+          "start": {
+            "column": 21,
+            "line": 1,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 19,
+          },
+          "start": {
+            "column": 35,
+            "line": 1,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 13,
+            "line": 21,
+          },
+          "start": {
+            "column": 9,
+            "line": 21,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 21,
+          },
+          "start": {
+            "column": 13,
+            "line": 21,
+          },
+        },
+        "name": "noop",
+      },
+    },
+    "path": "<process-cwd>/src/original.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 0,
+      "3": 1,
+      "4": 1,
+      "5": 0,
+      "6": 1,
+      "7": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 1,
+          "line": 19,
+        },
+        "start": {
+          "column": 21,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 3,
+          "line": 5,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 11,
+          "line": 4,
+        },
+        "start": {
+          "column": 4,
+          "line": 4,
+        },
+      },
+      "3": {
+        "end": {
+          "column": 9,
+          "line": 8,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "4": {
+        "end": {
+          "column": 3,
+          "line": 13,
+        },
+        "start": {
+          "column": 2,
+          "line": 10,
+        },
+      },
+      "5": {
+        "end": {
+          "column": 11,
+          "line": 12,
+        },
+        "start": {
+          "column": 4,
+          "line": 12,
+        },
+      },
+      "6": {
+        "end": {
+          "column": 3,
+          "line": 18,
+        },
+        "start": {
+          "column": 2,
+          "line": 15,
+        },
+      },
+      "7": {
+        "end": {
+          "column": 11,
+          "line": 17,
+        },
+        "start": {
+          "column": 4,
+          "line": 17,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/untested-file.ts": {
     "b": {
       "0": [

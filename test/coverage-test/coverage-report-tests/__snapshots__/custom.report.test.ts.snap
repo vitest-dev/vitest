@@ -29,6 +29,7 @@ exports[`custom json report 1`] = `
     "<process-cwd>/src/index.mts",
     "<process-cwd>/src/multi-environment.ts",
     "<process-cwd>/src/multi-suite.ts",
+    "<process-cwd>/src/transpiled.js",
     "<process-cwd>/src/utils.ts",
   ],
 }
