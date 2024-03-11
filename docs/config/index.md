@@ -1944,7 +1944,7 @@ Retry the test specific number of times if it fails.
 
 ### onConsoleLog<NonProjectOption />
 
-- **Type**: `(log: string, type: 'stdout' | 'stderr') => false | void`
+- **Type**: `(log: string, type: 'stdout' | 'stderr') => false | undefined`
 
 Custom handler for `console.log` in tests. If you return `false`, Vitest will not print the log to the console.
 
@@ -1955,7 +1955,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    onConsoleLog(log: string, type: 'stdout' | 'stderr'): false | void {
+    onConsoleLog(log: string, type: 'stdout' | 'stderr'): false | undefined {
       if (log === 'message from third party library' && type === 'stdout')
         return false
     },
@@ -1965,7 +1965,7 @@ export default defineConfig({
 
 ### onStackTrace<NonProjectOption /> <Badge type="info">1.0.0+</Badge> {#onstacktrace}
 
-- **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
+- **Type**: `(error: Error, frame: ParsedStack) => boolean | undefined`
 
 Apply a filtering function to each frame of each stack trace when handling errors. The first argument, `error`, is an object with the same properties as a standard `Error`, but it is not an actual instance.
 
@@ -1977,7 +1977,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    onStackTrace(error: Error, { file }: ParsedStack): boolean | void {
+    onStackTrace(error: Error, { file }: ParsedStack): boolean | undefined {
       // If we've encountered a ReferenceError, show the whole stack.
       if (error.name === 'ReferenceError')
         return
