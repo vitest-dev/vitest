@@ -323,6 +323,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
     }
 
+    const sources = [url]
+    if (map.sources && map.sources[0] && !url.endsWith(map.sources[0]))
+      sources[0] = new URL(map.sources[0], url).href
+
     return {
       originalSource: sourcesContent,
       source: code || sourcesContent,
@@ -330,7 +334,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
-          sources: [url],
+          sources,
           sourcesContent: [sourcesContent],
         }),
       },
