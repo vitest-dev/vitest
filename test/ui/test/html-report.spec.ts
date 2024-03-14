@@ -32,7 +32,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 0 Fail 5 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('5 Pass 1 Fail 6 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -63,5 +63,11 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     await page.getByLabel('Show coverage').click()
     await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+  })
+
+  test('error', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByText('fixtures/error.test.ts').click()
+    await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 })
