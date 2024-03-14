@@ -253,13 +253,16 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    // Load, instrument and collect empty coverages from all files which
-    // are not already in the coverage map
-    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+
+    if (this.ctx.config.changed)
+      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+
     const uncoveredFiles = includedFiles
-      .map(file => resolve(this.ctx.config.root, file))
       .filter(file => !coveredFiles.includes(file))
 
+    const cacheKey = new Date().getTime()
     const coverageMap = libCoverage.createCoverageMap({})
 
     // Note that these cannot be run parallel as synchronous instrumenter.lastFileCoverage
@@ -267,13 +270,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     for (const [index, filename] of uncoveredFiles.entries()) {
       debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
 
-      // Make sure file is not served from cache
-      // so that instrumenter loads up requested file coverage
-      if (this.ctx.vitenode.fetchCache.has(filename))
-        this.ctx.vitenode.fetchCache.delete(filename)
-
-      await this.ctx.vitenode.transformRequest(filename)
-
+      // Make sure file is not served from cache so that instrumenter loads up requested file coverage
+      await this.ctx.vitenode.transformRequest(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
     }

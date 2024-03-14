@@ -246,9 +246,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
     const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
 
-    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+
+    if (this.ctx.config.changed)
+      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+
     const uncoveredFiles = includedFiles
-      .map(file => pathToFileURL(resolve(this.ctx.config.root, file)))
+      .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
     let merged: RawCoverage = { result: [] }

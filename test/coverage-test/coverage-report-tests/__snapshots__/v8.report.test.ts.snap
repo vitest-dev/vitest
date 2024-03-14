@@ -2777,6 +2777,153 @@ exports[`v8 json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/file-to-change.ts": {
+    "all": true,
+    "b": {
+      "0": [
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 7,
+          },
+          "start": {
+            "column": 0,
+            "line": 1,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 7,
+            },
+            "start": {
+              "column": 0,
+              "line": 1,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+    },
+    "f": {
+      "0": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 7,
+          },
+          "start": {
+            "column": 0,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 7,
+          },
+          "start": {
+            "column": 0,
+            "line": 1,
+          },
+        },
+        "name": "(empty-report)",
+      },
+    },
+    "path": "<process-cwd>/src/file-to-change.ts",
+    "s": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 23,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 51,
+          "line": 2,
+        },
+        "start": {
+          "column": 0,
+          "line": 2,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 1,
+          "line": 3,
+        },
+        "start": {
+          "column": 0,
+          "line": 3,
+        },
+      },
+      "3": {
+        "end": {
+          "column": 0,
+          "line": 4,
+        },
+        "start": {
+          "column": 0,
+          "line": 4,
+        },
+      },
+      "4": {
+        "end": {
+          "column": 37,
+          "line": 5,
+        },
+        "start": {
+          "column": 0,
+          "line": 5,
+        },
+      },
+      "5": {
+        "end": {
+          "column": 14,
+          "line": 6,
+        },
+        "start": {
+          "column": 0,
+          "line": 6,
+        },
+      },
+      "6": {
+        "end": {
+          "column": 1,
+          "line": 7,
+        },
+        "start": {
+          "column": 0,
+          "line": 7,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/function-count.ts": {
     "all": false,
     "b": {
