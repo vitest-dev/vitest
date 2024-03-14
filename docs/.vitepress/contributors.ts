@@ -111,13 +111,12 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Team member of Vitest & UnoCSS',
   },
   {
-    avatar: contributorsAvatars.zxch3n,
-    name: 'Zixuan Chen',
-    github: 'zxch3n',
-    mastodon: 'https://elk.zone/hachyderm.io/@zx',
-    twitter: 'zxch3n',
-    title: 'A fullstack developer',
-    desc: 'Working on CRDTs & local-first software',
+    avatar: contributorsAvatars['hi-ogawa'],
+    name: 'Hiroshi Ogawa',
+    github: 'hi-ogawa',
+    twitter: 'hiroshi_18181',
+    title: 'Open source enthusiast',
+    desc: 'Team member of Vitest',
   },
 ]
 
@@ -148,12 +147,13 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     desc: 'Core team member of Vite & Team member of Vitest',
   },
   {
-    avatar: contributorsAvatars['hi-ogawa'],
-    name: 'Hiroshi Ogawa',
-    github: 'hi-ogawa',
-    twitter: 'hiroshi_18181',
-    title: 'Open source enthusiast',
-    desc: 'Team member of Vitest',
+    avatar: contributorsAvatars.zxch3n,
+    name: 'Zixuan Chen',
+    github: 'zxch3n',
+    mastodon: 'https://elk.zone/hachyderm.io/@zx',
+    twitter: 'zxch3n',
+    title: 'A fullstack developer',
+    desc: 'Working on CRDTs & local-first software',
   },
 ]
 

@@ -297,7 +297,15 @@ export class WorkspaceProject {
   }
 
   async setServer(options: UserConfig, server: ViteDevServer) {
-    this.config = resolveConfig(this.ctx.mode, options, server.config)
+    this.config = resolveConfig(
+      this.ctx.mode,
+      {
+        ...options,
+        coverage: this.ctx.config.coverage,
+      },
+      server.config,
+    )
+
     this.server = server
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
@@ -329,7 +337,6 @@ export class WorkspaceProject {
 
     return deepMerge({
       ...this.config,
-      coverage: this.ctx.config.coverage,
 
       poolOptions: {
         forks: {
@@ -358,7 +365,8 @@ export class WorkspaceProject {
         },
       },
       snapshotOptions: {
-        ...this.config.snapshotOptions,
+        ...this.ctx.config.snapshotOptions,
+        expand: this.config.snapshotOptions.expand ?? this.ctx.config.snapshotOptions.expand,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
@@ -374,6 +382,7 @@ export class WorkspaceProject {
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
       alias: [],
+      includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 

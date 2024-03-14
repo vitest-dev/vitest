@@ -7,6 +7,7 @@ export default defineConfig({
     poolOptions: {
       custom: {
         print: 'options are respected',
+        array: [1, 2, 3],
       },
     },
     poolMatchGlobs: [

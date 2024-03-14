@@ -20,6 +20,7 @@ exports[`custom json report 1`] = `
     "<process-cwd>/src/Defined.vue",
     "<process-cwd>/src/Hello.vue",
     "<process-cwd>/src/another-setup.ts",
+    "<process-cwd>/src/decorators.ts",
     "<process-cwd>/src/dynamic-file-esm.ignore.js",
     "<process-cwd>/src/dynamic-files.ts",
     "<process-cwd>/src/function-count.ts",
@@ -28,6 +29,7 @@ exports[`custom json report 1`] = `
     "<process-cwd>/src/index.mts",
     "<process-cwd>/src/multi-environment.ts",
     "<process-cwd>/src/multi-suite.ts",
+    "<process-cwd>/src/transpiled.js",
     "<process-cwd>/src/utils.ts",
   ],
 }

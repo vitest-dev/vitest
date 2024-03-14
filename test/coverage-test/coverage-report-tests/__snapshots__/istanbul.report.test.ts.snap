@@ -530,6 +530,215 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/decorators.ts": {
+    "b": {
+      "0": [
+        1,
+        0,
+      ],
+      "1": [
+        0,
+        1,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 8,
+          },
+          "start": {
+            "column": 4,
+            "line": 5,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 8,
+            },
+            "start": {
+              "column": 4,
+              "line": 5,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 8,
+            },
+            "start": {
+              "column": 4,
+              "line": 5,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 13,
+          },
+          "start": {
+            "column": 4,
+            "line": 10,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 4,
+              "line": 10,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 4,
+              "line": 10,
+            },
+          },
+        ],
+        "type": "if",
+      },
+    },
+    "f": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 9,
+            "line": 4,
+          },
+          "start": {
+            "column": 2,
+            "line": 4,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 14,
+          },
+          "start": {
+            "column": 46,
+            "line": 4,
+          },
+        },
+        "name": "(anonymous_4)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": null,
+            "line": 17,
+          },
+          "start": {
+            "column": 9,
+            "line": 17,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 21,
+          },
+          "start": {
+            "column": 25,
+            "line": 20,
+          },
+        },
+        "name": "SomeDecorator",
+      },
+      "2": {
+        "decl": {
+          "end": {
+            "column": 17,
+            "line": 25,
+          },
+          "start": {
+            "column": 9,
+            "line": 25,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 27,
+          },
+          "start": {
+            "column": 33,
+            "line": 25,
+          },
+        },
+        "name": "noop",
+      },
+    },
+    "path": "<process-cwd>/src/decorators.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 4,
+          "line": 5,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 7,
+        },
+        "start": {
+          "column": 6,
+          "line": 7,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 13,
+        },
+        "start": {
+          "column": 4,
+          "line": 10,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 6,
+          "line": 12,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/dynamic-files.ts": {
     "b": {
       "0": [
@@ -921,6 +1130,89 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 2,
           "line": 30,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/file-to-change.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 0,
+      "1": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 22,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 22,
+            "line": 1,
+          },
+        },
+        "name": "run",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 36,
+            "line": 5,
+          },
+          "start": {
+            "column": 16,
+            "line": 5,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 7,
+          },
+          "start": {
+            "column": 36,
+            "line": 5,
+          },
+        },
+        "name": "uncoveredFunction",
+      },
+    },
+    "path": "<process-cwd>/src/file-to-change.ts",
+    "s": {
+      "0": 0,
+      "1": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 6,
+        },
+        "start": {
+          "column": 2,
+          "line": 6,
         },
       },
     },
@@ -1893,6 +2185,503 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 4,
           "line": 7,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/original.ts": {
+    "b": {
+      "0": [
+        0,
+        0,
+      ],
+      "1": [
+        0,
+        0,
+      ],
+      "2": [
+        0,
+        0,
+      ],
+      "3": [
+        0,
+        0,
+      ],
+      "4": [
+        0,
+        0,
+      ],
+      "5": [
+        0,
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 5,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "1": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 13,
+          },
+          "start": {
+            "column": 2,
+            "line": 10,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "2": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 18,
+          },
+          "start": {
+            "column": 2,
+            "line": 15,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "3": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 5,
+          },
+          "start": {
+            "column": 2,
+            "line": 2,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 5,
+            },
+            "start": {
+              "column": 2,
+              "line": 2,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "4": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 13,
+          },
+          "start": {
+            "column": 2,
+            "line": 10,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 13,
+            },
+            "start": {
+              "column": 2,
+              "line": 10,
+            },
+          },
+        ],
+        "type": "if",
+      },
+      "5": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 18,
+          },
+          "start": {
+            "column": 2,
+            "line": 15,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 3,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+          {
+            "end": {
+              "column": 3,
+              "line": 18,
+            },
+            "start": {
+              "column": 2,
+              "line": 15,
+            },
+          },
+        ],
+        "type": "if",
+      },
+    },
+    "f": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 22,
+            "line": 1,
+          },
+          "start": {
+            "column": 21,
+            "line": 1,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 19,
+          },
+          "start": {
+            "column": 40,
+            "line": 1,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 16,
+            "line": 21,
+          },
+          "start": {
+            "column": 9,
+            "line": 21,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 21,
+          },
+          "start": {
+            "column": 16,
+            "line": 21,
+          },
+        },
+        "name": "noop",
+      },
+      "2": {
+        "decl": {
+          "end": {
+            "column": 13,
+            "line": 21,
+          },
+          "start": {
+            "column": 9,
+            "line": 21,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 21,
+          },
+          "start": {
+            "column": 13,
+            "line": 21,
+          },
+        },
+        "name": "noop",
+      },
+    },
+    "path": "<process-cwd>/src/original.ts",
+    "s": {
+      "0": 0,
+      "1": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 19,
+        },
+        "start": {
+          "column": 21,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 5,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+      "10": {
+        "end": {
+          "column": 11,
+          "line": 4,
+        },
+        "start": {
+          "column": 4,
+          "line": 4,
+        },
+      },
+      "11": {
+        "end": {
+          "column": 9,
+          "line": 8,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "12": {
+        "end": {
+          "column": 3,
+          "line": 13,
+        },
+        "start": {
+          "column": 2,
+          "line": 10,
+        },
+      },
+      "13": {
+        "end": {
+          "column": 11,
+          "line": 12,
+        },
+        "start": {
+          "column": 4,
+          "line": 12,
+        },
+      },
+      "14": {
+        "end": {
+          "column": 3,
+          "line": 18,
+        },
+        "start": {
+          "column": 2,
+          "line": 15,
+        },
+      },
+      "15": {
+        "end": {
+          "column": 11,
+          "line": 17,
+        },
+        "start": {
+          "column": 4,
+          "line": 17,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 4,
+        },
+        "start": {
+          "column": 4,
+          "line": 4,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 13,
+        },
+        "start": {
+          "column": 2,
+          "line": 10,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 4,
+          "line": 12,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 18,
+        },
+        "start": {
+          "column": 2,
+          "line": 15,
+        },
+      },
+      "7": {
+        "end": {
+          "column": null,
+          "line": 17,
+        },
+        "start": {
+          "column": 4,
+          "line": 17,
+        },
+      },
+      "8": {
+        "end": {
+          "column": 1,
+          "line": 19,
+        },
+        "start": {
+          "column": 21,
+          "line": 1,
+        },
+      },
+      "9": {
+        "end": {
+          "column": 3,
+          "line": 5,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
         },
       },
     },

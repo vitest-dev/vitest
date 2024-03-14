@@ -61,7 +61,7 @@ vi.resetModules()
 
 ## Failed to terminate worker
 
-This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#pool-1-0-0). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
+This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
 
 As work-around you can switch to [`pool: 'forks'`](/config/#forks) or [`pool: 'vmForks'`](/config/#vmforks).
 

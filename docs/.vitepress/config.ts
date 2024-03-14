@@ -282,6 +282,10 @@ export default withPwa(defineConfig({
               link: '/api/expect-typeof',
             },
             {
+              text: 'Assert',
+              link: '/api/assert',
+            },
+            {
               text: 'AssertType',
               link: '/api/assert-type',
             },

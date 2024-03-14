@@ -14,10 +14,14 @@ export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
     }
     else {
       for (const task of s.tasks) {
-        if (isAtomTest(task))
+        if (isAtomTest(task)) {
           tests.push(task)
-        else
-          tests.push(...getTests(task))
+        }
+        else {
+          const taskTests = getTests(task)
+          for (const test of taskTests)
+            tests.push(test)
+        }
       }
     }
   }

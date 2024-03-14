@@ -4,13 +4,13 @@ title: IDE Integrations | Guide
 
 # IDE Integrations
 
-## VS Code <Badge>Official</Badge>
+## VS Code <Badge>Official</Badge> {#vs-code}
 
 <p text-center>
 <img src="https://raw.githubusercontent.com/vitest-dev/vscode/main/img/cover.png" w-60>
 </p>
 
-[GitHub](https://github.com/vitest-dev/vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
+[GitHub](https://github.com/vitest-dev/vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
 ![](https://i.ibb.co/bJCbCf2/202203292020.gif)
 

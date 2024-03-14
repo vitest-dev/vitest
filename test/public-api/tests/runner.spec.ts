@@ -15,9 +15,10 @@ it.each([
       headless: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', async (config) => {
+] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 3 }, async (config) => {
   const taskUpdate: TaskResultPack[] = []
   const finishedFiles: File[] = []
+  const collectedFiles: File[] = []
   const { vitest, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures'),
     include: ['**/*.spec.ts'],
@@ -30,8 +31,12 @@ it.each([
         onFinished(files) {
           finishedFiles.push(...files || [])
         },
+        onCollected(files) {
+          collectedFiles.push(...files || [])
+        },
       },
     ],
+    includeTaskLocation: true,
     ...config,
   })
 
@@ -69,7 +74,17 @@ it.each([
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
-}, {
-  timeout: 60_000,
-  retry: 3,
+
+  expect(finishedFiles[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
+  expect(collectedFiles[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
+  expect(files[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
 })

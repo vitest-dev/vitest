@@ -216,7 +216,7 @@ To see all configurable options for coverage, see the [coverage Config Reference
 
 ## Vitest UI
 
-Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](./ui).
+Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](/guide/ui).
 
 Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
 - enable `coverage.enabled=true` in your configuration or run Vitest with `--coverage.enabled=true` flag

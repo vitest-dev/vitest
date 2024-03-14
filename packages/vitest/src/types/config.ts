@@ -48,10 +48,22 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
-   * Should tests run in random order.
+   * Should files and tests run in random order.
    * @default false
    */
-  shuffle?: boolean
+  shuffle?: boolean | {
+    /**
+     * Should files run in random order. Long running tests will not start
+     * earlier if you enable this option.
+     * @default false
+     */
+    files?: boolean
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    tests?: boolean
+  }
   /**
    * Should tests run in parallel.
    * @default false
@@ -220,7 +232,7 @@ export interface InlineConfig {
 
   /**
    * Exclude globs for test files
-   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
    */
   exclude?: string[]
 
@@ -359,7 +371,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default true
+   * @default !process.env.CI
    */
   watch?: boolean
 
@@ -373,6 +385,8 @@ export interface InlineConfig {
   /**
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters.
+   *
+   * @default []
    */
   reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
@@ -439,7 +453,7 @@ export interface InlineConfig {
    *
    * Useful if you are testing calling CLI commands
    *
-   * @default []
+   * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
    */
   forceRerunTriggers?: string[]
 
@@ -494,6 +508,8 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
+   *
+   * @default false
    */
   ui?: boolean
 
@@ -508,7 +524,7 @@ export interface InlineConfig {
   /**
    * Open UI automatically.
    *
-   * @default true
+   * @default !process.env.CI
    */
   open?: boolean
 
@@ -551,6 +567,8 @@ export interface InlineConfig {
 
   /**
    * Allow tests and suites that are marked as only
+   *
+   * @default !process.env.CI
    */
   allowOnly?: boolean
 
@@ -574,7 +592,7 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
@@ -626,6 +644,8 @@ export interface InlineConfig {
 
   /**
    * Ignore any unhandled errors that occur
+   *
+   * @default false
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
 
@@ -695,6 +715,13 @@ export interface InlineConfig {
    * @default false
    */
   disableConsoleIntercept?: boolean
+
+  /**
+   * Include "location" property inside the test definition
+   *
+   * @default false
+   */
+  includeTaskLocation?: boolean
 }
 
 export interface TypecheckConfig {
@@ -708,14 +735,20 @@ export interface TypecheckConfig {
   only?: boolean
   /**
    * What tools to use for type checking.
+   *
+   * @default 'tsc'
    */
   checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
   /**
    * Pattern for files that should be treated as test files
+   *
+   * @default ['**\/*.{test,spec}-d.?(c|m)[jt]s?(x)']
    */
   include: string[]
   /**
    * Pattern for files that should not be treated as test files
+   *
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
    */
   exclude: string[]
   /**
@@ -783,6 +816,11 @@ export interface UserConfig extends InlineConfig {
    * Additional exclude patterns
    */
   cliExclude?: string[]
+
+  /**
+   * Override vite config's clearScreen from cli
+   */
+  clearScreen?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {

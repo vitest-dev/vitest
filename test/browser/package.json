@@ -18,6 +18,6 @@
     "playwright": "^1.41.0",
     "url": "^0.11.3",
     "vitest": "workspace:*",
-    "webdriverio": "^8.31.1"
+    "webdriverio": "^8.32.2"
   }
 }

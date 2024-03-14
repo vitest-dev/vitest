@@ -15,6 +15,22 @@ async function config(cliOptions: UserConfig, configValue: UserConfig = {}, vite
 }
 
 describe('correctly defines isolated flags', async () => {
+  it('does not merge user-defined poolOptions with itself', async () => {
+    const c = await config({}, {
+      poolOptions: {
+        array: [1, 2, 3],
+      },
+    })
+    // Ensure poolOptions.array has not been merged with itself
+    // Previously, this would have been [1,2,3,1,2,3]
+    expect(c.poolOptions?.array).toMatchInlineSnapshot(`
+      [
+        1,
+        2,
+        3,
+      ]
+    `)
+  })
   it('prefers CLI poolOptions flags over config', async () => {
     const c = await config({
       isolate: true,

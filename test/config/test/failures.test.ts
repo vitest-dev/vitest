@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import type { UserConfig } from 'vitest/config'
 import { version } from 'vitest/package.json'
 
+import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
 function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
@@ -59,6 +60,49 @@ test('v8 coverage provider cannot be used with browser', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
   expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})
+
+test('v8 coverage provider cannot be used with browser in workspace', async () => {
+  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
+
+  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})
+
+test('coverage reportsDirectory cannot be current working directory', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
+})
+
+test('coverage reportsDirectory cannot be root', async () => {
+  const { stderr } = await runVitest({
+    root: './fixtures',
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./fixtures'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
 })
 
 test('version number is printed when coverage provider fails to load', async () => {

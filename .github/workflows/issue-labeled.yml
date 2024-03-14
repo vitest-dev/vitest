@@ -8,12 +8,12 @@ jobs:
   reply-labeled:
     runs-on: ubuntu-latest
     steps:
-      - name: need reproduction
-        if: github.event.label.name == 'need reproduction'
+      - name: needs reproduction
+        if: github.event.label.name == 'needs reproduction'
         uses: actions-cool/issues-helper@v3
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.issue.number }}
           body: |
-            Hello @${{ github.event.issue.user.login }}. Please provide a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) using a GitHub repository or [StackBlitz](https://vitest.new). Issues marked with `need reproduction` will be closed if they have no activity within 3 days.
+            Hello @${{ github.event.issue.user.login }}. Please provide a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) using a GitHub repository or [StackBlitz](https://vitest.new) (you can also use [examples](https://github.com/vitest-dev/vitest/tree/main/examples)). Issues marked with `needs reproduction` will be closed if they have no activity within 3 days.

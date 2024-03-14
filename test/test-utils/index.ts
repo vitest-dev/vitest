@@ -188,6 +188,9 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     await cli.isDone
   })
 
+  if (args.includes('--inspect') || args.includes('--inspect-brk'))
+    return cli
+
   if (args.includes('--watch')) {
     if (command === 'vitest') // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')
