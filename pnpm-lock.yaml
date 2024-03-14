@@ -1854,6 +1854,18 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/inspect:
+    devDependencies:
+      vite:
+        specifier: ^5.0.12
+        version: 5.0.12(@types/node@20.11.5)(less@4.1.3)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+      ws:
+        specifier: ^8.14.2
+        version: 8.14.2
+
   test/mixed-pools:
     devDependencies:
       vitest:
