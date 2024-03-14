@@ -580,6 +580,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Removes colors from the console output',
     alias: 'no-color',
   },
+  clearScreen: {
+    description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
+  },
 
   // disable CLI options
   cliExclude: null,

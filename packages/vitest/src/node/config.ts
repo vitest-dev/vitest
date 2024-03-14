@@ -94,6 +94,8 @@ export function resolveConfig(
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
+  resolved.clearScreen = resolved.clearScreen ?? viteConfig.clearScreen ?? true
+
   if (options.shard) {
     if (resolved.watch)
       throw new Error('You cannot use --shard option with enabled watch')
