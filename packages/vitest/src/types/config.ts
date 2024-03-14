@@ -715,6 +715,13 @@ export interface InlineConfig {
    * @default false
    */
   disableConsoleIntercept?: boolean
+
+  /**
+   * Include "location" property inside the test definition
+   *
+   * @default false
+   */
+  includeTaskLocation?: boolean
 }
 
 export interface TypecheckConfig {

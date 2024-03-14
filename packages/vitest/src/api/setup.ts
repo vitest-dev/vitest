@@ -113,6 +113,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getConfig() {
           return vitestOrWorkspace.config
         },
+        async getBrowserFileSourceMap(id) {
+          if (!('ctx' in vitestOrWorkspace))
+            return undefined
+          const mod = vitestOrWorkspace.browser?.moduleGraph.getModuleById(id)
+          return mod?.transformResult?.map
+        },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
           if (result) {

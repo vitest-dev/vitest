@@ -2108,3 +2108,16 @@ Disabling this option might [improve performance](/guide/improving-performance) 
 ::: tip
 You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
 :::
+
+### includeTaskLocation <Badge type="info">1.4.0+</Badge> {#includeTaskLocation}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Should `location` property be included when Vitest API receives tasks in [reporters](#reporters). If you have a lot of tests, this might cause a small performance regression.
+
+The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
+
+::: tip
+This option has no effect if you do not use custom code that relies on this.
+:::

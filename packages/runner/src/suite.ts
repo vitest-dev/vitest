@@ -1,4 +1,5 @@
 import { format, isObject, objDisplay, objectAttr } from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import type { Custom, CustomAPI, File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustomOptions, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
@@ -25,19 +26,25 @@ export const it = test
 
 let runner: VitestRunner
 let defaultSuite: SuiteCollector
+let currentTestFilepath: string
 
 export function getDefaultSuite() {
   return defaultSuite
+}
+
+export function getTestFilepath() {
+  return currentTestFilepath
 }
 
 export function getRunner() {
   return runner
 }
 
-export function clearCollectorContext(currentRunner: VitestRunner) {
+export function clearCollectorContext(filepath: string, currentRunner: VitestRunner) {
   if (!defaultSuite)
     defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
   runner = currentRunner
+  currentTestFilepath = filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -103,7 +110,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   let suite: Suite
 
-  initSuite()
+  initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const task: Custom = {
@@ -138,6 +145,17 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
         withFixtures(handler, context),
         options?.timeout ?? runner.config.testTimeout,
       ))
+    }
+
+    if (runner.config.includeTaskLocation) {
+      const limit = Error.stackTraceLimit
+      // custom can be called from any place, let's assume the limit is 10 stacks
+      Error.stackTraceLimit = 10
+      const error = new Error('stacktrace').stack!
+      Error.stackTraceLimit = limit
+      const stack = findStackTrace(error)
+      if (stack)
+        task.location = stack
     }
 
     tasks.push(task)
@@ -183,7 +201,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     getHooks(suite)[name].push(...fn as any)
   }
 
-  function initSuite() {
+  function initSuite(includeLocation: boolean) {
     if (typeof suiteOptions === 'number')
       suiteOptions = { timeout: suiteOptions }
 
@@ -199,13 +217,27 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       projectName: '',
     }
 
+    if (runner && includeLocation && runner.config.includeTaskLocation) {
+      const limit = Error.stackTraceLimit
+      Error.stackTraceLimit = 5
+      const error = new Error('stacktrace').stack!
+      Error.stackTraceLimit = limit
+      const stack = parseSingleStack(error.split('\n')[5])
+      if (stack) {
+        suite.location = {
+          line: stack.line,
+          column: stack.column,
+        }
+      }
+    }
+
     setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
     tasks.length = 0
     factoryQueue.length = 0
-    initSuite()
+    initSuite(false)
   }
 
   async function collect(file?: File) {
@@ -396,4 +428,19 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+function findStackTrace(error: string) {
+  // first line is the error message
+  // and the first 3 stacks are always from the collector
+  const lines = error.split('\n').slice(4)
+  for (const line of lines) {
+    const stack = parseSingleStack(line)
+    if (stack && stack.file === getTestFilepath()) {
+      return {
+        line: stack.line,
+        column: stack.column,
+      }
+    }
+  }
 }
