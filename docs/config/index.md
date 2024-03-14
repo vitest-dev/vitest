@@ -1137,6 +1137,10 @@ Clean coverage report on watch rerun
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
+::: warning
+Vitest will delete this directory before running tests if `coverage.clean` is enabled (default value).
+:::
+
 Directory to write coverage report to.
 
 To preview the coverage report in the output of [HTML reporter](/guide/reporters.html#html-reporter), this option must be set as a sub-directory of the html report directory (for example `./html/coverage`).

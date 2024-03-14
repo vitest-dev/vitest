@@ -137,12 +137,20 @@ export function resolveConfig(
     }
   }
 
+  // TODO: V2.0.0 remove
   // @ts-expect-error -- check for removed API option
   if (resolved.coverage.provider === 'c8')
     throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
+  if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
+    const reportsDirectory = resolve(resolved.root, resolved.coverage.reportsDirectory)
+
+    if (reportsDirectory === resolved.root || reportsDirectory === process.cwd())
+      throw new Error(`You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`)
+  }
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
