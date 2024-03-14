@@ -223,6 +223,13 @@ test('cache is parsed correctly', () => {
   })
 })
 
+test('shuffle is parsed correctly', () => {
+  expect(getCLIOptions('--sequence.shuffle')).toEqual({ sequence: { shuffle: true } })
+  expect(getCLIOptions('--sequence.shuffle=false')).toEqual({ sequence: { shuffle: false } })
+  expect(getCLIOptions('--sequence.shuffle.files --sequence.shuffle.tests')).toEqual({ sequence: { shuffle: { files: true, tests: true } } })
+  expect(getCLIOptions('--sequence.shuffle.files=false --sequence.shuffle.tests=false')).toEqual({ sequence: { shuffle: { files: false, tests: false } } })
+})
+
 test('typecheck correctly passes down arguments', () => {
   const { options, args } = parseArguments('--typecheck some.name.ts')
   expect(options).toEqual({ typecheck: { enabled: true } })

@@ -48,10 +48,22 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
-   * Should tests run in random order.
+   * Should files and tests run in random order.
    * @default false
    */
-  shuffle?: boolean
+  shuffle?: boolean | {
+    /**
+     * Should files run in random order. Long running tests will not start
+     * earlier if you enable this option.
+     * @default false
+     */
+    files?: boolean
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    tests?: boolean
+  }
   /**
    * Should tests run in parallel.
    * @default false
