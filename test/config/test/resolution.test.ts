@@ -235,3 +235,18 @@ describe('correctly defines inline and noExternal flags', async () => {
     ])
   })
 })
+
+describe('correctly defines api flag', () => {
+  it('overrides inlined value', async () => {
+    const c = await vitest({ api: false }, {
+      api: {
+        port: 1234,
+      },
+      watch: true,
+    })
+    expect(c.server.config.server.middlewareMode).toBe(true)
+    expect(c.config.api).toEqual({
+      middlewareMode: true,
+    })
+  })
+})
