@@ -185,7 +185,7 @@
     "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.2.9",
-    "get-tsconfig": "^4.7.2",
+    "get-tsconfig": "^4.7.3",
     "happy-dom": "^13.3.8",
     "jsdom": "^24.0.0",
     "log-update": "^5.0.1",
