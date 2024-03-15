@@ -213,6 +213,7 @@ test('maxConcurrency is parsed correctly', () => {
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
+  expect(() => getCLIOptions('--cache.dir=./cache')).toThrowError('--cache.dir is deprecated')
 })
 
 test('shuffle is parsed correctly', () => {

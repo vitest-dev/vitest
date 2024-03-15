@@ -551,8 +551,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: {
       dir: null,
     },
+    default: true,
     // cache can only be "false" or an object
     transform(cache) {
+      if (typeof cache !== 'boolean' && cache)
+        throw new Error('--cache.dir is deprecated')
       if (cache)
         return {}
       return cache
