@@ -1736,18 +1736,10 @@ Test above this limit will be queued to run when available slot appears.
 
 ### cache<NonProjectOption />
 
-- **Type**: `false | { dir? }`
+- **Type**: `false`
 - **CLI**: `--no-cache`, `--cache=false`
 
-Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
-
-#### cache.dir
-
-- **Type**: `string`
-- **Default**: `node_modules/.vitest`
-- **CLI**: `--cache.dir=./cache`
-
-Path to cache directory.
+Use this option if you want to disable the cache feature. At the moment Vitest stores cache for test results to run the longer and failed tests first.
 
 ### sequence
 
