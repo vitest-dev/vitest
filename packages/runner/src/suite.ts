@@ -153,7 +153,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       Error.stackTraceLimit = 10
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findStackTrace(error)
+      const stack = findStackTrace(error, task.each ?? false)
       if (stack)
         task.location = stack
     }
@@ -226,7 +226,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       if (stack) {
         suite.location = {
           line: stack.line,
-          column: stack.column,
+          // because source map is boundary based, this line leads to ")" in test.each()[(]),
+          // but it should be the next opening bracket - here we assume it's on the same line
+          column: each ? stack.column + 1 : stack.column,
         }
       }
     }
@@ -430,7 +432,7 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-function findStackTrace(error: string) {
+function findStackTrace(error: string, each: boolean) {
   // first line is the error message
   // and the first 3 stacks are always from the collector
   const lines = error.split('\n').slice(4)
@@ -439,7 +441,13 @@ function findStackTrace(error: string) {
     if (stack && stack.file === getTestFilepath()) {
       return {
         line: stack.line,
-        column: stack.column,
+        /**
+         * test.each([1, 2])('name')
+         *                 ^ leads here, but should
+         *                  ^ lead here
+         * in source maps it's the same boundary, so it just points to the start of it
+         */
+        column: each ? stack.column + 1 : stack.column,
       }
     }
   }

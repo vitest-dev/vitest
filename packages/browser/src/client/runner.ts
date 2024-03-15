@@ -127,7 +127,7 @@ async function updateFilesLocations(files: File[]) {
       if (task.location) {
         const { line, column } = originalPositionFor(traceMap, task.location)
         if (line != null && column != null)
-          task.location = { line, column: column + 1 }
+          task.location = { line, column: task.each ? column : column + 1 }
       }
       if ('tasks' in task)
         task.tasks.forEach(updateLocation)
