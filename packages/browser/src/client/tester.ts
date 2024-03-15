@@ -146,7 +146,7 @@ async function runTests(files: string[]) {
     preparedData = await tryCall(() => prepareTestEnvironment(files))
   }
   catch (error) {
-    debug('data cannot be loaded becuase it threw an error')
+    debug('data cannot be loaded because it threw an error')
     await client.rpc.onUnhandledError(serializeError(error), 'Preload Error')
     done(files)
     return

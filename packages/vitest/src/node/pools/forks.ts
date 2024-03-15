@@ -8,6 +8,7 @@ import type { ContextRPC, ContextTestEnvironment, ResolvedConfig, RunnerRPC, Run
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { groupBy, resolve } from '../../utils'
 import { createMethodsRPC } from './rpc'
 
@@ -42,12 +43,6 @@ function createChildProcessChannel(project: WorkspaceProject) {
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 
   return { channel, cleanup }
-}
-
-function stringifyRegex(input: RegExp | string): string {
-  if (typeof input === 'string')
-    return input
-  return `$$vitest:${input.toString()}`
 }
 
 export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
@@ -144,14 +139,7 @@ export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptio
           return configs.get(project)!
 
         const _config = project.getSerializableConfig()
-
-        const config = {
-          ..._config,
-          // v8 serialize does not support regex
-          testNamePattern: _config.testNamePattern
-            ? stringifyRegex(_config.testNamePattern)
-            : undefined,
-        } as ResolvedConfig
+        const config = wrapSerializableConfig(_config)
 
         configs.set(project, config)
         return config

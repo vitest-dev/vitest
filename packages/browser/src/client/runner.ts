@@ -55,7 +55,13 @@ export function createBrowserRunner(
       }
     }
 
-    onCollected = (files: File[]): unknown => {
+    onCollected = async (files: File[]): Promise<unknown> => {
+      if (this.config.includeTaskLocation) {
+        try {
+          await updateFilesLocations(files)
+        }
+        catch (_) {}
+      }
       return rpc().onCollected(files)
     }
 
@@ -106,4 +112,29 @@ export async function initiateRunner() {
   runner.config.diffOptions = diffOptions
   cachedRunner = runner
   return runner
+}
+
+async function updateFilesLocations(files: File[]) {
+  const { loadSourceMapUtils } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const { TraceMap, originalPositionFor } = await loadSourceMapUtils()
+
+  const promises = files.map(async (file) => {
+    const result = await rpc().getBrowserFileSourceMap(file.filepath)
+    if (!result)
+      return null
+    const traceMap = new TraceMap(result as any)
+    function updateLocation(task: Task) {
+      if (task.location) {
+        const { line, column } = originalPositionFor(traceMap, task.location)
+        if (line != null && column != null)
+          task.location = { line, column: column + 1 }
+      }
+      if ('tasks' in task)
+        task.tasks.forEach(updateLocation)
+    }
+    file.tasks.forEach(updateLocation)
+    return null
+  })
+
+  await Promise.all(promises)
 }

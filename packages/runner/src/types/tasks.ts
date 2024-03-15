@@ -18,6 +18,10 @@ export interface TaskBase {
   result?: TaskResult
   retry?: number
   repeats?: number
+  location?: {
+    line: number
+    column: number
+  }
 }
 
 export interface TaskPopulated extends TaskBase {

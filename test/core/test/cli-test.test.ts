@@ -1,4 +1,6 @@
 import { expect, test } from 'vitest'
+import { resolveConfig as viteResolveConfig } from 'vite'
+import { resolveConfig } from '../../../packages/vitest/src/node/config.js'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 
 const vitestCli = createCLI()
@@ -223,6 +225,13 @@ test('cache is parsed correctly', () => {
   })
 })
 
+test('shuffle is parsed correctly', () => {
+  expect(getCLIOptions('--sequence.shuffle')).toEqual({ sequence: { shuffle: true } })
+  expect(getCLIOptions('--sequence.shuffle=false')).toEqual({ sequence: { shuffle: false } })
+  expect(getCLIOptions('--sequence.shuffle.files --sequence.shuffle.tests')).toEqual({ sequence: { shuffle: { files: true, tests: true } } })
+  expect(getCLIOptions('--sequence.shuffle.files=false --sequence.shuffle.tests=false')).toEqual({ sequence: { shuffle: { files: false, tests: false } } })
+})
+
 test('typecheck correctly passes down arguments', () => {
   const { options, args } = parseArguments('--typecheck some.name.ts')
   expect(options).toEqual({ typecheck: { enabled: true } })
@@ -252,6 +261,44 @@ test('browser by name', () => {
 
   expect(args).toEqual([])
   expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
+})
+
+test('clearScreen', async () => {
+  const examples = [
+    // vitest cli | vite clearScreen
+    ['--clearScreen', undefined],
+    ['--clearScreen', true],
+    ['--clearScreen', false],
+    ['--no-clearScreen', undefined],
+    ['--no-clearScreen', true],
+    ['--no-clearScreen', false],
+    ['', undefined],
+    ['', true],
+    ['', false],
+  ] as const
+  const baseViteConfig = await viteResolveConfig({ configFile: false }, 'serve')
+  const results = examples.map(([vitestClearScreen, viteClearScreen]) => {
+    const viteConfig = {
+      ...baseViteConfig,
+      clearScreen: viteClearScreen,
+    }
+    const vitestConfig = getCLIOptions(vitestClearScreen)
+    const config = resolveConfig('test', vitestConfig, viteConfig)
+    return config.clearScreen
+  })
+  expect(results).toMatchInlineSnapshot(`
+    [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+    ]
+  `)
 })
 
 test('public parseCLI works correctly', () => {
