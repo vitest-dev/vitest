@@ -4,7 +4,7 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
@@ -166,7 +166,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       'expected #{this} to match object #{exp}',
       'expected #{this} to not match object #{exp}',
       expected,
-      actual,
+      getObjectSubset(actual, expected),
     )
   })
   def('toMatch', function (expected: string | RegExp) {

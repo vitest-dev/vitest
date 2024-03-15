@@ -903,24 +903,96 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
 })
 
-it('toHaveProperty error diff', () => {
+// make it easy for dev who trims trailing whitespace on IDE
+function trim(s: string): string {
+  return s.replaceAll(/ *$/gm, '')
+}
+
+function getError(f: () => unknown) {
+  try {
+    f()
+    return expect.unreachable()
+  }
+  catch (error) {
+    const processed = processError(error)
+    return [processed.message, trim(processed.diff)]
+  }
+}
+
+it('toMatchObject error diff', () => {
   setupColors(getDefaultColors())
 
-  // make it easy for dev who trims trailing whitespace on IDE
-  function trim(s: string): string {
-    return s.replaceAll(/ *$/gm, '')
-  }
+  // single property on root
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }",
+      "- Expected
+    + Received
 
-  function getError(f: () => unknown) {
-    try {
-      f()
-      return expect.unreachable()
-    }
-    catch (error) {
-      const processed = processError(error)
-      return [processed.message, trim(processed.diff)]
-    }
-  }
+      Object {
+    -   "b": 3,
+    +   "b": 2,
+      }",
+    ]
+  `)
+
+  // nested property
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 } } to match object { c: { d: 5 } }",
+      "- Expected
+    + Received
+
+      Object {
+        "c": Object {
+    -     "d": 5,
+    +     "d": 4,
+        },
+      }",
+    ]
+  `)
+
+  // multiple nested properties
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 }, foo: { value: 'bar' }, bar: { value: 'foo' } }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }",
+      "- Expected
+    + Received
+
+      Object {
+        "c": Object {
+    -     "d": 5,
+    +     "d": 4,
+        },
+        "foo": Object {
+    -     "value": "biz",
+    +     "value": "bar",
+        },
+      }",
+    ]
+  `)
+
+  // property on root, nothing stripped
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ a: 1, b: 3, c: { d: 4 } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 } } to match object { a: 1, b: 3, c: { d: 4 } }",
+      "- Expected
+    + Received
+
+      Object {
+        "a": 1,
+    -   "b": 3,
+    +   "b": 2,
+        "c": Object {
+          "d": 4,
+        },
+      }",
+    ]
+  `)
+})
+
+it('toHaveProperty error diff', () => {
+  setupColors(getDefaultColors())
 
   // non match value
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
