@@ -14,6 +14,7 @@ import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import { provider } from 'std-env'
+import { stripLiteral } from 'strip-literal'
 import createDebug from 'debug'
 import { cleanUrl } from 'vite-node/utils'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
@@ -245,9 +246,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
     const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
 
-    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+
+    if (this.ctx.config.changed)
+      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+
     const uncoveredFiles = includedFiles
-      .map(file => pathToFileURL(resolve(this.ctx.config.root, file)))
+      .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
     let merged: RawCoverage = { result: [] }
@@ -260,7 +266,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
 
       const coverages = await Promise.all(chunk.map(async (filename) => {
-        const { source } = await this.getSources(filename.href, transformResults)
+        const transformResult = await this.ctx.vitenode.transformRequest(filename.pathname).catch(() => {})
+
+        // Ignore empty files, e.g. files that contain only typescript types and no runtime code
+        if (transformResult && stripLiteral(transformResult.code).trim() === '')
+          return null
+
+        const { originalSource } = await this.getSources(filename.href, transformResults)
 
         const coverage = {
           url: filename.href,
@@ -269,7 +281,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           functions: [{
             ranges: [{
               startOffset: 0,
-              endOffset: source.length,
+              endOffset: originalSource.length,
               count: 0,
             }],
             isBlockCoverage: true,
@@ -281,7 +293,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         return { result: [coverage] }
       }))
 
-      merged = mergeProcessCovs([merged, ...coverages])
+      merged = mergeProcessCovs([
+        merged,
+        ...coverages.filter((cov): cov is NonNullable<typeof cov> => cov != null),
+      ])
     }
 
     return merged
@@ -289,7 +304,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   private async getSources(url: string, transformResults: TransformResults, functions: Profiler.FunctionCoverage[] = []): Promise<{
     source: string
-    originalSource?: string
+    originalSource: string
     sourceMap?: { sourcemap: EncodedSourceMap }
   }> {
     const filePath = normalize(fileURLToPath(url))
@@ -306,8 +321,16 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     })
 
     // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
-    if (!map)
-      return { source: code || sourcesContent }
+    if (!map) {
+      return {
+        source: code || sourcesContent,
+        originalSource: sourcesContent,
+      }
+    }
+
+    const sources = [url]
+    if (map.sources && map.sources[0] && !url.endsWith(map.sources[0]))
+      sources[0] = new URL(map.sources[0], url).href
 
     return {
       originalSource: sourcesContent,
@@ -316,7 +339,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
-          sources: [url],
+          sources,
           sourcesContent: [sourcesContent],
         }),
       },

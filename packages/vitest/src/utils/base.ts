@@ -160,3 +160,12 @@ export function setProcessTitle(title: string) {
   }
   catch {}
 }
+
+export function escapeRegExp(s: string) {
+  // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+}
+
+export function wildcardPatternToRegExp(pattern: string): RegExp {
+  return new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`, 'i')
+}

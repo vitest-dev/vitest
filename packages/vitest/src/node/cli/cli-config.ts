@@ -436,7 +436,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<options>',
     subcommands: {
       shuffle: {
-        description: 'Run tests in a random order. Enabling this option will impact Vitest\'s cache and have a performance impact. May be useful to find tests that accidentally depend on another run previously (default: false)',
+        description: 'Run files and tests in a random order. Enabling this option will impact Vitest\'s cache and have a performance impact. May be useful to find tests that accidentally depend on another run previously (default: false)',
+        argument: '',
+        subcommands: {
+          files: {
+            description: 'Run files in a random order. Long running tests will not start earlier if you enable this option. (default: false)',
+          },
+          tests: {
+            description: 'Run tests in a random oder (default: false)',
+          },
+        },
       },
       concurrent: {
         description: 'Make tests run in parallel (default: false)',
@@ -524,7 +533,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   project: {
-    description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2',
+    description: 'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: --project=1 --project=2. You can also filter projects using wildcards like --project=packages*',
     argument: '<name>',
     array: true,
   },
@@ -567,6 +576,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Removes colors from the console output',
     alias: 'no-color',
   },
+  clearScreen: {
+    description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
+  },
 
   // disable CLI options
   cliExclude: null,
@@ -599,4 +611,5 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
+  includeTaskLocation: null,
 }

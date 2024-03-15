@@ -1,15 +1,17 @@
 import { createRequire } from 'node:module'
 
-import type { ResolvedConfig } from '../types'
+import type { ContextRPC } from '../types'
 
 const __require = createRequire(import.meta.url)
 let inspector: typeof import('node:inspector')
+let session: InstanceType<typeof inspector.Session>
 
 /**
  * Enables debugging inside `worker_threads` and `child_process`.
  * Should be called as early as possible when worker/process has been set up.
  */
-export function setupInspect(config: ResolvedConfig) {
+export function setupInspect(ctx: ContextRPC) {
+  const config = ctx.config
   const isEnabled = config.inspect || config.inspectBrk
 
   if (isEnabled) {
@@ -20,8 +22,22 @@ export function setupInspect(config: ResolvedConfig) {
     if (!isOpen) {
       inspector.open()
 
-      if (config.inspectBrk)
+      if (config.inspectBrk) {
         inspector.waitForDebugger()
+        const firstTestFile = ctx.files[0]
+
+        // Stop at first test file
+        if (firstTestFile) {
+          session = new inspector.Session()
+          session.connect()
+
+          session.post('Debugger.enable')
+          session.post('Debugger.setBreakpointByUrl', {
+            lineNumber: 0,
+            url: new URL(firstTestFile, import.meta.url).href,
+          })
+        }
+      }
     }
   }
 
@@ -32,7 +48,9 @@ export function setupInspect(config: ResolvedConfig) {
   const keepOpen = config.watch && (isIsolatedSingleFork || isIsolatedSingleThread)
 
   return function cleanup() {
-    if (isEnabled && !keepOpen && inspector)
+    if (isEnabled && !keepOpen && inspector) {
       inspector.close()
+      session?.disconnect()
+    }
   }
 }

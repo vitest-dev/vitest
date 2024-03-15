@@ -1137,6 +1137,10 @@ Clean coverage report on watch rerun
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
+::: warning
+Vitest will delete this directory before running tests if `coverage.clean` is enabled (default value).
+:::
+
 Directory to write coverage report to.
 
 To preview the coverage report in the output of [HTML reporter](/guide/reporters.html#html-reporter), this option must be set as a sub-directory of the html report directory (for example `./html/coverage`).
@@ -1760,13 +1764,29 @@ Sharding is happening before sorting, and only if `--shard` option is provided.
 
 #### sequence.shuffle
 
-- **Type**: `boolean`
+- **Type**: `boolean | { files?, tests? }`
 - **Default**: `false`
 - **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
 
-If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
+If you want files and tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
-Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your files and tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+
+#### sequence.shuffle.files <Badge type="info">1.4.0+</Badge> {#sequence-shuffle-files}
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
+
+Whether to randomize files, be aware that long running tests will not start earlier if you enable this option.
+
+#### sequence.shuffle.tests <Badge type="info">1.4.0+</Badge> {#sequence-shuffle-tests}
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **CLI**: `--sequence.shuffle.tests`, `--sequence.shuffle.tests=false`
+
+Whether to randomize tests.
 
 #### sequence.concurrent <Badge type="info">0.32.2+</Badge> {#sequence-concurrent}
 
@@ -2083,4 +2103,17 @@ Disabling this option might [improve performance](/guide/improving-performance) 
 
 ::: tip
 You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
+:::
+
+### includeTaskLocation <Badge type="info">1.4.0+</Badge> {#includeTaskLocation}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Should `location` property be included when Vitest API receives tasks in [reporters](#reporters). If you have a lot of tests, this might cause a small performance regression.
+
+The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
+
+::: tip
+This option has no effect if you do not use custom code that relies on this.
 :::

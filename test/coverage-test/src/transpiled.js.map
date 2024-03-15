@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "transpiled.js",
+  "sourceRoot": "",
+  "sources": [
+    "./original.ts"
+  ],
+  "names": [],
+  "mappings": "AAAA,MAAM,CAAC,IAAM,KAAK,GAAG,UAAC,GAAa;IACjC,IAAI,GAAG,EAAE,CAAC;QACR,YAAY;QACZ,IAAI,EAAE,CAAC;IACT,CAAC;IAED,UAAU;IACV,IAAI,EAAE,CAAC;IAEP,IAAI,GAAG,KAAK,CAAC,EAAE,CAAC;QACd,YAAY;QACZ,IAAI,EAAE,CAAC;IACT,CAAC;IAED,IAAI,GAAG,KAAK,SAAS,EAAE,CAAC;QACtB,UAAU;QACV,IAAI,EAAE,CAAC;IACT,CAAC;AACH,CAAC,CAAC;AAEF,SAAS,IAAI,KAAI,CAAC",
+  "sourcesContent": [
+    "export const hello = (arg?: unknown) => {\n  if (arg) {\n    // Uncovered\n    noop();\n  }\n\n  // Covered\n  noop();\n\n  if (arg === 3) {\n    // Uncovered\n    noop();\n  }\n\n  if (arg === undefined) {\n    // Covered\n    noop();\n  }\n};\n\nfunction noop() {}\n"
+  ]
+}

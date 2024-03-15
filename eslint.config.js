@@ -15,6 +15,8 @@ export default antfu(
       'test/workspaces/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
+      'test/coverage-test/src/transpiled.js',
+      'test/coverage-test/src/original.ts',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
     ],

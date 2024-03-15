@@ -12,7 +12,7 @@ import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { getModuleGraph, isPrimitive, stringifyReplace } from '../utils'
+import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
@@ -113,6 +113,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getConfig() {
           return vitestOrWorkspace.config
         },
+        async getBrowserFileSourceMap(id) {
+          if (!('ctx' in vitestOrWorkspace))
+            return undefined
+          const mod = vitestOrWorkspace.browser?.moduleGraph.getModuleById(id)
+          return mod?.transformResult?.map
+        },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
           if (result) {
@@ -162,7 +168,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onCancel'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onCancel', 'onTaskUpdate'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
         onTimeoutError(functionName) {
@@ -194,7 +200,7 @@ export class WebSocketReporter implements Reporter {
     if (this.clients.size === 0)
       return
     this.clients.forEach((client) => {
-      client.onCollected?.(files)
+      client.onCollected?.(files)?.catch?.(noop)
     })
   }
 
@@ -216,25 +222,25 @@ export class WebSocketReporter implements Reporter {
     })
 
     this.clients.forEach((client) => {
-      client.onTaskUpdate?.(packs)
+      client.onTaskUpdate?.(packs)?.catch?.(noop)
     })
   }
 
   onFinished(files?: File[], errors?: unknown[]) {
     this.clients.forEach((client) => {
-      client.onFinished?.(files, errors)
+      client.onFinished?.(files, errors)?.catch?.(noop)
     })
   }
 
   onFinishedReportCoverage() {
     this.clients.forEach((client) => {
-      client.onFinishedReportCoverage?.()
+      client.onFinishedReportCoverage?.()?.catch?.(noop)
     })
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
     this.clients.forEach((client) => {
-      client.onUserConsoleLog?.(log)
+      client.onUserConsoleLog?.(log)?.catch?.(noop)
     })
   }
 }

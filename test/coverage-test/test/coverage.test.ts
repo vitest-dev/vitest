@@ -76,3 +76,10 @@ test('virtual file imports', () => {
 test('decorators', () => {
   new DecoratorsTester().method('cover line')
 })
+
+// Istanbul fails to follow source maps on windows
+test.skipIf(globalThis.process?.env.COVERAGE_PROVIDER === 'istanbul')('pre-transpiled code with source maps to original', async () => {
+  const transpiled = await import('../src/transpiled.js')
+
+  transpiled.hello()
+})
