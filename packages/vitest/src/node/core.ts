@@ -13,7 +13,6 @@ import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
@@ -43,7 +42,6 @@ export class Vitest {
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
-  browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
 
@@ -51,6 +49,7 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  watchedTests: Set<string> = new Set()
   filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
@@ -623,6 +622,14 @@ export class Vitest {
       return
 
     this._rerunTimer = setTimeout(async () => {
+      // run only watched tests
+      if (this.watchedTests.size) {
+        this.changedTests.forEach((test) => {
+          if (!this.watchedTests.has(test))
+            this.changedTests.delete(test)
+        })
+      }
+
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
@@ -663,6 +670,15 @@ export class Vitest {
       return project.getModulesByFilepath(filepath).size
       // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
+  }
+
+  /**
+   * Watch only the specified tests. If no tests are provided, all tests will be watched.
+   */
+  public watchTests(tests: string[]) {
+    this.watchedTests = new Set(
+      tests.map(test => slash(test)),
+    )
   }
 
   private unregisterWatcher = noop
