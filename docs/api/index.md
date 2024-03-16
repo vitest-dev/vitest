@@ -956,9 +956,9 @@ If you are running tests concurrently, you should always use `onTestFinished` ho
 ```ts
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFinished }) => {
   const db = connectDb()
-  t.onTestFinished(() => db.close())
+  onTestFinished(() => db.close())
   db.query('SELECT * FROM users')
 })
 ```
@@ -1011,7 +1011,7 @@ If you are running tests concurrently, you should always use `onTestFailed` hook
 ```ts
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
   onTestFailed((result) => {
     console.log(result.errors)
