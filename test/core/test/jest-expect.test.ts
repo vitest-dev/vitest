@@ -922,10 +922,26 @@ function getError(f: () => unknown) {
 it('toMatchObject error diff', () => {
   setupColors(getDefaultColors())
 
-  // single property on root
+  // single property on root (3 total properties, 1 expected)
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: 3 } to match object { c: 4 }
+    (2 more properties properties in actual)",
+      "- Expected
+    + Received
+
+      Object {
+    -   "c": 4,
+    +   "c": 3,
+      }",
+    ]
+  `)
+
+  // single property on root (4 total properties, 1 expected)
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 }))).toMatchInlineSnapshot(`
     [
-      "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }",
+      "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }
+    (3 more properties properties in actual)",
       "- Expected
     + Received
 
@@ -936,10 +952,11 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
-  // nested property
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
+  // nested property (7 total properties, 2 expected)
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4, e: 5 }, f: { g: 6 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
     [
-      "expected { a: 1, b: 2, c: { d: 4 } } to match object { c: { d: 5 } }",
+      "expected { a: 1, b: 2, c: { d: 4, e: 5 }, …(1) } to match object { c: { d: 5 } }
+    (5 more properties properties in actual)",
       "- Expected
     + Received
 
@@ -952,10 +969,45 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
-  // multiple nested properties
+  // 3 total properties, 3 expected (0 stripped)
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ a: 1, b: 2, c: 4 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: 3 } to match object { a: 1, b: 2, c: 4 }",
+      "- Expected
+    + Received
+
+      Object {
+        "a": 1,
+        "b": 2,
+    -   "c": 4,
+    +   "c": 3,
+      }",
+    ]
+  `)
+
+  // 4 total properties, 3 expected
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 3 } }).toMatchObject({ a: 1, c: { d: 4 } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 3 } } to match object { a: 1, c: { d: 4 } }
+    (1 more property properties in actual)",
+      "- Expected
+    + Received
+
+      Object {
+        "a": 1,
+        "c": Object {
+    -     "d": 4,
+    +     "d": 3,
+        },
+      }",
+    ]
+  `)
+
+  // 8 total properties, 4 expected
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 }, foo: { value: 'bar' }, bar: { value: 'foo' } }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }))).toMatchInlineSnapshot(`
     [
-      "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }",
+      "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }
+    (4 more properties properties in actual)",
       "- Expected
     + Received
 
@@ -972,20 +1024,24 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
-  // property on root, nothing stripped
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ a: 1, b: 3, c: { d: 4 } }))).toMatchInlineSnapshot(`
+  // 8 total properties, 3 expected
+  const characters = { firstName: 'Vladimir', lastName: 'Harkonnen', family: 'House Harkonnen', colors: ['red', 'blue'], children: [{ firstName: 'Jessica', lastName: 'Atreides', colors: ['red', 'green', 'black'] }] }
+  expect(getError(() => expect(characters).toMatchObject({ family: 'House Atreides', children: [{ firstName: 'Paul' }] }))).toMatchInlineSnapshot(`
     [
-      "expected { a: 1, b: 2, c: { d: 4 } } to match object { a: 1, b: 3, c: { d: 4 } }",
+      "expected { firstName: 'Vladimir', …(4) } to match object { family: 'House Atreides', …(1) }
+    (5 more properties properties in actual)",
       "- Expected
     + Received
 
       Object {
-        "a": 1,
-    -   "b": 3,
-    +   "b": 2,
-        "c": Object {
-          "d": 4,
-        },
+        "children": Array [
+          Object {
+    -       "firstName": "Paul",
+    +       "firstName": "Jessica",
+          },
+        ],
+    -   "family": "House Atreides",
+    +   "family": "House Harkonnen",
       }",
     ]
   `)
