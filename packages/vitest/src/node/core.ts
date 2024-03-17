@@ -16,6 +16,7 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
+import type { HangingOps } from '../runtime/runners/with-async-leaks-detecter'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -68,6 +69,8 @@ export class Vitest {
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
   public distPath!: string
+
+  public hangingOps?: HangingOps[]
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -487,6 +490,8 @@ export class Vitest {
 
     await this.report('onPathsCollected', filepaths)
 
+    const detectAsyncLeaks = this.config.detectAsyncLeaks && !this.config.browser.enabled
+
     // previous run
     await this.runningPromise
     this._onCancelListeners = []
@@ -504,6 +509,9 @@ export class Vitest {
 
       if (!this.isFirstRun && this.config.coverage.cleanOnRerun)
         await this.coverageProvider?.clean()
+
+      if (detectAsyncLeaks)
+        this.hangingOps = []
 
       await this.initializeGlobalSetup(paths)
 
@@ -527,6 +535,9 @@ export class Vitest {
         const specs = Array.from(new Set(paths.map(([, p]) => p)))
         await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
         await this.reportCoverage(allTestsRun)
+
+        if (detectAsyncLeaks)
+          await this.logger.printAsyncLeaksWarning(this.hangingOps!)
 
         this.runningPromise = undefined
         this.isFirstRun = false

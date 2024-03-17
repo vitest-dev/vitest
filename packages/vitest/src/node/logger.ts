@@ -3,8 +3,9 @@ import c from 'picocolors'
 import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
-import { toArray } from '../utils'
+import { getFullName, toArray } from '../utils'
 import { highlightCode } from '../utils/colors'
+import type { HangingOps } from '../runtime/runners/with-async-leaks-detecter'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
@@ -211,5 +212,23 @@ export class Logger {
       await this.printError(err, { fullStack: true })
     }))
     this.log(c.red(divider()))
+  }
+
+  async printAsyncLeaksWarning(hangingOps: HangingOps[]) {
+    if (hangingOps.length === 0)
+      return
+    const errorMessage = c.yellow(c.bold(
+      `\nVitest has detected the following ${hangingOps.length} hanging operation${hangingOps.length > 1 ? 's' : ''} potentially keeping Vitest from exiting: \n`,
+    ))
+    this.log(c.yellow(divider(c.bold(c.inverse(' Hanging Operations ')))))
+    this.log(errorMessage)
+
+    hangingOps.forEach(({ type, taskId, stack }) => {
+      const task = taskId && this.ctx.state.idMap.get(taskId)
+      this.log(type + c.dim(` | ${task ? getFullName(task) : taskId}`))
+      this.log(`${c.gray(c.dim(`${stack}`))}\n`)
+    })
+
+    this.log(c.yellow(divider()))
   }
 }

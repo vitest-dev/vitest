@@ -11,7 +11,7 @@ import { rpc } from '../rpc'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
-  private workerState = getWorkerState()
+  protected workerState = getWorkerState()
   private __vitest_executor!: VitestExecutor
   private cancelRun = false
 

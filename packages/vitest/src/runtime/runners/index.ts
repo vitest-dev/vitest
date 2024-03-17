@@ -12,7 +12,14 @@ const runnersFile = resolve(distDir, 'runners.js')
 
 async function getTestRunnerConstructor(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(runnersFile)
+    const { VitestTestRunner, NodeBenchmarkRunner, VitestTestRunnerWithAsyncLeaksDetecter } = await executor.executeFile(runnersFile)
+
+    if (config.detectAsyncLeaks) {
+      if (config.browser?.enabled)
+        throw new Error('Async leaks detection is not supported in browser mode.')
+      return VitestTestRunnerWithAsyncLeaksDetecter as VitestRunnerConstructor
+    }
+
     return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as VitestRunnerConstructor
   }
   const mod = await executor.executeId(config.runner)
