@@ -940,7 +940,7 @@ These hooks will throw an error if they are called outside of the test body.
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 
-```ts
+```ts {1,5}
 import { onTestFinished, test } from 'vitest'
 
 test('performs a query', () => {
@@ -953,12 +953,12 @@ test('performs a query', () => {
 ::: warning
 If you are running tests concurrently, you should always use `onTestFinished` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
 
-```ts
+```ts {3,5}
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFinished }) => {
   const db = connectDb()
-  t.onTestFinished(() => db.close())
+  onTestFinished(() => db.close())
   db.query('SELECT * FROM users')
 })
 ```
@@ -993,7 +993,7 @@ test('performs an organization query', async () => {
 
 This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
 
-```ts
+```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
@@ -1008,10 +1008,10 @@ test('performs a query', () => {
 ::: warning
 If you are running tests concurrently, you should always use `onTestFailed` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
 
-```ts
+```ts {3,5-7}
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
   onTestFailed((result) => {
     console.log(result.errors)
