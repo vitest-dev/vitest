@@ -15,54 +15,32 @@ import { defineConfig } from 'vite'
 import { BenchmarkReportsMap } from 'vitest/reporters'
 import type { BenchmarkResult } from 'vitest'
 
-// node_modules/.vitest/bench/(save-baseline).json  // default new.json
-// node_modules/.vitest/bench/(baseline).json       // default last new.json renambed to base.json
-const benchDir = 'node_modules/.vitest/bench'
-
 class CompareReporter extends BenchmarkReportsMap.json {
-  // TODO: cli option? reporter option? env var?
-  constructor(
-    private options: {
-      baseline?: string // TODO: support multiple comparison?
-      saveBaseline?: string
-    } = {},
-  ) {
-    super()
-    // for now, use env var for configuration
-    this.options.baseline = process.env.VITEST_BENCH_BASELINE
-    this.options.saveBaseline = process.env.VITEST_BENCH_SAVE_BASELINE
-  }
-
   async onFinished() {
-    if (fs.existsSync(benchDir))
-      await fs.promises.mkdir(benchDir, { recursive: true })
+    // TODO: use env var as flag for prototype
 
-    let baseFile: string | undefined
-    let newFile = path.join(benchDir, 'new.json')
+    // --compare
+    const baseFile = process.env.VITEST_BENCH_COMPARE;
 
-    if (this.options?.baseline) {
-      baseFile = path.join(benchDir, `${this.options.baseline}.json`)
-      if (!fs.existsSync(baseFile)) {
-        console.error('baseline not found:', baseFile)
-        return
-      }
-    }
-    else if (fs.existsSync(newFile)) {
-      // if no baseline provided, rename last new.json to base.json
-      baseFile = path.join(benchDir, 'base.json')
-      await fs.promises.copyFile(newFile, baseFile)
-    }
+    // writing is not necessary when --compare
+    // --benchmark.outputFile
+    const newFile = process.env.VITEST_BENCH_OUTPUT_FILE ?? "bench-default.json";
 
-    if (this.options?.saveBaseline)
-      newFile = path.join(benchDir, `${this.options.saveBaseline}.json`)
+    if (fs.existsSync(path.dirname(newFile)))
+      await fs.promises.mkdir(path.dirname(newFile), { recursive: true })
 
-    // reuse json reporter
+    // for now, reuse json reporter to save file
     this.ctx.config.benchmark!.outputFile = newFile
     await super.onFinished()
 
-    // output comparison with baseline
-    if (baseFile)
+    if (baseFile) {
+      if (!fs.existsSync(baseFile)) {
+        console.error('baseline not found:', baseFile)
+        return;
+      }
+      // output comparison with baseline
       await compare(newFile, baseFile)
+    }
   }
 }
 
