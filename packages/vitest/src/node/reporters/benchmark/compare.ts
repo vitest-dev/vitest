@@ -1,12 +1,6 @@
-/// <reference types="vitest" />
-
-// Configure Vitest (https://vitest.dev/config/)
-
 import fs from 'node:fs'
 import path from 'node:path'
-import { defineConfig } from 'vite'
-import { Reporter } from 'vitest/reporters'
-import type { BenchmarkResult, File, Task } from 'vitest'
+import type { BenchmarkResult, File, Reporter, Task, Vitest } from '../../../types'
 
 /*
 
@@ -33,6 +27,12 @@ function traverseTask(
 }
 
 export class CompareReporter implements Reporter {
+  ctx: Vitest = undefined!
+
+  onInit(ctx: Vitest) {
+    this.ctx = ctx
+  }
+
   async onFinished(files: File[] = []) {
     // TODO: use env var as flag for prototype
     // --benchmark.outputFile
@@ -64,17 +64,17 @@ export class CompareReporter implements Reporter {
     for (const file of files) {
       traverseTask(file, (t, depth) => {
         if (t.type === "suite") {
-          console.log(" ".repeat(depth * 2), t.name);
+          this.ctx.logger.log(" ".repeat(depth * 2), t.name);
           return;
         }
         if (t.result?.benchmark) {
-          const { samples, ...current } = t.result.benchmark
+          const { samples: _samples, ...current } = t.result.benchmark
           currentEntries[t.id] = current;
 
           const baseline = baseEntries?.[t.id];
           if (baseline) {
             const diff = current.hz / baseline.hz;
-            console.log(
+            this.ctx.logger.log(
               " ".repeat(depth * 2),
               t.name,
               `${current.hz.toPrecision(5)}hz`,
@@ -82,7 +82,7 @@ export class CompareReporter implements Reporter {
               `[change: ${diff.toFixed(2)}x ${diff > 1 ? '⇑' : '⇓'}]`,
             )
           } else {
-            console.log(
+            this.ctx.logger.log(
               " ".repeat(depth * 2),
               `${current.hz.toPrecision(5)}hz`,
               `(no baseline)`,
@@ -99,11 +99,3 @@ export class CompareReporter implements Reporter {
     }
   }
 }
-
-export default defineConfig({
-  test: {
-    benchmark: {
-      reporters: ['default', new CompareReporter()],
-    },
-  },
-})
