@@ -107,7 +107,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
         benchMap[t.id].baseline = {
           ...options.compare[t.id],
           samples: [],
-          name: c.gray('(prev.)'),
+          name: c.gray('(comp.)'),
         }
       }
     }
