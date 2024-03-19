@@ -1,12 +1,12 @@
+import fs from 'node:fs'
 import c from 'picocolors'
+import * as pathe from 'pathe'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
-import { type TableRendererOptions, createTableRenderer } from './tableRender'
 import type { BenchmarkResult, File } from '../../../../types'
 import { getTasks } from '../../../../utils'
 import { getOutputFile } from '../../../../utils/config-helpers'
-import * as pathe from 'pathe'
-import fs from 'node:fs'
+import { type TableRendererOptions, createTableRenderer } from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
@@ -31,10 +31,11 @@ export class TableReporter extends BaseReporter {
         const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
         try {
           this.rendererOptions.compare = JSON.parse(
-            await fs.promises.readFile(compareFile, "utf-8")
+            await fs.promises.readFile(compareFile, 'utf-8'),
           )
-        } catch (e) {
-          this.ctx.logger.error(`Failed to read '${compareFile}'`, e);
+        }
+        catch (e) {
+          this.ctx.logger.error(`Failed to read '${compareFile}'`, e)
         }
       }
       const files = this.ctx.state.getFiles(this.watchFilters)
@@ -57,7 +58,7 @@ export class TableReporter extends BaseReporter {
       const outputDirectory = pathe.dirname(outputFile)
       if (!fs.existsSync(outputDirectory))
         await fs.promises.mkdir(outputDirectory, { recursive: true })
-      const output = createBenchmarkOutput(files);
+      const output = createBenchmarkOutput(files)
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
     }
   }
@@ -86,7 +87,7 @@ export class TableReporter extends BaseReporter {
 }
 
 export interface TableBenchmarkOutput {
-  [id: string]: Omit<BenchmarkResult, "samples">
+  [id: string]: Omit<BenchmarkResult, 'samples'>
 }
 
 function createBenchmarkOutput(files: File[]) {
@@ -94,9 +95,9 @@ function createBenchmarkOutput(files: File[]) {
   for (const test of getTasks(files)) {
     if (test.meta?.benchmark && test.result?.benchmark) {
       // strip gigantic "samples"
-      const { samples: _samples, ...rest } = test.result.benchmark;
-      result[test.id] = rest;
+      const { samples: _samples, ...rest } = test.result.benchmark
+      result[test.id] = rest
     }
   }
-  return result;
+  return result
 }

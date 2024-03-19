@@ -43,7 +43,7 @@ export interface BenchmarkUserOptions {
   /**
    * benchmark output file to compare against
    */
-  compare?: string;
+  compare?: string
 }
 
 export interface Benchmark extends Custom {

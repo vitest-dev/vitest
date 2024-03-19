@@ -828,7 +828,7 @@ export interface UserConfig extends InlineConfig {
   /**
    * benchmark.compare option exposed at the top level for cli
    */
-  compare?: string;
+  compare?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
