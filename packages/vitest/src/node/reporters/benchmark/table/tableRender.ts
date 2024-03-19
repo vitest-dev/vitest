@@ -107,7 +107,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
         benchMap[t.id].baseline = {
           ...options.compare[t.id],
           samples: [],
-          name: c.gray('(comp.)'),
+          name: '',
         }
       }
     }
@@ -165,7 +165,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
         }
         output.push(padding + prefix + body + suffix)
         const bodyBaseline = renderBenchmark(bench.baseline, columnWidths)
-        output.push(`${padding}   ${bodyBaseline}${suffix}`)
+        output.push(`${padding}   ${bodyBaseline}  ${c.dim('(baseline)')}`)
       }
       else {
         if (bench.current.rank === 1 && benchCount > 1)
