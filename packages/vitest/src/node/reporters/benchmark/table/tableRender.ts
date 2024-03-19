@@ -73,11 +73,11 @@ function padRow(row: string[], widths: number[]) {
   )
 }
 
-function renderTableHead2(widths: number[]) {
+function renderTableHead(widths: number[]) {
   return ' '.repeat(3) + padRow(tableHead, widths).map(c.bold).join('  ')
 }
 
-function renderBenchmark2(result: BenchmarkResult, widths: number[]) {
+function renderBenchmark(result: BenchmarkResult, widths: number[]) {
   const padded = padRow(renderBenchmarkItems(result), widths)
   return [
     padded[0], // name
@@ -125,10 +125,8 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
   for (const task of tasks) {
     const padding = '  '.repeat(level ? 1 : 0)
     let prefix = ''
-    // if (idx === 0 && task.meta?.benchmark)
-    //   prefix += `${renderTableHead(tasks)}\n${padding}`
     if (idx === 0 && task.meta?.benchmark)
-      prefix += `${renderTableHead2(columnWidths)}\n${padding}`
+      prefix += `${renderTableHead(columnWidths)}\n${padding}`
 
     prefix += ` ${getStateSymbol(task)} `
 
@@ -153,7 +151,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
 
     const bench = benchMap[task.id]
     if (bench) {
-      let body = renderBenchmark2(bench.current, columnWidths)
+      let body = renderBenchmark(bench.current, columnWidths)
       if (options.compare && bench.baseline) {
         if (bench.current.hz) {
           const diff = bench.current.hz / bench.baseline.hz
@@ -166,11 +164,11 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
             body += `  ${c.red(`[${diffFixed}x] ⇓`)}`
         }
         output.push(padding + prefix + body + suffix)
-        const body2 = renderBenchmark2(bench.baseline, columnWidths)
-        output.push(`${padding}   ${body2}${suffix}`)
+        const bodyBaseline = renderBenchmark(bench.baseline, columnWidths)
+        output.push(`${padding}   ${bodyBaseline}${suffix}`)
       }
       else {
-        if (bench.current.rank === 1)
+        if (bench.current.rank === 1 && benchCount > 1)
           body += `  ${c.bold(c.green(' fastest'))}`
 
         if (bench.current.rank === benchCount && benchCount > 2)
@@ -182,10 +180,6 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
     else {
       output.push(padding + prefix + name + suffix)
     }
-    // // const body = task.meta?.benchmark
-    // //   ? renderBenchmark(task as Benchmark, tasks)
-    // //   : name
-    // output.push(padding + prefix + name + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
