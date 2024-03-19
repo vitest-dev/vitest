@@ -824,6 +824,11 @@ export interface UserConfig extends InlineConfig {
    * Override vite config's clearScreen from cli
    */
   clearScreen?: boolean
+
+  /**
+   * benchmark.compare option exposed at the top level for cli
+   */
+  compare?: string;
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -850,7 +855,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   api?: ApiConfig
   cliExclude?: string[]
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare'>
   shard?: {
     index: number
     count: number

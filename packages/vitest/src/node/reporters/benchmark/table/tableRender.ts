@@ -6,12 +6,14 @@ import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
+import { TableBenchmarkOutput } from '.'
 
 export interface TableRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
   slowTestThreshold: number
+  compare?: TableBenchmarkOutput;
 }
 
 const outputMap = new WeakMap<Task, string>()
@@ -61,7 +63,7 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.p999 || 0),
     `±${(result.rme || 0).toFixed(2)}%`,
     // TODO: persist only sampleCount?
-    result.samples ? result.samples.length.toString() : "-",
+    result.samples.length ? result.samples.length.toString() : "-",
   ]
 }
 function renderBenchmark(task: Benchmark, tasks: Task[]): string {
@@ -186,16 +188,6 @@ function renderBenchmark2(result: BenchmarkResult, widths: number[]) {
     c.cyan(padded[8]), // p999
     c.dim(padded[9]), // rem
     c.dim(padded[10]), // sample
-    // TODO: fix or hide fastest/slowest during compare
-    //       show "change: 0.98x ⇓" compared to baseline
-    // result.rank === 1
-    //   ? c.bold(c.green(' fastest'))
-    //   : '',
-    // result.rank === 1
-    //   ? c.bold(c.green(' fastest'))
-    //   : (result.rank > 2 && result.rank === benches.length && benches.length > 2)
-    //       ? c.bold(c.gray(' slowest'))
-    //       : '',
   ].join('  ')
 }
 
@@ -207,10 +199,14 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
     if (t.meta.benchmark && t.result?.benchmark) {
       benchMap[t.id] = {
         current: t.result.benchmark,
-        baseline: {
-          ...baselineResults[t.id],
-          name: c.gray("(prev.)")
+      }
+      if (options.compare && options.compare[t.id]) {
+        benchMap[t.id].baseline = {
+          ...options.compare[t.id],
+          samples: [],
+          name: c.gray("(prev.)"),
         }
+        options.compare[t.id]
       }
     }
   }
@@ -256,7 +252,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
     const bench = benchMap[task.id]
     if (bench) {
       let body = renderBenchmark2(bench.current, columnWidths);
-      if (bench.baseline) {
+      if (options.compare && bench.baseline) {
         if (bench.current.hz) {
           const diff = bench.current.hz / bench.baseline.hz;
           const diffFixed = diff.toFixed(2);
