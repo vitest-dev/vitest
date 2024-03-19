@@ -8,8 +8,25 @@ if (existsSync('./bench.json'))
   rmSync('./bench.json')
 
 try {
+  function noop() {}
+
   await startVitest('benchmark', ['base.bench', 'mode.bench', 'only.bench'], {
     watch: false,
+    benchmark: {
+      reporters: ['json', {
+        onInit: noop,
+        onPathsCollected: noop,
+        onCollected: noop,
+        onFinished: noop,
+        onTaskUpdate: noop,
+        onTestRemoved: noop,
+        onWatcherStart: noop,
+        onWatcherRerun: noop,
+        onServerRestart: noop,
+        onUserConsoleLog: noop,
+      }],
+      outputFile: './bench.json',
+    },
   })
 }
 catch (error) {
