@@ -5,9 +5,7 @@ import { runVitest } from '../../test-utils'
 test('compare', { timeout: 60_000 }, async () => {
   await fs.promises.rm('./fixtures/basic/bench.json', { force: true })
 
-  // force tty output
-  process.stdout.isTTY = true
-
+  // --outputFile
   {
     const result = await runVitest({
       root: './fixtures/basic',
@@ -19,7 +17,9 @@ test('compare', { timeout: 60_000 }, async () => {
   }
 
   // --compare
-  {
+  // cannot run on CI since no tty output
+  if (!process.env.CI) {
+    process.stdout.isTTY = true
     const result = await runVitest({
       root: './fixtures/basic',
       compare: './bench.json',
