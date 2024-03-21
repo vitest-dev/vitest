@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`should detect hanging operations - fixtures/detect-async-leaks/edge-cases.test.ts 1`] = `""`;
+
+exports[`should detect hanging operations - fixtures/detect-async-leaks/timeout.test.ts 1`] = `
+"⎯⎯⎯⎯⎯ Hanging Operations ⎯⎯⎯⎯⎯
+
+Vitest has detected the following 4 hanging operations potentially keeping Vitest from exiting: 
+
+Timeout | timeout.test.ts
+at timeout.test.ts:4:3
+
+Timeout | timeout.test.ts > suite 1 > test 1
+at timeout.test.ts:13:5
+
+Timeout | timeout.test.ts > suite 1 > suite 2 > test 2
+at timeout.test.ts:18:7
+
+Timeout | timeout.test.ts
+at timeout.test.ts:8:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+"
+`;
