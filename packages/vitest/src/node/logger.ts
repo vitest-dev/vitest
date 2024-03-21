@@ -223,10 +223,10 @@ export class Logger {
     this.log(c.yellow(divider(c.bold(c.inverse(' Hanging Operations ')))))
     this.log(errorMessage)
 
-    hangingOps.forEach(({ type, taskId, stack }) => {
+    hangingOps.forEach(({ error, taskId }) => {
       const task = taskId && this.ctx.state.idMap.get(taskId)
-      this.log(type + c.dim(` | ${task ? getFullName(task) : taskId}`))
-      this.log(`${c.gray(c.dim(`${stack}`))}\n`)
+      this.log(error.message + c.dim(` | ${task ? getFullName(task) : taskId}`))
+      this.log(`${c.gray(c.dim(`${error.stack}`))}\n`)
     })
 
     this.log(c.yellow(divider()))

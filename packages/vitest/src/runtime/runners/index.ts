@@ -16,7 +16,7 @@ async function getTestRunnerConstructor(config: ResolvedConfig, executor: Vitest
 
     if (config.detectAsyncLeaks) {
       if (config.browser?.enabled)
-        throw new Error('Async leaks detection is not supported in browser mode.')
+        throw new Error('"--detectAsyncLeaks" flag is not supported in browser mode.')
       return VitestTestRunnerWithAsyncLeaksDetecter as VitestRunnerConstructor
     }
 
