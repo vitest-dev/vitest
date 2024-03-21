@@ -1,8 +1,8 @@
 import asyncHooks from 'node:async_hooks'
 import { promisify } from 'node:util'
 import { relative } from 'pathe'
-import { rpc } from '../rpc'
-import { VitestTestRunner } from './test'
+import { rpc } from '../../rpc'
+import { VitestTestRunner } from '../test'
 
 export interface HangingOps {
   error: Error
@@ -11,7 +11,7 @@ export interface HangingOps {
 
 const asyncSleep = promisify(setTimeout)
 
-export class VitestTestRunnerWithAsyncLeaksDetecter extends VitestTestRunner {
+export class WithAsyncLeaksDetecter extends VitestTestRunner {
   private hangingOps: Map<number, HangingOps> = new Map()
 
   private asyncHook: asyncHooks.AsyncHook = asyncHooks.createHook({

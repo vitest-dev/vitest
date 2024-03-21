@@ -1,6 +1,6 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { CancelReason } from '@vitest/runner'
-import type { HangingOps } from '../runtime/runners/with-async-leaks-detecter'
+import type { HangingOps } from '../runtime/runners/node/detect-async-leaks'
 import type { EnvironmentOptions, Pool, ResolvedConfig, VitestEnvironment } from './config'
 import type { Environment, UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
