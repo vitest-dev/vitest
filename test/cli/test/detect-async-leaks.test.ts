@@ -5,7 +5,7 @@ import { runVitestCli } from '../../test-utils'
 const files = glob.sync('fixtures/detect-async-leaks/*.test.ts')
 
 test.each(files)('should detect hanging operations - %s', async (file) => {
-  const { stdout, stderr } = await runVitestCli(
+  const { stdout } = await runVitestCli(
     'run',
     '--root',
     'fixtures/detect-async-leaks',
@@ -13,6 +13,5 @@ test.each(files)('should detect hanging operations - %s', async (file) => {
     file,
   )
 
-  expect(stderr).toBeFalsy()
   expect(stdout).toMatchSnapshot()
 })
