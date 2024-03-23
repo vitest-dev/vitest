@@ -311,6 +311,36 @@ exports[`asymmetric matcher error 23`] = `
 }
 `;
 
+exports[`toHaveBeenNthCalledWith error 1`] = `
+{
+  "actual": "Array [
+  "Hi",
+]",
+  "diff": "- Expected
++ Received
+
+  Array [
+-   "hey",
++   "Hi",
+  ]",
+  "expected": "Array [
+  "hey",
+]",
+  "message": "expected 2nd "spy" call to have been called with [ 'hey' ]",
+}
+`;
+
+exports[`toHaveBeenNthCalledWith error 2`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "Array [
+  "hey",
+]",
+  "message": "expected 3rd "spy" call to have been called with [ 'hey' ], but called only 2 times",
+}
+`;
+
 exports[`toMatch/toContain diff 1`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
