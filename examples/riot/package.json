@@ -1,0 +1,16 @@
+{
+    "name": "@vitest/example-riot",
+    "private": true,
+    "scripts": {
+      "test": "vitest",
+      "coverage": "vitest --coverage"
+    },
+    "devDependencies": {
+      "jsdom": "latest",
+      "riot": "=9.1.4",
+      "rollup-plugin-riot": "=9.0.2",
+      "vite": "latest",
+      "vitest": "latest"
+    }
+  }
+  

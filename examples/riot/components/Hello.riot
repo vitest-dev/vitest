@@ -1,0 +1,26 @@
+<hello>
+    <span>
+        <div>{ props.count } x { state.times } = { state.result }</div>
+        <button onclick={ add }>
+            x1
+        </button>
+    </span>
+    <script>
+        export default {
+            state: {
+                times: 2,
+                result: 0
+            },
+            onMounted () {
+                this.compute();
+            },
+            add() {
+                this.update({ times: this.state.times + 1 })
+                this.compute();
+            },
+            compute() {
+                this.update({ result: this.state.times * this.props.count })
+            }
+        }
+    </script>
+</hello>

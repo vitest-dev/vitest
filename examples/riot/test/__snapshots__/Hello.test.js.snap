@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Hello Component > should mount the component 1`] = `
+"<span><div>4 x 2 = 8</div><button>
+            x1
+        </button></span>"
+`;
