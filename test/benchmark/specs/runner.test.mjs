@@ -8,7 +8,7 @@ if (existsSync('./bench.json'))
   rmSync('./bench.json')
 
 try {
-  await startVitest('benchmark', ['base.bench', 'mode.bench', 'only.bench'], {
+  await startVitest('benchmark', ['base.bench', 'mode.bench', 'only.bench', 'hooks.bench'], {
     watch: false,
   })
 }
@@ -28,6 +28,8 @@ await test('benchmarks are actually running', async () => {
   assert.ok(resultJson.testResults.a2, 'a2 is in results')
   assert.ok(resultJson.testResults.b3, 'b3 is in results')
   assert.ok(resultJson.testResults.b4, 'b4 is in results')
+  assert.ok(resultJson.testResults.hooks, 'hooks is in results')
+  assert.ok(resultJson.testResults['hooks-cleanup'], 'hooks-cleanup is in results')
 })
 
 await test('doesn\'t have skipped tests', () => {

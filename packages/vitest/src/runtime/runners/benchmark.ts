@@ -1,5 +1,5 @@
-import type { Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
-import { updateTask as updateRunnerTask } from '@vitest/runner'
+import type { HookCleanupCallback, Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import { callCleanupHooks, callSuiteHook, updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../../utils'
@@ -34,6 +34,10 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     else if (task.type === 'suite')
       benchmarkSuiteGroup.push(task)
   }
+
+  let beforeAllCleanups: HookCleanupCallback[] = []
+
+  beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
   if (benchmarkSuiteGroup.length)
     await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuite(subSuite, runner)))
@@ -90,7 +94,12 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       await task.warmup()
       tasks.push([
         await new Promise<BenchTask>(resolve => setTimeout(async () => {
-          resolve(await task.run())
+          let beforeEachCleanups: HookCleanupCallback[] = []
+          beforeEachCleanups = await callSuiteHook(benchmark.suite, benchmark, 'beforeEach', runner, [benchmark.context, benchmark.suite])
+          const result = await task.run()
+          await callSuiteHook(benchmark.suite, benchmark, 'afterEach', runner, [benchmark.context, benchmark.suite])
+          await callCleanupHooks(beforeEachCleanups)
+          resolve(result)
         })),
         benchmark,
       ])
@@ -114,6 +123,9 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     await defer
   }
+
+  await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+  await callCleanupHooks(beforeAllCleanups)
 
   function updateTask(task: Task) {
     updateRunnerTask(task, runner)
