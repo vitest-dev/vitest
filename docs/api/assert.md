@@ -1,6 +1,6 @@
 # assert
 
-Vitest reexports `assert` method from [`chai`](https://www.chaijs.com/api/assert/) for verifying invariants.
+Vitest reexports the `assert` method from [`chai`](https://www.chaijs.com/api/assert/) for verifying invariants.
 
 ## assert
 
@@ -1699,7 +1699,7 @@ test('assert.increases', () => {
 
 - **Type:** `<T>(modifier: Function, object: T, property: string, message?: string) => void`
 
-Asserts that a `modifier` dose not increases a numeric `object`'s `property`.
+Asserts that a `modifier` does not increases a numeric `object`'s `property`.
 
 ```ts
 import { assert, test } from 'vitest'
