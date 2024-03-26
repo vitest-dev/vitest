@@ -251,9 +251,9 @@ interface SuiteCollectorCallable<ExtraContext = {}> {
   /**
    * @deprecated Use options as the second argument instead
    */
-  (name: string | Function, fn: SuiteFactory<ExtraContext>, options: TestOptions): SuiteCollector<ExtraContext>
-  (name: string | Function, fn?: SuiteFactory<ExtraContext>, options?: number | TestOptions): SuiteCollector<ExtraContext>
-  (name: string | Function, options: TestOptions, fn?: SuiteFactory<ExtraContext>): SuiteCollector<ExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, fn: SuiteFactory<OverrideExtraContext>, options: TestOptions): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, fn?: SuiteFactory<OverrideExtraContext>, options?: number | TestOptions): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, options: TestOptions, fn?: SuiteFactory<OverrideExtraContext>): SuiteCollector<OverrideExtraContext>
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
