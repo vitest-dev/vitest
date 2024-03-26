@@ -98,7 +98,7 @@ export class VitestTestRunner implements VitestRunner {
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
-      testPath: test.suite?.file?.filepath,
+      testPath: test.file.filepath,
       currentTestName: getFullName(test),
       snapshotState: this.snapshotClient.snapshotState,
     }, (globalThis as any)[GLOBAL_EXPECT])
