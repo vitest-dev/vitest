@@ -8,11 +8,20 @@ import { rpc } from '../rpc'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 
-const runnersFile = resolve(distDir, 'runners.js')
+const commonRunnersFile = resolve(distDir, 'runners.js')
+const nodeRunnersFile = resolve(distDir, 'runners-node.js')
 
 async function getTestRunnerConstructor(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(runnersFile)
+    if (config.detectAsyncLeaks) {
+      if (config.browser?.enabled)
+        throw new Error('"--detectAsyncLeaks" flag is not supported in browser mode.')
+      const { WithAsyncLeaksDetecter } = await executor.executeFile(nodeRunnersFile)
+      return WithAsyncLeaksDetecter as VitestRunnerConstructor
+    }
+
+    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(commonRunnersFile)
+
     return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as VitestRunnerConstructor
   }
   const mod = await executor.executeId(config.runner)

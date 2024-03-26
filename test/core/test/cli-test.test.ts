@@ -292,6 +292,12 @@ test('clearScreen', async () => {
   `)
 })
 
+test('detectAsyncLeaks', async () => {
+  expect(getCLIOptions('--detectAsyncLeaks')).toEqual({ detectAsyncLeaks: true })
+  expect(getCLIOptions('--detectAsyncLeaks=true')).toEqual({ detectAsyncLeaks: true })
+  expect(getCLIOptions('--detectAsyncLeaks=false')).toEqual({ detectAsyncLeaks: false })
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],

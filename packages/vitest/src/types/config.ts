@@ -824,6 +824,12 @@ export interface UserConfig extends InlineConfig {
    * Override vite config's clearScreen from cli
    */
   clearScreen?: boolean
+
+  /**
+   * Detect async leaks in the test suite. This  will slow down the test suite, use only in node environment.
+   * @default false
+   */
+  detectAsyncLeaks?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {

@@ -582,6 +582,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
   },
+  detectAsyncLeaks: {
+    description: 'Detect async leaks in the test suite. This  will slow down the test suite, use only in node environment (default: false)',
+  },
 
   // disable CLI options
   cliExclude: null,

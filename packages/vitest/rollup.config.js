@@ -24,6 +24,7 @@ const entries = {
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',
   'runners': 'src/runners.ts',
+  'runners-node': 'src/runtime/runners/node/index.ts',
   'environments': 'src/environments.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/coverage.ts',
