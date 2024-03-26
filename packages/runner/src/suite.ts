@@ -43,9 +43,7 @@ export function getRunner() {
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
   const api = config.shuffle ? suite.shuffle : suite
-  return api('', {
-    concurrent: config.concurrent,
-  })
+  return api('', { concurrent: config.concurrent }, () => {})
 }
 
 export function clearCollectorContext(filepath: string, currentRunner: VitestRunner) {
