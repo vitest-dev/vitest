@@ -7,8 +7,8 @@ import { getCurrentTest } from '@vitest/runner'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getFullName } from '../../utils/tasks'
-import { getCurrentEnvironment } from '../../utils/global'
+import { getTestName } from '../../utils/tasks'
+import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
@@ -31,6 +31,7 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
+  const testPath = getTestFile(test)
   setState<MatcherState>({
     // this should also add "snapshotState" that is added conditionally
     ...globalState,
@@ -40,8 +41,8 @@ export function createExpect(test?: TaskPopulated) {
     expectedAssertionsNumber: null,
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
-    testPath: test ? test.suite.file?.filepath : globalState.testPath,
-    currentTestName: test ? getFullName(test as Test) : globalState.currentTestName,
+    testPath,
+    currentTestName: test ? getTestName(test as Test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped
@@ -87,6 +88,13 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
+}
+
+function getTestFile(test?: TaskPopulated) {
+  if (test)
+    return test.file.filepath
+  const state = getWorkerState()
+  return state.filepath
 }
 
 const globalExpect = createExpect()

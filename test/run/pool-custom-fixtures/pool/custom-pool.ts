@@ -28,7 +28,9 @@ export default (ctx: Vitest): ProcessPool => {
           result: {
             state: 'pass',
           },
+          file: null!,
         }
+        taskFile.file = taskFile
         const taskTest: Test = {
           type: 'test',
           name: 'custom test',
@@ -37,6 +39,7 @@ export default (ctx: Vitest): ProcessPool => {
           suite: taskFile,
           mode: 'run',
           meta: {},
+          file: taskFile,
           result: {
             state: 'pass',
           },
