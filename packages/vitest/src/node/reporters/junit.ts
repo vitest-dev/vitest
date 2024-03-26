@@ -255,6 +255,7 @@ export class JUnitReporter implements Reporter {
             // NOTE: not used in JUnitReporter
             context: null as any,
             suite: null as any,
+            file: null as any,
           } satisfies Task)
         }
 

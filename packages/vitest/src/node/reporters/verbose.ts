@@ -18,8 +18,8 @@ export class VerboseReporter extends DefaultReporter {
       const task = this.ctx.state.idMap.get(pack[0])
       if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
         let title = ` ${getStateSymbol(task)} `
-        if (task.suite?.projectName)
-          title += formatProjectName(task.suite.projectName)
+        if (task.file.projectName)
+          title += formatProjectName(task.file.projectName)
         title += getFullName(task, c.dim(' > '))
         if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
           title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
