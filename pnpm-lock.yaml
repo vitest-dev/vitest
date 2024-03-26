@@ -16,6 +16,9 @@ patchedDependencies:
   '@types/chai@4.3.6':
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
+  '@types/sinonjs__fake-timers@8.1.5':
+    hash: ggdsr7nrdrzokhhihsihc2hdja
+    path: patches/@types__sinonjs__fake-timers@8.1.5.patch
   cac@6.7.14:
     hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
@@ -1420,7 +1423,7 @@ importers:
         version: 2.4.9
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
-        version: 8.1.5
+        version: 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
       birpc:
         specifier: 0.2.15
         version: 0.2.15
@@ -9931,9 +9934,10 @@ packages:
     resolution: {integrity: sha512-0kSuKjAS0TrGLJ0M/+8MaFkGsQhZpB6pxOmvS3K8FYI72K//YmdfoW9X2qPsAKh1mkwxGD5zib9s1FIFed6E8g==}
     dev: true
 
-  /@types/sinonjs__fake-timers@8.1.5:
+  /@types/sinonjs__fake-timers@8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja):
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
     dev: true
+    patched: true
 
   /@types/sizzle@2.3.3:
     resolution: {integrity: sha512-JYM8x9EGF163bEyhdJBpR2QX1R5naCJHC8ucJylJ3w9/CVBaskdQ8WqBf8MmQrd1kRvp/a4TS8HJ+bxzR7ZJYQ==}
