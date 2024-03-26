@@ -868,10 +868,10 @@ export class Vitest {
         for await (const project of teardownProjects.reverse())
           await project.teardownGlobalSetup()
 
-        const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
+        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close().then(() => w.server = undefined as any))
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (!this.projects.includes(this.coreWorkspaceProject))
+        if (!this.resolvedProjects.includes(this.coreWorkspaceProject))
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
         if (this.pool) {
