@@ -43,7 +43,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       return {}
     return {
       filepath: test.file.filepath,
-      name: getNames(test).join(' > '),
+      name: getNames(test).slice(1).join(' > '),
     }
   }
 
