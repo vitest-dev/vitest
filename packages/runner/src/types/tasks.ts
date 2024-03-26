@@ -306,7 +306,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }
 
-export type SuiteFactory<ExtraContext = {}> = (test: (name: string | Function, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (test: TestAPI<ExtraContext>) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
