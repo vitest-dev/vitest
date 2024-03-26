@@ -7,7 +7,7 @@ import { getCurrentTest } from '@vitest/runner'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getFullName } from '../../utils/tasks'
+import { getTestName } from '../../utils/tasks'
 import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
 
 export function createExpect(test?: TaskPopulated) {
@@ -42,7 +42,7 @@ export function createExpect(test?: TaskPopulated) {
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
     testPath,
-    currentTestName: test ? getFullName(test as Test) : globalState.currentTestName,
+    currentTestName: test ? getTestName(test as Test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped

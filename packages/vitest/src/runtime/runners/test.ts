@@ -3,7 +3,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getFullName, getNames, getTests, getWorkerState } from '../../utils'
+import { getNames, getTestName, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
@@ -99,7 +99,7 @@ export class VitestTestRunner implements VitestRunner {
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
       testPath: test.file.filepath,
-      currentTestName: getFullName(test),
+      currentTestName: getTestName(test),
       snapshotState: this.snapshotClient.snapshotState,
     }, (globalThis as any)[GLOBAL_EXPECT])
   }
