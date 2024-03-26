@@ -85,7 +85,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? getTaskIdByStack(state.ctx.config.root)
+      const id = state?.current?.id || state?.current?.file?.id || getTaskIdByStack(state.ctx.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -106,7 +106,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? getTaskIdByStack(state.ctx.config.root)
+      const id = state?.current?.id || state?.current?.file?.id || getTaskIdByStack(state.ctx.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()

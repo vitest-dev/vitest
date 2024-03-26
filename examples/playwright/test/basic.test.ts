@@ -20,9 +20,10 @@ describe.runIf(process.platform !== 'win32')('basic', async () => {
   })
 
   afterAll(async () => {
-    await browser.close()
+    // hook timed out and we already have another error
+    await browser?.close()
     await new Promise<void>((resolve, reject) => {
-      server.httpServer.close(error => error ? reject(error) : resolve())
+      server?.httpServer.close(error => error ? reject(error) : resolve())
     })
   })
 

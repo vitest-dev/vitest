@@ -27,6 +27,10 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
+  onAfterRunFiles() {
+    this.workerState.current = undefined
+  }
+
   async onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
@@ -44,6 +48,8 @@ export class VitestTestRunner implements VitestRunner {
       if (result)
         await rpc().snapshotSaved(result)
     }
+
+    this.workerState.current = suite.suite
   }
 
   onAfterRunTask(test: Task) {
@@ -52,7 +58,7 @@ export class VitestTestRunner implements VitestRunner {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       test.result!.heap = process.memoryUsage().heapUsed
 
-    this.workerState.current = undefined
+    this.workerState.current = test.suite
   }
 
   onCancel(_reason: CancelReason) {
@@ -81,6 +87,8 @@ export class VitestTestRunner implements VitestRunner {
       // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
       await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
     }
+
+    this.workerState.current = suite
   }
 
   onBeforeTryTask(test: Task) {

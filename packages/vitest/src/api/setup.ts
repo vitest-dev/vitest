@@ -200,7 +200,7 @@ export class WebSocketReporter implements Reporter {
     if (this.clients.size === 0)
       return
     this.clients.forEach((client) => {
-      client.onCollected?.(files).catch(noop)
+      client.onCollected?.(files)?.catch?.(noop)
     })
   }
 
@@ -222,25 +222,25 @@ export class WebSocketReporter implements Reporter {
     })
 
     this.clients.forEach((client) => {
-      client.onTaskUpdate?.(packs).catch(noop)
+      client.onTaskUpdate?.(packs)?.catch?.(noop)
     })
   }
 
   onFinished(files?: File[], errors?: unknown[]) {
     this.clients.forEach((client) => {
-      client.onFinished?.(files, errors).catch(noop)
+      client.onFinished?.(files, errors)?.catch?.(noop)
     })
   }
 
   onFinishedReportCoverage() {
     this.clients.forEach((client) => {
-      client.onFinishedReportCoverage?.().catch(noop)
+      client.onFinishedReportCoverage?.()?.catch?.(noop)
     })
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
     this.clients.forEach((client) => {
-      client.onUserConsoleLog?.(log).catch(noop)
+      client.onUserConsoleLog?.(log)?.catch?.(noop)
     })
   }
 }

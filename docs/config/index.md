@@ -1736,18 +1736,10 @@ Test above this limit will be queued to run when available slot appears.
 
 ### cache<NonProjectOption />
 
-- **Type**: `false | { dir? }`
+- **Type**: `false`
 - **CLI**: `--no-cache`, `--cache=false`
 
-Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
-
-#### cache.dir
-
-- **Type**: `string`
-- **Default**: `node_modules/.vitest`
-- **CLI**: `--cache.dir=./cache`
-
-Path to cache directory.
+Use this option if you want to disable the cache feature. At the moment Vitest stores cache for test results to run the longer and failed tests first.
 
 ### sequence
 
@@ -1964,7 +1956,7 @@ Retry the test specific number of times if it fails.
 
 ### onConsoleLog<NonProjectOption />
 
-- **Type**: `(log: string, type: 'stdout' | 'stderr') => false | void`
+- **Type**: `(log: string, type: 'stdout' | 'stderr') => boolean | void`
 
 Custom handler for `console.log` in tests. If you return `false`, Vitest will not print the log to the console.
 
@@ -1975,9 +1967,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    onConsoleLog(log: string, type: 'stdout' | 'stderr'): false | void {
-      if (log === 'message from third party library' && type === 'stdout')
-        return false
+    onConsoleLog(log: string, type: 'stdout' | 'stderr'): boolean | void {
+      return !(log === 'message from third party library' && type === 'stdout')
     },
   },
 })

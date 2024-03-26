@@ -47,7 +47,7 @@ it.each([
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
 
-  expect(taskUpdate).toHaveLength(2)
+  expect(taskUpdate).toHaveLength(4)
   expect(finishedFiles).toHaveLength(1)
 
   const files = vitest?.state.getFiles() || []
@@ -86,5 +86,14 @@ it.each([
   expect(files[0].tasks[0].location).toEqual({
     line: 14,
     column: 1,
+  })
+
+  const eachTests = [1, 2]
+  eachTests.forEach((name, index) => {
+    expect(files[0].tasks[index + 1].name).toBe(`custom ${name}`)
+    expect(files[0].tasks[index + 1].location).toEqual({
+      line: 18,
+      column: 18,
+    })
   })
 })

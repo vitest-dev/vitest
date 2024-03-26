@@ -624,10 +624,13 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vitest' }
+   * @default { dir: 'node_modules/.vite/vitest' }
    */
   cache?: false | {
-    dir?: string
+    /**
+     * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+     */
+    dir: string
   }
 
   /**
@@ -854,6 +857,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   cache: {
+    /**
+     * @deprecated
+     */
     dir: string
   } | false
 
