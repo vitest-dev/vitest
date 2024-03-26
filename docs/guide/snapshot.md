@@ -8,7 +8,7 @@ title: Snapshot | Guide
 
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
 
-When using snapshot, Vitest will take a snapshot of the given value, then compares it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
+When using snapshot, Vitest will take a snapshot of the given value, then compare it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
 
 ## Use Snapshots
 
@@ -81,7 +81,7 @@ vitest -u
 
 ## File Snapshots
 
-When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `\``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
+When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `` ` ``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
 
 To improve this case, we introduce [`toMatchFileSnapshot()`](/api/expect#tomatchfilesnapshot) to explicitly snapshot in a file. This allows you to assign any file extension to the snapshot file, and making them more readable.
 
