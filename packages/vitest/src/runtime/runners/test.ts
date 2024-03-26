@@ -39,7 +39,7 @@ export class VitestTestRunner implements VitestRunner {
       // mark snapshots in skipped tests as not obsolete
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
-          const name = getNames(test).slice(1).join(' > ')
+          const name = getNames(test).join(' > ')
           this.snapshotClient.skipTestSnapshots(name)
         }
       }

@@ -42,8 +42,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     if (!test)
       return {}
     return {
-      filepath: test.file?.filepath,
-      name: getNames(test).slice(1).join(' > '),
+      filepath: test.file.filepath,
+      name: getNames(test).join(' > '),
     }
   }
 
