@@ -110,7 +110,7 @@ describe('jest-expect', () => {
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
     expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
 
-    expect(() => expect(1).toMatch(/\d/)).toThrowErrorMatchingInlineSnapshot(`[TypeError: .toMatch() expects to received a string, got number]`)
+    expect(() => expect(1).toMatch(/\d/)).toThrowErrorMatchingInlineSnapshot(`[TypeError: .toMatch() expects to receive a string, but got number]`)
   })
 
   it('asymmetric matchers (jest style)', () => {
