@@ -1,4 +1,4 @@
-import type { CancelReason, Custom, ExtendedContext, Suite, Task, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, File, Suite, Task, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -35,7 +35,7 @@ export class VitestTestRunner implements VitestRunner {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
 
-    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+    if (suite.mode !== 'skip' && 'filepath' in suite) {
       // mark snapshots in skipped tests as not obsolete
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
@@ -82,10 +82,10 @@ export class VitestTestRunner implements VitestRunner {
       suite.mode = 'skip'
 
     // initialize snapshot state before running file suite
-    if (suite.mode !== 'skip' && typeof suite.filepath !== 'undefined') {
+    if (suite.mode !== 'skip' && 'filepath' in suite) {
       // default "name" is irrelevant for Vitest since each snapshot assertion
       // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
-      await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
+      await this.snapshotClient.startCurrentRun((suite as File).filepath, '__default_name_', this.workerState.config.snapshotOptions)
     }
 
     this.workerState.current = suite

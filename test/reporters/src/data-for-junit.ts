@@ -12,7 +12,9 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
     result: { state: 'fail', duration: 145.99284195899963 },
     tasks: [],
     projectName: '',
+    file: null as any,
   }
+  file.file = file
 
   const suite: Suite = {
     id: '',
@@ -23,7 +25,6 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
     file,
     result: { state: 'pass', duration: 1.90183687210083 },
     tasks: [],
-    projectName: '',
   }
 
   const errorWithXml = new AssertionError({
