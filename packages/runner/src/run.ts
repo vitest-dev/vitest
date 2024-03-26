@@ -57,9 +57,13 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   const sequence = runner.config.sequence.hooks
 
   const callbacks: HookCleanupCallback[] = []
-  if (name === 'beforeEach' && suite.suite) {
+  let parentSuite: Suite | null = suite.suite || suite.file
+  if (parentSuite && ('filepath' in parentSuite))
+    parentSuite = null
+
+  if (name === 'beforeEach' && parentSuite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
+      ...await callSuiteHook(parentSuite, currentTask, name, runner, args),
     )
   }
 
@@ -77,9 +81,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
   updateSuiteHookState(currentTask, name, 'pass', runner)
 
-  if (name === 'afterEach' && suite.suite) {
+  if (name === 'afterEach' && parentSuite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
+      ...await callSuiteHook(parentSuite, currentTask, name, runner, args),
     )
   }
 
@@ -150,6 +154,8 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
   setCurrentTest(test)
 
+  const suite = test.suite || test.file
+
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = test.retry ?? 0
@@ -160,7 +166,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
         test.result.repeatCount = repeatCount
 
-        beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
+        beforeEachCleanups = await callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite])
 
         if (runner.runTask) {
           await runner.runTask(test)
@@ -202,7 +208,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
       }
 
       try {
-        await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
+        await callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite])
         await callCleanupHooks(beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }

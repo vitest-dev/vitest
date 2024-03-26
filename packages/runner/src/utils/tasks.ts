@@ -48,7 +48,7 @@ export function getNames(task: Task) {
   const names = [task.name]
   let current: Task | undefined = task
 
-  while (current?.suite || current?.file) {
+  while (current?.suite || (current?.file && !('filepath' in current.file))) {
     current = current.suite || current.file
     if (current?.name)
       names.unshift(current.name)
