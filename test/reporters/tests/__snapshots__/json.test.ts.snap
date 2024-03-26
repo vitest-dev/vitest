@@ -4,12 +4,22 @@ exports[`json reporter > generates correct report 1`] = `
 {
   "ancestorTitles": [],
   "failureMessages": [
-    "expected 2 to deeply equal 1",
+    "AssertionError: expected 2 to deeply equal 1
+    at <root>/test/reporters/fixtures/json-fail.test.ts:8:13
+    at file://<root>/packages/runner/dist/index.js:135:14
+    at file://<root>/packages/runner/dist/index.js:60:26
+    at runTest (file://<root>/packages/runner/dist/index.js:767:17)
+    at runSuite (file://<root>/packages/runner/dist/index.js:895:15)
+    at runFiles (file://<root>/packages/runner/dist/index.js:944:5)
+    at startTests (file://<root>/packages/runner/dist/index.js:953:3)
+    at file://<root>/packages/vitest/src/runtime/runBaseTests.ts:43:7
+    at withEnv (file://<root>/packages/vitest/src/runtime/setup-node.ts:80:5)
+    at run (file://<root>/packages/vitest/src/runtime/runBaseTests.ts:29:9)",
   ],
   "fullName": "should fail",
   "location": {
-    "column": 13,
-    "line": 8,
+    "column": 1,
+    "line": 5,
   },
   "status": "failed",
   "title": "should fail",

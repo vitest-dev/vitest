@@ -5,9 +5,10 @@ import { runVitest } from '../../test-utils'
 
 describe('json reporter', async () => {
   const root = resolve(__dirname, '../fixtures')
+  const projectRoot = resolve(__dirname, '../../..')
 
   it('generates correct report', async () => {
-    const { stdout } = await runVitest({ reporters: 'json', root }, ['json-fail'])
+    const { stdout } = await runVitest({ reporters: 'json', root, includeTaskLocation: true }, ['json-fail'])
 
     const data = JSON.parse(stdout)
 
@@ -24,6 +25,8 @@ describe('json reporter', async () => {
 
     const result = failedTest.assertionResults[0]
     delete result.duration
+    const rootRegexp = new RegExp(projectRoot, 'g')
+    result.failureMessages = result.failureMessages.map((m: string) => m.replace(rootRegexp, '<root>'))
     expect(result).toMatchSnapshot()
   }, 40000)
 
