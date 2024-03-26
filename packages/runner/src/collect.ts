@@ -52,9 +52,13 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
         }
         else if (c.type === 'collector') {
           const suite = await c.collect(file)
-          mergeHooks(fileHooks, getHooks(suite))
-          if (suite.name || suite.tasks.length)
+          if (suite.name || suite.tasks.length) {
+            mergeHooks(fileHooks, getHooks(suite))
             file.tasks.push(suite)
+          }
+        }
+        else {
+          c satisfies never
         }
       }
 

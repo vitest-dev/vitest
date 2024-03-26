@@ -57,9 +57,10 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   const sequence = runner.config.sequence.hooks
 
   const callbacks: HookCleanupCallback[] = []
-  let parentSuite: Suite | null = suite.suite || suite.file
-  if (parentSuite && ('filepath' in parentSuite))
-    parentSuite = null
+  // stop at file level
+  const parentSuite: Suite | null = 'filepath' in suite
+    ? null
+    : (suite.suite || suite.file)
 
   if (name === 'beforeEach' && parentSuite) {
     callbacks.push(
