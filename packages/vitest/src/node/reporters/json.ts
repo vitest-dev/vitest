@@ -1,10 +1,9 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, Task, TaskState } from '../../types'
+import type { File, Reporter, SnapshotSummary, Suite, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
-import { parseErrorStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -12,7 +11,11 @@ import { parseErrorStacktrace } from '../../utils/source-map'
 
 type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
-interface Callsite { line: number; column: number }
+interface Callsite {
+  line: number
+  column: number
+}
+
 const StatusMap: Record<TaskState, Status> = {
   fail: 'failed',
   only: 'pending',
@@ -28,7 +31,7 @@ export interface JsonAssertionResult {
   status: Status
   title: string
   duration?: Milliseconds | null
-  failureMessages: Array<string>
+  failureMessages: Array<string> | null
   location?: Callsite | null
 }
 
@@ -56,9 +59,9 @@ export interface JsonTestResults {
   startTime: number
   success: boolean
   testResults: Array<JsonTestResult>
+  snapshot: SnapshotSummary
   // coverageMap?: CoverageMap | null | undefined
   // numRuntimeErrorTestSuites: number
-  // snapshot: SnapshotSummary
   // wasInterrupted: boolean
 }
 
@@ -104,9 +107,12 @@ export class JsonReporter implements Reporter {
 
       const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
       const assertionResults = tests.map((t) => {
-        const ancestorTitles = [] as string[]
+        const ancestorTitles: string[] = []
         let iter: Suite | undefined = t.suite
         while (iter) {
+          // the root suite should not be reported
+          if (iter.id === '')
+            break
           ancestorTitles.push(iter.name)
           iter = iter.suite
         }
@@ -114,13 +120,13 @@ export class JsonReporter implements Reporter {
 
         return {
           ancestorTitles,
-          fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
+          fullName: t.name ? [...ancestorTitles, t.name].join(' ') : ancestorTitles.join(' '),
           status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
-          failureMessages: t.result?.errors?.map(e => e.message) || [],
-          location: this.getFailureLocation(t),
-        } as JsonAssertionResult
+          failureMessages: t.result?.errors?.map(e => e.stack || e.message) || [],
+          location: t.location || null,
+        } satisfies JsonAssertionResult
       })
 
       if (tests.some(t => t.result?.state === 'run')) {
@@ -153,6 +159,7 @@ export class JsonReporter implements Reporter {
       numFailedTests,
       numPendingTests,
       numTodoTests,
+      snapshot: this.ctx.snapshot.summary,
       startTime: this.start,
       success,
       testResults,
@@ -186,22 +193,5 @@ export class JsonReporter implements Reporter {
     else {
       this.ctx.logger.log(report)
     }
-  }
-
-  protected getFailureLocation(test: Task): Callsite | undefined {
-    const error = test.result?.errors?.[0]
-    if (!error)
-      return
-
-    const project = this.ctx.getProjectByTaskId(test.id)
-    const stack = parseErrorStacktrace(error, {
-      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-      frameFilter: this.ctx.config.onStackTrace,
-    })
-    const frame = stack[0]
-    if (!frame)
-      return
-
-    return { line: frame.line, column: frame.column }
   }
 }
