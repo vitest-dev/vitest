@@ -13,7 +13,7 @@ function getTaskIdByStack(root: string) {
   if (!stack)
     return UNKNOWN_TEST_ID
 
-  const index = stack.findIndex(line => line.includes('at Console.value (node:internal/console/'))
+  const index = stack.findIndex(line => line.includes('at Console.value'))
   const line = index === -1 ? null : stack[index + 2]
 
   if (!line)
