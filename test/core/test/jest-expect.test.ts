@@ -1085,6 +1085,14 @@ it('asymmetric matcher error', () => {
   }).toThrow(MyError1))
 })
 
+it('toHaveBeenNthCalledWith error', () => {
+  const fn = vi.fn()
+  fn('World')
+  fn('Hi')
+  snapshotError(() => expect(fn).toHaveBeenNthCalledWith(2, 'hey'))
+  snapshotError(() => expect(fn).toHaveBeenNthCalledWith(3, 'hey'))
+})
+
 it('toMatch/toContain diff', () => {
   snapshotError(() => expect('hello'.repeat(20)).toContain('world'))
   snapshotError(() => expect('hello'.repeat(20)).toMatch('world'))
