@@ -348,7 +348,9 @@ function createVitest(): VitestUtils {
 
   const workerState = getWorkerState()
 
-  const _timers = new FakeTimers({
+  let _timers: FakeTimers
+
+  const timers = () => _timers ||= new FakeTimers({
     global: globalThis,
     config: workerState.config.fakeTimers,
   })
@@ -374,77 +376,77 @@ function createVitest(): VitestUtils {
       }
 
       if (config)
-        _timers.configure({ ...workerState.config.fakeTimers, ...config })
+        timers().configure({ ...workerState.config.fakeTimers, ...config })
       else
-        _timers.configure(workerState.config.fakeTimers)
+        timers().configure(workerState.config.fakeTimers)
 
-      _timers.useFakeTimers()
+      timers().useFakeTimers()
       return utils
     },
 
     isFakeTimers() {
-      return _timers.isFakeTimers()
+      return timers().isFakeTimers()
     },
 
     useRealTimers() {
-      _timers.useRealTimers()
+      timers().useRealTimers()
       _mockedDate = null
       return utils
     },
 
     runOnlyPendingTimers() {
-      _timers.runOnlyPendingTimers()
+      timers().runOnlyPendingTimers()
       return utils
     },
 
     async runOnlyPendingTimersAsync() {
-      await _timers.runOnlyPendingTimersAsync()
+      await timers().runOnlyPendingTimersAsync()
       return utils
     },
 
     runAllTimers() {
-      _timers.runAllTimers()
+      timers().runAllTimers()
       return utils
     },
 
     async runAllTimersAsync() {
-      await _timers.runAllTimersAsync()
+      await timers().runAllTimersAsync()
       return utils
     },
 
     runAllTicks() {
-      _timers.runAllTicks()
+      timers().runAllTicks()
       return utils
     },
 
     advanceTimersByTime(ms: number) {
-      _timers.advanceTimersByTime(ms)
+      timers().advanceTimersByTime(ms)
       return utils
     },
 
     async advanceTimersByTimeAsync(ms: number) {
-      await _timers.advanceTimersByTimeAsync(ms)
+      await timers().advanceTimersByTimeAsync(ms)
       return utils
     },
 
     advanceTimersToNextTimer() {
-      _timers.advanceTimersToNextTimer()
+      timers().advanceTimersToNextTimer()
       return utils
     },
 
     async advanceTimersToNextTimerAsync() {
-      await _timers.advanceTimersToNextTimerAsync()
+      await timers().advanceTimersToNextTimerAsync()
       return utils
     },
 
     getTimerCount() {
-      return _timers.getTimerCount()
+      return timers().getTimerCount()
     },
 
     setSystemTime(time: number | string | Date) {
       const date = time instanceof Date ? time : new Date(time)
       _mockedDate = date
-      _timers.setSystemTime(date)
+      timers().setSystemTime(date)
       return utils
     },
 
@@ -453,11 +455,11 @@ function createVitest(): VitestUtils {
     },
 
     getRealSystemTime() {
-      return _timers.getRealSystemTime()
+      return timers().getRealSystemTime()
     },
 
     clearAllTimers() {
-      _timers.clearAllTimers()
+      timers().clearAllTimers()
       return utils
     },
 
