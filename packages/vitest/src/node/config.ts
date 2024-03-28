@@ -348,6 +348,10 @@ export function resolveConfig(
 
     if (options.outputFile)
       resolved.benchmark.outputFile = options.outputFile
+
+    // --compare from cli
+    if (options.compare)
+      resolved.benchmark.compare = options.compare
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>

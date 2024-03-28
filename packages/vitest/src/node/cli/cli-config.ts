@@ -582,6 +582,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
   },
+  compare: {
+    description: 'benchmark output file to compare against',
+    argument: '<filename>',
+  },
 
   // disable CLI options
   cliExclude: null,
