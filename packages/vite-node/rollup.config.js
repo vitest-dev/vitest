@@ -41,6 +41,10 @@ const plugins = [
   commonjs(),
   esbuild({
     target: 'node14',
+    define:
+      process.env.ROLLUP_WATCH
+        ? {}
+        : { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' },
   }),
 ]
 
