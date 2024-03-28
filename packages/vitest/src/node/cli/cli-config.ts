@@ -634,4 +634,5 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   includeTaskLocation: null,
+  snapshotEnvironment: null,
 }
