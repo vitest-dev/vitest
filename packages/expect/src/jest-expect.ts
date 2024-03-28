@@ -171,6 +171,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toMatch', function (expected: string | RegExp) {
     const actual = this._obj as string
+    if (typeof actual !== 'string')
+      throw new TypeError(`.toMatch() expects to receive a string, but got ${typeof actual}`)
+
     return this.assert(
       typeof expected === 'string'
         ? actual.includes(expected)
