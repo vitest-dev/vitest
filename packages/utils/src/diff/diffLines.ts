@@ -81,21 +81,24 @@ function printAnnotation({
   return `${aColor(a)}\n${bColor(b)}\n\n`
 }
 
-export function printDiffLines(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
+export function printDiffLines(diffs: Array<Diff>, truncated: boolean, options: DiffOptionsNormalized): string {
   return printAnnotation(options, countChanges(diffs))
-    + (options.expand
-      ? joinAlignedDiffsExpand(diffs, options)
-      : joinAlignedDiffsNoExpand(diffs, options))
+    + (options.expand ? joinAlignedDiffsExpand(diffs, options) : joinAlignedDiffsNoExpand(diffs, options))
+    + (truncated ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`) : '')
 }
 
 // Compare two arrays of strings line-by-line. Format as comparison lines.
 export function diffLinesUnified(aLines: Array<string>, bLines: Array<string>, options?: DiffOptions): string {
+  const normalizedOptions = normalizeDiffOptions(options)
+  const [diffs, truncated] = diffLinesRaw(
+    isEmptyString(aLines) ? [] : aLines,
+    isEmptyString(bLines) ? [] : bLines,
+    normalizedOptions,
+  )
   return printDiffLines(
-    diffLinesRaw(
-      isEmptyString(aLines) ? [] : aLines,
-      isEmptyString(bLines) ? [] : bLines,
-    ),
-    normalizeDiffOptions(options),
+    diffs,
+    truncated,
+    normalizedOptions,
   )
 }
 
@@ -120,7 +123,7 @@ export function diffLinesUnified2(aLinesDisplay: Array<string>, bLinesDisplay: A
     return diffLinesUnified(aLinesDisplay, bLinesDisplay, options)
   }
 
-  const diffs = diffLinesRaw(aLinesCompare, bLinesCompare)
+  const [diffs, truncated] = diffLinesRaw(aLinesCompare, bLinesCompare, options)
 
   // Replace comparison lines with displayable lines.
   let aIndex = 0
@@ -144,13 +147,16 @@ export function diffLinesUnified2(aLinesDisplay: Array<string>, bLinesDisplay: A
     }
   })
 
-  return printDiffLines(diffs, normalizeDiffOptions(options))
+  return printDiffLines(diffs, truncated, normalizeDiffOptions(options))
 }
 
 // Compare two arrays of strings line-by-line.
-export function diffLinesRaw(aLines: Array<string>, bLines: Array<string>): Array<Diff> {
-  const aLength = aLines.length
-  const bLength = bLines.length
+export function diffLinesRaw(aLines: Array<string>, bLines: Array<string>, options?: DiffOptions): [Array<Diff>, boolean] {
+  const truncate = options?.truncateThreshold ?? false
+  const truncateThreshold = Math.max(Math.floor(options?.truncateThreshold ?? 0), 0)
+  const aLength = truncate ? Math.min(aLines.length, truncateThreshold) : aLines.length
+  const bLength = truncate ? Math.min(bLines.length, truncateThreshold) : bLines.length
+  const truncated = aLength !== aLines.length || bLength !== bLines.length
 
   const isCommon = (aIndex: number, bIndex: number) => aLines[aIndex] === bLines[bIndex]
 
@@ -185,5 +191,5 @@ export function diffLinesRaw(aLines: Array<string>, bLines: Array<string>): Arra
   for (; bIndex !== bLength; bIndex += 1)
     diffs.push(new Diff(DIFF_INSERT, bLines[bIndex]))
 
-  return diffs
+  return [diffs, truncated]
 }
