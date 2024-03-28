@@ -1,9 +1,9 @@
 import { bench, describe } from "vitest"
-import { appendLog, benchOptions, sleep } from "./helper";
+import { appendLog, benchOptions, sleepBench } from "./helper";
 
 describe("S1", () => {
   bench("B1", async () => {
     await appendLog("F2 / S1 / B1")
-    await sleep(10);
+    await sleepBench();
   }, benchOptions)
 })
