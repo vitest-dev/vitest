@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/benchmark-sequential",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}
