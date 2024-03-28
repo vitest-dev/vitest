@@ -85,7 +85,7 @@ Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your pack
 Test Files  1 passed (1)
     Tests  1 passed (1)
   Start at  02:15:44
-  Duration  311ms (transform 23ms, setup 0ms, collect 16ms, tests 2ms, environment 0ms, prepare 106ms)
+  Duration  311ms
 ```
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
