@@ -393,7 +393,7 @@ export async function startTests(paths: string[], runner: VitestRunner) {
 
   const files = await collectTests(paths, runner)
 
-  runner.onCollected?.(files)
+  await runner.onCollected?.(files)
   await runner.onBeforeRunFiles?.(files)
 
   await runFiles(files, runner)

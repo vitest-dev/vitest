@@ -14,3 +14,7 @@ afterAll((suite) => {
 test('custom', ({ task }) => {
   task.meta.custom = 'some-custom-hanlder'
 })
+
+test.each([1, 2])('custom %s', () => {
+  // support locations
+})

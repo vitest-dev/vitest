@@ -94,6 +94,8 @@ export function resolveConfig(
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
+  resolved.clearScreen = resolved.clearScreen ?? viteConfig.clearScreen ?? true
+
   if (options.shard) {
     if (resolved.watch)
       throw new Error('You cannot use --shard option with enabled watch')
@@ -135,12 +137,20 @@ export function resolveConfig(
     }
   }
 
+  // TODO: V2.0.0 remove
   // @ts-expect-error -- check for removed API option
   if (resolved.coverage.provider === 'c8')
     throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
+  if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
+    const reportsDirectory = resolve(resolved.root, resolved.coverage.reportsDirectory)
+
+    if (reportsDirectory === resolved.root || reportsDirectory === process.cwd())
+      throw new Error(`You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`)
+  }
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
@@ -436,11 +446,28 @@ export function resolveConfig(
     resolved.css.modules.classNameStrategy ??= 'stable'
   }
 
-  resolved.cache ??= { dir: '' }
-  if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
+  if (resolved.cache !== false) {
+    let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
+
+    if (resolved.cache && resolved.cache.dir) {
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
+        ),
+      )
+
+      cacheDir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
+    }
+
+    resolved.cache = { dir: cacheDir }
+  }
 
   resolved.sequence ??= {} as any
+  if (resolved.sequence.shuffle && typeof resolved.sequence.shuffle === 'object') {
+    const { files, tests } = resolved.sequence.shuffle
+    resolved.sequence.sequencer ??= files ? RandomSequencer : BaseSequencer
+    resolved.sequence.shuffle = tests
+  }
   if (!resolved.sequence?.sequencer) {
     // CLI flag has higher priority
     resolved.sequence.sequencer = resolved.sequence.shuffle

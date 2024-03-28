@@ -14,7 +14,8 @@ import virtualFile2 from '\0vitest-custom-virtual-file-2'
 
 // Browser mode crashes with dynamic files. Enable this when browser mode works.
 // To keep istanbul report consistent between browser and node, skip dynamic tests when istanbul is used.
-const skipDynamicFiles = '__vitest_browser__' in globalThis || globalThis.process?.env.COVERAGE_PROVIDER === 'istanbul' || !globalThis.process?.env.COVERAGE_PROVIDER
+const provider = globalThis.process?.env.COVERAGE_PROVIDER
+const skipDynamicFiles = '__vitest_browser__' in globalThis || provider === 'istanbul' || !provider
 
 const { pythagoras } = await (() => {
   if ('__vitest_browser__' in globalThis)
@@ -75,4 +76,11 @@ test('virtual file imports', () => {
 
 test('decorators', () => {
   new DecoratorsTester().method('cover line')
+})
+
+// Istanbul fails to follow source maps on windows
+test.runIf(provider === 'v8' || provider === 'custom')('pre-transpiled code with source maps to original', async () => {
+  const transpiled = await import('../src/transpiled.js')
+
+  transpiled.hello()
 })

@@ -521,13 +521,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const nthCall = spy.mock.calls[times - 1]
-
+    const callCount = spy.mock.calls.length
+    const isCalled = times <= callCount
     this.assert(
       jestEquals(nthCall, args, [...customTesters, iterableEquality]),
-      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}${
+         isCalled ? `` : `, but called only ${callCount} times`}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
       nthCall,
+      isCalled,
     )
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {

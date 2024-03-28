@@ -54,7 +54,7 @@ export class Logger {
   }
 
   clearFullScreen(message: string) {
-    if (this.ctx.server.config.clearScreen === false) {
+    if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }
@@ -63,7 +63,7 @@ export class Logger {
   }
 
   clearScreen(message: string, force = false) {
-    if (this.ctx.server.config.clearScreen === false) {
+    if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }
@@ -171,10 +171,16 @@ export class Logger {
       this.log(c.dim(c.green(`     ${output} Browser runner started at ${new URL('/', origin)}`)))
     })
 
-    if (this.ctx.config.ui)
+    if (this.ctx.config.ui) {
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
-    else if (this.ctx.config.api?.port)
-      this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
+    }
+    else if (this.ctx.config.api?.port) {
+      const resolvedUrls = this.ctx.server.resolvedUrls
+      // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
+      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
+      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
+      this.log(c.dim(c.green(`      API started at ${new URL('/', origin)}`)))
+    }
 
     if (this.ctx.coverageProvider)
       this.log(c.dim('      Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))

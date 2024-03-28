@@ -6,6 +6,10 @@ import type { WorkerRpcOptions } from './types'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 
+// Store global APIs in case process is overwritten by tests
+const processSend = process.send?.bind(process)
+const processOn = process.on?.bind(process)
+
 export function createThreadsRpcOptions({ port }: WorkerContext): WorkerRpcOptions {
   return {
     post: (v) => { port.postMessage(v) },
@@ -17,9 +21,9 @@ export function createForksRpcOptions(nodeV8: typeof import('v8')): WorkerRpcOpt
   return {
     serialize: nodeV8.serialize,
     deserialize: v => nodeV8.deserialize(Buffer.from(v)),
-    post(v) { process.send!(v) },
+    post(v) { processSend!(v) },
     on(fn) {
-      process.on('message', (message: any, ...extras: any) => {
+      processOn('message', (message: any, ...extras: any) => {
         // Do not react on Tinypool's internal messaging
         if ((message as TinypoolWorkerMessage)?.__tinypool_worker_message__)
           return

@@ -15,7 +15,7 @@ if (isChildProcess())
 export async function run(ctx: ContextRPC) {
   const prepareStart = performance.now()
 
-  const inspectorCleanup = setupInspect(ctx.config)
+  const inspectorCleanup = setupInspect(ctx)
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)

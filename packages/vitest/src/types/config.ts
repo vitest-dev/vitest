@@ -48,10 +48,22 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
-   * Should tests run in random order.
+   * Should files and tests run in random order.
    * @default false
    */
-  shuffle?: boolean
+  shuffle?: boolean | {
+    /**
+     * Should files run in random order. Long running tests will not start
+     * earlier if you enable this option.
+     * @default false
+     */
+    files?: boolean
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    tests?: boolean
+  }
   /**
    * Should tests run in parallel.
    * @default false
@@ -612,10 +624,13 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vitest' }
+   * @default { dir: 'node_modules/.vite/vitest' }
    */
   cache?: false | {
-    dir?: string
+    /**
+     * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+     */
+    dir: string
   }
 
   /**
@@ -703,6 +718,13 @@ export interface InlineConfig {
    * @default false
    */
   disableConsoleIntercept?: boolean
+
+  /**
+   * Include "location" property inside the test definition
+   *
+   * @default false
+   */
+  includeTaskLocation?: boolean
 }
 
 export interface TypecheckConfig {
@@ -797,6 +819,11 @@ export interface UserConfig extends InlineConfig {
    * Additional exclude patterns
    */
   cliExclude?: string[]
+
+  /**
+   * Override vite config's clearScreen from cli
+   */
+  clearScreen?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -830,6 +857,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   cache: {
+    /**
+     * @deprecated
+     */
     dir: string
   } | false
 

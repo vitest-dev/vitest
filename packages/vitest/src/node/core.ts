@@ -11,9 +11,8 @@ import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import { hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
@@ -43,7 +42,6 @@ export class Vitest {
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
-  browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
 
@@ -51,6 +49,7 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  watchedTests: Set<string> = new Set()
   filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
@@ -161,11 +160,14 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
 
     const projects = await this.resolveWorkspace(cliOptions)
-    this.projects = projects
     this.resolvedProjects = projects
-    const filteredProjects = toArray(resolved.project)
-    if (filteredProjects.length)
-      this.projects = this.projects.filter(p => filteredProjects.includes(p.getName()))
+    this.projects = projects
+    const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
+    if (filters.length > 0) {
+      this.projects = this.projects.filter(p =>
+        filters.some(pattern => pattern.test(p.getName())),
+      )
+    }
     if (!this.coreWorkspaceProject)
       this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
 
@@ -382,10 +384,6 @@ export class Vitest {
       }
     }
 
-    // all subsequent runs will treat this as a fresh run
-    this.config.changed = false
-    this.config.related = undefined
-
     if (files.length) {
       // populate once, update cache on watch
       await this.cache.stats.populateStats(this.config.root, files)
@@ -532,6 +530,10 @@ export class Vitest {
 
         this.runningPromise = undefined
         this.isFirstRun = false
+
+        // all subsequent runs will treat this as a fresh run
+        this.config.changed = false
+        this.config.related = undefined
       })
 
     return await this.runningPromise
@@ -620,6 +622,14 @@ export class Vitest {
       return
 
     this._rerunTimer = setTimeout(async () => {
+      // run only watched tests
+      if (this.watchedTests.size) {
+        this.changedTests.forEach((test) => {
+          if (!this.watchedTests.has(test))
+            this.changedTests.delete(test)
+        })
+      }
+
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
@@ -660,6 +670,15 @@ export class Vitest {
       return project.getModulesByFilepath(filepath).size
       // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
+  }
+
+  /**
+   * Watch only the specified tests. If no tests are provided, all tests will be watched.
+   */
+  public watchTests(tests: string[]) {
+    this.watchedTests = new Set(
+      tests.map(test => slash(test)),
+    )
   }
 
   private unregisterWatcher = noop
@@ -841,6 +860,7 @@ export class Vitest {
           results.filter(r => r.status === 'rejected').forEach((err) => {
             this.logger.error('error during close', (err as PromiseRejectedResult).reason)
           })
+          this.logger.logUpdate.done() // restore terminal cursor
         })
       })()
     }

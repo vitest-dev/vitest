@@ -246,9 +246,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
     const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
 
-    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+
+    if (this.ctx.config.changed)
+      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+
     const uncoveredFiles = includedFiles
-      .map(file => pathToFileURL(resolve(this.ctx.config.root, file)))
+      .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
     let merged: RawCoverage = { result: [] }
@@ -323,6 +328,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
     }
 
+    const sources = [url]
+    if (map.sources && map.sources[0] && !url.endsWith(map.sources[0]))
+      sources[0] = new URL(map.sources[0], url).href
+
     return {
       originalSource: sourcesContent,
       source: code || sourcesContent,
@@ -330,7 +339,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
-          sources: [url],
+          sources,
           sourcesContent: [sourcesContent],
         }),
       },
