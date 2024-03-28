@@ -266,6 +266,13 @@ export class WorkspaceProject {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
+
+          // the file is inside the filter path, so we should always include it,
+          // we don't include ../file because this condition is always true if
+          // the file doens't exist which cause false positives
+          if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
+            return true
+
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
