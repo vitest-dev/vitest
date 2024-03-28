@@ -248,6 +248,9 @@ export function resolveConfig(
   if (resolved.runner)
     resolved.runner = resolvePath(resolved.runner, resolved.root)
 
+  if (resolved.snapshotEnvironment)
+    resolved.snapshotEnvironment = resolvePath(resolved.snapshotEnvironment, resolved.root)
+
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
