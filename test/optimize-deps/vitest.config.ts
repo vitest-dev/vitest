@@ -24,17 +24,4 @@ export default defineConfig({
       },
     },
   },
-  // use dummy ssrLoadModule to trigger ssr.optimizeDeps.
-  // this will be unnecessary from Vite 5.1
-  // cf. https://github.com/vitejs/vite/pull/15561
-  plugins: [
-    {
-      name: 'force-ssr-optimize-deps',
-      configureServer(server) {
-        return async () => {
-          await server.ssrLoadModule('/package.json')
-        }
-      },
-    },
-  ],
 })
