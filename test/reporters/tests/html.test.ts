@@ -14,7 +14,7 @@ describe('html reporter', async () => {
   it('resolves to "passing" status for test file "all-passing-or-skipped"', async () => {
     const [expected, testFile, basePath] = ['passing', 'all-passing-or-skipped', 'html/all-passing-or-skipped']
 
-    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
     const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
@@ -42,7 +42,7 @@ describe('html reporter', async () => {
   it('resolves to "failing" status for test file "json-fail"', async () => {
     const [expected, testFile, basePath] = ['failing', 'json-fail.test', 'html/fail']
 
-    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
     const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
