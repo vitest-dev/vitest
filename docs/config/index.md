@@ -1103,6 +1103,20 @@ List of files included in coverage as glob patterns
 
 List of files excluded from coverage as glob patterns.
 
+This option overrides all default options. Extend the default options when adding new patterns to ignore:
+
+```ts
+import { coverageConfigDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      exclude: ['**/custom-pattern/**', ...coverageConfigDefaults.exclude]
+    },
+  },
+})
+```
+
 #### coverage.all
 
 - **Type:** `boolean`
