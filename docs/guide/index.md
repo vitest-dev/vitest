@@ -34,7 +34,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
+Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
