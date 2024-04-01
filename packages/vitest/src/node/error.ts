@@ -290,7 +290,7 @@ export function generateCodeFrame(
 
         const lineLength = lines[j].length
 
-        // to long, maybe it's a minified file, skip for codeframe
+        // too long, maybe it's a minified file, skip for codeframe
         if (stripAnsi(lines[j]).length > 200)
           return ''
 
