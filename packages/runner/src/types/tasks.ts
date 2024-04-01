@@ -186,6 +186,10 @@ export interface TestOptions {
    */
   concurrent?: boolean
   /**
+   * wip
+   */
+  concurrentSuite?: boolean
+  /**
    * Whether tests run sequentially.
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
    */

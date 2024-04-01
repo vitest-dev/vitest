@@ -172,7 +172,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof suiteOptions === 'object')
       options = Object.assign({}, suiteOptions, options)
 
-    // inherit concurrent / sequential from suite
+    // TODO: `this.concurrent/sequential` always undefined?
+    // inherit concurrent / sequential from current suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
     options.sequential = this.sequential || (!this.concurrent && options?.sequential)
 
@@ -215,6 +216,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       tasks: [],
       meta: Object.create(null),
       projectName: '',
+      concurrent: suiteOptions?.concurrentSuite,
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -282,7 +284,8 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    // inherit concurrent / sequential from current suite
+    // TODO: `this.concurrent/sequential` always undefined?
+    // inherit test concurrent / sequential from current suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
     options.sequential = this.sequential || (!this.concurrent && options?.sequential)
 
