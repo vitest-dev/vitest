@@ -3,7 +3,7 @@ import { Console } from 'node:console'
 import { relative } from 'node:path'
 import { getColors, getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
-import type { WorkerGlobalState } from '../types'
+import { getWorkerState } from '../utils'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
@@ -13,7 +13,7 @@ function getTaskIdByStack(root: string) {
   if (!stack)
     return UNKNOWN_TEST_ID
 
-  const index = stack.findIndex(line => line.includes('at Console.value (node:internal/console/'))
+  const index = stack.findIndex(line => line.includes('at Console.value'))
   const line = index === -1 ? null : stack[index + 2]
 
   if (!line)
@@ -27,12 +27,14 @@ function getTaskIdByStack(root: string) {
   return UNKNOWN_TEST_ID
 }
 
-export function createCustomConsole(state: WorkerGlobalState) {
+export function createCustomConsole() {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
 
   const { setTimeout, clearTimeout } = getSafeTimers()
+
+  const state = () => getWorkerState()
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {
@@ -56,7 +58,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
       return
     const content = buffer.map(i => String(i)).join('')
     const timer = timers.get(taskId)!
-    state.rpc.onUserConsoleLog({
+    state().rpc.onUserConsoleLog({
       type: 'stdout',
       content: content || '<empty line>',
       taskId,
@@ -72,7 +74,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
       return
     const content = buffer.map(i => String(i)).join('')
     const timer = timers.get(taskId)!
-    state.rpc.onUserConsoleLog({
+    state().rpc.onUserConsoleLog({
       type: 'stderr',
       content: content || '<empty line>',
       taskId,
@@ -85,7 +87,8 @@ export function createCustomConsole(state: WorkerGlobalState) {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id || state?.current?.file?.id || getTaskIdByStack(state.ctx.config.root)
+      const s = state()
+      const id = s?.current?.id || s?.current?.file?.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -106,7 +109,8 @@ export function createCustomConsole(state: WorkerGlobalState) {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id || state?.current?.file?.id || getTaskIdByStack(state.ctx.config.root)
+      const s = state()
+      const id = s?.current?.id || s?.current?.file?.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()

@@ -34,7 +34,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
+Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
@@ -85,7 +85,7 @@ Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your pack
 Test Files  1 passed (1)
     Tests  1 passed (1)
   Start at  02:15:44
-  Duration  311ms (transform 23ms, setup 0ms, collect 16ms, tests 2ms, environment 0ms, prepare 106ms)
+  Duration  311ms
 ```
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.

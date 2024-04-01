@@ -23,10 +23,13 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
 
   let vitest: Vitest | undefined
   try {
+    const { reporters, ...rest } = config
+
     vitest = await startVitest(mode, cliFilters, {
       watch: false,
-      reporters: ['verbose'],
-      ...config,
+      // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
+      ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
+      ...rest,
     }, viteOverrides)
   }
   catch (e: any) {
