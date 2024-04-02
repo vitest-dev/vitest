@@ -28,6 +28,8 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 function setupEnv(env: Record<string, any>) {
+  if (typeof process === 'undefined')
+    return
   for (const key in env)
     process.env[key] = env[key]
 }
