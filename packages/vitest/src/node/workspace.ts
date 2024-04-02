@@ -413,7 +413,7 @@ export class WorkspaceProject {
       alias: [],
       includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
       env: {
-        ...this.server.config.env,
+        ...this.server?.config.env,
         ...this.config.env,
       },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
