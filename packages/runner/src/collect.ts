@@ -58,6 +58,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
           }
         }
         else {
+          // check that types are exhausted
           c satisfies never
         }
       }
