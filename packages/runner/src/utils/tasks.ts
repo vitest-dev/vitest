@@ -54,7 +54,8 @@ export function getNames(task: Task) {
       names.unshift(current.name)
   }
 
-  names.unshift(task.file.name)
+  if (current !== task.file)
+    names.unshift(task.file.name)
 
   return names
 }

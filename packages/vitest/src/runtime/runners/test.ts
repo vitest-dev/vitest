@@ -49,7 +49,7 @@ export class VitestTestRunner implements VitestRunner {
         await rpc().snapshotSaved(result)
     }
 
-    this.workerState.current = suite.suite
+    this.workerState.current = suite.suite || suite.file
   }
 
   onAfterRunTask(test: Task) {
@@ -58,7 +58,7 @@ export class VitestTestRunner implements VitestRunner {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       test.result!.heap = process.memoryUsage().heapUsed
 
-    this.workerState.current = test.suite
+    this.workerState.current = test.suite || test.file
   }
 
   onCancel(_reason: CancelReason) {
