@@ -115,6 +115,34 @@ test('asymmetric matcher in nested', () => {
   `)
 })
 
+test('getter only property', () => {
+  setupColors(getDefaultColors())
+  const x = { normalProp: 1 }
+  const y = { normalProp: 2 }
+  Object.defineProperty(x, 'getOnlyProp', {
+    enumerable: true,
+    get: () => ({ a: 'b' }),
+  })
+  Object.defineProperty(y, 'getOnlyProp', {
+    enumerable: true,
+    get: () => ({ a: 'b' }),
+  })
+  expect(
+    getErrorDiff(x, y),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      Object {
+        "getOnlyProp": Object {
+          "a": "b",
+        },
+    -   "normalProp": 2,
+    +   "normalProp": 1,
+      }"
+  `)
+})
+
 function getErrorDiff(actual: unknown, expected: unknown) {
   try {
     expect(actual).toEqual(expected)
