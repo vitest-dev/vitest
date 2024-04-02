@@ -5,6 +5,7 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { inspect } from '@vitest/utils'
+import stripAnsi from 'strip-ansi'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
@@ -289,8 +290,8 @@ export function generateCodeFrame(
 
         const lineLength = lines[j].length
 
-        // to long, maybe it's a minified file, skip for codeframe
-        if (lineLength > 200)
+        // too long, maybe it's a minified file, skip for codeframe
+        if (stripAnsi(lines[j]).length > 200)
           return ''
 
         res.push(lineNo(j + 1) + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent))
