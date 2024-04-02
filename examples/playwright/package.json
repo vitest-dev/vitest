@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "test": "vite build && vitest",
+    "test": "DEBUG=pw:api vite build && vitest",
     "test:ui": "vite build && vitest --ui"
   },
   "devDependencies": {
