@@ -2,13 +2,11 @@
 
 exports[`json reporter > generates correct report 1`] = `
 {
-  "ancestorTitles": [
-    "",
-  ],
+  "ancestorTitles": [],
   "failureMessages": [
     "expected 2 to deeply equal 1",
   ],
-  "fullName": " should fail",
+  "fullName": "should fail",
   "location": {
     "column": 13,
     "line": 8,
