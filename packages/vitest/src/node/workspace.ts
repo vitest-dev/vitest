@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import { dirname, join, relative, resolve, toNamespacedPath } from 'pathe'
+import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -257,7 +257,7 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
+  filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
@@ -267,11 +267,14 @@ export class WorkspaceProject {
         return filters.some((f) => {
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
 
-          // the file is inside the filter path, so we should always include it,
-          // we don't include ../file because this condition is always true if
-          // the file doens't exist which cause false positives
-          if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
-            return true
+          // if filter is a full file path, we should include it if it's in the same folder
+          if (isAbsolute(f)) {
+            // the file is inside the filter path, so we should always include it,
+            // we don't include ../file because this condition is always true if
+            // the file doens't exist which cause false positives
+            if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
+              return true
+          }
 
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
