@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
+import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
@@ -325,7 +326,8 @@ export class Vitest {
           continue
         }
         const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
-        process.chdir(dir)
+        if (isMainThread)
+          process.chdir(dir)
         // this just resolves the config, later we also wait when the server is resolved,
         // but we can do that in parallel because it doesn't depend on process.cwd()
         // this is strictly a performance optimization so we don't need to wait for server to start
@@ -333,7 +335,8 @@ export class Vitest {
       }
     }
     finally {
-      process.chdir(cwd)
+      if (isMainThread)
+        process.chdir(cwd)
     }
 
     const projectPromises: Promise<() => Promise<WorkspaceProject>>[] = []
