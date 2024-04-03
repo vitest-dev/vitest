@@ -10,6 +10,7 @@ let globalSetup = false
 export async function setupCommonEnv(config: ResolvedConfig) {
   resetRunOnceCounter()
   setupDefines(config.defines)
+  setupEnv(config.env)
 
   if (globalSetup)
     return
@@ -24,6 +25,13 @@ export async function setupCommonEnv(config: ResolvedConfig) {
 function setupDefines(defines: Record<string, any>) {
   for (const key in defines)
     (globalThis as any)[key] = defines[key]
+}
+
+function setupEnv(env: Record<string, any>) {
+  if (typeof process === 'undefined')
+    return
+  for (const key in env)
+    process.env[key] = env[key]
 }
 
 export async function loadDiffConfig(config: ResolvedConfig, executor: VitestExecutor) {
