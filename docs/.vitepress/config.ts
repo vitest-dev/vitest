@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { withPwa } from '@vite-pwa/vitepress'
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { version } from '../../package.json'
 import {
   contributing,
@@ -58,6 +59,7 @@ export default withPwa(defineConfig({
       light: 'github-light',
       dark: 'github-dark',
     },
+    codeTransformers: [transformerTwoslash()],
   },
   themeConfig: {
     logo: '/logo.svg',

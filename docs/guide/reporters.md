@@ -15,7 +15,7 @@ npx vitest --reporter=verbose
 
 Using reporters via [`vitest.config.ts`](/config/):
 
-```ts
+```ts twoslash
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 

@@ -102,7 +102,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts
+```ts twoslash
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -162,7 +162,7 @@ But we recommend to use the same file for both Vite and Vitest instead of creati
 
 Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
-```ts
+```ts twoslash
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
