@@ -1,8 +1,8 @@
 import c from 'picocolors'
+import type { TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
 import { getFullName } from '../../../../utils'
-import type { TaskResultPack } from '../../../../types'
 import { getStateSymbol } from '../../renderers/utils'
 import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
 
