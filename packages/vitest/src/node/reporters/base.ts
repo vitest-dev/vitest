@@ -328,8 +328,10 @@ export abstract class BaseReporter implements Reporter {
       const groupName = getFullName(group, c.dim(' > '))
       logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
       const siblings = group.tasks
-        .filter(i => i.result?.benchmark && i !== bench)
+        .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
         .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+      if (siblings.length === 0)
+        continue
       for (const sibling of siblings) {
         const number = `${(sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)}x`
         logger.log(`    ${c.green(number)} ${c.gray('faster than')} ${sibling.name}`)
