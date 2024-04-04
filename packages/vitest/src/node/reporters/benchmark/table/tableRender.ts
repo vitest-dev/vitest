@@ -12,7 +12,6 @@ export interface TableRendererOptions {
   logger: Logger
   showHeap: boolean
   slowTestThreshold: number
-  recurse: boolean
 }
 
 const outputMap = new WeakMap<Task, string>()
@@ -101,7 +100,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('  ')
 }
 
-export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): string {
+export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0, shallow = false): string {
   const output: string[] = []
 
   let idx = 0
@@ -152,7 +151,7 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
       }
     }
 
-    if (options.recurse && task.type === 'suite' && task.tasks.length > 0) {
+    if (!shallow && task.type === 'suite' && task.tasks.length > 0) {
       if (task.result?.state)
         output.push(renderTree(task.tasks, options, level + 1))
     }

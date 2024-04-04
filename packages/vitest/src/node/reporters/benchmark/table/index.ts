@@ -21,11 +21,10 @@ export class TableReporter extends BaseReporter {
   }
 
   onCollected() {
-    this.rendererOptions.logger = this.ctx.logger
-    this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-    this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
-    this.rendererOptions.recurse = this.isTTY
     if (this.isTTY) {
+      this.rendererOptions.logger = this.ctx.logger
+      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createTableRenderer(files, this.rendererOptions).start()
@@ -47,7 +46,7 @@ export class TableReporter extends BaseReporter {
           if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
             title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
           this.ctx.logger.log(title)
-          this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1))
+          this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1, true))
         }
       }
     }
