@@ -43,7 +43,10 @@ export class TableReporter extends BaseReporter {
         // render static table when all benches inside single suite are finished
         const benches = task.tasks.filter(t => t.meta.benchmark)
         if (benches.length > 0 && benches.every(t => t.result?.state !== 'run')) {
-          this.ctx.logger.log(` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`)
+          let title = ` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
+          if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
+            title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+          this.ctx.logger.log(title)
           this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1))
         }
       }
