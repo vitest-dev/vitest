@@ -38,22 +38,30 @@ describe('timeout', () => {
     teardown() {
 
     },
+    ...benchOptions
   })
 
   bench('timeout75', async () => {
     await timeout(75)
-  })
+  }, benchOptions)
 
   bench('timeout50', async () => {
     await timeout(50)
-  })
+  }, benchOptions)
 
   bench('timeout25', async () => {
     await timeout(25)
-  })
+  }, benchOptions)
 
   // TODO: move to failed tests
   // test('reduce', () => {
   //   expect(1 - 1).toBe(2)
   // })
 })
+
+const benchOptions = {
+  time: 0,
+  iterations: 3,
+  warmupIterations: 0,
+  warmupTime: 0,
+}
