@@ -9,7 +9,7 @@ test('should print logs correctly', async () => {
   expect(stdout).toBeTruthy()
   expect(stderr).toBeTruthy()
 
-  expect(stdout).toContain(
+  expect(stdout.replace('\n ✓ console.test.ts > suite > nested suite > test', '')).toContain(
 `
 stdout | console.test.ts > suite > nested suite
 beforeAll

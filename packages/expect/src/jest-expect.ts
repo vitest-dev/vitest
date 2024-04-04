@@ -171,6 +171,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toMatch', function (expected: string | RegExp) {
     const actual = this._obj as string
+    if (typeof actual !== 'string')
+      throw new TypeError(`.toMatch() expects to receive a string, but got ${typeof actual}`)
+
     return this.assert(
       typeof expected === 'string'
         ? actual.includes(expected)
@@ -521,13 +524,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const nthCall = spy.mock.calls[times - 1]
-
+    const callCount = spy.mock.calls.length
+    const isCalled = times <= callCount
     this.assert(
       jestEquals(nthCall, args, [...customTesters, iterableEquality]),
-      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}${
+         isCalled ? `` : `, but called only ${callCount} times`}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
       nthCall,
+      isCalled,
     )
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {

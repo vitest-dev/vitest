@@ -2046,9 +2046,10 @@ Installs fake timers with the specified Unix epoch.
 
 #### fakeTimers.toFake
 
-- **Type:** `FakeMethod[]`
+- **Type:** `('setTimeout' | 'clearTimeout' | 'setImmediate' | 'clearImmediate' | 'setInterval' | 'clearInterval' | 'Date' | 'nextTick' | 'hrtime' | 'requestAnimationFrame' | 'cancelAnimationFrame' | 'requestIdleCallback' | 'cancelIdleCallback' | 'performance' | 'queueMicrotask')[]`
+- **Default:** `['setTimeout', 'clearTimeout', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'Date']`
 
-An array with names of global methods and APIs to fake. By default, Vitest does not replace `nextTick()` and `queueMicrotask()`.
+An array with names of global methods and APIs to fake.
 
 To only mock `setTimeout()` and `nextTick()`, specify this property as `['setTimeout', 'nextTick']`.
 
