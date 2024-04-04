@@ -1,7 +1,10 @@
 import c from 'picocolors'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
-import { type TableRendererOptions, createTableRenderer } from './tableRender'
+import { getFullName } from '../../../../utils'
+import type { TaskResultPack } from '../../../../types'
+import { getStateSymbol } from '../../renderers/utils'
+import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
@@ -18,15 +21,32 @@ export class TableReporter extends BaseReporter {
   }
 
   onCollected() {
+    this.rendererOptions.logger = this.ctx.logger
+    this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+    this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
+    this.rendererOptions.recurse = this.isTTY
     if (this.isTTY) {
-      this.rendererOptions.logger = this.ctx.logger
-      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createTableRenderer(files, this.rendererOptions).start()
       else
         this.renderer.update(files)
+    }
+  }
+
+  onTaskUpdate(packs: TaskResultPack[]) {
+    if (this.isTTY)
+      return
+    for (const pack of packs) {
+      const task = this.ctx.state.idMap.get(pack[0])
+      if (task && task.type === 'suite' && task.result?.state && task.result?.state !== 'run') {
+        // render static table when all benches inside single suite are finished
+        const benches = task.tasks.filter(t => t.meta.benchmark)
+        if (benches.length > 0 && benches.every(t => t.result?.state !== 'run')) {
+          this.ctx.logger.log(` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`)
+          this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1))
+        }
+      }
     }
   }
 
