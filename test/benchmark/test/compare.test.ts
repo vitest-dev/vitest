@@ -3,17 +3,17 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('compare', { timeout: 60_000 }, async () => {
-  await fs.promises.rm('./fixtures/basic/bench.json', { force: true })
+  await fs.promises.rm('./fixtures/compare/bench.json', { force: true })
 
   // --outputFile
   {
     const result = await runVitest({
-      root: './fixtures/basic',
+      root: './fixtures/compare',
       outputFile: './bench.json',
       reporters: ['default'],
     }, [], 'benchmark')
     expect(result.exitCode).toBe(0)
-    expect(fs.existsSync('./fixtures/basic/bench.json')).toBe(true)
+    expect(fs.existsSync('./fixtures/compare/bench.json')).toBe(true)
   }
 
   // --compare
@@ -21,7 +21,7 @@ test('compare', { timeout: 60_000 }, async () => {
   if (!process.env.CI) {
     process.stdout.isTTY = true
     const result = await runVitest({
-      root: './fixtures/basic',
+      root: './fixtures/compare',
       compare: './bench.json',
       reporters: ['default'],
     }, [], 'benchmark')
