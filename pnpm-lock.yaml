@@ -1541,12 +1541,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/benchmark-wip:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/browser:
     devDependencies:
       '@vitejs/plugin-basic-ssl':
