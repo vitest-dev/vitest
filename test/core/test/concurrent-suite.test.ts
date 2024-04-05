@@ -108,12 +108,14 @@ describe('works with describe.each', () => {
   })
 })
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 describe('tests are sequential', () => {
   describe('1st suite', { concurrentSuite: true }, () => {
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     let done = false
 
-    test('0', () => {
+    test('0', async () => {
+      await sleep(200)
       expect(done).toBe(false)
     })
 
@@ -124,6 +126,40 @@ describe('tests are sequential', () => {
 
     test('2', () => {
       expect(done).toBe(true)
+    })
+  })
+})
+
+// TODO
+describe('maxConcurrency', { concurrent: true, concurrentSuite: true }, () => {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  describe('1st suite', () => {
+    test('0', async () => {
+      defers[0].resolve()
+      await defers[3]
+    })
+
+    test('1', async () => {
+      await defers[0]
+      defers[1].resolve()
+    })
+  })
+
+  describe('2nd suite', () => {
+    test('2', async () => {
+      await defers[1]
+      defers[2].resolve()
+    })
+
+    test('3', async () => {
+      await defers[2]
+      defers[3].resolve()
     })
   })
 })
