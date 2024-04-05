@@ -186,7 +186,7 @@ export interface TestOptions {
    */
   concurrent?: boolean
   /**
-   * wip
+   * TODO: suite only options?
    */
   concurrentSuite?: boolean
   /**

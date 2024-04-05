@@ -38,3 +38,27 @@ describe('example-2', () => {
     })
   })
 })
+
+describe.only('example-3', () => {
+  describe('nested', { concurrentSuite: true }, () => {
+    // finishes in 3 sec
+    // (1st and 2nd cases in serial)
+    describe('1st suite', () => {
+      test('1st case', async () => {
+        await sleep(1000)
+      })
+      test('2nd case', async () => {
+        await sleep(2000)
+      })
+    })
+
+    describe('2nd suite', () => {
+      test('1st case', async () => {
+        await sleep(1000)
+      })
+      test('2nd case', async () => {
+        await sleep(2000)
+      })
+    })
+  })
+})
