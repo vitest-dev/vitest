@@ -2077,6 +2077,28 @@ export default defineConfig({
 ```
 :::
 
+#### diff.truncateThreshold
+
+- **Type**: `number`
+- **Default**: `0`
+
+The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
+Truncation won't take effect with default value 0.
+
+#### diff.truncateAnnotation
+
+- **Type**: `string`
+- **Default**: `'... Diff result is truncated'`
+
+Annotation that is output at the end of diff result if it's truncated.
+
+#### diff.truncateAnnotationColor
+
+- **Type**: `DiffOptionsColor = (arg: string) => string`
+- **Default**: `noColor = (string: string): string => string`
+
+Color of truncate annotation, default is output with no color.
+
 ### fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`
