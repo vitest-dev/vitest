@@ -83,8 +83,8 @@ describe('works with describe.each', () => {
     await defers[3]
   })
 
-  describe.each([0, 1])('%s', { concurrentSuite: true }, (i) => {
-    if (i === 0) {
+  describe.each(['1st suite', '2nd suite'])('%s', { concurrentSuite: true }, (s) => {
+    if (s === '1st suite') {
       test('0', async () => {
         defers[0].resolve()
       })
@@ -95,7 +95,7 @@ describe('works with describe.each', () => {
       })
     }
 
-    if (i === 1) {
+    if (s === '2nd suite') {
       test('2', async () => {
         await defers[0]
         defers[2].resolve()
