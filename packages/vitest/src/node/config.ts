@@ -12,6 +12,7 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
+import type { Logger } from './logger'
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -76,13 +77,14 @@ export function resolveConfig(
   mode: VitestRunMode,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  logger: Logger,
 ): ResolvedConfig {
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
           `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
             viteConfig.test.environment
@@ -209,11 +211,11 @@ export function resolveConfig(
       return
 
     if (option === 'fallbackCJS') {
-      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+      logger.console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
     }
     else {
       const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
         ),
@@ -475,7 +477,7 @@ export function resolveConfig(
     let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
 
     if (resolved.cache && resolved.cache.dir) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
         ),
@@ -514,7 +516,7 @@ export function resolveConfig(
   resolved.typecheck.enabled ??= false
 
   if (resolved.typecheck.enabled)
-    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
+    logger.console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false

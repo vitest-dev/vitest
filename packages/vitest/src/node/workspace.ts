@@ -333,6 +333,7 @@ export class WorkspaceProject {
         coverage: this.ctx.config.coverage,
       },
       server.config,
+      this.ctx.logger,
     )
 
     this.server = server
