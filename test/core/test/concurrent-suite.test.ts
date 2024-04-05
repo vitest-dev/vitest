@@ -1,5 +1,5 @@
 import { createDefer } from '@vitest/utils'
-import { afterAll, describe, test } from 'vitest'
+import { afterAll, describe, expect, test } from 'vitest'
 
 describe('basic', () => {
   const defers = [
@@ -105,5 +105,25 @@ describe('works with describe.each', () => {
         defers[3].resolve()
       })
     }
+  })
+})
+
+describe('tests are sequential', () => {
+  describe('1st suite', { concurrentSuite: true }, () => {
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+    let done = false
+
+    test('0', () => {
+      expect(done).toBe(false)
+    })
+
+    test('1', async () => {
+      await sleep(100)
+      done = true
+    })
+
+    test('2', () => {
+      expect(done).toBe(true)
+    })
   })
 })
