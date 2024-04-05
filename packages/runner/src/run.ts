@@ -311,7 +311,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       else {
         for (let tasksGroup of partitionSuiteChildren(suite)) {
           if (tasksGroup[0].concurrent === true) {
-            // TODO: p-limit needs to be shared globally to not go over maxConcurrency?
             const mutex = limit(runner.config.maxConcurrency)
             await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
           }

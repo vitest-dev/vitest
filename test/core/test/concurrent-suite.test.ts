@@ -129,37 +129,3 @@ describe('tests are sequential', () => {
     })
   })
 })
-
-// TODO
-describe('maxConcurrency', { concurrent: true, concurrentSuite: true }, () => {
-  const defers = [
-    createDefer<void>(),
-    createDefer<void>(),
-    createDefer<void>(),
-    createDefer<void>(),
-  ]
-
-  describe('1st suite', () => {
-    test('0', async () => {
-      defers[0].resolve()
-      await defers[3]
-    })
-
-    test('1', async () => {
-      await defers[0]
-      defers[1].resolve()
-    })
-  })
-
-  describe('2nd suite', () => {
-    test('2', async () => {
-      await defers[1]
-      defers[2].resolve()
-    })
-
-    test('3', async () => {
-      await defers[2]
-      defers[3].resolve()
-    })
-  })
-})
