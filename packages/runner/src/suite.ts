@@ -172,8 +172,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (typeof suiteOptions === 'object')
       options = Object.assign({}, suiteOptions, options)
 
-    // TODO: `this.concurrent/sequential` always undefined?
-    // inherit concurrent / sequential from current suite
+    // inherit concurrent / sequential from suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
     options.sequential = this.sequential || (!this.concurrent && options?.sequential)
 
@@ -284,8 +283,7 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    // TODO: `this.concurrent/sequential` always undefined?
-    // inherit test concurrent / sequential from current suite
+    // inherit concurrent / sequential from current suite
     options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
     options.sequential = this.sequential || (!this.concurrent && options?.sequential)
 
