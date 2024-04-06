@@ -1103,6 +1103,20 @@ List of files included in coverage as glob patterns
 
 List of files excluded from coverage as glob patterns.
 
+This option overrides all default options. Extend the default options when adding new patterns to ignore:
+
+```ts
+import { coverageConfigDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      exclude: ['**/custom-pattern/**', ...coverageConfigDefaults.exclude]
+    },
+  },
+})
+```
+
 #### coverage.all
 
 - **Type:** `boolean`
@@ -1318,6 +1332,38 @@ Sets thresholds for files matching the glob pattern.
     }
   }
 }
+```
+
+#### coverage.ignoreEmptyLines
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
+
+Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
+
+This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
+By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
+
+If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  esbuild: {
+    // Transpile all files with ESBuild to remove comments from code coverage.
+    // Required for `test.coverage.ignoreEmptyLines` to work:
+    include: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx'],
+  },
+  test: {
+    coverage: {
+      provider: 'v8',
+      ignoreEmptyLines: true,
+    },
+  },
+})
 ```
 
 #### coverage.ignoreClassMethods
@@ -2030,6 +2076,28 @@ export default defineConfig({
 })
 ```
 :::
+
+#### diff.truncateThreshold
+
+- **Type**: `number`
+- **Default**: `0`
+
+The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
+Truncation won't take effect with default value 0.
+
+#### diff.truncateAnnotation
+
+- **Type**: `string`
+- **Default**: `'... Diff result is truncated'`
+
+Annotation that is output at the end of diff result if it's truncated.
+
+#### diff.truncateAnnotationColor
+
+- **Type**: `DiffOptionsColor = (arg: string) => string`
+- **Default**: `noColor = (string: string): string => string`
+
+Color of truncate annotation, default is output with no color.
 
 ### fakeTimers
 

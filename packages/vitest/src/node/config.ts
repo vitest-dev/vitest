@@ -119,7 +119,8 @@ export function resolveConfig(
   if (resolved.minWorkers)
     resolved.minWorkers = Number(resolved.minWorkers)
 
-  resolved.fileParallelism ??= true
+  // run benchmark sequentially by default
+  resolved.fileParallelism ??= mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers

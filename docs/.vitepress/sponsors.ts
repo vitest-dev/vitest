@@ -34,13 +34,7 @@ const vitestSponsors = {
       img: '/bit.svg',
     },
   ],
-  gold: [
-    {
-      name: 'InfoSupport',
-      url: 'https://www.infosupport.com/open-source/',
-      img: '/infosupport.svg',
-    },
-  ],
+  // gold: [],
 } satisfies Record<string, Sponsor[]>
 
 export const sponsors = [
@@ -54,9 +48,9 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.platinum,
   },
-  {
-    tier: 'Gold Sponsors',
-    size: 'medium',
-    items: vitestSponsors.gold,
-  },
+  // {
+  //   tier: 'Gold Sponsors',
+  //   size: 'medium',
+  //   items: vitestSponsors.gold,
+  // },
 ]
