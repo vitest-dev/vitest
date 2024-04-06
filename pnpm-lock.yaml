@@ -22,6 +22,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
+  v8-to-istanbul@9.2.0:
+    hash: zm2cjmgndzbmnuve7zu5emyu7i
+    path: patches/v8-to-istanbul@9.2.0.patch
 
 importers:
 
@@ -1063,9 +1066,6 @@ importers:
       test-exclude:
         specifier: ^6.0.0
         version: 6.0.0
-      v8-to-istanbul:
-        specifier: ^9.2.0
-        version: 9.2.0
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -1085,6 +1085,9 @@ importers:
       pathe:
         specifier: ^1.1.1
         version: 1.1.1
+      v8-to-istanbul:
+        specifier: ^9.2.0
+        version: 9.2.0(patch_hash=zm2cjmgndzbmnuve7zu5emyu7i)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -6180,6 +6183,7 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
       '@jridgewell/sourcemap-codec': 1.4.15
+    dev: true
 
   /@jridgewell/trace-mapping@0.3.22:
     resolution: {integrity: sha512-Wf963MzWtA2sjrNt+g18IAln9lKnlRp+K2eH4jjIoF1wYeq3aMREpG09xhlhdzS0EjwU7qmUJYangWa+151vZw==}
@@ -9619,6 +9623,7 @@ packages:
 
   /@types/istanbul-lib-coverage@2.0.6:
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
+    dev: true
 
   /@types/istanbul-lib-instrument@1.7.7:
     resolution: {integrity: sha512-xyV3cVIhVuVAT7wyJXT+lliOo4b7BpfsnfCDy0/nuuAX+J7RB2rWNDV/7hkmv62vwqAD2XQ2Fgt6OwWGWEYfvg==}
@@ -12968,7 +12973,7 @@ packages:
       istanbul-reports: 3.1.6
       rimraf: 3.0.2
       test-exclude: 6.0.0
-      v8-to-istanbul: 9.2.0
+      v8-to-istanbul: 9.2.0(patch_hash=zm2cjmgndzbmnuve7zu5emyu7i)
       yargs: 16.2.0
       yargs-parser: 20.2.9
     dev: true
@@ -26536,13 +26541,15 @@ packages:
       source-map: 0.7.4
     dev: true
 
-  /v8-to-istanbul@9.2.0:
+  /v8-to-istanbul@9.2.0(patch_hash=zm2cjmgndzbmnuve7zu5emyu7i):
     resolution: {integrity: sha512-/EH/sDgxU2eGxajKdwLCDmQ4FWq+kpi3uCmBGpw1xJtnAxEjlD8j8PEiGWpCIMIs3ciNAgH0d3TTJiUkYzyZjA==}
     engines: {node: '>=10.12.0'}
     dependencies:
       '@jridgewell/trace-mapping': 0.3.20
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+    dev: true
+    patched: true
 
   /validate-html-nesting@1.2.2:
     resolution: {integrity: sha512-hGdgQozCsQJMyfK5urgFcWEqsSSrK63Awe0t/IMR0bZ0QMtnuaiHzThW81guu3qx9abLi99NEuiaN6P9gVYsNg==}
