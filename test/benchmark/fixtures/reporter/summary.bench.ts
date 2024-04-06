@@ -2,11 +2,11 @@ import { bench, describe } from 'vitest'
 
 describe('suite-a', () => {
   bench('good', async () => {
-    await sleep(25)
+    await sleep(10)
   }, options)
 
   bench('bad', async () => {
-    await sleep(50)
+    await sleep(300)
   }, options)
 })
 
@@ -26,7 +26,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const options = {
   time: 0,
-  iterations: 3,
+  iterations: 2,
   warmupIterations: 0,
   warmupTime: 0,
 }
