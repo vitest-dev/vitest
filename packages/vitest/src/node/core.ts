@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
+import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
@@ -312,23 +313,50 @@ export class Vitest {
       return acc
     }, {} as UserConfig)
 
-    const projects = filteredWorkspaces.map(async (workspacePath) => {
-      // don't start a new server, but reuse existing one
-      if (
-        this.server.config.configFile === workspacePath
-      )
-        return this.createCoreProject()
-      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
-    })
+    const cwd = process.cwd()
+
+    const projects: (() => Promise<WorkspaceProject>)[] = []
+
+    try {
+      // we have to resolve them one by one because CWD should depend on the project
+      for (const filepath of filteredWorkspaces) {
+        if (this.server.config.configFile === filepath) {
+          const project = await this.createCoreProject()
+          projects.push(() => Promise.resolve(project))
+          continue
+        }
+        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
+        if (isMainThread)
+          process.chdir(dir)
+        // this just resolves the config, later we also wait when the server is resolved,
+        // but we can do that in parallel because it doesn't depend on process.cwd()
+        // this is strictly a performance optimization so we don't need to wait for server to start
+        projects.push(await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }))
+      }
+    }
+    finally {
+      if (isMainThread)
+        process.chdir(cwd)
+    }
+
+    const projectPromises: Promise<() => Promise<WorkspaceProject>>[] = []
 
     projectsOptions.forEach((options, index) => {
-      projects.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
+      // we can resolve these in parallel because process.cwd() is not changed
+      projectPromises.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
     })
 
-    if (!projects.length)
+    if (!projects.length && !projectPromises.length)
       return [await this.createCoreProject()]
 
-    const resolvedProjects = await Promise.all(projects)
+    const resolvedProjectsReceivers = [
+      ...projects,
+      ...await Promise.all(projectPromises),
+    ]
+    // we need to wait when the server is resolved, we can do that in parallel
+    const resolvedProjects = await Promise.all(
+      resolvedProjectsReceivers.map(receiver => receiver()),
+    )
     const names = new Set<string>()
 
     for (const project of resolvedProjects) {

@@ -43,6 +43,11 @@ npm i -D @vitest/coverage-istanbul
 
 ## Coverage Setup
 
+:::tip
+It's recommended to always define [`coverage.include`](https://vitest.dev/config/#coverage-include) in your configuration file.
+This helps Vitest to reduce the amount of files picked by [`coverage.all`](https://vitest.dev/config/#coverage-all).
+:::
+
 To test with coverage enabled, you can pass the `--coverage` flag in CLI.
 By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 

@@ -266,13 +266,11 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
 
       const coverages = await Promise.all(chunk.map(async (filename) => {
-        const transformResult = await this.ctx.vitenode.transformRequest(filename.pathname).catch(() => {})
+        const { originalSource, source } = await this.getSources(filename.href, transformResults)
 
         // Ignore empty files, e.g. files that contain only typescript types and no runtime code
-        if (transformResult && stripLiteral(transformResult.code).trim() === '')
+        if (source && stripLiteral(source).trim() === '')
           return null
-
-        const { originalSource } = await this.getSources(filename.href, transformResults)
 
         const coverage = {
           url: filename.href,
@@ -309,9 +307,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   }> {
     const filePath = normalize(fileURLToPath(url))
 
-    const transformResult = transformResults.get(filePath)
+    const transformResult = transformResults.get(filePath) || await this.ctx.vitenode.transformRequest(filePath).catch(() => {})
 
-    const map = transformResult?.map
+    const map = transformResult?.map as (EncodedSourceMap | undefined)
     const code = transformResult?.code
     const sourcesContent = map?.sourcesContent?.[0] || await fs.readFile(filePath, 'utf-8').catch(() => {
       // If file does not exist construct a dummy source for it.
@@ -367,7 +365,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         // If no source map was found from vite-node we can assume this file was not run in the wrapper
         const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
 
-        const converter = v8ToIstanbul(url, wrapperLength, sources)
+        const converter = v8ToIstanbul(url, wrapperLength, sources, undefined, this.options.ignoreEmptyLines)
         await converter.load()
 
         converter.applyCoverage(functions)

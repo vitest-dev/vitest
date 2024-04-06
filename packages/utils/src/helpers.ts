@@ -111,7 +111,15 @@ export function clone<T>(
       if (!descriptor)
         continue
       const cloned = clone((val as any)[k], seen, options)
-      if ('get' in descriptor) {
+      if (options.forceWritable) {
+        Object.defineProperty(out, k, {
+          enumerable: descriptor.enumerable,
+          configurable: true,
+          writable: true,
+          value: cloned,
+        })
+      }
+      else if ('get' in descriptor) {
         Object.defineProperty(out, k, {
           ...descriptor,
           get() {
@@ -122,7 +130,6 @@ export function clone<T>(
       else {
         Object.defineProperty(out, k, {
           ...descriptor,
-          writable: options.forceWritable ? true : descriptor.writable,
           value: cloned,
         })
       }
