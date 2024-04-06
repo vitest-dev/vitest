@@ -107,6 +107,10 @@ export default withPwa(defineConfig({
           {
             items: [
               {
+                text: 'Mastodon',
+                link: mastodon,
+              },
+              {
                 text: 'X (formerly Twitter)',
                 link: twitter,
               },
