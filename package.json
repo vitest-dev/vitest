@@ -10,7 +10,7 @@
   },
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "ci:docs": "run-s build docs:build",
+    "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
@@ -57,7 +57,6 @@
     "fast-glob": "^3.3.2",
     "lint-staged": "^15.1.0",
     "magic-string": "^0.30.5",
-    "npm-run-all2": "^6.1.2",
     "pathe": "^1.1.1",
     "rimraf": "^5.0.5",
     "rollup": "^4.9.6",
