@@ -926,7 +926,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 }))).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: 3 } to match object { c: 4 }
-    (2 more properties properties in actual)",
+    (2 matching properties omitted from actual)",
       "- Expected
     + Received
 
@@ -941,7 +941,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 }))).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }
-    (3 more properties properties in actual)",
+    (3 matching properties omitted from actual)",
       "- Expected
     + Received
 
@@ -956,7 +956,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 4, e: 5 }, f: { g: 6 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4, e: 5 }, …(1) } to match object { c: { d: 5 } }
-    (5 more properties properties in actual)",
+    (5 matching properties omitted from actual)",
       "- Expected
     + Received
 
@@ -989,7 +989,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 3 } }).toMatchObject({ a: 1, c: { d: 4 } }))).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 3 } } to match object { a: 1, c: { d: 4 } }
-    (1 more property properties in actual)",
+    (1 matching property omitted from actual)",
       "- Expected
     + Received
 
@@ -1007,7 +1007,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 }, foo: { value: 'bar' }, bar: { value: 'foo' } }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }))).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }
-    (4 more properties properties in actual)",
+    (4 matching properties omitted from actual)",
       "- Expected
     + Received
 
@@ -1029,7 +1029,7 @@ it('toMatchObject error diff', () => {
   expect(getError(() => expect(characters).toMatchObject({ family: 'House Atreides', children: [{ firstName: 'Paul' }] }))).toMatchInlineSnapshot(`
     [
       "expected { firstName: 'Vladimir', …(4) } to match object { family: 'House Atreides', …(1) }
-    (5 more properties properties in actual)",
+    (5 matching properties omitted from actual)",
       "- Expected
     + Received
 

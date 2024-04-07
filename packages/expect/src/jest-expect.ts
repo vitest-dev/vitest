@@ -175,7 +175,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
     if ((pass && isNot) || (!pass && !isNot)) {
-      const message = stripped === 0 ? msg : `${msg}\n(${stripped} more ${pluralize('property', stripped)} properties in actual)`
+      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${pluralize('property', stripped)} omitted from actual)`
       throw new AssertionError(message, { showDiff: true, expected, actual: actualSubset })
     }
   })
