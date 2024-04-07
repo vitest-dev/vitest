@@ -19,7 +19,7 @@ it.each([
   const taskUpdate: TaskResultPack[] = []
   const finishedFiles: File[] = []
   const collectedFiles: File[] = []
-  const { vitest, stdout, stderr } = await runVitest({
+  const { ctx, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures'),
     include: ['**/*.spec.ts'],
     reporters: [
@@ -50,7 +50,7 @@ it.each([
   expect(taskUpdate).toHaveLength(4)
   expect(finishedFiles).toHaveLength(1)
 
-  const files = vitest?.state.getFiles() || []
+  const files = ctx?.state.getFiles() || []
   expect(files).toHaveLength(1)
 
   expect(taskUpdate).toContainEqual(

@@ -1,45 +1,30 @@
 import { rmSync, writeFileSync } from 'node:fs'
-import { afterEach, expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 
-import * as testUtils from '../../test-utils'
+import { runVitest } from '../../test-utils'
 
-async function runVitestCli(...args: string[]) {
-  const vitest = await testUtils.runVitestCli(...args)
-  if (args.includes('--watch'))
-    vitest.resetOutput()
-  return vitest
-}
-
-const cliArgs = ['--root', 'fixtures', '--watch']
-const cleanups: (() => void)[] = []
-
-afterEach(() => {
-  cleanups.splice(0).forEach(fn => fn())
-})
-
-// TODO: Fix flakiness and enable on CI
-if (process.env.GITHUB_ACTIONS)
-  test.only('skip tests on CI', () => {})
+const options = { root: 'fixtures', watch: true }
 
 test('quit watch mode', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest, waitForClose } = await runVitest(options)
 
   vitest.write('q')
 
-  await vitest.isDone
+  await waitForClose()
 })
 
 test('rerun current pattern tests', async () => {
-  const vitest = await runVitestCli(...cliArgs, '-t', 'sum')
+  const { vitest } = await runVitest({ ...options, testNamePattern: 'sum' })
 
   vitest.write('r')
 
+  await vitest.waitForStdout('RERUN')
   await vitest.waitForStdout('Test name pattern: /sum/')
   await vitest.waitForStdout('1 passed')
 })
 
 test('filter by filename', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await runVitest(options)
 
   vitest.write('p')
 
@@ -57,7 +42,7 @@ test('filter by filename', async () => {
 })
 
 test('filter by test name', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await runVitest(options)
 
   vitest.write('t')
 
@@ -73,8 +58,8 @@ test('filter by test name', async () => {
   await vitest.waitForStdout('1 passed')
 })
 
-test('cancel test run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
+  const { vitest } = await runVitest(options)
 
   const testPath = 'fixtures/cancel.test.ts'
   const testCase = `// Dynamic test case
@@ -95,7 +80,7 @@ test('2 - test that is cancelled', async () => {
 })
 `
 
-  cleanups.push(() => rmSync(testPath))
+  onTestFinished(() => rmSync(testPath))
   writeFileSync(testPath, testCase, 'utf8')
 
   // Test case is running, cancel it

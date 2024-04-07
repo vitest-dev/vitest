@@ -48,6 +48,7 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
 
     afterEach(async () => {
       await ctx?.close()
+      await ctx?.closingPromise
       process.exit = exit
     })
   }
