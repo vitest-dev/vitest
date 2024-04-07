@@ -1,7 +1,6 @@
-import { Writable } from 'node:stream'
+import { Readable, Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { ReadStream } from 'node:tty'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
@@ -19,9 +18,13 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
   const exit = process.exit
   process.exit = (() => { }) as never
 
-  const stdin = new ReadStream(0)
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
+
+  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
+  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
+  stdin.isTTY = true
+  stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr })
 
   let ctx: Vitest | undefined
@@ -40,7 +43,8 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
     })
   }
   catch (e: any) {
-    // Ignore error and rely on stderr instead
+    console.error(e.message)
+    cli.stderr += e.message
   }
   finally {
     exitCode = process.exitCode
