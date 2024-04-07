@@ -1,14 +1,14 @@
-import { Console } from 'node:console'
 import { Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { ReadStream } from 'node:tty'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
 import { type Options, execa } from 'execa'
-import stripAnsi from 'strip-ansi'
 import { dirname, resolve } from 'pathe'
+import { Cli } from './cli'
 
 export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test', viteOverrides: ViteUserConfig = {}) {
   // Reset possible previous runs
@@ -19,77 +19,48 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
   const exit = process.exit
   process.exit = (() => { }) as never
 
-  const { getLogs, restore } = captureLogs()
+  const stdin = new ReadStream(0)
+  const stdout = new Writable({ write: (_, __, callback) => callback() })
+  const stderr = new Writable({ write: (_, __, callback) => callback() })
+  const cli = new Cli({ stdin, stdout, stderr })
 
-  let vitest: Vitest | undefined
+  let ctx: Vitest | undefined
   try {
     const { reporters, ...rest } = config
 
-    vitest = await startVitest(mode, cliFilters, {
+    ctx = await startVitest(mode, cliFilters, {
       watch: false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
-    }, viteOverrides)
+    }, viteOverrides, {
+      stdin,
+      stdout,
+      stderr,
+    })
   }
   catch (e: any) {
-    return {
-      stderr: `${getLogs().stderr}\n${e.message}`,
-      stdout: getLogs().stdout,
-      exitCode,
-      vitest,
-    }
+    // Ignore error and rely on stderr instead
   }
   finally {
     exitCode = process.exitCode
     process.exitCode = 0
-    process.exit = exit
 
-    restore()
+    afterEach(async () => {
+      await ctx?.close()
+      process.exit = exit
+    })
   }
-
-  return { ...getLogs(), exitCode, vitest }
-}
-
-function captureLogs() {
-  const stdout: string[] = []
-  const stderr: string[] = []
-
-  const streams = {
-    stdout: new Writable({
-      write(chunk, _, callback) {
-        stdout.push(chunk.toString())
-        callback()
-      },
-    }),
-    stderr: new Writable({
-      write(chunk, _, callback) {
-        stderr.push(chunk.toString())
-        callback()
-      },
-    }),
-  }
-
-  const originalConsole = globalThis.console
-  globalThis.console = new Console(streams)
-
-  const originalStdoutWrite = process.stdout.write
-  process.stdout.write = streams.stdout.write.bind(streams.stdout) as any
-
-  const originalStderrWrite = process.stderr.write
-  process.stderr.write = streams.stderr.write.bind(streams.stderr) as any
 
   return {
-    restore: () => {
-      globalThis.console = originalConsole
-      process.stdout.write = originalStdoutWrite
-      process.stderr.write = originalStderrWrite
-    },
-    getLogs() {
-      return {
-        stdout: stripAnsi(stdout.join('')),
-        stderr: stripAnsi(stderr.join('')),
-      }
+    ctx,
+    exitCode,
+    vitest: cli,
+    stdout: cli.stdout,
+    stderr: cli.stderr,
+    waitForClose: async () => {
+      await new Promise<void>(resolve => ctx!.onClose(resolve))
+      return ctx?.closingPromise
     },
   }
 }
@@ -103,96 +74,35 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   }
 
   const subprocess = execa(command, args, options as Options)
+  const cli = new Cli({
+    stdin: subprocess.stdin!,
+    stdout: subprocess.stdout!,
+    stderr: subprocess.stderr!,
+  })
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
-
-  const cli = {
-    stdout: '',
-    stderr: '',
-    stdoutListeners: [] as (() => void)[],
-    stderrListeners: [] as (() => void)[],
-    isDone,
-    write(text: string) {
-      this.resetOutput()
-      subprocess.stdin!.write(text)
-    },
-    waitForStdout(expected: string) {
-      const error = new Error('Timeout error')
-      Error.captureStackTrace(error, this.waitForStdout)
-      return new Promise<void>((resolve, reject) => {
-        if (this.stdout.includes(expected))
-          return resolve()
-
-        const timeout = setTimeout(() => {
-          error.message = `Timeout when waiting for output "${expected}".\nReceived:\n${this.stdout} \nStderr:\n${this.stderr}`
-          reject(error)
-        }, process.env.CI ? 20_000 : 4_000)
-
-        const listener = () => {
-          if (this.stdout.includes(expected)) {
-            if (timeout)
-              clearTimeout(timeout)
-
-            resolve()
-          }
-        }
-
-        this.stdoutListeners.push(listener)
-      })
-    },
-    waitForStderr(expected: string) {
-      const error = new Error('Timeout')
-      Error.captureStackTrace(error, this.waitForStderr)
-      return new Promise<void>((resolve, reject) => {
-        if (this.stderr.includes(expected))
-          return resolve()
-
-        const timeout = setTimeout(() => {
-          error.message = `Timeout when waiting for error "${expected}".\nReceived:\n${this.stderr}\nStdout:\n${this.stdout}`
-          reject(error)
-        }, process.env.CI ? 20_000 : 4_000)
-
-        const listener = () => {
-          if (this.stderr.includes(expected)) {
-            if (timeout)
-              clearTimeout(timeout)
-
-            resolve()
-          }
-        }
-
-        this.stderrListeners.push(listener)
-      })
-    },
-    resetOutput() {
-      this.stdout = ''
-      this.stderr = ''
-    },
-  }
-
-  subprocess.stdout!.on('data', (data) => {
-    cli.stdout += stripAnsi(data.toString())
-    cli.stdoutListeners.forEach(fn => fn())
-  })
-
-  subprocess.stderr!.on('data', (data) => {
-    cli.stderr += stripAnsi(data.toString())
-    cli.stderrListeners.forEach(fn => fn())
-  })
-
   subprocess.on('exit', () => setDone())
+
+  function output() {
+    return {
+      vitest: cli,
+      stdout: cli.stdout || '',
+      stderr: cli.stderr || '',
+      waitForClose: () => isDone,
+    }
+  }
 
   // Manually stop the processes so that each test don't have to do this themselves
   afterEach(async () => {
     if (subprocess.exitCode === null)
       subprocess.kill()
 
-    await cli.isDone
+    await isDone
   })
 
   if (args.includes('--inspect') || args.includes('--inspect-brk'))
-    return cli
+    return output()
 
   if (args.includes('--watch')) {
     if (command === 'vitest') // Wait for initial test run to complete
@@ -202,10 +112,10 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     cli.stdout = cli.stdout.replace('[debug] watcher is ready\n', '')
   }
   else {
-    await cli.isDone
+    await isDone
   }
 
-  return cli
+  return output()
 }
 
 export async function runVitestCli(_options?: Options | string, ...args: string[]) {
@@ -215,7 +125,9 @@ export async function runVitestCli(_options?: Options | string, ...args: string[
 
 export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  return runCli('vite-node', _options, ...args)
+  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
+
+  return { viteNode: vitest, ...rest }
 }
 
 const originalFiles = new Map<string, string>()
