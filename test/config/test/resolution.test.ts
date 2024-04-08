@@ -278,12 +278,10 @@ describe.only.each([
     ['1002', { enabled: true, port: 1002 }],
     ['www.remote.com:1002', { enabled: true, port: 1002, host: 'www.remote.com' }],
     ['www.remote.com', { enabled: true, host: 'www.remote.com' }],
-  ])('parses "%s" value', async (cliValue, inspect) => {
-    const rawConfig = parseCLI([
-      'vitest',
-      '--no-file-parallelism',
-      `${inspectFlagName}=${cliValue}`,
-    ])
+  ])(`parses "vitest ${inspectFlagName} %s" value`, async (cliValue, inspect) => {
+    const rawConfig = parseCLI(
+      `vitest --no-file-parallelism ${inspectFlagName} ${cliValue}`,
+    )
     const c = await config(rawConfig.options)
     expect(c.inspector).toEqual({
       ...inspect,

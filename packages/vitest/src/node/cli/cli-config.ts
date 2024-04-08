@@ -470,7 +470,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Enable Node.js inspector (default: 127.0.0.1:9229)',
     argument: '[[host:]port]',
     transform(portOrEnabled) {
-      if (portOrEnabled === 'true' || portOrEnabled === 'yes')
+      if (portOrEnabled === 0 || portOrEnabled === 'true' || portOrEnabled === 'yes')
         return true
       if (portOrEnabled === 'false' || portOrEnabled === 'no')
         return false
@@ -481,7 +481,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Enable Node.js inspector and break before the test starts',
     argument: '[[host:]port]',
     transform(portOrEnabled) {
-      if (portOrEnabled === 'true' || portOrEnabled === 'yes')
+      if (portOrEnabled === 0 || portOrEnabled === 'true' || portOrEnabled === 'yes')
         return true
       if (portOrEnabled === 'false' || portOrEnabled === 'no')
         return false
