@@ -264,7 +264,7 @@ describe('correctly defines api flag', () => {
   })
 })
 
-describe.only.each([
+describe.each([
   '--inspect',
   '--inspect-brk',
 ])('correctly parses %s flags', (inspectFlagName) => {
