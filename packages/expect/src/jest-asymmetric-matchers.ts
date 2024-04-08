@@ -324,7 +324,7 @@ class CloseTo extends AsymmetricMatcher<number> {
     return [
       this.toString(),
       this.sample,
-      `(${this.precision} ${pluralize('digit', this.precision)})`,
+      `(${pluralize('digit', this.precision)})`,
     ].join(' ')
   }
 }

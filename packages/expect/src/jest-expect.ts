@@ -4,7 +4,7 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, pluralize, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
@@ -175,7 +175,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
     if ((pass && isNot) || (!pass && !isNot)) {
-      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${pluralize('property', stripped)} omitted from actual)`
+      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${stripped === 1 ? 'property' : 'properties'} omitted from actual)`
       throw new AssertionError(message, { showDiff: true, expected, actual: actualSubset })
     }
   })

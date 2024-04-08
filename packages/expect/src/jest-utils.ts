@@ -537,12 +537,8 @@ export function generateToBeMessage(deepEqualityName: string, expected = '#{this
   return toBeMessage
 }
 
-const IRREGULAR_PLURALS: { [key: string]: string } = {
-  property: 'properties',
-}
-
 export function pluralize(word: string, count: number): string {
-  return count === 1 ? word : IRREGULAR_PLURALS[word] ?? `${word}s`
+  return `${count} ${word}${count === 1 ? '' : 's'}`
 }
 
 export function getObjectKeys(object: object): Array<string | symbol> {
