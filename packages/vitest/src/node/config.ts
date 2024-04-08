@@ -102,7 +102,7 @@ export function resolveConfig(
     ...resolved.inspector,
     ...parseInspector(inspector),
     enabled: !!inspector,
-    waitForDebugger: resolved.inspector.waitForDebugger ?? !!resolved.inspectBrk,
+    waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
   }
 
   if (viteConfig.base !== '/')
