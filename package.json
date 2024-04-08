@@ -67,7 +67,7 @@
     "typescript": "^5.2.2",
     "vite": "^5.2.6",
     "vitest": "workspace:*",
-    "zx": "^7.2.3"
+    "zx": "^8.0.1"
   },
   "pnpm": {
     "overrides": {
