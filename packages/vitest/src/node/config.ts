@@ -26,10 +26,13 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   if (typeof inspect === 'number')
     return { port: inspect }
 
+  if (inspect.match(/https?:\//))
+    throw new Error(`Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`)
+
   const [host, port] = inspect.split(':')
   if (!port)
-    return { host, port: defaultInspectPort }
-  return { host, port: Number(port) }
+    return { host }
+  return { host, port: Number(port) || defaultInspectPort }
 }
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
