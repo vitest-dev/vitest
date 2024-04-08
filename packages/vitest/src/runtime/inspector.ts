@@ -12,7 +12,7 @@ let session: InstanceType<typeof inspector.Session>
  */
 export function setupInspect(ctx: ContextRPC) {
   const config = ctx.config
-  const isEnabled = config.inspect || config.inspectBrk
+  const isEnabled = config.inspector.enabled
 
   if (isEnabled) {
     inspector = __require('node:inspector')
@@ -20,10 +20,13 @@ export function setupInspect(ctx: ContextRPC) {
     const isOpen = inspector.url() !== undefined
 
     if (!isOpen) {
-      inspector.open()
+      inspector.open(
+        config.inspector.port,
+        config.inspector.host,
+        config.inspector.waitForDebugger,
+      )
 
       if (config.inspectBrk) {
-        inspector.waitForDebugger()
         const firstTestFile = ctx.files[0]
 
         // Stop at first test file

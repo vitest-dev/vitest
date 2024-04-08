@@ -410,6 +410,7 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      inspector: this.ctx.config.inspector,
       alias: [],
       includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
       env: {

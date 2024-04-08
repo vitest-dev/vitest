@@ -675,7 +675,7 @@ export interface InlineConfig {
    *
    * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
-  inspect?: boolean
+  inspect?: boolean | string
 
   /**
    * Debug tests by opening `node:inspector` in worker / child process and wait for debugger to connect.
@@ -683,7 +683,29 @@ export interface InlineConfig {
    *
    * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
-  inspectBrk?: boolean
+  inspectBrk?: boolean | string
+
+  /**
+   * Inspector options. If `--inspect` or `--inspect-brk` is enabled, these options will be passed to the inspector.
+   */
+  inspector?: {
+    /**
+     * Enable inspector
+     */
+    enabled?: boolean
+    /**
+     * Port to run inspector on
+     */
+    port?: number
+    /**
+     * Host to run inspector on
+     */
+    host?: string
+    /**
+     * Wait for debugger to connect before running tests
+     */
+    waitForDebugger?: boolean
+  }
 
   /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
