@@ -96,8 +96,8 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
-| `--inspect` | Enables Node.js inspector |
-| `--inspect-brk` | Enables Node.js inspector with break |
+| `--inspect [[host:]port]` | Enable Node.js inspector (default: 127.0.0.1:9229) |
+| `--inspect-brk [[host:]port]` | Enables Node.js inspector and break before the test starts |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
 | `--exclude <glob>` | Additional file globs to be excluded from test |

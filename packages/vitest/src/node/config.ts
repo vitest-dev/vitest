@@ -25,7 +25,9 @@ function parseInspector(inspect: string | undefined | boolean) {
     return {}
 
   const [host, port] = inspect.split(':')
-  return { host, port: port ? Number(port) : undefined }
+  if (!port)
+    return { port: Number(host) }
+  return { host, port: Number(port) }
 }
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
