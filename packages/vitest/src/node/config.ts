@@ -20,6 +20,14 @@ function resolvePath(path: string, root: string) {
   )
 }
 
+function parseInspector(inspect: string | undefined | boolean) {
+  if (typeof inspect === 'boolean' || inspect === undefined)
+    return {}
+
+  const [host, port] = inspect.split(':')
+  return { host, port: port ? Number(port) : undefined }
+}
+
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
 ): ApiConfig | undefined {
@@ -88,8 +96,14 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
-  resolved.inspect = Boolean(resolved.inspect)
-  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  const inspector = resolved.inspect || resolved.inspectBrk
+
+  resolved.inspector = {
+    ...resolved.inspector,
+    ...parseInspector(inspector),
+    enabled: !!inspector,
+    waitForDebugger: resolved.inspector.waitForDebugger ?? !!resolved.inspectBrk,
+  }
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
