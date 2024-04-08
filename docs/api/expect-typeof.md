@@ -18,7 +18,7 @@ You can negate all assertions, using `.not` property.
 
 This matcher will check if the types are fully equal to each other. This matcher will not fail if two objects have different values, but the same type. It will fail however if an object is missing a property.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf({ a: 1 }).toEqualTypeOf<{ a: number }>()
@@ -33,7 +33,7 @@ expectTypeOf({ a: 1, b: 1 }).not.toEqualTypeOf<{ a: number }>()
 
 This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf({ a: 1, b: 1 }).toMatchTypeOf({ a: 1 })
@@ -47,7 +47,7 @@ expectTypeOf<string | number>().not.toMatchTypeOf<number>()
 
 You can use `.extract` to narrow down types for further testing.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 type ResponsiveProp<T> = T | T[] | { xs?: T; sm?: T; md?: T }
@@ -79,7 +79,7 @@ If no type is found in the union, `.extract` will return `never`.
 
 You can use `.exclude` to remove types from a union for further testing.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 type ResponsiveProp<T> = T | T[] | { xs?: T; sm?: T; md?: T }
@@ -108,7 +108,7 @@ If no type is found in the union, `.exclude` will return `never`.
 
 You can use `.returns` to extract return value of a function type.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(() => {}).returns.toBeVoid()
@@ -125,7 +125,7 @@ If used on a non-function type, it will return `never`, so you won't be able to 
 
 You can extract function arguments with `.parameters` to perform assertions on its value. Parameters are returned as an array.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 type NoParam = () => void
@@ -149,7 +149,7 @@ You can also use [`.toBeCallableWith`](#tobecallablewith) matcher as a more expr
 
 You can extract a certain function argument with `.parameter(number)` call to perform other assertions on it.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 function foo(a: number, b: string) {
@@ -170,7 +170,7 @@ If used on a non-function type, it will return `never`, so you won't be able to 
 
 You can extract constructor parameters as an array of values and perform assertions on them with this method.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(Date).constructorParameters.toEqualTypeOf<[] | [string | number | Date]>()
@@ -190,7 +190,7 @@ You can also use [`.toBeConstructibleWith`](#tobeconstructiblewith) matcher as a
 
 This property gives access to matchers that can be performed on an instance of the provided class.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(Date).instance.toHaveProperty('toISOString')
@@ -206,7 +206,7 @@ If used on a non-function type, it will return `never`, so you won't be able to 
 
 You can get array item type with `.items` to perform further assertions.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf([1, 2, 3]).items.toEqualTypeOf<number>()
@@ -219,7 +219,7 @@ expectTypeOf([1, 2, 3]).items.not.toEqualTypeOf<string>()
 
 This matcher extracts resolved value of a `Promise`, so you can perform other assertions on it.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 async function asyncFunc() {
@@ -240,7 +240,7 @@ If used on a non-promise type, it will return `never`, so you won't be able to c
 
 This matcher extracts guard value (e.g., `v is number`), so you can perform assertions on it.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 function isString(v: any): v is string {
@@ -259,7 +259,7 @@ Returns `never`, if the value is not a guard function, so you won't be able to c
 
 This matcher extracts assert value (e.g., `assert v is number`), so you can perform assertions on it.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 function assertNumber(v: any): asserts v is number {
@@ -280,7 +280,7 @@ Returns `never`, if the value is not an assert function, so you won't be able to
 
 With this matcher you can check, if provided type is `any` type. If the type is too specific, the test will fail.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf<any>().toBeAny()
@@ -294,7 +294,7 @@ expectTypeOf('string').not.toBeAny()
 
 This matcher checks, if provided type is `unknown` type.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf().toBeUnknown()
@@ -334,7 +334,7 @@ expectTypeOf((): never => {}).toBeFunction()
 
 This matcher checks, if provided type is an `object`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(42).not.toBeObject()
@@ -347,7 +347,7 @@ expectTypeOf({}).toBeObject()
 
 This matcher checks, if provided type is `Array<T>`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(42).not.toBeArray()
@@ -362,7 +362,7 @@ expectTypeOf([{}, 42]).toBeArray()
 
 This matcher checks, if provided type is a `string`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(42).not.toBeString()
@@ -376,7 +376,7 @@ expectTypeOf('a').toBeString()
 
 This matcher checks, if provided type is `boolean`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(42).not.toBeBoolean()
@@ -390,7 +390,7 @@ expectTypeOf<boolean>().toBeBoolean()
 
 This matcher checks, if provided type is `void`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(() => {}).returns.toBeVoid()
@@ -403,7 +403,7 @@ expectTypeOf<void>().toBeVoid()
 
 This matcher checks, if provided type is a `symbol`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(Symbol(1)).toBeSymbol()
@@ -416,7 +416,7 @@ expectTypeOf<symbol>().toBeSymbol()
 
 This matcher checks, if provided type is `null`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(null).toBeNull()
@@ -430,7 +430,7 @@ expectTypeOf(undefined).not.toBeNull()
 
 This matcher checks, if provided type is `undefined`.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(undefined).toBeUndefined()
@@ -444,7 +444,7 @@ expectTypeOf(null).not.toBeUndefined()
 
 This matcher checks, if you can use `null` or `undefined` with provided type.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf<1 | undefined>().toBeNullable()
@@ -458,7 +458,7 @@ expectTypeOf<1 | undefined | null>().toBeNullable()
 
 This matcher ensures you can call provided function with a set of parameters.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 type NoParam = () => void
@@ -478,7 +478,7 @@ If used on a non-function type, it will return `never`, so you won't be able to 
 
 This matcher ensures you can create a new instance with a set of constructor parameters.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf(Date).toBeConstructibleWith(new Date())
@@ -495,7 +495,7 @@ If used on a non-function type, it will return `never`, so you won't be able to 
 
 This matcher checks if a property exists on the provided object. If it exists, it also returns the same set of matchers for the type of this property, so you can chain assertions one after another.
 
-```ts
+```ts twoslash
 import { expectTypeOf } from 'vitest'
 
 const obj = { a: 1, b: '' }

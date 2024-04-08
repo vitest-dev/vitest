@@ -6,7 +6,7 @@ You can import reporters from `vitest/reporters` and extend them to create your 
 
 In general, you don't need to create your reporter from scratch. `vitest` comes with several default reporting programs that you can extend.
 
-```ts
+```ts twoslash
 import { DefaultReporter } from 'vitest/reporters'
 
 export default class MyDefaultReporter extends DefaultReporter {

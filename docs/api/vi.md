@@ -36,7 +36,9 @@ If `factory` is defined, all imports will return its result. Vitest calls factor
 
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
 
-```js
+```js twoslash
+import { vi } from 'vitest'
+// ---cut---
 // when using JavaScript
 
 vi.mock('./path/to/module.js', async (importOriginal) => {
@@ -349,7 +351,9 @@ This section describes how to work with [method mocks](/api/mock) and replace en
 Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
 If no function is given, mock will return `undefined`, when invoked.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 const getApples = vi.fn(() => 0)
 
 getApples()
@@ -388,7 +392,9 @@ Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clea
 
 Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](#vi-fn). It returns a [mock function](/api/mock).
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 let apples = 0
 const cart = {
   getApples: () => 42,
@@ -484,7 +490,7 @@ import.meta.env.NODE_ENV === 'development'
 
 Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
 
-```ts
+```ts twoslash
 import { vi } from 'vitest'
 
 // `innerWidth` is "0" before calling stubGlobal
@@ -546,7 +552,9 @@ This sections descibes how to work with [fake timers](/guide/mocking#timers).
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -563,7 +571,9 @@ vi.advanceTimersByTime(150)
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first. This will include asynchronously set timers.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -580,7 +590,9 @@ await vi.advanceTimersByTimeAsync(150)
 
 Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -595,7 +607,9 @@ vi.advanceTimersToNextTimer() // log: 1
 
 Will call next available timer and wait until it's resolved if it was set asynchronously. Useful to make assertions between each timer call.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -640,7 +654,9 @@ Calls every microtask that was queued by `process.nextTick`. This will also run 
 
 This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired. If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setTimeout(() => console.log(++i))
 const interval = setInterval(() => {
@@ -663,7 +679,9 @@ vi.runAllTimers()
 This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
 it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 setTimeout(async () => {
   console.log(await Promise.resolve('result'))
 }, 100)
@@ -679,7 +697,9 @@ await vi.runAllTimersAsync()
 
 This method will call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call. It will not fire any timer that was initiated during its call.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -694,7 +714,9 @@ vi.runOnlyPendingTimers()
 
 This method will asynchronously call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call, even asynchronous ones. It will not fire any timer that was initiated during its call.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 setTimeout(() => {
   console.log(1)
 }, 100)
@@ -723,7 +745,9 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 const date = new Date(1998, 11, 19)
 
 vi.useFakeTimers()
@@ -832,7 +856,7 @@ This is similar to `vi.waitFor`, but if the callback throws any errors, executio
 
 Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
 
-```ts
+```ts twoslash
 import { expect, test, vi } from 'vitest'
 
 test('Element render correctly', async () => {

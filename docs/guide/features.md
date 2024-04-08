@@ -48,7 +48,7 @@ Learn more about [Test Filtering](/guide/filtering).
 
 Use `.concurrent` in consecutive tests to run them in parallel.
 
-```ts
+```ts twoslash
 import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
@@ -61,7 +61,7 @@ describe('suite', () => {
 
 If you use `.concurrent` on a suite, every test in it will be run in parallel.
 
-```ts
+```ts twoslash
 import { describe, it } from 'vitest'
 
 // All tests within this suite will be run in parallel
@@ -103,7 +103,7 @@ Notice that if you are using third-party libraries that add matchers, setting `t
 
 [Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
-```ts
+```ts twoslash
 import { expect, vi } from 'vitest'
 
 const fn = vi.fn()
@@ -130,7 +130,7 @@ $ npm i -D jsdom
 
 After that, change the `environment` option in your config file:
 
-```ts
+```ts twoslash
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -190,7 +190,7 @@ Learn more at [In-source testing](/guide/in-source).
 Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
 function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
-```ts
+```ts twoslash
 import { bench, describe } from 'vitest'
 
 describe('sort', () => {

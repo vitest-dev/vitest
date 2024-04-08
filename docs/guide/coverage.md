@@ -16,7 +16,7 @@ Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 
 You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
 
-```ts
+```ts twoslash
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -62,7 +62,7 @@ By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 
 To configure it, set `test.coverage` options in your config file:
 
-```ts
+```ts twoslash
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -80,7 +80,6 @@ export default defineConfig({
 You can use custom coverage reporters by passing either the name of the package or absolute path in `test.coverage.reporter`:
 
 ```ts
-// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -100,7 +99,7 @@ export default defineConfig({
 
 Custom reporters are loaded by Istanbul and must match its reporter interface. See [built-in reporters' implementation](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib) for reference.
 
-```js
+```js twoslash
 // custom-reporter.cjs
 const { ReportBase } = require('istanbul-lib-report')
 
@@ -128,7 +127,7 @@ module.exports = class CustomReporter extends ReportBase {
 
 It's also possible to provide your custom coverage provider by passing `'custom'` in `test.coverage.provider`:
 
-```ts
+```ts twoslash
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -176,7 +175,7 @@ Please refer to the type definition for more details.
 
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
 
-```js
+```js twoslash
 import { defineConfig } from 'vite'
 
 export default defineConfig({
