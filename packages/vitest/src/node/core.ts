@@ -832,7 +832,7 @@ export class Vitest {
             return
 
           const heedsRerun = this.handleFileChanged(i.file)
-          if (heedsRerun)
+          if (heedsRerun.length)
             rerun = true
         })
       }
@@ -841,7 +841,7 @@ export class Vitest {
         files.push(filepath)
     }
 
-    return files
+    return Array.from(new Set(files))
   }
 
   private async reportCoverage(allTestsRun: boolean) {
