@@ -320,7 +320,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
               // run describe block independently from tests
               const suites = tasksGroup.filter(group => group.type === 'suite')
               const tests = tasksGroup.filter(group => group.type === 'test')
-              const groups = shuffle([suites, tests], sequence.seed)
+              const groups = shuffle<Task[]>([suites, tests], sequence.seed)
               tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
             }
             for (const c of tasksGroup)
