@@ -294,7 +294,7 @@ describe.only.each([
       'vitest',
       '--no-file-parallelism',
       inspectFlagName,
-      'https://www.remote.com:1002',
+      url,
     ])
     const error = vi.fn()
     const originalError = console.error
