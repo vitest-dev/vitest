@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
+import { defaultBrowserPort, defaultInspectPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -20,13 +20,15 @@ function resolvePath(path: string, root: string) {
   )
 }
 
-function parseInspector(inspect: string | undefined | boolean) {
+function parseInspector(inspect: string | undefined | boolean | number) {
   if (typeof inspect === 'boolean' || inspect === undefined)
     return {}
+  if (typeof inspect === 'number')
+    return { port: inspect }
 
   const [host, port] = inspect.split(':')
   if (!port)
-    return { port: Number(host) }
+    return { host, port: defaultInspectPort }
   return { host, port: Number(port) }
 }
 
