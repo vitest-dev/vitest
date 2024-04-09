@@ -59,8 +59,7 @@ interface CLIOptions {
 }
 
 function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
-  for (const optionName in options) {
-    const option = (options as any)[optionName] as CLIOption<any> | null
+  for (const [optionName, option] of Object.entries(options)) {
     if (option)
       addCommand(cli, optionName, option)
   }
