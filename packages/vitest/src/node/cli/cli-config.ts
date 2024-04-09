@@ -21,7 +21,7 @@ export type CLIOption<Value> = {
 // require argument for non-boolean options
 (NonNullable<Value> extends boolean ? {} : { argument: string })
 
-type CLIOptions<Config extends {}> = {
+export type CLIOptions<Config extends {}> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function ? never : Key]-?: CLIOption<Config[Key]> | null
 }
 
@@ -601,10 +601,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description: 'Clear terminal screen when re-running tests during watch mode (default: true)',
   },
-  compare: {
-    description: 'benchmark output file to compare against',
-    argument: '<filename>',
-  },
 
   // disable CLI options
   cliExclude: null,
@@ -638,4 +634,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   includeTaskLocation: null,
+  compare: null,
+}
+
+export const benchCliOptionsConfig: Pick<VitestCLIOptions, 'compare'> = {
+  compare: {
+    description: 'benchmark output file to compare against',
+    argument: '<filename>',
+  },
 }
