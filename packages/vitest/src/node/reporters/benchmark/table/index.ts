@@ -25,21 +25,21 @@ export class TableReporter extends BaseReporter {
   }
 
   async onCollected() {
-    if (this.isTTY) {
-      this.rendererOptions.logger = this.ctx.logger
-      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
-      if (this.ctx.config.benchmark?.compare) {
-        const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
-        try {
-          this.rendererOptions.compare = JSON.parse(
-            await fs.promises.readFile(compareFile, 'utf-8'),
-          )
-        }
-        catch (e) {
-          this.ctx.logger.error(`Failed to read '${compareFile}'`, e)
-        }
+    this.rendererOptions.logger = this.ctx.logger
+    this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+    this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
+    if (this.ctx.config.benchmark?.compare) {
+      const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
+      try {
+        this.rendererOptions.compare = JSON.parse(
+          await fs.promises.readFile(compareFile, 'utf-8'),
+        )
       }
+      catch (e) {
+        this.ctx.logger.error(`Failed to read '${compareFile}'`, e)
+      }
+    }
+    if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createTableRenderer(files, this.rendererOptions).start()
