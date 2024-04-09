@@ -94,7 +94,7 @@ function renderBenchmark(result: BenchmarkResult, widths: number[]) {
   ].join('  ')
 }
 
-function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): string {
+export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0, shallow = false): string {
   const output: string[] = []
 
   const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
@@ -195,7 +195,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
       }
     }
 
-    if (task.type === 'suite' && task.tasks.length > 0) {
+    if (!shallow && task.type === 'suite' && task.tasks.length > 0) {
       if (task.result?.state)
         output.push(renderTree(task.tasks, options, level + 1))
     }

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
+    "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
@@ -65,9 +66,9 @@
     "simple-git-hooks": "^2.9.0",
     "tsx": "^4.6.1",
     "typescript": "^5.2.2",
-    "vite": "^5.0.12",
+    "vite": "^5.2.6",
     "vitest": "workspace:*",
-    "zx": "^7.2.3"
+    "zx": "^8.0.1"
   },
   "pnpm": {
     "overrides": {
@@ -84,7 +85,8 @@
       "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
       "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
-      "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch"
+      "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
+      "v8-to-istanbul@9.2.0": "patches/v8-to-istanbul@9.2.0.patch"
     }
   },
   "simple-git-hooks": {

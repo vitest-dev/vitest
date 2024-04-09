@@ -308,7 +308,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       if (typeof browser === 'boolean')
         return { enabled: browser }
       if (browser === 'true' || browser === 'false')
-        return { enabled: browser !== 'false' }
+        return { enabled: browser === 'true' }
+      if (browser === 'yes' || browser === 'no')
+        return { enabled: browser === 'yes' }
       if (typeof browser === 'string')
         return { enabled: true, name: browser }
       return browser
@@ -465,11 +467,28 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   inspect: {
-    description: 'Enable Node.js inspector',
+    description: 'Enable Node.js inspector (default: 127.0.0.1:9229)',
+    argument: '[[host:]port]',
+    transform(portOrEnabled) {
+      if (portOrEnabled === 0 || portOrEnabled === 'true' || portOrEnabled === 'yes')
+        return true
+      if (portOrEnabled === 'false' || portOrEnabled === 'no')
+        return false
+      return portOrEnabled
+    },
   },
   inspectBrk: {
-    description: 'Enable Node.js inspector with break',
+    description: 'Enable Node.js inspector and break before the test starts',
+    argument: '[[host:]port]',
+    transform(portOrEnabled) {
+      if (portOrEnabled === 0 || portOrEnabled === 'true' || portOrEnabled === 'yes')
+        return true
+      if (portOrEnabled === 'false' || portOrEnabled === 'no')
+        return false
+      return portOrEnabled
+    },
   },
+  inspector: null,
   testTimeout: {
     description: 'Default timeout of a test in milliseconds (default: 5000)',
     argument: '<timeout>',

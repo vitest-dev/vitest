@@ -90,10 +90,30 @@ const testCases = [
       rmSync('./src/new-uncovered-file.ts')
     },
   },
+  {
+    testConfig: {
+      name: 'ignore empty lines',
+      include: ['option-tests/empty-lines.test.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: 'json',
+        ignoreEmptyLines: true,
+        all: true,
+        include: ['src/empty-lines.ts', 'src/untested-file.ts'],
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/empty-lines.test.ts'],
+    },
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
   for (const { after, before, testConfig, assertionConfig } of testCases) {
+    // Test config may specify which provider the test is for
+    if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider)
+      continue
+
     await before?.()
 
     // Run test case

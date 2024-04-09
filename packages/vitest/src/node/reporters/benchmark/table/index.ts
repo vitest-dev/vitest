@@ -1,12 +1,14 @@
 import fs from 'node:fs'
 import c from 'picocolors'
 import * as pathe from 'pathe'
+import type { TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
 import type { BenchmarkResult, File } from '../../../../types'
-import { getTasks } from '../../../../utils'
+import { getFullName, getTasks } from '../../../../utils'
 import { getOutputFile } from '../../../../utils/config-helpers'
-import { type TableRendererOptions, createTableRenderer } from './tableRender'
+import { getStateSymbol } from '../../renderers/utils'
+import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
@@ -43,6 +45,25 @@ export class TableReporter extends BaseReporter {
         this.renderer = createTableRenderer(files, this.rendererOptions).start()
       else
         this.renderer.update(files)
+    }
+  }
+
+  onTaskUpdate(packs: TaskResultPack[]) {
+    if (this.isTTY)
+      return
+    for (const pack of packs) {
+      const task = this.ctx.state.idMap.get(pack[0])
+      if (task && task.type === 'suite' && task.result?.state && task.result?.state !== 'run') {
+        // render static table when all benches inside single suite are finished
+        const benches = task.tasks.filter(t => t.meta.benchmark)
+        if (benches.length > 0 && benches.every(t => t.result?.state !== 'run')) {
+          let title = ` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
+          if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
+            title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+          this.ctx.logger.log(title)
+          this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1, true))
+        }
+      }
     }
   }
 

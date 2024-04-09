@@ -233,7 +233,12 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {}
+export interface CoverageV8Options extends BaseCoverageOptions {
+  /**
+   * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
+   */
+  ignoreEmptyLines?: boolean
+}
 
 export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
   /** Name of the module or path to a file to load the custom provider from */

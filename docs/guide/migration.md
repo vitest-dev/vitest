@@ -269,7 +269,7 @@ This is not a Jest-specific feature, but if you previously were using Jest with 
 
 `vite.config.js`
 
-```js
+```js twoslash
 import { defineConfig } from 'vite'
 
 export default defineConfig({
