@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 
-import type { ContextRPC } from '../types'
+import type { ContextRPC, ResolvedConfig } from '../types'
 
 const __require = createRequire(import.meta.url)
 let inspector: typeof import('node:inspector')
@@ -44,11 +44,7 @@ export function setupInspect(ctx: ContextRPC) {
     }
   }
 
-  // In watch mode the inspector can persist re-runs if isolation is disabled and a single worker is used
-  const isIsolatedSingleThread = config.pool === 'threads' && config.poolOptions?.threads?.isolate === false && config.poolOptions?.threads?.singleThread
-  const isIsolatedSingleFork = config.pool === 'forks' && config.poolOptions?.forks?.isolate === false && config.poolOptions?.forks?.singleFork
-
-  const keepOpen = config.watch && (isIsolatedSingleFork || isIsolatedSingleThread)
+  const keepOpen = shouldKeepOpen(config)
 
   return function cleanup() {
     if (isEnabled && !keepOpen && inspector) {
@@ -56,4 +52,21 @@ export function setupInspect(ctx: ContextRPC) {
       session?.disconnect()
     }
   }
+}
+
+export function closeInspector(config: ResolvedConfig) {
+  const keepOpen = shouldKeepOpen(config)
+
+  if (inspector && !keepOpen) {
+    inspector.close()
+    session?.disconnect()
+  }
+}
+
+function shouldKeepOpen(config: ResolvedConfig) {
+  // In watch mode the inspector can persist re-runs if isolation is disabled and a single worker is used
+  const isIsolatedSingleThread = config.pool === 'threads' && config.poolOptions?.threads?.isolate === false && config.poolOptions?.threads?.singleThread
+  const isIsolatedSingleFork = config.pool === 'forks' && config.poolOptions?.forks?.isolate === false && config.poolOptions?.forks?.singleFork
+
+  return config.watch && (isIsolatedSingleFork || isIsolatedSingleThread)
 }
