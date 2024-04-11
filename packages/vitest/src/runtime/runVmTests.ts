@@ -15,6 +15,7 @@ import * as VitestIndex from '../index'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
+import { closeInspector } from './inspector'
 
 export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
@@ -55,6 +56,11 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     setupChaiConfig(config.chaiConfig)
 
   const runner = await resolveTestRunner(config, executor)
+
+  workerState.onCancel.then((reason) => {
+    closeInspector(config)
+    runner.onCancel?.(reason)
+  })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
 
