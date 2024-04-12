@@ -140,8 +140,8 @@ export function resolveConfig(
   if (resolved.minWorkers)
     resolved.minWorkers = Number(resolved.minWorkers)
 
-  // run benchmark sequentially by default
-  resolved.fileParallelism ??= mode !== 'benchmark'
+  // browser pool and benchmark are sequential by default
+  resolved.fileParallelism ??= resolved.pool !== 'browser' && mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
