@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/benchmark-sequential",
+  "name": "@vitest/test-benchmark",
   "type": "module",
   "private": true,
   "scripts": {

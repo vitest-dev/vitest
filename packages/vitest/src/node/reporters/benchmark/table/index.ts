@@ -110,15 +110,18 @@ export class TableReporter extends BaseReporter {
 }
 
 export interface FormattedBenchamrkReport {
-  groups: FormattedBenchmarkGroup[]
+  files: {
+    filepath: string
+    groups: FormattedBenchmarkGroup[]
+  }[]
 }
 
+// flat results with TaskId as a key
 export interface FlatBenchmarkReport {
   [id: string]: FormattedBenchmarkResult
 }
 
 interface FormattedBenchmarkGroup {
-  filepath: string
   fullName: string
   benchmarks: FormattedBenchmarkResult[]
 }
@@ -129,8 +132,9 @@ export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
 }
 
 function createFormattedBenchamrkReport(files: File[]) {
-  const result: FormattedBenchamrkReport = { groups: [] }
+  const report: FormattedBenchamrkReport = { files: [] }
   for (const file of files) {
+    const groups: FormattedBenchmarkGroup[] = []
     for (const task of getTasks(file)) {
       if (task && task.type === 'suite') {
         const benchmarks: FormattedBenchmarkResult[] = []
@@ -146,23 +150,28 @@ function createFormattedBenchamrkReport(files: File[]) {
           }
         }
         if (benchmarks.length) {
-          result.groups.push({
-            filepath: file.filepath,
+          groups.push({
             fullName: getFullName(task, ' > '),
             benchmarks,
           })
         }
       }
     }
+    report.files.push({
+      filepath: file.filepath,
+      groups,
+    })
   }
-  return result
+  return report
 }
 
 function flattenFormattedBenchamrkReport(report: FormattedBenchamrkReport): FlatBenchmarkReport {
   const flat: FlatBenchmarkReport = {}
-  for (const group of report.groups) {
-    for (const t of group.benchmarks)
-      flat[t.id] = t
+  for (const file of report.files) {
+    for (const group of file.groups) {
+      for (const t of group.benchmarks)
+        flat[t.id] = t
+    }
   }
   return flat
 }
