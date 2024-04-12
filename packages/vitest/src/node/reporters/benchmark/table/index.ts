@@ -31,8 +31,10 @@ export class TableReporter extends BaseReporter {
     if (this.ctx.config.benchmark?.compare) {
       const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
       try {
-        this.rendererOptions.compare = JSON.parse(
-          await fs.promises.readFile(compareFile, 'utf-8'),
+        this.rendererOptions.compare = flattenFormattedBenchamrkReport(
+          JSON.parse(
+            await fs.promises.readFile(compareFile, 'utf-8'),
+          ),
         )
       }
       catch (e) {
@@ -79,7 +81,7 @@ export class TableReporter extends BaseReporter {
       const outputDirectory = pathe.dirname(outputFile)
       if (!fs.existsSync(outputDirectory))
         await fs.promises.mkdir(outputDirectory, { recursive: true })
-      const output = createBenchmarkOutput(files)
+      const output = createFormattedBenchamrkReport(files)
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
     }
   }
@@ -107,18 +109,52 @@ export class TableReporter extends BaseReporter {
   }
 }
 
-export interface TableBenchmarkOutput {
-  [id: string]: Omit<BenchmarkResult, 'samples'>
+export interface FormattedBenchamrkReport {
+  groups: FormattedBenchmarkGroup[]
 }
 
-function createBenchmarkOutput(files: File[]) {
-  const result: TableBenchmarkOutput = {}
-  for (const test of getTasks(files)) {
-    if (test.meta?.benchmark && test.result?.benchmark) {
-      // strip gigantic "samples"
-      const { samples: _samples, ...rest } = test.result.benchmark
-      result[test.id] = rest
+export interface FlatBenchmarkReport {
+  [id: string]: FormattedBenchmarkResult
+}
+
+interface FormattedBenchmarkGroup {
+  fullName: string
+  benchmarks: FormattedBenchmarkResult[]
+}
+
+export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
+  id: string
+  sampleCount: number
+}
+
+function createFormattedBenchamrkReport(files: File[]) {
+  const result: FormattedBenchamrkReport = { groups: [] }
+  for (const task of getTasks(files)) {
+    if (task && task.type === 'suite') {
+      const benches = task.tasks.filter(t => t.meta.benchmark && t.result?.benchmark)
+      if (benches.length > 0) {
+        result.groups.push({
+          fullName: getFullName(task, ' > '),
+          benchmarks: benches.map((t) => {
+            const { samples, ...rest } = t.result!.benchmark!
+            return {
+              id: t.id,
+              sampleCount: samples.length,
+              ...rest,
+            }
+          }),
+        })
+      }
     }
   }
   return result
+}
+
+function flattenFormattedBenchamrkReport(report: FormattedBenchamrkReport): FlatBenchmarkReport {
+  const flat: FlatBenchmarkReport = {}
+  for (const group of report.groups) {
+    for (const t of group.benchmarks)
+      flat[t.id] = t
+  }
+  return flat
 }

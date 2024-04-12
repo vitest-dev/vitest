@@ -6,14 +6,14 @@ import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
-import type { TableBenchmarkOutput } from '.'
+import type { FlatBenchmarkReport } from '.'
 
 export interface TableRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
   slowTestThreshold: number
-  compare?: TableBenchmarkOutput
+  compare?: FlatBenchmarkReport
 }
 
 const outputMap = new WeakMap<Task, string>()
@@ -103,11 +103,11 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
       benchMap[t.id] = {
         current: t.result.benchmark,
       }
-      if (options.compare && options.compare[t.id]) {
+      const baseline = options.compare?.[t.id]
+      if (baseline) {
         benchMap[t.id].baseline = {
-          ...options.compare[t.id],
-          samples: [],
-          name: '',
+          ...baseline,
+          samples: Array(baseline.sampleCount),
         }
       }
     }
