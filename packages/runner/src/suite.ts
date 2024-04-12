@@ -149,11 +149,11 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     if (runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
-      // custom can be called from any place, let's assume the limit is 10 stacks
-      Error.stackTraceLimit = 10
+      // custom can be called from any place, let's assume the limit is 15 stacks
+      Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findStackTrace(error, task.each ?? false)
+      const stack = findTestFileStackTrace(error, task.each ?? false)
       if (stack)
         task.location = stack
     }
@@ -219,18 +219,12 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
-      Error.stackTraceLimit = 5
+      Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = parseSingleStack(error.split('\n')[5])
-      if (stack) {
-        suite.location = {
-          line: stack.line,
-          // because source map is boundary based, this line leads to ")" in test.each()[(]),
-          // but it should be the next opening bracket - here we assume it's on the same line
-          column: each ? stack.column + 1 : stack.column,
-        }
-      }
+      const stack = findTestFileStackTrace(error, suite.each ?? false)
+      if (stack)
+        suite.location = stack
     }
 
     setHooks(suite, createSuiteHooks())
@@ -432,10 +426,9 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-function findStackTrace(error: string, each: boolean) {
+function findTestFileStackTrace(error: string, each: boolean) {
   // first line is the error message
-  // and the first 3 stacks are always from the collector
-  const lines = error.split('\n').slice(4)
+  const lines = error.split('\n').slice(1)
   for (const line of lines) {
     const stack = parseSingleStack(line)
     if (stack && stack.file === getTestFilepath()) {
