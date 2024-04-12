@@ -118,6 +118,7 @@ export interface FlatBenchmarkReport {
 }
 
 interface FormattedBenchmarkGroup {
+  filepath: string
   fullName: string
   benchmarks: FormattedBenchmarkResult[]
 }
@@ -129,21 +130,28 @@ export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
 
 function createFormattedBenchamrkReport(files: File[]) {
   const result: FormattedBenchamrkReport = { groups: [] }
-  for (const task of getTasks(files)) {
-    if (task && task.type === 'suite') {
-      const benches = task.tasks.filter(t => t.meta.benchmark && t.result?.benchmark)
-      if (benches.length > 0) {
-        result.groups.push({
-          fullName: getFullName(task, ' > '),
-          benchmarks: benches.map((t) => {
-            const { samples, ...rest } = t.result!.benchmark!
-            return {
+  for (const file of files) {
+    for (const task of getTasks(file)) {
+      if (task && task.type === 'suite') {
+        const benchmarks: FormattedBenchmarkResult[] = []
+        for (const t of task.tasks) {
+          const benchmark = t.meta.benchmark && t.result?.benchmark
+          if (benchmark) {
+            const { samples, ...rest } = benchmark
+            benchmarks.push({
               id: t.id,
               sampleCount: samples.length,
               ...rest,
-            }
-          }),
-        })
+            })
+          }
+        }
+        if (benchmarks.length) {
+          result.groups.push({
+            filepath: file.filepath,
+            fullName: getFullName(task, ' > '),
+            benchmarks,
+          })
+        }
       }
     }
   }
