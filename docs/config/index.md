@@ -319,6 +319,18 @@ To provide object via CLI command, use the following syntax: `--outputFile.json=
 
 A file path to store the benchmark result, which can be used for `--compare` option later.
 
+For example:
+
+```sh
+# save main branch's result
+git checkout main
+vitest bench --outputJson main.json
+
+# change a branch and compare against main
+git checkout feature
+vitest bench --compare main.json
+```
+
 #### benchmark.compare
 
 - **Type:** `string | undefined`
