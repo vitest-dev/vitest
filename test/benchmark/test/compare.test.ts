@@ -5,11 +5,11 @@ import { runVitest } from '../../test-utils'
 test('compare', { timeout: 60_000 }, async () => {
   await fs.promises.rm('./fixtures/compare/bench.json', { force: true })
 
-  // --outputFile
+  // --outputJson
   {
     const result = await runVitest({
       root: './fixtures/compare',
-      outputFile: './bench.json',
+      outputJson: './bench.json',
       reporters: ['default'],
     }, [], 'benchmark')
     expect(result.exitCode).toBe(0)

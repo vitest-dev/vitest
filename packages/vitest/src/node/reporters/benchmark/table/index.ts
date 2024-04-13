@@ -6,7 +6,6 @@ import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
 import type { BenchmarkResult, File } from '../../../../types'
 import { getFullName, getTasks } from '../../../../utils'
-import { getOutputFile } from '../../../../utils/config-helpers'
 import { getStateSymbol } from '../../renderers/utils'
 import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
 
@@ -75,7 +74,7 @@ export class TableReporter extends BaseReporter {
     await super.onFinished(files, errors)
 
     // write output for future comparison
-    let outputFile = getOutputFile(this.ctx.config.benchmark, 'default')
+    let outputFile = this.ctx.config.benchmark?.outputJson
     if (outputFile) {
       outputFile = pathe.resolve(this.ctx.config.root, outputFile)
       const outputDirectory = pathe.dirname(outputFile)

@@ -851,6 +851,11 @@ export interface UserConfig extends InlineConfig {
    * benchmark.compare option exposed at the top level for cli
    */
   compare?: string
+
+  /**
+   * benchmark.outputJson option exposed at the top level for cli
+   */
+  outputJson?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -877,7 +882,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   api?: ApiConfig
   cliExclude?: string[]
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare'>
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   shard?: {
     index: number
     count: number

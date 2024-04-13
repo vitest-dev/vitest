@@ -377,6 +377,8 @@ export function resolveConfig(
     // --compare from cli
     if (options.compare)
       resolved.benchmark.compare = options.compare
+    if (options.outputJson)
+      resolved.benchmark.outputJson = options.outputJson
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>

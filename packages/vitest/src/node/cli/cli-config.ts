@@ -635,11 +635,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
   name: null,
   includeTaskLocation: null,
   compare: null,
+  outputJson: null,
 }
 
-export const benchCliOptionsConfig: Pick<VitestCLIOptions, 'compare'> = {
+export const benchCliOptionsConfig: Pick<VitestCLIOptions, 'compare' | 'outputJson'> = {
   compare: {
     description: 'benchmark output file to compare against',
+    argument: '<filename>',
+  },
+  outputJson: {
+    description: 'benchmark output file',
     argument: '<filename>',
   },
 }
