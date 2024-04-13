@@ -49,8 +49,7 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.p995 || 0),
     formatNumber(result.p999 || 0),
     `±${(result.rme || 0).toFixed(2)}%`,
-    // TODO: persist only sampleCount?
-    result.samples.length ? result.samples.length.toString() : '-',
+    result.samples.length.toString(),
   ]
 }
 
