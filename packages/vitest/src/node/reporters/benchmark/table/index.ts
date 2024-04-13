@@ -82,6 +82,7 @@ export class TableReporter extends BaseReporter {
         await fs.promises.mkdir(outputDirectory, { recursive: true })
       const output = createFormattedBenchamrkReport(files)
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
+      this.ctx.logger.log(`Benchmark report written to ${outputFile}`)
     }
   }
 
