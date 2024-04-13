@@ -312,6 +312,20 @@ By providing an object instead of a string you can define individual outputs whe
 
 To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
+#### benchmark.outputJson
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to store the benchmark result, which can be used for `--compare` option later.
+
+#### benchmark.compare
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to a previous benchmark result to compare against current runs.
+
 ### alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
