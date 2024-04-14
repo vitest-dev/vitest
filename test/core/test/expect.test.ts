@@ -394,6 +394,7 @@ describe('Error equality', () => {
 
 describe('circular equality', () => {
   test('object, set, map', () => {
+    // https://github.com/vitest-dev/vitest/issues/5533
     function gen() {
       const obj = {
         a: new Set<any>(),
@@ -404,9 +405,10 @@ describe('circular equality', () => {
       return obj
     }
     expect(gen()).toEqual(gen())
+    expect(gen()).toMatchObject(gen())
   })
 
-  test('object, set, set', () => {
+  test('object, set', () => {
     function gen() {
       const obj = {
         a: new Set<any>(),
@@ -417,9 +419,10 @@ describe('circular equality', () => {
       return obj
     }
     expect(gen()).toEqual(gen())
+    expect(gen()).toMatchObject(gen())
   })
 
-  test('array, set, set', () => {
+  test('array, set', () => {
     function gen() {
       const obj = [new Set<any>(), new Set<any>()]
       obj[0].add(obj)
@@ -427,5 +430,25 @@ describe('circular equality', () => {
       return obj
     }
     expect(gen()).toEqual(gen())
+    // TODO
+    expect(() => expect(gen()).toMatchObject(gen())).toThrow()
+  })
+
+  test('object, array', () => {
+    // https://github.com/jestjs/jest/issues/14734
+    function gen() {
+      const a: any = {
+        v: 1,
+      }
+      const c1: any = {
+        ref: [],
+      }
+      c1.ref.push(c1)
+      a.ref = c1
+      return a
+    }
+    expect(gen()).toEqual(gen())
+    // TODO
+    expect(() => expect(gen()).toMatchObject(gen())).toThrow()
   })
 })
