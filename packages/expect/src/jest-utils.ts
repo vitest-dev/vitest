@@ -325,9 +325,8 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
   aStack.push(a)
   bStack.push(b)
 
-  // TODO: need to filter out "iterableEqualityWithStack" from the last run?
   const filteredCustomTesters: Array<Tester> = [
-    ...customTesters.filter(t => t !== iterableEquality && t.name !== 'iterableEqualityWithStack'),
+    ...customTesters.filter(t => t !== iterableEquality),
     iterableEqualityWithStack,
   ]
 
@@ -335,7 +334,7 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
     return iterableEquality(
       a,
       b,
-      [...filteredCustomTesters],
+      [...customTesters],
       [...aStack],
       [...bStack],
     )
