@@ -1374,7 +1374,7 @@ Sets thresholds for files matching the glob pattern.
 #### coverage.ignoreEmptyLines
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true` (`false` in v1)
 - **Available for providers:** `'v8'`
 - **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
 

@@ -43,7 +43,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
   allowExternal: false,
-  ignoreEmptyLines: false,
+  ignoreEmptyLines: true,
   processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
 }
 
