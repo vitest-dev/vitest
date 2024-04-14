@@ -15,5 +15,6 @@ declare module 'vue' {
     NonProjectOption: typeof import('./components/NonProjectOption.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Version: typeof import('./components/Version.vue')['default']
   }
 }
