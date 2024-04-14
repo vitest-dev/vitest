@@ -248,8 +248,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       }
     }
 
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
-    this.coverageFiles = new Map()
+    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
+    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
+
+    if (!keepResults) {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    }
   }
 
   async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
