@@ -905,7 +905,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this.server, ...this.projects.map(p => p.server)].filter(Boolean).length
+          const runningServers = [this.server, ...this.resolvedProjects.map(p => p.server)].filter(Boolean).length
 
           if (runningServers === 1)
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
