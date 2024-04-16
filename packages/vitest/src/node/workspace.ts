@@ -114,7 +114,7 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = (key: string, value: unknown) => {
+  provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
     try {
       structuredClone(value)
     }

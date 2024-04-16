@@ -974,28 +974,31 @@ Since Vitest 1.0.0-beta, global setup runs only if there is at least one running
 
 Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, since 1.0.0 you can pass down serializable data to tests via `provide` method:
 
-```ts
-// globalSetup.js
+:::code-group
+```js [globalSetup.js]
 export default function setup({ provide }) {
   provide('wsPort', 3000)
 }
 ```
+```ts [globalSetup.ts]
+import type { GlobalSetupContext } from 'vitest/node'
 
-```ts
-// example.test.js
-import { inject } from 'vitest'
+export default function setup({ provide }: GlobalSetupContext) {
+  provide('wsPort', 3000)
+}
 
-inject('wsPort') === 3000
-```
-
-If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
-
-```ts
+// You can also extend `ProvidedContext` type
+// to have type safe access to `provide/inject` methods:
 declare module 'vitest' {
   export interface ProvidedContext {
     wsPort: number
   }
 }
+```
+```ts [example.test.js]
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
 ```
 :::
 
