@@ -38,8 +38,7 @@ describe('circular equality', () => {
       return obj
     }
     expect(gen()).toEqual(gen())
-    // TODO
-    expect(() => expect(gen()).toMatchObject(gen())).toThrow()
+    expect(gen()).toMatchObject(gen())
   })
 
   test('object, array', () => {
@@ -56,7 +55,6 @@ describe('circular equality', () => {
       return a
     }
     expect(gen()).toEqual(gen())
-    // TODO
-    expect(() => expect(gen()).toMatchObject(gen())).toThrow()
+    expect(gen()).toMatchObject(gen())
   })
 })
