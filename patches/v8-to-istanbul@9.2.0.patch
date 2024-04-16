@@ -96,7 +96,7 @@ index d8ebc215f6ad83d472abafe976935acfe5c61b04..021fd2aed1f73ebb4adc449ce6e96f2d
  
  // this implementation is pulled over from istanbul-lib-sourcemap:
 diff --git a/lib/v8-to-istanbul.js b/lib/v8-to-istanbul.js
-index 3616437b00658861dc5a8910c64d1449e9fdf467..c1e0c0ae19984480e408713d1691fa174a7c4c1f 100644
+index 3616437b00658861dc5a8910c64d1449e9fdf467..4642ca4818ce982e2f186abe4289793768e7cdf9 100644
 --- a/lib/v8-to-istanbul.js
 +++ b/lib/v8-to-istanbul.js
 @@ -1,3 +1,4 @@
@@ -104,7 +104,25 @@ index 3616437b00658861dc5a8910c64d1449e9fdf467..c1e0c0ae19984480e408713d1691fa17
  const assert = require('assert')
  const convertSourceMap = require('convert-source-map')
  const util = require('util')
-@@ -25,12 +26,13 @@ const isNode8 = /^v8\./.test(process.version)
+@@ -8,14 +9,9 @@ const CovBranch = require('./branch')
+ const CovFunction = require('./function')
+ const CovSource = require('./source')
+ const { sliceRange } = require('./range')
+-const compatError = Error(`requires Node.js ${require('../package.json').engines.node}`)
+-const { readFileSync } = require('fs')
+-let readFile = () => { throw compatError }
+-try {
+-  readFile = require('fs').promises.readFile
+-} catch (_err) {
+-  // most likely we're on an older version of Node.js.
+-}
++const { readFileSync, promises } = require('fs')
++const readFile = promises.readFile
++
+ const { TraceMap } = require('@jridgewell/trace-mapping')
+ const isOlderNode10 = /^v10\.(([0-9]\.)|(1[0-5]\.))/u.test(process.version)
+ const isNode8 = /^v8\./.test(process.version)
+@@ -25,12 +21,13 @@ const isNode8 = /^v8\./.test(process.version)
  const cjsWrapperLength = isOlderNode10 ? require('module').wrapper[0].length : 0
  
  module.exports = class V8ToIstanbul {
@@ -119,7 +137,7 @@ index 3616437b00658861dc5a8910c64d1449e9fdf467..c1e0c0ae19984480e408713d1691fa17
      this.sources = sources || {}
      this.generatedLines = []
      this.branches = {}
-@@ -58,8 +60,8 @@ module.exports = class V8ToIstanbul {
+@@ -58,8 +55,8 @@ module.exports = class V8ToIstanbul {
          if (!this.sourceMap.sourcesContent) {
            this.sourceMap.sourcesContent = await this.sourcesContentFromSources()
          }
@@ -130,7 +148,7 @@ index 3616437b00658861dc5a8910c64d1449e9fdf467..c1e0c0ae19984480e408713d1691fa17
        } else {
          const candidatePath = this.rawSourceMap.sourcemap.sources.length >= 1 ? this.rawSourceMap.sourcemap.sources[0] : this.rawSourceMap.sourcemap.file
          this.path = this._resolveSource(this.rawSourceMap, candidatePath || this.path)
-@@ -82,8 +84,8 @@ module.exports = class V8ToIstanbul {
+@@ -82,8 +79,8 @@ module.exports = class V8ToIstanbul {
            // We fallback to reading the original source from disk.
            originalRawSource = await readFile(this.path, 'utf8')
          }
@@ -141,7 +159,7 @@ index 3616437b00658861dc5a8910c64d1449e9fdf467..c1e0c0ae19984480e408713d1691fa17
        }
      } else {
        this.covSources = [{ source: new CovSource(rawSource, this.wrapperLength), path: this.path }]
-@@ -281,8 +283,10 @@ module.exports = class V8ToIstanbul {
+@@ -281,8 +278,10 @@ module.exports = class V8ToIstanbul {
        s: {}
      }
      source.lines.forEach((line, index) => {
