@@ -57,10 +57,18 @@ test('define process and using import.meta.env together', () => {
 test('PROD, DEV, SSR should be boolean', () => {
   expect(import.meta.env.PROD).toBe(false)
   expect(import.meta.env.DEV).toBe(true)
-  expect(import.meta.env.SSR).toBe(true)
   expect(process.env.PROD).toBe('')
   expect(process.env.DEV).toBe('1')
-  expect(process.env.SSR).toBe('1')
+
+  // see https://github.com/vitest-dev/vitest/issues/5562
+  if (process.execArgv.includes('--experimental-vm-modules')) {
+    expect(import.meta.env.SSR).toBe(false)
+    expect(process.env.SSR).toBe(undefined)
+  }
+  else {
+    expect(import.meta.env.SSR).toBe(true)
+    expect(process.env.SSR).toBe('1')
+  }
 
   import.meta.env.SSR = false
   expect(import.meta.env.SSR).toEqual(false)
