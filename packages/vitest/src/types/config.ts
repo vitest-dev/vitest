@@ -804,7 +804,7 @@ export interface UserConfig extends InlineConfig {
   /**
    * Do not run tests when Vitest starts.
    *
-   * Vitest will only run tests if it's called programmatically or the file changes.
+   * Vitest will only run tests if it's called programmatically or the test file changes.
    *
    * CLI file filters will be ignored.
    */
