@@ -15,6 +15,7 @@ export interface WebSocketHandlers {
   getCountOfFailedTests: () => number
   sendLog: (log: UserConsoleLog) => void
   getFiles: () => File[]
+  getTestFiles: () => Promise<[name: string, file: string][]>
   getPaths: () => string[]
   getConfig: () => ResolvedConfig
   resolveSnapshotPath: (testPath: string) => string

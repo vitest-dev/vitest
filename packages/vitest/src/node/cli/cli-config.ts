@@ -601,6 +601,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description: 'Clear terminal screen when re-running tests during watch mode (default: `true`)',
   },
+  standalone: {
+    description: 'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: false)',
+  },
 
   // disable CLI options
   cliExclude: null,

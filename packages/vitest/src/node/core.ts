@@ -422,6 +422,25 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
+  async init() {
+    this._onClose = []
+
+    try {
+      await this.initCoverageProvider()
+      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.initBrowserProviders()
+    }
+    finally {
+      await this.report('onInit', this)
+    }
+
+    // populate test files cache so watch mode can trigger a file rerun
+    await this.globTestFiles()
+
+    if (this.config.watch)
+      await this.report('onWatcherStart')
+  }
+
   private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
       if (deps.has(filepath))
