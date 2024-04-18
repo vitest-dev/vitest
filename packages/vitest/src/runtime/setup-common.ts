@@ -30,7 +30,11 @@ function setupDefines(defines: Record<string, any>) {
 function setupEnv(env: Record<string, any>) {
   if (typeof process === 'undefined')
     return
-  for (const key in env)
+  // same boolean-to-string assignment as VitestPlugin.configResolved
+  const { PROD, DEV, ...restEnvs } = env
+  process.env.PROD = PROD ? '1' : ''
+  process.env.DEV = DEV ? '1' : ''
+  for (const key in restEnvs)
     process.env[key] = env[key]
 }
 
