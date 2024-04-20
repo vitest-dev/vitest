@@ -216,6 +216,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         coverageMap,
         thresholds: this.options.thresholds,
         createCoverageMap: () => libCoverage.createCoverageMap({}),
+        root: this.ctx.config.root,
       })
 
       this.checkThresholds({

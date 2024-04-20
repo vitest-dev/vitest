@@ -225,6 +225,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         coverageMap,
         thresholds: this.options.thresholds,
         createCoverageMap: () => libCoverage.createCoverageMap({}),
+        root: this.ctx.config.root,
       })
 
       this.checkThresholds({

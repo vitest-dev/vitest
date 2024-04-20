@@ -125,10 +125,11 @@ export class BaseCoverageProvider {
    * where each threshold set holds their own coverage maps. Threshold set is either
    * for specific files defined by glob pattern or global for all other files.
    */
-  resolveThresholds({ coverageMap, thresholds, createCoverageMap }: {
+  resolveThresholds({ coverageMap, thresholds, createCoverageMap, root }: {
     coverageMap: CoverageMap
     thresholds: NonNullable<BaseCoverageOptions['thresholds']>
     createCoverageMap: () => CoverageMap
+    root: string
   }): ResolvedThreshold[] {
     const resolvedThresholds: ResolvedThreshold[] = []
     const files = coverageMap.files()
@@ -143,7 +144,7 @@ export class BaseCoverageProvider {
       const globThresholds = resolveGlobThresholds(thresholds[glob])
       const globCoverageMap = createCoverageMap()
 
-      const matchingFiles = files.filter(file => mm.isMatch(file, glob))
+      const matchingFiles = files.filter(file => mm.isMatch(relative(root, file), glob))
       filesMatchedByGlobs.push(...matchingFiles)
 
       for (const file of matchingFiles) {
