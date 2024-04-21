@@ -3,8 +3,12 @@ import { expect, test } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
-test('match by partial pattern', async () => {
-  const { stdout } = await runVitest({ root: './fixtures' }, ['example'])
+test.each([
+  { filter: 'example' },
+  { filter: '/example' },
+  { filter: resolve('./fixtures/test/example') },
+])('match by partial pattern $filter', async ({ filter }) => {
+  const { stdout } = await runVitest({ root: './fixtures' }, [filter])
 
   expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
   expect(stdout).toMatch('Test Files  1 passed (1)')
