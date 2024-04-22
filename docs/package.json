@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "nr prefetch && vitepress build",
+    "build": "nr cli-table && nr prefetch && vitepress build",
+    "cli-table": "tsx .vitepress/scripts/cli-generator.ts",
     "build-no-prefetch": "vitepress build",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
