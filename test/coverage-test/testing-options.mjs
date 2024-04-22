@@ -106,6 +106,31 @@ const testCases = [
       include: ['coverage-report-tests/empty-lines.test.ts'],
     },
   },
+  {
+    testConfig: {
+      name: 'failing thresholds',
+      include: ['option-tests/thresholds.test.ts'],
+      coverage: {
+        reporter: 'text',
+        all: false,
+        include: ['src/utils.ts'],
+        thresholds: {
+          'src/utils.ts': {
+            branches: 100,
+            functions: 100,
+            lines: 100,
+            statements: 100,
+          },
+        },
+      },
+    },
+    after() {
+      if (process.exitCode !== 1)
+        throw new Error('Expected test to fail as thresholds are not met')
+
+      process.exitCode = 0
+    },
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
@@ -149,6 +174,8 @@ for (const provider of ['v8', 'istanbul']) {
 }
 
 function checkExit() {
-  if (process.exitCode)
+  if (process.exitCode) {
+    console.error(`Exit code was set to ${process.exitCode}. Failing tests`)
     process.exit(process.exitCode)
+  }
 }
