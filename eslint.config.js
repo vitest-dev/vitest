@@ -10,6 +10,8 @@ export default antfu(
       '**/*.snap',
       '**/bench.json',
       '**/fixtures',
+      '**/assets/**',
+      '**/*.timestamp-*',
       'test/core/src/self',
       'test/wasm-modules/src/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
