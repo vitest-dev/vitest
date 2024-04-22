@@ -105,18 +105,24 @@ describe('stubbing envs', () => {
     expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
   })
 
-  it.each(['PROD', 'DEV', 'SSR'] as const)('requires boolean for vite ones', (name) => {
+  it.each(['PROD', 'DEV', 'SSR'] as const)('requires boolean for env.%s', (name) => {
     vi.stubEnv(name as 'PROD', false)
-    expect(import.meta.env.PROD).toBe(false)
-    expect(process.env.PROD).toBe('')
+    expect(import.meta.env[name]).toBe(false)
+    expect(process.env[name]).toBe('')
 
     vi.stubEnv(name as 'PROD', true)
-    expect(import.meta.env.PROD).toBe(true)
-    expect(process.env.PROD).toBe('1')
+    expect(import.meta.env[name]).toBe(true)
+    expect(process.env[name]).toBe('1')
 
     // @ts-expect-error PROD, DEV, SSR expect a boolean
     vi.stubEnv(name as 'PROD', 'string')
     // @ts-expect-error PROD, DEV, SSR expect a boolean
     vi.stubEnv(name, 'string')
+  })
+
+  it('setting boolean casts the value to string', () => {
+    // @ts-expect-error value should be a string
+    vi.stubEnv('MY_TEST_ENV', true)
+    expect(import.meta.env.MY_TEST_ENV).toBe('true')
   })
 })
