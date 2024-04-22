@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 declare global {
@@ -22,4 +23,14 @@ test('env variable is assigned', () => {
   expect(process.env.CONFIG_VAR).toBe('root')
   expect(process.env.CONFIG_LOCAL).toBe('local')
   expect(process.env.CONFIG_OVERRIDE).toBe('local')
+})
+
+test('cwd is resolved correctly', () => {
+  const spaceRoot = resolve(import.meta.dirname, '..')
+  const rootPath = resolve(spaceRoot, '..')
+
+  expect(process.env.ROOT_CWD_CONFIG).toBe(rootPath)
+  expect(process.env.ROOT_CWD_SERVER).toBe(rootPath)
+  expect(process.env.SPACE_2_CWD_CONFIG).toBe(spaceRoot)
+  expect(process.env.SPACE_2_CWD_SERVER).toBe(spaceRoot)
 })

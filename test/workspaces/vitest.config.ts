@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import { cwdPlugin } from './cwdPlugin.js'
 
 if (process.env.TEST_WATCH) {
   // Patch stdin on the process so that we can fake it to seem like a real interactive terminal and pass the TTY checks
@@ -8,6 +9,7 @@ if (process.env.TEST_WATCH) {
 
 export default defineConfig({
   envPrefix: ['VITE_', 'CUSTOM_', 'ROOT_'],
+  plugins: [cwdPlugin('ROOT')],
   test: {
     coverage: {
       enabled: true,
