@@ -48,7 +48,7 @@ test('filter by test name', async () => {
   const { vitest } = await runVitest(options)
 
     vitest.write('sum')
-    if (args[0] === '--standalone')
+    if (standalone === '--standalone')
       await vitest.waitForStdout('Pattern matches no results')
     else
       await vitest.waitForStdout('Pattern matches 1 result')
