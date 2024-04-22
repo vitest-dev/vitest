@@ -328,10 +328,9 @@ export class Vitest {
         const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
         if (isMainThread)
           process.chdir(dir)
-        // this just resolves the config, later we also wait when the server is resolved,
-        // but we can do that in parallel because it doesn't depend on process.cwd()
-        // this is strictly a performance optimization so we don't need to wait for server to start
-        projects.push(await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }))
+        projects.push(
+          await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }),
+        )
       }
     }
     finally {
