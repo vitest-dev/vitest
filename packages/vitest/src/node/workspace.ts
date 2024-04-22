@@ -284,17 +284,11 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
-          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-
           // if filter is a full file path, we should include it if it's in the same folder
-          if (isAbsolute(f)) {
-            // the file is inside the filter path, so we should always include it,
-            // we don't include ../file because this condition is always true if
-            // the file doens't exist which cause false positives
-            if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
-              return true
-          }
+          if (isAbsolute(f) && t.startsWith(f))
+            return true
 
+          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })

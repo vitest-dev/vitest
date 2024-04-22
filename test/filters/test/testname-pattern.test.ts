@@ -3,8 +3,12 @@ import { expect, test } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
-test('match by partial pattern', async () => {
-  const { stdout } = await runVitest({ root: './fixtures' }, ['example'])
+test.each([
+  { filter: 'example' },
+  { filter: '/example' },
+  { filter: resolve('./fixtures/test/example') },
+])('match by partial pattern $filter', async ({ filter }) => {
+  const { stdout } = await runVitest({ root: './fixtures' }, [filter])
 
   expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
   expect(stdout).toMatch('Test Files  1 passed (1)')
@@ -41,4 +45,42 @@ test.each([
   expect(stdout).toMatch('✓ test/filters.test.ts > this will pass')
   expect(stdout).toMatch('× test/dont-run-this.test.ts > this will fail')
   expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
+})
+
+test.each([
+  {
+    filter: 'basic',
+    files: [
+      'test/basic.test.ts',
+      'test/foo-basic/a.test.ts',
+      'test/basic/a.test.ts',
+      'test/basic-foo/a.test.ts',
+    ],
+  },
+  {
+    filter: '/basic',
+    files: [
+      'test/basic.test.ts',
+      'test/basic/a.test.ts',
+      'test/basic-foo/a.test.ts',
+    ],
+  },
+  {
+    filter: 'basic/',
+    files: [
+      'test/foo-basic/a.test.ts',
+      'test/basic/a.test.ts',
+    ],
+  },
+  {
+    filter: '/basic/',
+    files: [
+      'test/basic/a.test.ts',
+    ],
+  },
+])('filter with slash $filter', async ({ filter, files }) => {
+  const { stdout } = await runVitest({ root: './fixtures-slash' }, [filter])
+  expect(stdout).toMatch(`Test Files  ${files.length} passed (${files.length})`)
+  for (const file of files)
+    expect(stdout).toMatch(`✓ ${file}`)
 })
