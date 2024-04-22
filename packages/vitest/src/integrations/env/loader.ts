@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ViteNodeRunnerOptions } from 'vite-node'
@@ -26,7 +27,12 @@ export async function loadEnvironment(ctx: ContextRPC, rpc: WorkerRPC): Promise<
     return environments[name]
   const loader = await createEnvironmentLoader({
     root: ctx.config.root,
-    fetchModule: id => rpc.fetch(id, 'ssr'),
+    fetchModule: async (id) => {
+      const result = await rpc.fetch(id, 'ssr')
+      if (result.id)
+        return { code: readFileSync(result.id, 'utf-8') }
+      return result
+    },
     resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
   const root = loader.root

@@ -9,7 +9,10 @@ import type { AfterSuiteRunMeta } from './worker'
 type TransformMode = 'web' | 'ssr'
 
 export interface RuntimeRPC {
-  fetch: (id: string, environment: TransformMode) => Promise<FetchResult>
+  fetch: (id: string, environment: TransformMode) => Promise<{
+    externalize?: string
+    id?: string
+  }>
   transform: (id: string, environment: TransformMode) => Promise<FetchResult>
   resolveId: (id: string, importer: string | undefined, environment: TransformMode) => Promise<ViteNodeResolveId | null>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>

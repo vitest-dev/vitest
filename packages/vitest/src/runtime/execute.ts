@@ -1,5 +1,6 @@
 import vm from 'node:vm'
 import { pathToFileURL } from 'node:url'
+import { readFileSync } from 'node:fs'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
@@ -104,7 +105,12 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         return { externalize: id }
       }
 
-      return rpc().fetch(id, getTransformMode())
+      const result = await rpc().fetch(id, getTransformMode())
+      if (result.id && !result.externalize) {
+        const code = readFileSync(result.id, 'utf-8')
+        return { code }
+      }
+      return result
     },
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
