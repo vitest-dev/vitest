@@ -232,7 +232,7 @@ export abstract class BaseReporter implements Reporter {
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
     const transformTime = this.ctx.projects
-      .flatMap(w => Array.from(w.vitenode.fetchCache.values()).map(i => i.duration || 0))
+      .flatMap(w => w.vitenode.getTotalDuration())
       .reduce((a, b) => a + b, 0)
     const environmentTime = files.reduce((acc, file) => acc + Math.max(0, file.environmentLoad || 0), 0)
     const prepareTime = files.reduce((acc, file) => acc + Math.max(0, file.prepareDuration || 0), 0)

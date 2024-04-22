@@ -31,6 +31,11 @@ export class ViteNodeServer {
     web: new Map<string, Promise<TransformResult | null | undefined>>(),
   }
 
+  private durations = {
+    ssr: new Map<string, number[]>(),
+    web: new Map<string, number[]>(),
+  }
+
   private existingOptimizedDeps = new Set<string>()
 
   fetchCaches = {
@@ -102,6 +107,12 @@ export class ViteNodeServer {
     return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
+  public getTotalDuration() {
+    const ssrDurations = [...this.durations.ssr.values()].flat()
+    const webDurations = [...this.durations.web.values()].flat()
+    return [...ssrDurations, ...webDurations].reduce((a, b) => a + b, 0)
+  }
+
   private async ensureExists(id: string): Promise<boolean> {
     if (this.existingOptimizedDeps.has(id))
       return true
@@ -145,9 +156,6 @@ export class ViteNodeServer {
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
       promiseMap.set(moduleId, this._fetchModule(moduleId, mode)
-        .then((r) => {
-          return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-        })
         .finally(() => {
           promiseMap.delete(moduleId)
         }))
@@ -259,7 +267,7 @@ export class ViteNodeServer {
       const start = performance.now()
       const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as any }
+      result = { code: r?.code, map: this.options.sourcemap ? r?.map as any : undefined }
     }
 
     const cacheEntry = {
@@ -267,6 +275,12 @@ export class ViteNodeServer {
       timestamp: time,
       result,
     }
+
+    const durations = this.durations[transformMode].get(filePath) || []
+    this.durations[transformMode].set(
+      filePath,
+      [...durations, duration ?? 0],
+    )
 
     this.fetchCaches[transformMode].set(filePath, cacheEntry)
     this.fetchCache.set(filePath, cacheEntry)
