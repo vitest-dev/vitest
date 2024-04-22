@@ -12,7 +12,6 @@ import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
-import { createDefer } from '../public/utils'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -40,40 +39,22 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
   )
 
-  return new Promise<() => Promise<WorkspaceProject>>((resolve, reject) => {
-    const resolution = createDefer<WorkspaceProject>()
-    let configResolved = false
-    const config: ViteInlineConfig = {
-      ...options,
-      root,
-      logLevel: 'error',
-      configFile,
-      // this will make "mode": "test" | "benchmark" inside defineConfig
-      mode: options.test?.mode || options.mode || ctx.config.mode,
-      plugins: [
-        {
-          name: 'vitest:workspace:resolve',
-          configResolved() {
-            configResolved = true
-            resolve(() => resolution)
-          },
-        },
-        ...options.plugins || [],
-        WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
-      ],
-    }
+  const config: ViteInlineConfig = {
+    ...options,
+    root,
+    logLevel: 'error',
+    configFile,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.test?.mode || options.mode || ctx.config.mode,
+    plugins: [
+      ...options.plugins || [],
+      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
+    ],
+  }
 
-    createViteServer(config)
-      .then(() => resolution.resolve(project))
-      .catch((err) => {
-        if (configResolved)
-          resolution.reject(err)
-        else
-          reject(err)
-      })
+  await createViteServer(config)
 
-    return project
-  })
+  return project
 }
 
 export class WorkspaceProject {

@@ -315,14 +315,14 @@ export class Vitest {
 
     const cwd = process.cwd()
 
-    const projects: (() => Promise<WorkspaceProject>)[] = []
+    const projects: WorkspaceProject[] = []
 
     try {
       // we have to resolve them one by one because CWD should depend on the project
       for (const filepath of filteredWorkspaces) {
         if (this.server.config.configFile === filepath) {
           const project = await this.createCoreProject()
-          projects.push(() => Promise.resolve(project))
+          projects.push(project)
           continue
         }
         const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
@@ -339,7 +339,7 @@ export class Vitest {
         process.chdir(cwd)
     }
 
-    const projectPromises: Promise<() => Promise<WorkspaceProject>>[] = []
+    const projectPromises: Promise<WorkspaceProject>[] = []
 
     projectsOptions.forEach((options, index) => {
       // we can resolve these in parallel because process.cwd() is not changed
@@ -349,14 +349,10 @@ export class Vitest {
     if (!projects.length && !projectPromises.length)
       return [await this.createCoreProject()]
 
-    const resolvedProjectsReceivers = [
+    const resolvedProjects = await Promise.all([
       ...projects,
       ...await Promise.all(projectPromises),
-    ]
-    // we need to wait when the server is resolved, we can do that in parallel
-    const resolvedProjects = await Promise.all(
-      resolvedProjectsReceivers.map(receiver => receiver()),
-    )
+    ])
     const names = new Set<string>()
 
     for (const project of resolvedProjects) {
