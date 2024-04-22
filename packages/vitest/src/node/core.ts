@@ -13,7 +13,7 @@ import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
-import { hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
+import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
@@ -618,14 +618,24 @@ export class Vitest {
     if (pattern === '')
       this.filenamePattern = undefined
 
-    this.configOverride.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    const testNamePattern = pattern ? new RegExp(pattern) : undefined
+    this.configOverride.testNamePattern = testNamePattern
+    // filter only test files that have tests matching the pattern
+    if (testNamePattern) {
+      files = files.filter((filepath) => {
+        const files = this.state.getFiles([filepath])
+        return !files.length || files.some((file) => {
+          const tasks = getTasks(file)
+          return !tasks.length || tasks.some(task => testNamePattern.test(task.name))
+        })
+      })
+    }
     await this.rerunFiles(files, trigger)
   }
 
-  async changeFilenamePattern(pattern: string) {
+  async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
     this.filenamePattern = pattern
 
-    const files = this.state.getFilepaths()
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
     await this.rerunFiles(files, trigger)
