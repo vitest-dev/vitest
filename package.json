@@ -53,7 +53,7 @@
     "@vitest/ui": "workspace:*",
     "bumpp": "^9.2.1",
     "esbuild": "^0.19.11",
-    "eslint": "^8.54.0",
+    "eslint": "^9.1.0",
     "fast-glob": "^3.3.2",
     "lint-staged": "^15.1.0",
     "magic-string": "^0.30.5",
