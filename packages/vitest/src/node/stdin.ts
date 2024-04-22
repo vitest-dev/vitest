@@ -149,10 +149,11 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     on()
 
     latestFilename = filter?.trim() || ''
+    const lastResults = watchFilter.getLastResults()
 
     await ctx.changeFilenamePattern(
       latestFilename,
-      watchFilter.getLastResults().map(i => resolve(ctx.config.root, i)),
+      filter && lastResults.length ? lastResults.map(i => resolve(ctx.config.root, i)) : undefined,
     )
   }
 
