@@ -33,12 +33,11 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       if (!result.code && 'id' in result)
         return result
 
-      if (!result.code) {
-        console.error(result)
-        return { code: `throw new Error('What is going on?')` }
-      }
+      if (!result.code)
+        throw new Error(`Failed to fetch module ${id}`)
+
       const code = result.code
-      const dir = join(tmpdir(), transformMode)
+      const dir = join(tmpdir(), project.id, transformMode)
       const tmp = join(dir, id.replace(/[/\\?%*:|"<>]/g, '_').replace('\0', '__x00__'))
       if (promises.has(tmp)) {
         await promises.get(tmp)

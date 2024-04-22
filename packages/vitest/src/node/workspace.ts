@@ -8,10 +8,10 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { deepMerge, nanoid } from '../utils/base'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -77,6 +77,8 @@ export class WorkspaceProject {
   } | undefined
 
   testFilesList: string[] | null = null
+
+  public readonly id = nanoid()
 
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
