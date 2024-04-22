@@ -57,7 +57,7 @@ test.skip('skipped test', () => {
   // some logic that fails right now
 })
 ```
-```ts [object-syntax <Badge type="info">1.3.0+</Badge>] twoslash
+```ts [object-syntax <Version>1.3.0</Version>] twoslash
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
@@ -82,7 +82,7 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend <Badge type="info">0.32.3+</Badge> {#test-extended}
+### test.extend <Version>0.32.3</Version> {#test-extended}
 
 - **Alias:** `it.extend`
 
@@ -957,7 +957,7 @@ Vitest provides a few hooks that you can call _during_ the test execution to cle
 These hooks will throw an error if they are called outside of the test body.
 :::
 
-### onTestFinished <Badge type="info">1.3.0+</Badge> {#ontestfinished}
+### onTestFinished <Version>1.3.0</Version> {#ontestfinished}
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 
