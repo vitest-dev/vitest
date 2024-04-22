@@ -39,7 +39,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       }
       const code = result.code
       const dir = join(tmpdir(), transformMode)
-      const tmp = join(dir, id.replace(/[\s/\\]/g, '_'))
+      const tmp = join(dir, id.replace(/[/\\?%*:|"<>]/g, '_'))
       if (promises.has(tmp)) {
         await promises.get(tmp)
         return { id: tmp }
