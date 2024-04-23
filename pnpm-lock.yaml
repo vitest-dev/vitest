@@ -1621,6 +1621,12 @@ importers:
 
   test/cli:
     devDependencies:
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@8.1.1)
       vite:
         specifier: ^5.2.6
         version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
