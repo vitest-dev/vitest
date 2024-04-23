@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('correctly inherit from the cli', async () => {
-  const { vitest } = await runVitest({
+  const { ctx } = await runVitest({
     root: 'fixtures/workspace-flags',
     logHeapUsage: true,
     allowOnly: true,
@@ -18,7 +18,7 @@ it('correctly inherit from the cli', async () => {
     passWithNoTests: true,
     bail: 100,
   })
-  const project = vitest!.projects[0]
+  const project = ctx!.projects[0]
   const config = project.getSerializableConfig()
   expect(config).toMatchObject({
     logHeapUsage: true,

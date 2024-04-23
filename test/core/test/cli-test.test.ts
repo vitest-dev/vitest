@@ -274,7 +274,7 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig('test', vitestConfig, viteConfig)
+    const config = resolveConfig('test', vitestConfig, viteConfig, undefined as any)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`

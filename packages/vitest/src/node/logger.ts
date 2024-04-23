@@ -1,3 +1,5 @@
+import { Console } from 'node:console'
+import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import { version } from '../../../../package.json'
@@ -24,17 +26,19 @@ const CURSOR_TO_START = `${ESC}1;1H`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
-  outputStream = process.stdout
-  errorStream = process.stderr
-  logUpdate = createLogUpdate(process.stdout)
+  logUpdate: ReturnType<typeof createLogUpdate>
 
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
+  public console: Console
 
   constructor(
     public ctx: Vitest,
-    public console = globalThis.console,
+    public outputStream: NodeJS.WriteStream | Writable = process.stdout,
+    public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
+    this.console = new Console({ stdout: outputStream, stderr: errorStream })
+    this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
   }
 

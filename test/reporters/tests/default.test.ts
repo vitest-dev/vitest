@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { runVitest, runVitestCli } from '../../test-utils'
+import { runVitest } from '../../test-utils'
 
 describe('default reporter', async () => {
   test('normal', async () => {
@@ -28,14 +28,12 @@ describe('default reporter', async () => {
   })
 
   test('rerun should undo', async () => {
-    const vitest = await runVitestCli(
-      '--root',
-      'fixtures/default',
-      '--watch',
-      '-t',
-      'passed',
-    )
-    vitest.resetOutput()
+    const { vitest } = await runVitest({
+      root: 'fixtures/default',
+      watch: true,
+      testNamePattern: 'passed',
+      reporters: 'none',
+    })
 
     // one file
     vitest.write('p')

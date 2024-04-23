@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('default intercept', async () => {
@@ -9,10 +9,15 @@ test('default intercept', async () => {
 })
 
 test.each(['threads', 'vmThreads'] as const)(`disable intercept pool=%s`, async (pool) => {
-  const { stderr } = await runVitest({
+  // `disableConsoleIntercept: true` forwards workers console.error to main thread's stderr
+  const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+
+  await runVitest({
     root: './fixtures/console',
     disableConsoleIntercept: true,
     pool,
   })
-  expect(stderr).toBe('__test_console__\n')
+
+  const call = spy.mock.lastCall![0]
+  expect(call.toString()).toBe('__test_console__\n')
 })

@@ -191,7 +191,11 @@ export abstract class BaseReporter implements Reporter {
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
     const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : log.taskId !== UNKNOWN_TEST_ID ? log.taskId : 'unknown test'}`))
-    process[log.type].write(`${header}\n${log.content}\n`)
+
+    const output = log.type === 'stdout' ? this.ctx.logger.outputStream : this.ctx.logger.errorStream
+
+    // @ts-expect-error -- write() method has different signature on the union type
+    output.write(`${header}\n${log.content}\n`)
   }
 
   shouldLog(log: UserConsoleLog) {

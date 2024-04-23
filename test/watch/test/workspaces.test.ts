@@ -27,7 +27,7 @@ test("dynamic test case", () => {
 `
 
 async function startVitest() {
-  const vitest = await runVitestCli(
+  const { vitest } = await runVitestCli(
     { cwd: root, env: { TEST_WATCH: 'true' } },
     '--root',
     root,

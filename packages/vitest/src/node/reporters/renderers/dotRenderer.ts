@@ -92,9 +92,10 @@ export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
   let timer: any
 
   const { logUpdate: log, outputStream } = options.logger
+  const columns = 'columns' in outputStream ? outputStream.columns : 80
 
   function update() {
-    log(render(tasks, outputStream.columns))
+    log(render(tasks, columns))
   }
 
   return {
@@ -114,7 +115,7 @@ export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
         timer = undefined
       }
       log.clear()
-      options.logger.log(render(tasks, outputStream.columns))
+      options.logger.log(render(tasks, columns))
       return this
     },
     clear() {

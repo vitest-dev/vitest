@@ -9,12 +9,12 @@ export default (ctx: Vitest): ProcessPool => {
   return {
     name: 'custom',
     async runTests(specs) {
-      console.warn('[pool] printing:', options.print)
-      console.warn('[pool] array option', options.array)
+      ctx.logger.console.warn('[pool] printing:', options.print)
+      ctx.logger.console.warn('[pool] array option', options.array)
       for await (const [project, file] of specs) {
         ctx.state.clearFiles(project)
         const methods = createMethodsRPC(project)
-        console.warn('[pool] running tests for', project.getName(), 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
+        ctx.logger.console.warn('[pool] running tests for', project.getName(), 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
         const path = relative(project.config.root, file)
         const taskFile: File = {
           id: `${path}${project.getName()}`,
@@ -47,7 +47,7 @@ export default (ctx: Vitest): ProcessPool => {
       }
     },
     close() {
-      console.warn('[pool] custom pool is closed!')
+      ctx.logger.console.warn('[pool] custom pool is closed!')
     },
   }
 }

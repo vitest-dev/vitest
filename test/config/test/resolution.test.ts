@@ -1,16 +1,19 @@
+import { Writable } from 'node:stream'
 import type { UserConfig } from 'vitest'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { describe, expect, it, onTestFinished, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createVitest, parseCLI } from 'vitest/node'
 import { extraInlineDeps } from 'vitest/config'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any })
+type VitestOptions = Parameters<typeof createVitest>[3]
+
+async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   return vitest
 }
 
-async function config(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}) {
-  const v = await vitest(cliOptions, configValue, viteConfig)
+async function config(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+  const v = await vitest(cliOptions, configValue, viteConfig, vitestOptions)
   return v.config
 }
 
@@ -296,16 +299,18 @@ describe.each([
       inspectFlagName,
       url,
     ])
-    const error = vi.fn()
-    const originalError = console.error
-    console.error = error
-    onTestFinished(() => {
-      console.error = originalError
+    const errors: string[] = []
+    const stderr = new Writable({
+      write(chunk, _encoding, callback) {
+        errors.push(chunk.toString())
+        callback()
+      },
     })
     await expect(async () => {
-      await config(rawConfig.options)
+      await config(rawConfig.options, {}, {}, { stderr })
     }).rejects.toThrowError()
-    expect(error.mock.lastCall[0]).toEqual(
+
+    expect(errors[0]).toEqual(
       expect.stringContaining(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`),
     )
   })

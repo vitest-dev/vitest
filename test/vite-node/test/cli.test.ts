@@ -41,8 +41,8 @@ it('script args in -- after', async () => {
 
 it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
   const entryPath = resolve(__dirname, '../src/watch', file)
-  const cli = await runViteNodeCli('--watch', entryPath)
-  await cli.waitForStdout('test 1')
+  const { viteNode } = await runViteNodeCli('--watch', entryPath)
+  await viteNode.waitForStdout('test 1')
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
-  await cli.waitForStdout('test 2')
+  await viteNode.waitForStdout('test 2')
 })

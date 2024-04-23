@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
+import type { Writable } from 'node:stream'
 import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
@@ -31,6 +32,9 @@ const WATCHER_DEBOUNCE = 100
 
 export interface VitestOptions {
   packageInstaller?: VitestPackageInstaller
+  stdin?: NodeJS.ReadStream
+  stdout?: NodeJS.WriteStream | Writable
+  stderr?: NodeJS.WriteStream | Writable
 }
 
 export class Vitest {
@@ -74,7 +78,7 @@ export class Vitest {
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
   ) {
-    this.logger = new Logger(this)
+    this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
   }
 
@@ -93,7 +97,7 @@ export class Vitest {
     this.runningPromise = undefined
     this.projectsTestFiles.clear()
 
-    const resolved = resolveConfig(this.mode, options, server.config)
+    const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
     this.server = server
     this.config = resolved

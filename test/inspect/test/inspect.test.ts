@@ -8,7 +8,7 @@ import { runVitestCli } from '../../test-utils'
 type Message = Partial<InspectorNotification<any>>
 
 test.skipIf(isWindows)('--inspect-brk stops at test file', async () => {
-  const vitest = await runVitestCli('--root', 'fixtures', '--inspect-brk', '--no-file-parallelism')
+  const { vitest, waitForClose } = await runVitestCli('--root', 'fixtures', '--inspect-brk', '--no-file-parallelism')
 
   await vitest.waitForStderr('Debugger listening on ')
   const url = vitest.stderr.split('\n')[0].replace('Debugger listening on ', '')
@@ -36,7 +36,7 @@ test.skipIf(isWindows)('--inspect-brk stops at test file', async () => {
   send({ method: 'Debugger.resume' })
 
   await vitest.waitForStdout('Test Files  1 passed (1)')
-  await vitest.isDone
+  await waitForClose()
 })
 
 async function createChannel(url: string) {

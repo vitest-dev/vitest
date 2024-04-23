@@ -1,4 +1,3 @@
-import { Console } from 'node:console'
 import { Writable } from 'node:stream'
 import { getTasks } from '@vitest/runner/utils'
 import stripAnsi from 'strip-ansi'
@@ -76,7 +75,7 @@ async function printErrorWrapper(error: unknown, ctx: Vitest, project: Workspace
   })
   const result = await printError(error, project, {
     showCodeFrame: false,
-    logger: new Logger(ctx, new Console(writable, writable)),
+    logger: new Logger(ctx, writable, writable),
   })
   return { nearest: result?.nearest, output }
 }
