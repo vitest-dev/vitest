@@ -50,32 +50,28 @@ describe('testing vi utils', () => {
       baz: string
     }
 
-    type FooBarFactory = () => FooBar
-
-    const mockFactory = vi.fn<FooBarFactory>()
+    const mockFactory = vi.fn<() => FooBar>()
 
     vi.mocked(mockFactory, { partial: true }).mockReturnValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
-      bar: vi.fn<FooBar['bar']>(),
+      bar: vi.fn(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
       baz: 'baz',
     })
 
-    type FooBarAsyncFactory = () => Promise<FooBar>
-
-    const mockFactoryAsync = vi.fn<FooBarAsyncFactory>()
+    const mockFactoryAsync = vi.fn<() => Promise<FooBar>>()
 
     vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
-      bar: vi.fn<FooBar['bar']>(),
+      bar: vi.fn(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
@@ -105,7 +101,7 @@ describe('testing vi utils', () => {
     // arguments are not necessary
     const someFn3: Mock<SomeFn> = vi.fn(() => 0)
 
-    // @ts-expect-error wrong return type
+    // @ts-expect-error wrong return type will be caught
     const someFn4: Mock<SomeFn> = vi.fn(() => '0')
 
     // TEST

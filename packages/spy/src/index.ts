@@ -114,7 +114,7 @@ and
   { foo(f: T): U }
 
 Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows assignment such as:
-  const boolFn: Jest.Mock<() => boolean> = jest.fn(() => true)
+  const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
 export interface MockInstance<T extends Procedure = Procedure> {
