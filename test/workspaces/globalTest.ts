@@ -33,8 +33,8 @@ export async function teardown() {
   try {
     assert.ok(results.success)
     assert.equal(results.numTotalTestSuites, 28)
-    assert.equal(results.numTotalTests, 30)
-    assert.equal(results.numPassedTests, 30)
+    assert.equal(results.numTotalTests, 31)
+    assert.equal(results.numPassedTests, 31)
 
     const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))
 
