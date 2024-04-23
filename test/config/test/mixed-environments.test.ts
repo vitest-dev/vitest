@@ -12,7 +12,7 @@ const configs: UserConfig[] = [
 
 test.each(configs)('should isolate environments when %s', async (config) => {
   const { stderr, stdout } = await runVitest({
-    root: './fixtures',
+    root: './fixtures/mixed-environments',
     ...config,
   })
 
