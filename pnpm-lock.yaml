@@ -1624,6 +1624,9 @@ importers:
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
+      '@types/ws':
+        specifier: ^8.5.9
+        version: 8.5.9
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.0.2
         version: 1.0.2(vite@5.2.6)
@@ -1636,6 +1639,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
+      ws:
+        specifier: ^8.14.2
+        version: 8.16.0
 
   test/config:
     devDependencies:
@@ -1894,6 +1900,52 @@ importers:
         version: 8.14.2
 
   test/mixed-pools:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/module-cjs:
+    devDependencies:
+      '@types/fs-extra':
+        specifier: ^9.0.13
+        version: 9.0.13
+      '@types/lodash':
+        specifier: ^4.14.201
+        version: 4.14.201
+      '@types/prettier':
+        specifier: ^2.6.1
+        version: 2.7.3
+      fs-extra:
+        specifier: ^10.1.0
+        version: 10.1.0
+      givens:
+        specifier: 1.3.9
+        version: 1.3.9
+      history:
+        specifier: ^5.3.0
+        version: 5.3.0
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      prettier:
+        specifier: ^2.6.2
+        version: 2.8.8
+      temp-dir:
+        specifier: ^2.0.0
+        version: 2.0.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/module-esm:
+    dependencies:
+      css-what:
+        specifier: 6.1.0
+        version: 6.1.0
+      tslib:
+        specifier: 2.4.0
+        version: 2.4.0
     devDependencies:
       vitest:
         specifier: workspace:*
@@ -5898,6 +5950,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
+    dev: true
 
   /@babel/runtime@7.24.4:
     resolution: {integrity: sha512-dkxf7+hn8mFBwKjs9bvBlArzLVxVbS8usaPUDd5p2a9JCL9tB8OaOVN1isD4+Xyk4ns89/xeOmbQvgdK7IIVdA==}
@@ -6210,7 +6263,7 @@ packages:
       '@babel/core': 7.24.4
       '@babel/helper-module-imports': 7.22.5
       '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.24.4)
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@emotion/hash': 0.9.0
       '@emotion/memoize': 0.8.0
       '@emotion/serialize': 1.1.0
@@ -7788,7 +7841,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@emotion/is-prop-valid': 1.2.0
       '@mui/types': 7.2.0(@types/react@18.2.37)
       '@mui/utils': 5.10.3(react@18.2.0)
@@ -7935,7 +7988,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@emotion/react': 11.10.4(@babel/core@7.24.4)(@types/react@18.2.37)(react@18.2.0)
       '@emotion/styled': 11.10.4(@babel/core@7.24.4)(@emotion/react@11.10.4)(@types/react@18.2.37)(react@18.2.0)
       '@mui/private-theming': 5.10.3(@types/react@18.2.37)(react@18.2.0)
@@ -8007,7 +8060,7 @@ packages:
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@types/prop-types': 15.7.9
       '@types/react-is': 17.0.3
       prop-types: 15.8.1
@@ -10631,7 +10684,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@babel/code-frame': 7.22.13
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@types/aria-query': 4.2.2
       aria-query: 5.3.0
       chalk: 4.1.2
@@ -10794,7 +10847,7 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       '@testing-library/dom': 8.19.0
     dev: true
 
@@ -14398,7 +14451,7 @@ packages:
   /broadcast-channel@3.7.0:
     resolution: {integrity: sha512-cIAKJXAxGJceNZGTZSBzMxzyOn72cVgPnKx4dc6LRjQgbaJUQqhy5rzL3zbMxkMWsGKkv2hSFkPRMEXfoMZ2Mg==}
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       detect-node: 2.1.0
       js-sha3: 0.8.0
       microseconds: 0.2.0
@@ -18767,7 +18820,7 @@ packages:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
     dependencies:
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.0
     dev: true
@@ -19334,10 +19387,6 @@ packages:
       lowercase-keys: 3.0.0
       p-cancelable: 3.0.0
       responselike: 3.0.0
-    dev: true
-
-  /graceful-fs@4.2.10:
-    resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
     dev: true
 
   /graceful-fs@4.2.11:
@@ -21597,7 +21646,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 12.0.1
-      ws: 8.14.2
+      ws: 8.16.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -22455,7 +22504,7 @@ packages:
   /match-sorter@6.3.1:
     resolution: {integrity: sha512-mxybbo3pPNuA+ZuCUhm5bwNkXrJTbsk5VWbR5wiwz/GC6LIiegBGn2w3O08UG/jdbYLinw51fSQ5xNU1U3MgBw==}
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       remove-accents: 0.4.2
     dev: false
 
@@ -25348,7 +25397,7 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
     dependencies:
-      '@babel/runtime': 7.23.2
+      '@babel/runtime': 7.24.4
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1

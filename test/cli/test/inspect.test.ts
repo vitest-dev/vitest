@@ -8,7 +8,13 @@ import { runVitestCli } from '../../test-utils'
 type Message = Partial<InspectorNotification<any>>
 
 test.skipIf(isWindows)('--inspect-brk stops at test file', async () => {
-  const { vitest, waitForClose } = await runVitestCli('--root', 'fixtures', '--inspect-brk', '--no-file-parallelism')
+  const { vitest, waitForClose } = await runVitestCli(
+    '--root',
+    'fixtures/inspect',
+    '--inspect-brk',
+    '9232',
+    '--no-file-parallelism',
+  )
 
   await vitest.waitForStderr('Debugger listening on ')
   const url = vitest.stderr.split('\n')[0].replace('Debugger listening on ', '')
