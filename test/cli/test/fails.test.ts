@@ -4,7 +4,7 @@ import { expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures')
+const root = resolve(__dirname, '../fixtures/fails')
 const files = await fg('**/*.test.ts', { cwd: root, dot: true })
 
 it.each(files)('should fail %s', async (file) => {
