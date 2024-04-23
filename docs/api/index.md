@@ -1010,6 +1010,10 @@ test('performs an organization query', async () => {
 })
 ```
 
+::: tip
+This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+:::
+
 ### onTestFailed
 
 This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.

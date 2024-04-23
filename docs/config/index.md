@@ -1865,6 +1865,10 @@ Changes the order in which hooks are executed.
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
+::: tip
+This option doesn't affect [`onTestFinished`](/api/#ontestfinished). It is always called in reverse order.
+:::
+
 #### sequence.setupFiles <Badge type="info">0.29.3+</Badge> {#sequence-setupfiles}
 
 - **Type**: `'list' | 'parallel'`
