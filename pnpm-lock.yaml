@@ -1624,6 +1624,9 @@ importers:
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
+      '@vitejs/plugin-basic-ssl':
+        specifier: ^1.0.2
+        version: 1.0.2(vite@5.2.6)
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
