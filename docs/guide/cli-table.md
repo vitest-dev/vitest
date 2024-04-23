@@ -25,9 +25,9 @@
 | `--coverage.cleanOnRerun` | Clean coverage report on watch rerun (default: true) |
 | `--coverage.reportsDirectory <path>` | Directory to write coverage report to (default: ./coverage) |
 | `--coverage.reporter <name>` | Coverage reporters to use. Visit [`coverage.reporter`](https://vitest.dev/config/#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`) |
-| `--coverage.reportOnFailure` | Generate coverage report even when tests fail (default: false) |
-| `--coverage.allowExternal` | Collect coverage of files outside the project root (default: false) |
-| `--coverage.skipFull` | Do not show files with 100% statement, branch, and function coverage (default: false) |
+| `--coverage.reportOnFailure` | Generate coverage report even when tests fail (default: `false`) |
+| `--coverage.allowExternal` | Collect coverage of files outside the project root (default: `false`) |
+| `--coverage.skipFull` | Do not show files with 100% statement, branch, and function coverage (default: `false`) |
 | `--coverage.thresholds.100` | Shortcut to set all coverage thresholds to 100 (default: `false`) |
 | `--coverage.thresholds.perFile` | Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`) |
 | `--coverage.thresholds.autoUpdate` | Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`) |
@@ -119,3 +119,4 @@
 | `--segfaultRetry <times>` | Retry the test suite if it crashes due to a segfault (default: `true`) |
 | `--no-color` | Removes colors from the console output |
 | `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
+| `--standalone` | Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`) |
