@@ -2,8 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import type { MockedFunction, MockedObject } from 'vitest'
-import { describe, expect, test, vi } from 'vitest'
+import type { Mock, MockedFunction, MockedObject } from 'vitest'
+import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/utils'
 
 function expectType<T>(obj: T) {
@@ -36,11 +36,14 @@ describe('testing vi utils', () => {
   })
 
   test('vi mocked', () => {
-    expectType<MockedObject<{ bar: () => boolean }>>({
+    // TODO: constant `true` isn't assignable `boolean`.
+    //       check what Jest does.
+    expectType<MockedObject<{ bar: () => true }>>({
       bar: vi.fn(() => true),
     })
-    expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
+    expectType<MockedFunction<() => true>>(vi.fn(() => true))
     expectType<MockedFunction<() => boolean>>(vi.fn())
+    expectType<Mock<() => true>>(vi.fn(() => true))
   })
 
   test('vi partial mocked', () => {
@@ -81,6 +84,40 @@ describe('testing vi utils', () => {
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
+  })
+
+  test('vi.fn and Mock type', () => {
+    // use case from https://github.com/vitest-dev/vitest/issues/4723#issuecomment-1851034249
+
+    // library to be tested
+    type SomeFn = (v: string) => number
+    function acceptSomeFn(f: SomeFn) {
+      f('hi')
+    }
+
+    // SETUP
+
+    // no args are allowed even though it's not type safe
+    const someFn1: Mock<SomeFn> = vi.fn()
+
+    // argument type is infered
+    const someFn2: Mock<SomeFn> = vi.fn((v) => {
+      expectTypeOf(v).toEqualTypeOf<string>()
+      return 0
+    })
+
+    // @ts-expect-error argument is required
+    const someFn3: Mock<SomeFn> = vi.fn(() => 0)
+
+    // @ts-expect-error wrong return type
+    const someFn4: Mock<SomeFn> = vi.fn(_ => '0')
+
+    // TEST
+    acceptSomeFn(someFn1)
+    expect(someFn1).toBeCalledWith('hi')
+    expect(someFn2).not.toBeCalled()
+    expect(someFn3).not.toBeCalled()
+    expect(someFn4).not.toBeCalled()
   })
 
   test('can change config', () => {

@@ -305,7 +305,7 @@ describe.each([
     await expect(async () => {
       await config(rawConfig.options)
     }).rejects.toThrowError()
-    expect(error.mock.lastCall[0]).toEqual(
+    expect(error.mock.lastCall?.[0]).toEqual(
       expect.stringContaining(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`),
     )
   })
