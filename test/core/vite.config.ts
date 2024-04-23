@@ -60,6 +60,10 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
+    environmentMatchGlobs: [
+      ['**/*.dom.test.ts', 'happy-dom'],
+      ['test/env-glob-dom/**', 'jsdom'],
+    ],
     environmentOptions: {
       custom: {
         option: 'config-option',
