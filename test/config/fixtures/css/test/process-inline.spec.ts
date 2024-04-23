@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { useRemoveStyles } from './utils'
+import { useRemoveStyles } from '../utils'
 
 describe('processing inline css', () => {
   useRemoveStyles()
 
   test('doesn\'t apply css', async () => {
-    await import('../src/App.module.css?inline')
+    await import('../App.module.css?inline')
 
     const element = document.createElement('div')
     element.className = 'main'
@@ -14,7 +14,7 @@ describe('processing inline css', () => {
   })
 
   test('returns a string', async () => {
-    const { default: style } = await import('../src/App.module.css?inline')
+    const { default: style } = await import('../App.module.css?inline')
     expect(typeof style).toBe('string')
   })
 })

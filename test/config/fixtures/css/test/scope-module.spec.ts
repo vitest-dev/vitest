@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 test('module is processed and scoped', async () => {
-  const { default: styles } = await import('../src/App.module.css')
+  const { default: styles } = await import('../App.module.css')
 
   expect(styles.module).toMatch(/_module_\w+_\w/)
   expect(styles.someRandomValue).toBeUndefined()
