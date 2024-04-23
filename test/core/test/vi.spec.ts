@@ -41,6 +41,15 @@ describe('testing vi utils', () => {
     })
     expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
     expectType<MockedFunction<() => boolean>>(vi.fn())
+
+    expectType<MockedFunction<() => boolean>>(vi.fn<() => boolean>(() => true))
+    expectType<Mock<() => boolean>>(vi.fn<() => boolean>(() => true))
+    expectType<() => boolean>(vi.fn(() => true))
+
+    // @ts-expect-error default unkonwn
+    expectType<(v: number) => boolean>(vi.fn())
+
+    expectType<(v: number) => boolean>(vi.fn<any>())
   })
 
   test('vi partial mocked', () => {
@@ -57,7 +66,7 @@ describe('testing vi utils', () => {
     })
 
     vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
@@ -71,7 +80,7 @@ describe('testing vi utils', () => {
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({

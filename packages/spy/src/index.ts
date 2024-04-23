@@ -92,8 +92,8 @@ export interface MockContext<T extends Procedure> {
   lastCall: Parameters<T> | undefined
 }
 
-// TODO: use `(...args: unknown[]) => unknown` for stricter default like jest?
 type Procedure = (...args: any[]) => any
+type UnknownProcedure = (...args: unknown[]) => unknown
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -117,7 +117,7 @@ Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows 
   const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
-export interface MockInstance<T extends Procedure = Procedure> {
+export interface MockInstance<T extends Procedure = UnknownProcedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
@@ -249,14 +249,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
 }
 /* eslint-enable ts/method-signature-style */
 
-export interface Mock<T extends Procedure = Procedure> extends MockInstance<T> {
+export interface Mock<T extends Procedure = UnknownProcedure> extends MockInstance<T> {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>> ? Promise<Partial<Awaited<T>>> : Partial<T>
 
-export interface PartialMock<T extends Procedure = Procedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
+export interface PartialMock<T extends Procedure = UnknownProcedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
@@ -514,7 +514,7 @@ function enhanceSpy<T extends Procedure>(
   return stub as any
 }
 
-export function fn<T extends Procedure = Procedure>(
+export function fn<T extends Procedure = UnknownProcedure>(
   implementation?: T,
 ): Mock<T> {
   const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
