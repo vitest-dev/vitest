@@ -961,6 +961,10 @@ export class Vitest {
     )))
   }
 
+  public async getTestFilepaths() {
+    return this.globTestFiles().then(files => files.map(([, file]) => file))
+  }
+
   public async globTestFiles(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {

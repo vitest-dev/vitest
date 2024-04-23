@@ -73,8 +73,10 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     if (name === 'u')
       return ctx.updateSnapshot()
     // rerun all tests
-    if (name === 'a' || name === 'return')
-      return ctx.changeNamePattern('')
+    if (name === 'a' || name === 'return') {
+      const files = await ctx.getTestFilepaths()
+      return ctx.changeNamePattern('', files, 'rerun all tests')
+    }
     // rerun current pattern tests
     if (name === 'r')
       return ctx.rerunFiles()
@@ -116,7 +118,7 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles = ctx.config.standalone && !files.length
-      ? (await ctx.globTestFiles()).map(([_, file]) => file)
+      ? await ctx.getTestFilepaths()
       : undefined
 
     await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
