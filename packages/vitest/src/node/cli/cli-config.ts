@@ -65,7 +65,7 @@ const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
 
 const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
   isolate: {
-    description: 'Isolate tests in threads pool (default: `true`)',
+    description: 'Isolate tests in forks pool (default: `true`)',
   },
   singleFork: {
     description: 'Run tests inside a single child_process (default: `false`)',

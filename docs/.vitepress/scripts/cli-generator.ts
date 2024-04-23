@@ -30,7 +30,7 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
     title += ` ${config.argument}`
   title += '`'
   if ('subcommands' in config && config.subcommands)
-    return resolveOptions(config.subcommands)
+    return resolveOptions(config.subcommands, name)
 
   return {
     title,
