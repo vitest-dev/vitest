@@ -27,12 +27,13 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     },
     async fetch(id, transformMode) {
       const result = await project.vitenode.fetchResult(id, transformMode)
+      const code = result.code
       if (result.externalize)
         return result
-      if (!result.code && 'id' in result)
+      if ('id' in result)
         return { id: result.id as string }
 
-      if (!result.code)
+      if (!code)
         throw new Error(`Failed to fetch module ${id}`)
 
       const dir = join(project.tmpDir, transformMode)
@@ -45,10 +46,8 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
         await mkdir(dir, { recursive: true })
         created.add(dir)
       }
-      const code = result.code
       promises.set(tmp, writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)))
       await promises.get(tmp)
-      result.code = undefined
       Object.assign(result, { id: tmp })
       return { id: tmp }
     },

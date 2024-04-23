@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
@@ -69,7 +69,7 @@ export function getRunnerOptions(): any {
     async fetchModule(id: string) {
       const result = await rpc.fetch(id, 'web')
       if (result.id && !result.externalize) {
-        const code = await readFile(result.id, 'utf-8')
+        const code = readFileSync(result.id, 'utf-8')
         return { code }
       }
       return result
