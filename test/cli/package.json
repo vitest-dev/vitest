@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest --exclude fixtures/exclude/**/string.test.ts"
+    "test": "vitest"
   },
   "devDependencies": {
     "vite": "latest",
