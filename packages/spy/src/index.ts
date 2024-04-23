@@ -92,7 +92,7 @@ export interface MockContext<T extends Procedure> {
   lastCall: Parameters<T> | undefined
 }
 
-// TODO: used `(...args: unknown[]) => unknown` for stricter default like jest?
+// TODO: use `(...args: unknown[]) => unknown` for stricter default like jest?
 type Procedure = (...args: any[]) => any
 
 type Methods<T> = keyof {
@@ -121,11 +121,11 @@ export interface MockInstance<T extends Procedure = Procedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
-  getMockName: () => string
+  getMockName(): string
   /**
    * Sets internal mock name. Useful to see the name of the mock if an assertion fails.
    */
-  mockName: (n: string) => this
+  mockName(n: string): this
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
@@ -135,19 +135,19 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * It is useful if you need to clean up mock between different assertions.
    */
-  mockClear: () => this
+  mockClear(): this
   /**
    * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations.
    *
    * This is useful when you want to completely reset a mock to the default state.
    */
-  mockReset: () => this
+  mockReset(): this
   /**
    * Does what `mockReset` does and restores inner implementation to the original function.
    *
    * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
    */
-  mockRestore: () => void
+  mockRestore(): void
   /**
    * Returns current mock implementation if there is one.
    *
@@ -155,7 +155,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation: () => T | undefined
+  getMockImplementation(): T | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
@@ -326,7 +326,7 @@ export type Mocked<T> = {
 } &
 T
 
-export const mocks = new Set<MockInstance<Procedure>>()
+export const mocks = new Set<MockInstance>()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return typeof fn === 'function'
@@ -509,7 +509,7 @@ function enhanceSpy<T extends Procedure>(
 
   state.willCall(mockCall)
 
-  mocks.add(stub as MockInstance<any>)
+  mocks.add(stub)
 
   return stub as any
 }
