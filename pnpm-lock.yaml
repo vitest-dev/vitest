@@ -2083,7 +2083,7 @@ importers:
         version: file:test/vite-node/deps/dep1
       '@vitest/test-dep2':
         specifier: file:./deps/dep2
-        version: file:test/vite-node/deps/dep2(@vitest/test-dep1@undefined)
+        version: file:test/vite-node/deps/dep2(@vitest/test-dep1@0.0.0)
       execa:
         specifier: ^6.1.0
         version: 6.1.0
@@ -10923,19 +10923,12 @@ packages:
   /@types/eslint-scope@3.7.6:
     resolution: {integrity: sha512-zfM4ipmxVKWdxtDaJ3MP3pBurDXOCoyjvlpE3u6Qzrmw4BPbfm4/ambIeTk/r/J0iq/+2/xp0Fmt+gFvXJY2PQ==}
     dependencies:
-      '@types/eslint': 8.44.6
+      '@types/eslint': 8.56.10
       '@types/estree': 1.0.5
     dev: true
 
   /@types/eslint@8.4.6:
     resolution: {integrity: sha512-/fqTbjxyFUaYNO7VcW5g+4npmqVACz1bB7RTHYuLj+PRjw9hrCwrUXVQFpChUS0JsyEFvMZ7U/PfmvWgxJhI9g==}
-    dependencies:
-      '@types/estree': 1.0.5
-      '@types/json-schema': 7.0.14
-    dev: true
-
-  /@types/eslint@8.44.6:
-    resolution: {integrity: sha512-P6bY56TVmX8y9J87jHNgQh43h6VVU+6H7oN7hgvivV81K2XY8qJZ5vqPy/HdUoVIelii2kChYVzQanlswPWVFw==}
     dependencies:
       '@types/estree': 1.0.5
       '@types/json-schema': 7.0.14
@@ -11727,7 +11720,7 @@ packages:
     resolution: {integrity: sha512-LKGAXMPQs8U/zMRFXDZOzmMKgFv3COlxUQ+2NMPhbqgVm6R1w+nU1i4836Pmxu9jZAuIeyySNrN/6Rc657ggig==}
     engines: {node: ^18.18.0 || >=20.0.0}
     peerDependencies:
-      eslint: ^8.56.0 || ^9.0.0
+      eslint: ^8.56.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@9.1.0)
       '@types/json-schema': 7.0.15
@@ -26239,7 +26232,7 @@ packages:
     resolution: {integrity: sha512-pN/yOAvcC+5rQ5nERGuwrjLlYvLTbCibnZ1I7B1LaiAz9BRBlE9GMgE/eqV30P7aJQUf7Ddimy/RsbYO/GrVGg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/json-schema': 7.0.14
+      '@types/json-schema': 7.0.15
       ajv: 6.12.6
       ajv-keywords: 3.5.2(ajv@6.12.6)
     dev: true
@@ -30499,7 +30492,7 @@ packages:
     name: '@vitest/test-dep1'
     dev: true
 
-  file:test/vite-node/deps/dep2(@vitest/test-dep1@undefined):
+  file:test/vite-node/deps/dep2(@vitest/test-dep1@0.0.0):
     resolution: {directory: test/vite-node/deps/dep2, type: directory}
     id: file:test/vite-node/deps/dep2
     name: '@vitest/test-dep2'

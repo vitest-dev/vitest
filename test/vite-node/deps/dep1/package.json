@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-dep1",
+  "version": "0.0.0",
   "type": "module",
   "exports": "./esm/index.js"
 }
