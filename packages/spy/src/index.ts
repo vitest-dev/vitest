@@ -109,9 +109,9 @@ type Classes<T> = {
 cf. https://typescript-eslint.io/rules/method-signature-style/
 
 Typescript assignability is different between
-  { foo: (f: T) => void } (this is "method-signature-style")
+  { foo: (f: T) => U } (this is "method-signature-style")
 and
-  { foo(f: T): void }
+  { foo(f: T): U }
 
 Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows assignment such as:
   const boolFn: Jest.Mock<() => boolean> = jest.fn(() => true)
