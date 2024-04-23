@@ -64,6 +64,10 @@ export default defineConfig({
       ['**/*.dom.test.ts', 'happy-dom'],
       ['test/env-glob-dom/**', 'jsdom'],
     ],
+    poolMatchGlobs: [
+      ['**/test/*.child_process.test.ts', 'forks'],
+      ['**/test/*.threads.test.ts', 'threads'],
+    ],
     environmentOptions: {
       custom: {
         option: 'config-option',
