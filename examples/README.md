@@ -7,6 +7,7 @@
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__/) |
 | `marko` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/marko) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/marko?initialPath=__vitest__/) |
 | `mocks` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/mocks) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/mocks?initialPath=__vitest__/) |
+| `nestjs` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/nestjs) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/nestjs?initialPath=__vitest__/) |
 | `nextjs` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/nextjs) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/nextjs?initialPath=__vitest__/) |
 | `playwright` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/playwright) | |
 | `preact-testing-lib` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/preact-testing-lib) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/preact-testing-lib?initialPath=__vitest__/) |
