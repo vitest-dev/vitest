@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ErrorWithDiff } from 'vitest'
 import { openInEditor, shouldOpenInEditor } from '~/composables/error'
+import { escapeHtml } from '~/utils/escape';
 
 const props = defineProps<{
   root: string
@@ -20,7 +21,7 @@ const isDiffShowable = computed(() => {
   return !!props.error?.diff
 })
 
-const diff = computed(() => props.error.diff ? filter.value.toHtml(props.error.diff) : undefined)
+const diff = computed(() => props.error.diff ? filter.value.toHtml(escapeHtml(props.error.diff)) : undefined)
 </script>
 
 <template>

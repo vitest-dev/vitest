@@ -1,6 +1,13 @@
+import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { startVitest } from 'vitest/node'
 
-/** @type {Record<string, Partial<import('vitest/config').UserConfig['test']>>[]} */
+/**
+ * @typedef {NonNullable<import('vitest/config').UserConfig['test']>} Config
+ * @typedef { () => void | Promise<void> } Callback
+ * @typedef {{ testConfig: Config, assertionConfig?: Config, after?: Callback, before?: Callback }} TestCase
+ */
+
+/** @type {TestCase[]} */
 const testCases = [
   {
     testConfig: {
@@ -43,10 +50,97 @@ const testCases = [
     },
     assertionConfig: null,
   },
+  {
+    testConfig: {
+      name: 'temp directory with shard',
+      include: ['option-tests/shard.test.ts'],
+      shard: '1/4',
+    },
+    assertionConfig: null,
+  },
+  {
+    testConfig: {
+      name: 'changed',
+      changed: 'HEAD',
+      coverage: {
+        include: ['src'],
+        reporter: 'json',
+        all: true,
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/changed.test.ts'],
+    },
+    before: () => {
+      let content = readFileSync('./src/file-to-change.ts', 'utf8')
+      content = content.replace('This file will be modified by test cases', 'Changed!')
+      writeFileSync('./src/file-to-change.ts', content, 'utf8')
+
+      writeFileSync('./src/new-uncovered-file.ts', `
+      // This file is not covered by any tests but should be picked by --changed
+      export default function helloworld() {
+        return 'Hello world'
+      }
+      `.trim(), 'utf8')
+    },
+    after: () => {
+      let content = readFileSync('./src/file-to-change.ts', 'utf8')
+      content = content.replace('Changed!', 'This file will be modified by test cases')
+      writeFileSync('./src/file-to-change.ts', content, 'utf8')
+      rmSync('./src/new-uncovered-file.ts')
+    },
+  },
+  {
+    testConfig: {
+      name: 'ignore empty lines',
+      include: ['option-tests/empty-lines.test.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: 'json',
+        ignoreEmptyLines: true,
+        all: true,
+        include: ['src/empty-lines.ts', 'src/untested-file.ts'],
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/empty-lines.test.ts'],
+    },
+  },
+  {
+    testConfig: {
+      name: 'failing thresholds',
+      include: ['option-tests/thresholds.test.ts'],
+      coverage: {
+        reporter: 'text',
+        all: false,
+        include: ['src/utils.ts'],
+        thresholds: {
+          'src/utils.ts': {
+            branches: 100,
+            functions: 100,
+            lines: 100,
+            statements: 100,
+          },
+        },
+      },
+    },
+    after() {
+      if (process.exitCode !== 1)
+        throw new Error('Expected test to fail as thresholds are not met')
+
+      process.exitCode = 0
+    },
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
-  for (const { testConfig, assertionConfig } of testCases) {
+  for (const { after, before, testConfig, assertionConfig } of testCases) {
+    // Test config may specify which provider the test is for
+    if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider)
+      continue
+
+    await before?.()
+
     // Run test case
     await startVitest('test', ['option-tests/'], {
       config: false,
@@ -57,29 +151,31 @@ for (const provider of ['v8', 'istanbul']) {
         enabled: true,
         clean: true,
         all: false,
+        reporter: [],
         provider,
         ...testConfig.coverage,
       },
     })
 
-    checkExit()
-
-    if (!assertionConfig)
-      continue
-
     // Check generated coverage report
-    await startVitest('test', ['coverage-report-tests'], {
-      config: false,
-      watch: false,
-      ...assertionConfig,
-      name: `${provider} - assert ${testConfig.name}`,
-    })
+    if (assertionConfig) {
+      await startVitest('test', ['coverage-report-tests'], {
+        config: false,
+        watch: false,
+        ...assertionConfig,
+        name: `${provider} - assert ${testConfig.name}`,
+      })
+    }
+
+    await after?.()
 
     checkExit()
   }
 }
 
 function checkExit() {
-  if (process.exitCode)
+  if (process.exitCode) {
+    console.error(`Exit code was set to ${process.exitCode}. Failing tests`)
     process.exit(process.exitCode)
+  }
 }

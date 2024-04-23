@@ -5,7 +5,7 @@ import { chromium } from 'playwright'
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
 
-const PORT = 3001
+const PORT = 3989
 
 // unstable in Windows, TODO: investigate
 describe.runIf(process.platform !== 'win32')('basic', async () => {
@@ -14,15 +14,16 @@ describe.runIf(process.platform !== 'win32')('basic', async () => {
   let page: Page
 
   beforeAll(async () => {
-    server = await preview({ preview: { port: PORT } })
+    server = await preview({ preview: { port: PORT, strictPort: true } })
     browser = await chromium.launch({ headless: true })
     page = await browser.newPage()
   })
 
   afterAll(async () => {
-    await browser.close()
+    // hook timed out and we already have another error
+    await browser?.close()
     await new Promise<void>((resolve, reject) => {
-      server.httpServer.close(error => error ? reject(error) : resolve())
+      server?.httpServer.close(error => error ? reject(error) : resolve())
     })
   })
 

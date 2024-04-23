@@ -45,17 +45,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         const testConfig = deepMerge(
           {} as UserConfig,
           configDefaults,
-          options,
           removeUndefinedValues(viteConfig.test ?? {}),
+          options,
         )
         testConfig.api = resolveApiServerConfig(testConfig)
-
-        testConfig.poolOptions ??= {}
-        testConfig.poolOptions.threads ??= {}
-        testConfig.poolOptions.forks ??= {}
-        // prefer --poolOptions.{name}.isolate CLI arguments over --isolate, but still respect config value
-        testConfig.poolOptions.threads.isolate = options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions.threads.isolate ?? viteConfig.test?.isolate
-        testConfig.poolOptions.forks.isolate = options.poolOptions?.forks?.isolate ?? options.isolate ?? testConfig.poolOptions.forks.isolate ?? viteConfig.test?.isolate
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
@@ -97,8 +90,24 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
               allow: resolveFsAllow(getRoot(), testConfig.config),
             },
           },
+          build: {
+            // Vitest doesn't use outputDir, but this value affects what folders are watched
+            // https://github.com/vitest-dev/vitest/issues/5429
+            // This works for Vite <5.2.10
+            outDir: 'dummy-non-existing-folder',
+            // This works for Vite >=5.2.10
+            // https://github.com/vitejs/vite/pull/16453
+            emptyOutDir: false,
+          },
           test: {
-            poolOptions: testConfig.poolOptions,
+            poolOptions: {
+              threads: {
+                isolate: options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions?.threads?.isolate ?? viteConfig.test?.isolate,
+              },
+              forks: {
+                isolate: options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions?.threads?.isolate ?? viteConfig.test?.isolate,
+              },
+            },
           },
         }
 

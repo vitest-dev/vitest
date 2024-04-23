@@ -18,7 +18,7 @@ This section describes the API that you can use when [mocking a module](/guide/m
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
 
-Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](/api/vi#vi-hoisted) and reference them inside `vi.mock`.
+Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
@@ -29,14 +29,16 @@ Vitest will not mock modules that were imported inside a [setup file](/config/#s
 :::
 
 ::: warning
-The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub <a href="https://github.com/vitest-dev/vitest/issues/3046">issue</a>.
+The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub [issue](https://github.com/vitest-dev/vitest/issues/3046).
 :::
 
 If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
 
-```js
+```js twoslash
+import { vi } from 'vitest'
+// ---cut---
 // when using JavaScript
 
 vi.mock('./path/to/module.js', async (importOriginal) => {
@@ -349,7 +351,9 @@ This section describes how to work with [method mocks](/api/mock) and replace en
 Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
 If no function is given, mock will return `undefined`, when invoked.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 const getApples = vi.fn(() => 0)
 
 getApples()
@@ -386,9 +390,11 @@ Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clea
 
 - **Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
 
-Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](/#vi-fn). It returns a [mock function](/api/mock).
+Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](#vi-fn). It returns a [mock function](/api/mock).
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 let apples = 0
 const cart = {
   getApples: () => 42,
@@ -421,7 +427,7 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
-### vi.stubEnv <Badge type="info">0.26.0+</Badge>
+### vi.stubEnv <Badge type="info">0.26.0+</Badge> {#vi-stubenv}
 
 - **Type:** `(name: string, value: string) => Vitest`
 
@@ -449,7 +455,7 @@ import.meta.env.MODE = 'test'
 ```
 :::
 
-### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge>
+### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge> {#vi-unstuballenvs}
 
 - **Type:** `() => Vitest`
 
@@ -484,7 +490,7 @@ import.meta.env.NODE_ENV === 'development'
 
 Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
 
-```ts
+```ts twoslash
 import { vi } from 'vitest'
 
 // `innerWidth` is "0" before calling stubGlobal
@@ -507,7 +513,7 @@ window.innerWidth = 100
 ```
 :::
 
-### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge>
+### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge> {#vi-unstuballglobals}
 
 - **Type:** `() => Vitest`
 
@@ -546,7 +552,9 @@ This sections descibes how to work with [fake timers](/guide/mocking#timers).
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -563,7 +571,9 @@ vi.advanceTimersByTime(150)
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first. This will include asynchronously set timers.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -580,7 +590,9 @@ await vi.advanceTimersByTimeAsync(150)
 
 Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -595,7 +607,9 @@ vi.advanceTimersToNextTimer() // log: 1
 
 Will call next available timer and wait until it's resolved if it was set asynchronously. Useful to make assertions between each timer call.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -640,7 +654,9 @@ Calls every microtask that was queued by `process.nextTick`. This will also run 
 
 This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired. If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setTimeout(() => console.log(++i))
 const interval = setInterval(() => {
@@ -663,7 +679,9 @@ vi.runAllTimers()
 This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
 it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 setTimeout(async () => {
   console.log(await Promise.resolve('result'))
 }, 100)
@@ -679,7 +697,9 @@ await vi.runAllTimersAsync()
 
 This method will call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call. It will not fire any timer that was initiated during its call.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -694,7 +714,9 @@ vi.runOnlyPendingTimers()
 
 This method will asynchronously call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call, even asynchronous ones. It will not fire any timer that was initiated during its call.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 setTimeout(() => {
   console.log(1)
 }, 100)
@@ -723,7 +745,9 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-```ts
+```ts twoslash
+import { expect, vi } from 'vitest'
+// ---cut---
 const date = new Date(1998, 11, 19)
 
 vi.useFakeTimers()
@@ -736,9 +760,9 @@ vi.useRealTimers()
 
 ### vi.useFakeTimers
 
-- **Type:** `() => Vitest`
+- **Type:** `(config?: FakeTimerInstallOpts) => Vitest`
 
-To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
+To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `setImmediate`, `clearImmediate`, and `Date`) until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
 
@@ -749,7 +773,7 @@ Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `proce
 It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
-### vi.isFakeTimers <Badge type="info">0.34.5+</Badge>
+### vi.isFakeTimers <Badge type="info">0.34.5+</Badge> {#vi-isfaketimers}
 
 - **Type:** `() => boolean`
 
@@ -765,7 +789,7 @@ When timers are run out, you may call this method to return mocked timers to its
 
 A set of useful helper functions that Vitest provides.
 
-### vi.waitFor <Badge type="info">0.34.5+</Badge>
+### vi.waitFor <Badge type="info">0.34.5+</Badge> {#vi-waitfor}
 
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 
@@ -824,7 +848,7 @@ test('Element exists in a DOM', async () => {
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
 
-### vi.waitUntil <Badge type="info">0.34.5+</Badge>
+### vi.waitUntil <Badge type="info">0.34.5+</Badge> {#vi-waituntil}
 
 - **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
 
@@ -832,7 +856,7 @@ This is similar to `vi.waitFor`, but if the callback throws any errors, executio
 
 Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
 
-```ts
+```ts twoslash
 import { expect, test, vi } from 'vitest'
 
 test('Element render correctly', async () => {
@@ -849,7 +873,7 @@ test('Element render correctly', async () => {
 })
 ```
 
-### vi.hoisted <Badge type="info">0.31.0+</Badge>
+### vi.hoisted <Badge type="info">0.31.0+</Badge> {#vi-hoisted}
 
 - **Type**: `<T>(factory: () => T) => T`
 

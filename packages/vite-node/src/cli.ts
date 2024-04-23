@@ -131,6 +131,31 @@ async function run(files: string[], options: CliOptions = {}) {
     process.on('uncaughtException', (err) => {
       console.error(c.red('[vite-node] Failed to execute file: \n'), err)
     })
+
+    if (process.env.VITE_TEST_WATCHER_DEBUG) {
+      // manually check `watcher.getWatched()` to make sure entry files are ready
+      // since watcher.on('ready', ...) event is not reliable since 5.1.
+      // https://github.com/vitejs/vite/blob/63a39c244b08cf1f2299bc2c3cfddcb82070d05b/playground/hmr-ssr/__tests__/hmr.spec.ts#L1065
+
+      const nodePath = await import('node:path')
+
+      async function waitForWatched(files: string[]): Promise<void> {
+        while (!files.every(file => isWatched(file)))
+          await new Promise(resolve => setTimeout(resolve, 20))
+      }
+
+      function isWatched(file: string): boolean {
+        const watched = server.watcher.getWatched()
+        const resolved = nodePath.resolve(file)
+        const dir = nodePath.dirname(resolved)
+        const base = nodePath.basename(resolved)
+        return watched[dir]?.includes(base)
+      }
+
+      await waitForWatched(files)
+      // eslint-disable-next-line no-console
+      console.log('[debug] watcher is ready')
+    }
   }
 }
 

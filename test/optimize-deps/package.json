@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-optimize-deps",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/test-dep-url": "file:./dep-url",
+    "vitest": "workspace:*"
+  }
+}

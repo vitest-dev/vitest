@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import { dirname, join, relative, resolve, toNamespacedPath } from 'pathe'
+import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -12,6 +12,7 @@ import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { createDefer } from '../public/utils'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -39,22 +40,40 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
   )
 
-  const config: ViteInlineConfig = {
-    ...options,
-    root,
-    logLevel: 'error',
-    configFile,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.test?.mode || options.mode || ctx.config.mode,
-    plugins: [
-      ...options.plugins || [],
-      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
-    ],
-  }
+  return new Promise<() => Promise<WorkspaceProject>>((resolve, reject) => {
+    const resolution = createDefer<WorkspaceProject>()
+    let configResolved = false
+    const config: ViteInlineConfig = {
+      ...options,
+      root,
+      logLevel: 'error',
+      configFile,
+      // this will make "mode": "test" | "benchmark" inside defineConfig
+      mode: options.test?.mode || options.mode || ctx.config.mode,
+      plugins: [
+        {
+          name: 'vitest:workspace:resolve',
+          configResolved() {
+            configResolved = true
+            resolve(() => resolution)
+          },
+        },
+        ...options.plugins || [],
+        WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
+      ],
+    }
 
-  await createViteServer(config)
+    createViteServer(config)
+      .then(() => resolution.resolve(project))
+      .catch((err) => {
+        if (configResolved)
+          resolution.reject(err)
+        else
+          reject(err)
+      })
 
-  return project
+    return project
+  })
 }
 
 export class WorkspaceProject {
@@ -72,8 +91,8 @@ export class WorkspaceProject {
 
   browserState: {
     files: string[]
-    resolve(): void
-    reject(v: unknown): void
+    resolve: () => void
+    reject: (v: unknown) => void
   } | undefined
 
   testFilesList: string[] | null = null
@@ -95,7 +114,7 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = (key: string, value: unknown) => {
+  provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
     try {
       structuredClone(value)
     }
@@ -257,7 +276,7 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
+  filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
@@ -265,6 +284,10 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
+          // if filter is a full file path, we should include it if it's in the same folder
+          if (isAbsolute(f) && t.startsWith(f))
+            return true
+
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
@@ -297,7 +320,15 @@ export class WorkspaceProject {
   }
 
   async setServer(options: UserConfig, server: ViteDevServer) {
-    this.config = resolveConfig(this.ctx.mode, options, server.config)
+    this.config = resolveConfig(
+      this.ctx.mode,
+      {
+        ...options,
+        coverage: this.ctx.config.coverage,
+      },
+      server.config,
+    )
+
     this.server = server
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
@@ -329,7 +360,6 @@ export class WorkspaceProject {
 
     return deepMerge({
       ...this.config,
-      coverage: this.ctx.config.coverage,
 
       poolOptions: {
         forks: {
@@ -358,7 +388,8 @@ export class WorkspaceProject {
         },
       },
       snapshotOptions: {
-        ...this.config.snapshotOptions,
+        ...this.ctx.config.snapshotOptions,
+        expand: this.config.snapshotOptions.expand ?? this.ctx.config.snapshotOptions.expand,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
@@ -373,7 +404,13 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      inspector: this.ctx.config.inspector,
       alias: [],
+      includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
+      env: {
+        ...this.server?.config.env,
+        ...this.config.env,
+      },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 

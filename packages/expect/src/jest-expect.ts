@@ -4,7 +4,7 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
@@ -161,19 +161,39 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toMatchObject', function (expected) {
     const actual = this._obj
+    const pass = jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality])
+    const isNot = utils.flag(this, 'negate') as boolean
+    const { subset: actualSubset, stripped } = getObjectSubset(actual, expected)
+    if ((pass && isNot) || (!pass && !isNot)) {
+      const msg = utils.getMessage(
+        this,
+        [
+          pass,
+          'expected #{this} to match object #{exp}',
+          'expected #{this} to not match object #{exp}',
+          expected,
+          actualSubset,
+          false,
+        ],
+      )
+      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${stripped === 1 ? 'property' : 'properties'} omitted from actual)`
+      throw new AssertionError(message, { showDiff: true, expected, actual: actualSubset })
+    }
+  })
+  def('toMatch', function (expected: string | RegExp) {
+    const actual = this._obj as string
+    if (typeof actual !== 'string')
+      throw new TypeError(`.toMatch() expects to receive a string, but got ${typeof actual}`)
+
     return this.assert(
-      jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality]),
-      'expected #{this} to match object #{exp}',
-      'expected #{this} to not match object #{exp}',
+      typeof expected === 'string'
+        ? actual.includes(expected)
+        : actual.match(expected),
+      `expected #{this} to match #{exp}`,
+      `expected #{this} not to match #{exp}`,
       expected,
       actual,
     )
-  })
-  def('toMatch', function (expected: string | RegExp) {
-    if (typeof expected === 'string')
-      return this.include(expected)
-    else
-      return this.match(expected)
   })
   def('toContain', function (item) {
     const actual = this._obj as Iterable<unknown> | string | Node | DOMTokenList
@@ -201,6 +221,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected "${actual.value}" not to contain "${item}"`,
         expectedClassList,
         actual.value,
+      )
+    }
+    // handle simple case on our own using `this.assert` to include diff in error message
+    if (typeof actual === 'string' && typeof item === 'string') {
+      return this.assert(
+        actual.includes(item),
+        `expected #{this} to contain #{exp}`,
+        `expected #{this} not to contain #{exp}`,
+        item,
+        actual,
       )
     }
     // make "actual" indexable to have compatibility with jest
@@ -505,13 +535,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const nthCall = spy.mock.calls[times - 1]
-
+    const callCount = spy.mock.calls.length
+    const isCalled = times <= callCount
     this.assert(
       jestEquals(nthCall, args, [...customTesters, iterableEquality]),
-      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}${
+         isCalled ? `` : `, but called only ${callCount} times`}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
       nthCall,
+      isCalled,
     )
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {

@@ -7,6 +7,7 @@ if (process.env.TEST_WATCH) {
 }
 
 export default defineConfig({
+  envPrefix: ['VITE_', 'CUSTOM_', 'ROOT_'],
   test: {
     coverage: {
       enabled: true,
@@ -15,5 +16,9 @@ export default defineConfig({
     reporters: ['default', 'json'],
     outputFile: './results.json',
     globalSetup: './globalTest.ts',
+    env: {
+      CONFIG_VAR: 'root',
+      CONFIG_OVERRIDE: 'root',
+    },
   },
 })

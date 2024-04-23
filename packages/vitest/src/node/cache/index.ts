@@ -4,7 +4,7 @@ import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { loadConfigFromFile } from 'vite'
 import { configFiles } from '../../constants'
-import type { CliOptions } from '../cli-api'
+import type { CliOptions } from '../cli/cli-api'
 import { slash } from '../../utils'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
@@ -21,8 +21,8 @@ export class VitestCache {
     return this.stats.getStats(key)
   }
 
-  static resolveCacheDir(root: string, dir: string | undefined, projectName: string | undefined) {
-    const baseDir = slash(dir || 'node_modules/.vitest')
+  static resolveCacheDir(root: string, dir?: string, projectName?: string) {
+    const baseDir = slash(dir || 'node_modules/.vite/vitest')
     return projectName
       ? resolve(root, baseDir, crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'))
       : resolve(root, baseDir)

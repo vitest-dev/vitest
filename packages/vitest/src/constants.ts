@@ -1,6 +1,7 @@
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204
 export const defaultBrowserPort = 63315
+export const defaultInspectPort = 9229
 
 export const EXIT_CODE_RESTART = 43
 
@@ -68,4 +69,6 @@ export const globalApis = [
   'afterAll',
   'beforeEach',
   'afterEach',
+  'onTestFinished',
+  'onTestFailed',
 ]

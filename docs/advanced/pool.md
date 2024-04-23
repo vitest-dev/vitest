@@ -14,7 +14,9 @@ Vitest runs tests in pools. By default, there are several pools:
 
 You can provide your own pool by specifying a file path:
 
-```ts
+```ts twoslash
+import { defineConfig } from 'vitest/config'
+// ---cut---
 export default defineConfig({
   test: {
     // will run every file with a custom pool by default
@@ -49,7 +51,7 @@ export interface ProcessPool {
 
 The function is called only once (unless the server config was updated), and it's generally a good idea to initialize everything you need for tests inside that function and reuse it when `runTests` is called.
 
-Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of tuples: the first element is a reference to a workspace project and the second one is an absolute path to a test file. Files are sorted using [`sequencer`](/config/#sequence.sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`vitest.workspace.ts`](/guide/workspace) configuration.
+Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of tuples: the first element is a reference to a workspace project and the second one is an absolute path to a test file. Files are sorted using [`sequencer`](/config/#sequence-sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`vitest.workspace.ts`](/guide/workspace) configuration.
 
 Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/guide/reporters) only after `runTests` is resolved).
 

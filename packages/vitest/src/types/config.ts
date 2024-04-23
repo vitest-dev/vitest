@@ -48,10 +48,22 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
-   * Should tests run in random order.
+   * Should files and tests run in random order.
    * @default false
    */
-  shuffle?: boolean
+  shuffle?: boolean | {
+    /**
+     * Should files run in random order. Long running tests will not start
+     * earlier if you enable this option.
+     * @default false
+     */
+    files?: boolean
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    tests?: boolean
+  }
   /**
    * Should tests run in parallel.
    * @default false
@@ -220,7 +232,7 @@ export interface InlineConfig {
 
   /**
    * Exclude globs for test files
-   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
    */
   exclude?: string[]
 
@@ -359,7 +371,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default true
+   * @default !process.env.CI
    */
   watch?: boolean
 
@@ -373,6 +385,8 @@ export interface InlineConfig {
   /**
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters.
+   *
+   * @default []
    */
   reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
@@ -430,6 +444,7 @@ export interface InlineConfig {
 
   /**
    * Glob pattern of file paths to be ignore from triggering watch rerun
+   * @deprecated Use server.watch.ignored instead
    */
   watchExclude?: string[]
 
@@ -438,7 +453,7 @@ export interface InlineConfig {
    *
    * Useful if you are testing calling CLI commands
    *
-   * @default []
+   * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
    */
   forceRerunTriggers?: string[]
 
@@ -493,6 +508,8 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
+   *
+   * @default false
    */
   ui?: boolean
 
@@ -507,7 +524,7 @@ export interface InlineConfig {
   /**
    * Open UI automatically.
    *
-   * @default true
+   * @default !process.env.CI
    */
   open?: boolean
 
@@ -550,6 +567,8 @@ export interface InlineConfig {
 
   /**
    * Allow tests and suites that are marked as only
+   *
+   * @default !process.env.CI
    */
   allowOnly?: boolean
 
@@ -573,7 +592,7 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
@@ -605,10 +624,13 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vitest' }
+   * @default { dir: 'node_modules/.vite/vitest' }
    */
   cache?: false | {
-    dir?: string
+    /**
+     * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+     */
+    dir: string
   }
 
   /**
@@ -625,6 +647,8 @@ export interface InlineConfig {
 
   /**
    * Ignore any unhandled errors that occur
+   *
+   * @default false
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
 
@@ -651,7 +675,7 @@ export interface InlineConfig {
    *
    * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
-  inspect?: boolean
+  inspect?: boolean | string
 
   /**
    * Debug tests by opening `node:inspector` in worker / child process and wait for debugger to connect.
@@ -659,7 +683,29 @@ export interface InlineConfig {
    *
    * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
    */
-  inspectBrk?: boolean
+  inspectBrk?: boolean | string
+
+  /**
+   * Inspector options. If `--inspect` or `--inspect-brk` is enabled, these options will be passed to the inspector.
+   */
+  inspector?: {
+    /**
+     * Enable inspector
+     */
+    enabled?: boolean
+    /**
+     * Port to run inspector on
+     */
+    port?: number
+    /**
+     * Host to run inspector on
+     */
+    host?: string
+    /**
+     * Wait for debugger to connect before running tests
+     */
+    waitForDebugger?: boolean
+  }
 
   /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
@@ -694,6 +740,13 @@ export interface InlineConfig {
    * @default false
    */
   disableConsoleIntercept?: boolean
+
+  /**
+   * Include "location" property inside the test definition
+   *
+   * @default false
+   */
+  includeTaskLocation?: boolean
 }
 
 export interface TypecheckConfig {
@@ -707,14 +760,20 @@ export interface TypecheckConfig {
   only?: boolean
   /**
    * What tools to use for type checking.
+   *
+   * @default 'tsc'
    */
   checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
   /**
    * Pattern for files that should be treated as test files
+   *
+   * @default ['**\/*.{test,spec}-d.?(c|m)[jt]s?(x)']
    */
   include: string[]
   /**
    * Pattern for files that should not be treated as test files
+   *
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
    */
   exclude: string[]
   /**
@@ -782,6 +841,11 @@ export interface UserConfig extends InlineConfig {
    * Additional exclude patterns
    */
   cliExclude?: string[]
+
+  /**
+   * Override vite config's clearScreen from cli
+   */
+  clearScreen?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -815,6 +879,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   cache: {
+    /**
+     * @deprecated
+     */
     dir: string
   } | false
 

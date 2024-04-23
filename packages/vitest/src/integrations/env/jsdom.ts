@@ -67,6 +67,7 @@ export default <Environment>({
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
+    dom.window.jsdom = dom
 
     // inject web globals if they missing in JSDOM but otherwise available in Nodejs
     // https://nodejs.org/dist/latest/docs/api/globals.html
@@ -141,10 +142,13 @@ export default <Environment>({
 
     const clearWindowErrors = catchWindowErrors(global)
 
+    global.jsdom = dom
+
     return {
       teardown(global) {
         clearWindowErrors()
         dom.window.close()
+        delete global.jsdom
         keys.forEach(key => delete global[key])
         originals.forEach((v, k) => global[k] = v)
       },

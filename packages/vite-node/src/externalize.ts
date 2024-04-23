@@ -61,15 +61,15 @@ async function isValidNodeImport(id: string) {
   if (extension !== '.js')
     return false
 
-  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
-    return false
-
   id = id.replace('file:///', '')
 
   const package_ = await findNearestPackageData(dirname(id))
 
   if (package_.type === 'module')
     return true
+
+  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
+    return false
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
 

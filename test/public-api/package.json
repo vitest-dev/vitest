@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "fixtures": "vitest --root ./fixtures"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",

@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import type { UserConfig } from 'vitest/config'
 import { version } from 'vitest/package.json'
 
+import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
 function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
@@ -61,6 +62,49 @@ test('v8 coverage provider cannot be used with browser', async () => {
   expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
 })
 
+test('v8 coverage provider cannot be used with browser in workspace', async () => {
+  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
+
+  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})
+
+test('coverage reportsDirectory cannot be current working directory', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
+})
+
+test('coverage reportsDirectory cannot be root', async () => {
+  const { stderr } = await runVitest({
+    root: './fixtures',
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./fixtures'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
+})
+
 test('version number is printed when coverage provider fails to load', async () => {
   const { stderr, stdout } = await runVitest({
     coverage: {
@@ -72,13 +116,6 @@ test('version number is printed when coverage provider fails to load', async () 
 
   expect(stdout).toMatch(`RUN  v${version}`)
   expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from ./non-existing-module.ts')
-})
-
-test('boolean coverage flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('--coverage', '--coverage.reporter', 'text')
-
-  expect(stderr).toMatch('Error: A boolean argument "--coverage" was used with dot notation arguments "--coverage.reporter".')
-  expect(stderr).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
 })
 
 test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {
@@ -102,13 +139,6 @@ test('boolean flag 100 should not crash CLI', async () => {
   expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for statements (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for branches (0%) does not meet global threshold (100%)')
-})
-
-test('boolean browser flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('run', '--browser', '--browser.name', 'chrome')
-
-  expect(stderr).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
-  expect(stderr).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
 })
 
 test('nextTick cannot be mocked inside child_process', async () => {

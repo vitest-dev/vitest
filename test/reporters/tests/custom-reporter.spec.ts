@@ -8,18 +8,13 @@ const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 const root = resolve(__dirname, '..')
 
-async function run(...runOptions: string[]): Promise<string> {
-  const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
-
-  return vitest.stdout
-}
-
 async function runWithRetry(...runOptions: string[]) {
   const count = 3
 
   for (let i = count; i >= 0; i--) {
     try {
-      return await run(...runOptions)
+      const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
+      return vitest.stdout
     }
     catch (e) {
       if (i <= 0)
@@ -41,7 +36,8 @@ describe('custom reporters', () => {
   }, TIMEOUT)
 
   test('load no base on root custom reporter instances defined in configuration works', async () => {
-    const stdout = await runWithRetry('--config', './reportTest2/custom-reporter-path.vitest.config.ts')
+    const { stdout, stderr } = await runVitest({ reporters: 'none', config: './reportTest2/custom-reporter-path.vitest.config.ts' })
+    expect(stderr).toBe('')
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
 

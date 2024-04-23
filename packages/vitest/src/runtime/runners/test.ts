@@ -1,4 +1,4 @@
-import type { CancelReason, Custom, ExtendedContext, Suite, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
+import type { CancelReason, Custom, ExtendedContext, Suite, Task, TaskContext, Test, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import type { ExpectStatic } from '@vitest/expect'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -27,6 +27,10 @@ export class VitestTestRunner implements VitestRunner {
     this.snapshotClient.clear()
   }
 
+  onAfterRunFiles() {
+    this.workerState.current = undefined
+  }
+
   async onAfterRunSuite(suite: Suite) {
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
@@ -44,22 +48,24 @@ export class VitestTestRunner implements VitestRunner {
       if (result)
         await rpc().snapshotSaved(result)
     }
+
+    this.workerState.current = suite.suite
   }
 
-  onAfterRunTask(test: Test) {
+  onAfterRunTask(test: Task) {
     this.snapshotClient.clearTest()
 
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       test.result!.heap = process.memoryUsage().heapUsed
 
-    this.workerState.current = undefined
+    this.workerState.current = test.suite
   }
 
   onCancel(_reason: CancelReason) {
     this.cancelRun = true
   }
 
-  async onBeforeRunTask(test: Test) {
+  async onBeforeRunTask(test: Task) {
     if (this.cancelRun)
       test.mode = 'skip'
 
@@ -81,30 +87,32 @@ export class VitestTestRunner implements VitestRunner {
       // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
       await this.snapshotClient.startCurrentRun(suite.filepath, '__default_name_', this.workerState.config.snapshotOptions)
     }
+
+    this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Test) {
+  onBeforeTryTask(test: Task) {
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
-      testPath: test.suite.file?.filepath,
+      testPath: test.suite?.file?.filepath,
       currentTestName: getFullName(test),
       snapshotState: this.snapshotClient.snapshotState,
     }, (globalThis as any)[GLOBAL_EXPECT])
   }
 
-  onAfterTryTask(test: Test) {
+  onAfterTryTask(test: Task) {
     const {
       assertionCalls,
       expectedAssertionsNumber,
       expectedAssertionsNumberErrorGen,
       isExpectingAssertions,
       isExpectingAssertionsError,
-      // @ts-expect-error local is untyped
-    } = test.context._local
+      // @ts-expect-error _local is untyped
+    } = 'context' in test && test.context._local
       ? test.context.expect.getState()
       : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)

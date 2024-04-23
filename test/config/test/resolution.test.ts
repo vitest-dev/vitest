@@ -1,7 +1,7 @@
 import type { UserConfig } from 'vitest'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { describe, expect, it } from 'vitest'
-import { createVitest } from 'vitest/node'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
+import { createVitest, parseCLI } from 'vitest/node'
 import { extraInlineDeps } from 'vitest/config'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}) {
@@ -15,6 +15,22 @@ async function config(cliOptions: UserConfig, configValue: UserConfig = {}, vite
 }
 
 describe('correctly defines isolated flags', async () => {
+  it('does not merge user-defined poolOptions with itself', async () => {
+    const c = await config({}, {
+      poolOptions: {
+        array: [1, 2, 3],
+      },
+    })
+    // Ensure poolOptions.array has not been merged with itself
+    // Previously, this would have been [1,2,3,1,2,3]
+    expect(c.poolOptions?.array).toMatchInlineSnapshot(`
+      [
+        1,
+        2,
+        3,
+      ]
+    `)
+  })
   it('prefers CLI poolOptions flags over config', async () => {
     const c = await config({
       isolate: true,
@@ -217,5 +233,80 @@ describe('correctly defines inline and noExternal flags', async () => {
       regexp2,
       'dep3',
     ])
+  })
+})
+
+describe('correctly defines api flag', () => {
+  it('CLI overrides disabling api', async () => {
+    const c = await vitest({ api: false }, {
+      api: {
+        port: 1234,
+      },
+      watch: true,
+    })
+    expect(c.server.config.server.middlewareMode).toBe(true)
+    expect(c.config.api).toEqual({
+      middlewareMode: true,
+    })
+  })
+
+  it('CLI overrides inlined value', async () => {
+    const c = await vitest({ api: { port: 4321 } }, {
+      api: {
+        port: 1234,
+      },
+      watch: true,
+    })
+    expect(c.server.config.server.port).toBe(4321)
+    expect(c.config.api).toEqual({
+      port: 4321,
+    })
+  })
+})
+
+describe.each([
+  '--inspect',
+  '--inspect-brk',
+])('correctly parses %s flags', (inspectFlagName) => {
+  it.each([
+    ['', { enabled: true }],
+    ['true', { enabled: true }],
+    ['yes', { enabled: true }],
+    ['false', { enabled: false }],
+    ['no', { enabled: false }],
+
+    ['1002', { enabled: true, port: 1002 }],
+    ['www.remote.com:1002', { enabled: true, port: 1002, host: 'www.remote.com' }],
+    ['www.remote.com', { enabled: true, host: 'www.remote.com' }],
+  ])(`parses "vitest ${inspectFlagName} %s" value`, async (cliValue, inspect) => {
+    const rawConfig = parseCLI(
+      `vitest --no-file-parallelism ${inspectFlagName} ${cliValue}`,
+    )
+    const c = await config(rawConfig.options)
+    expect(c.inspector).toEqual({
+      ...inspect,
+      waitForDebugger: inspectFlagName === '--inspect-brk' && inspect.enabled,
+    })
+  })
+  it('cannot use a URL', async () => {
+    const url = 'https://www.remote.com:1002'
+    const rawConfig = parseCLI([
+      'vitest',
+      '--no-file-parallelism',
+      inspectFlagName,
+      url,
+    ])
+    const error = vi.fn()
+    const originalError = console.error
+    console.error = error
+    onTestFinished(() => {
+      console.error = originalError
+    })
+    await expect(async () => {
+      await config(rawConfig.options)
+    }).rejects.toThrowError()
+    expect(error.mock.lastCall[0]).toEqual(
+      expect.stringContaining(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`),
+    )
   })
 })

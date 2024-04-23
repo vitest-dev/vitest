@@ -185,6 +185,30 @@ test('multi environment coverage is merged correctly', async () => {
   expect(lineCoverage[30]).toBe(2)
 })
 
+test('decorators generated metadata is ignored', async () => {
+  const coverageJson = await readCoverageJson()
+  const coverageMap = libCoverage.createCoverageMap(coverageJson as any)
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/src/decorators.ts')
+  const lineCoverage = fileCoverage.getLineCoverage()
+  const branchCoverage = fileCoverage.getBranchCoverageByLine()
+
+  // Decorator should not be uncovered - on V8 this is marked as covered, on Istanbul it's excluded from report
+  if (process.env.COVERAGE_PROVIDER === 'v8') {
+    expect(lineCoverage['4']).toBe(1)
+    expect(branchCoverage['4'].coverage).toBe(100)
+  }
+  else {
+    expect(lineCoverage['4']).toBeUndefined()
+    expect(branchCoverage['4']).toBeUndefined()
+  }
+
+  // Covered branch should be marked correctly
+  expect(lineCoverage['7']).toBe(1)
+
+  // Uncovered branch should be marked correctly
+  expect(lineCoverage['12']).toBe(0)
+})
+
 test('temporary files are removed after test', async () => {
   const coveragePath = resolve('./coverage')
   const files = fs.readdirSync(coveragePath)

@@ -111,6 +111,17 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Team member of Vitest & UnoCSS',
   },
   {
+    avatar: contributorsAvatars['hi-ogawa'],
+    name: 'Hiroshi Ogawa',
+    github: 'hi-ogawa',
+    twitter: 'hiroshi_18181',
+    title: 'Open source enthusiast',
+    desc: 'Team member of Vitest',
+  },
+]
+
+const plainTeamEmeritiMembers: CoreTeam[] = [
+  {
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
@@ -128,6 +139,14 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Author of fluent-vue',
   },
   {
+    avatar: contributorsAvatars.poyoho,
+    name: 'Yoho Po',
+    github: 'poyoho',
+    twitter: '@yoho_po',
+    title: 'It\'s no problem in my locall',
+    desc: 'Core team member of Vite & Team member of Vitest',
+  },
+  {
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
@@ -136,16 +155,9 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'A fullstack developer',
     desc: 'Working on CRDTs & local-first software',
   },
-  {
-    avatar: contributorsAvatars.poyoho,
-    name: 'Yoho Po',
-    github: 'poyoho',
-    twitter: '@yoho_po',
-    title: 'It\'s no problem in my locall',
-    desc: 'Core team member of Vite & Team member of Vitest',
-  },
 ]
 
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
+const teamEmeritiMembers = plainTeamEmeritiMembers.map(tm => createLinks(tm))
 
-export { teamMembers }
+export { teamMembers, teamEmeritiMembers }

@@ -15,7 +15,7 @@ export interface BenchmarkUserOptions {
 
   /**
    * Exclude globs for benchmark test files
-   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
    */
   exclude?: string[]
 
@@ -29,6 +29,8 @@ export interface BenchmarkUserOptions {
   /**
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters
+   *
+   * @default ['default']
    */
   reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
 
@@ -54,12 +56,11 @@ export interface BenchmarkResult extends TinybenchResult {
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void
 type ChainableBenchmarkAPI = ChainableFunction<
   'skip' | 'only' | 'todo',
-  [name: string | Function, fn?: BenchFunction, options?: BenchOptions],
-  void
+  (name: string | Function, fn?: BenchFunction, options?: BenchOptions) => void
 >
 export type BenchmarkAPI = ChainableBenchmarkAPI & {
-  skipIf(condition: any): ChainableBenchmarkAPI
-  runIf(condition: any): ChainableBenchmarkAPI
+  skipIf: (condition: any) => ChainableBenchmarkAPI
+  runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
 export {

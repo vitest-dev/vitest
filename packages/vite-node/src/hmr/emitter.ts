@@ -4,10 +4,9 @@ import type { HMRPayload, Plugin } from 'vite'
 export type EventType = string | symbol
 export type Handler<T = unknown> = (event: T) => void
 export interface Emitter<Events extends Record<EventType, unknown>> {
-  on<Key extends keyof Events>(type: Key, handler: Handler<Events[Key]>): void
-  off<Key extends keyof Events>(type: Key, handler?: Handler<Events[Key]>): void
-  emit<Key extends keyof Events>(type: Key, event: Events[Key]): void
-  emit<Key extends keyof Events>(type: undefined extends Events[Key] ? Key : never): void
+  on: <Key extends keyof Events>(type: Key, handler: Handler<Events[Key]>) => void
+  off: <Key extends keyof Events>(type: Key, handler?: Handler<Events[Key]>) => void
+  emit: (<Key extends keyof Events>(type: Key, event: Events[Key]) => void) & (<Key extends keyof Events>(type: undefined extends Events[Key] ? Key : never) => void)
 }
 
 export type HMREmitter = Emitter<{
@@ -22,7 +21,7 @@ declare module 'vite' {
 
 export function createHmrEmitter(): HMREmitter {
   const emitter = new EventEmitter()
-  return emitter
+  return emitter as HMREmitter
 }
 
 export function viteNodeHmrPlugin(): Plugin {
@@ -50,12 +49,6 @@ export function viteNodeHmrPlugin(): Plugin {
       server.ws.send = function (payload: any) {
         _send(payload)
         emitter.emit('message', payload)
-      }
-      if (process.env.VITE_TEST_WATCHER_DEBUG) {
-        server.watcher.on('ready', () => {
-          // eslint-disable-next-line no-console
-          console.log('[debug] watcher is ready')
-        })
       }
     },
   }

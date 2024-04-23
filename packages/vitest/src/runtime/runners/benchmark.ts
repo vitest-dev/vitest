@@ -35,8 +35,9 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       benchmarkSuiteGroup.push(task)
   }
 
-  if (benchmarkSuiteGroup.length)
-    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuite(subSuite, runner)))
+  // run sub suites sequentially
+  for (const subSuite of benchmarkSuiteGroup)
+    await runBenchmarkSuite(subSuite, runner)
 
   if (benchmarkGroup.length) {
     const defer = createDefer()

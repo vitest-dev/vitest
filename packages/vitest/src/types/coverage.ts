@@ -8,21 +8,21 @@ type TransformResult = string | Partial<ViteTransformResult> | undefined | null 
 
 export interface CoverageProvider {
   name: string
-  initialize(ctx: Vitest): Promise<void> | void
+  initialize: (ctx: Vitest) => Promise<void> | void
 
-  resolveOptions(): ResolvedCoverageOptions
-  clean(clean?: boolean): void | Promise<void>
+  resolveOptions: () => ResolvedCoverageOptions
+  clean: (clean?: boolean) => void | Promise<void>
 
-  onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
+  onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
 
-  reportCoverage(reportContext?: ReportContext): void | Promise<void>
+  reportCoverage: (reportContext?: ReportContext) => void | Promise<void>
 
-  onFileTransform?(
+  onFileTransform?: (
     sourceCode: string,
     id: string,
     // TODO: when upgrading vite, import Rollup from vite
     pluginCtx: any
-  ): TransformResult | Promise<TransformResult>
+  ) => TransformResult | Promise<TransformResult>
 }
 
 export interface ReportContext {
@@ -34,22 +34,22 @@ export interface CoverageProviderModule {
   /**
    * Factory for creating a new coverage provider
    */
-  getProvider(): CoverageProvider | Promise<CoverageProvider>
+  getProvider: () => CoverageProvider | Promise<CoverageProvider>
 
   /**
    * Executed before tests are run in the worker thread.
    */
-  startCoverage?(): unknown | Promise<unknown>
+  startCoverage?: () => unknown | Promise<unknown>
 
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
-  takeCoverage?(): unknown | Promise<unknown>
+  takeCoverage?: () => unknown | Promise<unknown>
 
   /**
    * Executed after all tests have been run in the worker thread.
    */
-  stopCoverage?(): unknown | Promise<unknown>
+  stopCoverage?: () => unknown | Promise<unknown>
 }
 
 export type CoverageReporter = keyof ReportOptions | (string & {})
@@ -65,7 +65,14 @@ type Provider = 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
   T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
-    T extends 'v8' ? ({ provider: T } & CoverageV8Options) :
+    T extends 'v8' ? ({
+      /**
+       * Provider to use for coverage collection.
+       *
+       * @default 'v8'
+       */
+      provider: T
+    } & CoverageV8Options) :
       T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
           ({ provider?: T } & (CoverageV8Options))
 
@@ -113,13 +120,15 @@ export interface BaseCoverageOptions {
 
   /**
    * List of files excluded from coverage as glob patterns
+   *
+   * @default ['coverage/**', 'dist/**', '**\/[.]**', 'packages/*\/test?(s)/**', '**\/*.d.ts', '**\/virtual:*', '**\/__x00__*', '**\/\x00*', 'cypress/**', 'test?(s)/**', 'test?(-*).?(c|m)[jt]s?(x)', '**\/*{.,-}{test,spec}.?(c|m)[jt]s?(x)', '**\/__tests__/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*', '**\/vitest.{workspace,projects}.[jt]s?(on)', '**\/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}']
    */
   exclude?: string[]
 
   /**
    * Whether to include all files, including the untested ones into report
    *
-   * @default false
+   * @default true
    */
   all?: boolean
 
@@ -139,6 +148,8 @@ export interface BaseCoverageOptions {
 
   /**
    * Directory to write coverage report to
+   *
+   * @default './coverage'
    */
   reportsDirectory?: string
 
@@ -222,7 +233,12 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {}
+export interface CoverageV8Options extends BaseCoverageOptions {
+  /**
+   * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
+   */
+  ignoreEmptyLines?: boolean
+}
 
 export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
   /** Name of the module or path to a file to load the custom provider from */

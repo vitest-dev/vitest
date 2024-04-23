@@ -28,7 +28,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
       projectName: config.name,
     }
 
-    clearCollectorContext(runner)
+    clearCollectorContext(filepath, runner)
 
     try {
       const setupStart = now()

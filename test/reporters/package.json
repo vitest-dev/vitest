@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "NO_COLOR=1 GITHUB_ACTIONS=false vitest run"
+    "test": "vitest"
   },
   "devDependencies": {
     "flatted": "^3.2.9",

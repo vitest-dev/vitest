@@ -24,8 +24,8 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
-  waitForConnection(): Promise<void>
-  reconnect(): Promise<void>
+  waitForConnection: () => Promise<void>
+  reconnect: () => Promise<void>
 }
 
 export function createClient(url: string, options: VitestClientOptions = {}) {
@@ -69,6 +69,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     },
     onFinished(files, errors) {
       handlers.onFinished?.(files, errors)
+    },
+    onFinishedReportCoverage() {
+      handlers.onFinishedReportCoverage?.()
     },
     onCancel(reason: CancelReason) {
       handlers.onCancel?.(reason)

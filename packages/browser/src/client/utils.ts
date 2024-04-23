@@ -14,9 +14,9 @@ interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
-  exportAll(): void
-  wrapModule(module: any): any
-  runTests(tests: string[]): Promise<void>
+  exportAll: () => void
+  wrapModule: (module: any) => any
+  runTests: (tests: string[]) => Promise<void>
 }
 
 export function getBrowserState(): BrowserRunnerState {

@@ -8,7 +8,7 @@ title: Getting Started | Guide
 
 Vitest is a next generation testing framework powered by Vite.
 
-You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
+You can learn more about the rationale behind the project in the [Why Vitest](/guide/why) section.
 
 ## Trying Vitest Online
 
@@ -34,7 +34,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.00
+Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
@@ -85,7 +85,7 @@ Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your pack
 Test Files  1 passed (1)
     Tests  1 passed (1)
   Start at  02:15:44
-  Duration  311ms (transform 23ms, setup 0ms, collect 16ms, tests 2ms, environment 0ms, prepare 106ms)
+  Duration  311ms
 ```
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
@@ -102,7 +102,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts
+```ts twoslash
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -162,7 +162,7 @@ But we recommend to use the same file for both Vite and Vitest instead of creati
 
 Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
-```ts
+```ts twoslash
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -209,15 +209,15 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 To run tests once without watching for file changes, use `vitest run`.
 You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
 
-Learn more about the [Command Line Interface](./cli.md)
+Learn more about the [Command Line Interface](/guide/cli)
 
 ## IDE Integrations
 
 We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
-[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
+[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
-Learn more about [IDE Integrations](./ide.md)
+Learn more about [IDE Integrations](/guide/ide)
 
 ## Examples
 

@@ -19,7 +19,6 @@ All `@vitest/*` sub packages require Vitest version 1.0.
 
 Quotes in snapshots are no longer escaped, and all snapshots use backtick quotes (`) even if the string is just a single line.
 
-
 1. Quotes are no longer escaped:
 
 ```diff
@@ -43,7 +42,6 @@ There were also [changes](https://github.com/vitest-dev/vitest/pull/4076) to `@v
 - You no longer need to extend `SnapshotClient` just to override `equalityCheck` method: just pass it down as `isEqual` when initiating an instance
 - `client.setTest` was renamed to `client.startCurrentRun`
 - `client.resetCurrent` was renamed to `client.finishCurrentRun`
-
 
 ### Pools are Standardized [#4172](https://github.com/vitest-dev/vitest/pull/4172)
 
@@ -145,7 +143,6 @@ A few types were removed in favor of Jest-style "Mock" naming.
 `SpyInstance` is deprecated in favor of `MockInstance` and will be removed in the next major release.
 :::
 
-
 ### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
 
 `vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
@@ -189,13 +186,23 @@ const { cloneDeep } = jest.requireActual('lodash/cloneDeep') // [!code --]
 const { cloneDeep } = await vi.importActual('lodash/cloneDeep') // [!code ++]
 ```
 
+### Accessing the Return Values of a Mocked Promise
+
+Both Jest and Vitest store the results of all mock calls in the [`mock.results`](/api/mock.html#mock-results) array, where the return values of each call are stored in the `value` property.
+However, when mocking or spying on a promise (e.g. using `mockResolvedValue`), in Jest the `value` property will be a promise, while in Vitest, it will become a resolved value when a promise is resolved.
+
+```ts
+await expect(spy.mock.results[0].value).resolves.toBe(123) // [!code --]
+expect(spy.mock.results[0].value).toBe(123) // [!code ++]
+```
+
 ### Envs
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
 
 ### Replace property
 
-If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](https://vitest.dev/api/vi.html#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest.
+If you want to modify the object, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [`vi.stubEnv`](/api/#vi-stubenv) or [`vi.spyOn`](/api/vi#vi-spyon) to do the same also in Vitest.
 
 ### Done Callback
 
@@ -262,7 +269,7 @@ This is not a Jest-specific feature, but if you previously were using Jest with 
 
 `vite.config.js`
 
-```js
+```js twoslash
 import { defineConfig } from 'vite'
 
 export default defineConfig({

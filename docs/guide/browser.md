@@ -2,9 +2,20 @@
 title: Browser Mode | Guide
 ---
 
-# Browser Mode <Badge type="warning">Experimental</Badge>
+# Browser Mode <Badge type="warning">Experimental</Badge> {#browser-mode}
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
+
+## Browser Compatibility
+
+Vitest uses [Vite dev server](https://vitejs.dev/guide/#browser-support) to run your tests, so we only support features specified in the [`esbuild.target`](https://vitejs.dev/config/shared-options.html#esbuild) option (`esnext` by default).
+
+By default, Vite targets browsers which support the native [ES Modules](https://caniuse.com/es6-module), native [ESM dynamic import](https://caniuse.com/es6-module-dynamic-import), and [`import.meta`](https://caniuse.com/mdn-javascript_operators_import_meta). On top of that, we utilize [`BroadcastChannel`](https://caniuse.com/?search=BroadcastChannel) to communicate between iframes:
+
+- Chrome >=87
+- Firefox >=78
+- Safari >=15.4
+- Edge >=88
 
 ## Motivation
 

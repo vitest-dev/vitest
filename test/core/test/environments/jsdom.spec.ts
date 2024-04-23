@@ -105,3 +105,11 @@ test('request doesn\'t support absolute URL because jsdom doesn\'t provide compa
     const _r = new Request('/api', { method: 'GET' })
   }).toThrow(/Failed to parse URL/)
 })
+
+test('jsdom global is exposed', () => {
+  // @ts-expect-error -- jsdom is not exposed in our types because we use a single tsconfig for all
+  const dom = jsdom
+  expect(dom).toBeDefined()
+  dom.reconfigure({ url: 'https://examples.new.com' })
+  expect(location.href).toBe('https://examples.new.com/')
+})

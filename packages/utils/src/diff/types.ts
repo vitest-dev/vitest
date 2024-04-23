@@ -27,6 +27,9 @@ export interface DiffOptions {
   omitAnnotationLines?: boolean
   patchColor?: DiffOptionsColor
   compareKeys?: CompareKeys
+  truncateThreshold?: number
+  truncateAnnotation?: string
+  truncateAnnotationColor?: DiffOptionsColor
 }
 
 export interface DiffOptionsNormalized {
@@ -48,4 +51,7 @@ export interface DiffOptionsNormalized {
   includeChangeCounts: boolean
   omitAnnotationLines: boolean
   patchColor: DiffOptionsColor
+  truncateThreshold: number
+  truncateAnnotation: string
+  truncateAnnotationColor: DiffOptionsColor
 }

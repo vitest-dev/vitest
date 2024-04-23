@@ -1,11 +1,12 @@
+import type { ContextRPC } from '../../types/rpc'
 import type { WorkerContext, WorkerGlobalState } from '../../types/worker'
 import { runBaseTests } from './base'
 import type { VitestWorker } from './types'
 import { createThreadsRpcOptions } from './utils'
 
 class ThreadsBaseWorker implements VitestWorker {
-  getRpcOptions(ctx: WorkerContext) {
-    return createThreadsRpcOptions(ctx)
+  getRpcOptions(ctx: ContextRPC) {
+    return createThreadsRpcOptions(ctx as WorkerContext)
   }
 
   runTests(state: WorkerGlobalState): unknown {

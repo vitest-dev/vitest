@@ -1,19 +1,25 @@
-[build.environment]
-  NODE_VERSION = "20"
-  # don't need playwright for docs build
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
-
 [build]
-  publish = "docs/.vitepress/dist"
-  command = "pnpm docs:build"
-  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json pnpm-lock.yaml"
+publish = "docs/.vitepress/dist"
+command = "pnpm ci:docs"
+ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json pnpm-lock.yaml"
+
+[build.environment]
+NODE_VERSION = "20"
+# don't need playwright for docs build
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 
 [[redirects]]
-  from = "/new"
-  to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
-  status = 302
+from = "/new"
+to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/"
+status = 302
+
+[[redirects]]
+from = "/vscode"
+to = "https://marketplace.visualstudio.com/items?itemName=vitest.explorer"
+status = 302
 
 [[headers]]
-  for = "/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
+for = "/manifest.webmanifest"
+
+[headers.values]
+Content-Type = "application/manifest+json"

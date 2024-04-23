@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
+import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
@@ -16,10 +16,10 @@ interface CoverageHandler {
 }
 
 export function createBrowserRunner(
-  VitestRunner: { new(config: ResolvedConfig): VitestRunner },
+  runnerClass: { new(config: ResolvedConfig): VitestRunner },
   coverageModule: CoverageHandler | null,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
-  return class BrowserTestRunner extends VitestRunner {
+  return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: ResolvedConfig
     hashMap = browserHashMap
 
@@ -28,7 +28,7 @@ export function createBrowserRunner(
       this.config = options.config
     }
 
-    async onAfterRunTask(task: Test) {
+    onAfterRunTask = async (task: Task) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
@@ -42,7 +42,7 @@ export function createBrowserRunner(
       }
     }
 
-    async onAfterRunFiles(files: File[]) {
+    onAfterRunFiles = async (files: File[]) => {
       await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
@@ -55,15 +55,21 @@ export function createBrowserRunner(
       }
     }
 
-    onCollected(files: File[]): unknown {
+    onCollected = async (files: File[]): Promise<unknown> => {
+      if (this.config.includeTaskLocation) {
+        try {
+          await updateFilesLocations(files)
+        }
+        catch (_) {}
+      }
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate(task: TaskResultPack[]): Promise<void> {
+    onTaskUpdate = (task: TaskResultPack[]): Promise<void> => {
       return rpc().onTaskUpdate(task)
     }
 
-    async importFile(filepath: string) {
+    importFile = async (filepath: string) => {
       let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
       if (hash === '') {
         hash = Date.now().toString()
@@ -106,4 +112,29 @@ export async function initiateRunner() {
   runner.config.diffOptions = diffOptions
   cachedRunner = runner
   return runner
+}
+
+async function updateFilesLocations(files: File[]) {
+  const { loadSourceMapUtils } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const { TraceMap, originalPositionFor } = await loadSourceMapUtils()
+
+  const promises = files.map(async (file) => {
+    const result = await rpc().getBrowserFileSourceMap(file.filepath)
+    if (!result)
+      return null
+    const traceMap = new TraceMap(result as any)
+    function updateLocation(task: Task) {
+      if (task.location) {
+        const { line, column } = originalPositionFor(traceMap, task.location)
+        if (line != null && column != null)
+          task.location = { line, column: task.each ? column : column + 1 }
+      }
+      if ('tasks' in task)
+        task.tasks.forEach(updateLocation)
+    }
+    file.tasks.forEach(updateLocation)
+    return null
+  })
+
+  await Promise.all(promises)
 }

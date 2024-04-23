@@ -15,9 +15,10 @@ it.each([
       headless: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', async (config) => {
+] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 3 }, async (config) => {
   const taskUpdate: TaskResultPack[] = []
   const finishedFiles: File[] = []
+  const collectedFiles: File[] = []
   const { vitest, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures'),
     include: ['**/*.spec.ts'],
@@ -30,8 +31,12 @@ it.each([
         onFinished(files) {
           finishedFiles.push(...files || [])
         },
+        onCollected(files) {
+          collectedFiles.push(...files || [])
+        },
       },
     ],
+    includeTaskLocation: true,
     ...config,
   })
 
@@ -42,7 +47,7 @@ it.each([
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
 
-  expect(taskUpdate).toHaveLength(2)
+  expect(taskUpdate).toHaveLength(4)
   expect(finishedFiles).toHaveLength(1)
 
   const files = vitest?.state.getFiles() || []
@@ -69,7 +74,26 @@ it.each([
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
-}, {
-  timeout: 60_000,
-  retry: 3,
+
+  expect(finishedFiles[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
+  expect(collectedFiles[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
+  expect(files[0].tasks[0].location).toEqual({
+    line: 14,
+    column: 1,
+  })
+
+  const eachTests = [1, 2]
+  eachTests.forEach((name, index) => {
+    expect(files[0].tasks[index + 1].name).toBe(`custom ${name}`)
+    expect(files[0].tasks[index + 1].location).toEqual({
+      line: 18,
+      column: 18,
+    })
+  })
 })

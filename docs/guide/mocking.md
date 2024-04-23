@@ -18,7 +18,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 
 ### Example
 
-```js
+```js twoslash
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
@@ -76,7 +76,7 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 
 ### Example
 
-```js
+```js twoslash
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function getLatest(index = messages.items.length - 1) {
@@ -137,7 +137,7 @@ describe('reading messages', () => {
 
 You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
 
-```ts
+```ts twoslash
 import { vi } from 'vitest'
 
 const IntersectionObserverMock = vi.fn(() => ({
@@ -362,11 +362,10 @@ Because Vitest runs in Node, mocking network requests is tricky; web APIs are no
 
 Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses the [`@mswjs/interceptors`](https://github.com/mswjs/interceptors) library. To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
 
-
 ### Configuration
 
 You can use it like below in your [setup file](/config/#setupfiles)
-```js
+```js twoslash
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
 import { HttpResponse, graphql, http } from 'msw'
@@ -426,7 +425,7 @@ See the [`vi.useFakeTimers` API section](/api/vi#vi-usefaketimers) for a more in
 
 ### Example
 
-```js
+```js twoslash
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 function executeAfterTwoHours(func) {
@@ -664,7 +663,7 @@ it('changes value', () => {
 })
 ```
 
-If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubEnvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) manually in `beforeEach` hook):
+If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubenvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) manually in `beforeEach` hook):
 
 ```ts
 import { expect, it, vi } from 'vitest'

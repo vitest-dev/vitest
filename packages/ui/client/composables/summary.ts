@@ -37,6 +37,8 @@ export const time = computed(() => {
     acc += Math.max(0, t.collectDuration || 0)
     acc += Math.max(0, t.setupDuration || 0)
     acc += Math.max(0, t.result?.duration || 0)
+    acc += Math.max(0, t.environmentLoad || 0)
+    acc += Math.max(0, t.prepareDuration || 0)
     return acc
   }, 0)
 
@@ -66,10 +68,13 @@ function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
     }
     else {
       for (const task of s.tasks) {
-        if (isAtomTest(task))
+        if (isAtomTest(task)) {
           tests.push(task)
-        else
-          tests.push(...getTests(task))
+        }
+        else {
+          const taskTests = getTests(task)
+          for (const test of taskTests) tests.push(test)
+        }
       }
     }
   }

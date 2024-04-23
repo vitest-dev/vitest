@@ -310,3 +310,72 @@ exports[`asymmetric matcher error 23`] = `
   "message": "expected error to be instance of MyError1",
 }
 `;
+
+exports[`toHaveBeenNthCalledWith error 1`] = `
+{
+  "actual": "Array [
+  "Hi",
+]",
+  "diff": "- Expected
++ Received
+
+  Array [
+-   "hey",
++   "Hi",
+  ]",
+  "expected": "Array [
+  "hey",
+]",
+  "message": "expected 2nd "spy" call to have been called with [ 'hey' ]",
+}
+`;
+
+exports[`toHaveBeenNthCalledWith error 2`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "Array [
+  "hey",
+]",
+  "message": "expected 3rd "spy" call to have been called with [ 'hey' ], but called only 2 times",
+}
+`;
+
+exports[`toMatch/toContain diff 1`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected
++ Received
+
+- world
++ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "expected": "world",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to contain 'world'",
+}
+`;
+
+exports[`toMatch/toContain diff 2`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected
++ Received
+
+- world
++ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "expected": "world",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
+}
+`;
+
+exports[`toMatch/toContain diff 3`] = `
+{
+  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "- Expected: 
+/world/
+
++ Received: 
+"hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
+  "expected": "/world/",
+  "message": "expected 'hellohellohellohellohellohellohellohe…' to match /world/",
+}
+`;

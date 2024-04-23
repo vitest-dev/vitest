@@ -96,17 +96,18 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order or `--sequence.shuffle --sequence.seed SEED_ID` to run a specific order) |
 | `--no-color` | Removes colors from the console output |
-| `--inspect` | Enables Node.js inspector |
-| `--inspect-brk` | Enables Node.js inspector with break |
+| `--inspect [[host:]port]` | Enable Node.js inspector (default: 127.0.0.1:9229) |
+| `--inspect-brk [[host:]port]` | Enables Node.js inspector and break before the test starts |
 | `--bail <number>` | Stop test execution when given number of tests have failed |
 | `--retry <times>` | Retry the test specific number of times if it fails |
 | `--exclude <glob>` | Additional file globs to be excluded from test |
 | `--expand-snapshot-diff` | Show full diff when snapshot fails |
 | `--disable-console-intercept` | Disable automatic interception of console logging (default: `false`) |
+| `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
 | `--typecheck [options]` | Custom options for typecheck pool. If passed without options, enables typechecking |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
 | `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
-| `--project` | The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2` |
+| `--project` | The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*` |
 | `-h, --help` | Display available CLI options |
 
 ::: tip
@@ -135,9 +136,11 @@ vitest --api=false
 
   Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash (e.g. `--changed 09a9920`) or branch name (e.g. `--changed origin/develop`).
 
-  If paired with the `forceRerunTriggers` config option it will run the whole test suite if a match is found.
+  When used with code coverage the report will contain only the files that were related to the changes.
+
+  If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
 
 ### shard
 

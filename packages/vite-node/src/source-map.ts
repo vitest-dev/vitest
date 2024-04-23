@@ -48,6 +48,11 @@ export function withInlineSourcemap(result: TransformResult, options: {
   while (OTHER_SOURCE_MAP_REGEXP.test(code))
     code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
 
+  // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
+  // so that debuggers can be set to break on first line
+  if (map.mappings.startsWith(';'))
+    map.mappings = `AAAA,CAAA${map.mappings}`
+
   const sourceMap = Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')
   result.code = `${code.trimEnd()}\n\n${VITE_NODE_SOURCEMAPPING_SOURCE}\n//# ${VITE_NODE_SOURCEMAPPING_URL};base64,${sourceMap}\n`
 

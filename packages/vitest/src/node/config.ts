@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
+import { defaultBrowserPort, defaultInspectPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -18,6 +18,21 @@ function resolvePath(path: string, root: string) {
     resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
   )
+}
+
+function parseInspector(inspect: string | undefined | boolean | number) {
+  if (typeof inspect === 'boolean' || inspect === undefined)
+    return {}
+  if (typeof inspect === 'number')
+    return { port: inspect }
+
+  if (inspect.match(/https?:\//))
+    throw new Error(`Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`)
+
+  const [host, port] = inspect.split(':')
+  if (!port)
+    return { host }
+  return { host, port: Number(port) || defaultInspectPort }
 }
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
@@ -88,11 +103,19 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
-  resolved.inspect = Boolean(resolved.inspect)
-  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  const inspector = resolved.inspect || resolved.inspectBrk
+
+  resolved.inspector = {
+    ...resolved.inspector,
+    ...parseInspector(inspector),
+    enabled: !!inspector,
+    waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+  }
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
+
+  resolved.clearScreen = resolved.clearScreen ?? viteConfig.clearScreen ?? true
 
   if (options.shard) {
     if (resolved.watch)
@@ -117,7 +140,11 @@ export function resolveConfig(
   if (resolved.minWorkers)
     resolved.minWorkers = Number(resolved.minWorkers)
 
-  resolved.fileParallelism ??= true
+  resolved.browser ??= {} as any
+  resolved.browser.fileParallelism ??= resolved.fileParallelism ?? false
+
+  // run benchmark sequentially by default
+  resolved.fileParallelism ??= mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
@@ -135,12 +162,20 @@ export function resolveConfig(
     }
   }
 
+  // TODO: V2.0.0 remove
   // @ts-expect-error -- check for removed API option
   if (resolved.coverage.provider === 'c8')
     throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
+  if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
+    const reportsDirectory = resolve(resolved.root, resolved.coverage.reportsDirectory)
+
+    if (reportsDirectory === resolved.root || reportsDirectory === process.cwd())
+      throw new Error(`You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`)
+  }
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
@@ -419,12 +454,13 @@ export function resolveConfig(
       resolved.reporters = Array.from(new Set(toArray(cliReporters))).filter(Boolean).map(reporter => [reporter, {}])
   }
 
-  if (!resolved.reporters.length)
+  if (!resolved.reporters.length) {
     resolved.reporters.push(['default', {}])
 
-  // automatically enable github-actions reporter
-  if (process.env.GITHUB_ACTIONS === 'true' && !resolved.reporters.some(v => Array.isArray(v) && v[0] === 'github-actions'))
-    resolved.reporters.push(['github-actions', {}])
+    // also enable github-actions reporter as a default
+    if (process.env.GITHUB_ACTIONS === 'true')
+      resolved.reporters.push(['github-actions', {}])
+  }
 
   if (resolved.changed)
     resolved.passWithNoTests ??= true
@@ -435,11 +471,28 @@ export function resolveConfig(
     resolved.css.modules.classNameStrategy ??= 'stable'
   }
 
-  resolved.cache ??= { dir: '' }
-  if (resolved.cache)
-    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
+  if (resolved.cache !== false) {
+    let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
+
+    if (resolved.cache && resolved.cache.dir) {
+      console.warn(
+        c.yellow(
+        `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
+        ),
+      )
+
+      cacheDir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir, resolved.name)
+    }
+
+    resolved.cache = { dir: cacheDir }
+  }
 
   resolved.sequence ??= {} as any
+  if (resolved.sequence.shuffle && typeof resolved.sequence.shuffle === 'object') {
+    const { files, tests } = resolved.sequence.shuffle
+    resolved.sequence.sequencer ??= files ? RandomSequencer : BaseSequencer
+    resolved.sequence.shuffle = tests
+  }
   if (!resolved.sequence?.sequencer) {
     // CLI flag has higher priority
     resolved.sequence.sequencer = resolved.sequence.shuffle
