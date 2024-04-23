@@ -36,14 +36,11 @@ describe('testing vi utils', () => {
   })
 
   test('vi mocked', () => {
-    // TODO: constant `true` isn't assignable `boolean`.
-    //       check what Jest does.
-    expectType<MockedObject<{ bar: () => true }>>({
+    expectType<MockedObject<{ bar: () => boolean }>>({
       bar: vi.fn(() => true),
     })
-    expectType<MockedFunction<() => true>>(vi.fn(() => true))
+    expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
     expectType<MockedFunction<() => boolean>>(vi.fn())
-    expectType<Mock<() => true>>(vi.fn(() => true))
   })
 
   test('vi partial mocked', () => {
@@ -89,28 +86,27 @@ describe('testing vi utils', () => {
   test('vi.fn and Mock type', () => {
     // use case from https://github.com/vitest-dev/vitest/issues/4723#issuecomment-1851034249
 
-    // library to be tested
+    // hypotetical library to be tested
     type SomeFn = (v: string) => number
     function acceptSomeFn(f: SomeFn) {
       f('hi')
     }
 
     // SETUP
-
     // no args are allowed even though it's not type safe
     const someFn1: Mock<SomeFn> = vi.fn()
 
-    // argument type is infered
+    // argument types are infered
     const someFn2: Mock<SomeFn> = vi.fn((v) => {
       expectTypeOf(v).toEqualTypeOf<string>()
       return 0
     })
 
-    // @ts-expect-error argument is required
+    // arguments are not necessary
     const someFn3: Mock<SomeFn> = vi.fn(() => 0)
 
     // @ts-expect-error wrong return type
-    const someFn4: Mock<SomeFn> = vi.fn(_ => '0')
+    const someFn4: Mock<SomeFn> = vi.fn(() => '0')
 
     // TEST
     acceptSomeFn(someFn1)

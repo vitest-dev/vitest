@@ -92,8 +92,7 @@ export interface MockContext<T extends Procedure> {
   lastCall: Parameters<T> | undefined
 }
 
-// TODO: jest uses stricter default based on `unknown`, but vitest has been using `any`.
-// type Procedure = (...args: unknown[]) => unknown
+// TODO: used `(...args: unknown[]) => unknown` for stricter default like jest?
 type Procedure = (...args: any[]) => any
 
 type Methods<T> = keyof {
@@ -106,6 +105,18 @@ type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
 }[keyof T] & (string | symbol)
 
+/*
+cf. https://typescript-eslint.io/rules/method-signature-style/
+
+Typescript assignability is different between
+  { foo: (f: T) => void } (this is "method-signature-style")
+and
+  { foo(f: T): void }
+
+Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows assignment such as:
+  const boolFn: Jest.Mock<() => boolean> = jest.fn(() => true)
+*/
+/* eslint-disable ts/method-signature-style */
 export interface MockInstance<T extends Procedure = Procedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
@@ -151,7 +162,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation: (fn: T) => this
+  mockImplementation(fn: T): this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -159,7 +170,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce: (fn: T) => this
+  mockImplementationOnce(fn: T): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -171,15 +182,16 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation: <T2>(fn: T, cb: () => T2) => T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: T, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+
   /**
    * Use this if you need to return `this` context from the method without invoking actual implementation.
    */
-  mockReturnThis: () => this
+  mockReturnThis(): this
   /**
    * Accepts a value that will be returned whenever the mock function is called.
    */
-  mockReturnValue: (obj: ReturnType<T>) => this
+  mockReturnValue(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
@@ -194,14 +206,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce: (obj: ReturnType<T>) => this
+  mockReturnValueOnce(obj: ReturnType<T>): this
   /**
    * Accepts a value that will be resolved when async function is called.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue: (obj: Awaited<ReturnType<T>>) => this
+  mockResolvedValue(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
    * @example
@@ -214,14 +226,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce: (obj: Awaited<ReturnType<T>>) => this
+  mockResolvedValueOnce(obj: Awaited<ReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
    * const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
    * await asyncMock() // throws 'Async error'
    */
-  mockRejectedValue: (obj: any) => this
+  mockRejectedValue(obj: any): this
   /**
    * Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
    * @example
@@ -233,8 +245,9 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * await asyncMock() // first call
    * await asyncMock() // throws "Async error"
    */
-  mockRejectedValueOnce: (obj: any) => this
+  mockRejectedValueOnce(obj: any): this
 }
+/* eslint-enable ts/method-signature-style */
 
 export interface Mock<T extends Procedure = Procedure> extends MockInstance<T> {
   new (...args: Parameters<T>): ReturnType<T>
@@ -501,10 +514,6 @@ function enhanceSpy<T extends Procedure>(
   return stub as any
 }
 
-export function fn<T extends Procedure = Procedure>(): Mock<T>
-export function fn<T extends Procedure = Procedure>(
-  implementation: T
-): Mock<T>
 export function fn<T extends Procedure = Procedure>(
   implementation?: T,
 ): Mock<T> {
