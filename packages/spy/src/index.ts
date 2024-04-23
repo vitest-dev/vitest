@@ -92,11 +92,9 @@ export interface MockContext<T extends Procedure> {
   lastCall: Parameters<T> | undefined
 }
 
-type Procedure = (...args: any[]) => any
-
 // TODO: jest uses stricter default based on `unknown`, but vitest has been using `any`.
-type UnknownProcedure = (...args: unknown[]) => unknown
-// type UnknownProcedure = (...args: any[]) => any
+// type Procedure = (...args: unknown[]) => unknown
+type Procedure = (...args: any[]) => any
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -108,12 +106,7 @@ type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
 }[keyof T] & (string | symbol)
 
-/**
- * @deprecated Use MockInstance<A, R> instead
- */
-export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> extends MockInstance<(...args: TArgs) => TReturns> {}
-
-export interface MockInstance<T extends Procedure = UnknownProcedure> {
+export interface MockInstance<T extends Procedure = Procedure> {
   /**
    * Use it to return the name given to mock with method `.mockName(name)`.
    */
@@ -243,14 +236,14 @@ export interface MockInstance<T extends Procedure = UnknownProcedure> {
   mockRejectedValueOnce: (obj: any) => this
 }
 
-export interface Mock<T extends Procedure = UnknownProcedure> extends MockInstance<T> {
+export interface Mock<T extends Procedure = Procedure> extends MockInstance<T> {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>> ? Promise<Partial<Awaited<T>>> : Partial<T>
 
-export interface PartialMock<T extends Procedure = UnknownProcedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
+export interface PartialMock<T extends Procedure = Procedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
@@ -503,21 +496,21 @@ function enhanceSpy<T extends Procedure>(
 
   state.willCall(mockCall)
 
-  mocks.add(stub)
+  mocks.add(stub as MockInstance<any>)
 
   return stub as any
 }
 
-export function fn<T extends Procedure = UnknownProcedure>(): Mock<T>
-export function fn<T extends Procedure = UnknownProcedure>(
+export function fn<T extends Procedure = Procedure>(): Mock<T>
+export function fn<T extends Procedure = Procedure>(
   implementation: T
 ): Mock<T>
-export function fn<T extends Procedure = UnknownProcedure>(
+export function fn<T extends Procedure = Procedure>(
   implementation?: T,
 ): Mock<T> {
   const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
   if (implementation)
     enhancedSpy.mockImplementation(implementation)
 
-  return enhancedSpy as Mock<T>
+  return enhancedSpy as any
 }
