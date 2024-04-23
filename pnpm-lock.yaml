@@ -1648,6 +1648,9 @@ importers:
 
   test/core:
     devDependencies:
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@vitest/expect':
         specifier: workspace:*
         version: link:../../packages/expect
@@ -1657,6 +1660,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@8.1.1)
       strip-ansi:
         specifier: ^7.1.0
         version: 7.1.0
@@ -1669,6 +1675,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
+      vitest-environment-custom:
+        specifier: file:./vitest-environment-custom
+        version: file:test/core/vitest-environment-custom
 
   test/coverage-test:
     devDependencies:
@@ -29366,6 +29375,7 @@ packages:
 
   /w3c-hr-time@1.0.2:
     resolution: {integrity: sha512-z8P5DvDNjKDoFIHK7q8r8lackT6l+jo/Ye3HOle7l9nICP9lf1Ci25fy9vHd0JOWewkIFzXIEig3TdKT7JQ5fQ==}
+    deprecated: Use your platform's native performance.now() and performance.timeOrigin.
     dependencies:
       browser-process-hrtime: 1.0.0
     dev: true
@@ -30476,6 +30486,11 @@ packages:
     resolution: {directory: test/config/fixtures/conditions-subpackage, type: directory}
     name: subpackage
     dev: false
+
+  file:test/core/vitest-environment-custom:
+    resolution: {directory: test/core/vitest-environment-custom, type: directory}
+    name: vitest-environment-custom
+    dev: true
 
   file:test/env-custom/vitest-environment-custom:
     resolution: {directory: test/env-custom/vitest-environment-custom, type: directory}

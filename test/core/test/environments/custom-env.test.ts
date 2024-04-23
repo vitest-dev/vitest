@@ -1,3 +1,5 @@
+// @vitest-environment custom
+
 import { expect, test } from 'vitest'
 
 test('custom env is defined', () => {

@@ -60,6 +60,11 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
+    environmentOptions: {
+      custom: {
+        option: 'config-option',
+      },
+    },
     env: {
       CUSTOM_ENV: 'foo',
     },

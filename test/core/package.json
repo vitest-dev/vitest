@@ -8,12 +8,15 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "vitest-environment-custom": "file:./vitest-environment-custom"
   }
 }
