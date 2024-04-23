@@ -2083,7 +2083,7 @@ importers:
         version: file:test/vite-node/deps/dep1
       '@vitest/test-dep2':
         specifier: file:./deps/dep2
-        version: file:test/vite-node/deps/dep2(@vitest/test-dep1@0.0.0)
+        version: file:test/vite-node/deps/dep2
       execa:
         specifier: ^6.1.0
         version: 6.1.0
@@ -30492,12 +30492,9 @@ packages:
     name: '@vitest/test-dep1'
     dev: true
 
-  file:test/vite-node/deps/dep2(@vitest/test-dep1@0.0.0):
+  file:test/vite-node/deps/dep2:
     resolution: {directory: test/vite-node/deps/dep2, type: directory}
-    id: file:test/vite-node/deps/dep2
     name: '@vitest/test-dep2'
-    peerDependencies:
-      '@vitest/test-dep1': '*'
     dependencies:
       '@vitest/test-dep1': file:test/vite-node/deps/dep1
     dev: true
