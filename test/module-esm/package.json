@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-esm",
+  "name": "@vitest/test-module-esm",
   "type": "module",
   "private": true,
   "scripts": {
