@@ -1,5 +1,4 @@
 import { mkdir, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
 import type { RuntimeRPC } from '../../types'
@@ -31,13 +30,12 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       if (result.externalize)
         return result
       if (!result.code && 'id' in result)
-        return result
+        return { id: result.id as string }
 
       if (!result.code)
         throw new Error(`Failed to fetch module ${id}`)
 
-      const code = result.code
-      const dir = join(tmpdir(), project.id, transformMode)
+      const dir = join(project.tmpDir, transformMode)
       const tmp = join(dir, id.replace(/[/\\?%*:|"<>]/g, '_').replace('\0', '__x00__'))
       if (promises.has(tmp)) {
         await promises.get(tmp)
@@ -47,6 +45,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
         await mkdir(dir, { recursive: true })
         created.add(dir)
       }
+      const code = result.code
       promises.set(tmp, writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)))
       await promises.get(tmp)
       result.code = undefined

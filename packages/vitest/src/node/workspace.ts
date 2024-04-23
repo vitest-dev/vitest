@@ -1,4 +1,6 @@
 import { promises as fs } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
@@ -79,6 +81,7 @@ export class WorkspaceProject {
   testFilesList: string[] | null = null
 
   public readonly id = nanoid()
+  public readonly tmpDir = join(tmpdir(), this.id)
 
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
@@ -404,9 +407,17 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
+        this.clearTmpDir(),
       ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
+  }
+
+  private async clearTmpDir() {
+    try {
+      await rm(this.tmpDir, { force: true, recursive: true })
+    }
+    catch {}
   }
 
   async initBrowserProvider() {
