@@ -221,7 +221,7 @@ Learn more about [IDE Integrations](/guide/ide)
 
 ## Examples
 
-[@@include](../../../examples/README.md)
+<!--@include: ../../../examples/README.md-->
 
 ## Projects using Vitest
 
