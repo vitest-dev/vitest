@@ -779,8 +779,10 @@ export class Vitest {
 
       const matchingProjects: WorkspaceProject[] = []
       await Promise.all(this.projects.map(async (project) => {
-        if (await project.isTargetFile(id))
+        if (await project.isTargetFile(id)) {
           matchingProjects.push(project)
+          project.testFilesList?.push(id)
+        }
       }))
 
       if (matchingProjects.length > 0) {
