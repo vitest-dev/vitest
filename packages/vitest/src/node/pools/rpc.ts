@@ -27,7 +27,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       return r?.map as RawSourceMap | undefined
     },
     async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchModule(id, transformMode)
+      const result = await project.vitenode.fetchResult(id, transformMode)
       if (result.externalize)
         return result
       if (!result.code && 'id' in result)

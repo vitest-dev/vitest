@@ -149,8 +149,15 @@ export class ViteNodeServer {
   }
 
   async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
-    const moduleId = normalizeModuleId(id)
     const mode = transformMode || this.getTransformMode(id)
+    return this.fetchResult(id, mode)
+      .then((r) => {
+        return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+      })
+  }
+
+  async fetchResult(id: string, mode: 'web' | 'ssr') {
+    const moduleId = normalizeModuleId(id)
     this.assertMode(mode)
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
@@ -267,7 +274,7 @@ export class ViteNodeServer {
       const start = performance.now()
       const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
-      result = { code: r?.code, map: this.options.sourcemap ? r?.map as any : undefined }
+      result = { code: r?.code, map: r?.map as any }
     }
 
     const cacheEntry = {
