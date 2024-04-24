@@ -27,7 +27,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs'
+  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs' | 'network'
   url: string
   path: string
 }
@@ -161,6 +161,9 @@ export class ExternalModulesExecutor {
     if (extension === '.node' || isNodeBuiltin(identifier))
       return { type: 'builtin', url: identifier, path: identifier }
 
+    if (identifier.startsWith('http:') || identifier.startsWith('https:'))
+      return { type: 'network', url: identifier, path: identifier }
+
     const isFileUrl = identifier.startsWith('file://')
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
     const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
@@ -209,12 +212,15 @@ export class ExternalModulesExecutor {
       case 'vite':
         return await this.vite.createViteModule(url)
       case 'wasm':
-        return await this.esm.createWebAssemblyModule(url, this.fs.readBuffer(path))
+        return await this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return await this.esm.createEsModule(url, this.fs.readFile(path))
+        return await this.esm.createEsModule(url, () => this.fs.readFile(path))
       case 'commonjs': {
         const exports = this.require(path)
         return this.wrapCommonJsSynteticModule(identifier, exports)
+      }
+      case 'network': {
+        return this.esm.createEsModule(url, () => fetch(url).then(r => r.text()))
       }
       default: {
         const _deadend: never = type

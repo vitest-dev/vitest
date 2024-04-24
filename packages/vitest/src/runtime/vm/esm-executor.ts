@@ -38,10 +38,11 @@ export class EsmExecutor {
     return m
   }
 
-  public async createEsModule(fileUrl: string, code: string) {
+  public async createEsModule(fileUrl: string, getCode: () => Promise<string> | string) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
+    const code = await getCode()
     // TODO: should not be allowed in strict mode, implement in #2854
     if (fileUrl.endsWith('.json')) {
       const m = new SyntheticModule(
@@ -77,11 +78,11 @@ export class EsmExecutor {
     return m
   }
 
-  public async createWebAssemblyModule(fileUrl: string, code: Buffer) {
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer) {
     const cached = this.moduleCache.get(fileUrl)
     if (cached)
       return cached
-    const m = this.loadWebAssemblyModule(code, fileUrl)
+    const m = this.loadWebAssemblyModule(getCode(), fileUrl)
     this.moduleCache.set(fileUrl, m)
     return m
   }
@@ -187,6 +188,6 @@ export class EsmExecutor {
       return module
     }
 
-    return this.createEsModule(identifier, code)
+    return this.createEsModule(identifier, () => code)
   }
 }
