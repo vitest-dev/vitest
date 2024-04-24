@@ -5,7 +5,7 @@ const STATUS = {
   NORMAL: 'normal',
 }
 
-function Link({ page, children }: any) {
+function Link({ page, children }: React.PropsWithChildren<{ page: string }>) {
   const [status, setStatus] = useState(STATUS.NORMAL)
 
   const onMouseEnter = () => {
@@ -20,6 +20,7 @@ function Link({ page, children }: any) {
     <a
       className={status}
       href={page || '#'}
+      aria-label={`Link is ${status}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
