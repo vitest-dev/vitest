@@ -20,7 +20,7 @@ it.each([
   const finishedFiles: File[] = []
   const collectedFiles: File[] = []
   const { ctx, stdout, stderr } = await runVitest({
-    root: resolve(__dirname, '..', 'fixtures'),
+    root: resolve(__dirname, '..', 'fixtures', 'public-api'),
     include: ['**/*.spec.ts'],
     reporters: [
       'verbose',
