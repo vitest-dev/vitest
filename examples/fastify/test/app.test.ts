@@ -1,6 +1,5 @@
 import { afterAll, expect, test } from 'vitest'
 import supertest from 'supertest'
-import axios from 'axios'
 
 import app from '../src/app'
 import { usersData } from '../mockData'
@@ -34,10 +33,10 @@ test('with axios', async () => {
   const address = app.server.address()
   const port = typeof address === 'string' ? address : address?.port
 
-  const response = await axios.get(`http://localhost:${port}/users`)
+  const response = await fetch(`http://localhost:${port}/users`).then(r => r.json())
 
-  expect(response.data).toHaveLength(4)
-  expect(response.data).toStrictEqual(usersData)
+  expect(response).toHaveLength(4)
+  expect(response).toStrictEqual(usersData)
 })
 
 afterAll(async () => {
