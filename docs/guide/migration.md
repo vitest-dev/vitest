@@ -5,7 +5,15 @@ outline: deep
 
 # Migration Guide
 
-## Migrating from Vitest 0.34.6
+## Migrating to Vitest 2.0
+
+### Hooks are running in a stack
+
+Before Vitest 2.0, all hooks were running in parallel. In 2.0, all hooks run serially. In addition to this, `afterAll`/`afterEach` are running in a reverse order.
+
+You can revert to the previous behaviour by changing [`sequence.hooks`](/config/#sequence-hooks) to `'parallel'`.
+
+## Migrating to Vitest 1.0
 
 <!-- introduction -->
 
