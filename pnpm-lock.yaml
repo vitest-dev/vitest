@@ -1520,27 +1520,6 @@ importers:
         specifier: workspace:*
         version: link:../runner
 
-  test/bail:
-    devDependencies:
-      '@vitest/browser':
-        specifier: workspace:*
-        version: link:../../packages/browser
-      vite:
-        specifier: ^5.2.6
-        version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      webdriverio:
-        specifier: latest
-        version: 8.6.3(typescript@5.2.2)
-
-  test/base:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/benchmark:
     devDependencies:
       vitest:
@@ -1574,47 +1553,8 @@ importers:
         specifier: ^8.32.2
         version: 8.32.2(typescript@5.2.2)
 
-  test/cache:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/changed:
     devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/cjs:
-    devDependencies:
-      '@types/fs-extra':
-        specifier: ^9.0.13
-        version: 9.0.13
-      '@types/lodash':
-        specifier: ^4.14.201
-        version: 4.14.201
-      '@types/prettier':
-        specifier: ^2.6.1
-        version: 2.7.0
-      fs-extra:
-        specifier: ^10.1.0
-        version: 10.1.0
-      givens:
-        specifier: 1.3.9
-        version: 1.3.9
-      history:
-        specifier: ^5.3.0
-        version: 5.3.0
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
-      prettier:
-        specifier: ^2.6.2
-        version: 2.7.1
-      temp-dir:
-        specifier: ^2.0.0
-        version: 2.0.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1748,123 +1688,8 @@ importers:
         specifier: latest
         version: 8.6.3(typescript@5.2.2)
 
-  test/css:
-    devDependencies:
-      jsdom:
-        specifier: ^20.0.0
-        version: 20.0.0
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/cwd:
     devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/edge-runtime:
-    devDependencies:
-      '@edge-runtime/vm':
-        specifier: 1.1.0-beta.26
-        version: 1.1.0-beta.26
-      '@vitest/web-worker':
-        specifier: workspace:*
-        version: link:../../packages/web-worker
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/empty-test:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/env-custom:
-    devDependencies:
-      '@types/debug':
-        specifier: ^4.1.12
-        version: 4.1.12
-      debug:
-        specifier: ^4.3.4
-        version: 4.3.4(supports-color@8.1.1)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      vitest-environment-custom:
-        specifier: file:./vitest-environment-custom
-        version: file:test/env-custom/vitest-environment-custom
-
-  test/env-custom-file:
-    devDependencies:
-      '@types/debug':
-        specifier: ^4.1.12
-        version: 4.1.12
-      debug:
-        specifier: ^4.3.4
-        version: 4.3.4(supports-color@8.1.1)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/env-glob:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/env-mixed:
-    devDependencies:
-      happy-dom:
-        specifier: latest
-        version: 8.9.0
-      vite:
-        specifier: ^5.2.6
-        version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/esm:
-    dependencies:
-      css-what:
-        specifier: 6.1.0
-        version: 6.1.0
-      tslib:
-        specifier: 2.4.0
-        version: 2.4.0
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/failing:
-    devDependencies:
-      '@vitest/runner':
-        specifier: workspace:*
-        version: link:../../packages/runner
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/fails:
-    devDependencies:
-      '@vitest/coverage-istanbul':
-        specifier: workspace:*
-        version: link:../../packages/coverage-istanbul
-      jsdom:
-        specifier: ^21.0.0
-        version: 21.0.0
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/filters:
-    devDependencies:
-      vite:
-        specifier: ^5.2.6
-        version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1875,31 +1700,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/global-setup-fail:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/import-meta:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/inspect:
-    devDependencies:
-      vite:
-        specifier: ^5.2.6
-        version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      ws:
-        specifier: ^8.14.2
-        version: 8.14.2
-
-  test/mixed-pools:
     devDependencies:
       vitest:
         specifier: workspace:*
@@ -1946,12 +1747,6 @@ importers:
       tslib:
         specifier: 2.4.0
         version: 2.4.0
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/network-imports:
     devDependencies:
       vitest:
         specifier: workspace:*
@@ -2229,15 +2024,6 @@ importers:
       '@vitest/browser':
         specifier: workspace:^
         version: link:../../packages/browser
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/ws-api:
-    devDependencies:
-      '@vitejs/plugin-basic-ssl':
-        specifier: ^1.0.2
-        version: 1.0.2(vite@5.2.6)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -11311,10 +11097,6 @@ packages:
     resolution: {integrity: sha512-kUNnecmtkunAoQ3CnjmMkzNU/gtxG8guhi+Fk2U/kOpIKjIMKnXGp4IJCgQJrXSgMsWYimYG4TGjz/UzbGEBTw==}
     dev: true
 
-  /@types/prettier@2.7.0:
-    resolution: {integrity: sha512-RI1L7N4JnW5gQw2spvL7Sllfuf1SaHdrZpCHiBlCXjIlufi1SMNnbu2teze3/QE67Fg2tBlH7W+mi4hVNk4p0A==}
-    dev: true
-
   /@types/prettier@2.7.3:
     resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
     dev: true
@@ -13243,13 +13025,6 @@ packages:
       acorn-walk: 7.2.0
     dev: true
 
-  /acorn-globals@7.0.1:
-    resolution: {integrity: sha512-umOSDSDrfHbTNPuNpC2NSnnA3LUrqpevPb4T9jRx4MagXNS0rs+gwiTcAvqCRmsD6utzsrzNt+ebm00SNWiC3Q==}
-    dependencies:
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
-    dev: true
-
   /acorn-import-assertions@1.8.0(acorn@8.11.3):
     resolution: {integrity: sha512-m7VZ3jwz4eK6A4Vtt8Ew1/mNbP24u0FhdyfA7fSvnJR6LMdfOYnmuIrrJAgrYfYJ10F/otaHTtrtrtmHdMNzEw==}
     peerDependencies:
@@ -13290,6 +13065,7 @@ packages:
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
+    dev: false
 
   /acorn@6.4.2:
     resolution: {integrity: sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==}
@@ -13316,12 +13092,6 @@ packages:
 
   /acorn@8.11.3:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-    dev: true
-
-  /acorn@8.9.0:
-    resolution: {integrity: sha512-jaVNAFBHNLXspO543WnNNPZFRtavh3skAkITqD0/2aeMkKZTN+254PyhwxFYrk3vQ1xfY+2wbesJMs/JC8/PwQ==}
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
@@ -15814,10 +15584,6 @@ packages:
     resolution: {integrity: sha512-p3pvU7r1MyyqbTk+WbNJIgJjG2VmTIaB10rI93LzVPrmDJKkzKYMtxxyAvQXR/NS6otuzveI7+7BBq3SjBS2mw==}
     dev: true
 
-  /cssom@0.5.0:
-    resolution: {integrity: sha512-iKuQcq+NdHqlAcwUY0o/HL69XQrUaQdMjmStJ8JFmUaiiQErlhrmuigkg/CU4E2J0IyUKUrMAgl36TvN67MqTw==}
-    dev: true
-
   /cssstyle@2.3.0:
     resolution: {integrity: sha512-AZL67abkUzIuvcHqk7c09cezpGNcxUxU4Ioi/05xHk4DQeTkWmGYftIE6ctU6AEt+Gn4n1lDStOtj7FKycP71A==}
     engines: {node: '>=8'}
@@ -16075,15 +15841,6 @@ packages:
       whatwg-url: 8.7.0
     dev: true
 
-  /data-urls@3.0.2:
-    resolution: {integrity: sha512-Jy/tj3ldjZJo63sVAvg6LHt2mHvl4V6AgRAmNDtLdm7faqtsx+aJG42rsyCo9JCoRVKwPFzKlIPx3DIibwSIaQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      abab: 2.0.6
-      whatwg-mimetype: 3.0.0
-      whatwg-url: 11.0.0
-    dev: true
-
   /data-urls@4.0.0:
     resolution: {integrity: sha512-/mMTei/JXPqvFqQtfyTowxmJVwr2PVAeCcDxyFf6LhoOu/09TX2OX3kb2wzi4DMXcfj4OItwDOnhl5oziPnT6g==}
     engines: {node: '>=14'}
@@ -16162,10 +15919,6 @@ packages:
   /decimal.js-light@2.5.1:
     resolution: {integrity: sha512-qIMFpTMZmny+MMIitAB6D7iVPEorVw6YQRWkvarTkT4tBeSLLiHzcwj6q0MmYSFCiVpiqPJTJEYIrpcPzVEIvg==}
     dev: false
-
-  /decimal.js@10.4.0:
-    resolution: {integrity: sha512-Nv6ENEzyPQ6AItkGwLE2PGKinZZ9g59vSh2BeH6NqPu0OTKZ5ruJsVqh/orbAnqXc9pBbgXAIrc2EyaCj8NpGg==}
-    dev: true
 
   /decimal.js@10.4.3:
     resolution: {integrity: sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==}
@@ -21533,89 +21286,6 @@ packages:
       - utf-8-validate
     dev: true
 
-  /jsdom@20.0.0:
-    resolution: {integrity: sha512-x4a6CKCgx00uCmP+QakBDFXwjAJ69IkkIWHmtmjd3wvXPcdOS44hfX2vqkOQrVrq8l9DhNNADZRXaCEWvgXtVA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      canvas: ^2.5.0
-    peerDependenciesMeta:
-      canvas:
-        optional: true
-    dependencies:
-      abab: 2.0.6
-      acorn: 8.9.0
-      acorn-globals: 6.0.0
-      cssom: 0.5.0
-      cssstyle: 2.3.0
-      data-urls: 3.0.2
-      decimal.js: 10.4.0
-      domexception: 4.0.0
-      escodegen: 2.0.0
-      form-data: 4.0.0
-      html-encoding-sniffer: 3.0.0
-      http-proxy-agent: 5.0.0
-      https-proxy-agent: 5.0.1
-      is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.1
-      parse5: 7.0.0
-      saxes: 6.0.0
-      symbol-tree: 3.2.4
-      tough-cookie: 4.1.2
-      w3c-hr-time: 1.0.2
-      w3c-xmlserializer: 3.0.0
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
-      whatwg-url: 11.0.0
-      ws: 8.14.2
-      xml-name-validator: 4.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
-  /jsdom@21.0.0:
-    resolution: {integrity: sha512-AIw+3ZakSUtDYvhwPwWHiZsUi3zHugpMEKlNPaurviseYoBqo0zBd3zqoUi3LPCNtPFlEP8FiW9MqCZdjb2IYA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      canvas: ^2.5.0
-    peerDependenciesMeta:
-      canvas:
-        optional: true
-    dependencies:
-      abab: 2.0.6
-      acorn: 8.9.0
-      acorn-globals: 7.0.1
-      cssom: 0.5.0
-      cssstyle: 2.3.0
-      data-urls: 3.0.2
-      decimal.js: 10.4.3
-      domexception: 4.0.0
-      escodegen: 2.0.0
-      form-data: 4.0.0
-      html-encoding-sniffer: 3.0.0
-      http-proxy-agent: 5.0.0
-      https-proxy-agent: 5.0.1
-      is-potential-custom-element-name: 1.0.1
-      nwsapi: 2.2.4
-      parse5: 7.1.2
-      saxes: 6.0.0
-      symbol-tree: 3.2.4
-      tough-cookie: 4.1.2
-      w3c-xmlserializer: 4.0.0
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
-      whatwg-url: 11.0.0
-      ws: 8.14.2
-      xml-name-validator: 4.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /jsdom@22.1.0:
     resolution: {integrity: sha512-/9AVW7xNbsBv6GfWho4TTNjEo9fe6Zhf9O7s0Fhhr3u+awPwAJMKwAMXnkk5vBxflqLW9hTHX/0cs+P3gW+cQw==}
     engines: {node: '>=16'}
@@ -23739,14 +23409,6 @@ packages:
     resolution: {integrity: sha512-Y1wZESM7VUThYY+4W+X4ySH2maqcA+p7UR+w8VWNWVAd6lwuXXWz/w/Cz43J/dI2I+PS6wD5N+bJUF+gjWvIqg==}
     dev: true
 
-  /nwsapi@2.2.1:
-    resolution: {integrity: sha512-JYOWTeFoS0Z93587vRJgASD5Ut11fYl5NyihP3KrYBvMe1FRRs6RN7m20SA/16GM4P6hTnZjT+UmDOt38UeXNg==}
-    dev: true
-
-  /nwsapi@2.2.4:
-    resolution: {integrity: sha512-NHj4rzRo0tQdijE9ZqAx6kYDcoRwYwSYzCA8MY3JzfxlrvEU0jhnhJT9BhqhJs7I/dKcrDm6TyulaRqZPIhN5g==}
-    dev: true
-
   /nwsapi@2.2.7:
     resolution: {integrity: sha512-ub5E4+FBPKwAZx0UwIQOjYWGHTEq5sPqHQNRN8Z9e4A7u3Tj1weLJsL59yH9vmvqEtBHaOmT6cYQKIZOxp35FQ==}
     dev: true
@@ -24223,12 +23885,6 @@ packages:
 
   /parse5@6.0.1:
     resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
-    dev: true
-
-  /parse5@7.0.0:
-    resolution: {integrity: sha512-y/t8IXSPWTuRZqXc0ajH/UwDj4mnqLEbSttNbThcFhGrZuOyoyvNBO85PBp2jQa55wY9d07PBNjsK8ZP3K5U6g==}
-    dependencies:
-      entities: 4.5.0
     dev: true
 
   /parse5@7.1.2:
@@ -24726,12 +24382,6 @@ packages:
 
   /prettier@2.3.0:
     resolution: {integrity: sha512-kXtO4s0Lz/DW/IJ9QdWhAf7/NmPWQXkFr/r/WkR3vyI+0v8amTDxiaQSLzs8NBlytfLWX/7uQUMIW677yLKl4w==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-    dev: true
-
-  /prettier@2.7.1:
-    resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
@@ -27968,16 +27618,6 @@ packages:
     resolution: {integrity: sha512-eM+pCBxXO/njtF7vdFsHuqb+ElbxqtI4r5EAvk6grfAFyJ6IvWlSkfZ5T9ozC6xWw3Fj1fGoSmrl0gUs46JVIw==}
     engines: {node: '>=6'}
 
-  /tough-cookie@4.1.2:
-    resolution: {integrity: sha512-G9fqXWoYFZgTc2z8Q5zaHy/vJMjm+WV0AkAeHxVCQiEB1b+dGvWzFW6QV07cY5jQ5gRkeid2qIkzkxUnmoQZUQ==}
-    engines: {node: '>=6'}
-    dependencies:
-      psl: 1.9.0
-      punycode: 2.3.1
-      universalify: 0.2.0
-      url-parse: 1.5.10
-    dev: true
-
   /tough-cookie@4.1.3:
     resolution: {integrity: sha512-aX/y5pVRkfRnfmuX+OdbSdXvPe6ieKX/G2s7e98f4poJHnqH3281gDPm/metm6E/WRamfx7WC4HUqkWHfQHprw==}
     engines: {node: '>=6'}
@@ -28000,13 +27640,6 @@ packages:
   /tr46@2.1.0:
     resolution: {integrity: sha512-15Ih7phfcdP5YxqiB+iDtLoaTz4Nd35+IiAv0kQ5FNKHzXgdWqPoTIqEDDJmXceQt4JZk6lVPT8lnDlPpGDppw==}
     engines: {node: '>=8'}
-    dependencies:
-      punycode: 2.3.1
-    dev: true
-
-  /tr46@3.0.0:
-    resolution: {integrity: sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==}
-    engines: {node: '>=12'}
     dependencies:
       punycode: 2.3.1
     dev: true
@@ -29445,13 +29078,6 @@ packages:
       xml-name-validator: 3.0.0
     dev: true
 
-  /w3c-xmlserializer@3.0.0:
-    resolution: {integrity: sha512-3WFqGEgSXIyGhOmAFtlicJNMjEps8b1MG31NCA0/vOF9+nKMUW1ckhi9cnNHmf88Rzw5V+dwIwsm2C7X8k9aQg==}
-    engines: {node: '>=12'}
-    dependencies:
-      xml-name-validator: 4.0.0
-    dev: true
-
   /w3c-xmlserializer@4.0.0:
     resolution: {integrity: sha512-d+BFHzbiCx6zGfz0HyQ6Rg69w9k19nviJspaj4yNscGjrHu94sVP+aRm75yEbCh+r2/yR+7q6hux9LVtbuTGBw==}
     engines: {node: '>=14'}
@@ -29912,14 +29538,6 @@ packages:
   /whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
     engines: {node: '>=18'}
-    dev: true
-
-  /whatwg-url@11.0.0:
-    resolution: {integrity: sha512-RKT8HExMpoYx4igMiVMY83lN6UeITKJlBQ+vR/8ZJ8OCdSiN3RwCq+9gH0+Xzj0+5IrM6i4j/6LuvzbZIQgEcQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      tr46: 3.0.0
-      webidl-conversions: 7.0.0
     dev: true
 
   /whatwg-url@12.0.1:
@@ -30547,11 +30165,6 @@ packages:
 
   file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
-    name: vitest-environment-custom
-    dev: true
-
-  file:test/env-custom/vitest-environment-custom:
-    resolution: {directory: test/env-custom/vitest-environment-custom, type: directory}
     name: vitest-environment-custom
     dev: true
 
