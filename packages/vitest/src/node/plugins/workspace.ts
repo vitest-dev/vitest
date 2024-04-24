@@ -1,4 +1,5 @@
-import { basename, dirname, relative } from 'pathe'
+import { existsSync, readFileSync } from 'node:fs'
+import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -35,10 +36,20 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         const root = testConfig.root || viteConfig.root || options.root
         let name = testConfig.name
         if (!name) {
-          if (typeof options.workspacePath === 'string')
-            name = basename(options.workspacePath.endsWith('/') ? options.workspacePath.slice(0, -1) : dirname(options.workspacePath))
-          else
+          if (typeof options.workspacePath === 'string') {
+            // if there is a package.json, read the name from it
+            const dir = options.workspacePath.endsWith('/')
+              ? options.workspacePath.slice(0, -1)
+              : dirname(options.workspacePath)
+            const pkgJsonPath = resolve(dir, 'package.json')
+            if (existsSync(pkgJsonPath))
+              name = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
+            else
+              name = basename(dir)
+          }
+          else {
             name = options.workspacePath.toString()
+          }
         }
 
         const config: ViteConfig = {
