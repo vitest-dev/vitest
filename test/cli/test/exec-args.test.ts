@@ -17,9 +17,11 @@ test.each([
   { pool: 'threads', execArgv: ['--inspect-brk'] },
   { pool: 'vmThreads', execArgv: ['--inspect-brk'] },
 ] as const)('should pass execArgv to { pool: $pool } ', async ({ pool, execArgv }) => {
-  const fileToTest = `exec-args-fixtures/${pool}.test.ts`
+  const root = './fixtures/exec-args-fixtures'
+  const fileToTest = `${pool}.test.ts`
 
   const vitest = await runVitest({
+    root,
     include: [fileToTest],
     pool,
     poolOptions: {
@@ -30,16 +32,17 @@ test.each([
   })
 
   expect(vitest.stdout).toContain(`✓ ${fileToTest}`)
+  expect(vitest.stderr).toBe('')
 })
 
 test('should not pass execArgv to workers when not specified in the config', async () => {
   const { stdout, stderr } = await execa('node', [
     '--title',
     'this-works-only-on-main-thread',
-    '../node_modules/vitest/vitest.mjs',
+    '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    cwd: `${process.cwd()}/no-exec-args-fixtures`,
+    cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
     reject: false,
     env: {
       VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
@@ -52,17 +55,15 @@ test('should not pass execArgv to workers when not specified in the config', asy
   expect(stdout).toContain('✓ no-exec-argv.test.ts')
 })
 
-test('should let allowed args pass to workers', async () => {
+test.only('should let allowed args pass to workers', async () => {
   const { stdout, stderr } = await execa('node', [
-    '--cpu-prof',
     '--heap-prof',
     '--diagnostic-dir=/tmp/vitest-diagnostics',
-    '--cpu-prof-name=cpu.prof',
     '--heap-prof-name=heap.prof',
-    '../node_modules/vitest/vitest.mjs',
+    '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    cwd: `${process.cwd()}/allowed-exec-args-fixtures`,
+    cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
     reject: false,
     env: {
       VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',

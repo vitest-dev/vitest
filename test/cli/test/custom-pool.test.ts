@@ -3,14 +3,14 @@ import { runVitest } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {
   const vitest = await runVitest({
-    root: 'pool-custom-fixtures',
+    root: './fixtures/custom-pool',
     reporters: ['basic'],
   })
 
   expect(vitest.stderr).toMatchInlineSnapshot(`
     "[pool] printing: options are respected
     [pool] array option [ 1, 2, 3 ]
-    [pool] running tests for custom-pool-test in /pool-custom-fixtures/tests/custom-not-run.spec.ts
+    [pool] running tests for custom-pool-test in /fixtures/custom-pool/tests/custom-not-run.spec.ts
     [pool] custom pool is closed!
     "
   `)
