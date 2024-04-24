@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/preact'
-import { useCount } from './useCount'
+import { useCount } from './useCount.js'
 
 describe('useCount hook', () => {
   it('should increment', () => {

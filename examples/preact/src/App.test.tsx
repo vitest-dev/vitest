@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/preact'
 import { BrowserRouter } from 'react-router-dom'
 
-import App from './App'
+import App from './App.jsx'
 
 describe('Preact Demo Test Suite', () => {
   it('basic', () => {

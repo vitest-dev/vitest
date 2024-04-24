@@ -1,4 +1,4 @@
-import { useCount } from './hooks/useCount'
+import { useCount } from './hooks/useCount.js'
 import './App.less'
 
 export default function App() {
