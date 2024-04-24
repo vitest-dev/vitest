@@ -452,7 +452,7 @@ export function subsetEquality(object: unknown, subset: unknown, customTesters: 
           return undefined
 
         return Object.keys(subset).every((key) => {
-          if (typeof subset[key] === 'object') {
+          if (subset[key] != null && typeof subset[key] === 'object') {
             if (seenReferences.has(subset[key]))
               return equals(object[key], subset[key], filteredCustomTesters)
 
