@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     server: {
       deps: {
-        external: [/tslib/, /css-what/, /prototype\.mjs/],
+        external: [/css-what/, /prototype\.mjs/],
       },
     },
   },
