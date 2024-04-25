@@ -2,14 +2,14 @@
 
 import { describe, expect, test } from 'vitest'
 
-import '../src/external/css/empty.css'
-import '../src/external/css/processed.css'
+import './src/external/css/empty.css'
+import './src/external/css/processed.css'
 
-import processedModule from '../src/external/css/processed.module.css'
+import processedModule from './src/external/css/processed.module.css'
 
-import file1 from '../src/external/assets/file1.png'
-import file2 from '../src/external/assets/file2.txt'
-import file3 from '../src/external/assets/file3.svg'
+import file1 from './src/external/assets/file1.png'
+import file2 from './src/external/assets/file2.txt'
+import file3 from './src/external/assets/file3.svg'
 
 describe('import external css', () => {
   test('when importing empty.css, element doesn\'t change style', () => {

@@ -1,17 +1,15 @@
 import { createRequire } from 'node:module'
 import { describe, expect, test } from 'vitest'
-import { createFile, resolvePath } from '../../test-utils'
 
 const require = createRequire(import.meta.url)
 
 test('can require if package.json is null', () => {
-  createFile(resolvePath(import.meta.url, '../src/external/package-null/package-null.json'), 'null')
-  expect(() => require('../src/external/package-null/package-null.js')).not.toThrow()
+  expect(() => require('./src/external/package-null/package-null.js')).not.toThrow()
 })
 
 describe('validating nested defaults in isolation', async () => {
-  const nestedDefaultExternalCjs = await import('../src/external/export-nested-default-cjs.js')
-  const moduleDefaultCjs = await import('../src/external/export-default-cjs.js')
+  const nestedDefaultExternalCjs = await import('./src/external/export-nested-default-cjs.js')
+  const moduleDefaultCjs = await import('./src/external/export-default-cjs.js')
 
   test('nested default should be resolved', () => {
     expect(nestedDefaultExternalCjs).toHaveProperty('default')

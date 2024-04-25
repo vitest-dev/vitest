@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 // @ts-expect-error untyped
-import * as notFound from '../src/external/not-found.js'
+import * as notFound from './src/external/not-found.js'
 
 it('path', async () => {
   await expect(() => notFound.importPath()).rejects.toMatchObject({
