@@ -12,7 +12,7 @@ test.each([
 
   expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
   expect(stdout).toMatch('Test Files  1 passed (1)')
-  expect(stdout).not.toMatch('test/cli.test.ts')
+  expect(stdout).not.toMatch('test/config.test.ts')
 })
 
 test('match by full test file name', async () => {
@@ -25,12 +25,12 @@ test('match by full test file name', async () => {
 })
 
 test('match by pattern that also matches current working directory', async () => {
-  const filter = 'cli'
+  const filter = 'config'
   expect(process.cwd()).toMatch(filter)
 
   const { stdout } = await runVitest({ root: './fixtures/filters' }, [filter])
 
-  expect(stdout).toMatch('✓ test/cli.test.ts > this will pass')
+  expect(stdout).toMatch('✓ test/config.test.ts > this will pass')
   expect(stdout).toMatch('Test Files  1 passed (1)')
   expect(stdout).not.toMatch('test/example.test.ts')
 })
@@ -42,7 +42,7 @@ test.each([
 ])('match by pattern that also matches %s: %s', async (_, filter) => {
   const { stdout } = await runVitest({ root: './fixtures/filters' }, [filter])
 
-  expect(stdout).toMatch('✓ test/cli.test.ts > this will pass')
+  expect(stdout).toMatch('✓ test/config.test.ts > this will pass')
   expect(stdout).toMatch('× test/dont-run-this.test.ts > this will fail')
   expect(stdout).toMatch('✓ test/example.test.ts > this will pass')
 })
