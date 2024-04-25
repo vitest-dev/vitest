@@ -1,10 +1,10 @@
 import { type UserConfig, expect, test } from 'vitest'
 import { basename } from 'pathe'
 
-import * as testUtils from '../test-utils'
+import * as testUtils from '../../test-utils'
 
 function runVitest(config: UserConfig) {
-  return testUtils.runVitest({ ...config, dir: './test' })
+  return testUtils.runVitest({ ...config, root: './fixtures/shard' })
 }
 
 function parsePaths(stdout: string) {
