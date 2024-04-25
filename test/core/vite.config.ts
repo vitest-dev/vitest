@@ -49,6 +49,9 @@ export default defineConfig({
     port: 3022,
   },
   test: {
+    api: {
+      port: 3023,
+    },
     name: 'core',
     includeSource: [
       'src/in-source/*.ts',

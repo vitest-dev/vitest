@@ -9,9 +9,10 @@ describe('edge runtime api', () => {
   })
 
   it('allows to run fetch', async () => {
-    const response = await fetch('https://github.com/robots.txt')
+    // 3023 is the default port
+    const response = await fetch('http://localhost:3023/')
     expect(response.status).toEqual(200)
-  }, 30_000)
+  })
 
   it('allows to run crypto', async () => {
     const array = new Uint32Array(10)
