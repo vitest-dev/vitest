@@ -5,6 +5,11 @@ export default defineConfig({
     include: ['test/**.test.ts'],
     reporters: ['verbose'],
     testTimeout: 60_000,
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
     chaiConfig: {
       truncateThreshold: 999,
     },
