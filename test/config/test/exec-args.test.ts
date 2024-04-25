@@ -55,7 +55,7 @@ test('should not pass execArgv to workers when not specified in the config', asy
   expect(stdout).toContain('✓ no-exec-argv.test.ts')
 })
 
-test.only('should let allowed args pass to workers', async () => {
+test('should let allowed args pass to workers', async () => {
   const { stdout, stderr } = await execa('node', [
     '--heap-prof',
     '--diagnostic-dir=/tmp/vitest-diagnostics',

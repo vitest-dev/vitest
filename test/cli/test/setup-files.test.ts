@@ -30,7 +30,7 @@ describe('setup files with forceRerunTrigger', () => {
   it.runIf(process.env.GITHUB_ACTIONS)('should run no tests if setup file is not changed', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
-  }, 60_000)
+  })
 
   it('should run the whole test suite if setup file is changed', async () => {
     const codes = 'export const a = 1'
@@ -38,5 +38,5 @@ describe('setup files with forceRerunTrigger', () => {
     await fs.writeFile(file, codes, 'utf-8')
     const { stdout } = await run()
     expect(stdout).toContain('1 passed')
-  }, 60_000)
+  })
 })
