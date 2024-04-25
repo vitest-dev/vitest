@@ -77,6 +77,14 @@ export default defineConfig({
         option: 'config-option',
       },
     },
+    poolOptions: {
+      threads: {
+        execArgv: ['--experimental-wasm-modules'],
+      },
+      forks: {
+        execArgv: ['--experimental-wasm-modules'],
+      },
+    },
     env: {
       CUSTOM_ENV: 'foo',
     },
@@ -98,6 +106,8 @@ export default defineConfig({
           /src\/external/,
           /esm\/esm/,
           /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
         ],
         inline: ['inline-lib'],
       },
@@ -112,6 +122,8 @@ export default defineConfig({
     ],
     onConsoleLog(log) {
       if (log.includes('Failed to load url') && log.includes('web-worker'))
+        return false
+      if (log.includes('Importing WebAssembly '))
         return false
     },
   },

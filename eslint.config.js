@@ -14,7 +14,7 @@ export default antfu(
       '**/*.timestamp-*',
       'test/core/src/self',
       'test/cache/cache/.vitest-base/results.json',
-      'test/wasm-modules/src/wasm-bindgen-no-cyclic',
+      'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/workspaces-browser/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',

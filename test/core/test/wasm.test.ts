@@ -3,9 +3,9 @@ import { resolve } from 'node:path'
 import { expect, test, vi } from 'vitest'
 
 // @ts-expect-error wasm is not typed
-import { add } from '../src/add.wasm'
+import { add } from '../src/wasm/add.wasm'
 
-const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/add.wasm'))
+const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/wasm/add.wasm'))
 
 test('supports native wasm imports', () => {
   expect(add(1, 2)).toBe(3)
@@ -28,7 +28,7 @@ test('supports native wasm imports', () => {
 
 test('supports dynamic wasm imports', async () => {
   // @ts-expect-error wasm is not typed
-  const { add: dynamicAdd } = await import('../src/add.wasm')
+  const { add: dynamicAdd } = await import('../src/wasm/add.wasm')
   expect(dynamicAdd(1, 2)).toBe(3)
 })
 
@@ -73,7 +73,7 @@ test('supports wasm/js cyclic import (old wasm-bindgen output)', async () => {
   globalThis.alert = vi.fn()
 
   // @ts-expect-error not typed
-  const { greet } = await import('../src/wasm-bindgen/index.js')
+  const { greet } = await import('../src/wasm/wasm-bindgen/index.js')
   greet('World')
 
   expect(globalThis.alert).toHaveBeenCalledWith('Hello, World!')
@@ -82,7 +82,7 @@ test('supports wasm/js cyclic import (old wasm-bindgen output)', async () => {
 test('supports wasm-bindgen', async () => {
   globalThis.alert = vi.fn()
 
-  const { greet } = await import('../src/wasm-bindgen-no-cyclic/index.js')
+  const { greet } = await import('../src/wasm/wasm-bindgen-no-cyclic/index.js')
   greet('No Cyclic')
 
   expect(globalThis.alert).toHaveBeenCalledWith('Hello, No Cyclic!')
