@@ -96,6 +96,7 @@ export default defineConfig({
     sequence: {
       seed: 101,
     },
+    allowOnly: true,
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },

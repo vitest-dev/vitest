@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:threads": "vitest --project threads",
+    "test:forks": "vitest --project forks",
+    "test:vmThreads": "vitest --project vmThreads",
     "dev": "vite",
     "coverage": "vitest run --coverage"
   },
