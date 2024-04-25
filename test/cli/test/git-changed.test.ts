@@ -5,6 +5,9 @@ import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
+// NOTE: if there are any changes in fixtures/git-changed,
+// most tests will probably fail
+
 describe('forceRerunTrigger', () => {
   async function run() {
     return runVitest({
@@ -24,7 +27,7 @@ describe('forceRerunTrigger', () => {
     expect(stdout).not.toContain('not-related.test.ts')
   })
 
-  it.only('should run no tests if file does not exist', async () => {
+  it('should run no tests if file does not exist', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
