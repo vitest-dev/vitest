@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 function objectToCSS(selector: string, obj: Record<string, string>) {
   const body = Object.entries(obj)
