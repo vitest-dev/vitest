@@ -8,7 +8,7 @@ import { runVitest } from '../../test-utils'
 process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {
-  const root = resolve(__dirname, '../fixtures')
+  const root = resolve(__dirname, '../fixtures/stacktraces')
   const files = await fg('*.test.*', { cwd: root })
 
   for (const file of files) {
@@ -20,12 +20,12 @@ describe('stacktraces should respect sourcemaps', async () => {
       const index = lines.findIndex(val => val.includes(`${file}:`))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot(file)
-    }, 30000)
+    })
   }
 })
 
 describe('stacktraces should pick error frame if present', async () => {
-  const root = resolve(__dirname, '../fixtures')
+  const root = resolve(__dirname, '../fixtures/stacktraces')
   const files = ['frame.spec.imba']
 
   for (const file of files) {
@@ -37,12 +37,12 @@ describe('stacktraces should pick error frame if present', async () => {
       const index = lines.findIndex(val => val.includes('FAIL'))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot(file)
-    }, 30000)
+    })
   }
 })
 
 describe('stacktrace should print error frame source file correctly', async () => {
-  const root = resolve(__dirname, '../fixtures')
+  const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-deps.test.js')
 
   it('error-in-deps', async () => {
@@ -50,11 +50,11 @@ describe('stacktrace should print error frame source file correctly', async () =
 
     // expect to print framestack of foo.js
     expect(stderr).toMatchSnapshot('error-in-deps')
-  }, 30000)
+  })
 })
 
 describe('stacktrace filtering', async () => {
-  const root = resolve(__dirname, '../fixtures')
+  const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
 
   it('filters stacktraces', async () => {
@@ -64,11 +64,11 @@ describe('stacktrace filtering', async () => {
     }, [testFile])
 
     expect(stderr).toMatchSnapshot('stacktrace-filtering')
-  }, 30000)
+  })
 })
 
 it('stacktrace in vmThreads', async () => {
-  const root = resolve(__dirname, '../fixtures')
+  const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
     root,
@@ -76,4 +76,4 @@ it('stacktrace in vmThreads', async () => {
   }, [testFile])
 
   expect(stderr).toMatchSnapshot()
-}, 3000)
+})
