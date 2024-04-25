@@ -14,6 +14,7 @@
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
+    "@vitest/web-worker": "workspace:^",
     "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
     "tinyspy": "^1.0.2",

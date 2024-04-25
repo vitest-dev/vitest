@@ -93,7 +93,12 @@ export default defineConfig({
     },
     server: {
       deps: {
-        external: ['tinyspy', /src\/external/, /esm\/esm/],
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+        ],
         inline: ['inline-lib'],
       },
     },
@@ -105,5 +110,9 @@ export default defineConfig({
         customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
       },
     ],
+    onConsoleLog(log) {
+      if (log.includes('Failed to load url') && log.includes('web-worker'))
+        return false
+    },
   },
 })

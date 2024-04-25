@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
+import '@vitest/web-worker'
+
 import { expect, it } from 'vitest'
 
 it('worker with invalid url throws an error', async () => {
   const url = import.meta.url
-  const worker = new Worker(new URL('../src/workerInvalid-path.ts', url))
+  const worker = new Worker(new URL('../src/web-worker/workerInvalid-path.ts', url))
   const event = await new Promise<ErrorEvent>((resolve) => {
     worker.onerror = (e) => {
       resolve(e)
@@ -19,7 +21,7 @@ it('worker with invalid url throws an error', async () => {
 
 it('throws an error on invalid path', async () => {
   expect(SharedWorker).toBeDefined()
-  const worker = new SharedWorker('./some-invalid-path')
+  const worker = new SharedWorker('./web-worker/some-invalid-path')
   const event = await new Promise<ErrorEvent>((resolve) => {
     worker.onerror = (e) => {
       resolve(e)
