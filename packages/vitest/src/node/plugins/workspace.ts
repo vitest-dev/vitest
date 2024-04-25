@@ -44,7 +44,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             const pkgJsonPath = resolve(dir, 'package.json')
             if (existsSync(pkgJsonPath))
               name = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
-            else
+            if (typeof name !== 'string' || !name)
               name = basename(dir)
           }
           else {
