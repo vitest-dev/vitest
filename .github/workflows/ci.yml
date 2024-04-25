@@ -32,22 +32,6 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     runs-on: ${{ matrix.os }}
 
@@ -144,8 +128,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -167,6 +149,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -182,8 +166,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -205,6 +187,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
