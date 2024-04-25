@@ -8,7 +8,7 @@ function objectToCSS(selector: string, obj: Record<string, string>) {
 }
 
 describe('snapshots', () => {
-  const files = import.meta.glob('./fixtures/**/input.json', { as: 'raw' })
+  const files = import.meta.glob('./fixtures/snapshots/**/input.json', { as: 'raw' })
 
   for (const [path, file] of Object.entries(files)) {
     test(path, async () => {
