@@ -11,6 +11,8 @@
     "@types/debug": "^4.1.12",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep1": "file:./deps/dep1",
+    "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
     "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
