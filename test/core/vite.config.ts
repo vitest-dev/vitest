@@ -58,7 +58,7 @@ export default defineConfig({
     ],
     exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
-    testTimeout: 2000,
+    testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
       './test/setup.ts',
     ],

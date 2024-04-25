@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest'
-import { runVitestCli } from '../../test-utils'
+import { runVitest } from '../../test-utils'
 
 it('run tests even though they are inside the .cache directory', async () => {
-  const { stderr } = await runVitestCli({
-    cwd: 'fixtures/dotted-files/.cache/projects/test',
-  }, '--no-watch')
+  const { stderr } = await runVitest({
+    root: 'fixtures/dotted-files/.cache/projects/test',
+  })
   expect(stderr).toBe('')
 })
