@@ -18,6 +18,8 @@ export class EsmExecutor {
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
   private context: vm.Context
 
+  #httpIp = IPnumber('127.0.0.0')
+
   constructor(private executor: ExternalModulesExecutor, options: EsmExecutorOptions) {
     this.context = options.context
   }
@@ -85,6 +87,26 @@ export class EsmExecutor {
     const m = this.loadWebAssemblyModule(getCode(), fileUrl)
     this.moduleCache.set(fileUrl, m)
     return m
+  }
+
+  public async createNetworkModule(fileUrl: string) {
+    // https://nodejs.org/api/esm.html#https-and-http-imports
+    if (fileUrl.startsWith('http:')) {
+      const url = new URL(fileUrl)
+      if (
+        url.hostname !== 'localhost'
+        && url.hostname !== '::1'
+        && (IPnumber(url.hostname) & IPmask(8)) !== this.#httpIp
+      ) {
+        throw new Error(
+          // we don't know the importer, so it's undefined (the same happens in --pool=threads)
+          `import of '${fileUrl}' by undefined is not supported: `
+          + 'http can only be used to load local resources (use https instead).',
+        )
+      }
+    }
+
+    return this.createEsModule(fileUrl, () => fetch(fileUrl).then(r => r.text()))
   }
 
   public async loadWebAssemblyModule(source: Buffer, identifier: string) {
@@ -190,4 +212,16 @@ export class EsmExecutor {
 
     return this.createEsModule(identifier, () => code)
   }
+}
+
+function IPnumber(address: string) {
+  const ip = address.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+  if (ip)
+    return (+ip[1] << 24) + (+ip[2] << 16) + (+ip[3] << 8) + (+ip[4])
+
+  throw new Error(`Expected IP address, received ${address}`)
+}
+
+function IPmask(maskSize: number) {
+  return -1 << (32 - maskSize)
 }

@@ -41,6 +41,8 @@ export class ExternalModulesExecutor {
   private fs: FileMap
   private resolvers: ((id: string, parent: string) => string | undefined)[] = []
 
+  #networkSupported: boolean | null = null
+
   constructor(private options: ExternalModulesExecutorOptions) {
     this.context = options.context
 
@@ -60,6 +62,20 @@ export class ExternalModulesExecutor {
       viteClientModule: options.viteClientModule,
     })
     this.resolvers = [this.vite.resolve]
+  }
+
+  async import(identifier: string) {
+    const module = await this.createModule(identifier)
+    await this.esm.evaluateModule(module)
+    return module.namespace
+  }
+
+  require(identifier: string) {
+    return this.cjs.require(identifier)
+  }
+
+  createRequire(identifier: string) {
+    return this.cjs.createRequire(identifier)
   }
 
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
@@ -161,7 +177,7 @@ export class ExternalModulesExecutor {
     if (extension === '.node' || isNodeBuiltin(identifier))
       return { type: 'builtin', url: identifier, path: identifier }
 
-    if (identifier.startsWith('http:') || identifier.startsWith('https:'))
+    if (this.isNetworkSupported && (identifier.startsWith('http:') || identifier.startsWith('https:')))
       return { type: 'network', url: identifier, path: identifier }
 
     const isFileUrl = identifier.startsWith('file://')
@@ -220,7 +236,7 @@ export class ExternalModulesExecutor {
         return this.wrapCommonJsSynteticModule(identifier, exports)
       }
       case 'network': {
-        return this.esm.createEsModule(url, () => fetch(url).then(r => r.text()))
+        return this.esm.createNetworkModule(url)
       }
       default: {
         const _deadend: never = type
@@ -229,17 +245,15 @@ export class ExternalModulesExecutor {
     }
   }
 
-  async import(identifier: string) {
-    const module = await this.createModule(identifier)
-    await this.esm.evaluateModule(module)
-    return module.namespace
-  }
-
-  require(identifier: string) {
-    return this.cjs.require(identifier)
-  }
-
-  createRequire(identifier: string) {
-    return this.cjs.createRequire(identifier)
+  private get isNetworkSupported() {
+    if (this.#networkSupported == null) {
+      if (process.execArgv.includes('--experimental-network-imports'))
+        this.#networkSupported = true
+      else if (process.env.NODE_OPTIONS?.includes('--experimental-network-imports'))
+        this.#networkSupported = true
+      else
+        this.#networkSupported = false
+    }
+    return this.#networkSupported
   }
 }
