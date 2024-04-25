@@ -36,6 +36,7 @@ export default defineConfig({
     '__NULL__': null,
     '__ZERO__': 0,
     '__FALSE__': false,
+    'import.meta.vitest': false,
   },
   resolve: {
     alias: [
@@ -49,6 +50,9 @@ export default defineConfig({
   },
   test: {
     name: 'core',
+    includeSource: [
+      'src/in-source/*.ts',
+    ],
     exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: 2000,
