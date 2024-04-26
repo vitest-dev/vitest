@@ -11,6 +11,7 @@ import { parseErrorStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
+import { printErrorWrapper } from './github-actions'
 
 export interface JUnitOptions {
   outputFile?: string
@@ -205,7 +206,13 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              await this.writeErrorDetails(task, error)
+              const result = await printErrorWrapper(
+                error,
+                this.ctx,
+                this.ctx.getProjectByTaskId(task.id),
+              )
+              // TODO: should strip color?
+              await this.baseLog(escapeXML(result.output))
             })
           }
         }

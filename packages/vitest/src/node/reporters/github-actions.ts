@@ -65,7 +65,7 @@ export class GithubActionsReporter implements Reporter {
 
 // use Logger with custom Console to extract messgage from `processError` util
 // TODO: maybe refactor `processError` to require single function `(message: string) => void` instead of full Logger?
-async function printErrorWrapper(error: unknown, ctx: Vitest, project: WorkspaceProject) {
+export async function printErrorWrapper(error: unknown, ctx: Vitest, project: WorkspaceProject) {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
