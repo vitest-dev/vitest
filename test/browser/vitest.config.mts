@@ -20,7 +20,6 @@ export default defineConfig({
   },
   test: {
     include: ['test/**.test.{ts,js}'],
-    pool: 'forks',
     browser: {
       enabled: true,
       name: browser,

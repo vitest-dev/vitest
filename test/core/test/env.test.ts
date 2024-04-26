@@ -73,3 +73,9 @@ test('PROD, DEV, SSR should be boolean', () => {
   import.meta.env.SSR = false
   expect(import.meta.env.SSR).toEqual(false)
 })
+
+test.runIf(process.platform === 'win32')('main process env variables are case insentive', () => {
+  expect(process.env.PROGRAMFILES).toBeDefined()
+  expect(process.env['PROGRAMFILES(X86)']).toBeDefined()
+  expect(process.env['ProgramFiles(x86)']).toBeDefined()
+})
