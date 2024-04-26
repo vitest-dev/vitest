@@ -3,13 +3,10 @@ import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import { getSuites } from '@vitest/runner/utils'
 import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
-import { parseErrorStacktrace } from '../../utils/source-map'
-import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
 import { printErrorWrapper } from './github-actions'
@@ -140,31 +137,6 @@ export class JUnitReporter implements Reporter {
     this.logger.unindent()
 
     await this.logger.log(`</${name}>`)
-  }
-
-  async writeErrorDetails(task: Task, error: ErrorWithDiff): Promise<void> {
-    const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
-    const errorDetails = `${errorName}: ${error.message}`
-
-    // Be sure to escape any XML in the error Details
-    await this.baseLog(escapeXML(errorDetails))
-
-    const project = this.ctx.getProjectByTaskId(task.id)
-    const stack = parseErrorStacktrace(error, {
-      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-      frameFilter: this.ctx.config.onStackTrace,
-    })
-
-    // TODO: This is same as printStack but without colors. Find a way to reuse code.
-    for (const frame of stack) {
-      const path = relative(this.ctx.config.root, frame.file)
-
-      await this.baseLog(escapeXML(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`))
-
-      // reached at test file, skip the follow stack
-      if (frame.file in this.ctx.state.filesMap)
-        break
-    }
   }
 
   async writeLogs(task: Task, type: 'err' | 'out'): Promise<void> {
