@@ -200,8 +200,8 @@ importers:
         specifier: ^6.3.4
         version: 6.3.4
       tsx:
-        specifier: ^4.7.2
-        version: 4.7.2
+        specifier: ^3.9.0
+        version: 3.9.0
       vite:
         specifier: ^5.2.6
         version: 5.2.6(@types/node@20.11.5)(less@4.1.3)
@@ -12568,7 +12568,6 @@ packages:
     dependencies:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
-    dev: false
 
   /iterate-iterator@1.0.2:
     resolution: {integrity: sha512-t91HubM4ZDQ70M9wqp+pcNpu8OyJ9UAtXntT/Bcsvp5tZMnz9vRa+IunKXeI8AnfZMTv0jNuVEmGeLSMjVvfPw==}
