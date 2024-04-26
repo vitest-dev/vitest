@@ -5,6 +5,7 @@ import { dirname, relative, resolve } from 'pathe'
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/utils'
 import { getSuites } from '@vitest/runner/utils'
+import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -211,8 +212,7 @@ export class JUnitReporter implements Reporter {
                 this.ctx,
                 this.ctx.getProjectByTaskId(task.id),
               )
-              // TODO: should strip color?
-              await this.baseLog(escapeXML(result.output))
+              await this.baseLog(escapeXML(stripAnsi(result.output)))
             })
           }
         }
