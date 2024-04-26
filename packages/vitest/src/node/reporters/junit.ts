@@ -212,7 +212,7 @@ export class JUnitReporter implements Reporter {
                 this.ctx,
                 this.ctx.getProjectByTaskId(task.id),
               )
-              await this.baseLog(escapeXML(stripAnsi(result.output)))
+              await this.baseLog(escapeXML(stripAnsi(result.output.trim())))
             })
           }
         }
