@@ -8,7 +8,7 @@ import { runVitestCli } from '../../test-utils'
 const file = fileURLToPath(import.meta.url)
 const dir = dirname(file)
 const root = resolve(dir, '..', '..', 'workspaces')
-const config = resolve(root, 'vitest.config.ts')
+const config = resolve(root, 'vitest.config.watch.ts')
 const cleanups: (() => void)[] = []
 
 const srcMathFile = resolve(root, 'src', 'math.ts')

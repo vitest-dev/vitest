@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
-    "test:webdriverio": "PROVIDER=webdriverio node --test --test-concurrency=1 specs/",
-    "test:playwright": "PROVIDER=playwright node --test --test-concurrency=1 specs/",
-    "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari node --test --test-concurrency=1 specs/",
+    "test:unit": "vitest --no-watch --config=vitest.config.unit.mts",
+    "test:webdriverio": "PROVIDER=webdriverio pnpm run test:unit",
+    "test:playwright": "PROVIDER=playwright pnpm run test:unit",
+    "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
