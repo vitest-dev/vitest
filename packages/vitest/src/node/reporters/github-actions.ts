@@ -1,10 +1,8 @@
-import { Writable } from 'node:stream'
 import { getTasks } from '@vitest/runner/utils'
 import stripAnsi from 'strip-ansi'
 import type { File, Reporter, Vitest } from '../../types'
 import { getFullName } from '../../utils'
-import { printError } from '../error'
-import { Logger } from '../logger'
+import { captuerPrintError } from '../error'
 import type { WorkspaceProject } from '../workspace'
 
 export class GithubActionsReporter implements Reporter {
@@ -44,7 +42,7 @@ export class GithubActionsReporter implements Reporter {
 
     // format errors via `printError`
     for (const { project, title, error } of projectErrors) {
-      const result = await printErrorWrapper(error, this.ctx, project)
+      const result = await captuerPrintError(error, this.ctx, project)
       const stack = result?.nearest
       if (!stack)
         continue
@@ -61,23 +59,6 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
-}
-
-// use Logger with custom Console to extract messgage from `processError` util
-// TODO: maybe refactor `processError` to require single function `(message: string) => void` instead of full Logger?
-export async function printErrorWrapper(error: unknown, ctx: Vitest, project: WorkspaceProject) {
-  let output = ''
-  const writable = new Writable({
-    write(chunk, _encoding, callback) {
-      output += String(chunk)
-      callback()
-    },
-  })
-  const result = await printError(error, project, {
-    showCodeFrame: false,
-    logger: new Logger(ctx, writable, writable),
-  })
-  return { nearest: result?.nearest, output }
 }
 
 // workflow command formatting based on
