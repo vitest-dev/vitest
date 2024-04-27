@@ -32,6 +32,9 @@ it('number name object', () => {
   throw { name: 1234 };
 });
 
+it('xml', () => {
+  throw new Error('error message that has XML in it <div><input/></div>');
+})
 
 function throwDeep() {
   throwSimple()

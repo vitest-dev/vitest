@@ -37,13 +37,13 @@ Error: afterAll error
 
 exports[`format error 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="8" failures="7" errors="0" time="...">
-    <testsuite name="error.test.ts" timestamp="..." hostname="..." tests="8" failures="7" errors="0" skipped="0" time="...">
+<testsuites name="vitest tests" tests="9" failures="8" errors="0" time="...">
+    <testsuite name="error.test.ts" timestamp="..." hostname="..." tests="9" failures="8" errors="0" skipped="0" time="...">
         <testcase classname="error.test.ts" name="stack" time="...">
             <failure message="throwSimple" type="Error">
 Error: throwSimple
- ❯ throwSimple error.test.ts:41:9
- ❯ throwDeep error.test.ts:37:3
+ ❯ throwSimple error.test.ts:44:9
+ ❯ throwDeep error.test.ts:40:3
  ❯ error.test.ts:8:3
             </failure>
         </testcase>
@@ -97,10 +97,16 @@ Unknown Error: 1234
 }
             </failure>
         </testcase>
+        <testcase classname="error.test.ts" name="xml" time="...">
+            <failure message="error message that has XML in it &lt;div&gt;&lt;input/&gt;&lt;/div&gt;" type="Error">
+Error: error message that has XML in it &lt;div&gt;&lt;input/&gt;&lt;/div&gt;
+ ❯ error.test.ts:36:9
+            </failure>
+        </testcase>
         <testcase classname="error.test.ts" name="error.test.ts" time="...">
             <failure message="throwSuite" type="Error">
 Error: throwSuite
- ❯ throwSuite error.test.ts:45:9
+ ❯ throwSuite error.test.ts:48:9
  ❯ error.test.ts:4:3
             </failure>
         </testcase>
