@@ -29,7 +29,11 @@ interface PrintErrorResult {
 }
 
 // use Logger with custom Console to capture entire error printing
-export async function captuerPrintError(error: unknown, ctx: Vitest, project: WorkspaceProject) {
+export async function captuerPrintError(
+  error: unknown,
+  ctx: Vitest,
+  project: WorkspaceProject,
+) {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
