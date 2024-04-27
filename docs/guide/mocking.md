@@ -497,7 +497,10 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 
 1. Example with `vi.mock`:
 
-Example with `vi.mock`:
+::: warning
+Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
+:::
+
 ```ts
 // ./some-path.js
 export function method() {}
@@ -643,8 +646,11 @@ expect(__VERSION__).toBe('1.0.0')
 
 ### Mock `import.meta.env`
 
-To change environmental variable, you can just assign a new value to it. This value will **not** automatically reset between different tests.
 1. To change environmental variable, you can just assign a new value to it.
+
+::: warning
+The environmental variable value will **_not_** automatically reset between different tests.
+:::
 
 ```ts
 import { beforeEach, expect, it } from 'vitest'
