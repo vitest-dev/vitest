@@ -15,7 +15,6 @@ export default defineConfig({
     },
   ],
   test: {
-    globals: true,
     globalSetup: [
       './globalSetup/default-export.js',
       './globalSetup/named-exports.js',

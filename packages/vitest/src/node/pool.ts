@@ -1,6 +1,7 @@
 import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
 import type { BuiltinPool, Pool } from '../types/pool-options'
+import { isWindows } from '../utils/env'
 import type { Vitest } from './core'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
@@ -89,6 +90,12 @@ export function createPool(ctx: Vitest): ProcessPool {
         ...process.env,
         ...ctx.config.env,
       },
+    }
+
+    // env are case-insensitive on Windows, but spawned processes don't support it
+    if (isWindows) {
+      for (const name in options.env)
+        options.env[name.toUpperCase()] = options.env[name]
     }
 
     const customPools = new Map<string, ProcessPool>()

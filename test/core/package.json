@@ -4,16 +4,25 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:threads": "vitest --project threads",
+    "test:forks": "vitest --project forks",
+    "test:vmThreads": "vitest --project vmThreads",
     "dev": "vite",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep1": "file:./deps/dep1",
+    "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
+    "@vitest/web-worker": "workspace:^",
+    "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "vitest-environment-custom": "file:./vitest-environment-custom"
   }
 }

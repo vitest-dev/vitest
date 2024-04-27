@@ -1,7 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 
+let teardownCalled = false
+
 export async function teardown() {
+  teardownCalled = true
   const results = JSON.parse(await readFile('./results.json', 'utf-8'))
 
   try {
@@ -12,6 +15,15 @@ export async function teardown() {
   }
   catch (err) {
     console.error(err)
+    // eslint-disable-next-line no-console
+    console.dir(results, { depth: null })
     process.exit(1)
   }
 }
+
+process.on('beforeExit', () => {
+  if (!teardownCalled) {
+    console.error('teardown was not called')
+    process.exitCode = 1
+  }
+})

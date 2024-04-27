@@ -6,7 +6,7 @@ import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
 function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
-  return testUtils.runVitest(config, ['fixtures/test/'])
+  return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -70,6 +70,7 @@ test('v8 coverage provider cannot be used with browser in workspace', async () =
 
 test('coverage reportsDirectory cannot be current working directory', async () => {
   const { stderr } = await runVitest({
+    root: undefined,
     coverage: {
       enabled: true,
       reportsDirectory: './',
@@ -88,7 +89,7 @@ test('coverage reportsDirectory cannot be current working directory', async () =
 
 test('coverage reportsDirectory cannot be root', async () => {
   const { stderr } = await runVitest({
-    root: './fixtures',
+    root: './fixtures/test',
     coverage: {
       enabled: true,
       reportsDirectory: './',
@@ -101,7 +102,7 @@ test('coverage reportsDirectory cannot be root', async () => {
     },
   })
 
-  const directory = normalize(resolve('./fixtures'))
+  const directory = normalize(resolve('./fixtures/test'))
   expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
 })
 
@@ -145,7 +146,7 @@ test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
     pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
-    include: ['./fixtures/test/fake-timers.test.ts'],
+    include: ['./fake-timers.test.ts'],
   })
 
   expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.')
