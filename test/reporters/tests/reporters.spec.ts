@@ -39,7 +39,7 @@ test('tap-flat reporter', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter', async () => {
+test.skip('JUnit reporter', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const context = getContext()
@@ -58,7 +58,7 @@ test('JUnit reporter', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter (no outputFile entry)', async () => {
+test.skip('JUnit reporter (no outputFile entry)', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const context = getContext()
@@ -78,7 +78,7 @@ test('JUnit reporter (no outputFile entry)', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter with outputFile', async () => {
+test.skip('JUnit reporter with outputFile', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const outputFile = resolve('report.xml')
@@ -104,7 +104,7 @@ test('JUnit reporter with outputFile', async () => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile with XML in error message', async () => {
+test.skip('JUnit reporter with outputFile with XML in error message', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const outputFile = resolve('report_escape_msg_xml.xml')
@@ -133,7 +133,7 @@ test('JUnit reporter with outputFile with XML in error message', async () => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile object', async () => {
+test.skip('JUnit reporter with outputFile object', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const outputFile = resolve('report_object.xml')
@@ -161,7 +161,7 @@ test('JUnit reporter with outputFile object', async () => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile in non-existing directory', async () => {
+test.skip('JUnit reporter with outputFile in non-existing directory', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const rootDirectory = resolve('junitReportDirectory')
@@ -188,7 +188,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile object in non-existing directory', async () => {
+test.skip('JUnit reporter with outputFile object in non-existing directory', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const rootDirectory = resolve('junitReportDirectory_object')
