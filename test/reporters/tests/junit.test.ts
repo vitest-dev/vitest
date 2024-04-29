@@ -57,6 +57,11 @@ test('emits <failure> when beforeAll/afterAll failed', async () => {
   expect(xml).toMatchSnapshot()
 })
 
+test('format error', async () => {
+  const { stdout } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
+})
+
 test('write testsuite name relative to root config', async () => {
   const { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/better-testsuite-name' })
 
