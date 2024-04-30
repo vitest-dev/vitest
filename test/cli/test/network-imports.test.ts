@@ -9,11 +9,6 @@ const config = {
     forks: {
       execArgv: ['--experimental-network-imports'],
     },
-    // not supported?
-    //   FAIL  test/basic.test.ts [ test/basic.test.ts ]
-    //   Error: ENOENT: no such file or directory, open 'http://localhost:9602/slash@3.0.0.js'
-    //    ❯ Object.openSync node:fs:596:3
-    //    ❯ readFileSync node:fs:464:35
     vmThreads: {
       execArgv: ['--experimental-network-imports'],
     },
@@ -25,7 +20,7 @@ const config = {
 it.each([
   'threads',
   'forks',
-  // 'vmThreads',
+  'vmThreads',
 ])('importing from network in %s', async (pool) => {
   const { stderr, exitCode } = await runVitest({
     ...config,
