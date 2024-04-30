@@ -1,5 +1,5 @@
 import { render } from 'preact'
 import App from './App.jsx'
-import './main.less'
+import './main.css'
 
 render(<App />, document.getElementById('root')!)

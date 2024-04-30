@@ -11,18 +11,17 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "preact": "^10.15.1",
+    "preact": "^10.21.0",
     "react": "npm:@preact/compat",
     "react-dom": "npm:@preact/compat",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.6.0",
-    "@testing-library/jest-dom": "^5.16.4",
+    "@preact/preset-vite": "^2.8.2",
+    "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/preact": "^3.2.3",
     "@vitest/ui": "latest",
-    "less": "^4.1.3",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "vite": "latest",
     "vitest": "latest"
   }

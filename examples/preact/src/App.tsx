@@ -1,5 +1,5 @@
 import { useCount } from './hooks/useCount.js'
-import './App.less'
+import './App.css'
 
 export default function App() {
   const { count, inc } = useCount()
