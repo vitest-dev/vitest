@@ -2777,6 +2777,395 @@ exports[`v8 json report 1`] = `
       },
     },
   },
+  "<process-cwd>/src/empty-lines.ts": {
+    "all": true,
+    "b": {
+      "0": [
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 478,
+            "line": 1,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": 1,
+              "line": 29,
+            },
+            "start": {
+              "column": 478,
+              "line": 1,
+            },
+          },
+        ],
+        "type": "branch",
+      },
+    },
+    "f": {
+      "0": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 478,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 478,
+            "line": 1,
+          },
+        },
+        "name": "(empty-report)",
+      },
+    },
+    "path": "<process-cwd>/src/empty-lines.ts",
+    "s": {
+      "0": 0,
+      "1": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "2": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 65,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 43,
+          "line": 2,
+        },
+        "start": {
+          "column": 0,
+          "line": 2,
+        },
+      },
+      "10": {
+        "end": {
+          "column": 3,
+          "line": 11,
+        },
+        "start": {
+          "column": 0,
+          "line": 11,
+        },
+      },
+      "11": {
+        "end": {
+          "column": 0,
+          "line": 12,
+        },
+        "start": {
+          "column": 0,
+          "line": 12,
+        },
+      },
+      "12": {
+        "end": {
+          "column": 32,
+          "line": 13,
+        },
+        "start": {
+          "column": 0,
+          "line": 13,
+        },
+      },
+      "13": {
+        "end": {
+          "column": 0,
+          "line": 14,
+        },
+        "start": {
+          "column": 0,
+          "line": 14,
+        },
+      },
+      "14": {
+        "end": {
+          "column": 27,
+          "line": 15,
+        },
+        "start": {
+          "column": 0,
+          "line": 15,
+        },
+      },
+      "15": {
+        "end": {
+          "column": 38,
+          "line": 16,
+        },
+        "start": {
+          "column": 0,
+          "line": 16,
+        },
+      },
+      "16": {
+        "end": {
+          "column": 12,
+          "line": 17,
+        },
+        "start": {
+          "column": 0,
+          "line": 17,
+        },
+      },
+      "17": {
+        "end": {
+          "column": 3,
+          "line": 18,
+        },
+        "start": {
+          "column": 0,
+          "line": 18,
+        },
+      },
+      "18": {
+        "end": {
+          "column": 0,
+          "line": 19,
+        },
+        "start": {
+          "column": 0,
+          "line": 19,
+        },
+      },
+      "19": {
+        "end": {
+          "column": 33,
+          "line": 20,
+        },
+        "start": {
+          "column": 0,
+          "line": 20,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 5,
+          "line": 3,
+        },
+        "start": {
+          "column": 0,
+          "line": 3,
+        },
+      },
+      "20": {
+        "end": {
+          "column": 13,
+          "line": 21,
+        },
+        "start": {
+          "column": 0,
+          "line": 21,
+        },
+      },
+      "21": {
+        "end": {
+          "column": 11,
+          "line": 22,
+        },
+        "start": {
+          "column": 0,
+          "line": 22,
+        },
+      },
+      "22": {
+        "end": {
+          "column": 22,
+          "line": 23,
+        },
+        "start": {
+          "column": 0,
+          "line": 23,
+        },
+      },
+      "23": {
+        "end": {
+          "column": 7,
+          "line": 24,
+        },
+        "start": {
+          "column": 0,
+          "line": 24,
+        },
+      },
+      "24": {
+        "end": {
+          "column": 5,
+          "line": 25,
+        },
+        "start": {
+          "column": 0,
+          "line": 25,
+        },
+      },
+      "25": {
+        "end": {
+          "column": 3,
+          "line": 26,
+        },
+        "start": {
+          "column": 0,
+          "line": 26,
+        },
+      },
+      "26": {
+        "end": {
+          "column": 0,
+          "line": 27,
+        },
+        "start": {
+          "column": 0,
+          "line": 27,
+        },
+      },
+      "27": {
+        "end": {
+          "column": 14,
+          "line": 28,
+        },
+        "start": {
+          "column": 0,
+          "line": 28,
+        },
+      },
+      "28": {
+        "end": {
+          "column": 1,
+          "line": 29,
+        },
+        "start": {
+          "column": 0,
+          "line": 29,
+        },
+      },
+      "3": {
+        "end": {
+          "column": 10,
+          "line": 4,
+        },
+        "start": {
+          "column": 0,
+          "line": 4,
+        },
+      },
+      "4": {
+        "end": {
+          "column": 9,
+          "line": 5,
+        },
+        "start": {
+          "column": 0,
+          "line": 5,
+        },
+      },
+      "5": {
+        "end": {
+          "column": 12,
+          "line": 6,
+        },
+        "start": {
+          "column": 0,
+          "line": 6,
+        },
+      },
+      "6": {
+        "end": {
+          "column": 5,
+          "line": 7,
+        },
+        "start": {
+          "column": 0,
+          "line": 7,
+        },
+      },
+      "7": {
+        "end": {
+          "column": 27,
+          "line": 8,
+        },
+        "start": {
+          "column": 0,
+          "line": 8,
+        },
+      },
+      "8": {
+        "end": {
+          "column": 38,
+          "line": 9,
+        },
+        "start": {
+          "column": 0,
+          "line": 9,
+        },
+      },
+      "9": {
+        "end": {
+          "column": 12,
+          "line": 10,
+        },
+        "start": {
+          "column": 0,
+          "line": 10,
+        },
+      },
+    },
+  },
   "<process-cwd>/src/file-to-change.ts": {
     "all": true,
     "b": {
@@ -2793,7 +3182,7 @@ exports[`v8 json report 1`] = `
             "line": 7,
           },
           "start": {
-            "column": 0,
+            "column": 133,
             "line": 1,
           },
         },
@@ -2804,7 +3193,7 @@ exports[`v8 json report 1`] = `
               "line": 7,
             },
             "start": {
-              "column": 0,
+              "column": 133,
               "line": 1,
             },
           },
@@ -2823,7 +3212,7 @@ exports[`v8 json report 1`] = `
             "line": 7,
           },
           "start": {
-            "column": 0,
+            "column": 133,
             "line": 1,
           },
         },
@@ -2834,7 +3223,7 @@ exports[`v8 json report 1`] = `
             "line": 7,
           },
           "start": {
-            "column": 0,
+            "column": 133,
             "line": 1,
           },
         },
@@ -5306,10 +5695,10 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 33,
+            "line": 47,
           },
           "start": {
-            "column": 0,
+            "column": 984,
             "line": 1,
           },
         },
@@ -5317,10 +5706,10 @@ exports[`v8 json report 1`] = `
           {
             "end": {
               "column": 1,
-              "line": 33,
+              "line": 47,
             },
             "start": {
-              "column": 0,
+              "column": 984,
               "line": 1,
             },
           },
@@ -5336,10 +5725,10 @@ exports[`v8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 33,
+            "line": 47,
           },
           "start": {
-            "column": 0,
+            "column": 984,
             "line": 1,
           },
         },
@@ -5347,10 +5736,10 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 33,
+            "line": 47,
           },
           "start": {
-            "column": 0,
+            "column": 984,
             "line": 1,
           },
         },
@@ -5386,7 +5775,15 @@ exports[`v8 json report 1`] = `
       "30": 0,
       "31": 0,
       "32": 0,
+      "33": 0,
+      "34": 0,
+      "35": 0,
+      "36": 0,
       "4": 0,
+      "43": 0,
+      "44": 0,
+      "45": 0,
+      "46": 0,
       "5": 0,
       "6": 0,
       "7": 0,
@@ -5416,7 +5813,7 @@ exports[`v8 json report 1`] = `
       },
       "10": {
         "end": {
-          "column": 36,
+          "column": 0,
           "line": 11,
         },
         "start": {
@@ -5426,7 +5823,7 @@ exports[`v8 json report 1`] = `
       },
       "11": {
         "end": {
-          "column": 14,
+          "column": 36,
           "line": 12,
         },
         "start": {
@@ -5436,7 +5833,7 @@ exports[`v8 json report 1`] = `
       },
       "12": {
         "end": {
-          "column": 1,
+          "column": 36,
           "line": 13,
         },
         "start": {
@@ -5446,7 +5843,7 @@ exports[`v8 json report 1`] = `
       },
       "13": {
         "end": {
-          "column": 0,
+          "column": 14,
           "line": 14,
         },
         "start": {
@@ -5456,7 +5853,7 @@ exports[`v8 json report 1`] = `
       },
       "14": {
         "end": {
-          "column": 41,
+          "column": 1,
           "line": 15,
         },
         "start": {
@@ -5466,7 +5863,7 @@ exports[`v8 json report 1`] = `
       },
       "15": {
         "end": {
-          "column": 36,
+          "column": 0,
           "line": 16,
         },
         "start": {
@@ -5476,7 +5873,7 @@ exports[`v8 json report 1`] = `
       },
       "16": {
         "end": {
-          "column": 14,
+          "column": 30,
           "line": 17,
         },
         "start": {
@@ -5486,7 +5883,7 @@ exports[`v8 json report 1`] = `
       },
       "17": {
         "end": {
-          "column": 1,
+          "column": 0,
           "line": 18,
         },
         "start": {
@@ -5496,7 +5893,7 @@ exports[`v8 json report 1`] = `
       },
       "18": {
         "end": {
-          "column": 0,
+          "column": 41,
           "line": 19,
         },
         "start": {
@@ -5506,7 +5903,7 @@ exports[`v8 json report 1`] = `
       },
       "19": {
         "end": {
-          "column": 65,
+          "column": 36,
           "line": 20,
         },
         "start": {
@@ -5526,7 +5923,7 @@ exports[`v8 json report 1`] = `
       },
       "20": {
         "end": {
-          "column": 25,
+          "column": 14,
           "line": 21,
         },
         "start": {
@@ -5536,7 +5933,7 @@ exports[`v8 json report 1`] = `
       },
       "21": {
         "end": {
-          "column": 38,
+          "column": 1,
           "line": 22,
         },
         "start": {
@@ -5546,7 +5943,7 @@ exports[`v8 json report 1`] = `
       },
       "22": {
         "end": {
-          "column": 25,
+          "column": 0,
           "line": 23,
         },
         "start": {
@@ -5556,7 +5953,7 @@ exports[`v8 json report 1`] = `
       },
       "23": {
         "end": {
-          "column": 3,
+          "column": 65,
           "line": 24,
         },
         "start": {
@@ -5566,7 +5963,7 @@ exports[`v8 json report 1`] = `
       },
       "24": {
         "end": {
-          "column": 0,
+          "column": 33,
           "line": 25,
         },
         "start": {
@@ -5576,7 +5973,7 @@ exports[`v8 json report 1`] = `
       },
       "25": {
         "end": {
-          "column": 25,
+          "column": 13,
           "line": 26,
         },
         "start": {
@@ -5586,7 +5983,7 @@ exports[`v8 json report 1`] = `
       },
       "26": {
         "end": {
-          "column": 38,
+          "column": 11,
           "line": 27,
         },
         "start": {
@@ -5596,7 +5993,7 @@ exports[`v8 json report 1`] = `
       },
       "27": {
         "end": {
-          "column": 20,
+          "column": 22,
           "line": 28,
         },
         "start": {
@@ -5606,7 +6003,7 @@ exports[`v8 json report 1`] = `
       },
       "28": {
         "end": {
-          "column": 3,
+          "column": 7,
           "line": 29,
         },
         "start": {
@@ -5616,7 +6013,7 @@ exports[`v8 json report 1`] = `
       },
       "29": {
         "end": {
-          "column": 0,
+          "column": 5,
           "line": 30,
         },
         "start": {
@@ -5636,7 +6033,7 @@ exports[`v8 json report 1`] = `
       },
       "30": {
         "end": {
-          "column": 36,
+          "column": 3,
           "line": 31,
         },
         "start": {
@@ -5646,7 +6043,7 @@ exports[`v8 json report 1`] = `
       },
       "31": {
         "end": {
-          "column": 41,
+          "column": 0,
           "line": 32,
         },
         "start": {
@@ -5656,12 +6053,52 @@ exports[`v8 json report 1`] = `
       },
       "32": {
         "end": {
-          "column": 1,
+          "column": 25,
           "line": 33,
         },
         "start": {
           "column": 0,
           "line": 33,
+        },
+      },
+      "33": {
+        "end": {
+          "column": 38,
+          "line": 34,
+        },
+        "start": {
+          "column": 0,
+          "line": 34,
+        },
+      },
+      "34": {
+        "end": {
+          "column": 25,
+          "line": 35,
+        },
+        "start": {
+          "column": 0,
+          "line": 35,
+        },
+      },
+      "35": {
+        "end": {
+          "column": 3,
+          "line": 36,
+        },
+        "start": {
+          "column": 0,
+          "line": 36,
+        },
+      },
+      "36": {
+        "end": {
+          "column": 0,
+          "line": 37,
+        },
+        "start": {
+          "column": 0,
+          "line": 37,
         },
       },
       "4": {
@@ -5674,9 +6111,49 @@ exports[`v8 json report 1`] = `
           "line": 5,
         },
       },
+      "43": {
+        "end": {
+          "column": 0,
+          "line": 44,
+        },
+        "start": {
+          "column": 0,
+          "line": 44,
+        },
+      },
+      "44": {
+        "end": {
+          "column": 36,
+          "line": 45,
+        },
+        "start": {
+          "column": 0,
+          "line": 45,
+        },
+      },
+      "45": {
+        "end": {
+          "column": 41,
+          "line": 46,
+        },
+        "start": {
+          "column": 0,
+          "line": 46,
+        },
+      },
+      "46": {
+        "end": {
+          "column": 1,
+          "line": 47,
+        },
+        "start": {
+          "column": 0,
+          "line": 47,
+        },
+      },
       "5": {
         "end": {
-          "column": 40,
+          "column": 65,
           "line": 6,
         },
         "start": {
@@ -5686,7 +6163,7 @@ exports[`v8 json report 1`] = `
       },
       "6": {
         "end": {
-          "column": 72,
+          "column": 0,
           "line": 7,
         },
         "start": {
@@ -5696,7 +6173,7 @@ exports[`v8 json report 1`] = `
       },
       "7": {
         "end": {
-          "column": 1,
+          "column": 40,
           "line": 8,
         },
         "start": {
@@ -5706,7 +6183,7 @@ exports[`v8 json report 1`] = `
       },
       "8": {
         "end": {
-          "column": 0,
+          "column": 72,
           "line": 9,
         },
         "start": {
@@ -5716,7 +6193,7 @@ exports[`v8 json report 1`] = `
       },
       "9": {
         "end": {
-          "column": 36,
+          "column": 1,
           "line": 10,
         },
         "start": {
@@ -6022,11 +6499,6 @@ exports[`v8 json report 1`] = `
       "22": 0,
       "23": 0,
       "24": 1,
-      "25": 1,
-      "26": 1,
-      "27": 1,
-      "28": 1,
-      "29": 1,
       "3": 1,
       "4": 1,
       "5": 2,
@@ -6214,56 +6686,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 22,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
-        },
-      },
-      "26": {
-        "end": {
-          "column": 39,
-          "line": 27,
-        },
-        "start": {
-          "column": 0,
-          "line": 27,
-        },
-      },
-      "27": {
-        "end": {
-          "column": 35,
-          "line": 28,
-        },
-        "start": {
-          "column": 0,
-          "line": 28,
-        },
-      },
-      "28": {
-        "end": {
-          "column": 62,
-          "line": 29,
-        },
-        "start": {
-          "column": 0,
-          "line": 29,
-        },
-      },
-      "29": {
-        "end": {
-          "column": 1,
-          "line": 30,
-        },
-        "start": {
-          "column": 0,
-          "line": 30,
         },
       },
       "3": {

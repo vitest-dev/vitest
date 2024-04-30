@@ -92,11 +92,12 @@ export async function initiateRunner() {
   if (cachedRunner)
     return cachedRunner
   const config = getConfig()
-  const [{ VitestTestRunner }, { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers }] = await Promise.all([
+  const [{ VitestTestRunner, NodeBenchmarkRunner }, { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers }] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
-  const BrowserRunner = createBrowserRunner(VitestTestRunner, {
+  const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+  const BrowserRunner = createBrowserRunner(runnerClass, {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment)

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll } from 'vitest'
+import { afterAll, beforeAll, beforeEach } from 'vitest'
 
 beforeAll(() => {
   // @ts-expect-error type

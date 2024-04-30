@@ -56,7 +56,9 @@ Sets internal mock name. Useful to see the name of the mock if assertion fails.
 
 Accepts a function that will be used as an implementation of the mock.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const mockFn = vi.fn().mockImplementation(apples => apples + 1)
 // or: vi.fn(apples => apples + 1);
 
@@ -76,7 +78,9 @@ mockFn.mock.calls[1][0] === 1 // true
 
 Accepts a function that will be used as mock's implementation during the next call. Can be chained so that multiple function calls produce different results.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const myMockFn = vi
   .fn()
   .mockImplementationOnce(() => true)
@@ -88,7 +92,9 @@ myMockFn() // false
 
 When the mocked function runs out of implementations, it will invoke the default implementation that was set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const myMockFn = vi
   .fn(() => 'default')
   .mockImplementationOnce(() => 'first call')
@@ -105,7 +111,9 @@ console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 
 Overrides the original mock implementation temporarily while the callback is being executed.
 
-```js
+```js twoslash
+import { vi } from 'vitest'
+// ---cut---
 const myMockFn = vi.fn(() => 'original')
 
 myMockFn.withImplementation(() => 'temp', () => {
@@ -141,7 +149,9 @@ Note that this method takes precedence over the [`mockImplementationOnce`](#mock
 
 Accepts an error that will be rejected when async function is called.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
 
 await asyncMock() // throws "Async error"
@@ -153,7 +163,9 @@ await asyncMock() // throws "Async error"
 
 Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const asyncMock = vi
   .fn()
   .mockResolvedValueOnce('first call')
@@ -187,7 +199,9 @@ If you want this method to be called before each test automatically, you can ena
 
 Accepts a value that will be resolved when async function is called.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const asyncMock = vi.fn().mockResolvedValue(42)
 
 await asyncMock() // 42
@@ -199,7 +213,9 @@ await asyncMock() // 42
 
 Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const asyncMock = vi
   .fn()
   .mockResolvedValue('default')
@@ -230,7 +246,9 @@ spy.mockImplementation(function () {
 
 Accepts a value that will be returned whenever the mock function is called.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const mock = vi.fn()
 mock.mockReturnValue(42)
 mock() // 42
@@ -246,7 +264,9 @@ Accepts a value that will be returned during the next function call. If chained,
 
 When there are no more `mockReturnValueOnce` values to use, mock will fallback to previously defined implementation if there is one.
 
-```ts
+```ts twoslash
+import { vi } from 'vitest'
+// ---cut---
 const myMockFn = vi
   .fn()
   .mockReturnValue('default')

@@ -1,4 +1,5 @@
 import limit from 'p-limit'
+import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
@@ -31,6 +32,19 @@ function getSuiteHooks(suite: Suite, name: keyof SuiteHooks, sequence: SequenceH
   if (sequence === 'stack' && (name === 'afterAll' || name === 'afterEach'))
     return hooks.slice().reverse()
   return hooks
+}
+
+async function callTaskHooks(task: Task, hooks: ((result: TaskResult) => Awaitable<void>)[], sequence: SequenceHooks) {
+  if (sequence === 'stack')
+    hooks = hooks.slice().reverse()
+
+  if (sequence === 'parallel') {
+    await Promise.all(hooks.map(fn => fn(task.result!)))
+  }
+  else {
+    for (const fn of hooks)
+      await fn(task.result!)
+  }
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
@@ -211,7 +225,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
   }
 
   try {
-    await Promise.all(test.onFinished?.map(fn => fn(test.result!)) || [])
+    await callTaskHooks(test, test.onFinished || [], 'stack')
   }
   catch (e) {
     failTask(test.result, e, runner.config.diffOptions)
@@ -219,7 +233,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
   if (test.result.state === 'fail') {
     try {
-      await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+      await callTaskHooks(test, test.onFailed || [], runner.config.sequence.hooks)
     }
     catch (e) {
       failTask(test.result, e, runner.config.diffOptions)
@@ -320,7 +334,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
               // run describe block independently from tests
               const suites = tasksGroup.filter(group => group.type === 'suite')
               const tests = tasksGroup.filter(group => group.type === 'test')
-              const groups = shuffle([suites, tests], sequence.seed)
+              const groups = shuffle<Task[]>([suites, tests], sequence.seed)
               tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
             }
             for (const c of tasksGroup)

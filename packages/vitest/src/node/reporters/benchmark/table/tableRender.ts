@@ -100,7 +100,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('  ')
 }
 
-function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): string {
+export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0, shallow = false): string {
   const output: string[] = []
 
   let idx = 0
@@ -151,7 +151,7 @@ function renderTree(tasks: Task[], options: TableRendererOptions, level = 0): st
       }
     }
 
-    if (task.type === 'suite' && task.tasks.length > 0) {
+    if (!shallow && task.type === 'suite' && task.tasks.length > 0) {
       if (task.result?.state)
         output.push(renderTree(task.tasks, options, level + 1))
     }

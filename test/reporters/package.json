@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest"
   },
   "devDependencies": {
     "flatted": "^3.2.9",

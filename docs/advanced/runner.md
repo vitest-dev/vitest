@@ -110,7 +110,7 @@ Snapshot support and some other features depend on the runner. If you don't want
 
 You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
-```js
+```js twoslash
 // ./utils/custom.js
 import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
 
@@ -134,7 +134,7 @@ export const myCustomTask = createTaskCollector(
 )
 ```
 
-```js
+```js twoslash
 // ./garden/tasks.test.js
 import { afterAll, beforeAll, describe, myCustomTask } from '../custom.js'
 import { gardener } from './gardener.js'

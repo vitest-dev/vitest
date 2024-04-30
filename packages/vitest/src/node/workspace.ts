@@ -12,7 +12,6 @@ import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
-import { createDefer } from '../public/utils'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -40,40 +39,22 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
   )
 
-  return new Promise<() => Promise<WorkspaceProject>>((resolve, reject) => {
-    const resolution = createDefer<WorkspaceProject>()
-    let configResolved = false
-    const config: ViteInlineConfig = {
-      ...options,
-      root,
-      logLevel: 'error',
-      configFile,
-      // this will make "mode": "test" | "benchmark" inside defineConfig
-      mode: options.test?.mode || options.mode || ctx.config.mode,
-      plugins: [
-        {
-          name: 'vitest:workspace:resolve',
-          configResolved() {
-            configResolved = true
-            resolve(() => resolution)
-          },
-        },
-        ...options.plugins || [],
-        WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
-      ],
-    }
+  const config: ViteInlineConfig = {
+    ...options,
+    root,
+    logLevel: 'error',
+    configFile,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.test?.mode || options.mode || ctx.config.mode,
+    plugins: [
+      ...options.plugins || [],
+      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
+    ],
+  }
 
-    createViteServer(config)
-      .then(() => resolution.resolve(project))
-      .catch((err) => {
-        if (configResolved)
-          resolution.reject(err)
-        else
-          reject(err)
-      })
+  await createViteServer(config)
 
-    return project
-  })
+  return project
 }
 
 export class WorkspaceProject {
@@ -114,7 +95,7 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = (key: string, value: unknown) => {
+  provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
     try {
       structuredClone(value)
     }
@@ -284,17 +265,11 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
-          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-
           // if filter is a full file path, we should include it if it's in the same folder
-          if (isAbsolute(f)) {
-            // the file is inside the filter path, so we should always include it,
-            // we don't include ../file because this condition is always true if
-            // the file doens't exist which cause false positives
-            if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
-              return true
-          }
+          if (isAbsolute(f) && t.startsWith(f))
+            return true
 
+          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
@@ -333,6 +308,7 @@ export class WorkspaceProject {
         coverage: this.ctx.config.coverage,
       },
       server.config,
+      this.ctx.logger,
     )
 
     this.server = server
@@ -410,6 +386,7 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      inspector: this.ctx.config.inspector,
       alias: [],
       includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
       env: {

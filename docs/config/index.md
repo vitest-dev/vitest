@@ -318,6 +318,14 @@ To provide object via CLI command, use the following syntax: `--outputFile.json=
 
 Define custom aliases when running inside tests. They will be merged with aliases from `resolve.alias`.
 
+::: warning
+Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https://vitejs.dev/guide/ssr.html#ssr-externals).
+
+1. Aliases affect only modules imported directly with an `import` keyword by an [inlined](#server-deps-inline) module (all source code is inlined by default).
+2. Vitest does not support aliasing `require` calls.
+3. If you are aliasing an external dependency (e.g., `react` -> `preact`), you may want to alias the actual `node_modules` packages instead to make it work for externalized dependencies. Both [Yarn](https://classic.yarnpkg.com/en/docs/cli/add/#toc-yarn-add-alias) and [pnpm](https://pnpm.io/aliases/) support aliasing via the `npm:` prefix.
+:::
+
 ### globals
 
 - **Type:** `boolean`
@@ -974,28 +982,31 @@ Since Vitest 1.0.0-beta, global setup runs only if there is at least one running
 
 Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, since 1.0.0 you can pass down serializable data to tests via `provide` method:
 
-```ts
-// globalSetup.js
+:::code-group
+```js [globalSetup.js]
 export default function setup({ provide }) {
   provide('wsPort', 3000)
 }
 ```
+```ts [globalSetup.ts]
+import type { GlobalSetupContext } from 'vitest/node'
 
-```ts
-// example.test.js
-import { inject } from 'vitest'
+export default function setup({ provide }: GlobalSetupContext) {
+  provide('wsPort', 3000)
+}
 
-inject('wsPort') === 3000
-```
-
-If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
-
-```ts
+// You can also extend `ProvidedContext` type
+// to have type safe access to `provide/inject` methods:
 declare module 'vitest' {
   export interface ProvidedContext {
     wsPort: number
   }
 }
+```
+```ts [example.test.js]
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
 ```
 :::
 
@@ -1102,6 +1113,20 @@ List of files included in coverage as glob patterns
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
+
+This option overrides all default options. Extend the default options when adding new patterns to ignore:
+
+```ts
+import { coverageConfigDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      exclude: ['**/custom-pattern/**', ...coverageConfigDefaults.exclude]
+    },
+  },
+})
+```
 
 #### coverage.all
 
@@ -1318,6 +1343,38 @@ Sets thresholds for files matching the glob pattern.
     }
   }
 }
+```
+
+#### coverage.ignoreEmptyLines
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
+
+Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
+
+This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
+By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
+
+If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  esbuild: {
+    // Transpile all files with ESBuild to remove comments from code coverage.
+    // Required for `test.coverage.ignoreEmptyLines` to work:
+    include: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx'],
+  },
+  test: {
+    coverage: {
+      provider: 'v8',
+      ignoreEmptyLines: true,
+    },
+  },
+})
 ```
 
 #### coverage.ignoreClassMethods
@@ -1816,6 +1873,10 @@ Changes the order in which hooks are executed.
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
+::: tip
+This option doesn't affect [`onTestFinished`](/api/#ontestfinished). It is always called in reverse order.
+:::
+
 #### sequence.setupFiles <Badge type="info">0.29.3+</Badge> {#sequence-setupfiles}
 
 - **Type**: `'list' | 'parallel'`
@@ -2030,6 +2091,28 @@ export default defineConfig({
 })
 ```
 :::
+
+#### diff.truncateThreshold
+
+- **Type**: `number`
+- **Default**: `0`
+
+The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
+Truncation won't take effect with default value 0.
+
+#### diff.truncateAnnotation
+
+- **Type**: `string`
+- **Default**: `'... Diff result is truncated'`
+
+Annotation that is output at the end of diff result if it's truncated.
+
+#### diff.truncateAnnotationColor
+
+- **Type**: `DiffOptionsColor = (arg: string) => string`
+- **Default**: `noColor = (string: string): string => string`
+
+Color of truncate annotation, default is output with no color.
 
 ### fakeTimers
 

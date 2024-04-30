@@ -1,5 +1,6 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
+import { Writable } from 'node:stream'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
@@ -13,7 +14,7 @@ import { TypeCheckError } from '../typecheck/typechecker'
 import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
-import type { Logger } from './logger'
+import { Logger } from './logger'
 import type { WorkspaceProject } from './workspace'
 
 interface PrintErrorOptions {
@@ -25,6 +26,26 @@ interface PrintErrorOptions {
 
 interface PrintErrorResult {
   nearest?: ParsedStack
+}
+
+// use Logger with custom Console to capture entire error printing
+export async function captuerPrintError(
+  error: unknown,
+  ctx: Vitest,
+  project: WorkspaceProject,
+) {
+  let output = ''
+  const writable = new Writable({
+    write(chunk, _encoding, callback) {
+      output += String(chunk)
+      callback()
+    },
+  })
+  const result = await printError(error, project, {
+    showCodeFrame: false,
+    logger: new Logger(ctx, writable, writable),
+  })
+  return { nearest: result?.nearest, output }
 }
 
 export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): Promise<PrintErrorResult | undefined> {

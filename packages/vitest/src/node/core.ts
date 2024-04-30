@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
+import type { Writable } from 'node:stream'
 import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
@@ -31,6 +32,9 @@ const WATCHER_DEBOUNCE = 100
 
 export interface VitestOptions {
   packageInstaller?: VitestPackageInstaller
+  stdin?: NodeJS.ReadStream
+  stdout?: NodeJS.WriteStream | Writable
+  stderr?: NodeJS.WriteStream | Writable
 }
 
 export class Vitest {
@@ -74,7 +78,7 @@ export class Vitest {
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
   ) {
-    this.logger = new Logger(this)
+    this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
   }
 
@@ -93,7 +97,7 @@ export class Vitest {
     this.runningPromise = undefined
     this.projectsTestFiles.clear()
 
-    const resolved = resolveConfig(this.mode, options, server.config)
+    const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
     this.server = server
     this.config = resolved
@@ -315,23 +319,22 @@ export class Vitest {
 
     const cwd = process.cwd()
 
-    const projects: (() => Promise<WorkspaceProject>)[] = []
+    const projects: WorkspaceProject[] = []
 
     try {
       // we have to resolve them one by one because CWD should depend on the project
       for (const filepath of filteredWorkspaces) {
         if (this.server.config.configFile === filepath) {
           const project = await this.createCoreProject()
-          projects.push(() => Promise.resolve(project))
+          projects.push(project)
           continue
         }
         const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
         if (isMainThread)
           process.chdir(dir)
-        // this just resolves the config, later we also wait when the server is resolved,
-        // but we can do that in parallel because it doesn't depend on process.cwd()
-        // this is strictly a performance optimization so we don't need to wait for server to start
-        projects.push(await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }))
+        projects.push(
+          await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }),
+        )
       }
     }
     finally {
@@ -339,7 +342,7 @@ export class Vitest {
         process.chdir(cwd)
     }
 
-    const projectPromises: Promise<() => Promise<WorkspaceProject>>[] = []
+    const projectPromises: Promise<WorkspaceProject>[] = []
 
     projectsOptions.forEach((options, index) => {
       // we can resolve these in parallel because process.cwd() is not changed
@@ -349,14 +352,10 @@ export class Vitest {
     if (!projects.length && !projectPromises.length)
       return [await this.createCoreProject()]
 
-    const resolvedProjectsReceivers = [
+    const resolvedProjects = await Promise.all([
       ...projects,
       ...await Promise.all(projectPromises),
-    ]
-    // we need to wait when the server is resolved, we can do that in parallel
-    const resolvedProjects = await Promise.all(
-      resolvedProjectsReceivers.map(receiver => receiver()),
-    )
+    ])
     const names = new Set<string>()
 
     for (const project of resolvedProjects) {
@@ -832,7 +831,7 @@ export class Vitest {
             return
 
           const heedsRerun = this.handleFileChanged(i.file)
-          if (heedsRerun)
+          if (heedsRerun.length)
             rerun = true
         })
       }
@@ -841,7 +840,7 @@ export class Vitest {
         files.push(filepath)
     }
 
-    return files
+    return Array.from(new Set(files))
   }
 
   private async reportCoverage(allTestsRun: boolean) {
@@ -868,10 +867,10 @@ export class Vitest {
         for await (const project of teardownProjects.reverse())
           await project.teardownGlobalSetup()
 
-        const closePromises: unknown[] = this.projects.map(w => w.close().then(() => w.server = undefined as any))
+        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close().then(() => w.server = undefined as any))
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (!this.projects.includes(this.coreWorkspaceProject))
+        if (!this.resolvedProjects.includes(this.coreWorkspaceProject))
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
 
         if (this.pool) {
@@ -905,7 +904,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this.server, ...this.projects.map(p => p.server)].filter(Boolean).length
+          const runningServers = [this.server, ...this.resolvedProjects.map(p => p.server)].filter(Boolean).length
 
           if (runningServers === 1)
             console.warn('Tests closed successfully but something prevents Vite server from exiting')

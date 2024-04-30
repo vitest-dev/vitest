@@ -6,7 +6,7 @@ const root = resolve(__dirname, '../fixtures/cache')
 const project = resolve(__dirname, '../')
 
 test('default', async () => {
-  const { vitest, stdout, stderr } = await runVitest({
+  const { ctx, stdout, stderr } = await runVitest({
     root,
     include: ['*.test.ts'],
   })
@@ -14,13 +14,13 @@ test('default', async () => {
   expect(stdout).toContain('✓ basic.test.ts >')
   expect(stderr).toBe('')
 
-  const cachePath = vitest!.cache.results.getCachePath()
+  const cachePath = ctx!.cache.results.getCachePath()
   const path = resolve(project, 'node_modules/.vite/vitest/results.json')
   expect(cachePath).toMatch(path)
 })
 
 test('use cache.dir', async () => {
-  const { vitest, stdout, stderr } = await runVitest(
+  const { ctx, stdout, stderr } = await runVitest(
     {
       root,
       include: ['*.test.ts'],
@@ -33,13 +33,13 @@ test('use cache.dir', async () => {
   expect(stdout).toContain('✓ basic.test.ts >')
   expect(stderr).toContain('"cache.dir" is deprecated')
 
-  const cachePath = vitest!.cache.results.getCachePath()
+  const cachePath = ctx!.cache.results.getCachePath()
   const path = resolve(root, 'node_modules/.vitest-custom/results.json')
   expect(cachePath).toMatch(path)
 })
 
 test('use cacheDir', async () => {
-  const { vitest, stdout, stderr } = await runVitest(
+  const { ctx, stdout, stderr } = await runVitest(
     {
       root,
       include: ['*.test.ts'],
@@ -52,7 +52,7 @@ test('use cacheDir', async () => {
   expect(stdout).toContain('✓ basic.test.ts >')
   expect(stderr).toBe('')
 
-  const cachePath = vitest!.cache.results.getCachePath()
+  const cachePath = ctx!.cache.results.getCachePath()
   const path = resolve(root, 'node_modules/.vite-custom/vitest/results.json')
   expect(cachePath).toMatch(path)
 })
@@ -67,7 +67,7 @@ describe('with optimizer enabled', () => {
   }
 
   test('default', async () => {
-    const { vitest, stdout, stderr } = await runVitest({
+    const { ctx, stdout, stderr } = await runVitest({
       root,
       include: ['*.test.ts'],
       deps,
@@ -76,13 +76,13 @@ describe('with optimizer enabled', () => {
     expect(stdout).toContain('✓ basic.test.ts >')
     expect(stderr).toBe('')
 
-    const cachePath = vitest!.cache.results.getCachePath()
+    const cachePath = ctx!.cache.results.getCachePath()
     const path = resolve(project, 'node_modules/.vite/vitest/results.json')
     expect(cachePath).toBe(path)
   })
 
   test('use cache.dir', async () => {
-    const { vitest, stdout, stderr } = await runVitest(
+    const { ctx, stdout, stderr } = await runVitest(
       {
         root,
         include: ['*.test.ts'],
@@ -96,13 +96,13 @@ describe('with optimizer enabled', () => {
     expect(stdout).toContain('✓ basic.test.ts >')
     expect(stderr).toContain('"cache.dir" is deprecated')
 
-    const cachePath = vitest!.cache.results.getCachePath()
+    const cachePath = ctx!.cache.results.getCachePath()
     const path = resolve(root, 'node_modules/.vitest-custom/results.json')
     expect(cachePath).toBe(path)
   })
 
   test('use cacheDir', async () => {
-    const { vitest, stdout, stderr } = await runVitest(
+    const { ctx, stdout, stderr } = await runVitest(
       {
         root,
         include: ['*.test.ts'],
@@ -116,7 +116,7 @@ describe('with optimizer enabled', () => {
     expect(stdout).toContain('✓ basic.test.ts >')
     expect(stderr).toBe('')
 
-    const cachePath = vitest!.cache.results.getCachePath()
+    const cachePath = ctx!.cache.results.getCachePath()
     const path = resolve(root, 'node_modules/.vite-custom/vitest/results.json')
     expect(cachePath).toBe(path)
   })

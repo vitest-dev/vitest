@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
+import { defaultBrowserPort, defaultInspectPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -12,12 +12,28 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
+import type { Logger } from './logger'
 
 function resolvePath(path: string, root: string) {
   return normalize(
     resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
   )
+}
+
+function parseInspector(inspect: string | undefined | boolean | number) {
+  if (typeof inspect === 'boolean' || inspect === undefined)
+    return {}
+  if (typeof inspect === 'number')
+    return { port: inspect }
+
+  if (inspect.match(/https?:\//))
+    throw new Error(`Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`)
+
+  const [host, port] = inspect.split(':')
+  if (!port)
+    return { host }
+  return { host, port: Number(port) || defaultInspectPort }
 }
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
@@ -61,13 +77,14 @@ export function resolveConfig(
   mode: VitestRunMode,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  logger: Logger,
 ): ResolvedConfig {
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
           `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
             viteConfig.test.environment
@@ -88,8 +105,14 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
-  resolved.inspect = Boolean(resolved.inspect)
-  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  const inspector = resolved.inspect || resolved.inspectBrk
+
+  resolved.inspector = {
+    ...resolved.inspector,
+    ...parseInspector(inspector),
+    enabled: !!inspector,
+    waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+  }
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -118,6 +141,9 @@ export function resolveConfig(
 
   if (resolved.minWorkers)
     resolved.minWorkers = Number(resolved.minWorkers)
+
+  resolved.browser ??= {} as any
+  resolved.browser.fileParallelism ??= resolved.fileParallelism ?? false
 
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'
@@ -185,11 +211,11 @@ export function resolveConfig(
       return
 
     if (option === 'fallbackCJS') {
-      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+      logger.console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
     }
     else {
       const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
         ),
@@ -451,7 +477,7 @@ export function resolveConfig(
     let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
 
     if (resolved.cache && resolved.cache.dir) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
         ),
@@ -490,7 +516,7 @@ export function resolveConfig(
   resolved.typecheck.enabled ??= false
 
   if (resolved.typecheck.enabled)
-    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
+    logger.console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false

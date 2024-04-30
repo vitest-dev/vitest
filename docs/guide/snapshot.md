@@ -14,7 +14,11 @@ When using snapshot, Vitest will take a snapshot of the given value, then compar
 
 To snapshot a value, you can use the [`toMatchSnapshot()`](/api/expect#tomatchsnapshot) from `expect()` API:
 
-```ts
+```ts twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -41,7 +45,11 @@ When using Snapshots with async concurrent tests, `expect` from the local [Test 
 
 Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
 
-```ts
+```ts twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -52,7 +60,11 @@ it('toUpperCase', () => {
 
 Instead of creating a snapshot file, Vitest will modify the test file directly to update the snapshot as a string:
 
-```ts
+```ts  twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -212,7 +224,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
-```ts
+```ts twoslash
 import { expect, test } from 'vitest'
 
 test('snapshot', () => {
@@ -280,7 +292,9 @@ exports[`toThrowErrorMatchingSnapshot > hint 1`] = `[Error: error]`;
 
 #### 4. default `Error` snapshot is different for `toThrowErrorMatchingSnapshot` and `toThrowErrorMatchingInlineSnapshot`
 
-```js
+```js twoslash
+import { expect, test } from 'vitest'
+// ---cut---
 test('snapshot', () => {
   //
   // in Jest

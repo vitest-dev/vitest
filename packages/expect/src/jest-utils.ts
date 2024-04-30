@@ -334,7 +334,7 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
     return iterableEquality(
       a,
       b,
-      [...filteredCustomTesters],
+      [...customTesters],
       [...aStack],
       [...bStack],
     )
@@ -411,6 +411,11 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
   if (!bIterator.next().done)
     return false
 
+  const aEntries = Object.entries(a)
+  const bEntries = Object.entries(b)
+  if (!equals(aEntries, bEntries))
+    return false
+
   // Remove the first value from the stack of traversed values.
   aStack.pop()
   bStack.pop()
@@ -420,7 +425,7 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
 /**
  * Checks if `hasOwnProperty(object, key)` up the prototype chain, stopping at `Object.prototype`.
  */
-function hasPropertyInObject(object: object, key: string): boolean {
+function hasPropertyInObject(object: object, key: string | symbol): boolean {
   const shouldTerminate
     = !object || typeof object !== 'object' || object === Object.prototype
 
@@ -452,7 +457,7 @@ export function subsetEquality(object: unknown, subset: unknown, customTesters: 
           return undefined
 
         return Object.keys(subset).every((key) => {
-          if (isObjectWithKeys(subset[key])) {
+          if (subset[key] != null && typeof subset[key] === 'object') {
             if (seenReferences.has(subset[key]))
               return equals(object[key], subset[key], filteredCustomTesters)
 
@@ -539,4 +544,70 @@ export function generateToBeMessage(deepEqualityName: string, expected = '#{this
 
 export function pluralize(word: string, count: number): string {
   return `${count} ${word}${count === 1 ? '' : 's'}`
+}
+
+export function getObjectKeys(object: object): Array<string | symbol> {
+  return [
+    ...Object.keys(object),
+    ...Object.getOwnPropertySymbols(object).filter(
+      s => Object.getOwnPropertyDescriptor(object, s)?.enumerable,
+    ),
+  ]
+}
+
+export function getObjectSubset(object: any, subset: any, customTesters: Array<Tester> = []): { subset: any; stripped: number } {
+  let stripped = 0
+
+  const getObjectSubsetWithContext = (seenReferences: WeakMap<object, boolean> = new WeakMap()) => (object: any, subset: any): any => {
+    if (Array.isArray(object)) {
+      if (Array.isArray(subset) && subset.length === object.length) {
+        // The map method returns correct subclass of subset.
+        return subset.map((sub: any, i: number) =>
+          getObjectSubsetWithContext(seenReferences)(object[i], sub),
+        )
+      }
+    }
+    else if (object instanceof Date) {
+      return object
+    }
+    else if (isObject(object) && isObject(subset)) {
+      if (
+        equals(object, subset, [
+          ...customTesters,
+          iterableEquality,
+          subsetEquality,
+        ])
+      ) {
+        // Avoid unnecessary copy which might return Object instead of subclass.
+        return subset
+      }
+
+      const trimmed: any = {}
+      seenReferences.set(object, trimmed)
+
+      for (const key of getObjectKeys(object)) {
+        if (hasPropertyInObject(subset, key)) {
+          trimmed[key] = seenReferences.has(object[key])
+            ? seenReferences.get(object[key])
+            : getObjectSubsetWithContext(seenReferences)(object[key], subset[key])
+        }
+        else {
+          if (!seenReferences.has(object[key])) {
+            stripped += 1
+            if (isObject(object[key]))
+              stripped += getObjectKeys(object[key]).length
+
+            getObjectSubsetWithContext(seenReferences)(object[key], subset[key])
+          }
+        }
+      }
+
+      if (getObjectKeys(trimmed).length > 0)
+        return trimmed
+    }
+
+    return object
+  }
+
+  return { subset: getObjectSubsetWithContext()(object, subset), stripped }
 }

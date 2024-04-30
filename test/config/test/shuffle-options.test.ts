@@ -25,8 +25,8 @@ test.each([
   { files: false, tests: true },
 ],
 )('should use BaseSequencer if shuffle is %o', async (shuffle) => {
-  const { vitest } = await run({ shuffle })
-  expect(vitest?.config.sequence.sequencer.name).toBe('BaseSequencer')
+  const { ctx } = await run({ shuffle })
+  expect(ctx?.config.sequence.sequencer.name).toBe('BaseSequencer')
 })
 
 test.each([
@@ -34,8 +34,8 @@ test.each([
   { files: true, tests: false },
   { files: true, tests: true },
 ])('should use RandomSequencer if shuffle is %o', async (shuffle) => {
-  const { vitest } = await run({ shuffle })
-  expect(vitest?.config.sequence.sequencer.name).toBe('RandomSequencer')
+  const { ctx } = await run({ shuffle })
+  expect(ctx?.config.sequence.sequencer.name).toBe('RandomSequencer')
 })
 
 test.each([
@@ -44,6 +44,6 @@ test.each([
   { files: true, tests: false },
   { files: true, tests: true },
 ])('should always use CustomSequencer if passed', async (shuffle) => {
-  const { vitest } = await run({ shuffle, sequencer: CustomSequencer })
-  expect(vitest?.config.sequence.sequencer.name).toBe('CustomSequencer')
+  const { ctx } = await run({ shuffle, sequencer: CustomSequencer })
+  expect(ctx?.config.sequence.sequencer.name).toBe('CustomSequencer')
 })
