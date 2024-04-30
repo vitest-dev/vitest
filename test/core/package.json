@@ -18,11 +18,16 @@
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
     "@vitest/web-worker": "workspace:^",
+    "axios": "^0.26.1",
     "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
+    "sweetalert2": "^11.6.16",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
+    "useJwt": "link:@vueuse/integrations/useJwt",
     "vitest": "workspace:*",
-    "vitest-environment-custom": "file:./vitest-environment-custom"
+    "vitest-environment-custom": "file:./vitest-environment-custom",
+    "vue": "^3.4.26",
+    "zustand": "^4.1.1"
   }
 }
