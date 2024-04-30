@@ -299,11 +299,20 @@ function createSuite() {
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        arrayOnlyCases
-          ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
-          : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), () => handler(...items), options)
+            : suite(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)
@@ -341,12 +350,21 @@ export function createTaskCollector(
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
-        arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), options, () => handler(...items))
-          : test(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), () => handler(...items), options)
+            : test(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), options, () => handler(...items))
+            : test(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)
