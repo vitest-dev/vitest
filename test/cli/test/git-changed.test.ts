@@ -8,7 +8,8 @@ const fileName = 'fixtures/git-changed/related/rerun.temp'
 // NOTE: if there are any changes in fixtures/git-changed,
 // most tests will probably fail
 
-describe('forceRerunTrigger', () => {
+// ecosystem-ci updated package.json and make this test fail
+describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
   async function run() {
     return runVitest({
       root: join(process.cwd(), 'fixtures/git-changed/related'),
