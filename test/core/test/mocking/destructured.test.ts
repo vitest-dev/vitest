@@ -2,8 +2,8 @@ import { expect, test, vi } from 'vitest'
 // @ts-expect-error mocked module
 import * as squaredModule from '../../../mocks/src/squared'
 // @ts-expect-error mocked module
-import { squared } from '../../../mocks/src/squared'
-import { foo } from '../../../mocks/src/set-foo.js'
+import { squared } from '../../src/mocks/squared'
+import { foo } from '../../src/mocks/set-foo.js'
 
 vi.mock('any')
 
