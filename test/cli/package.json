@@ -12,6 +12,7 @@
     "@vitest/runner": "workspace:^",
     "debug": "^4.3.4",
     "execa": "^8.0.1",
+    "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
     "ws": "^8.14.2"

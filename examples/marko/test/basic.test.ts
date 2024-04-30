@@ -1,3 +1,4 @@
+import { afterEach, expect, test } from 'vitest'
 import Hello from '../components/Hello.marko'
 
 let host: HTMLElement
@@ -16,7 +17,7 @@ test('mount component', async () => {
     .getComponent()
   expect(instance).toBeTruthy()
   expect(host.innerHTML).toContain('4 x 2 = 8')
-  expect(host.innerHTML).toMatchSnapshot()
+  expect(host).toMatchSnapshot()
   const btn = host.getElementsByTagName('button')[0]
   btn.click() // or btn.dispatchEvent(new window.Event('click', { bubbles: true }))
   await tick()

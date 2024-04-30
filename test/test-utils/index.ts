@@ -92,6 +92,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   function output() {
     return {
       vitest: cli,
+      exitCode: subprocess.exitCode,
       stdout: cli.stdout || '',
       stderr: cli.stderr || '',
       waitForClose: () => isDone,
