@@ -18,6 +18,7 @@
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
     "@vitest/web-worker": "workspace:^",
+    "@vueuse/integrations": "^10.9.0",
     "axios": "^0.26.1",
     "debug": "^4.3.4",
     "strip-ansi": "^7.1.0",
