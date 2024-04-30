@@ -6,7 +6,7 @@ const proto = {
 }
 const logger = {
   warn() {
-    this[writeSym]()
+    ;(this as any)[writeSym]()
   },
 }
 Object.setPrototypeOf(logger, proto)
