@@ -1,6 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
 import { isMainThread } from 'node:worker_threads'
+import { createRequire } from 'node:module'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
@@ -111,8 +112,16 @@ export class Vitest {
     this.vitenode = new ViteNodeServer(server, this.config.server)
 
     // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    function getVitestDir(configRoot: string) {
+      const require = createRequire(import.meta.url)
+      try {
+        const vitestCjsPath = require.resolve('vitest', { paths: [configRoot, rootDir] })
+        return resolve(vitestCjsPath, '..')
+      }
+      catch {}
+      return rootDir
+    }
+    const vitestDir = getVitestDir(resolved.root)
     this.distPath = join(vitestDir, 'dist')
 
     const node = this.vitenode
