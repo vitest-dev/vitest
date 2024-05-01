@@ -95,6 +95,7 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.distPath = undefined!
     this.projectsTestFiles.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
