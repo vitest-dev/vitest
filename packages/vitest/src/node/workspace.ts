@@ -1,4 +1,6 @@
 import { promises as fs } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
@@ -8,10 +10,10 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { deepMerge, nanoid } from '../utils/base'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -77,6 +79,9 @@ export class WorkspaceProject {
   } | undefined
 
   testFilesList: string[] | null = null
+
+  public readonly id = nanoid()
+  public readonly tmpDir = join(tmpdir(), this.id)
 
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
@@ -402,9 +407,17 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
+        this.clearTmpDir(),
       ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
+  }
+
+  private async clearTmpDir() {
+    try {
+      await rm(this.tmpDir, { force: true, recursive: true })
+    }
+    catch {}
   }
 
   async initBrowserProvider() {
