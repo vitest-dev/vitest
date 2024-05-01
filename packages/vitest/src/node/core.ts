@@ -381,11 +381,6 @@ export class Vitest {
   async start(filters?: string[]) {
     this._onClose = []
 
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -508,7 +503,19 @@ export class Vitest {
       await project.initializeGlobalSetup()
   }
 
+  private async initializeDistPath() {
+    if (this.distPath)
+      return
+
+    // if Vitest is running globally, then we should still import local vitest if possible
+    const projectVitestPath = await this.vitenode.resolveId('vitest')
+    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    this.distPath = join(vitestDir, 'dist')
+  }
+
   async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
+    await this.initializeDistPath()
+
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
