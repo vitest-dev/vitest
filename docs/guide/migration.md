@@ -186,6 +186,14 @@ const { cloneDeep } = jest.requireActual('lodash/cloneDeep') // [!code --]
 const { cloneDeep } = await vi.importActual('lodash/cloneDeep') // [!code ++]
 ```
 
+### Extends mocking to external libraries
+
+Where Jest does it by default, when mocking a module and wanting this mocking to be extended to other external libraries that use the same module, you should explicitly tell which 3rd-party library you want to be mocked, so the external library would be part of your source code, by using [server.deps.inline](https://vitest.dev/config/#server-deps-inline).
+
+```
+server.deps.inline: ["lib-name"]
+```
+
 ### Accessing the Return Values of a Mocked Promise
 
 Both Jest and Vitest store the results of all mock calls in the [`mock.results`](/api/mock.html#mock-results) array, where the return values of each call are stored in the `value` property.

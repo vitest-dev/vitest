@@ -1,6 +1,11 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
+import { join } from 'pathe'
 import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
+
+const created = new Set()
+const promises = new Map<string, Promise<void>>()
 
 export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
   const ctx = project.ctx
@@ -20,8 +25,31 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id, transformMode) {
-      return project.vitenode.fetchModule(id, transformMode)
+    async fetch(id, transformMode) {
+      const result = await project.vitenode.fetchResult(id, transformMode)
+      const code = result.code
+      if (result.externalize)
+        return result
+      if ('id' in result)
+        return { id: result.id as string }
+
+      if (!code)
+        throw new Error(`Failed to fetch module ${id}`)
+
+      const dir = join(project.tmpDir, transformMode)
+      const tmp = join(dir, id.replace(/[/\\?%*:|"<>]/g, '_').replace('\0', '__x00__'))
+      if (promises.has(tmp)) {
+        await promises.get(tmp)
+        return { id: tmp }
+      }
+      if (!created.has(dir)) {
+        await mkdir(dir, { recursive: true })
+        created.add(dir)
+      }
+      promises.set(tmp, writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)))
+      await promises.get(tmp)
+      Object.assign(result, { id: tmp })
+      return { id: tmp }
     },
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)

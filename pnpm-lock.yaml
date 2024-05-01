@@ -180,7 +180,7 @@ importers:
     devDependencies:
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       vite:
         specifier: ^5.2.6
         version: 5.2.6(@types/node@20.11.5)
@@ -192,7 +192,7 @@ importers:
     devDependencies:
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       fastify:
         specifier: ^4.26.2
         version: 4.26.2
@@ -217,10 +217,10 @@ importers:
     devDependencies:
       '@vitest/browser':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)(webdriverio@8.32.2)
+        version: link:../../packages/browser
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       jsdom:
         specifier: latest
         version: 24.0.0
@@ -247,7 +247,7 @@ importers:
         version: 4.1.10(@marko/compiler@5.36.1)(vite@5.2.6)
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -287,7 +287,7 @@ importers:
         version: 3.2.3(preact@10.21.0)
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -321,7 +321,7 @@ importers:
         version: 4.2.1(vite@5.2.6)
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -397,7 +397,7 @@ importers:
         version: 20.11.5
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -427,7 +427,7 @@ importers:
         version: 4.2.1(vite@5.2.10)
       '@vitest/ui':
         specifier: latest
-        version: 1.5.3(vitest@packages+vitest)
+        version: link:../../packages/ui
       fastify:
         specifier: ^4.26.2
         version: 4.26.2
@@ -879,7 +879,7 @@ importers:
         version: 4.3.10
       debug:
         specifier: ^4.3.4
-        version: 4.3.4(supports-color@8.1.1)
+        version: 4.3.4
       execa:
         specifier: ^8.0.1
         version: 8.0.1
@@ -6333,52 +6333,6 @@ packages:
       vue: 3.4.26(typescript@5.4.5)
     dev: true
 
-  /@vitest/browser@1.5.3(vitest@packages+vitest)(webdriverio@8.32.2):
-    resolution: {integrity: sha512-75XHo+qzbTqvb7kvOCZt4EAphugo8HbeepqcXLWqQiNCYd/PkBWzPu5pSptGVt86WDd8DUVybyq/nGVY1XfWZA==}
-    peerDependencies:
-      playwright: '*'
-      safaridriver: '*'
-      vitest: workspace:*
-      webdriverio: '*'
-    peerDependenciesMeta:
-      playwright:
-        optional: true
-      safaridriver:
-        optional: true
-      webdriverio:
-        optional: true
-    dependencies:
-      '@vitest/utils': 1.5.3
-      magic-string: 0.30.10
-      sirv: 2.0.4
-      vitest: link:packages/vitest
-      webdriverio: 8.32.2(typescript@5.2.2)
-    dev: true
-
-  /@vitest/ui@1.5.3(vitest@packages+vitest):
-    resolution: {integrity: sha512-DoSA5YxcUmeBEK7kJHzXiL2I0d9AijWI33arnUrwiWFDxgZPDxTjvSVsiXhe8qfqhloIHkwazl5E2rhlDd/ErA==}
-    peerDependencies:
-      vitest: workspace:*
-    dependencies:
-      '@vitest/utils': 1.5.3
-      fast-glob: 3.3.2
-      fflate: 0.8.1
-      flatted: 3.2.9
-      pathe: 1.1.2
-      picocolors: 1.0.0
-      sirv: 2.0.4
-      vitest: link:packages/vitest
-    dev: true
-
-  /@vitest/utils@1.5.3:
-    resolution: {integrity: sha512-rE9DTN1BRhzkzqNQO+kw8ZgfeEBCLXiHJwetk668shmNBpSagQxneT5eSqEBLP+cqSiAeecvQmbpFfdMyLcIQA==}
-    dependencies:
-      diff-sequences: 29.6.3
-      estree-walker: 3.0.3
-      loupe: 2.3.7
-      pretty-format: 29.7.0
-    dev: true
-
   /@volar/language-core@1.10.4:
     resolution: {integrity: sha512-Na69qA6uwVIdA0rHuOc2W3pHtVQQO8hCNim7FOaKNpRJh0oAFnu5r9i7Oopo5C4cnELZkPNjTrbmpcCTiW+CMQ==}
     dependencies:
@@ -7110,7 +7064,7 @@ packages:
     resolution: {integrity: sha512-o/zjMZRhJxny7OyEF+Op8X+efiELC7k7yOjMzgfzVqOzXqkBkWI79YoTdOtsuWd5BWhAGAuOY/Xa6xpiaWXiNg==}
     engines: {node: '>= 14'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -8616,6 +8570,17 @@ packages:
       supports-color: 8.1.1
     dev: true
 
+  /debug@4.3.4:
+    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
+
   /debug@4.3.4(supports-color@8.1.1):
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -9743,6 +9708,7 @@ packages:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
     dependencies:
       '@types/estree': 1.0.5
+    dev: false
 
   /esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
@@ -10073,6 +10039,7 @@ packages:
 
   /fflate@0.8.1:
     resolution: {integrity: sha512-/exOvEuc+/iaUm105QIiOt4LpBdMTWsXxqR0HDF35vx3fmaKzw7354gTilCh5rkzEt8WYyG//ku3h3nRmd7CHQ==}
+    dev: false
 
   /figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
@@ -10428,6 +10395,7 @@ packages:
 
   /get-func-name@2.0.2:
     resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
+    dev: false
 
   /get-intrinsic@1.2.1:
     resolution: {integrity: sha512-2DcsyfABl+gVHEfCOaTrWgyt+tb6MSEGmKq+kI5HwLbIYgjgmMcV8KQ41uaKz1xxUcn9tJtgFbQUEVcEbd0FYw==}
@@ -10898,7 +10866,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -10949,7 +10917,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12109,6 +12077,7 @@ packages:
     resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}
     dependencies:
       get-func-name: 2.0.2
+    dev: false
 
   /lowercase-keys@3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
