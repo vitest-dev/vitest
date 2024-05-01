@@ -1,40 +1,46 @@
 import { defineConfig } from 'vitest/config'
 
+const testHooks: string[] = (globalThis as any).__testHooks ??= [];
+
 export default defineConfig({
   plugins: [
     {
       name: "test-default",
       configureServer() {
-        console.log("##test## configureServer(default)")
+        testHooks.push("configureServer(default)")
+        console.log("configureServer(default)")
       },
       buildStart() {
-        console.log("##test## buildStart(default)")
+        testHooks.push("buildStart(default)")
+        console.log("buildStart(default)")
       },
       resolveId(source) {
-        console.log("##test## resolveId(default)")
-        console.log({ source })
+        testHooks.push("resolveId(default)")
+        console.log("resolveId(default)", source)
       },
       transform(_code, id) {
-        console.log("##test## transform(default)")
-        console.log({ id })
+        testHooks.push("transform(default)")
+        console.log("transform(default)", id)
       },
     },
     {
       name: "test-pre",
       enforce: "pre",
       configureServer() {
-        console.log("##test## configureServer(pre)")
+        testHooks.push("configureServer(pre)")
+        console.log("configureServer(pre)")
       },
       buildStart() {
-        console.log("##test## buildStart(pre)")
+        testHooks.push("buildStart(pre)")
+        console.log("buildStart(pre)")
       },
       resolveId(source) {
-        console.log("##test## resolveId(pre)")
-        console.log({ source })
+        testHooks.push("resolveId(pre)")
+        console.log("resolveId(pre)", source)
       },
       transform(_code, id) {
-        console.log("##test## transform(pre)")
-        console.log({ id })
+        testHooks.push("transform(pre)")
+        console.log("transform(pre)", id)
       },
     }
   ]
