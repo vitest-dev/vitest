@@ -41,13 +41,7 @@ export const client = (function createVitestClient() {
 })()
 
 function sort(a: File, b: File) {
-  if (a.name < b.name)
-    return -1
-
-  if (a.name > b.name)
-    return 1
-
-  return 0
+  return a.name.localeCompare(b.name)
 }
 
 export const config = shallowRef<ResolvedConfig>({} as any)
