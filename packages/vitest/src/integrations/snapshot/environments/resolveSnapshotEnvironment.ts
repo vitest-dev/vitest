@@ -1,14 +1,15 @@
 import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
 import type { VitestExecutor } from '../../../runtime/execute'
 import type { ResolvedConfig } from '../../../types'
-import { VitestNodeSnapshotEnvironment } from './node'
 
 export async function resolveSnapshotEnvironment(
   config: ResolvedConfig,
   executor: VitestExecutor,
 ): Promise<SnapshotEnvironment> {
-  if (!config.snapshotEnvironment)
+  if (!config.snapshotEnvironment) {
+    const { VitestNodeSnapshotEnvironment } = await import('./node')
     return new VitestNodeSnapshotEnvironment()
+  }
 
   const mod = await executor.executeId(config.snapshotEnvironment)
   if (typeof mod.default !== 'object' || !mod.default)
