@@ -38,7 +38,9 @@ describe('default reporter', async () => {
     // one file
     vitest.write('p')
     await vitest.waitForStdout('Input filename pattern')
-    vitest.write('a\n')
+    vitest.write('a')
+    await vitest.waitForStdout('a.test.ts')
+    vitest.write('\n')
     await vitest.waitForStdout('Filename pattern: a')
     await vitest.waitForStdout('Waiting for file changes...')
     expect(vitest.stdout).contain('✓ a1 test')

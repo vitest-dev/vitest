@@ -136,6 +136,9 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.standalone && !resolved.watch)
+    throw new Error(`Vitest standalone mode requires --watch`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 

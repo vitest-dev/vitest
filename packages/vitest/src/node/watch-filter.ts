@@ -179,4 +179,8 @@ export class WatchFilter {
     // @ts-expect-error -- write() method has different signature on the union type
     this.stdout.write(data)
   }
+
+  public getLastResults() {
+    return this.results
+  }
 }

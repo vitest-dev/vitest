@@ -2,7 +2,7 @@ import readline from 'node:readline'
 import type { Writable } from 'node:stream'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { relative } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { getTests, isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
@@ -73,8 +73,10 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     if (name === 'u')
       return ctx.updateSnapshot()
     // rerun all tests
-    if (name === 'a' || name === 'return')
-      return ctx.changeNamePattern('')
+    if (name === 'a' || name === 'return') {
+      const files = await ctx.getTestFilepaths()
+      return ctx.changeNamePattern('', files, 'rerun all tests')
+    }
     // rerun current pattern tests
     if (name === 'r')
       return ctx.rerunFiles()
@@ -113,7 +115,13 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     })
 
     on()
-    await ctx.changeNamePattern(filter?.trim() || '', undefined, 'change pattern')
+    const files = ctx.state.getFilepaths()
+    // if running in standalone mode, Vitest instance doesn't know about any test file
+    const cliFiles = ctx.config.standalone && !files.length
+      ? await ctx.getTestFilepaths()
+      : undefined
+
+    await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
   }
 
   async function inputProjectName() {
@@ -143,8 +151,12 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     on()
 
     latestFilename = filter?.trim() || ''
+    const lastResults = watchFilter.getLastResults()
 
-    await ctx.changeFilenamePattern(latestFilename)
+    await ctx.changeFilenamePattern(
+      latestFilename,
+      filter && lastResults.length ? lastResults.map(i => resolve(ctx.config.root, i)) : undefined,
+    )
   }
 
   let rl: readline.Interface | undefined
