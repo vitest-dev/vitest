@@ -127,6 +127,9 @@ export function processError(err: any, diffOptions?: DiffOptions) {
   }
   catch {}
 
+  if (typeof err.cause === 'object')
+    processError(err.cause, diffOptions)
+
   try {
     return serializeError(err)
   }
