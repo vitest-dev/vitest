@@ -93,6 +93,22 @@ export interface BrowserConfigOptions {
    * @default test.fileParallelism
    */
   fileParallelism?: boolean
+
+  /**
+   * Scripts injected into the tester iframe.
+   */
+  testerScripts?: BrowserScript[]
+
+  /**
+   * Scripts injected into the main window.
+   */
+  indexScripts?: BrowserScript[]
+}
+
+export interface BrowserScript {
+  content?: string
+  src?: string
+  async?: boolean
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {

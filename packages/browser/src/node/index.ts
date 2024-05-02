@@ -4,13 +4,9 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import type { ResolvedConfig } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
+import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
 import { injectVitestModule } from './esmInjector'
-
-function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
-}
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -33,6 +29,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         const injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8')
         const favicon = `${base}favicon.svg`
         const testerPrefix = `${base}__vitest_test__/__test__/`
+        let cachedTesterHtml: string | undefined
+        let cachedRunnerHtml: string | undefined
         server.middlewares.use((_req, res, next) => {
           const headers = server.config.server.headers
           if (headers) {
@@ -63,7 +61,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           })
 
           if (url.pathname === base) {
-            const html = replacer(await runnerHtml, {
+            if (!cachedRunnerHtml) {
+              cachedRunnerHtml = replacer(await runnerHtml, {
+                __VITEST_SCRIPTS__: scriptFormatter(project.config.browser.indexScripts),
+              })
+            }
+
+            const html = replacer(cachedRunnerHtml, {
               __VITEST_FAVICON__: favicon,
               __VITEST_TITLE__: 'Vitest Browser Runner',
               __VITEST_INJECTOR__: injector,
@@ -77,7 +81,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
 
-          const html = replacer(await testerHtml, {
+          if (!cachedTesterHtml) {
+            cachedTesterHtml = replacer(await testerHtml, {
+              __VITEST_SCRIPTS__: scriptFormatter(project.config.browser.testerScripts),
+            })
+          }
+
+          const html = replacer(cachedTesterHtml, {
             __VITEST_FAVICON__: favicon,
             __VITEST_TITLE__: 'Vitest Browser Tester',
             __VITEST_INJECTOR__: injector,
@@ -232,4 +242,16 @@ function wrapConfig(config: ResolvedConfig): ResolvedConfig {
         ? config.testNamePattern.toString() as any as RegExp
         : undefined,
   }
+}
+
+function replacer(code: string, values: Record<string, string>) {
+  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
+}
+
+function scriptFormatter(scripts: BrowserScript[] | undefined) {
+  if (!scripts?.length)
+    return ''
+  return scripts.map(({ content, src, async }) => {
+    return `<script type="module"${async ? ' async' : ''}${src ? ` src="${src}"` : ''}>${content}</script>`
+  }).join('\n')
 }
