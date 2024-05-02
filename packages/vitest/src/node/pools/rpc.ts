@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
@@ -30,14 +31,15 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       const code = result.code
       if (result.externalize)
         return result
-      if ('id' in result)
+      if ('id' in result && typeof result.id === 'string')
         return { id: result.id as string }
 
       if (!code)
         throw new Error(`Failed to fetch module ${id}`)
 
       const dir = join(project.tmpDir, transformMode)
-      const tmp = join(dir, id.replace(/[/\\?%*:|"<>]/g, '_').replace('\0', '__x00__'))
+      const name = createHash('sha1').update(id).digest('hex')
+      const tmp = join(dir, name)
       if (promises.has(tmp)) {
         await promises.get(tmp)
         return { id: tmp }
