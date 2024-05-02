@@ -34,7 +34,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       if ('id' in result && typeof result.id === 'string')
         return { id: result.id as string }
 
-      if (!code)
+      if (code == null)
         throw new Error(`Failed to fetch module ${id}`)
 
       const dir = join(project.tmpDir, transformMode)
