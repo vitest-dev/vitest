@@ -312,7 +312,7 @@ By providing an object instead of a string you can define individual outputs whe
 
 To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
-#### benchmark.outputJson
+#### benchmark.outputJson <Version>1.6.0</Version> {#benchmark-outputJson}
 
 - **Type:** `string | undefined`
 - **Default:** `undefined`
@@ -331,7 +331,7 @@ git checkout feature
 vitest bench --compare main.json
 ```
 
-#### benchmark.compare
+#### benchmark.compare <Version>1.6.0</Version> {#benchmark-compare}
 
 - **Type:** `string | undefined`
 - **Default:** `undefined`
