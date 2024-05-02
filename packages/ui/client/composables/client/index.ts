@@ -40,9 +40,19 @@ export const client = (function createVitestClient() {
   }
 })()
 
+function sort(a: File, b: File) {
+  if (a.name < b.name)
+    return -1
+
+  if (a.name > b.name)
+    return 1
+
+  return 0
+}
+
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
-export const files = computed(() => client.state.getFiles())
+export const files = computed(() => client.state.getFiles().sort(sort))
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
