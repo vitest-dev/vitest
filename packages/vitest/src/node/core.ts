@@ -95,6 +95,7 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.distPath = undefined!
     this.projectsTestFiles.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
@@ -109,11 +110,6 @@ export class Vitest {
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
-
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
 
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
@@ -508,7 +504,19 @@ export class Vitest {
       await project.initializeGlobalSetup()
   }
 
+  private async initializeDistPath() {
+    if (this.distPath)
+      return
+
+    // if Vitest is running globally, then we should still import local vitest if possible
+    const projectVitestPath = await this.vitenode.resolveId('vitest')
+    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    this.distPath = join(vitestDir, 'dist')
+  }
+
   async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
+    await this.initializeDistPath()
+
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
