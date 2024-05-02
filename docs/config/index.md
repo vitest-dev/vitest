@@ -2201,7 +2201,7 @@ The `location` property has `column` and `line` values that correspond to the `t
 This option has no effect if you do not use custom code that relies on this.
 :::
 
-### snapshotEnvironment <Badge type="info">1.5.0+</Badge> {#snapshotEnvironment}
+### snapshotEnvironment <Version>1.6.0</Version> {#snapshotEnvironment}
 
 - **Type:** `string`
 
@@ -2220,6 +2220,8 @@ export interface SnapshotEnvironment {
   removeSnapshotFile: (filepath: string) => Promise<void>
 }
 ```
+
+You can extend default `VitestSnapshotEnvironment` from `vitest/snapshot` entry point if you need to overwrite only a part of the API.
 
 ::: warning
 This is a low-level option and should be used only for advanced cases where you don't have access to default Node.js APIs.

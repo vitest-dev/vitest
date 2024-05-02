@@ -20,6 +20,8 @@ export default defineConfig({
   },
   test: {
     include: ['test/**.test.{ts,js}'],
+    // having a snapshot environment doesn't affect browser tests
+    snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
       enabled: true,
       name: browser,
