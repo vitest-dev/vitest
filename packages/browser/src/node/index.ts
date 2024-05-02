@@ -252,6 +252,6 @@ function scriptFormatter(scripts: BrowserScript[] | undefined) {
   if (!scripts?.length)
     return ''
   return scripts.map(({ content, src, async }) => {
-    return `<script type="module"${async ? ' async' : ''}${src ? ` src="${src}"` : ''}>${content}</script>`
+    return `<script type="module"${async ? ' async' : ''}${src ? ` src="${src}"` : ''}>${content || ''}</script>`
   }).join('\n')
 }
