@@ -16,11 +16,12 @@ export interface JUnitOptions {
   classname?: string
   suiteName?: string
   /**
+   * Write <system-out> and <system-err> for console output
    * @default true
    */
   includeConsoleOutput?: boolean
   /**
-   * Add `file` attribute to the output (validated on CIRCLE CI and GitLab CI)
+   * Add <testcase file="..."> attribute (validated on CIRCLE CI and GitLab CI)
    * @default false
    */
   addFileAttribute?: boolean
