@@ -112,11 +112,11 @@ test.each([true, false])('includeConsoleOutput %s', async (t) => {
   expect(stabilizeReport(stdout)).matchSnapshot()
 })
 
-// test.each([true, false])('addFileAttribute %s', async (t) => {
-//   const { stdout } = await runVitest({
-//     reporters: [['junit', { addFileAttribute: t }]],
-//     root: './fixtures/default',
-//     include: ['a.test.ts'],
-//   })
-//   expect(stabilizeReport(stdout)).matchSnapshot();
-// })
+test.each([true, false])('addFileAttribute %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { addFileAttribute: t }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})
