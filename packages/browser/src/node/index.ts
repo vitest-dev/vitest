@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { basename, resolve } from 'pathe'
+import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { Plugin } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
@@ -37,6 +37,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        let indexScripts: string | undefined
+        let testerScripts: string | undefined
         server.middlewares.use(async (req, res, next) => {
           if (!req.url)
             return next()
@@ -59,10 +61,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           })
 
           if (url.pathname === base) {
+            if (!indexScripts)
+              indexScripts = await formatScripts(project.config.browser.indexScripts, server)
+
             const html = replacer(await runnerHtml, {
               __VITEST_FAVICON__: favicon,
               __VITEST_TITLE__: 'Vitest Browser Runner',
-              __VITEST_SCRIPTS__: formatScripts(project.config.browser.indexScripts),
+              __VITEST_SCRIPTS__: indexScripts,
               __VITEST_INJECTOR__: injector,
             })
             res.write(html, 'utf-8')
@@ -74,10 +79,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
 
+          if (!testerScripts)
+            testerScripts = await formatScripts(project.config.browser.testerScripts, server)
+
           const html = replacer(await testerHtml, {
             __VITEST_FAVICON__: favicon,
             __VITEST_TITLE__: 'Vitest Browser Tester',
-            __VITEST_SCRIPTS__: formatScripts(project.config.browser.testerScripts),
+            __VITEST_SCRIPTS__: testerScripts,
             __VITEST_INJECTOR__: injector,
             __VITEST_APPEND__:
             // TODO: have only a single global variable to not pollute the global scope
@@ -236,10 +244,17 @@ function replacer(code: string, values: Record<string, string>) {
   return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
 }
 
-function formatScripts(scripts: BrowserScript[] | undefined) {
+async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteDevServer) {
   if (!scripts?.length)
     return ''
-  return scripts.map(({ content, src, async, type = 'module' }) => {
-    return `<script type="${type}"${async ? ' async' : ''}${src ? ` src="${src}"` : ''}>${content || ''}</script>`
-  }).join('\n')
+  const promises = scripts.map(async ({ content, src, async, id, type = 'module' }, index) => {
+    const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
+    const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
+    await server.moduleGraph.ensureEntryFromUrl(transformId)
+    const contentProcessed = content && type === 'module'
+      ? (await server.pluginContainer.transform(content, transformId)).code
+      : content
+    return `<script type="${type}"${async ? ' async' : ''}${srcLink ? ` src="${srcLink}"` : ''}>${contentProcessed || ''}</script>`
+  })
+  return (await Promise.all(promises)).join('\n')
 }

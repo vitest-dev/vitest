@@ -26,8 +26,8 @@ describe.each([
   })
 
   test(`[${description}] tests are actually running`, () => {
-    expect(browserResultJson.testResults).toHaveLength(14)
-    expect(passedTests).toHaveLength(12)
+    expect(browserResultJson.testResults).toHaveLength(15)
+    expect(passedTests).toHaveLength(13)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')

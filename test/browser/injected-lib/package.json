@@ -1,0 +1,7 @@
+{
+  "name": "@vitest/injected-lib",
+  "type": "module",
+  "exports": {
+    "default": "./index.js"
+  }
+}
