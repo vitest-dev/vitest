@@ -6,6 +6,7 @@ import type { Plugin, ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
+import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
@@ -254,7 +255,7 @@ async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteD
     const contentProcessed = content && type === 'module'
       ? (await server.pluginContainer.transform(content, transformId)).code
       : content
-    return `<script type="${type}"${async ? ' async' : ''}${srcLink ? ` src="${srcLink}"` : ''}>${contentProcessed || ''}</script>`
+    return `<script type="${type}"${async ? ' async' : ''}${srcLink ? ` src="${slash(`/@fs/${srcLink}`)}"` : ''}>${contentProcessed || ''}</script>`
   })
   return (await Promise.all(promises)).join('\n')
 }
