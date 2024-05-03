@@ -15,6 +15,15 @@ export interface JUnitOptions {
   outputFile?: string
   classname?: string
   suiteName?: string
+  /**
+   * @default true
+   */
+  includeConsoleOutput?: boolean
+  /**
+   * Add `file` attribute to the output (validated on CIRCLE CI and GitLab CI)
+   * @default false
+   */
+  addFileAttribute?: boolean
 }
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -88,7 +97,8 @@ export class JUnitReporter implements Reporter {
   private options: JUnitOptions
 
   constructor(options: JUnitOptions) {
-    this.options = options
+    this.options = { ...options }
+    this.options.includeConsoleOutput ??= true
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -163,8 +173,10 @@ export class JUnitReporter implements Reporter {
         name: task.name,
         time: getDuration(task),
       }, async () => {
-        await this.writeLogs(task, 'out')
-        await this.writeLogs(task, 'err')
+        if (this.options.includeConsoleOutput) {
+          await this.writeLogs(task, 'out')
+          await this.writeLogs(task, 'err')
+        }
 
         if (task.mode === 'skip' || task.mode === 'todo')
           await this.logger.log('<skipped/>')
