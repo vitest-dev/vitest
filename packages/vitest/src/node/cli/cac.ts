@@ -1,14 +1,14 @@
 import { normalize } from 'pathe'
-import cac, { type CAC } from 'cac'
+import cac, { type CAC, type Command } from 'cac'
 import c from 'picocolors'
 import { version } from '../../../package.json'
 import { toArray } from '../../utils/base'
 import type { Vitest, VitestRunMode } from '../../types'
 import type { CliOptions } from './cli-api'
-import type { CLIOption } from './cli-config'
-import { cliOptionsConfig } from './cli-config'
+import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
+import { benchCliOptionsConfig, cliOptionsConfig } from './cli-config'
 
-function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
+function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
   let command = option.shorthand ? `-${option.shorthand}, --${commandName}` : `--${commandName}`
   if ('argument' in option)
@@ -56,17 +56,20 @@ interface CLIOptions {
   allowUnknownOptions?: boolean
 }
 
+function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
+  for (const [optionName, option] of Object.entries(options)) {
+    if (option)
+      addCommand(cli, optionName, option)
+  }
+}
+
 export function createCLI(options: CLIOptions = {}) {
   const cli = cac('vitest')
 
   cli
     .version(version)
 
-  for (const optionName in cliOptionsConfig) {
-    const option = (cliOptionsConfig as any)[optionName] as CLIOption<any> | null
-    if (option)
-      addCommand(cli, optionName, option)
-  }
+  addCliOptions(cli, cliOptionsConfig)
 
   cli.help((info) => {
     const helpSection = info.find(current => current.title?.startsWith('For more info, run any command'))
@@ -158,9 +161,12 @@ export function createCLI(options: CLIOptions = {}) {
     .command('dev [...filters]', undefined, options)
     .action(watch)
 
-  cli
-    .command('bench [...filters]', undefined, options)
-    .action(benchmark)
+  addCliOptions(
+    cli
+      .command('bench [...filters]', undefined, options)
+      .action(benchmark),
+    benchCliOptionsConfig,
+  )
 
   // TODO: remove in Vitest 2.0
   cli

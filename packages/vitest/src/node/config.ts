@@ -136,6 +136,9 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.standalone && !resolved.watch)
+    throw new Error(`Vitest standalone mode requires --watch`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 
@@ -247,6 +250,9 @@ export function resolveConfig(
 
   if (resolved.runner)
     resolved.runner = resolvePath(resolved.runner, resolved.root)
+
+  if (resolved.snapshotEnvironment)
+    resolved.snapshotEnvironment = resolvePath(resolved.snapshotEnvironment, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -375,6 +381,12 @@ export function resolveConfig(
 
     if (options.outputFile)
       resolved.benchmark.outputFile = options.outputFile
+
+    // --compare from cli
+    if (options.compare)
+      resolved.benchmark.compare = options.compare
+    if (options.outputJson)
+      resolved.benchmark.outputJson = options.outputJson
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>

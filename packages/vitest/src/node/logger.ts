@@ -189,7 +189,10 @@ export class Logger {
     if (this.ctx.coverageProvider)
       this.log(c.dim('      Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
 
-    this.log()
+    if (this.ctx.config.standalone)
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+    else
+      this.log()
   }
 
   printUnhandledErrors(errors: unknown[]) {

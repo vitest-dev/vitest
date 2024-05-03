@@ -202,13 +202,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
         array: true,
       },
       reportOnFailure: {
-        description: 'Generate coverage report even when tests fail (default: false)',
+        description: 'Generate coverage report even when tests fail (default: `false`)',
       },
       allowExternal: {
-        description: 'Collect coverage of files outside the project root (default: false)',
+        description: 'Collect coverage of files outside the project root (default: `false`)',
       },
       skipFull: {
-        description: 'Do not show files with 100% statement, branch, and function coverage (default: false)',
+        description: 'Do not show files with 100% statement, branch, and function coverage (default: `false`)',
       },
       thresholds: {
         description: null,
@@ -350,6 +350,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
       fileParallelism: {
         description: 'Should all test files run in parallel. Use `--browser.file-parallelism=false` to disable (default: same as `--file-parallelism`)',
       },
+      indexScripts: null,
+      testerScripts: null,
     },
   },
   pool: {
@@ -601,6 +603,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description: 'Clear terminal screen when re-running tests during watch mode (default: `true`)',
   },
+  standalone: {
+    description: 'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
+  },
 
   // disable CLI options
   cliExclude: null,
@@ -634,4 +639,18 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   includeTaskLocation: null,
+  snapshotEnvironment: null,
+  compare: null,
+  outputJson: null,
+}
+
+export const benchCliOptionsConfig: Pick<VitestCLIOptions, 'compare' | 'outputJson'> = {
+  compare: {
+    description: 'benchmark output file to compare against',
+    argument: '<filename>',
+  },
+  outputJson: {
+    description: 'benchmark output file',
+    argument: '<filename>',
+  },
 }

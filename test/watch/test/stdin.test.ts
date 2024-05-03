@@ -1,68 +1,64 @@
 import { rmSync, writeFileSync } from 'node:fs'
-import { expect, onTestFinished, test } from 'vitest'
+import { describe, expect, onTestFinished, test } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
-const options = { root: 'fixtures', watch: true }
+const _options = { root: 'fixtures', watch: true }
 
-test('quit watch mode', async () => {
-  const { vitest, waitForClose } = await runVitest(options)
+describe.each([true, false])('standalone mode is %s', (standalone) => {
+  const options = { ..._options, standalone }
 
-  vitest.write('q')
+  test('quit watch mode', async () => {
+    const { vitest, waitForClose } = await runVitest(options)
 
-  await waitForClose()
-})
+    vitest.write('q')
 
-test('rerun current pattern tests', async () => {
-  const { vitest } = await runVitest({ ...options, testNamePattern: 'sum' })
+    await waitForClose()
+  })
 
-  vitest.write('r')
+  test('filter by filename', async () => {
+    const { vitest } = await runVitest(options)
 
-  await vitest.waitForStdout('RERUN')
-  await vitest.waitForStdout('Test name pattern: /sum/')
-  await vitest.waitForStdout('1 passed')
-})
+    vitest.write('p')
 
-test('filter by filename', async () => {
-  const { vitest } = await runVitest(options)
+    await vitest.waitForStdout('Input filename pattern')
 
-  vitest.write('p')
+    vitest.write('math')
 
-  await vitest.waitForStdout('Input filename pattern')
+    await vitest.waitForStdout('Pattern matches 1 result')
+    await vitest.waitForStdout('› math.test.ts')
 
-  vitest.write('math')
+    vitest.write('\n')
 
-  await vitest.waitForStdout('Pattern matches 1 result')
-  await vitest.waitForStdout('› math.test.ts')
+    await vitest.waitForStdout('Filename pattern: math')
+    await vitest.waitForStdout('1 passed')
+  })
 
-  vitest.write('\n')
+  test('filter by test name', async () => {
+    const { vitest } = await runVitest(options)
 
-  await vitest.waitForStdout('Filename pattern: math')
-  await vitest.waitForStdout('1 passed')
-})
+    vitest.write('t')
 
-test('filter by test name', async () => {
-  const { vitest } = await runVitest(options)
+    await vitest.waitForStdout('Input test name pattern')
 
-  vitest.write('t')
+    vitest.write('sum')
+    if (standalone)
+      await vitest.waitForStdout('Pattern matches no results')
+    else
+      await vitest.waitForStdout('Pattern matches 1 result')
+    await vitest.waitForStdout('› sum')
 
-  await vitest.waitForStdout('Input test name pattern')
+    vitest.write('\n')
 
-  vitest.write('sum')
-  await vitest.waitForStdout('Pattern matches 1 result')
-  await vitest.waitForStdout('› sum')
+    await vitest.waitForStdout('Test name pattern: /sum/')
+    await vitest.waitForStdout('1 passed')
+  })
 
-  vitest.write('\n')
+  test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
+    const { vitest } = await runVitest(options)
 
-  await vitest.waitForStdout('Test name pattern: /sum/')
-  await vitest.waitForStdout('1 passed')
-})
-
-test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
-  const { vitest } = await runVitest(options)
-
-  const testPath = 'fixtures/cancel.test.ts'
-  const testCase = `// Dynamic test case
+    const testPath = 'fixtures/cancel.test.ts'
+    const testCase = `// Dynamic test case
 import { afterAll, afterEach, test } from 'vitest'
 
 // These should be called even when test is cancelled
@@ -80,17 +76,28 @@ test('2 - test that is cancelled', async () => {
 })
 `
 
-  onTestFinished(() => rmSync(testPath))
-  writeFileSync(testPath, testCase, 'utf8')
+    onTestFinished(() => rmSync(testPath))
+    writeFileSync(testPath, testCase, 'utf8')
 
-  // Test case is running, cancel it
-  await vitest.waitForStdout('[cancel-test]: test')
-  vitest.write('c')
+    // Test case is running, cancel it
+    await vitest.waitForStdout('[cancel-test]: test')
+    vitest.write('c')
 
-  // Test hooks should still be called
-  await vitest.waitForStdout('CANCELLED')
-  await vitest.waitForStdout('[cancel-test]: afterAll')
-  await vitest.waitForStdout('[cancel-test]: afterEach')
+    // Test hooks should still be called
+    await vitest.waitForStdout('CANCELLED')
+    await vitest.waitForStdout('[cancel-test]: afterAll')
+    await vitest.waitForStdout('[cancel-test]: afterEach')
 
-  expect(vitest.stdout).not.include('[cancel-test]: should not run')
+    expect(vitest.stdout).not.include('[cancel-test]: should not run')
+  })
+})
+
+test('rerun current pattern tests', async () => {
+  const { vitest } = await runVitest({ ..._options, testNamePattern: 'sum' })
+
+  vitest.write('r')
+
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('Test name pattern: /sum/')
+  await vitest.waitForStdout('1 passed')
 })

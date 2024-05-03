@@ -1,5 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`addFileAttribute false 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="ok.test.ts" name="ok" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`addFileAttribute true 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="ok.test.ts" file="ok.test.ts" name="ok" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
 exports[`emits <failure> when beforeAll/afterAll failed 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="8" failures="2" errors="0" time="...">
@@ -109,6 +131,36 @@ Error: throwSuite
  ❯ throwSuite error.test.ts:48:9
  ❯ error.test.ts:4:3
             </failure>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`includeConsoleOutput false 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="console-simple.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="console-simple.test.ts" name="test" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`includeConsoleOutput true 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="console-simple.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="console-simple.test.ts" name="test" time="...">
+            <system-out>
+__test_stdout__
+
+            </system-out>
+            <system-err>
+__test_stderr__
+
+            </system-err>
         </testcase>
     </testsuite>
 </testsuites>

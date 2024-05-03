@@ -10,8 +10,8 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils/global'
-import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import * as VitestIndex from '../index'
+import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
@@ -26,8 +26,6 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     value: VitestIndex,
     enumerable: false,
   })
-
-  config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(workerState.rpc)
 
   setupColors(createColors(isatty(1)))
 
@@ -55,7 +53,12 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
 
-  const runner = await resolveTestRunner(config, executor)
+  const [runner, snapshotEnvironment] = await Promise.all([
+    resolveTestRunner(config, executor),
+    resolveSnapshotEnvironment(config, executor),
+  ])
+
+  config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
   workerState.onCancel.then((reason) => {
     closeInspector(config)

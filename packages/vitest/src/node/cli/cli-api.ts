@@ -88,11 +88,17 @@ export async function startVitest(
   })
 
   ctx.onAfterSetServer(() => {
-    ctx.start(cliFilters)
+    if (ctx.config.standalone)
+      ctx.init()
+    else
+      ctx.start(cliFilters)
   })
 
   try {
-    await ctx.start(cliFilters)
+    if (ctx.config.standalone)
+      await ctx.init()
+    else
+      await ctx.start(cliFilters)
   }
   catch (e) {
     process.exitCode = 1

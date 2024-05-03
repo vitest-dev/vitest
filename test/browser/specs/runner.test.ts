@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { runBrowserTests } from './utils'
 
 describe.each([
@@ -26,8 +26,12 @@ describe.each([
   })
 
   test(`[${description}] tests are actually running`, () => {
-    expect(browserResultJson.testResults).toHaveLength(14)
-    expect(passedTests).toHaveLength(12)
+    onTestFailed(() => {
+      console.error(stderr)
+    })
+
+    expect(browserResultJson.testResults).toHaveLength(15)
+    expect(passedTests).toHaveLength(13)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')

@@ -91,6 +91,10 @@
     "./reporters": {
       "types": "./dist/reporters.d.ts",
       "default": "./dist/reporters.js"
+    },
+    "./snapshot": {
+      "types": "./dist/snapshot.d.ts",
+      "default": "./dist/snapshot.js"
     }
   },
   "main": "./dist/index.js",
