@@ -109,6 +109,10 @@ export interface BrowserScript {
   content?: string
   src?: string
   async?: boolean
+  /**
+   * @default 'module'
+   */
+  type?: string
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
