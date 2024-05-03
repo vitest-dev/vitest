@@ -170,6 +170,7 @@ export class JUnitReporter implements Reporter {
       await this.writeElement('testcase', {
         // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
         classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        file: this.options.addFileAttribute ? filename : undefined,
         name: task.name,
         time: getDuration(task),
       }, async () => {
@@ -271,8 +272,9 @@ export class JUnitReporter implements Reporter {
 
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
+        const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement('testsuite', {
-          name: relative(this.ctx.config.root, file.filepath),
+          name: filename,
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
@@ -281,7 +283,7 @@ export class JUnitReporter implements Reporter {
           skipped: file.stats.skipped,
           time: getDuration(file),
         }, async () => {
-          await this.writeTasks(file.tasks, file.name)
+          await this.writeTasks(file.tasks, filename)
         })
       }
     })
