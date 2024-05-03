@@ -68,7 +68,7 @@ export class TableReporter extends BaseReporter {
     }
   }
 
-  onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.stopListRender()
     this.ctx.logger.log()
     super.onFinished(files, errors)
