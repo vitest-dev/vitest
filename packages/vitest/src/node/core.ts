@@ -9,7 +9,7 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { CancelReason, File } from '@vitest/runner'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
@@ -28,6 +28,7 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
+import { readBlobs } from './reporters/blob'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -380,6 +381,28 @@ export class Vitest {
 
   private async initBrowserProviders() {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
+  }
+
+  async blob() {
+    const blobs = await readBlobs(this.config.blob || [])
+
+    if (!blobs.length)
+      throw new Error(`vitest.blob() requires at least one blob file paths in the config`)
+
+    await this.report('onInit', this)
+
+    // TODO; remove duplicates
+    const files = blobs.flatMap(blob => blob.files)
+    const errors = blobs.flatMap(blob => blob.errors)
+    this.state.collectFiles(files)
+
+    const testPacks = files
+      .flatMap(file => getTasks(file))
+      .map<TaskResultPack>(i => [i.id, i.result, i.meta])
+
+    await this.report('onCollected', files)
+    await this.report('onTaskUpdate', testPacks)
+    await this.report('onFinished', files, errors)
   }
 
   async start(filters?: string[]) {

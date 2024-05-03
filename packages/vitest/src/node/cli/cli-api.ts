@@ -95,7 +95,9 @@ export async function startVitest(
   })
 
   try {
-    if (ctx.config.standalone)
+    if (ctx.config.blob.length)
+      await ctx.blob()
+    else if (ctx.config.standalone)
       await ctx.init()
     else
       await ctx.start(cliFilters)

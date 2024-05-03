@@ -11,6 +11,8 @@ import { HangingProcessReporter } from './hanging-process'
 import { GithubActionsReporter } from './github-actions'
 import type { BaseReporter } from './base'
 import type { HTMLOptions } from './html'
+import type { BlobOptions } from './blob'
+import { BlobReporter } from './blob'
 
 export {
   DefaultReporter,
@@ -31,6 +33,7 @@ export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './jso
 export const ReportersMap = {
   'default': DefaultReporter,
   'basic': BasicReporter,
+  'blob': BlobReporter,
   'verbose': VerboseReporter,
   'dot': DotReporter,
   'json': JsonReporter,
@@ -49,6 +52,7 @@ export interface BuiltinReporterOptions {
   'verbose': never
   'dot': never
   'json': JsonOptions
+  'blob': BlobOptions
   'tap': never
   'tap-flat': never
   'junit': JUnitOptions

@@ -606,6 +606,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   standalone: {
     description: 'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
   },
+  blob: {
+    description: 'Paths to blob reports. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+    argument: '<path>',
+    array: true,
+  },
 
   // disable CLI options
   cliExclude: null,

@@ -139,6 +139,11 @@ export function resolveConfig(
   if (resolved.standalone && !resolved.watch)
     throw new Error(`Vitest standalone mode requires --watch`)
 
+  resolved.blob = toArray(resolved.blob || [])
+
+  if (resolved.blob.length && resolved.watch)
+    throw new Error(`Cannot merge blobs with --watch enabled`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 
