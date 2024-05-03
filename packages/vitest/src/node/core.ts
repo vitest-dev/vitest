@@ -391,7 +391,9 @@ export class Vitest {
 
     await this.report('onInit', this)
 
-    // TODO; remove duplicates
+    // TODO: remove duplicates
+    // TODO: trigger onConsoleLog
+    // TODO: how to print error stack frame without module graph?
     const files = blobs.flatMap(blob => blob.files)
     const errors = blobs.flatMap(blob => blob.errors)
     this.state.collectFiles(files)

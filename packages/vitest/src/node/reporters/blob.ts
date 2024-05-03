@@ -25,6 +25,7 @@ export class BlobReporter implements Reporter {
 
   async onFinished(files?: File[], errors?: unknown[]) {
     const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob') ?? 'blob.json'
+    // TODO: store module graph?
     const report = stringify([files, errors])
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
