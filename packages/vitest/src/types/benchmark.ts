@@ -39,6 +39,16 @@ export interface BenchmarkUserOptions {
    * Also definable individually per reporter by using an object instead.
    */
   outputFile?: string | (Partial<Record<BenchmarkBuiltinReporters, string>> & Record<string, string>)
+
+  /**
+   * benchmark output file to compare against
+   */
+  compare?: string
+
+  /**
+   * benchmark output file
+   */
+  outputJson?: string
 }
 
 export interface Benchmark extends Custom {

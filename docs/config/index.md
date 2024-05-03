@@ -312,6 +312,32 @@ By providing an object instead of a string you can define individual outputs whe
 
 To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
+#### benchmark.outputJson <Version>1.6.0</Version> {#benchmark-outputJson}
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to store the benchmark result, which can be used for `--compare` option later.
+
+For example:
+
+```sh
+# save main branch's result
+git checkout main
+vitest bench --outputJson main.json
+
+# change a branch and compare against main
+git checkout feature
+vitest bench --compare main.json
+```
+
+#### benchmark.compare <Version>1.6.0</Version> {#benchmark-compare}
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to a previous benchmark result to compare against current runs.
+
 ### alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`

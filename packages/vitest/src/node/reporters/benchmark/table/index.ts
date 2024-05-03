@@ -1,8 +1,11 @@
+import fs from 'node:fs'
 import c from 'picocolors'
+import * as pathe from 'pathe'
 import type { TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
-import { getFullName } from '../../../../utils'
+import type { BenchmarkResult, File } from '../../../../types'
+import { getFullName, getTasks } from '../../../../utils'
 import { getStateSymbol } from '../../renderers/utils'
 import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
 
@@ -20,11 +23,24 @@ export class TableReporter extends BaseReporter {
     super.onWatcherStart()
   }
 
-  onCollected() {
+  async onCollected() {
+    this.rendererOptions.logger = this.ctx.logger
+    this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
+    this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
+    if (this.ctx.config.benchmark?.compare) {
+      const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
+      try {
+        this.rendererOptions.compare = flattenFormattedBenchamrkReport(
+          JSON.parse(
+            await fs.promises.readFile(compareFile, 'utf-8'),
+          ),
+        )
+      }
+      catch (e) {
+        this.ctx.logger.error(`Failed to read '${compareFile}'`, e)
+      }
+    }
     if (this.isTTY) {
-      this.rendererOptions.logger = this.ctx.logger
-      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createTableRenderer(files, this.rendererOptions).start()
@@ -56,6 +72,18 @@ export class TableReporter extends BaseReporter {
     await this.stopListRender()
     this.ctx.logger.log()
     await super.onFinished(files, errors)
+
+    // write output for future comparison
+    let outputFile = this.ctx.config.benchmark?.outputJson
+    if (outputFile) {
+      outputFile = pathe.resolve(this.ctx.config.root, outputFile)
+      const outputDirectory = pathe.dirname(outputFile)
+      if (!fs.existsSync(outputDirectory))
+        await fs.promises.mkdir(outputDirectory, { recursive: true })
+      const output = createFormattedBenchamrkReport(files)
+      await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
+      this.ctx.logger.log(`Benchmark report written to ${outputFile}`)
+    }
   }
 
   async onWatcherStart() {
@@ -79,4 +107,71 @@ export class TableReporter extends BaseReporter {
     this.renderer?.clear()
     super.onUserConsoleLog(log)
   }
+}
+
+export interface FormattedBenchamrkReport {
+  files: {
+    filepath: string
+    groups: FormattedBenchmarkGroup[]
+  }[]
+}
+
+// flat results with TaskId as a key
+export interface FlatBenchmarkReport {
+  [id: string]: FormattedBenchmarkResult
+}
+
+interface FormattedBenchmarkGroup {
+  fullName: string
+  benchmarks: FormattedBenchmarkResult[]
+}
+
+export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
+  id: string
+  sampleCount: number
+}
+
+function createFormattedBenchamrkReport(files: File[]) {
+  const report: FormattedBenchamrkReport = { files: [] }
+  for (const file of files) {
+    const groups: FormattedBenchmarkGroup[] = []
+    for (const task of getTasks(file)) {
+      if (task && task.type === 'suite') {
+        const benchmarks: FormattedBenchmarkResult[] = []
+        for (const t of task.tasks) {
+          const benchmark = t.meta.benchmark && t.result?.benchmark
+          if (benchmark) {
+            const { samples, ...rest } = benchmark
+            benchmarks.push({
+              id: t.id,
+              sampleCount: samples.length,
+              ...rest,
+            })
+          }
+        }
+        if (benchmarks.length) {
+          groups.push({
+            fullName: getFullName(task, ' > '),
+            benchmarks,
+          })
+        }
+      }
+    }
+    report.files.push({
+      filepath: file.filepath,
+      groups,
+    })
+  }
+  return report
+}
+
+function flattenFormattedBenchamrkReport(report: FormattedBenchamrkReport): FlatBenchmarkReport {
+  const flat: FlatBenchmarkReport = {}
+  for (const file of report.files) {
+    for (const group of file.groups) {
+      for (const t of group.benchmarks)
+        flat[t.id] = t
+    }
+  }
+  return flat
 }
