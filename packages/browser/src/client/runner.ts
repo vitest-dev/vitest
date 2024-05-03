@@ -3,7 +3,7 @@ import type { ResolvedConfig } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
 import { getConfig, importId } from './utils'
-import { BrowserSnapshotEnvironment } from './snapshot'
+import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
@@ -92,7 +92,10 @@ export async function initiateRunner() {
   if (cachedRunner)
     return cachedRunner
   const config = getConfig()
-  const [{ VitestTestRunner, NodeBenchmarkRunner }, { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers }] = await Promise.all([
+  const [
+    { VitestTestRunner, NodeBenchmarkRunner },
+    { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
+  ] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
@@ -101,7 +104,7 @@ export async function initiateRunner() {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment)
-    config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
+    config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
   const runner = new BrowserRunner({
     config,
   })
