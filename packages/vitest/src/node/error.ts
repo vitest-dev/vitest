@@ -29,7 +29,7 @@ interface PrintErrorResult {
 }
 
 // use Logger with custom Console to capture entire error printing
-export async function captuerPrintError(
+export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   project: WorkspaceProject,
@@ -41,14 +41,14 @@ export async function captuerPrintError(
       callback()
     },
   })
-  const result = await printError(error, project, {
+  const result = printError(error, project, {
     showCodeFrame: false,
     logger: new Logger(ctx, writable, writable),
   })
   return { nearest: result?.nearest, output }
 }
 
-export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): Promise<PrintErrorResult | undefined> {
+export function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): PrintErrorResult | undefined {
   const { showCodeFrame = true, fullStack = false, type } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
@@ -140,7 +140,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    await printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
+    printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)

@@ -141,7 +141,7 @@ export class WorkspaceProject {
     }
     catch (e) {
       this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-      await this.logger.printError(e)
+      this.logger.printError(e)
       process.exit(1)
     }
   }
@@ -155,7 +155,7 @@ export class WorkspaceProject {
       }
       catch (error) {
         this.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
-        await this.logger.printError(error)
+        this.logger.printError(error)
         process.exitCode = 1
       }
     }

@@ -183,7 +183,7 @@ export function createTableRenderer(_tasks: Task[], options: TableRendererOption
       update()
       return this
     },
-    async stop() {
+    stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined

@@ -215,7 +215,7 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
       tasks = _tasks
       return this
     },
-    async stop() {
+    stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined
