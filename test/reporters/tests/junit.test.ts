@@ -102,3 +102,21 @@ test('options.suiteName changes name property', async () => {
 function stabilizeReport(report: string) {
   return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
 }
+
+test.each([true, false])('includeConsoleOutput %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { includeConsoleOutput: t }]],
+    root,
+    include: ['console-simple.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})
+
+// test.each([true, false])('addFileAttribute %s', async (t) => {
+//   const { stdout } = await runVitest({
+//     reporters: [['junit', { addFileAttribute: t }]],
+//     root: './fixtures/default',
+//     include: ['a.test.ts'],
+//   })
+//   expect(stabilizeReport(stdout)).matchSnapshot();
+// })
