@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { runBrowserTests } from './utils'
 
 describe.each([
@@ -26,6 +26,10 @@ describe.each([
   })
 
   test(`[${description}] tests are actually running`, () => {
+    onTestFailed(() => {
+      console.error(stderr)
+    })
+
     expect(browserResultJson.testResults).toHaveLength(15)
     expect(passedTests).toHaveLength(13)
     expect(failedTests).toHaveLength(2)
