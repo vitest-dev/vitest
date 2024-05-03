@@ -11,12 +11,12 @@ it('should export self', () => {
 
 it('example 1', async () => {
   const entryPath = resolve(__dirname, '../src/self-export-example1.ts')
-  const cli = await runViteNodeCli(entryPath)
-  await cli.waitForStdout('Function')
+  const { viteNode } = await runViteNodeCli(entryPath)
+  await viteNode.waitForStdout('Function')
 }, 60_000)
 
 it('example 2', async () => {
   const entryPath = resolve(__dirname, '../src/self-export-example2.ts')
-  const cli = await runViteNodeCli(entryPath)
-  await cli.waitForStdout('HelloWorld: 1')
+  const { viteNode } = await runViteNodeCli(entryPath)
+  await viteNode.waitForStdout('HelloWorld: 1')
 }, 60_000)

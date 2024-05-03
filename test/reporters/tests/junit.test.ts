@@ -57,6 +57,11 @@ test('emits <failure> when beforeAll/afterAll failed', async () => {
   expect(xml).toMatchSnapshot()
 })
 
+test('format error', async () => {
+  const { stdout } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
+})
+
 test('write testsuite name relative to root config', async () => {
   const { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/better-testsuite-name' })
 
@@ -97,3 +102,21 @@ test('options.suiteName changes name property', async () => {
 function stabilizeReport(report: string) {
   return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
 }
+
+test.each([true, false])('includeConsoleOutput %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { includeConsoleOutput: t }]],
+    root,
+    include: ['console-simple.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})
+
+test.each([true, false])('addFileAttribute %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { addFileAttribute: t }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})

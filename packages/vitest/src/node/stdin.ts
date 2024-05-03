@@ -1,7 +1,8 @@
 import readline from 'node:readline'
+import type { Writable } from 'node:stream'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { relative } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { getTests, isWindows, stdout } from '../utils'
 import { toArray } from '../utils/base'
 import type { Vitest } from './core'
@@ -28,7 +29,7 @@ ${keys.map(i => c.dim('  press ') + c.reset([i[0]].flat().map(c.bold).join(', ')
   )
 }
 
-export function registerConsoleShortcuts(ctx: Vitest) {
+export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream = process.stdin, stdout: NodeJS.WriteStream | Writable) {
   let latestFilename = ''
 
   async function _keypressHandler(str: string, key: any) {
@@ -72,8 +73,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     if (name === 'u')
       return ctx.updateSnapshot()
     // rerun all tests
-    if (name === 'a' || name === 'return')
-      return ctx.changeNamePattern('')
+    if (name === 'a' || name === 'return') {
+      const files = await ctx.getTestFilepaths()
+      return ctx.changeNamePattern('', files, 'rerun all tests')
+    }
     // rerun current pattern tests
     if (name === 'r')
       return ctx.rerunFiles()
@@ -97,7 +100,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter('Input test name pattern (RegExp)')
+    const watchFilter = new WatchFilter('Input test name pattern (RegExp)', stdin, stdout)
     const filter = await watchFilter.filter((str: string) => {
       const files = ctx.state.getFiles()
       const tests = getTests(files)
@@ -112,7 +115,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     })
 
     on()
-    await ctx.changeNamePattern(filter?.trim() || '', undefined, 'change pattern')
+    const files = ctx.state.getFilepaths()
+    // if running in standalone mode, Vitest instance doesn't know about any test file
+    const cliFiles = ctx.config.standalone && !files.length
+      ? await ctx.getTestFilepaths()
+      : undefined
+
+    await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
   }
 
   async function inputProjectName() {
@@ -130,7 +139,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   async function inputFilePattern() {
     off()
 
-    const watchFilter = new WatchFilter('Input filename pattern')
+    const watchFilter = new WatchFilter('Input filename pattern', stdin, stdout)
 
     const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.globTestFiles([str])
@@ -142,26 +151,30 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     on()
 
     latestFilename = filter?.trim() || ''
+    const lastResults = watchFilter.getLastResults()
 
-    await ctx.changeFilenamePattern(latestFilename)
+    await ctx.changeFilenamePattern(
+      latestFilename,
+      filter && lastResults.length ? lastResults.map(i => resolve(ctx.config.root, i)) : undefined,
+    )
   }
 
   let rl: readline.Interface | undefined
   function on() {
     off()
-    rl = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
-    readline.emitKeypressEvents(process.stdin, rl)
-    if (process.stdin.isTTY)
-      process.stdin.setRawMode(true)
-    process.stdin.on('keypress', keypressHandler)
+    rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 50 })
+    readline.emitKeypressEvents(stdin, rl)
+    if (stdin.isTTY)
+      stdin.setRawMode(true)
+    stdin.on('keypress', keypressHandler)
   }
 
   function off() {
     rl?.close()
     rl = undefined
-    process.stdin.removeListener('keypress', keypressHandler)
-    if (process.stdin.isTTY)
-      process.stdin.setRawMode(false)
+    stdin.removeListener('keypress', keypressHandler)
+    if (stdin.isTTY)
+      stdin.setRawMode(false)
   }
 
   on()

@@ -73,9 +73,11 @@ export async function startVitest(
     return ctx
   }
 
+  const stdin = vitestOptions?.stdin || process.stdin
+  const stdout = vitestOptions?.stdout || process.stdout
   let stdinCleanup
-  if (process.stdin.isTTY && ctx.config.watch)
-    stdinCleanup = registerConsoleShortcuts(ctx)
+  if (stdin.isTTY && ctx.config.watch)
+    stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
@@ -86,11 +88,17 @@ export async function startVitest(
   })
 
   ctx.onAfterSetServer(() => {
-    ctx.start(cliFilters)
+    if (ctx.config.standalone)
+      ctx.init()
+    else
+      ctx.start(cliFilters)
   })
 
   try {
-    await ctx.start(cliFilters)
+    if (ctx.config.standalone)
+      await ctx.init()
+    else
+      await ctx.start(cliFilters)
   }
   catch (e) {
     process.exitCode = 1

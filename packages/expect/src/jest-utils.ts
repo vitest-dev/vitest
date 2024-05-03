@@ -334,7 +334,7 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
     return iterableEquality(
       a,
       b,
-      [...filteredCustomTesters],
+      [...customTesters],
       [...aStack],
       [...bStack],
     )
@@ -411,6 +411,11 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
   if (!bIterator.next().done)
     return false
 
+  const aEntries = Object.entries(a)
+  const bEntries = Object.entries(b)
+  if (!equals(aEntries, bEntries))
+    return false
+
   // Remove the first value from the stack of traversed values.
   aStack.pop()
   bStack.pop()
@@ -452,7 +457,7 @@ export function subsetEquality(object: unknown, subset: unknown, customTesters: 
           return undefined
 
         return Object.keys(subset).every((key) => {
-          if (isObjectWithKeys(subset[key])) {
+          if (subset[key] != null && typeof subset[key] === 'object') {
             if (seenReferences.has(subset[key]))
               return equals(object[key], subset[key], filteredCustomTesters)
 

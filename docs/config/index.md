@@ -344,6 +344,14 @@ A file path to a previous benchmark result to compare against current runs.
 
 Define custom aliases when running inside tests. They will be merged with aliases from `resolve.alias`.
 
+::: warning
+Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https://vitejs.dev/guide/ssr.html#ssr-externals).
+
+1. Aliases affect only modules imported directly with an `import` keyword by an [inlined](#server-deps-inline) module (all source code is inlined by default).
+2. Vitest does not support aliasing `require` calls.
+3. If you are aliasing an external dependency (e.g., `react` -> `preact`), you may want to alias the actual `node_modules` packages instead to make it work for externalized dependencies. Both [Yarn](https://classic.yarnpkg.com/en/docs/cli/add/#toc-yarn-add-alias) and [pnpm](https://pnpm.io/aliases/) support aliasing via the `npm:` prefix.
+:::
+
 ### globals
 
 - **Type:** `boolean`
@@ -1000,28 +1008,31 @@ Since Vitest 1.0.0-beta, global setup runs only if there is at least one running
 
 Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, since 1.0.0 you can pass down serializable data to tests via `provide` method:
 
-```ts
-// globalSetup.js
+:::code-group
+```js [globalSetup.js]
 export default function setup({ provide }) {
   provide('wsPort', 3000)
 }
 ```
+```ts [globalSetup.ts]
+import type { GlobalSetupContext } from 'vitest/node'
 
-```ts
-// example.test.js
-import { inject } from 'vitest'
+export default function setup({ provide }: GlobalSetupContext) {
+  provide('wsPort', 3000)
+}
 
-inject('wsPort') === 3000
-```
-
-If you are using TypeScript, you can extend `ProvidedContext` type to have type safe access to `provide/inject` methods:
-
-```ts
+// You can also extend `ProvidedContext` type
+// to have type safe access to `provide/inject` methods:
 declare module 'vitest' {
   export interface ProvidedContext {
     wsPort: number
   }
 }
+```
+```ts [example.test.js]
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
 ```
 :::
 
@@ -1117,7 +1128,7 @@ List of files included in coverage as glob patterns
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/vitest.{workspace,projects}.[jt]s?(on)',
@@ -1888,6 +1899,10 @@ Changes the order in which hooks are executed.
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
+::: tip
+This option doesn't affect [`onTestFinished`](/api/#ontestfinished). It is always called in reverse order.
+:::
+
 #### sequence.setupFiles <Badge type="info">0.29.3+</Badge> {#sequence-setupfiles}
 
 - **Type**: `'list' | 'parallel'`
@@ -2210,4 +2225,32 @@ The `location` property has `column` and `line` values that correspond to the `t
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.
+:::
+
+### snapshotEnvironment <Version>1.6.0</Version> {#snapshotEnvironment}
+
+- **Type:** `string`
+
+Path to a custom snapshot environment implementation. This is useful if you are running your tests in an environment that doesn't support Node.js APIs. This option doesn't have any effect on a browser runner.
+
+This object should have the shape of `SnapshotEnvironment` and is used to resolve and read/write snapshot files:
+
+```ts
+export interface SnapshotEnvironment {
+  getVersion: () => string
+  getHeader: () => string
+  resolvePath: (filepath: string) => Promise<string>
+  resolveRawPath: (testPath: string, rawPath: string) => Promise<string>
+  saveSnapshotFile: (filepath: string, snapshot: string) => Promise<void>
+  readSnapshotFile: (filepath: string) => Promise<string | null>
+  removeSnapshotFile: (filepath: string) => Promise<void>
+}
+```
+
+You can extend default `VitestSnapshotEnvironment` from `vitest/snapshot` entry point if you need to overwrite only a part of the API.
+
+::: warning
+This is a low-level option and should be used only for advanced cases where you don't have access to default Node.js APIs.
+
+If you just need to configure snapshots feature, use [`snapshotFormat`](#snapshotformat) or [`resolveSnapshotPath`](#resolvesnapshotpath) options.
 :::

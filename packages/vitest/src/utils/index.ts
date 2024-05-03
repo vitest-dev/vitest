@@ -1,6 +1,5 @@
 import { relative } from 'pathe'
 import { getWorkerState } from '../utils'
-import { isNode } from './env'
 
 export * from './graph'
 export * from './tasks'
@@ -10,8 +9,8 @@ export * from './timers'
 export * from './env'
 export * from './modules'
 export * from './serialization'
+export { isWindows } from './env'
 
-export const isWindows = isNode && process.platform === 'win32'
 export function getRunMode() {
   return getWorkerState().config.mode
 }

@@ -8,12 +8,12 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@marko/compiler": "latest",
-    "@marko/testing-library": "latest",
-    "@marko/vite": "latest",
+    "@marko/compiler": "^5.36.1",
+    "@marko/testing-library": "^6.2.0",
+    "@marko/vite": "^4.1.10",
     "@vitest/ui": "latest",
-    "jsdom": "latest",
-    "marko": "latest",
+    "jsdom": "^24.0.0",
+    "marko": "^5.34.2",
     "vite": "latest",
     "vitest": "latest"
   },

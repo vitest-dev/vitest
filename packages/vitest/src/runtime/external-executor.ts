@@ -27,7 +27,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 interface ModuleInformation {
-  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs'
+  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs' | 'network'
   url: string
   path: string
 }
@@ -40,6 +40,8 @@ export class ExternalModulesExecutor {
   private context: vm.Context
   private fs: FileMap
   private resolvers: ((id: string, parent: string) => string | undefined)[] = []
+
+  #networkSupported: boolean | null = null
 
   constructor(private options: ExternalModulesExecutorOptions) {
     this.context = options.context
@@ -60,6 +62,20 @@ export class ExternalModulesExecutor {
       viteClientModule: options.viteClientModule,
     })
     this.resolvers = [this.vite.resolve]
+  }
+
+  async import(identifier: string) {
+    const module = await this.createModule(identifier)
+    await this.esm.evaluateModule(module)
+    return module.namespace
+  }
+
+  require(identifier: string) {
+    return this.cjs.require(identifier)
+  }
+
+  createRequire(identifier: string) {
+    return this.cjs.createRequire(identifier)
   }
 
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
@@ -161,6 +177,9 @@ export class ExternalModulesExecutor {
     if (extension === '.node' || isNodeBuiltin(identifier))
       return { type: 'builtin', url: identifier, path: identifier }
 
+    if (this.isNetworkSupported && (identifier.startsWith('http:') || identifier.startsWith('https:')))
+      return { type: 'network', url: identifier, path: identifier }
+
     const isFileUrl = identifier.startsWith('file://')
     const pathUrl = isFileUrl ? fileURLToPath(identifier.split('?')[0]) : identifier
     const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
@@ -209,12 +228,15 @@ export class ExternalModulesExecutor {
       case 'vite':
         return await this.vite.createViteModule(url)
       case 'wasm':
-        return await this.esm.createWebAssemblyModule(url, this.fs.readBuffer(path))
+        return await this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return await this.esm.createEsModule(url, this.fs.readFile(path))
+        return await this.esm.createEsModule(url, () => this.fs.readFile(path))
       case 'commonjs': {
         const exports = this.require(path)
         return this.wrapCommonJsSynteticModule(identifier, exports)
+      }
+      case 'network': {
+        return this.esm.createNetworkModule(url)
       }
       default: {
         const _deadend: never = type
@@ -223,17 +245,15 @@ export class ExternalModulesExecutor {
     }
   }
 
-  async import(identifier: string) {
-    const module = await this.createModule(identifier)
-    await this.esm.evaluateModule(module)
-    return module.namespace
-  }
-
-  require(identifier: string) {
-    return this.cjs.require(identifier)
-  }
-
-  createRequire(identifier: string) {
-    return this.cjs.createRequire(identifier)
+  private get isNetworkSupported() {
+    if (this.#networkSupported == null) {
+      if (process.execArgv.includes('--experimental-network-imports'))
+        this.#networkSupported = true
+      else if (process.env.NODE_OPTIONS?.includes('--experimental-network-imports'))
+        this.#networkSupported = true
+      else
+        this.#networkSupported = false
+    }
+    return this.#networkSupported
   }
 }

@@ -90,6 +90,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
               allow: resolveFsAllow(getRoot(), testConfig.config),
             },
           },
+          build: {
+            // Vitest doesn't use outputDir, but this value affects what folders are watched
+            // https://github.com/vitest-dev/vitest/issues/5429
+            // This works for Vite <5.2.10
+            outDir: 'dummy-non-existing-folder',
+            // This works for Vite >=5.2.10
+            // https://github.com/vitejs/vite/pull/16453
+            emptyOutDir: false,
+          },
           test: {
             poolOptions: {
               threads: {

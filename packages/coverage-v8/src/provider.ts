@@ -216,6 +216,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         coverageMap,
         thresholds: this.options.thresholds,
         createCoverageMap: () => libCoverage.createCoverageMap({}),
+        root: this.ctx.config.root,
       })
 
       this.checkThresholds({
@@ -239,8 +240,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
     }
 
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
+    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
+
+    if (!keepResults) {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    }
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
@@ -304,10 +310,17 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     source: string
     originalSource: string
     sourceMap?: { sourcemap: EncodedSourceMap }
+    isExecuted: boolean
   }> {
     const filePath = normalize(fileURLToPath(url))
 
-    const transformResult = transformResults.get(filePath) || await this.ctx.vitenode.transformRequest(filePath).catch(() => {})
+    let isExecuted = true
+    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>> = transformResults.get(filePath)
+
+    if (!transformResult) {
+      isExecuted = false
+      transformResult = await this.ctx.vitenode.transformRequest(filePath).catch(() => null)
+    }
 
     const map = transformResult?.map as (EncodedSourceMap | undefined)
     const code = transformResult?.code
@@ -321,6 +334,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
     if (!map) {
       return {
+        isExecuted,
         source: code || sourcesContent,
         originalSource: sourcesContent,
       }
@@ -331,6 +345,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       sources[0] = new URL(map.sources[0], url).href
 
     return {
+      isExecuted,
       originalSource: sourcesContent,
       source: code || sourcesContent,
       sourceMap: {
@@ -362,8 +377,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       await Promise.all(chunk.map(async ({ url, functions }) => {
         const sources = await this.getSources(url, transformResults, functions)
 
-        // If no source map was found from vite-node we can assume this file was not run in the wrapper
-        const wrapperLength = sources.sourceMap ? WRAPPER_LENGTH : 0
+        // If file was executed by vite-node we'll need to add its wrapper
+        const wrapperLength = sources.isExecuted ? WRAPPER_LENGTH : 0
 
         const converter = v8ToIstanbul(url, wrapperLength, sources, undefined, this.options.ignoreEmptyLines)
         await converter.load()

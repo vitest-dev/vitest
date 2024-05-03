@@ -292,7 +292,7 @@ export interface VitestUtils {
    * Changes the value of `import.meta.env` and `process.env`.
    * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
-  stubEnv: (name: string, value: string) => VitestUtils
+  stubEnv: <T extends string>(name: T, value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string) => VitestUtils
 
   /**
    * Reset the value to original value that was available before first `vi.stubGlobal` was called.
@@ -357,6 +357,8 @@ function createVitest(): VitestUtils {
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
   const _stubsEnv = new Map()
+
+  const _envBooleans = ['PROD', 'DEV', 'SSR']
 
   const getImporter = () => {
     const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
@@ -550,10 +552,13 @@ function createVitest(): VitestUtils {
       return utils
     },
 
-    stubEnv(name: string, value: string) {
+    stubEnv(name: string, value: string | boolean) {
       if (!_stubsEnv.has(name))
         _stubsEnv.set(name, process.env[name])
-      process.env[name] = value
+      if (_envBooleans.includes(name))
+        process.env[name] = value ? '1' : ''
+      else
+        process.env[name] = String(value)
       return utils
     },
 

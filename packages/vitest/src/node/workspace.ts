@@ -1,4 +1,6 @@
 import { promises as fs } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
@@ -8,11 +10,10 @@ import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
-import { createDefer } from '../public/utils'
+import { deepMerge, nanoid } from '../utils/base'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -40,40 +41,22 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
   )
 
-  return new Promise<() => Promise<WorkspaceProject>>((resolve, reject) => {
-    const resolution = createDefer<WorkspaceProject>()
-    let configResolved = false
-    const config: ViteInlineConfig = {
-      ...options,
-      root,
-      logLevel: 'error',
-      configFile,
-      // this will make "mode": "test" | "benchmark" inside defineConfig
-      mode: options.test?.mode || options.mode || ctx.config.mode,
-      plugins: [
-        {
-          name: 'vitest:workspace:resolve',
-          configResolved() {
-            configResolved = true
-            resolve(() => resolution)
-          },
-        },
-        ...options.plugins || [],
-        WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
-      ],
-    }
+  const config: ViteInlineConfig = {
+    ...options,
+    root,
+    logLevel: 'error',
+    configFile,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.test?.mode || options.mode || ctx.config.mode,
+    plugins: [
+      ...options.plugins || [],
+      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
+    ],
+  }
 
-    createViteServer(config)
-      .then(() => resolution.resolve(project))
-      .catch((err) => {
-        if (configResolved)
-          resolution.reject(err)
-        else
-          reject(err)
-      })
+  await createViteServer(config)
 
-    return project
-  })
+  return project
 }
 
 export class WorkspaceProject {
@@ -97,6 +80,9 @@ export class WorkspaceProject {
 
   testFilesList: string[] | null = null
 
+  public readonly id = nanoid()
+  public readonly tmpDir = join(tmpdir(), this.id)
+
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
 
@@ -114,7 +100,7 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = (key: string, value: unknown) => {
+  provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
     try {
       structuredClone(value)
     }
@@ -284,17 +270,11 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
-          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-
           // if filter is a full file path, we should include it if it's in the same folder
-          if (isAbsolute(f)) {
-            // the file is inside the filter path, so we should always include it,
-            // we don't include ../file because this condition is always true if
-            // the file doens't exist which cause false positives
-            if (relativePath === '..' || relativePath === '../' || relativePath.startsWith('../..'))
-              return true
-          }
+          if (isAbsolute(f) && t.startsWith(f))
+            return true
 
+          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
       })
@@ -333,6 +313,7 @@ export class WorkspaceProject {
         coverage: this.ctx.config.coverage,
       },
       server.config,
+      this.ctx.logger,
     )
 
     this.server = server
@@ -426,9 +407,17 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
+        this.clearTmpDir(),
       ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
+  }
+
+  private async clearTmpDir() {
+    try {
+      await rm(this.tmpDir, { force: true, recursive: true })
+    }
+    catch {}
   }
 
   async initBrowserProvider() {

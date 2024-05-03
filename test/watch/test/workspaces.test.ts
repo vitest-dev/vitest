@@ -8,7 +8,7 @@ import { runVitestCli } from '../../test-utils'
 const file = fileURLToPath(import.meta.url)
 const dir = dirname(file)
 const root = resolve(dir, '..', '..', 'workspaces')
-const config = resolve(root, 'vitest.config.ts')
+const config = resolve(root, 'vitest.config.watch.ts')
 const cleanups: (() => void)[] = []
 
 const srcMathFile = resolve(root, 'src', 'math.ts')
@@ -27,7 +27,7 @@ test("dynamic test case", () => {
 `
 
 async function startVitest() {
-  const vitest = await runVitestCli(
+  const { vitest } = await runVitestCli(
     { cwd: root, env: { TEST_WATCH: 'true' } },
     '--root',
     root,
@@ -65,7 +65,7 @@ it('editing a file that is imported in different workspaces reruns both files', 
   writeFileSync(srcMathFile, `${srcMathContent}\n`, 'utf8')
 
   await vitest.waitForStdout('RERUN  src/math.ts')
-  await vitest.waitForStdout('|space_3| math.space-3-test.ts')
+  await vitest.waitForStdout('|@vitest/space_3| math.space-3-test.ts')
   await vitest.waitForStdout('|space_1| test/math.spec.ts')
   await vitest.waitForStdout('Test Files  2 passed')
 })
@@ -100,7 +100,7 @@ it('adding a new test file matching core project config triggers re-run', async 
 
   // Test case should not be run by other projects
   expect(vitest.stdout).not.include('|space_1|')
-  expect(vitest.stdout).not.include('|space_3|')
+  expect(vitest.stdout).not.include('|@vitest/space_3|')
   expect(vitest.stdout).not.include('|node|')
   expect(vitest.stdout).not.include('|happy-dom|')
 })
@@ -114,7 +114,7 @@ it('adding a new test file matching project specific config triggers re-run', as
 
   await vitest.waitForStdout('Running added dynamic test')
   await vitest.waitForStdout('RERUN  space_3/new-dynamic.space-3-test.ts')
-  await vitest.waitForStdout('|space_3| new-dynamic.space-3-test.ts')
+  await vitest.waitForStdout('|@vitest/space_3| new-dynamic.space-3-test.ts')
 
   // Wait for tests to end
   await vitest.waitForStdout('Waiting for file changes')

@@ -561,6 +561,11 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
+   * Path to a custom snapshot environment module that has a defualt export of `SnapshotEnvironment` object.
+   */
+  snapshotEnvironment?: string
+
+  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean
@@ -800,6 +805,15 @@ export interface UserConfig extends InlineConfig {
    * Setting to `false` will disable config resolving.
    */
   config?: string | false | undefined
+
+  /**
+   * Do not run tests when Vitest starts.
+   *
+   * Vitest will only run tests if it's called programmatically or the test file changes.
+   *
+   * CLI file filters will be ignored.
+   */
+  standalone?: boolean
 
   /**
    * Use happy-dom

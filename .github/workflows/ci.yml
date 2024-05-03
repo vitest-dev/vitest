@@ -32,22 +32,6 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     runs-on: ${{ matrix.os }}
 
@@ -56,7 +40,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18, 20]
+        node_version: [18, 20, 22]
         include:
           - os: macos-14
             node_version: 20
@@ -85,11 +69,8 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
-      - name: Test No Threads
-        run: pnpm run test:ci:no-threads
-
-      - name: Test Vm Threads
-        run: pnpm run test:ci:vm-threads
+      - name: Test Examples
+        run: pnpm run test:examples
 
   test-ui:
     runs-on: ubuntu-latest
@@ -147,8 +128,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -170,6 +149,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -185,8 +166,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -208,6 +187,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright

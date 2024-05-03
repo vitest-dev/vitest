@@ -41,6 +41,8 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
+
+  'snapshot': 'src/snapshot.ts',
 }
 
 const dtsEntries = {
@@ -56,6 +58,7 @@ const dtsEntries = {
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   workers: 'src/workers.ts',
+  snapshot: 'src/snapshot.ts',
 }
 
 const external = [
@@ -65,6 +68,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:stream',
   'node:vm',
   'inspector',
   'vite-node/source-map',

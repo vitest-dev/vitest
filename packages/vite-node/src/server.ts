@@ -31,6 +31,11 @@ export class ViteNodeServer {
     web: new Map<string, Promise<TransformResult | null | undefined>>(),
   }
 
+  private durations = {
+    ssr: new Map<string, number[]>(),
+    web: new Map<string, number[]>(),
+  }
+
   private existingOptimizedDeps = new Set<string>()
 
   fetchCaches = {
@@ -102,6 +107,12 @@ export class ViteNodeServer {
     return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
+  public getTotalDuration() {
+    const ssrDurations = [...this.durations.ssr.values()].flat()
+    const webDurations = [...this.durations.web.values()].flat()
+    return [...ssrDurations, ...webDurations].reduce((a, b) => a + b, 0)
+  }
+
   private async ensureExists(id: string): Promise<boolean> {
     if (this.existingOptimizedDeps.has(id))
       return true
@@ -138,16 +149,20 @@ export class ViteNodeServer {
   }
 
   async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
-    const moduleId = normalizeModuleId(id)
     const mode = transformMode || this.getTransformMode(id)
+    return this.fetchResult(id, mode)
+      .then((r) => {
+        return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+      })
+  }
+
+  async fetchResult(id: string, mode: 'web' | 'ssr') {
+    const moduleId = normalizeModuleId(id)
     this.assertMode(mode)
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
       promiseMap.set(moduleId, this._fetchModule(moduleId, mode)
-        .then((r) => {
-          return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-        })
         .finally(() => {
           promiseMap.delete(moduleId)
         }))
@@ -267,6 +282,12 @@ export class ViteNodeServer {
       timestamp: time,
       result,
     }
+
+    const durations = this.durations[transformMode].get(filePath) || []
+    this.durations[transformMode].set(
+      filePath,
+      [...durations, duration ?? 0],
+    )
 
     this.fetchCaches[transformMode].set(filePath, cacheEntry)
     this.fetchCache.set(filePath, cacheEntry)
