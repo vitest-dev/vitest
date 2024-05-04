@@ -94,7 +94,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
-export function processError(err: any, diffOptions?: DiffOptions) {
+export function processError(err: any, diffOptions?: DiffOptions, seen = new WeakSet()) {
   if (!err || typeof err !== 'object')
     return { message: err }
   // stack is not serialized in worker communication
@@ -127,8 +127,10 @@ export function processError(err: any, diffOptions?: DiffOptions) {
   // some Error implementations may not allow rewriting cause
   // in most cases, the assignment will lead to "err.cause = err.cause"
   try {
-    if (typeof err.cause === 'object')
-      err.cause = processError(err.cause, diffOptions)
+    if (!seen.has(err) && typeof err.cause === 'object') {
+      seen.add(err)
+      err.cause = processError(err.cause, diffOptions, seen)
+    }
   }
   catch {}
 
