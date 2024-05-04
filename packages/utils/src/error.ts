@@ -124,9 +124,13 @@ export function processError(err: any, diffOptions?: DiffOptions) {
   }
   catch {}
 
-  // Process the cause of the Error in any (recursive)
-  if (typeof err.cause === 'object')
-    processError(err.cause, diffOptions)
+  // some Error implementations may not allow rewriting cause
+  // in most cases, the assignment will lead to "err.cause = err.cause"
+  try {
+    if (typeof err.cause === 'object')
+      err.cause = processError(err.cause, diffOptions)
+  }
+  catch {}
 
   try {
     return serializeError(err)
