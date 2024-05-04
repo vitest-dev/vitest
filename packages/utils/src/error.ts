@@ -121,12 +121,10 @@ export function processError(err: any, diffOptions?: DiffOptions) {
   try {
     if (typeof err.message === 'string')
       err.message = normalizeErrorMessage(err.message)
-
-    if (typeof err.cause === 'object' && typeof err.cause.message === 'string')
-      err.cause.message = normalizeErrorMessage(err.cause.message)
   }
   catch {}
 
+  // Process the cause of the Error in any (recursive)
   if (typeof err.cause === 'object')
     processError(err.cause, diffOptions)
 
