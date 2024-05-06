@@ -8,6 +8,8 @@ import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap
 import { getContext } from '../src/context'
 import { files } from '../src/data'
 
+const beautify = (json: string) => JSON.parse(json)
+
 vi.mock('os', () => ({
   hostname: () => 'hostname',
 }))
@@ -205,7 +207,7 @@ test('json reporter with outputFile', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(beautify(readFileSync(outputFile, 'utf8'))).toMatchSnapshot()
 
   // Cleanup
   rmSync(outputFile)
@@ -229,7 +231,7 @@ test('json reporter with outputFile object', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(beautify(readFileSync(outputFile, 'utf8'))).toMatchSnapshot()
 
   // Cleanup
   rmSync(outputFile)
@@ -252,7 +254,7 @@ test('json reporter with outputFile in non-existing directory', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(beautify(readFileSync(outputFile, 'utf8'))).toMatchSnapshot()
 
   // Cleanup
   rmSync(rootDirectory, { recursive: true })
@@ -277,7 +279,7 @@ test('json reporter with outputFile object in non-existing directory', async () 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(beautify(readFileSync(outputFile, 'utf8'))).toMatchSnapshot()
 
   // Cleanup
   rmSync(rootDirectory, { recursive: true })

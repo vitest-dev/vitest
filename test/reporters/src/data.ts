@@ -11,7 +11,9 @@ const file: File = {
   result: { state: 'fail', duration: 145.99284195899963 },
   tasks: [],
   projectName: '',
+  file: null!,
 }
+file.file = file
 
 const suite: Suite = {
   id: '',
@@ -22,20 +24,6 @@ const suite: Suite = {
   file,
   result: { state: 'pass', duration: 1.90183687210083 },
   tasks: [],
-  projectName: '',
-}
-
-const innerSuite: Suite = {
-  id: '',
-  type: 'suite',
-  name: 'inner suite',
-  mode: 'run',
-  file,
-  meta: {},
-  suite,
-  result: { state: 'pass', duration: 1.90183687210083 },
-  tasks: [],
-  projectName: '',
 }
 
 const error: ErrorWithDiff = new AssertionError({
@@ -57,16 +45,16 @@ error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
 + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
 + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
-const innerTasks: Task[] = [
+const tasks: Task[] = [
   {
     id: '1223128da3_0',
     type: 'test',
     name: 'Math.sqrt()',
     mode: 'run',
-    suite: innerSuite,
     fails: undefined,
     meta: {},
     file,
+    suite,
     result: {
       state: 'fail',
       errors: [error],
@@ -74,12 +62,6 @@ const innerTasks: Task[] = [
     },
     context: null as any,
   },
-]
-
-innerSuite.tasks = innerTasks
-
-const tasks: Task[] = [
-  innerSuite,
   {
     id: '1223128da3_1',
     type: 'test',

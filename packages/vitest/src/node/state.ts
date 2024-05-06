@@ -150,19 +150,24 @@ export class StateManager {
   }
 
   cancelFiles(files: string[], root: string, projectName: string) {
-    this.collectFiles(files.map(filepath => ({
-      filepath,
-      name: relative(root, filepath),
-      id: filepath,
-      mode: 'skip',
-      type: 'suite',
-      result: {
-        state: 'skip',
-      },
-      meta: {},
-      // Cancelled files have not yet collected tests
-      tasks: [],
-      projectName,
-    })))
+    this.collectFiles(files.map((filepath) => {
+      const file: File = {
+        filepath,
+        name: relative(root, filepath),
+        id: filepath,
+        mode: 'skip',
+        type: 'suite',
+        result: {
+          state: 'skip',
+        },
+        meta: {},
+        // Cancelled files have not yet collected tests
+        tasks: [],
+        projectName,
+        file: null!,
+      }
+      file.file = file
+      return file
+    }))
   }
 }

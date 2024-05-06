@@ -326,7 +326,7 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
     for (const bench of topBenches) {
-      const group = bench.suite
+      const group = bench.suite || bench.file
       if (!group)
         continue
       const groupName = getFullName(group, c.dim(' > '))

@@ -14,7 +14,6 @@ export interface TaskBase {
   concurrent?: boolean
   shuffle?: boolean
   suite?: Suite
-  file?: File
   result?: TaskResult
   retry?: number
   repeats?: number
@@ -25,7 +24,7 @@ export interface TaskBase {
 }
 
 export interface TaskPopulated extends TaskBase {
-  suite: Suite
+  file: File
   pending?: boolean
   result?: TaskResult
   fails?: boolean
@@ -54,14 +53,14 @@ export interface TaskResult {
 export type TaskResultPack = [id: string, result: TaskResult | undefined, meta: TaskMeta]
 
 export interface Suite extends TaskBase {
+  file: File
   type: 'suite'
   tasks: Task[]
-  filepath?: string
-  projectName: string
 }
 
 export interface File extends Suite {
   filepath: string
+  projectName: string
   collectDuration?: number
   setupDuration?: number
 }
@@ -301,7 +300,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   test: TestAPI<ExtraContext>
   tasks: (Suite | Custom<ExtraContext> | Test<ExtraContext> | SuiteCollector<ExtraContext>)[]
   task: (name: string, options?: TaskCustomOptions) => Custom<ExtraContext>
-  collect: (file?: File) => Promise<Suite>
+  collect: (file: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }

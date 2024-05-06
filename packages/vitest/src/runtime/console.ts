@@ -88,7 +88,7 @@ export function createCustomConsole() {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id = s?.current?.id || s?.current?.file?.id || getTaskIdByStack(s.config.root)
+      const id = s?.current?.id || s?.current?.suite?.id || s.current?.file.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -110,7 +110,7 @@ export function createCustomConsole() {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id = s?.current?.id || s?.current?.file?.id || getTaskIdByStack(s.config.root)
+      const id = s?.current?.id || s?.current?.suite?.id || s.current?.file.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
