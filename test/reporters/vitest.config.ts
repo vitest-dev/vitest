@@ -5,6 +5,7 @@ export default defineConfig({
     exclude: ['node_modules', 'fixtures', 'dist'],
     reporters: ['verbose'],
     testTimeout: 100000,
+    pool: 'forks',
     chaiConfig: {
       truncateThreshold: 0,
     },

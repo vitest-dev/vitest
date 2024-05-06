@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     reporters: 'verbose',
     include: ['test/**/*.test.*'],
+    pool: 'forks',
     chaiConfig: {
       truncateThreshold: 0,
     },
@@ -13,6 +14,7 @@ export default defineConfig({
 
     // Test cases may have side effects, e.g. files under fixtures/ are modified on the fly to trigger file watchers
     poolOptions: {
+      forks: { singleFork: true },
       threads: { singleThread: true },
       vmThreads: { singleThread: true },
     },
