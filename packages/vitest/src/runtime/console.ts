@@ -4,6 +4,7 @@ import { relative } from 'node:path'
 import { getColors, getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from '../utils'
+import type { WorkerGlobalState } from '../types'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
@@ -27,14 +28,14 @@ function getTaskIdByStack(root: string) {
   return UNKNOWN_TEST_ID
 }
 
-export function createCustomConsole() {
+export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
-  const state = () => getWorkerState()
+  const state = () => defaultState || getWorkerState()
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {
