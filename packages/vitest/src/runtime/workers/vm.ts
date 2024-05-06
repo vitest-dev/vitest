@@ -48,7 +48,7 @@ export async function runVmTests(state: WorkerGlobalState) {
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole()
+  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
