@@ -103,7 +103,7 @@ export class JsonReporter implements Reporter {
         startTime = this.start
 
       const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
-      const assertionResults = await Promise.all(tests.map(async (t) => {
+      const assertionResults = tests.map((t) => {
         const ancestorTitles = [] as string[]
         let iter: Suite | undefined = t.suite
         while (iter) {
@@ -119,9 +119,9 @@ export class JsonReporter implements Reporter {
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.errors?.map(e => e.message) || [],
-          location: await this.getFailureLocation(t),
+          location: this.getFailureLocation(t),
         } as JsonAssertionResult
-      }))
+      })
 
       if (tests.some(t => t.result?.state === 'run')) {
         this.ctx.logger.warn('WARNING: Some tests are still running when generating the JSON report.'
@@ -188,7 +188,7 @@ export class JsonReporter implements Reporter {
     }
   }
 
-  protected async getFailureLocation(test: Task): Promise<Callsite | undefined> {
+  protected getFailureLocation(test: Task): Callsite | undefined {
     const error = test.result?.errors?.[0]
     if (!error)
       return

@@ -8,7 +8,7 @@ import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { getOutputFile } from '../../utils/config-helpers'
-import { captuerPrintError } from '../error'
+import { capturePrintError } from '../error'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface JUnitOptions {
@@ -193,7 +193,7 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              const result = await captuerPrintError(
+              const result = capturePrintError(
                 error,
                 this.ctx,
                 this.ctx.getProjectByTaskId(task.id),

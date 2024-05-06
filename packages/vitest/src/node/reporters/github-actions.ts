@@ -2,7 +2,7 @@ import { getTasks } from '@vitest/runner/utils'
 import stripAnsi from 'strip-ansi'
 import type { File, Reporter, Vitest } from '../../types'
 import { getFullName } from '../../utils'
-import { captuerPrintError } from '../error'
+import { capturePrintError } from '../error'
 import type { WorkspaceProject } from '../workspace'
 
 export class GithubActionsReporter implements Reporter {
@@ -12,7 +12,7 @@ export class GithubActionsReporter implements Reporter {
     this.ctx = ctx
   }
 
-  async onFinished(files: File[] = [], errors: unknown[] = []) {
+  onFinished(files: File[] = [], errors: unknown[] = []) {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{ project: WorkspaceProject; title: string; error: unknown }>()
     for (const error of errors) {
@@ -42,7 +42,7 @@ export class GithubActionsReporter implements Reporter {
 
     // format errors via `printError`
     for (const { project, title, error } of projectErrors) {
-      const result = await captuerPrintError(error, this.ctx, project)
+      const result = capturePrintError(error, this.ctx, project)
       const stack = result?.nearest
       if (!stack)
         continue

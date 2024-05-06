@@ -117,7 +117,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           await project.setServer(options, server)
         }
         catch (err) {
-          await project.ctx.logger.printError(err, { fullStack: true })
+          project.ctx.logger.printError(err, { fullStack: true })
           process.exit(1)
         }
 

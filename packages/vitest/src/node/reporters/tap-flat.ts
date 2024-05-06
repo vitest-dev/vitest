@@ -21,7 +21,7 @@ export class TapFlatReporter extends TapReporter {
     super.onInit(ctx)
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files = this.ctx.state.getFiles()) {
     this.ctx.logger.log('TAP version 13')
 
     const flatTasks = files.flatMap(task => flattenTasks(task))
