@@ -49,6 +49,7 @@ export default defineConfig({
     port: 3022,
   },
   test: {
+    reporters: ['verbose'],
     api: {
       port: 3023,
     },
