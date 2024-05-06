@@ -73,6 +73,10 @@ exports[`json reporter (no outputFile entry) 1`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -84,7 +88,17 @@ exports[`json reporter (no outputFile entry) 1`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {
@@ -194,6 +208,10 @@ exports[`json reporter 1`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -205,7 +223,17 @@ exports[`json reporter 1`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {
@@ -320,6 +348,10 @@ exports[`json reporter with outputFile 2`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -331,7 +363,17 @@ exports[`json reporter with outputFile 2`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {
@@ -446,6 +488,10 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -457,7 +503,17 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {
@@ -572,6 +628,10 @@ exports[`json reporter with outputFile object 2`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -583,7 +643,17 @@ exports[`json reporter with outputFile object 2`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {
@@ -698,6 +768,10 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
   "numTodoTests": 1,
   "numTotalTestSuites": 2,
   "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
   "startTime": 1642587001759,
   "success": false,
   "testResults": [
@@ -709,7 +783,17 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           ],
           "duration": 1.4422860145568848,
           "failureMessages": [
-            "expected 2.23606797749979 to equal 2",
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
           ],
           "fullName": "suite Math.sqrt()",
           "location": {

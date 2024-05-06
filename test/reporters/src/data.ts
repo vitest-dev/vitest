@@ -16,7 +16,7 @@ const file: File = {
 file.file = file
 
 const suite: Suite = {
-  id: '',
+  id: '1223128da3_0',
   type: 'suite',
   name: 'suite',
   mode: 'run',
@@ -47,7 +47,7 @@ error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
 
 const tasks: Task[] = [
   {
-    id: '1223128da3_0',
+    id: '1223128da3_0_0',
     type: 'test',
     name: 'Math.sqrt()',
     mode: 'run',
@@ -60,10 +60,14 @@ const tasks: Task[] = [
       errors: [error],
       duration: 1.4422860145568848,
     },
+    location: {
+      column: 32,
+      line: 8,
+    },
     context: null as any,
   },
   {
-    id: '1223128da3_1',
+    id: '1223128da3_0_1',
     type: 'test',
     name: 'JSON',
     mode: 'run',
@@ -75,7 +79,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_3',
+    id: '1223128da3_0_3',
     type: 'test',
     name: 'async with timeout',
     mode: 'skip',
@@ -87,7 +91,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_4',
+    id: '1223128da3_0_4',
     type: 'test',
     name: 'timeout',
     mode: 'run',
@@ -99,7 +103,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_5',
+    id: '1223128da3_0_5',
     type: 'test',
     name: 'callback setup success ',
     mode: 'run',
@@ -111,7 +115,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_6',
+    id: '1223128da3_0_6',
     type: 'test',
     name: 'callback test success ',
     mode: 'run',
@@ -123,7 +127,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_7',
+    id: '1223128da3_0_7',
     type: 'test',
     name: 'callback setup success done(false)',
     mode: 'run',
@@ -135,7 +139,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_8',
+    id: '1223128da3_0_8',
     type: 'test',
     name: 'callback test success done(false)',
     mode: 'run',
@@ -155,7 +159,7 @@ const tasks: Task[] = [
     ],
   },
   {
-    id: '1223128da3_9',
+    id: '1223128da3_0_9',
     type: 'test',
     name: 'todo test',
     mode: 'todo',

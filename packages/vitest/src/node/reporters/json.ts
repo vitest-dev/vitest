@@ -110,9 +110,6 @@ export class JsonReporter implements Reporter {
         const ancestorTitles: string[] = []
         let iter: Suite | undefined = t.suite
         while (iter) {
-          // the root suite should not be reported
-          if (iter.id === '')
-            break
           ancestorTitles.push(iter.name)
           iter = iter.suite
         }
@@ -125,7 +122,7 @@ export class JsonReporter implements Reporter {
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.errors?.map(e => e.stack || e.message) || [],
-          location: t.location || null,
+          location: t.location,
         } satisfies JsonAssertionResult
       })
 
