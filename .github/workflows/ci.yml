@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  VITEST_SEGFAULT_RETRY: 3
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 

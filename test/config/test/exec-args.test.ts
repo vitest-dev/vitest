@@ -1,16 +1,6 @@
-import { afterAll, beforeAll, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { execa } from 'execa'
 import { runVitest } from '../../test-utils'
-
-// VITEST_SEGFAULT_RETRY messes with the node flags, as can be seen in packages/vitest/src/node/cli-wrapper.ts
-// so here we remove it to make sure the tests are not affected by it
-const ORIGIN_VITEST_SEGFAULT_RETRY = process.env.VITEST_SEGFAULT_RETRY
-beforeAll(() => {
-  delete process.env.VITEST_SEGFAULT_RETRY
-})
-afterAll(() => {
-  process.env.VITEST_SEGFAULT_RETRY = ORIGIN_VITEST_SEGFAULT_RETRY
-})
 
 test.each([
   { pool: 'forks', execArgv: ['--hash-seed=1', '--random-seed=1', '--no-opt'] },
