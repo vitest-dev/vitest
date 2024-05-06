@@ -513,7 +513,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
-  resolved.sequence.hooks ??= 'parallel'
+  resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer)
     resolved.sequence.seed ??= Date.now()
 
