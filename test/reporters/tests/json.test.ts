@@ -26,7 +26,7 @@ describe('json reporter', async () => {
     const result = failedTest.assertionResults[0]
     delete result.duration
     const rootRegexp = new RegExp(projectRoot, 'g')
-    result.failureMessages = result.failureMessages.map((m: string) => m.replace(rootRegexp, '<root>'))
+    result.failureMessages = result.failureMessages.map((m: string) => m.split('\n').slice(0, 2).join('\n').replace(rootRegexp, '<root>'))
     expect(result).toMatchSnapshot()
   }, 40000)
 
