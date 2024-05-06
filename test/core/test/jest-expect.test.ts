@@ -879,6 +879,19 @@ it('correctly prints diff', () => {
   }
 })
 
+it('correctly prints diff for the cause', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(new Error('wrapper', { cause: err }))
+    expect(error.cause.diff).toContain('-   "a": 2')
+    expect(error.cause.diff).toContain('+   "a": 1')
+  }
+})
+
 it('correctly prints diff with asymmetric matchers', () => {
   try {
     expect({ a: 1, b: 'string' }).toEqual({

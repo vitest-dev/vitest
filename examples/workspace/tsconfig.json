@@ -8,6 +8,6 @@
     "sourceMap": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test"],
+  "include": ["packages"],
   "exclude": ["node_modules"]
 }

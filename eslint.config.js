@@ -14,7 +14,7 @@ export default antfu(
       '**/*.timestamp-*',
       'test/core/src/self',
       'test/cache/cache/.vitest-base/results.json',
-      'test/wasm-modules/src/wasm-bindgen-no-cyclic',
+      'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/workspaces-browser/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
@@ -100,7 +100,7 @@ export default antfu(
     files: [
       `docs/${GLOB_SRC}`,
       `packages/web-worker/${GLOB_SRC}`,
-      `test/web-worker/${GLOB_SRC}`,
+      `test/core/${GLOB_SRC}`,
     ],
     rules: {
       'no-restricted-globals': 'off',

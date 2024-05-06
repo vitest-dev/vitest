@@ -312,11 +312,45 @@ By providing an object instead of a string you can define individual outputs whe
 
 To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
+#### benchmark.outputJson <Version>1.6.0</Version> {#benchmark-outputJson}
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to store the benchmark result, which can be used for `--compare` option later.
+
+For example:
+
+```sh
+# save main branch's result
+git checkout main
+vitest bench --outputJson main.json
+
+# change a branch and compare against main
+git checkout feature
+vitest bench --compare main.json
+```
+
+#### benchmark.compare <Version>1.6.0</Version> {#benchmark-compare}
+
+- **Type:** `string | undefined`
+- **Default:** `undefined`
+
+A file path to a previous benchmark result to compare against current runs.
+
 ### alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
 
 Define custom aliases when running inside tests. They will be merged with aliases from `resolve.alias`.
+
+::: warning
+Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https://vitejs.dev/guide/ssr.html#ssr-externals).
+
+1. Aliases affect only modules imported directly with an `import` keyword by an [inlined](#server-deps-inline) module (all source code is inlined by default).
+2. Vitest does not support aliasing `require` calls.
+3. If you are aliasing an external dependency (e.g., `react` -> `preact`), you may want to alias the actual `node_modules` packages instead to make it work for externalized dependencies. Both [Yarn](https://classic.yarnpkg.com/en/docs/cli/add/#toc-yarn-add-alias) and [pnpm](https://pnpm.io/aliases/) support aliasing via the `npm:` prefix.
+:::
 
 ### globals
 
@@ -1094,7 +1128,7 @@ List of files included in coverage as glob patterns
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/vitest.{workspace,projects}.[jt]s?(on)',
@@ -1603,6 +1637,55 @@ When running tests in Node.js Vitest can use its own module resolution to easily
 This option has no effect on tests running inside Node.js.
 
 If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
+
+#### browser.indexScripts <Version>1.6.0</Version> {#browser-indexscripts}
+
+- **Type:** `BrowserScript[]`
+- **Default:** `[]`
+
+Custom scripts that should be injected into the index HTML before test iframes are initiated. This HTML document only sets up iframes and doesn't actually import your code.
+
+The script `src` and `content` will be processed by Vite plugins. Script should be provided in the following shape:
+
+```ts
+export interface BrowserScript {
+  /**
+   * If "content" is provided and type is "module", this will be its identifier.
+   *
+   * If you are using TypeScript, you can add `.ts` extension here for example.
+   * @default `injected-${index}.js`
+   */
+  id?: string
+  /**
+   * JavaScript content to be injected. This string is processed by Vite plugins if type is "module".
+   *
+   * You can use `id` to give Vite a hint about the file extension.
+   */
+  content?: string
+  /**
+   * Path to the script. This value is resolved by Vite so it can be a node module or a file path.
+   */
+  src?: string
+  /**
+   * If the script should be loaded asynchronously.
+   */
+  async?: boolean
+  /**
+   * Script type.
+   * @default 'module'
+   */
+  type?: string
+}
+```
+
+#### browser.testerScripts <Version>1.6.0</Version> {#browser-testerscripts}
+
+- **Type:** `BrowserScript[]`
+- **Default:** `[]`
+
+Custom scripts that should be injected into the tester HTML before the tests environment is initiated. This is useful to inject polyfills required for Vitest browser implementation. It is recommended to use [`setupFiles`](#setupfiles) in almost all cases instead of this.
+
+The script `src` and `content` will be processed by Vite plugins.
 
 ### clearMocks
 
@@ -2191,4 +2274,32 @@ The `location` property has `column` and `line` values that correspond to the `t
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.
+:::
+
+### snapshotEnvironment <Version>1.6.0</Version> {#snapshotEnvironment}
+
+- **Type:** `string`
+
+Path to a custom snapshot environment implementation. This is useful if you are running your tests in an environment that doesn't support Node.js APIs. This option doesn't have any effect on a browser runner.
+
+This object should have the shape of `SnapshotEnvironment` and is used to resolve and read/write snapshot files:
+
+```ts
+export interface SnapshotEnvironment {
+  getVersion: () => string
+  getHeader: () => string
+  resolvePath: (filepath: string) => Promise<string>
+  resolveRawPath: (testPath: string, rawPath: string) => Promise<string>
+  saveSnapshotFile: (filepath: string, snapshot: string) => Promise<void>
+  readSnapshotFile: (filepath: string) => Promise<string | null>
+  removeSnapshotFile: (filepath: string) => Promise<void>
+}
+```
+
+You can extend default `VitestSnapshotEnvironment` from `vitest/snapshot` entry point if you need to overwrite only a part of the API.
+
+::: warning
+This is a low-level option and should be used only for advanced cases where you don't have access to default Node.js APIs.
+
+If you just need to configure snapshots feature, use [`snapshotFormat`](#snapshotformat) or [`resolveSnapshotPath`](#resolvesnapshotpath) options.
 :::

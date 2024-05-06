@@ -199,7 +199,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          await ctx.logger.printError(err, { fullStack: true })
+          ctx.logger.printError(err, { fullStack: true })
           process.exit(1)
         }
 

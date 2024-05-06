@@ -1,5 +1,4 @@
-import assert from 'node:assert'
-import { bench, describe, expect } from 'vitest'
+import { bench, describe, expect, assert } from 'vitest'
 
 const run = [false, false, false, false, false]
 

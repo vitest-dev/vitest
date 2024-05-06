@@ -164,6 +164,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         getProvidedContext() {
           return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
         },
+        async getTestFiles() {
+          const spec = await ctx.globTestFiles()
+          return spec.map(([project, file]) => [project.getName(), file]) as [string, string][]
+        },
       },
       {
         post: msg => ws.send(msg),

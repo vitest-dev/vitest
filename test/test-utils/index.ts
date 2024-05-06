@@ -2,7 +2,7 @@ import { Readable, Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { type UserConfig, type VitestRunMode, afterEach } from 'vitest'
+import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
 import { type Options, execa } from 'execa'
@@ -92,6 +92,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   function output() {
     return {
       vitest: cli,
+      exitCode: subprocess.exitCode,
       stdout: cli.stdout || '',
       stderr: cli.stderr || '',
       waitForClose: () => isDone,
@@ -133,6 +134,11 @@ export async function runViteNodeCli(_options?: Options | string, ...args: strin
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 
   return { viteNode: vitest, ...rest }
+}
+
+export function getInternalState(): WorkerGlobalState {
+  // @ts-expect-error untyped global
+  return globalThis.__vitest_worker__
 }
 
 const originalFiles = new Map<string, string>()

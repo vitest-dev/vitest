@@ -14,7 +14,7 @@ import { closeInspector } from './inspector'
 export async function run(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
-  await setupGlobalEnv(config, environment)
+  await setupGlobalEnv(config, environment, executor)
   await startCoverageInsideWorker(config.coverage, executor)
 
   if (config.chaiConfig)

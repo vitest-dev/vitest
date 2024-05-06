@@ -16,6 +16,7 @@ import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions } from './pool-options'
 
+export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
@@ -561,6 +562,11 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
+   * Path to a custom snapshot environment module that has a defualt export of `SnapshotEnvironment` object.
+   */
+  snapshotEnvironment?: string
+
+  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean
@@ -802,6 +808,15 @@ export interface UserConfig extends InlineConfig {
   config?: string | false | undefined
 
   /**
+   * Do not run tests when Vitest starts.
+   *
+   * Vitest will only run tests if it's called programmatically or the test file changes.
+   *
+   * CLI file filters will be ignored.
+   */
+  standalone?: boolean
+
+  /**
    * Use happy-dom
    */
   dom?: boolean
@@ -846,6 +861,16 @@ export interface UserConfig extends InlineConfig {
    * Override vite config's clearScreen from cli
    */
   clearScreen?: boolean
+
+  /**
+   * benchmark.compare option exposed at the top level for cli
+   */
+  compare?: string
+
+  /**
+   * benchmark.outputJson option exposed at the top level for cli
+   */
+  outputJson?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -872,7 +897,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   api?: ApiConfig
   cliExclude?: string[]
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   shard?: {
     index: number
     count: number
