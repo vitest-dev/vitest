@@ -25,7 +25,7 @@
     "publish-ci": "tsx scripts/publish-ci.ts",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release",
     "test": "pnpm --filter test-core test:threads",
-    "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/test-*' --filter !test-browser run test --workspace-concurrency=1",
+    "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
     "test:ecosystem-ci": "ECOSYSTEM_CI=true pnpm test:ci",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
