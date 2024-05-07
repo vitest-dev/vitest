@@ -220,23 +220,23 @@ export class ExternalModulesExecutor {
 
     switch (type) {
       case 'data':
-        return this.esm.createDataModule(identifier)
+        return await this.esm.createDataModule(identifier)
       case 'builtin': {
         const exports = this.require(identifier)
         return this.wrapCoreSynteticModule(identifier, exports)
       }
       case 'vite':
-        return this.vite.createViteModule(url)
+        return await this.vite.createViteModule(url)
       case 'wasm':
-        return this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
+        return await this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return this.esm.createEsModule(url, () => this.fs.readFileAsync(path))
+        return await this.esm.createEsModule(url, () => this.fs.readFileAsync(path))
       case 'commonjs': {
         const exports = this.require(path)
         return this.wrapCommonJsSynteticModule(identifier, exports)
       }
       case 'network':
-        return this.esm.createNetworkModule(url)
+        return await this.esm.createNetworkModule(url)
       default: {
         const _deadend: never = type
         return _deadend
