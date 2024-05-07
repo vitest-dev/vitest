@@ -1,11 +1,11 @@
-import { resolve } from 'pathe'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
 describe('json reporter', async () => {
-  const root = resolve(__dirname, '../fixtures')
-  const projectRoot = resolve(__dirname, '../../..')
+  const root = resolve(__dirname, '..', 'fixtures')
+  const projectRoot = resolve(__dirname, '..', '..', '..')
 
   it('generates correct report', async () => {
     const { stdout } = await runVitest({ reporters: 'json', root, includeTaskLocation: true }, ['json-fail'])
