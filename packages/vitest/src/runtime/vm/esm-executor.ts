@@ -40,48 +40,50 @@ export class EsmExecutor {
     return m
   }
 
-  public createEsModule(fileURL: string, getCode: () => Promise<string> | string) {
+  public async createEsModule(fileURL: string, getCode: () => Promise<string> | string) {
     const cached = this.moduleCache.get(fileURL)
     if (cached)
       return cached
-    const promise = (async () => {
-      const code = await getCode()
-      // TODO: should not be allowed in strict mode, implement in #2854
-      if (fileURL.endsWith('.json')) {
-        const m = new SyntheticModule(
-          ['default'],
-          () => {
-            const result = JSON.parse(code)
-            m.setExport('default', result)
-          },
-        )
-        this.moduleCache.set(fileURL, m)
-        return m
-      }
-      const m = new SourceTextModule(
-        code,
-        {
-          identifier: fileURL,
-          context: this.context,
-          importModuleDynamically: this.executor.importModuleDynamically,
-          initializeImportMeta: (meta, mod) => {
-            meta.url = mod.identifier
-            if (mod.identifier.startsWith('file:')) {
-              const filename = fileURLToPath(mod.identifier)
-              meta.filename = filename
-              meta.dirname = dirname(filename)
-            }
-            meta.resolve = (specifier: string, importer?: string | URL) => {
-              return this.executor.resolve(specifier, importer != null ? importer.toString() : mod.identifier)
-            }
-          },
+    const promise = this.loadEsModule(fileURL, getCode)
+    this.moduleCache.set(fileURL, promise)
+    return promise
+  }
+
+  private async loadEsModule(fileURL: string, getCode: () => string | Promise<string>) {
+    const code = await getCode()
+    // TODO: should not be allowed in strict mode, implement in #2854
+    if (fileURL.endsWith('.json')) {
+      const m = new SyntheticModule(
+        ['default'],
+        () => {
+          const result = JSON.parse(code)
+          m.setExport('default', result)
         },
       )
       this.moduleCache.set(fileURL, m)
       return m
-    })()
-    this.moduleCache.set(fileURL, promise)
-    return promise
+    }
+    const m = new SourceTextModule(
+      code,
+      {
+        identifier: fileURL,
+        context: this.context,
+        importModuleDynamically: this.executor.importModuleDynamically,
+        initializeImportMeta: (meta, mod) => {
+          meta.url = mod.identifier
+          if (mod.identifier.startsWith('file:')) {
+            const filename = fileURLToPath(mod.identifier)
+            meta.filename = filename
+            meta.dirname = dirname(filename)
+          }
+          meta.resolve = (specifier: string, importer?: string | URL) => {
+            return this.executor.resolve(specifier, importer != null ? importer.toString() : mod.identifier)
+          }
+        },
+      },
+    )
+    this.moduleCache.set(fileURL, m)
+    return m
   }
 
   public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer) {
