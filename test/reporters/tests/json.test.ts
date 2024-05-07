@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
@@ -8,7 +8,11 @@ describe('json reporter', async () => {
   const projectRoot = resolve(__dirname, '..', '..', '..')
 
   it('generates correct report', async () => {
-    const { stdout } = await runVitest({ reporters: 'json', root, includeTaskLocation: true }, ['json-fail'])
+    const { stdout } = await runVitest({
+      reporters: 'json',
+      root,
+      includeTaskLocation: true,
+    }, ['json-fail'])
 
     const data = JSON.parse(stdout)
 
@@ -26,7 +30,11 @@ describe('json reporter', async () => {
     const result = failedTest.assertionResults[0]
     delete result.duration
     const rootRegexp = new RegExp(projectRoot, 'g')
-    result.failureMessages = result.failureMessages.map((m: string) => m.split('\n').slice(0, 2).join('\n').replace(rootRegexp, '<root>'))
+    result.failureMessages = result.failureMessages
+      .map((m: string) => {
+        const errorStack = m.split('\n').slice(0, 2).join('\n')
+        return errorStack.replace(/\\/g, '/').replace(rootRegexp, '<root>')
+      })
     expect(result).toMatchSnapshot()
   }, 40000)
 
