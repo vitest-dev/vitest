@@ -97,13 +97,28 @@ const testCases = [
       coverage: {
         provider: 'v8',
         reporter: 'json',
-        ignoreEmptyLines: true,
         all: true,
         include: ['src/empty-lines.ts', 'src/untested-file.ts'],
       },
     },
     assertionConfig: {
-      include: ['coverage-report-tests/empty-lines.test.ts'],
+      include: ['coverage-report-tests/ignore-empty-lines.test.ts'],
+    },
+  },
+  {
+    testConfig: {
+      name: 'include empty lines',
+      include: ['option-tests/empty-lines.test.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: 'json',
+        ignoreEmptyLines: false,
+        all: true,
+        include: ['src/empty-lines.ts', 'src/untested-file.ts'],
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/include-empty-lines.test.ts'],
     },
   },
   {
