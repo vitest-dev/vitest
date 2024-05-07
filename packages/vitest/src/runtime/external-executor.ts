@@ -81,7 +81,7 @@ export class ExternalModulesExecutor {
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
   public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
     const module = await this.resolveModule(specifier, referencer.identifier)
-    return this.esm.evaluateModule(module)
+    return await this.esm.evaluateModule(module)
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
