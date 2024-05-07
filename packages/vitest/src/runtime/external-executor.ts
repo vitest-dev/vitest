@@ -226,18 +226,17 @@ export class ExternalModulesExecutor {
         return this.wrapCoreSynteticModule(identifier, exports)
       }
       case 'vite':
-        return await this.vite.createViteModule(url)
+        return this.vite.createViteModule(url)
       case 'wasm':
-        return await this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
+        return this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return await this.esm.createEsModule(url, () => this.fs.readFile(path))
+        return this.esm.createEsModule(url, () => this.fs.readFileAsync(path))
       case 'commonjs': {
         const exports = this.require(path)
         return this.wrapCommonJsSynteticModule(identifier, exports)
       }
-      case 'network': {
+      case 'network':
         return this.esm.createNetworkModule(url)
-      }
       default: {
         const _deadend: never = type
         return _deadend
