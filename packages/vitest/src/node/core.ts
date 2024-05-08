@@ -387,7 +387,7 @@ export class Vitest {
     const blobs = await readBlobs(this.config.mergeReports)
 
     if (!blobs.length)
-      throw new Error(`vitest.blob() requires at least one blob file paths in the config`)
+      throw new Error(`vitest.mergeReports() requires at least one blob file paths in the config`)
 
     await this.report('onInit', this)
 
