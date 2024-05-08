@@ -382,6 +382,18 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
+Sometimes the configuration mentioned above might not work because your workspace cannot find the types for `vitest/globals`. If that's the case, you can add `typeRoots` to your `tsconfig.json` file. Afterward, try restarting your TypeScript server. For example in VSCode, press `F1` and select `TypeScript: Restart TS server`
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"]
+  }
+}
+```
+
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts
