@@ -10,31 +10,44 @@ test('should print logs correctly', async () => {
   expect(stderr).toBeTruthy()
 
   expect(stdout).toContain(
-`stdout | console.test.ts > suite > nested suite
-nested suite stdin beforeAll
-nested suite stdin afterAll
+`stdout | console.test.ts
+global stdin beforeAll
 
 stdout | console.test.ts > suite
 suite stdin beforeAll
+
+stdout | console.test.ts > suite > nested suite
+nested suite stdin beforeAll`,
+  )
+
+  expect(stdout).toContain(
+`stdout | console.test.ts > suite > nested suite
+nested suite stdin afterAll
+
+stdout | console.test.ts > suite
 suite stdin afterAll
 
 stdout | console.test.ts
-global stdin beforeAll
-global stdin afterAll
-`,
+global stdin afterAll`,
   )
 
   expect(stderr).toContain(
-`stderr | console.test.ts > suite > nested suite
-nested suite stderr beforeAll
-nested suite stderr afterAll
+`stderr | console.test.ts
+global stderr beforeAll
 
 stderr | console.test.ts > suite
 suite stderr beforeAll
+
+stderr | console.test.ts > suite > nested suite
+nested suite stderr beforeAll
+
+stderr | console.test.ts > suite > nested suite
+nested suite stderr afterAll
+
+stderr | console.test.ts > suite
 suite stderr afterAll
 
 stderr | console.test.ts
-global stderr beforeAll
 global stderr afterAll`,
   )
 })
