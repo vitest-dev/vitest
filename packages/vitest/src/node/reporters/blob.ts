@@ -18,7 +18,7 @@ export class BlobReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     if (ctx.config.watch)
-      throw new Error(`Blob reporter is not supported in watch mode`)
+      throw new Error('Blob reporter is not supported in watch mode')
 
     this.ctx = ctx
   }
