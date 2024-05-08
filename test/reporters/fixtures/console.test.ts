@@ -32,7 +32,8 @@ describe('suite', () => {
       console.error('nested suite stderr afterAll')
     })
 
-    test('test', () => {
+    test('test', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
       expect(true).toBe(true)
     })
   })

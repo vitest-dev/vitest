@@ -81,7 +81,7 @@ export class ExternalModulesExecutor {
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
   public importModuleDynamically = async (specifier: string, referencer: VMModule) => {
     const module = await this.resolveModule(specifier, referencer.identifier)
-    return this.esm.evaluateModule(module)
+    return await this.esm.evaluateModule(module)
   }
 
   public resolveModule = async (specifier: string, referencer: string) => {
@@ -220,7 +220,7 @@ export class ExternalModulesExecutor {
 
     switch (type) {
       case 'data':
-        return this.esm.createDataModule(identifier)
+        return await this.esm.createDataModule(identifier)
       case 'builtin': {
         const exports = this.require(identifier)
         return this.wrapCoreSynteticModule(identifier, exports)
@@ -230,14 +230,13 @@ export class ExternalModulesExecutor {
       case 'wasm':
         return await this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return await this.esm.createEsModule(url, () => this.fs.readFile(path))
+        return await this.esm.createEsModule(url, () => this.fs.readFileAsync(path))
       case 'commonjs': {
         const exports = this.require(path)
         return this.wrapCommonJsSynteticModule(identifier, exports)
       }
-      case 'network': {
-        return this.esm.createNetworkModule(url)
-      }
+      case 'network':
+        return await this.esm.createNetworkModule(url)
       default: {
         const _deadend: never = type
         return _deadend

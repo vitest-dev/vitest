@@ -40,13 +40,19 @@ export class EsmExecutor {
     return m
   }
 
-  public async createEsModule(fileUrl: string, getCode: () => Promise<string> | string) {
-    const cached = this.moduleCache.get(fileUrl)
+  public async createEsModule(fileURL: string, getCode: () => Promise<string> | string) {
+    const cached = this.moduleCache.get(fileURL)
     if (cached)
       return cached
+    const promise = this.loadEsModule(fileURL, getCode)
+    this.moduleCache.set(fileURL, promise)
+    return promise
+  }
+
+  private async loadEsModule(fileURL: string, getCode: () => string | Promise<string>) {
     const code = await getCode()
     // TODO: should not be allowed in strict mode, implement in #2854
-    if (fileUrl.endsWith('.json')) {
+    if (fileURL.endsWith('.json')) {
       const m = new SyntheticModule(
         ['default'],
         () => {
@@ -54,13 +60,13 @@ export class EsmExecutor {
           m.setExport('default', result)
         },
       )
-      this.moduleCache.set(fileUrl, m)
+      this.moduleCache.set(fileURL, m)
       return m
     }
     const m = new SourceTextModule(
       code,
       {
-        identifier: fileUrl,
+        identifier: fileURL,
         context: this.context,
         importModuleDynamically: this.executor.importModuleDynamically,
         initializeImportMeta: (meta, mod) => {
@@ -76,7 +82,7 @@ export class EsmExecutor {
         },
       },
     )
-    this.moduleCache.set(fileUrl, m)
+    this.moduleCache.set(fileURL, m)
     return m
   }
 
