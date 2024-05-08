@@ -866,9 +866,9 @@ export interface UserConfig extends InlineConfig {
   outputJson?: string
 
   /**
-   * Blob reports
+   * Directory of blob reports to merge
    */
-  blob?: string[]
+  mergeReports?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
 import { resolve } from 'pathe'
 import type { File, Reporter, Vitest } from '../../types'
@@ -24,7 +24,12 @@ export class BlobReporter implements Reporter {
   }
 
   async onFinished(files?: File[], errors?: unknown[]) {
-    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob') ?? 'blob.json'
+    let outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
+    if (!outputFile) {
+      const shard = this.ctx.config.shard
+      outputFile = shard ? `blob-${shard.index}-${shard.count}.json` : 'blob.json'
+    }
+
     // TODO: store module graph?
     const report = stringify([files, errors])
 
@@ -38,11 +43,11 @@ export class BlobReporter implements Reporter {
   }
 }
 
-export function readBlobs(blobs: string[]) {
+export async function readBlobs(blobsDirectory: string) {
+  const resolvedDir = resolve(process.cwd(), blobsDirectory)
+  const blobs = (await readdir(resolvedDir)).map(file => resolve(resolvedDir, file))
   const promises = blobs.map(async (path) => {
-    // resolve relative to process.cwd, since it's the only way to pass them dowwn
-    const resolvedPath = resolve(process.cwd(), path)
-    const content = await readFile(resolvedPath, 'utf-8')
+    const content = await readFile(path, 'utf-8')
     const [files, errors] = parse(content) as [files: File[], errors: unknown[]]
     return { files, errors }
   })
