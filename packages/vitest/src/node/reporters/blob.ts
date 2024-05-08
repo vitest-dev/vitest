@@ -53,9 +53,9 @@ export class BlobReporter implements Reporter {
 
 export async function readBlobs(blobsDirectory: string) {
   const resolvedDir = resolve(process.cwd(), blobsDirectory)
-  const blobs = (await readdir(resolvedDir)).map(file => resolve(resolvedDir, file))
-  const promises = blobs.map(async (path) => {
-    const content = await readFile(path, 'utf-8')
+  const blobs = await readdir(resolvedDir)
+  const promises = blobs.map(async (file) => {
+    const content = await readFile(resolve(resolvedDir, file), 'utf-8')
     const [files, errors] = parse(content) as [files: File[], errors: unknown[]]
     return { files, errors }
   })
