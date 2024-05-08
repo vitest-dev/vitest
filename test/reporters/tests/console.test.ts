@@ -1,10 +1,25 @@
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { DefaultReporter } from 'vitest/reporters'
 import { runVitest } from '../../test-utils'
+
+class LogReporter extends DefaultReporter {
+  isTTY = true
+  renderer = {
+    start() {},
+    update() {},
+    stop() {},
+    clear() {},
+  }
+}
 
 test('should print logs correctly', async () => {
   const filename = resolve('./fixtures/console.test.ts')
-  const { stdout, stderr } = await runVitest({ root: './fixtures', reporters: ['dot'] }, [filename])
+
+  const { stdout, stderr } = await runVitest({
+    root: './fixtures',
+    reporters: [new LogReporter() as any],
+  }, [filename])
 
   expect(stdout).toBeTruthy()
   expect(stderr).toBeTruthy()
