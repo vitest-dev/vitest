@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 
 test('should print logs correctly', async () => {
   const filename = resolve('./fixtures/console.test.ts')
-  const { stdout, stderr } = await runVitest({ root: './fixtures' }, [filename])
+  const { stdout, stderr } = await runVitest({ root: './fixtures', reporters: ['dot'] }, [filename])
 
   expect(stdout).toBeTruthy()
   expect(stderr).toBeTruthy()
