@@ -383,7 +383,7 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  async blob() {
+  async mergeReports() {
     const blobs = await readBlobs(this.config.mergeReports)
 
     if (!blobs.length)

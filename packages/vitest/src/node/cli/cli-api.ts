@@ -95,8 +95,8 @@ export async function startVitest(
   })
 
   try {
-    if (ctx.config.blob.length)
-      await ctx.blob()
+    if (ctx.config.mergeReports)
+      await ctx.mergeReports()
     else if (ctx.config.standalone)
       await ctx.init()
     else
