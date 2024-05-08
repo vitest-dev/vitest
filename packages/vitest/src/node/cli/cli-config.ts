@@ -608,7 +608,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   mergeReports: {
     description: 'Paths to blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
-    argument: '<path>',
+    argument: '[path]',
+    transform(value) {
+      if (!value || typeof value === 'boolean')
+        return '.vitest-reports'
+      return value
+    },
   },
 
   // disable CLI options
