@@ -22,7 +22,7 @@ export class VitestPackageInstaller {
       }
     }
 
-    if (isPackageExists(dependency, { paths: [root, __dirname] }))
+    if (/* @__PURE__ */ isPackageExists(dependency, { paths: [root, __dirname] }))
       return true
 
     const promptInstall = !isCI && process.stdout.isTTY
