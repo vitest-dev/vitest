@@ -121,21 +121,38 @@ export default ({ mode }: { mode: string }) => {
                   text: 'Discord Chat',
                   link: discord,
                 },
-                {
-                  text: 'Releases ',
-                  link: releases,
-                },
-                {
-                  text: 'Contributing ',
-                  link: contributing,
-                },
               ],
             },
           ],
         },
         {
           text: `v${version}`,
-          link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+          items: [
+            {
+              items: [
+                {
+                  text: `v${version}`,
+                  link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+                },
+                {
+                  text: 'Releases Notes',
+                  link: releases,
+                },
+                {
+                  text: 'Contributing ',
+                  link: contributing,
+                },
+              ]
+            },
+            {
+              items: [
+                {
+                  text: 'v0.x',
+                  link: 'https://v0.vitest.dev/',
+                }
+              ]
+            }
+          ],
         },
       ],
 
