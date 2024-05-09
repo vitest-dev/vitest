@@ -144,7 +144,6 @@ test('boolean flag 100 should not crash CLI', async () => {
 
 test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
-    pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fake-timers.test.ts'],
   })
@@ -154,6 +153,7 @@ test('nextTick cannot be mocked inside child_process', async () => {
 
 test('nextTick can be mocked inside worker_threads', async () => {
   const { stderr } = await runVitest({
+    pool: 'threads',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fixtures/test/fake-timers.test.ts'],
   })

@@ -13,13 +13,10 @@ export default defineConfig({
     testTimeout: process.env.CI ? 60_000 : 10_000,
 
     // Test cases may have side effects, e.g. files under fixtures/ are modified on the fly to trigger file watchers
-    poolOptions: {
-      forks: { singleFork: true },
-      threads: { singleThread: true },
-      vmThreads: { singleThread: true },
-    },
+    fileParallelism: false,
 
     // TODO: Fix flakiness and remove
     allowOnly: true,
+    bail: 1,
   },
 })
