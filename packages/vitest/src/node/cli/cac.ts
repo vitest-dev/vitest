@@ -1,7 +1,7 @@
 import { normalize } from 'pathe'
 import cac, { type CAC, type Command } from 'cac'
 import c from 'picocolors'
-import { version } from '../../../package.json'
+import { version } from '../../../package.json' with { type: 'json' }
 import { toArray } from '../../utils/base'
 import type { Vitest, VitestRunMode } from '../../types'
 import type { CliOptions } from './cli-api'
@@ -66,8 +66,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
 export function createCLI(options: CLIOptions = {}) {
   const cli = cac('vitest')
 
-  cli
-    .version(version)
+  cli.version(version)
 
   addCliOptions(cli, cliOptionsConfig)
 

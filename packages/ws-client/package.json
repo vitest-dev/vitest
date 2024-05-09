@@ -38,9 +38,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "0.2.15",
-    "flatted": "^3.2.9",
-    "ws": "^8.14.2"
+    "birpc": "0.2.17",
+    "flatted": "^3.3.1",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*"

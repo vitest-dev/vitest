@@ -12,6 +12,7 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
+import { version } from '../../package.json' with { type: 'json' }
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -38,6 +39,8 @@ export interface VitestOptions {
 }
 
 export class Vitest {
+  version = version
+
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> = {}
 
@@ -103,7 +106,7 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
-    this.cache = new VitestCache()
+    this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch)

@@ -44,18 +44,18 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "@ampproject/remapping": "^2.2.1",
+    "@ampproject/remapping": "^2.3.0",
     "@bcoe/v8-coverage": "^0.2.3",
     "debug": "^4.3.4",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.4",
-    "istanbul-reports": "^3.1.6",
-    "magic-string": "^0.30.5",
-    "magicast": "^0.3.3",
+    "istanbul-reports": "^3.1.7",
+    "magic-string": "^0.30.10",
+    "magicast": "^0.3.4",
     "picocolors": "^1.0.0",
-    "std-env": "^3.5.0",
-    "strip-literal": "^2.0.0",
+    "std-env": "^3.7.0",
+    "strip-literal": "^2.1.0",
     "test-exclude": "^6.0.0"
   },
   "devDependencies": {
@@ -64,7 +64,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
-    "pathe": "^1.1.1",
+    "pathe": "^1.1.2",
     "v8-to-istanbul": "^9.2.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"

@@ -42,8 +42,8 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "magic-string": "^0.30.5",
-    "pathe": "^1.1.1",
+    "magic-string": "^0.30.10",
+    "pathe": "^1.1.2",
     "pretty-format": "^29.7.0"
   },
   "devDependencies": {
