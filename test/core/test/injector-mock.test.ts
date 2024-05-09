@@ -1201,6 +1201,70 @@ await vi
       1234;"
     `)
   })
+
+  test('handles dynamic import as the first argument', () => {
+    expect(
+      hoistSimpleCode(`
+    vi.mock(import('./path'))
+    vi.mock(import(somePath))
+    vi.mock(import(\`./path\`))
+
+    vi.mock(import('./path'));
+    vi.mock(import(somePath));
+    vi.mock(import(\`./path\`));
+
+    vi.mock(await import('./path'))
+    vi.mock(await import(somePath))
+    vi.mock(await import(\`./path\`))
+
+    vi.mock(await import('./path'));
+    vi.mock(await import(somePath));
+    vi.mock(await import(\`./path\`));
+
+    vi.mock(import('./path'), () => {})
+    vi.mock(import(somePath), () => {})
+    vi.mock(import(\`./path\`), () => {})
+
+    vi.mock(await import('./path'), () => {})
+    vi.mock(await import(somePath), () => {})
+    vi.mock(await import(\`./path\`), () => {})
+
+    vi.mock(import('./path'), () => {});
+    vi.mock(import(somePath), () => {});
+    vi.mock(import(\`./path\`), () => {});
+
+    vi.mock(await import('./path'), () => {});
+    vi.mock(await import(somePath), () => {});
+    vi.mock(await import(\`./path\`), () => {});
+    `),
+    ).toMatchInlineSnapshot(`
+      "if (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+      vi.mock('./path')
+      vi.mock(somePath)
+      vi.mock(\`./path\`)
+      vi.mock('./path');
+      vi.mock(somePath);
+      vi.mock(\`./path\`);
+      vi.mock('./path')
+      vi.mock(somePath)
+      vi.mock(\`./path\`)
+      vi.mock('./path');
+      vi.mock(somePath);
+      vi.mock(\`./path\`);
+      vi.mock('./path', () => {})
+      vi.mock(somePath, () => {})
+      vi.mock(\`./path\`, () => {})
+      vi.mock('./path', () => {})
+      vi.mock(somePath, () => {})
+      vi.mock(\`./path\`, () => {})
+      vi.mock('./path', () => {});
+      vi.mock(somePath, () => {});
+      vi.mock(\`./path\`, () => {});
+      vi.mock('./path', () => {});
+      vi.mock(somePath, () => {});
+      vi.mock(\`./path\`, () => {});"
+    `)
+  })
 })
 
 describe('throws an error when nodes are incompatible', () => {

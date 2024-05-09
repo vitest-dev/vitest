@@ -1,7 +1,7 @@
 import MagicString from 'magic-string'
-import type { AwaitExpression, CallExpression, ExportDefaultDeclaration, ExportNamedDeclaration, Identifier, ImportDeclaration, VariableDeclaration, Node as _Node } from 'estree'
+import type { AwaitExpression, CallExpression, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Identifier, ImportDeclaration, ImportExpression, VariableDeclaration, Node as _Node } from 'estree'
 import { findNodeAround } from 'acorn-walk'
-import type { PluginContext } from 'rollup'
+import type { PluginContext, ProgramNode } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
 import type { Colors } from '@vitest/utils'
 import { highlightCode } from '../utils/colors'
@@ -69,7 +69,7 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
 
   const s = new MagicString(code)
 
-  let ast: any
+  let ast: ProgramNode
   try {
     ast = parse(code)
   }
@@ -277,6 +277,14 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
     )
   }
 
+  function rewriteMockDynamicImport(nodeCode: string, moduleInfo: Positioned<ImportExpression>, expressionStart: number, expressionEnd: number, mockStart: number) {
+    const source = moduleInfo.source as Positioned<Expression>
+    const importPath = s.slice(source.start, source.end)
+    const nodeCodeStart = expressionStart - mockStart
+    const nodeCodeEnd = expressionEnd - mockStart
+    return nodeCode.slice(0, nodeCodeStart) + importPath + nodeCode.slice(nodeCodeEnd)
+  }
+
   // validate hoistedNodes doesn't have nodes inside other nodes
   for (let i = 0; i < hoistedNodes.length; i++) {
     const node = hoistedNodes[i]
@@ -300,7 +308,37 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
      * import user from './user'
      * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
      */
-    const nodeCode = s.slice(node.start, end)
+    let nodeCode = s.slice(node.start, end)
+
+    // rewrite vi.mock(import('..')) into vi.mock('..')
+    if (
+      node.type === 'CallExpression'
+      && node.callee.type === 'MemberExpression'
+      && ((node.callee.property as Identifier).name === 'mock' || (node.callee.property as Identifier).name === 'unmock')
+    ) {
+      const moduleInfo = node.arguments[0] as Positioned<Expression>
+      // vi.mock(import('./path')) -> vi.mock('./path')
+      if (moduleInfo.type === 'ImportExpression') {
+        nodeCode = rewriteMockDynamicImport(
+          nodeCode,
+          moduleInfo,
+          moduleInfo.start,
+          moduleInfo.end,
+          node.start,
+        )
+      }
+      // vi.mock(await import('./path')) -> vi.mock('./path')
+      if (moduleInfo.type === 'AwaitExpression' && moduleInfo.argument.type === 'ImportExpression') {
+        nodeCode = rewriteMockDynamicImport(
+          nodeCode,
+          moduleInfo.argument as Positioned<ImportExpression>,
+          moduleInfo.start,
+          moduleInfo.end,
+          node.start,
+        )
+      }
+    }
+
     s.remove(node.start, end)
     return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
   }).join('')
