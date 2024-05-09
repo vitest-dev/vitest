@@ -37,8 +37,7 @@ export class BlobReporter implements Reporter {
       return [project.getName(), [...project.server.moduleGraph.idToModuleMap.keys()]]
     })
 
-    // TODO: store module graph?
-    const report = stringify([files, errors, moduleKeys])
+    const report = stringify([this.ctx.version, files, errors, moduleKeys])
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 
@@ -60,8 +59,8 @@ export async function readBlobs(blobsDirectory: string) {
   const blobs = await readdir(resolvedDir)
   const promises = blobs.map(async (file) => {
     const content = await readFile(resolve(resolvedDir, file), 'utf-8')
-    const [files, errors, moduleKeys] = parse(content) as [files: File[], errors: unknown[], [string, string[]][]]
-    return { files, errors, moduleKeys }
+    const [version, files, errors, moduleKeys] = parse(content) as [string, files: File[], errors: unknown[], [string, string[]][]]
+    return { version, files, errors, moduleKeys }
   })
   return Promise.all(promises)
 }

@@ -19,6 +19,7 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
+import { version } from '../../package.json'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -423,28 +424,36 @@ export class Vitest {
       })
     })
 
-    const files = blobs.flatMap(blob => blob.files)
+    const files = blobs.flatMap(blob => blob.files).sort((f1, f2) => {
+      const time1 = f1.result?.startTime || 0
+      const time2 = f2.result?.startTime || 0
+      return time1 - time2
+    })
     const errors = blobs.flatMap(blob => blob.errors)
     this.state.collectFiles(files)
 
-    const tasks = files.flatMap(file => getTasks(file))
+    await this.report('onCollected', files.map((file) => {
+      return { ...file, result: undefined }
+    }))
 
-    await this.report('onCollected', files)
+    for (const file of files) {
+      const logs: UserConsoleLog[] = []
+      const taskPacks: TaskResultPack[] = []
 
-    const logs: UserConsoleLog[] = []
-    const taskPacks: TaskResultPack[] = []
+      const tasks = getTasks(file)
+      for (const task of tasks) {
+        if (task.logs)
+          logs.push(...task.logs)
+        taskPacks.push([task.id, task.result, task.meta])
+      }
+      logs.sort((log1, log2) => log1.time - log2.time)
 
-    for (const task of tasks) {
-      if (task.logs)
-        logs.push(...task.logs)
-      taskPacks.push([task.id, task.result, task.meta])
+      for (const log of logs)
+        await this.report('onUserConsoleLog', log)
+
+      await this.report('onTaskUpdate', taskPacks)
     }
-    logs.sort((log1, log2) => log1.time - log2.time)
 
-    for (const log of logs)
-      await this.report('onUserConsoleLog', log)
-
-    await this.report('onTaskUpdate', taskPacks)
     await this.report('onFinished', files, errors)
   }
 
