@@ -49,13 +49,6 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('c8 coverage provider is not supported', async () => {
-  // @ts-expect-error -- check for removed API option
-  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'c8' } })
-
-  expect(stderr).toMatch('Error: "coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
-})
-
 test('v8 coverage provider cannot be used with browser', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
