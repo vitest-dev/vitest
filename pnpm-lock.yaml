@@ -1163,6 +1163,9 @@ importers:
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)
+      immutable:
+        specifier: 5.0.0-beta.5
+        version: 5.0.0-beta.5
       strip-ansi:
         specifier: ^7.1.0
         version: 7.1.0
@@ -10978,6 +10981,10 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
+  /immutable@5.0.0-beta.5:
+    resolution: {integrity: sha512-1RO6wxfJdh/uyWb2MTn3RuCPXYmpRiAhoKm8vEnA50+2Gy0j++6GBtu5q6sq2d4tpcL+e1sCHzk8NkWnRhT2/Q==}
+    dev: true
+
   /import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
@@ -16348,7 +16355,7 @@ packages:
       '@vue/composition-api':
         optional: true
     dependencies:
-      vue: 3.4.26(typescript@5.4.5)
+      vue: 3.4.26(typescript@5.2.2)
     dev: true
 
   /vue-eslint-parser@9.4.2(eslint@9.1.0):
