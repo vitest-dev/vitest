@@ -13,7 +13,7 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
@@ -391,19 +391,60 @@ export class Vitest {
 
     await this.report('onInit', this)
 
-    // TODO: remove duplicates
-    // TODO: trigger onConsoleLog
-    // TODO: how to print error stack frame without module graph?
+    // fake module graph - it is used to check if module is imported, but we don't use values inside
+    const projects = Object.fromEntries(this.projects.map(p => [p.getName(), p]))
+
+    blobs.forEach((blob) => {
+      blob.moduleKeys.forEach(([projectName, moduleIds]) => {
+        const project = projects[projectName]
+        if (!project)
+          return
+        moduleIds.forEach((moduleId) => {
+          project.server.moduleGraph.idToModuleMap.set(moduleId, {
+            id: moduleId,
+            url: moduleId,
+            file: moduleId,
+            ssrTransformResult: null,
+            transformResult: null,
+            importedBindings: null,
+            importedModules: new Set(),
+            importers: new Set(),
+            type: 'js',
+            clientImportedModules: new Set(),
+            ssrError: null,
+            ssrImportedModules: new Set(),
+            ssrModule: null,
+            acceptedHmrDeps: new Set(),
+            acceptedHmrExports: null,
+            lastHMRTimestamp: 0,
+            lastInvalidationTimestamp: 0,
+          })
+        })
+      })
+    })
+
     const files = blobs.flatMap(blob => blob.files)
     const errors = blobs.flatMap(blob => blob.errors)
     this.state.collectFiles(files)
 
-    const testPacks = files
-      .flatMap(file => getTasks(file))
-      .map<TaskResultPack>(i => [i.id, i.result, i.meta])
+    const tasks = files.flatMap(file => getTasks(file))
 
     await this.report('onCollected', files)
-    await this.report('onTaskUpdate', testPacks)
+
+    const logs: UserConsoleLog[] = []
+    const taskPacks: TaskResultPack[] = []
+
+    for (const task of tasks) {
+      if (task.logs)
+        logs.push(...task.logs)
+      taskPacks.push([task.id, task.result, task.meta])
+    }
+    logs.sort((log1, log2) => log1.time - log2.time)
+
+    for (const log of logs)
+      await this.report('onUserConsoleLog', log)
+
+    await this.report('onTaskUpdate', taskPacks)
     await this.report('onFinished', files, errors)
   }
 

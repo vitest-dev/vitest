@@ -33,8 +33,12 @@ export class BlobReporter implements Reporter {
         : '.vitest-reports/blob.json'
     }
 
+    const moduleKeys = this.ctx.projects.map((project) => {
+      return [project.getName(), [...project.server.moduleGraph.idToModuleMap.keys()]]
+    })
+
     // TODO: store module graph?
-    const report = stringify([files, errors])
+    const report = stringify([files, errors, moduleKeys])
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 
@@ -56,8 +60,8 @@ export async function readBlobs(blobsDirectory: string) {
   const blobs = await readdir(resolvedDir)
   const promises = blobs.map(async (file) => {
     const content = await readFile(resolve(resolvedDir, file), 'utf-8')
-    const [files, errors] = parse(content) as [files: File[], errors: unknown[]]
-    return { files, errors }
+    const [files, errors, moduleKeys] = parse(content) as [files: File[], errors: unknown[], [string, string[]][]]
+    return { files, errors, moduleKeys }
   })
   return Promise.all(promises)
 }
