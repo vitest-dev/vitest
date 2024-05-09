@@ -55,6 +55,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
                 "nameStr": "AssertionError",
+                "ok": false,
                 "operator": "strictEqual",
                 "showDiff": true,
                 "stack": "AssertionError: expected 2 to deeply equal 1",
