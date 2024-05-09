@@ -46,11 +46,11 @@
   "dependencies": {
     "debug": "^4.3.4",
     "istanbul-lib-coverage": "^3.2.2",
-    "istanbul-lib-instrument": "^6.0.1",
+    "istanbul-lib-instrument": "^6.0.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.4",
-    "istanbul-reports": "^3.1.6",
-    "magicast": "^0.3.3",
+    "istanbul-reports": "^3.1.7",
+    "magicast": "^0.3.4",
     "picocolors": "^1.0.0",
     "test-exclude": "^6.0.0"
   },
@@ -61,7 +61,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
-    "pathe": "^1.1.1",
+    "pathe": "^1.1.2",
     "vitest": "workspace:*"
   }
 }
