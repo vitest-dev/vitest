@@ -1265,6 +1265,36 @@ await vi
       vi.mock(\`./path\`, () => {});"
     `)
   })
+
+  test.only('handles import in vi.do* methods', () => {
+    expect(
+      hoistSimpleCode(`
+vi.doMock(import('./path'))
+
+beforeEach(() => {
+  vi.doUnmock(import('./path'))
+  vi.doMock(import('./path'))
+})
+
+test('test', async () => {
+  vi.doMock(import(dynamicName))
+  await import(dynamicName)
+})
+      `),
+    ).toMatchInlineSnapshot(`
+      "vi.doMock('./path')
+
+      beforeEach(() => {
+        vi.doUnmock('./path')
+        vi.doMock('./path')
+      })
+
+      test('test', async () => {
+        vi.doMock(dynamicName)
+        await import(dynamicName)
+      })"
+    `)
+  })
 })
 
 describe('throws an error when nodes are incompatible', () => {

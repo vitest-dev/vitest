@@ -58,7 +58,7 @@ export function getBetterEnd(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable = /\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted)\(/
+const regexpHoistable = /\b(vi|vitest)\s*\.\s*(mock|unmock|hoisted|doMock|doUnmock)\(/
 const hashbangRE = /^#!.*\n/
 
 export function hoistMocks(code: string, id: string, parse: PluginContext['parse'], colors?: Colors) {
@@ -223,6 +223,24 @@ export function hoistMocks(code: string, id: string, parse: PluginContext['parse
           if (declarationNode)
             assertNotNamedExport(declarationNode, `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`)
           hoistedNodes.push(node)
+        }
+
+        // vi.doMock(import('./path')) -> vi.doMock('./path')
+        // vi.doMock(await import('./path')) -> vi.doMock('./path')
+        if (methodName === 'doMock' || methodName === 'doUnmock') {
+          const moduleInfo = node.arguments[0] as Positioned<Expression>
+          let source: Positioned<Expression> | null = null
+          if (moduleInfo.type === 'ImportExpression')
+            source = moduleInfo.source as Positioned<Expression>
+          if (moduleInfo.type === 'AwaitExpression' && moduleInfo.argument.type === 'ImportExpression')
+            source = moduleInfo.argument.source as Positioned<Expression>
+          if (source) {
+            s.overwrite(
+              moduleInfo.start,
+              moduleInfo.end,
+              s.slice(source.start, source.end),
+            )
+          }
         }
 
         if (methodName === 'hoisted') {

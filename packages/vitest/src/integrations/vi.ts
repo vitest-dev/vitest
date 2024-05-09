@@ -198,7 +198,7 @@ export interface VitestUtils {
   // eslint-disable-next-line ts/method-signature-style
   unmock(path: string): void
   // eslint-disable-next-line ts/method-signature-style
-  unmock(path: Promise<unknown>): void
+  unmock(module: Promise<unknown>): void
 
   /**
    * Mocks every subsequent [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) call.
@@ -209,14 +209,20 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  doMock: (path: string, factory?: MockFactoryWithHelper) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock(path: string, factory?: MockFactoryWithHelper): void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
    * Unlike [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock), this method is not hoisted to the top of the file.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  doUnmock: (path: string) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(path: string): void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(module: Promise<unknown>): void
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -500,7 +506,9 @@ function createVitest(): VitestUtils {
       _mocker.queueUnmock(path, getImporter())
     },
 
-    doMock(path: string, factory?: MockFactoryWithHelper) {
+    doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doMock() expects a string path, but received a ${typeof path}`)
       const importer = getImporter()
       _mocker.queueMock(
         path,
@@ -510,7 +518,9 @@ function createVitest(): VitestUtils {
       )
     },
 
-    doUnmock(path: string) {
+    doUnmock(path: string | Promise<unknown>) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
       _mocker.queueUnmock(path, getImporter())
     },
 
