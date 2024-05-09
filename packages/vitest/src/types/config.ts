@@ -391,7 +391,6 @@ export interface InlineConfig {
    */
   reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
-  // TODO: v2.0.0 Remove in favor of custom reporter options, e.g. "reporters: [['json', { outputFile: 'some-dir/file.html' }]]"
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.

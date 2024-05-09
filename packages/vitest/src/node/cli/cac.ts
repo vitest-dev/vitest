@@ -168,13 +168,6 @@ export function createCLI(options: CLIOptions = {}) {
     benchCliOptionsConfig,
   )
 
-  // TODO: remove in Vitest 2.0
-  cli
-    .command('typecheck [...filters]')
-    .action(() => {
-      throw new Error(`Running typecheck via "typecheck" command is removed. Please use "--typecheck" to run your regular tests alongside typechecking, or "--typecheck.only" to run only typecheck tests.`)
-    })
-
   cli
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
