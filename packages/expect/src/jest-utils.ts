@@ -268,7 +268,9 @@ export function hasProperty(obj: object | null, property: string): boolean {
 // SENTINEL constants are from https://github.com/facebook/immutable-js
 const IS_KEYED_SENTINEL = '@@__IMMUTABLE_KEYED__@@'
 const IS_SET_SENTINEL = '@@__IMMUTABLE_SET__@@'
+const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_ORDERED_SENTINEL = '@@__IMMUTABLE_ORDERED__@@'
+const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 
 export function isImmutableUnorderedKeyed(maybeKeyed: any) {
   return !!(
@@ -284,6 +286,36 @@ export function isImmutableUnorderedSet(maybeSet: any) {
     && maybeSet[IS_SET_SENTINEL]
     && !maybeSet[IS_ORDERED_SENTINEL]
   )
+}
+
+function isObjectLiteral(source: unknown): source is Record<string, unknown> {
+  return source != null && typeof source === 'object' && !Array.isArray(source)
+}
+
+function isImmutableList(source: unknown): boolean {
+  return Boolean(source && isObjectLiteral(source) && source[IS_LIST_SENTINEL])
+}
+
+function isImmutableOrderedKeyed(source: unknown): boolean {
+  return Boolean(
+    source
+    && isObjectLiteral(source)
+    && source[IS_KEYED_SENTINEL]
+    && source[IS_ORDERED_SENTINEL],
+  )
+}
+
+function isImmutableOrderedSet(source: unknown): boolean {
+  return Boolean(
+    source
+    && isObjectLiteral(source)
+    && source[IS_SET_SENTINEL]
+    && source[IS_ORDERED_SENTINEL],
+  )
+}
+
+function isImmutableRecord(source: unknown): boolean {
+  return Boolean(source && isObjectLiteral(source) && source[IS_RECORD_SYMBOL])
 }
 
 /**
@@ -411,10 +443,17 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
   if (!bIterator.next().done)
     return false
 
-  const aEntries = Object.entries(a)
-  const bEntries = Object.entries(b)
-  if (!equals(aEntries, bEntries))
-    return false
+  if (
+    !isImmutableList(a)
+    && !isImmutableOrderedKeyed(a)
+    && !isImmutableOrderedSet(a)
+    && !isImmutableRecord(a)
+  ) {
+    const aEntries = Object.entries(a)
+    const bEntries = Object.entries(b)
+    if (!equals(aEntries, bEntries))
+      return false
+  }
 
   // Remove the first value from the stack of traversed values.
   aStack.pop()
