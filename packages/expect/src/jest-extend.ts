@@ -55,8 +55,8 @@ class JestExtendError extends Error {
   }
 }
 
-function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiPlugin {
-  return (c, utils) => {
+function JestExtendPlugin(c: Chai.ChaiStatic, expect: ExpectStatic, matchers: MatchersObject): ChaiPlugin {
+  return (_, utils) => {
     Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
         const { state, isNot, obj } = getMatcherState(this, expect)
@@ -139,6 +139,6 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'extend', (expect: ExpectStatic, expects: MatchersObject) => {
-    use(JestExtendPlugin(expect, expects))
+    use(JestExtendPlugin(chai, expect, expects))
   })
 }
