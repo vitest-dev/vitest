@@ -11,7 +11,7 @@
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "ci:docs": "pnpm run build && pnpm run docs:build",
-    "build": "pnpm -r --filter='./packages/**' run build",
+    "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
