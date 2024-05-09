@@ -1266,7 +1266,7 @@ await vi
     `)
   })
 
-  test.only('handles import in vi.do* methods', () => {
+  test('handles import in vi.do* methods', () => {
     expect(
       hoistSimpleCode(`
 vi.doMock(import('./path'))
