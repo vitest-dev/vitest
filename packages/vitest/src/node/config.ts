@@ -16,7 +16,7 @@ import type { Logger } from './logger'
 
 function resolvePath(path: string, root: string) {
   return normalize(
-    resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
   )
 }
