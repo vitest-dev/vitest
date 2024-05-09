@@ -10,7 +10,7 @@ import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
-import matchers from './assertions/index'
+import matchers from './jest-assertions/index'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -21,17 +21,13 @@ declare class DOMTokenList {
   contains(item: unknown): boolean
 }
 
-const defineJestMatchers: ChaiPlugin = (chai, utils) => {
-  matchers.forEach(define => define(chai, utils))
-}
-
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
   const c = () => getColors()
   const customTesters = getCustomEqualityTesters()
 
-  defineJestMatchers(chai, utils)
+  matchers.forEach(define => define(chai, utils))
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
@@ -84,46 +80,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this
   })
 
-  def('toEqual', function (expected) {
-    const actual = utils.flag(this, 'object')
-    const equal = jestEquals(
-      actual,
-      expected,
-      [...customTesters, iterableEquality],
-    )
-
-    return this.assert(
-      equal,
-      'expected #{this} to deeply equal #{exp}',
-      'expected #{this} to not deeply equal #{exp}',
-      expected,
-      actual,
-    )
-  })
-
-  def('toStrictEqual', function (expected) {
-    const obj = utils.flag(this, 'object')
-    const equal = jestEquals(
-      obj,
-      expected,
-      [
-        ...customTesters,
-        iterableEquality,
-        typeEquality,
-        sparseArrayEquality,
-        arrayBufferEquality,
-      ],
-      true,
-    )
-
-    return this.assert(
-      equal,
-      'expected #{this} to strictly equal #{exp}',
-      'expected #{this} to not strictly equal #{exp}',
-      expected,
-      obj,
-    )
-  })
   def('toBe', function (expected) {
     const actual = this._obj
     const pass = Object.is(actual, expected)
