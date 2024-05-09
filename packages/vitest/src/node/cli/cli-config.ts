@@ -615,7 +615,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   snapshotFormat: null,
   snapshotSerializers: null,
   includeSource: null,
-  watchExclude: null,
   alias: null,
   env: null,
   environmentMatchGlobs: null,
