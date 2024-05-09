@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.6.0",
   "private": true,
-  "packageManager": "pnpm@8.10.3",
+  "packageManager": "pnpm@8.15.8",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -11,7 +11,7 @@
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "ci:docs": "pnpm run build && pnpm run docs:build",
-    "build": "pnpm -r --filter='./packages/**' run build",
+    "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
