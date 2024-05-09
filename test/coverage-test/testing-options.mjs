@@ -59,6 +59,7 @@ const testCases = [
     assertionConfig: null,
   },
   {
+    skip: !!process.env.ECOSYSTEM_CI,
     testConfig: {
       name: 'changed',
       changed: 'HEAD',
@@ -149,7 +150,9 @@ const testCases = [
 ]
 
 for (const provider of ['v8', 'istanbul']) {
-  for (const { after, before, testConfig, assertionConfig } of testCases) {
+  for (const { after, before, testConfig, assertionConfig, skip } of testCases) {
+    if (skip)
+      continue
     // Test config may specify which provider the test is for
     if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider)
       continue
