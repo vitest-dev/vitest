@@ -1270,6 +1270,8 @@ await vi
     expect(
       hoistSimpleCode(`
 vi.doMock(import('./path'))
+vi.doMock(import(\`./path\`))
+vi.doMock(import('./path'));
 
 beforeEach(() => {
   vi.doUnmock(import('./path'))
@@ -1283,6 +1285,8 @@ test('test', async () => {
       `),
     ).toMatchInlineSnapshot(`
       "vi.doMock('./path')
+      vi.doMock(\`./path\`)
+      vi.doMock('./path');
 
       beforeEach(() => {
         vi.doUnmock('./path')
