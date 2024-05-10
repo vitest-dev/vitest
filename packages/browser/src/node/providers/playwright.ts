@@ -47,10 +47,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.browser = browser
     this.page = await browser.newPage(this.options?.page)
 
-    this.page.on('close', () => {
-      browser.close()
-    })
-
     return this.page
   }
 

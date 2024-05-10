@@ -3,11 +3,10 @@
 import type { Page } from 'playwright'
 import type { BrowserCommand } from '../types'
 
-// TODO: remove repetition from commands.d.ts
-interface TypePayload { type: string }
-interface PressPayload { press: string }
-interface DownPayload { down: string }
-interface UpPayload { up: string }
+export interface TypePayload { type: string }
+export interface PressPayload { press: string }
+export interface DownPayload { down: string }
+export interface UpPayload { up: string }
 
 export type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
 
@@ -67,7 +66,7 @@ export const sendKeys: BrowserCommand<[SendKeysPayload]> = async ([payload], { p
     throw new Error('You must provide a `SendKeysPayload` object')
 
   if (provider.name === 'playwright') {
-    const page = ((provider as any).page as Page)
+    const page = (provider as any).page as Page
     if (isTypePayload(payload))
       await page.keyboard.type(payload.type)
     else if (isPressPayload(payload))

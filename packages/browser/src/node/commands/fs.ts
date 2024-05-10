@@ -1,8 +1,22 @@
 import fs, { promises as fsp } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { isFileServingAllowed } from 'vite'
+import { isFileServingAllowed } from 'vitest/node'
 import type { WorkspaceProject } from 'vitest/node'
 import type { BrowserCommand } from '../types'
+
+export type BufferEncoding =
+  | 'ascii'
+  | 'utf8'
+  | 'utf-8'
+  | 'utf16le'
+  | 'utf-16le'
+  | 'ucs2'
+  | 'ucs-2'
+  | 'base64'
+  | 'base64url'
+  | 'latin1'
+  | 'binary'
+  | 'hex'
 
 export interface FsOptions {
   encoding?: BufferEncoding

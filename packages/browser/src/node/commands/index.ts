@@ -11,3 +11,16 @@ export default {
   writeFile,
   sendKeys,
 }
+
+export type {
+  BufferEncoding,
+  FsOptions,
+} from './fs'
+
+export type {
+  TypePayload,
+  PressPayload,
+  DownPayload,
+  UpPayload,
+  SendKeysPayload,
+} from './keyboard'

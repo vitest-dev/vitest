@@ -2,21 +2,17 @@ import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { Plugin, ViteDevServer } from 'vite'
+import type { ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
-import type { BrowserScript, WorkspaceProject } from 'vitest/node'
+import type { BrowserScript, Plugin, WorkspaceProject } from 'vitest/node'
 import { coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
-import builtinCommands from './commands'
+import BrowserCommands from './plugins/commands'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
-
-  project.config.browser.commands ??= {}
-  for (const [name, command] of Object.entries(builtinCommands))
-    project.config.browser.commands[name] ??= command
 
   return [
     {
@@ -192,28 +188,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         return useId
       },
     },
-    {
-      name: 'vitest:browser:virtual-module:commands',
-      resolveId(id) {
-        if (id === '$commands')
-          return '\0$commands'
-      },
-      load(id) {
-        if (id === '\0$commands') {
-          const commands = Object.keys(project.config.browser.commands ?? {})
-          const code = `
-const rpc = () => __vitest_worker__.rpc
-${commands.map((command) => {
-  // TODO: refactor into a separate function
-  if (!/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(command))
-    throw new Error(`Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`)
-  return `export const ${command} = (...args) => rpc().triggerCommand('${command}', args)`
-})}
-          `
-          return code
-        }
-      },
-    },
+    BrowserCommands(project),
     {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
