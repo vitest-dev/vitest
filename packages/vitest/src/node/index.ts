@@ -18,6 +18,7 @@ export type {
   BrowserProvider,
   BrowserProviderOptions,
   BrowserScript,
+  BrowserCommand,
 } from '../types/browser'
 export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'

@@ -1,7 +1,6 @@
 import type { Plugin } from 'vite'
-import type { WorkspaceProject } from 'vitest/node'
+import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
 import builtinCommands from '../commands/index'
-import type { BrowserCommand } from '../types'
 
 const VIRTUAL_ID_COMMANDS = '\0@vitest/browser/commands'
 const ID_COMMANDS = '@vitest/browser/commands'

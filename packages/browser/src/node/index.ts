@@ -10,6 +10,8 @@ import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
 import BrowserCommands from './plugins/commands'
 
+export type { BrowserCommand } from 'vitest/node'
+
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')

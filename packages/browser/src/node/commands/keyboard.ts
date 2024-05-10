@@ -1,14 +1,9 @@
 // based on https://github.com/modernweb-dev/web/blob/f7fcf29cb79e82ad5622665d76da3f6b23d0ef43/packages/test-runner-commands/src/sendKeysPlugin.ts
 
 import type { Page } from 'playwright'
-import type { BrowserCommand } from '../types'
-
-export interface TypePayload { type: string }
-export interface PressPayload { press: string }
-export interface DownPayload { down: string }
-export interface UpPayload { up: string }
-
-export type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
+import type { BrowserCommand } from 'vitest/node'
+import type Types from '../../../commands'
+import type { DownPayload, PressPayload, SendKeysPayload, TypePayload, UpPayload } from '../../../commands'
 
 function isObject(payload: unknown): payload is Record<string, unknown> {
   return payload != null && typeof payload === 'object'
@@ -61,7 +56,7 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<[SendKeysPayload]> = async ([payload], { provider }) => {
+export const sendKeys: BrowserCommand<Parameters<typeof Types.sendKeys>> = async ([payload], { provider }) => {
   if (!isSendKeysPayload(payload) || !payload)
     throw new Error('You must provide a `SendKeysPayload` object')
 

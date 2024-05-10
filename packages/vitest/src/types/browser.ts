@@ -105,11 +105,11 @@ export interface BrowserConfigOptions {
   indexScripts?: BrowserScript[]
 
   // TODO
-  commands?: Record<string, BrowserCommand>
+  commands?: Record<string, BrowserCommand<any>>
 }
 
-interface BrowserCommand {
-  (payload: any, options: { provider: BrowserProvider; project: WorkspaceProject }): Awaitable<any>
+export interface BrowserCommand<T> {
+  (payload: T, options: { provider: BrowserProvider; project: WorkspaceProject }): Awaitable<any>
 }
 
 export interface BrowserScript {

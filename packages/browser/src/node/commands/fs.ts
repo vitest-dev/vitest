@@ -1,27 +1,8 @@
 import fs, { promises as fsp } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { isFileServingAllowed } from 'vitest/node'
-import type { WorkspaceProject } from 'vitest/node'
-import type { BrowserCommand } from '../types'
-
-export type BufferEncoding =
-  | 'ascii'
-  | 'utf8'
-  | 'utf-8'
-  | 'utf16le'
-  | 'utf-16le'
-  | 'ucs2'
-  | 'ucs-2'
-  | 'base64'
-  | 'base64url'
-  | 'latin1'
-  | 'binary'
-  | 'hex'
-
-export interface FsOptions {
-  encoding?: BufferEncoding
-  flag?: string | number
-}
+import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
+import type Types from '../../../commands'
 
 function assertFileAccess(path: string, project: WorkspaceProject) {
   const resolvedPath = resolve(path)
@@ -29,20 +10,20 @@ function assertFileAccess(path: string, project: WorkspaceProject) {
     throw new Error(`Access denied to "${resolvedPath}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
 }
 
-export const readFile: BrowserCommand<[string, BufferEncoding | FsOptions]> = async ([path, options], { project }) => {
+export const readFile: BrowserCommand<Parameters<typeof Types.readFile>> = async ([path, options], { project }) => {
   assertFileAccess(path, project)
-  return fsp.readFile(path, options).catch(() => null)
+  return fsp.readFile(path, options)
 }
 
-export const writeFile: BrowserCommand<[string, string, BufferEncoding | FsOptions & { mode?: number | string }]> = async ([path, data, options], { project }) => {
+export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = async ([path, data, options], { project }) => {
   assertFileAccess(path, project)
   const dir = dirname(path)
   if (!fs.existsSync(dir))
     await fsp.mkdir(dir, { recursive: true })
-  await fsp.writeFile(path, data, options).catch(() => null)
+  await fsp.writeFile(path, data, options)
 }
 
-export const removeFile: BrowserCommand<[string]> = async ([path], { project }) => {
+export const removeFile: BrowserCommand<Parameters<typeof Types.removeFile>> = async ([path], { project }) => {
   assertFileAccess(path, project)
-  await fsp.rm(path).catch(() => null)
+  await fsp.rm(path)
 }

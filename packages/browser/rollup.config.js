@@ -14,7 +14,6 @@ const external = [
   /^@?vitest(\/|$)/,
   'worker_threads',
   'node:worker_threads',
-  /node:/,
 ]
 
 const plugins = [
@@ -44,12 +43,9 @@ export default () => [
     plugins,
   },
   {
-    input: {
-      index: input.index,
-      commands: './src/node/commands/index.ts',
-    },
+    input: input.index,
     output: {
-      dir: 'dist',
+      file: 'dist/index.d.ts',
       format: 'esm',
     },
     external,
