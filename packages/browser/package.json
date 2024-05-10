@@ -25,7 +25,8 @@
       "default": "./dist/providers.js"
     },
     "./commands": {
-      "types": "./commands.d.ts"
+      "types": "./commands.d.ts",
+      "default": "./commands.js"
     },
     "./providers/webdriverio": {
       "types": "./providers/webdriverio.d.ts"

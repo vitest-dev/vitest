@@ -18,6 +18,7 @@ export default function BrowserCommands(project: WorkspaceProject): Plugin {
 
   return {
     name: 'vitest:browser:virtual-module:commands',
+    enforce: 'pre',
     resolveId(id) {
       if (id === ID_COMMANDS)
         return VIRTUAL_ID_COMMANDS
@@ -39,7 +40,7 @@ function generateCommandsFile(commandsMap: Record<string, BrowserCommand<any>>) 
 const rpc = () => __vitest_worker__.rpc
 `
   const commandsCode = commands.map((command) => {
-    return `export const ${command} = (...args) => rpc().triggerCommand('${command}', args)`
+    return `export const ${command} = (...args) => rpc().triggerCommand('${command}', __vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined, args)`
   })
 
   return `${prepare}\n${commandsCode.join('\n')}`
