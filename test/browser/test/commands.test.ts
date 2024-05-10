@@ -1,4 +1,4 @@
-import { readFile, removeFile, sendKeys, writeFile } from '@vitest/browser/commands'
+import { myCustomCommand, readFile, removeFile, sendKeys, writeFile } from '@vitest/browser/commands'
 import { expect, it } from 'vitest'
 
 const provider = import.meta.env.PROVIDER || 'playwright'
@@ -120,3 +120,20 @@ it.skipIf(provider === 'webdriverio')('natively holds and then releases a key', 
   expect(input.value).to.equal('ABCabc')
   input.remove()
 })
+
+it('can run custom commands', async () => {
+  const result = await myCustomCommand('arg1', 'arg2')
+  expect(result).toEqual({
+    testPath: expect.stringMatching('test/browser/test/commands.test.ts'),
+    arg1: 'arg1',
+    arg2: 'arg2',
+  })
+})
+
+declare module '@vitest/browser/commands' {
+  export function myCustomCommand(arg1: string, arg2: string): Promise<{
+    testPath: string
+    arg1: string
+    arg2: string
+  }>
+}

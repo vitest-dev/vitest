@@ -25,4 +25,3 @@ export type { JUnitOptions } from './reporters/junit'
 export type { HTMLOptions } from './reporters/html'
 
 export { isFileServingAllowed } from 'vite'
-export type { Plugin } from 'vite'

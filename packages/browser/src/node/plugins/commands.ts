@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from 'vitest/config'
 import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
 import builtinCommands from '../commands/index'
 
