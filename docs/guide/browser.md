@@ -230,7 +230,7 @@ declare module '@vitest/browser/commands' {
 }
 ```
 
-::: warn
+::: warning
 Custom functions will override built-in ones if they have the same name.
 :::
 
