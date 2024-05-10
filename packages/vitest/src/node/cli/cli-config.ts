@@ -352,6 +352,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       indexScripts: null,
       testerScripts: null,
+      commands: null,
     },
   },
   pool: {

@@ -108,8 +108,8 @@ export interface BrowserConfigOptions {
   commands?: Record<string, BrowserCommand<any>>
 }
 
-export interface BrowserCommand<T> {
-  (payload: T, options: { provider: BrowserProvider; project: WorkspaceProject }): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[]> {
+  (options: { provider: BrowserProvider; project: WorkspaceProject }, ...payload: Payload): Awaitable<any>
 }
 
 export interface BrowserScript {

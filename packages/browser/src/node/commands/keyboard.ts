@@ -56,7 +56,7 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<Parameters<typeof Types.sendKeys>> = async ([payload], { provider }) => {
+export const sendKeys: BrowserCommand<Parameters<typeof Types.sendKeys>> = async ({ provider }, payload) => {
   if (!isSendKeysPayload(payload) || !payload)
     throw new Error('You must provide a `SendKeysPayload` object')
 

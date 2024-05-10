@@ -157,7 +157,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           const commands = vitestOrWorkspace.config.browser?.commands
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
-          return commands[command](payload, { project: vitestOrWorkspace, provider: vitestOrWorkspace.browserProvider })
+          return commands[command]({ project: vitestOrWorkspace, provider: vitestOrWorkspace.browserProvider }, ...payload)
         },
         getBrowserFiles() {
           if (!('ctx' in vitestOrWorkspace))

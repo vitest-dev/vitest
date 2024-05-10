@@ -10,12 +10,12 @@ function assertFileAccess(path: string, project: WorkspaceProject) {
     throw new Error(`Access denied to "${resolvedPath}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
 }
 
-export const readFile: BrowserCommand<Parameters<typeof Types.readFile>> = async ([path, options], { project }) => {
+export const readFile: BrowserCommand<Parameters<typeof Types.readFile>> = async ({ project }, path, options) => {
   assertFileAccess(path, project)
   return fsp.readFile(path, options)
 }
 
-export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = async ([path, data, options], { project }) => {
+export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = async ({ project }, path, data, options) => {
   assertFileAccess(path, project)
   const dir = dirname(path)
   if (!fs.existsSync(dir))
@@ -23,7 +23,7 @@ export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = asy
   await fsp.writeFile(path, data, options)
 }
 
-export const removeFile: BrowserCommand<Parameters<typeof Types.removeFile>> = async ([path], { project }) => {
+export const removeFile: BrowserCommand<Parameters<typeof Types.removeFile>> = async ({ project }, path) => {
   assertFileAccess(path, project)
   await fsp.rm(path)
 }
