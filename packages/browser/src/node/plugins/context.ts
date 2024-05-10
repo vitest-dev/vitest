@@ -21,7 +21,14 @@ export default function BrowserContext(project: WorkspaceProject): Plugin {
 
 function generateContextFile(_project: WorkspaceProject) {
   return `
-export const getServerPlatform = () => ${JSON.stringify(process.platform)}
-export const getConfig = () => __vitest_browser_runner__.config
-  `
+export const server = {
+  platform: ${JSON.stringify(process.platform)}
+}
+
+export const page = {
+  get config() {
+    return __vitest_browser_runner__.config
+  }
+}
+`
 }

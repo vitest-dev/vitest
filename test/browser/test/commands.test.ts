@@ -5,7 +5,7 @@ import {
   sendKeys,
   writeFile,
 } from '@vitest/browser/commands'
-import { getServerPlatform } from '@vitest/browser/context'
+import { server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
 
 const provider = import.meta.env.PROVIDER || 'playwright'
@@ -19,7 +19,7 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    if (getServerPlatform() === 'win32')
+    if (server.platform === 'win32')
       expect(err.message).toMatch('test\\browser\\test\\test.txt')
     else
       expect(err.message).toMatch('test/browser/test/test.txt')
@@ -38,7 +38,7 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    if (getServerPlatform() === 'win32')
+    if (server.platform === 'win32')
       expect(err.message).toMatch('test\\browser\\test\\test.txt')
     else
       expect(err.message).toMatch('test/browser/test/test.txt')

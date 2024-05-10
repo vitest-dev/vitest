@@ -13,5 +13,9 @@ type Platform =
   | 'cygwin'
   | 'netbsd'
 
-export const getServerPlatform: () => Platform
-export const getConfig: () => ResolvedConfig
+export const server: {
+  platform: Platform
+}
+export const page: {
+  config: ResolvedConfig
+}

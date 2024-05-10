@@ -124,8 +124,12 @@ In this case, Vitest will run in headless mode using the Chrome browser.
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
 ```ts
-export const getServerPlatform: () => Platform
-export const getConfig: () => ResolvedConfig
+export const server: {
+  platform: Platform
+}
+export const page: {
+  config: ResolvedConfig
+}
 ```
 
 ## Commands <Version>2.0.0</Version> {#commands}
