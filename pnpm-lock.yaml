@@ -320,9 +320,6 @@ importers:
       '@types/react':
         specifier: ^18.2.79
         version: 18.2.79
-      '@vitejs/plugin-react':
-        specifier: ^4.2.1
-        version: 4.2.1(vite@5.2.6)
       '@vitest/ui':
         specifier: latest
         version: link:../../packages/ui
@@ -6181,22 +6178,6 @@ packages:
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
       vite: 5.2.10(@types/node@20.12.11)
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@vitejs/plugin-react@4.2.1(vite@5.2.6):
-    resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    peerDependencies:
-      vite: ^5.2.6
-    dependencies:
-      '@babel/core': 7.24.4
-      '@babel/plugin-transform-react-jsx-self': 7.23.3(@babel/core@7.24.4)
-      '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.24.4)
-      '@types/babel__core': 7.20.5
-      react-refresh: 0.14.0
-      vite: 5.2.6(@types/node@20.12.11)
     transitivePeerDependencies:
       - supports-color
     dev: true
