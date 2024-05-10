@@ -9,6 +9,7 @@ import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
 import BrowserCommands from './plugins/commands'
+import BrowserContext from './plugins/context'
 
 export type { BrowserCommand } from 'vitest/node'
 
@@ -190,6 +191,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         return useId
       },
     },
+    BrowserContext(project),
     BrowserCommands(project),
     {
       name: 'vitest:browser:esm-injector',

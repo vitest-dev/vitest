@@ -28,6 +28,10 @@
       "types": "./commands.d.ts",
       "default": "./commands.js"
     },
+    "./context": {
+      "types": "./context.d.ts",
+      "default": "./context.js"
+    },
     "./providers/webdriverio": {
       "types": "./providers/webdriverio.d.ts"
     },

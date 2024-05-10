@@ -1,4 +1,11 @@
-import { myCustomCommand, readFile, removeFile, sendKeys, writeFile } from '@vitest/browser/commands'
+import {
+  myCustomCommand,
+  readFile,
+  removeFile,
+  sendKeys,
+  writeFile,
+} from '@vitest/browser/commands'
+import { getServerPlatform } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
 
 const provider = import.meta.env.PROVIDER || 'playwright'
@@ -12,7 +19,10 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    expect(err.message).toMatch(`test/browser/test/test.txt`)
+    if (getServerPlatform() === 'win32')
+      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+    else
+      expect(err.message).toMatch('test/browser/test/test.txt')
   }
 
   await writeFile(file, 'hello world')
@@ -28,7 +38,10 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    expect(err.message).toMatch(`test/browser/test/test.txt`)
+    if (getServerPlatform() === 'win32')
+      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+    else
+      expect(err.message).toMatch('test/browser/test/test.txt')
   }
 })
 
