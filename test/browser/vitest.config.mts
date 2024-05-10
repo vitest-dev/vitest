@@ -18,6 +18,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vitest/cjs-lib'],
   },
+  define: {
+    'import.meta.env.PROVIDER': JSON.stringify(provider),
+  },
   test: {
     include: ['test/**.test.{ts,js}'],
     // having a snapshot environment doesn't affect browser tests

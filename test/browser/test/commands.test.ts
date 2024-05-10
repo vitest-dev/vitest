@@ -1,6 +1,8 @@
 import { readFile, removeFile, sendKeys, writeFile } from '@vitest/browser/commands'
 import { expect, it } from 'vitest'
 
+const provider = import.meta.env.PROVIDER || 'playwright'
+
 it('can manipulate files', async () => {
   const file = './test.txt'
 
@@ -61,7 +63,7 @@ it('natively presses `Tab`', async () => {
   input2.remove()
 })
 
-it('natively presses `Shift+Tab`', async () => {
+it.skipIf(provider === 'webdriverio')('natively presses `Shift+Tab`', async () => {
   const input1 = document.createElement('input')
   const input2 = document.createElement('input')
   document.body.append(input1, input2)
@@ -83,7 +85,7 @@ it('natively presses `Shift+Tab`', async () => {
   input2.remove()
 })
 
-it('natively holds and then releases a key', async () => {
+it.skipIf(provider === 'webdriverio')('natively holds and then releases a key', async () => {
   const input = document.createElement('input')
   document.body.append(input)
   input.focus()
