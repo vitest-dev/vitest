@@ -219,7 +219,7 @@ Then you can call it inside your test by importing it from `@vitest/browser/comm
 import { myCustomCommand } from '@vitest/browser/commands'
 import { expect, test } from 'vitest'
 
-test('keys are sent', async () => {
+test('custom command works correctly', async () => {
   const result = await myCustomCommand('test1', 'test2')
   expect(result).toEqual({ someValue: true })
 })
