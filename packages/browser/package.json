@@ -24,10 +24,6 @@
       "types": "./providers.d.ts",
       "default": "./dist/providers.js"
     },
-    "./commands": {
-      "types": "./commands.d.ts",
-      "default": "./commands.js"
-    },
     "./context": {
       "types": "./context.d.ts",
       "default": "./context.js"

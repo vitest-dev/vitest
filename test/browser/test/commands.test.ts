@@ -1,14 +1,9 @@
-import {
-  myCustomCommand,
-  readFile,
-  removeFile,
-  sendKeys,
-  writeFile,
-} from '@vitest/browser/commands'
-import { server } from '@vitest/browser/context'
+import { commands, server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
 
 const provider = import.meta.env.PROVIDER || 'playwright'
+
+const { readFile, writeFile, removeFile, sendKeys, myCustomCommand } = server.commands
 
 it('can manipulate files', async () => {
   const file = './test.txt'
@@ -52,7 +47,7 @@ it('natively types into an input', async () => {
   document.body.append(input)
   input.focus()
 
-  await sendKeys({
+  await commands.sendKeys({
     type: keys,
   })
 
@@ -67,7 +62,7 @@ it('natively presses `Tab`', async () => {
   input1.focus()
   expect(document.activeElement).to.equal(input1)
 
-  await sendKeys({
+  await commands.sendKeys({
     press: 'Tab',
   })
 
@@ -143,10 +138,12 @@ it('can run custom commands', async () => {
   })
 })
 
-declare module '@vitest/browser/commands' {
-  export function myCustomCommand(arg1: string, arg2: string): Promise<{
-    testPath: string
-    arg1: string
-    arg2: string
-  }>
+declare module '@vitest/browser/context' {
+  interface BrowserCommands {
+    myCustomCommand: (arg1: string, arg2: string) => Promise<{
+      testPath: string
+      arg1: string
+      arg2: string
+    }>
+  }
 }

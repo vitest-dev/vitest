@@ -2,14 +2,14 @@ import fs, { promises as fsp } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { isFileServingAllowed } from 'vitest/node'
 import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
-import type Types from '../../../commands'
+import type { BrowserCommands } from '../../../context'
 
 function assertFileAccess(path: string, project: WorkspaceProject) {
   if (!isFileServingAllowed(path, project.server) && !isFileServingAllowed(path, project.ctx.server))
     throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
 }
 
-export const readFile: BrowserCommand<Parameters<typeof Types.readFile>> = async ({ project, testPath = process.cwd() }, path, options = {}) => {
+export const readFile: BrowserCommand<Parameters<BrowserCommands['readFile']>> = async ({ project, testPath = process.cwd() }, path, options = {}) => {
   const filepath = resolve(dirname(testPath), path)
   assertFileAccess(filepath, project)
   // never return a Buffer
@@ -18,7 +18,7 @@ export const readFile: BrowserCommand<Parameters<typeof Types.readFile>> = async
   return fsp.readFile(filepath, options)
 }
 
-export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = async ({ project, testPath = process.cwd() }, path, data, options) => {
+export const writeFile: BrowserCommand<Parameters<BrowserCommands['writeFile']>> = async ({ project, testPath = process.cwd() }, path, data, options) => {
   const filepath = resolve(dirname(testPath), path)
   assertFileAccess(filepath, project)
   const dir = dirname(filepath)
@@ -27,7 +27,7 @@ export const writeFile: BrowserCommand<Parameters<typeof Types.writeFile>> = asy
   await fsp.writeFile(filepath, data, options)
 }
 
-export const removeFile: BrowserCommand<Parameters<typeof Types.removeFile>> = async ({ project, testPath = process.cwd() }, path) => {
+export const removeFile: BrowserCommand<Parameters<BrowserCommands['removeFile']>> = async ({ project, testPath = process.cwd() }, path) => {
   const filepath = resolve(dirname(testPath), path)
   assertFileAccess(filepath, project)
   await fsp.rm(filepath)

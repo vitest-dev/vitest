@@ -125,9 +125,34 @@ Vitest exposes a context module via `@vitest/browser/context` entry point. As of
 
 ```ts
 export const server: {
+  /**
+   * Platform the Vitest server is running on.
+   * The same as calling `process.platform` on the server.
+   */
   platform: Platform
+  /**
+   * Runtime version of the Vitest server.
+   * The same as calling `process.version` on the server.
+   */
+  version: string
+  /**
+   * Available commands for the browser.
+   * @see {@link https://vitest.dev/guide/browser#commands}
+   */
+  commands: BrowserCommands
 }
+
+/**
+ * Available commands for the browser.
+ * A shortcut to `server.commands`.
+ * @see {@link https://vitest.dev/guide/browser#commands}
+ */
+export const commands: BrowserCommands
+
 export const page: {
+  /**
+   * Serialized test config.
+   */
   config: ResolvedConfig
 }
 ```
@@ -149,7 +174,9 @@ This API follows [`server.fs`](https://vitejs.dev/config/server-options.html#ser
 :::
 
 ```ts
-import { readFile, removeFile, writeFile } from '@vitest/browser/commands'
+import { server } from '@vitest/browser/context'
+
+const { readFile, writeFile, removeFile } = server.commands
 
 it('handles files', async () => {
   const file = './test.txt'
@@ -226,20 +253,24 @@ export default function BrowserCommands(): Plugin {
 }
 ```
 
-Then you can call it inside your test by importing it from `@vitest/browser/commands`:
+Then you can call it inside your test by importing it from `@vitest/browser/context`:
 
 ```ts
-import { myCustomCommand } from '@vitest/browser/commands'
+import { commands } from '@vitest/browser/context'
 import { expect, test } from 'vitest'
 
 test('custom command works correctly', async () => {
-  const result = await myCustomCommand('test1', 'test2')
+  const result = await commands.myCustomCommand('test1', 'test2')
   expect(result).toEqual({ someValue: true })
 })
 
 // if you are using TypeScript, you can augment the module
-declare module '@vitest/browser/commands' {
-  export function myCustomCommand(arg1: string, arg2: string): Promise<{ someValue: true }>
+declare module '@vitest/browser/context' {
+  interface BrowserCommands {
+    myCustomCommand: (arg1: string, arg2: string) => Promise<{
+      someValue: true
+    }>
+  }
 }
 ```
 

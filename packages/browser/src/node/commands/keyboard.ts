@@ -2,8 +2,14 @@
 
 import type { Page } from 'playwright'
 import type { BrowserCommand } from 'vitest/node'
-import type Types from '../../../commands'
-import type { DownPayload, PressPayload, SendKeysPayload, TypePayload, UpPayload } from '../../../commands'
+import type {
+  BrowserCommands,
+  DownPayload,
+  PressPayload,
+  SendKeysPayload,
+  TypePayload,
+  UpPayload,
+} from '../../../context'
 
 function isObject(payload: unknown): payload is Record<string, unknown> {
   return payload != null && typeof payload === 'object'
@@ -56,7 +62,7 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<Parameters<typeof Types.sendKeys>> = async ({ provider }, payload) => {
+export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async ({ provider }, payload) => {
   if (!isSendKeysPayload(payload) || !payload)
     throw new Error('You must provide a `SendKeysPayload` object')
 
