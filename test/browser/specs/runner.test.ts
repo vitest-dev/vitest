@@ -30,8 +30,8 @@ describe.each([
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(15)
-    expect(passedTests).toHaveLength(13)
+    expect(browserResultJson.testResults).toHaveLength(16)
+    expect(passedTests).toHaveLength(14)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')
