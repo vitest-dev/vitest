@@ -176,12 +176,5 @@ describe('ViewReport', () => {
     expect(diffElement.getByText(/Expected/)).toBeTruthy()
     expect(diffElement.getByText(/Received/)).toBeTruthy()
     expect(diffElement.queryByText(/\\x1B/)).toBeFalsy()
-
-    // const diffElement = component.get('[data-testid="diff"]')
-    // diffElement.should('exist')
-    // diffElement
-    //   .should('contain.text', 'Expected')
-    //   .and('contain.text', 'Received')
-    //   .and('not.contain.text', '\x1B')
   })
 })
