@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "1.6.0",
+  "version": "2.0.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@8.10.3",
+  "packageManager": "pnpm@8.15.8",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -11,7 +11,7 @@
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "ci:docs": "pnpm run build && pnpm run docs:build",
-    "build": "pnpm -r --filter='./packages/**' run build",
+    "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
@@ -23,7 +23,7 @@
     "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
     "publish-ci": "tsx scripts/publish-ci.ts",
-    "release": "bumpp package.json packages/*/package.json --commit --push --tag && git update-ref refs/heads/release refs/heads/main && git push origin release",
+    "release": "tsx scripts/release.ts",
     "test": "pnpm --filter test-core test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
@@ -37,36 +37,36 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.15.0",
+    "@antfu/eslint-config": "^2.17.0",
     "@antfu/ni": "^0.21.12",
-    "@playwright/test": "^1.41.0",
+    "@playwright/test": "^1.44.0",
     "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.0.1",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@types/node": "^20.11.5",
-    "@types/ws": "^8.5.9",
+    "@types/node": "^20.12.11",
+    "@types/ws": "^8.5.10",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^9.2.1",
-    "esbuild": "^0.19.11",
-    "eslint": "^9.1.0",
+    "bumpp": "^9.4.1",
+    "esbuild": "^0.21.1",
+    "eslint": "^9.2.0",
     "fast-glob": "^3.3.2",
-    "lint-staged": "^15.1.0",
-    "magic-string": "^0.30.5",
-    "pathe": "^1.1.1",
+    "lint-staged": "^15.2.2",
+    "magic-string": "^0.30.10",
+    "pathe": "^1.1.2",
     "rimraf": "^5.0.5",
-    "rollup": "^4.9.6",
+    "rollup": "^4.17.2",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-esbuild": "^6.1.1",
-    "rollup-plugin-license": "^3.2.0",
-    "simple-git-hooks": "^2.9.0",
-    "tsx": "^4.6.1",
-    "typescript": "^5.2.2",
+    "rollup-plugin-license": "^3.3.1",
+    "simple-git-hooks": "^2.11.1",
+    "tsx": "^4.9.3",
+    "typescript": "^5.4.5",
     "vite": "^5.2.6",
     "vitest": "workspace:*",
-    "zx": "^8.0.1"
+    "zx": "^8.0.2"
   },
   "pnpm": {
     "overrides": {
@@ -85,7 +85,8 @@
       "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
-      "v8-to-istanbul@9.2.0": "patches/v8-to-istanbul@9.2.0.patch"
+      "v8-to-istanbul@9.2.0": "patches/v8-to-istanbul@9.2.0.patch",
+      "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     }
   },
   "simple-git-hooks": {

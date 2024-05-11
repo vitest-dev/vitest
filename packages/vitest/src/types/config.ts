@@ -391,7 +391,6 @@ export interface InlineConfig {
    */
   reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
-  // TODO: v2.0.0 Remove in favor of custom reporter options, e.g. "reporters: [['json', { outputFile: 'some-dir/file.html' }]]"
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
@@ -442,12 +441,6 @@ export interface InlineConfig {
    * Path to global setup files
    */
   globalSetup?: string | string[]
-
-  /**
-   * Glob pattern of file paths to be ignore from triggering watch rerun
-   * @deprecated Use server.watch.ignored instead
-   */
-  watchExclude?: string[]
 
   /**
    * Glob patter of file paths that will trigger the whole suite rerun
@@ -938,7 +931,6 @@ export type ProjectConfig = Omit<
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
-  | 'watchExclude'
   | 'forceRerunTriggers'
   | 'testNamePattern'
   | 'ui'

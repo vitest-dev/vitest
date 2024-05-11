@@ -10,6 +10,7 @@ import { TapFlatReporter } from './tap-flat'
 import { HangingProcessReporter } from './hanging-process'
 import { GithubActionsReporter } from './github-actions'
 import type { BaseReporter } from './base'
+import type { HTMLOptions } from './html'
 
 export {
   DefaultReporter,
@@ -52,7 +53,7 @@ export interface BuiltinReporterOptions {
   'tap-flat': never
   'junit': JUnitOptions
   'hanging-process': never
-  'html': { outputFile?: string } // TODO: Any better place for defining this UI package's reporter options?
+  'html': HTMLOptions
 }
 
 export * from './benchmark'

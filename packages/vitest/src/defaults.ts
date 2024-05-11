@@ -67,7 +67,7 @@ const config = {
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  pool: 'threads' as const,
+  pool: 'forks' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -76,7 +76,6 @@ const config = {
   testTimeout: 5000,
   hookTimeout: 10000,
   teardownTimeout: 10000,
-  watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
     '**/package.json/**',
     '**/{vitest,vite}.config.*/**',

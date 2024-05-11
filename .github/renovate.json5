@@ -28,12 +28,13 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     "cac",
-    // TODO: update when chai is updated to 5.0
-    "loupe",
     // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
     "log-update",
     // Pinned because it requires "node" condition in the new version
     // But we intentionally build Vitest ambiguously
-    "find-up"
+    "find-up",
+    // Pinned because we use execa, and the newer version replaces it with another pkg
+    // We should remove execa entirely
+    "@antfu/install-pkg"
   ]
 }

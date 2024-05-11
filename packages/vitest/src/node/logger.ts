@@ -2,7 +2,6 @@ import { Console } from 'node:console'
 import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
@@ -135,8 +134,6 @@ export class Logger {
         this.console.error(c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)))
       }
     })
-    if (config.watchExclude)
-      this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
     if (config.watch && (config.changed || config.related?.length)) {
       this.log(`No affected ${config.mode} files found\n`)
@@ -153,8 +150,8 @@ export class Logger {
     this.log()
 
     const versionTest = this.ctx.config.watch
-      ? c.blue(`v${version}`)
-      : c.cyan(`v${version}`)
+      ? c.blue(`v${this.ctx.version}`)
+      : c.cyan(`v${this.ctx.version}`)
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')

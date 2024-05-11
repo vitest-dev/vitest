@@ -17,6 +17,7 @@ This section describes the API that you can use when [mocking a module](/guide/m
 ### vi.mock
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void` <Version>2.0.0+</Version>
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -63,6 +64,21 @@ vi.mock('./path/to/module.js', async (importOriginal) => {
   }
 })
 ```
+
+Since 2.0.0, Vitest supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
+
+```ts
+vi.mock(import('./path/to/module.js'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    // replace some exports
+    namedExport: vi.fn(),
+  }
+})
+```
+
+Under the hood, Vitest still operates on a string and not a module object.
 
 ::: warning
 `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.

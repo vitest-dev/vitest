@@ -586,7 +586,7 @@ By providing an object instead of a string you can define individual outputs whe
 ### pool<NonProjectOption /> <Badge type="info">1.0.0+</Badge> {#pool}
 
 - **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`
-- **Default:** `'threads'`
+- **Default:** `'forks'` (in v1 `'threads'`)
 - **CLI:** `--pool=threads`
 
 Pool used to run tests in.
@@ -1036,14 +1036,6 @@ inject('wsPort') === 3000
 ```
 :::
 
-### watchExclude<NonProjectOption />
-
-- **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**']`
-- **Deprecated** use [`server.watch.ignored`](https://vitejs.dev/config/server-options.html#server-watch)
-
-Glob pattern of file paths to be ignored from triggering watch rerun.
-
 ### forceRerunTriggers<NonProjectOption />
 
 - **Type**: `string[]`
@@ -1061,7 +1053,7 @@ test('execute a script', async () => {
 ```
 
 ::: tip
-Make sure that your files are not excluded by `watchExclude`.
+Make sure that your files are not excluded by [`server.watch.ignored`](https://vitejs.dev/config/server-options.html#server-watch).
 :::
 
 ### coverage<NonProjectOption />

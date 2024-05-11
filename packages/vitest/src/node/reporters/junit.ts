@@ -169,8 +169,7 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
-        classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        classname: this.options.classname ?? filename,
         file: this.options.addFileAttribute ? filename : undefined,
         name: task.name,
         time: getDuration(task),
@@ -264,8 +263,7 @@ export class JUnitReporter implements Reporter {
       stats.failures += file.stats.failures
       return stats
     }, {
-      // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { suiteName: 'something' }]]"
-      name: this.options.suiteName || process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      name: this.options.suiteName || 'vitest tests',
       tests: 0,
       failures: 0,
       errors: 0, // we cannot detect those

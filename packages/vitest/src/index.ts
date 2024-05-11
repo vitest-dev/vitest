@@ -17,8 +17,6 @@ export * from './integrations/chai'
 export * from './integrations/vi'
 export * from './integrations/utils'
 export { inject } from './integrations/inject'
-// TODO: remove in 2.0.0, import from vitest/snapshot directly
-export type { SnapshotEnvironment } from '@vitest/snapshot/environment'
 
 export * from './types'
 export * from './api/types'
