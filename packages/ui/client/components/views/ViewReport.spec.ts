@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker'
 import type { File } from 'vitest'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import ViewReport from './ViewReport.vue'
-import { cleanup, render, screen, within } from '~/test'
+import { render, screen, within } from '~/test'
 import { config } from '~/composables/client'
 
 config.value.root = ''
@@ -58,10 +58,6 @@ const fileWithTextStacks: File = {
   file: null!,
 }
 fileWithTextStacks.file = fileWithTextStacks
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('ViewReport', () => {
   describe('File where stacks are in text', () => {
