@@ -142,16 +142,16 @@ export default ({ mode }: { mode: string }) => {
                   text: 'Contributing ',
                   link: contributing,
                 },
-              ]
+              ],
             },
             {
               items: [
                 {
                   text: 'v0.x',
                   link: 'https://v0.vitest.dev/',
-                }
-              ]
-            }
+                },
+              ],
+            },
           ],
         },
       ],
