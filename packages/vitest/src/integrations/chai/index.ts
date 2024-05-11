@@ -6,11 +6,10 @@ import type { TaskPopulated, Test } from '@vitest/runner'
 import { getCurrentTest } from '@vitest/runner'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
+import { getSafeTimers } from '@vitest/utils'
 import type { MatcherState } from '../../types/chai'
 import { getTestName } from '../../utils/tasks'
 import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
-
-const now = Date.now
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
@@ -60,10 +59,9 @@ export function createExpect(test?: TaskPopulated) {
     return assert
   }
 
-  expect.poll = (fn, options): any => {
-    const interval = options?.interval ?? 50 // TODO: custom option
-    const timeout = options?.timeout ?? 2000 // TODO: custom option
-    const message = options?.message
+  expect.poll = function poll(fn, options = {}): any {
+    const { interval = 50, timeout = 1000, message } = options
+    const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
     const proxy: any = new Proxy(expect(null), {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver)
@@ -71,19 +69,21 @@ export function createExpect(test?: TaskPopulated) {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        const start = now()
-        const end = start + timeout
-
         return (...args: any[]) => new Promise((resolve, reject) => {
+          let intervalId: any
+          let lastError: any
+          const { setTimeout } = getSafeTimers()
+          setTimeout(() => {
+            clearTimeout(intervalId)
+            reject(copyStackTrace(new Error(`Matcher expect().${String(key)}() did not succeed in ${timeout}ms`, { cause: lastError }), STACK_TRACE_ERROR))
+          }, timeout)
           const check = async () => {
             try {
               resolve(await (expect(await fn(), message)[key as 'toBe'] as any)(...args))
             }
             catch (err) {
-              if (now() > end)
-                reject(new Error(`Matcher expect().${String(key)}() did not succeed in ${timeout}ms`, { cause: err }))
-              else
-                setTimeout(check, interval)
+              lastError = err
+              intervalId = setTimeout(check, interval)
             }
           }
           check()
@@ -123,6 +123,12 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
+}
+
+function copyStackTrace(target: Error, source: Error) {
+  if (source.stack !== undefined)
+    target.stack = source.stack.replace(source.message, target.message)
+  return target
 }
 
 function getTestFile(test?: TaskPopulated) {

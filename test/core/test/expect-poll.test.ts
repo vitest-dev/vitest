@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
 
 test('expect.poll', async () => {
-  await expect.poll(() => true).toBe(true)
+  await expect.poll(() => false).toBe(true)
 })
