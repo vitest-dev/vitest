@@ -41,6 +41,7 @@
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
+    "test:ui": "vitest --ui --browser",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component"
   },
@@ -60,6 +61,7 @@
     "@faker-js/faker": "^8.4.1",
     "@iconify-json/logos": "^1.1.42",
     "@testing-library/cypress": "^10.0.1",
+    "@testing-library/vue": "^8.0.3",
     "@types/codemirror": "^5.60.15",
     "@types/d3-force": "^3.0.9",
     "@types/d3-selection": "^3.0.10",
