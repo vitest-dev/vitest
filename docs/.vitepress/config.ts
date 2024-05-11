@@ -121,8 +121,21 @@ export default ({ mode }: { mode: string }) => {
                   text: 'Discord Chat',
                   link: discord,
                 },
+              ],
+            },
+          ],
+        },
+        {
+          text: `v${version}`,
+          items: [
+            {
+              items: [
                 {
-                  text: 'Releases ',
+                  text: `v${version}`,
+                  link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+                },
+                {
+                  text: 'Releases Notes',
                   link: releases,
                 },
                 {
@@ -131,11 +144,15 @@ export default ({ mode }: { mode: string }) => {
                 },
               ],
             },
+            {
+              items: [
+                {
+                  text: 'v0.x',
+                  link: 'https://v0.vitest.dev/',
+                },
+              ],
+            },
           ],
-        },
-        {
-          text: `v${version}`,
-          link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
         },
       ],
 
