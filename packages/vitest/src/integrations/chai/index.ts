@@ -10,6 +10,8 @@ import type { MatcherState } from '../../types/chai'
 import { getTestName } from '../../utils/tasks'
 import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
 
+const now = Date.now
+
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
@@ -56,6 +58,38 @@ export function createExpect(test?: TaskPopulated) {
       soft: true,
     })
     return assert
+  }
+
+  expect.poll = (fn, options): any => {
+    const interval = options?.interval ?? 50 // TODO: custom option
+    const timeout = options?.timeout ?? 2000 // TODO: custom option
+    const proxy: any = new Proxy(expect(null), {
+      get(target, key, receiver) {
+        const result = Reflect.get(target, key, receiver)
+
+        if (typeof result !== 'function')
+          return result instanceof chai.Assertion ? proxy : result
+
+        const start = now()
+        const end = start + timeout
+
+        return (...args: any[]) => new Promise((resolve, reject) => {
+          const check = async () => {
+            try {
+              resolve(await (expect(await fn())[key as 'toBe'] as any)(...args))
+            }
+            catch (err) {
+              if (now() > end)
+                reject(new Error(`Matcher expect().${String(key)}() did not succeed in ${timeout}ms`, { cause: err }))
+              else
+                setTimeout(check, interval)
+            }
+          }
+          check()
+        })
+      },
+    })
+    return proxy
   }
 
   expect.unreachable = (message?: string) => {

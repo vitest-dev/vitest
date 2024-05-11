@@ -93,6 +93,7 @@ export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersConta
   <T>(actual: T, message?: string): Assertion<T>
   unreachable: (message?: string) => never
   soft: <T>(actual: T, message?: string) => Assertion<T>
+  poll: <T>(actual: () => T, options?: { interval?: number; timeout?: number; message?: string }) => Promisify<Assertion<Awaited<T>>>
   extend: (expects: MatchersObject) => void
   addEqualityTesters: (testers: Array<Tester>) => void
   assertions: (expected: number) => void

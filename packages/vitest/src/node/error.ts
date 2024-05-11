@@ -160,6 +160,8 @@ const skipErrorProperties = new Set([
   'stackStr',
   'type',
   'showDiff',
+  'ok',
+  'operator',
   'diff',
   'codeFrame',
   'actual',
