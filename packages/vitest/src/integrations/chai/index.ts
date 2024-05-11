@@ -63,6 +63,7 @@ export function createExpect(test?: TaskPopulated) {
   expect.poll = (fn, options): any => {
     const interval = options?.interval ?? 50 // TODO: custom option
     const timeout = options?.timeout ?? 2000 // TODO: custom option
+    const message = options?.message
     const proxy: any = new Proxy(expect(null), {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver)
@@ -76,7 +77,7 @@ export function createExpect(test?: TaskPopulated) {
         return (...args: any[]) => new Promise((resolve, reject) => {
           const check = async () => {
             try {
-              resolve(await (expect(await fn())[key as 'toBe'] as any)(...args))
+              resolve(await (expect(await fn(), message)[key as 'toBe'] as any)(...args))
             }
             catch (err) {
               if (now() > end)
