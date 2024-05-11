@@ -102,6 +102,10 @@ describe('jest-expect', () => {
     }).toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
     }))
+    expect(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw ''
+    }).toThrow(/^$/)
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
