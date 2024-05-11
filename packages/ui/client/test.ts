@@ -12,4 +12,4 @@ export function render(component: any, options?: RenderOptions) {
   })
 }
 
-export { within } from '@testing-library/vue'
+export { within, screen, cleanup } from '@testing-library/vue'

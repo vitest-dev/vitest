@@ -1,14 +1,15 @@
 import { faker } from '@faker-js/faker'
-import { describe, expect, it } from 'vitest'
+import type { File } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import ViewReport from './ViewReport.vue'
-import { render, within } from '~/test'
+import { cleanup, render, screen, within } from '~/test'
 import { config } from '~/composables/client'
 
 config.value.root = ''
 
-// const taskErrorSelector = '.task-error'
-// const viewReportSelector = '[data-testid=view-report]'
-// const stackRowSelector = '[data-testid=stack]'
+const taskErrorTestId = 'task-error'
+const viewReportTestId = 'view-report'
+const stackRowTestId = 'stack'
 
 function makeTextStack() {
   return {
@@ -21,7 +22,7 @@ function makeTextStack() {
 }
 
 // 5 Stacks
-const textStacks = Array.from(Array.from({ length: 5 })).map(makeTextStack)
+const textStacks = Array.from({ length: 5 }, makeTextStack)
 
 const diff = `
   \x1B[32m- Expected\x1B[39m
@@ -41,7 +42,7 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks = {
+const fileWithTextStacks: File = {
   id: 'f-1',
   name: 'test/plain-stack-trace.ts',
   type: 'suite',
@@ -50,119 +51,134 @@ const fileWithTextStacks = {
   meta: {},
   result: {
     state: 'fail',
-    error,
     errors: [error],
   },
   tasks: [],
+  projectName: '',
+  file: null!,
 }
+fileWithTextStacks.file = fileWithTextStacks
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('ViewReport', () => {
-  // describe('File where stacks are in text', () => {
-  //   beforeEach(() => {
-  //     cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report" />)
-  //   })
+  describe('File where stacks are in text', () => {
+    beforeEach(() => {
+      render(ViewReport, {
+        props: {
+          file: fileWithTextStacks,
+        },
+        attrs: {
+          'data-testid': viewReportTestId,
+        },
+      })
+    })
 
-  //   it('renders all of the stacks', () => {
-  //     const stacks = fileWithTextStacks.result.error.stacks
-  //     cy.get(stackRowSelector).should('have.length', stacks.length)
-  //       .get(stackRowSelector)
-  //       .each(($stack, idx) => {
-  //         const { column, line, file: fileName } = stacks[idx]
-  //         expect($stack).to.contain.text(`${line}:${column}`)
-  //         expect($stack).to.contain.text(`- ${fileName}`)
-  //       })
-  //   })
+    it('renders all of the stacks', () => {
+      const stacks = error.stacks
+      const stacksElements = screen.queryAllByTestId(stackRowTestId)
+      expect(stacksElements).toHaveLength(stacks.length)
 
-  //   it('renders the error message', () => {
-  //     cy.get(viewReportSelector)
-  //       .should('contain.text', fileWithTextStacks.result.error.message)
-  //       .and('contain.text', fileWithTextStacks.result.error.name)
-  //   })
-  // })
+      stacksElements.forEach((stack, idx) => {
+        const { column, line, file: fileName } = stacks[idx]
+        expect(stack.textContent).toContain(`${line}:${column}`)
+        expect(stack.textContent).toContain(`- ${fileName}`)
+      })
+    })
 
-  // it('test html stack trace without html message', () => {
-  //   const file: File = {
-  //     id: 'f-1',
-  //     name: 'test/plain-stack-trace.ts',
-  //     type: 'suite',
-  //     mode: 'run',
-  //     filepath: 'test/plain-stack-trace.ts',
-  //     meta: {},
-  //     result: {
-  //       state: 'fail',
-  //       errors: [{
-  //         name: 'Do some test',
-  //         stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-  //         message: 'Error: Transform failed with 1 error:',
-  //         diff,
-  //       }],
-  //     },
-  //     tasks: [],
-  //   }
-  //   const container = cy.mount(<ViewReport file={file} />)
-  //     .get(taskErrorSelector)
-  //   container.should('exist')
-  //   container.children('pre').then((c) => {
-  //     expect(c.text(), 'error has the correct plain text').equals('Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts')
-  //     const children = c.children().get()
-  //     expect(children.length, 'the pre container has the correct children').equals(2)
-  //     children.forEach((e, idx) => {
-  //       if (idx === 0) {
-  //         expect(e.tagName, 'error contains <b> element').equals('B')
-  //         expect(e.innerHTML, 'the <b> error element is correct').equals('Do some test')
-  //       }
-  //       else {
-  //         expect(e.children.length, 'the stack children elements is correct').equals(0)
-  //         expect(e.innerHTML, 'stack has the correct message').equals('test/plain-stack-trace.ts')
-  //         expect(e, 'the stack has the correct text color').to.have.attr('style', 'color:#A50')
-  //       }
-  //     })
-  //   })
-  // })
-  // it('test html stack trace and message', () => {
-  //   const file: File = {
-  //     id: 'f-1',
-  //     name: 'test/plain-stack-trace.ts',
-  //     type: 'suite',
-  //     mode: 'run',
-  //     filepath: 'test/plain-stack-trace.ts',
-  //     meta: {},
-  //     result: {
-  //       state: 'fail',
-  //       errors: [{
-  //         name: 'Do some test',
-  //         stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-  //         message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
-  //         diff,
-  //       }],
-  //     },
-  //     tasks: [],
-  //   }
-  //   const component = cy.mount(<ViewReport file={file} />)
-  //   const container = component.get(taskErrorSelector)
-  //   container.should('exist')
-  //   container.children('pre').then((c) => {
-  //     expect(c.text(), 'error has the correct plain text').equals('Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts')
-  //     const children = c.children().get()
-  //     expect(children.length, 'the pre container has the correct children').equals(3)
-  //     children.forEach((e, idx) => {
-  //       switch (idx) {
-  //         case 0:
-  //           expect(e.tagName, 'error contains <b> element').equals('B')
-  //           expect(e.innerHTML, 'the <b> error element is correct').equals('Do some test')
-  //           break
-  //         case 1:
-  //           expect(e.innerHTML, 'the error has the correct message').equals('Error: Transform failed with 1 error:')
-  //           expect(e, 'the error has the correct background color').to.have.attr('style', 'background-color:#00A')
-  //           break
-  //         case 2:
-  //           expect(e.children.length, 'the stack children elements is correct').equals(0)
-  //           expect(e.innerHTML, 'stack has the correct message').equals('test/plain-stack-trace.ts')
-  //           expect(e, 'the stack has the correct text color').to.have.attr('style', 'color:#A50')
-  //       }
-  //     })
-  //   })
-  // })
+    it('renders the error message', () => {
+      const report = screen.getByTestId(viewReportTestId)
+      expect(report.textContent).toContain(error.message)
+      expect(report.textContent).toContain(error.name)
+    })
+  })
+
+  it('test html stack trace without html message', () => {
+    const file: File = {
+      id: 'f-1',
+      name: 'test/plain-stack-trace.ts',
+      type: 'suite',
+      mode: 'run',
+      filepath: 'test/plain-stack-trace.ts',
+      meta: {},
+      result: {
+        state: 'fail',
+        errors: [{
+          name: 'Do some test',
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          message: 'Error: Transform failed with 1 error:',
+          diff,
+        }],
+      },
+      tasks: [],
+      projectName: '',
+      file: null!,
+    }
+    file.file = file
+    const container = render(ViewReport, {
+      props: { file },
+    })
+    const taskError = container.getByTestId(taskErrorTestId)
+    const preElements = taskError.querySelectorAll('pre')
+    expect(preElements).toHaveLength(1)
+
+    expect(preElements[0].textContent, 'error has the correct plain text').toBe('Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts')
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(2)
+
+    const [bold, stack] = preElements[0].children
+    expect(bold.tagName, 'error contains <b> element').toBe('B')
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
+
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
+  })
+
+  it('test html stack trace and message', () => {
+    const file: File = {
+      id: 'f-1',
+      name: 'test/plain-stack-trace.ts',
+      type: 'suite',
+      mode: 'run',
+      filepath: 'test/plain-stack-trace.ts',
+      meta: {},
+      result: {
+        state: 'fail',
+        errors: [{
+          name: 'Do some test',
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
+          diff,
+        }],
+      },
+      tasks: [],
+      projectName: '',
+      file: null!,
+    }
+    file.file = file
+    const container = render(ViewReport, {
+      props: { file },
+    })
+    const taskError = container.getByTestId(taskErrorTestId)
+    const preElements = taskError.querySelectorAll('pre')
+    expect(preElements).toHaveLength(1)
+
+    expect(preElements[0].textContent, 'error has the correct plain text').toBe('Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts')
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(3)
+
+    const [bold, error, stack] = preElements[0].children
+    expect(bold.tagName, 'error contains <b> element').toBe('B')
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
+
+    expect(error.innerHTML, 'the error has the correct message').toBe('Error: Transform failed with 1 error:')
+    expect(error.getAttribute('style'), 'the error has the correct background color').toBe('background-color:#00A')
+
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
+  })
 
   it('test diff display', () => {
     const component = render(ViewReport, {
