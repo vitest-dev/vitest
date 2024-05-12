@@ -2,8 +2,10 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
+import { cleanUrl } from 'vite-node/utils'
 import type { File, Reporter, Vitest } from '../../types'
 import { getOutputFile } from '../../utils/config-helpers'
+import type { WorkspaceProject } from '../workspace'
 
 export interface BlobOptions {
   outputFile?: string
@@ -54,13 +56,60 @@ export class BlobReporter implements Reporter {
   }
 }
 
-export async function readBlobs(blobsDirectory: string) {
+export async function readBlobs(blobsDirectory: string, projectsArray: WorkspaceProject[]) {
   const resolvedDir = resolve(process.cwd(), blobsDirectory)
-  const blobs = await readdir(resolvedDir)
-  const promises = blobs.map(async (file) => {
+  const blobsFiles = await readdir(resolvedDir)
+  const promises = blobsFiles.map(async (file) => {
     const content = await readFile(resolve(resolvedDir, file), 'utf-8')
     const [version, files, errors, moduleKeys] = parse(content) as [string, files: File[], errors: unknown[], [string, string[]][]]
     return { version, files, errors, moduleKeys }
   })
-  return Promise.all(promises)
+  const blobs = await Promise.all(promises)
+
+  if (!blobs.length)
+    throw new Error(`vitest.mergeReports() requires at least one blob file paths in the config`)
+
+  // fake module graph - it is used to check if module is imported, but we don't use values inside
+  const projects = Object.fromEntries(projectsArray.map(p => [p.getName(), p]))
+
+  blobs.forEach((blob) => {
+    blob.moduleKeys.forEach(([projectName, moduleIds]) => {
+      const project = projects[projectName]
+      if (!project)
+        return
+      moduleIds.forEach((moduleId) => {
+        project.server.moduleGraph.idToModuleMap.set(moduleId, {
+          id: moduleId,
+          url: moduleId,
+          file: cleanUrl(moduleId),
+          ssrTransformResult: null,
+          transformResult: null,
+          importedBindings: null,
+          importedModules: new Set(),
+          importers: new Set(),
+          type: 'js',
+          clientImportedModules: new Set(),
+          ssrError: null,
+          ssrImportedModules: new Set(),
+          ssrModule: null,
+          acceptedHmrDeps: new Set(),
+          acceptedHmrExports: null,
+          lastHMRTimestamp: 0,
+          lastInvalidationTimestamp: 0,
+        })
+      })
+    })
+  })
+
+  const files = blobs.flatMap(blob => blob.files).sort((f1, f2) => {
+    const time1 = f1.result?.startTime || 0
+    const time2 = f2.result?.startTime || 0
+    return time1 - time2
+  })
+  const errors = blobs.flatMap(blob => blob.errors)
+
+  return {
+    files,
+    errors,
+  }
 }

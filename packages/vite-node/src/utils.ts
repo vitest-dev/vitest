@@ -45,11 +45,9 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/\?+$/, '') // remove end query mark
 }
 
-export const queryRE = /\?.*$/s
-export const hashRE = /#.*$/s
-
+const postfixRE = /[?#].*$/
 export function cleanUrl(url: string): string {
-  return url.replace(hashRE, '').replace(queryRE, '')
+  return url.replace(postfixRE, '')
 }
 
 const internalRequests = [

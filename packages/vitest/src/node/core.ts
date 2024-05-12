@@ -385,56 +385,12 @@ export class Vitest {
   }
 
   async mergeReports() {
-    const blobs = await readBlobs(this.config.mergeReports)
-
-    if (!blobs.length)
-      throw new Error(`vitest.mergeReports() requires at least one blob file paths in the config`)
+    const { files, errors } = await readBlobs(this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
-
-    // fake module graph - it is used to check if module is imported, but we don't use values inside
-    const projects = Object.fromEntries(this.projects.map(p => [p.getName(), p]))
-
-    blobs.forEach((blob) => {
-      blob.moduleKeys.forEach(([projectName, moduleIds]) => {
-        const project = projects[projectName]
-        if (!project)
-          return
-        moduleIds.forEach((moduleId) => {
-          project.server.moduleGraph.idToModuleMap.set(moduleId, {
-            id: moduleId,
-            url: moduleId,
-            file: moduleId,
-            ssrTransformResult: null,
-            transformResult: null,
-            importedBindings: null,
-            importedModules: new Set(),
-            importers: new Set(),
-            type: 'js',
-            clientImportedModules: new Set(),
-            ssrError: null,
-            ssrImportedModules: new Set(),
-            ssrModule: null,
-            acceptedHmrDeps: new Set(),
-            acceptedHmrExports: null,
-            lastHMRTimestamp: 0,
-            lastInvalidationTimestamp: 0,
-          })
-        })
-      })
-    })
-
-    const files = blobs.flatMap(blob => blob.files).sort((f1, f2) => {
-      const time1 = f1.result?.startTime || 0
-      const time2 = f2.result?.startTime || 0
-      return time1 - time2
-    })
-    const errors = blobs.flatMap(blob => blob.errors)
     this.state.collectFiles(files)
 
-    await this.report('onCollected', files.map((file) => {
-      return { ...file, result: undefined }
-    }))
+    await this.report('onCollected', files)
 
     for (const file of files) {
       const logs: UserConsoleLog[] = []
