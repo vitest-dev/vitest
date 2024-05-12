@@ -867,6 +867,7 @@ export interface UserConfig extends InlineConfig {
 
   /**
    * Directory of blob reports to merge
+   * @default '.vitest-reports'
    */
   mergeReports?: string
 }
