@@ -28,7 +28,7 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
-import { readBlobs } from './reporters/blob'
+import { BlobReporter, readBlobs } from './reporters/blob'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -384,6 +384,9 @@ export class Vitest {
   }
 
   async mergeReports() {
+    if (this.reporters.some(r => r instanceof BlobReporter))
+      throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
+
     const { files, errors } = await readBlobs(this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
