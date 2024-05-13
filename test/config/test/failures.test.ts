@@ -1,11 +1,11 @@
 import { expect, test } from 'vitest'
-import type { UserConfig } from 'vitest/config'
+import type { UserConfig } from 'vitest'
 import { version } from 'vitest/package.json'
 
 import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
-function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
+function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
   return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
 
@@ -152,4 +152,10 @@ test('nextTick can be mocked inside worker_threads', async () => {
   })
 
   expect(stderr).not.toMatch('Error')
+})
+
+test('mergeReports doesn\'t work with watch mode enabled', async () => {
+  const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
+
+  expect(stderr).toMatch('Cannot merge reports with --watch enabled')
 })
