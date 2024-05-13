@@ -1,7 +1,7 @@
-import { relative } from 'pathe'
 import type { File, Task, TaskResultPack } from '@vitest/runner'
 
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
+import { createFileTask } from '@vitest/runner/utils'
 import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
@@ -91,6 +91,9 @@ export class StateManager {
     files.forEach((file) => {
       const existing = (this.filesMap.get(file.filepath) || [])
       const otherProject = existing.filter(i => i.projectName !== file.projectName)
+      const currentFile = existing.find(i => i.projectName === file.projectName)
+      // take logs from the current file, it should always be accurate,
+      file.logs = currentFile?.logs
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
@@ -102,13 +105,23 @@ export class StateManager {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
-      if (!files)
+      const fileTask = createFileTask(path, project.config.root, project.config.name)
+      this.idMap.set(fileTask.id, fileTask)
+      if (!files) {
+        this.filesMap.set(path, [fileTask])
         return
+      }
       const filtered = files.filter(file => file.projectName !== project.config.name)
-      if (!filtered.length)
-        this.filesMap.delete(path)
-      else
-        this.filesMap.set(path, filtered)
+      // always keep a File task, so we can associate logs with it
+      if (!filtered.length) {
+        this.filesMap.set(path, [fileTask])
+      }
+      else {
+        this.filesMap.set(path, [
+          ...filtered,
+          fileTask,
+        ])
+      }
     })
   }
 
@@ -150,24 +163,6 @@ export class StateManager {
   }
 
   cancelFiles(files: string[], root: string, projectName: string) {
-    this.collectFiles(files.map((filepath) => {
-      const file: File = {
-        filepath,
-        name: relative(root, filepath),
-        id: filepath,
-        mode: 'skip',
-        type: 'suite',
-        result: {
-          state: 'skip',
-        },
-        meta: {},
-        // Cancelled files have not yet collected tests
-        tasks: [],
-        projectName,
-        file: null!,
-      }
-      file.file = file
-      return file
-    }))
+    this.collectFiles(files.map(filepath => createFileTask(filepath, root, projectName)))
   }
 }

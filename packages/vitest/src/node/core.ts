@@ -197,6 +197,12 @@ export class Vitest {
       || this.projects[0]
   }
 
+  public getProjectByName(name: string) {
+    return this.projects.find(p => p.getName() === name)
+      || this.getCoreWorkspaceProject()
+      || this.projects[0]
+  }
+
   private async getWorkspaceConfigPath() {
     if (this.config.workspace)
       return this.config.workspace
@@ -390,7 +396,24 @@ export class Vitest {
     const { files, errors } = await readBlobs(this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
-    this.state.collectFiles(files)
+    await this.report('onPathsCollected', files.flatMap(f => f.filepath))
+
+    const workspaceSpecs = new Map<WorkspaceProject, File[]>()
+    for (const file of files) {
+      const project = this.getProjectByName(file.projectName)
+      const specs = workspaceSpecs.get(project) || []
+      specs.push(file)
+      workspaceSpecs.set(project, specs)
+    }
+
+    for (const [project, files] of workspaceSpecs) {
+      const filepaths = files.map(f => f.filepath)
+      this.state.clearFiles(project, filepaths)
+      files.forEach((file) => {
+        file.logs?.forEach(log => this.state.updateUserLog(log))
+      })
+      this.state.collectFiles(files)
+    }
 
     await this.report('onCollected', files)
 
