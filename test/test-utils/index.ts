@@ -43,8 +43,8 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
     })
   }
   catch (e: any) {
-    console.error(e.message)
-    cli.stderr += e.message
+    console.error(e)
+    cli.stderr += e.stack
   }
   finally {
     exitCode = process.exitCode
