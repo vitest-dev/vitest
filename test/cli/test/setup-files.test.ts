@@ -10,7 +10,7 @@ test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when 
     pool,
   })
 
-  const filepath = 'console-setup.ts'
+  const filepath = 'empty.test.ts'
   expect(stdout).toContain(`stdout | ${filepath}`)
   expect(stderr).toContain(`stderr | ${filepath}`)
 })
