@@ -62,32 +62,35 @@ export function createExpect(test?: TaskPopulated) {
   expect.poll = function poll(fn, options = {}): any {
     const { interval = 50, timeout = 1000, message } = options
     const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-    const proxy: any = new Proxy(expect(null), {
+    const proxy: any = new Proxy(expect(null, message), {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver)
 
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        return (...args: any[]) => new Promise((resolve, reject) => {
-          let intervalId: any
-          let lastError: any
-          const { setTimeout } = getSafeTimers()
-          setTimeout(() => {
-            clearTimeout(intervalId)
-            reject(copyStackTrace(new Error(`Matcher expect().${String(key)}() did not succeed in ${timeout}ms`, { cause: lastError }), STACK_TRACE_ERROR))
-          }, timeout)
-          const check = async () => {
-            try {
-              resolve(await (expect(await fn(), message)[key as 'toBe'] as any)(...args))
+        return function (this: any, ...args: any[]) {
+          return new Promise((resolve, reject) => {
+            let intervalId: any
+            let lastError: any
+            const { setTimeout } = getSafeTimers()
+            setTimeout(() => {
+              clearTimeout(intervalId)
+              reject(copyStackTrace(new Error(`Matcher did not succeed in ${timeout}ms`, { cause: lastError }), STACK_TRACE_ERROR))
+            }, timeout)
+            const check = async () => {
+              try {
+                chai.util.flag(this, 'object', await fn())
+                resolve(await result.call(this, ...args))
+              }
+              catch (err) {
+                lastError = err
+                intervalId = setTimeout(check, interval)
+              }
             }
-            catch (err) {
-              lastError = err
-              intervalId = setTimeout(check, interval)
-            }
-          }
-          check()
-        })
+            check()
+          })
+        }
       },
     })
     return proxy
