@@ -103,14 +103,17 @@ test('merge reports', async () => {
     reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
   })
 
-  const json = JSON.parse(reporterJson.replace(/\\([^n])/g, '/$1').replace(new RegExp(resolve(process.cwd()), 'gi'), '<root>'))
+  const path = (r: string) => r.replace(/\\([^n])/g, '/$1').replace(new RegExp(resolve(process.cwd()), 'gi'), '<root>')
+
+  const json = JSON.parse(reporterJson)
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
+    result.name = path(result.name)
     result.assertionResults.forEach((assertion: any) => {
       delete assertion.duration
       assertion.failureMessages = assertion.failureMessages.map((m: string) => {
-        return m.split('\n').slice(0, 2).join('\n')
+        return m.split('\n').slice(0, 2).map(path).join('\n')
       })
     })
   })
