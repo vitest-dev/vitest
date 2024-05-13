@@ -103,7 +103,7 @@ test('merge reports', async () => {
     reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
   })
 
-  const json = JSON.parse(reporterJson.replace(/\\/g, '/').replace(new RegExp(process.cwd(), 'g'), '<root>'))
+  const json = JSON.parse(reporterJson.replace(/\\(^n)/g, '/$1').replace(new RegExp(resolve(process.cwd()), 'g'), '<root>'))
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
