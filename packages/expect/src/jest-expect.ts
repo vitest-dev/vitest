@@ -3,12 +3,13 @@ import type { Constructable } from '@vitest/utils'
 import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
-import type { Assertion, ChaiPlugin } from './types'
+import type { Assertion, ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
-import { JEST_MATCHERS_OBJECT } from './constants'
+import { GLOBAL_EXPECT, JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
+import { getState } from './state'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -729,6 +730,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
+    // @ts-expect-error local is untyped
+    const state: MatcherState = test?.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
+
+    if (state.poll)
+      throw new SyntaxError(`expect.poll is not supported in combination with .resolves`)
+
     if (typeof obj?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
 
@@ -771,6 +780,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+    // @ts-expect-error local is untyped
+    const state: MatcherState = test?.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
+
+    if (state.poll)
+      throw new SyntaxError(`expect.poll is not supported in combination with .rejects`)
 
     if (typeof wrapper?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)
