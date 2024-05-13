@@ -15,7 +15,7 @@ export interface WebSocketHandlers {
   getCountOfFailedTests: () => number
   sendLog: (log: UserConsoleLog) => void
   getFiles: () => File[]
-  getTestFiles: () => Promise<[name: string, file: string][]>
+  getTestFiles: () => Promise<[{ name: string; root: string }, file: string][]>
   getPaths: () => string[]
   getConfig: () => ResolvedConfig
   resolveSnapshotPath: (testPath: string) => string
@@ -39,7 +39,7 @@ export interface WebSocketHandlers {
   debug: (...args: string[]) => void
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected' | 'onSpecsCollected'> {
   onCancel: (reason: CancelReason) => void
   onFinishedReportCoverage: () => void
 }

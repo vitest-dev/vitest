@@ -15,6 +15,8 @@ const formattedLogs = computed(() => {
 
 function getTaskName(id?: string) {
   const task = id && client.state.idMap.get(id)
+  if (task && 'filepath' in task)
+    return task.name
   return (task ? getNames(task).slice(1).join(' > ') : '-') || '-'
 }
 </script>

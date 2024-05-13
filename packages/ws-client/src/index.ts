@@ -52,6 +52,12 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let onMessage: Function
   const functions: WebSocketEvents = {
+    onSpecsCollected(specs) {
+      specs?.forEach(([config, file]) => {
+        ctx.state.clearFiles({ config }, [file])
+      })
+      handlers.onSpecsCollected?.(specs)
+    },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
       handlers.onPathsCollected?.(paths)
@@ -66,6 +72,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)
+      handlers.onUserConsoleLog?.(log)
     },
     onFinished(files, errors) {
       handlers.onFinished?.(files, errors)

@@ -92,8 +92,10 @@ export class StateManager {
       const existing = (this.filesMap.get(file.filepath) || [])
       const otherProject = existing.filter(i => i.projectName !== file.projectName)
       const currentFile = existing.find(i => i.projectName === file.projectName)
-      // take logs from the current file, it should always be accurate,
-      file.logs = currentFile?.logs
+      // keep logs for the previous file because it should alway be initiated before the collections phase
+      // which means that all logs are collected during the collection and not inside tests
+      if (currentFile)
+        file.logs = currentFile.logs
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
@@ -101,7 +103,7 @@ export class StateManager {
   }
 
   // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
-  clearFiles(_project: { config: { name: string } }, paths: string[] = []) {
+  clearFiles(_project: { config: { name: string; root: string } }, paths: string[] = []) {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)

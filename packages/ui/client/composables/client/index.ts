@@ -3,8 +3,7 @@ import type { WebSocketStatus } from '@vueuse/core'
 import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
-import { relative } from 'pathe'
-import { generateHash } from '@vitest/runner/utils'
+import { createFileTask } from '@vitest/runner/utils'
 import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
@@ -92,21 +91,8 @@ watch(
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
-        const files = filenames.map<File>(([name, filepath]) => {
-          const path = relative(_config.root, filepath)
-          return {
-            filepath,
-            name: path,
-            id: /* #__PURE__ */ generateHash(`${path}${name || ''}`),
-            mode: 'skip',
-            type: 'suite',
-            result: {
-              state: 'skip',
-            },
-            meta: {},
-            tasks: [],
-            projectName: name,
-          }
+        const files = filenames.map<File>(([{ name, root }, filepath]) => {
+          return /* #__PURE__ */ createFileTask(filepath, root, name)
         })
         client.state.collectFiles(files)
       }

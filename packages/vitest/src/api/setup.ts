@@ -11,7 +11,7 @@ import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
+import type { Awaitable, File, ModuleGraphData, Reporter, SerializableSpec, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
@@ -166,7 +166,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
         async getTestFiles() {
           const spec = await ctx.globTestFiles()
-          return spec.map(([project, file]) => [project.getName(), file]) as [string, string][]
+          return spec.map(([project, file]) => [{
+            name: project.getName(),
+            root: project.config.root,
+          }, file])
         },
       },
       {
@@ -205,6 +208,14 @@ export class WebSocketReporter implements Reporter {
       return
     this.clients.forEach((client) => {
       client.onCollected?.(files)?.catch?.(noop)
+    })
+  }
+
+  onSpecsCollected(specs?: SerializableSpec[] | undefined): Awaitable<void> {
+    if (this.clients.size === 0)
+      return
+    this.clients.forEach((client) => {
+      client.onSpecsCollected?.(specs)?.catch?.(noop)
     })
   }
 

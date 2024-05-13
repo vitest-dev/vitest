@@ -13,7 +13,7 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, SerializableSpec, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
@@ -592,13 +592,17 @@ export class Vitest {
     this.distPath = join(vitestDir, 'dist')
   }
 
-  async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
+  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
     await this.initializeDistPath()
 
-    const filepaths = paths.map(([, file]) => file)
+    const filepaths = specs.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
+    await this.report('onSpecsCollected', specs.map(
+      ([project, file]) =>
+        [{ name: project.getName(), root: project.config.root }, file] as SerializableSpec,
+    ))
 
     // previous run
     await this.runningPromise
@@ -618,10 +622,10 @@ export class Vitest {
       if (!this.isFirstRun && this.config.coverage.cleanOnRerun)
         await this.coverageProvider?.clean()
 
-      await this.initializeGlobalSetup(paths)
+      await this.initializeGlobalSetup(specs)
 
       try {
-        await this.pool.runTests(paths, invalidates)
+        await this.pool.runTests(specs, invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
@@ -637,8 +641,8 @@ export class Vitest {
     })()
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
-        const specs = Array.from(new Set(paths.map(([, p]) => p)))
-        await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
+        const files = Array.from(new Set(specs.map(([, p]) => p)))
+        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors())
         await this.reportCoverage(allTestsRun)
 
         this.runningPromise = undefined
