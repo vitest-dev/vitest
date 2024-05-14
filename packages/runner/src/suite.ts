@@ -222,7 +222,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       shuffle,
       tasks: [],
       meta: Object.create(null),
-      concurrent: suiteOptions?.concurrentSuite,
+      concurrent: suiteOptions?.concurrent,
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {

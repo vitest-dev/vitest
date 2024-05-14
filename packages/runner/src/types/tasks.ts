@@ -180,14 +180,10 @@ export interface TestOptions {
    */
   repeats?: number
   /**
-   * Whether tests run concurrently.
+   * Whether suites and tests run concurrently.
    * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
    */
   concurrent?: boolean
-  /**
-   * TODO: suite only options?
-   */
-  concurrentSuite?: boolean
   /**
    * Whether tests run sequentially.
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.

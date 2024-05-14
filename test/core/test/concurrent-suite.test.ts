@@ -1,5 +1,5 @@
 import { createDefer } from '@vitest/utils'
-import { afterAll, describe, expect, test } from 'vitest'
+import { afterAll, describe, test } from 'vitest'
 
 describe('basic', () => {
   const defers = [
@@ -13,7 +13,7 @@ describe('basic', () => {
     await defers[3]
   })
 
-  describe('1st suite', { concurrentSuite: true }, () => {
+  describe('1st suite', { concurrent: true }, () => {
     test('0', async () => {
       defers[0].resolve()
     })
@@ -24,7 +24,7 @@ describe('basic', () => {
     })
   })
 
-  describe('2nd suite', { concurrentSuite: true }, () => {
+  describe('2nd suite', { concurrent: true }, () => {
     test('2', async () => {
       await defers[0]
       defers[2].resolve()
@@ -36,7 +36,7 @@ describe('basic', () => {
   })
 })
 
-describe('inherits option', { concurrentSuite: true }, () => {
+describe('inherits option', { concurrent: true }, () => {
   const defers = [
     createDefer<void>(),
     createDefer<void>(),
@@ -83,7 +83,7 @@ describe('works with describe.each', () => {
     await defers[3]
   })
 
-  describe.each(['1st suite', '2nd suite'])('%s', { concurrentSuite: true }, (s) => {
+  describe.each(['1st suite', '2nd suite'])('%s', { concurrent: true }, (s) => {
     if (s === '1st suite') {
       test('0', async () => {
         defers[0].resolve()
@@ -105,27 +105,5 @@ describe('works with describe.each', () => {
         defers[3].resolve()
       })
     }
-  })
-})
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-describe('tests are sequential', () => {
-  describe('1st suite', { concurrentSuite: true }, () => {
-    let done = false
-
-    test('0', async () => {
-      await sleep(200)
-      expect(done).toBe(false)
-    })
-
-    test('1', async () => {
-      await sleep(100)
-      done = true
-    })
-
-    test('2', () => {
-      expect(done).toBe(true)
-    })
   })
 })
