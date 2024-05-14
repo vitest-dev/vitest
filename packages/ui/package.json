@@ -41,7 +41,7 @@
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
-    "test:ui": "vitest --ui --browser"
+    "test:ui": "vitest --browser"
   },
   "peerDependencies": {
     "vitest": "workspace:*"

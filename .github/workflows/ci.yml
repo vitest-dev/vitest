@@ -88,8 +88,11 @@ jobs:
       - name: Install
         run: pnpm i
 
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install chromium
+
       - name: Test UI
-        run: pnpm run ui:test
+        run: pnpm run -C packages/ui test:ui
 
   test-ui-e2e:
     strategy:
