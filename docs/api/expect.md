@@ -767,7 +767,7 @@ test('matches snapshot', () => {
 })
 ```
 
-## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge> {#tomatchfilesnapshot}
+## toMatchFileSnapshot {#tomatchfilesnapshot}
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
 
@@ -1246,7 +1246,7 @@ test('"id" is a number', () => {
 })
 ```
 
-## expect.closeTo <Badge type="info">1.0.0+</Badge> {#expect-closeto}
+## expect.closeTo {#expect-closeto}
 
 - **Type:** `(expected: any, precision?: number) => any`
 
@@ -1444,7 +1444,7 @@ Don't forget to include the ambient declaration file in your `tsconfig.json`.
 If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
 :::
 
-## expect.addEqualityTesters <Badge type="info">1.2.0+</Badge> {#expect-addequalitytesters}
+## expect.addEqualityTesters {#expect-addequalitytesters}
 
 - **Type:** `(tester: Array<Tester>) => void`
 
