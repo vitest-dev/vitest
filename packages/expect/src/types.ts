@@ -90,13 +90,7 @@ export type MatchersObject<T extends MatcherState = MatcherState> = Record<strin
 
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
-  unreachable: (message?: string) => never
-  soft: <T>(actual: T, message?: string) => Assertion<T>
-  poll: <T>(actual: () => T, options?: { interval?: number; timeout?: number; message?: string }) => Promisify<Assertion<Awaited<T>>>
   extend: (expects: MatchersObject) => void
-  addEqualityTesters: (testers: Array<Tester>) => void
-  assertions: (expected: number) => void
-  hasAssertions: () => void
   anything: () => any
   any: (constructor: unknown) => any
   getState: () => MatcherState
@@ -175,13 +169,15 @@ type Promisify<O> = {
     : O[K]
 }
 
+export type PromisifyAssertion<T> = Promisify<Assertion<T>>
+
 export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, JestAssertion<T> {
   toBeTypeOf: (expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => void
   toHaveBeenCalledOnce: () => void
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
-  resolves: Promisify<Assertion<T>>
-  rejects: Promisify<Assertion<T>>
+  resolves: PromisifyAssertion<T>
+  rejects: PromisifyAssertion<T>
 }
 
 declare global {
