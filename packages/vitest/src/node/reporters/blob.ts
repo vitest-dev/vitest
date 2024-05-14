@@ -26,7 +26,7 @@ export class BlobReporter implements Reporter {
     this.ctx = ctx
   }
 
-  async onFinished(files?: File[], errors?: unknown[]) {
+  async onFinished(files: File[] = [], errors: unknown[] = []) {
     let outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
       const shard = this.ctx.config.shard
@@ -35,11 +35,11 @@ export class BlobReporter implements Reporter {
         : '.vitest-reports/blob.json'
     }
 
-    const moduleKeys = this.ctx.projects.map((project) => {
+    const moduleKeys = this.ctx.projects.map<MergeReportModuleKeys>((project) => {
       return [project.getName(), [...project.server.moduleGraph.idToModuleMap.keys()]]
     })
 
-    const report = stringify([this.ctx.version, files, errors, moduleKeys])
+    const report = stringify([this.ctx.version, files, errors, moduleKeys] satisfies MergeReport)
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 
@@ -57,11 +57,12 @@ export class BlobReporter implements Reporter {
 }
 
 export async function readBlobs(blobsDirectory: string, projectsArray: WorkspaceProject[]) {
+  // using process.cwd() because --merge-reports can only be used in CLI
   const resolvedDir = resolve(process.cwd(), blobsDirectory)
   const blobsFiles = await readdir(resolvedDir)
   const promises = blobsFiles.map(async (file) => {
     const content = await readFile(resolve(resolvedDir, file), 'utf-8')
-    const [version, files, errors, moduleKeys] = parse(content) as [string, files: File[], errors: unknown[], [string, string[]][]]
+    const [version, files, errors, moduleKeys] = parse(content) as MergeReport
     return { version, files, errors, moduleKeys }
   })
   const blobs = await Promise.all(promises)
@@ -113,3 +114,12 @@ export async function readBlobs(blobsDirectory: string, projectsArray: Workspace
     errors,
   }
 }
+
+type MergeReport = [
+  vitestVersion: string,
+  files: File[],
+  errors: unknown[],
+  moduleKeys: MergeReportModuleKeys[],
+]
+
+type MergeReportModuleKeys = [projectName: string, moduleIds: string[]]
