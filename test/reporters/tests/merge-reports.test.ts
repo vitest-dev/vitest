@@ -27,7 +27,11 @@ test('merge reports', async () => {
   expect(exitCode).toBe(1)
 
   // remove "RUN v{} path" and "Duration" because it's not stable
-  const stdoutCheck = reporterDefault.split('\n').slice(2, -3).join('\n').replace(/Start at [\w\s\d:]+/, 'Start at <time>')
+  const stdoutCheck = reporterDefault
+    .split('\n')
+    .slice(2, -3)
+    .join('\n')
+    .replace(/Start at [\w\s\d:]+/, 'Start at <time>')
   const stderrArr = stderrDefault.split('\n')
   const stderrCheck = [
     ...stderrArr.slice(3, 19),
@@ -105,7 +109,9 @@ test('merge reports', async () => {
     reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
   })
 
-  const path = (r: string) => r.replace(/\\([^n])/g, '/$1').replace(new RegExp(resolve(process.cwd()), 'gi'), '<root>')
+  const slash = (r: string) => r.replace(/\\/g, '/')
+  const path = (r: string) => slash(r)
+    .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
   const json = JSON.parse(reporterJson)
   json.testResults.forEach((result: any) => {
