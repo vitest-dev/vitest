@@ -96,7 +96,7 @@ const failed = computed(() => {
           :style="{ 'margin-left': `${task.result?.htmlError ? 0.5 : (2 * task.level + 0.5)}rem` }"
         >
           {{ task.name }}
-          <div v-if="task.result?.htmlError" class="scrolls scrolls-rounded task-error">
+          <div v-if="task.result?.htmlError" class="scrolls scrolls-rounded task-error" data-testid="task-error">
             <pre v-html="task.result.htmlError" />
           </div>
           <template v-else-if="task.result?.errors">
