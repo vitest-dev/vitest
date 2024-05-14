@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+import type { BrowserCommand } from 'vitest/node'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
@@ -8,6 +9,10 @@ function noop() {}
 
 const provider = process.env.PROVIDER || 'playwright'
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+
+const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
+  return { testPath, arg1, arg2 }
+}
 
 export default defineConfig({
   server: {
@@ -60,6 +65,9 @@ export default defineConfig({
           content: 'if(__injected[0] !== 3) throw new Error("injected not working")',
         },
       ],
+      commands: {
+        myCustomCommand,
+      },
     },
     alias: {
       '#src': resolve(dir, './src'),

@@ -1,3 +1,4 @@
+import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { type Vitest, startVitest } from 'vitest/node'
 
@@ -8,7 +9,20 @@ test.describe('ui', () => {
   let vitest: Vitest | undefined
 
   test.beforeAll(async () => {
-    vitest = await startVitest('test', [], { watch: true, ui: true, open: false, api: { port }, coverage: { enabled: true } })
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    vitest = await startVitest('test', [], {
+      watch: true,
+      ui: true,
+      open: false,
+      api: { port },
+      coverage: { enabled: true },
+      reporters: [],
+    }, {}, {
+      stdout,
+      stderr,
+    })
     expect(vitest).toBeDefined()
   })
 

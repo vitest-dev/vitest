@@ -332,8 +332,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       else {
         for (let tasksGroup of partitionSuiteChildren(suite)) {
           if (tasksGroup[0].concurrent === true) {
-            const mutex = limit(runner.config.maxConcurrency)
-            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+            await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
           }
           else {
             const { sequence } = runner.config
@@ -386,15 +385,19 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
 }
 
+let limitMaxConcurrency: ReturnType<typeof limit>
+
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   if (c.type === 'test' || c.type === 'custom')
-    return runTest(c, runner)
+    return limitMaxConcurrency(() => runTest(c, runner))
 
   else if (c.type === 'suite')
     return runSuite(c, runner)
 }
 
 export async function runFiles(files: File[], runner: VitestRunner) {
+  limitMaxConcurrency ??= limit(runner.config.maxConcurrency)
+
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {
       if (!file.result?.errors?.length) {

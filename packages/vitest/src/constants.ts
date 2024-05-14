@@ -8,8 +8,8 @@ export const EXIT_CODE_RESTART = 43
 export const API_PATH = '/__vitest_api__'
 
 export const extraInlineDeps = [
-  /^(?!.*(?:node_modules)).*\.mjs$/,
-  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  /^(?!.*node_modules).*\.mjs$/,
+  /^(?!.*node_modules).*\.cjs\.js$/,
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
   // Nuxt

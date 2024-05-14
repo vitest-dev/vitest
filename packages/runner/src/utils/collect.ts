@@ -1,5 +1,6 @@
 import { processError } from '@vitest/utils/error'
-import type { Suite, TaskBase } from '../types'
+import { relative } from 'pathe'
+import type { File, Suite, TaskBase } from '../types'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
@@ -91,4 +92,21 @@ export function calculateSuiteHash(parent: Suite) {
     if (t.type === 'suite')
       calculateSuiteHash(t)
   })
+}
+
+export function createFileTask(filepath: string, root: string, projectName: string) {
+  const path = relative(root, filepath)
+  const file: File = {
+    id: generateHash(`${path}${projectName || ''}`),
+    name: path,
+    type: 'suite',
+    mode: 'run',
+    filepath,
+    tasks: [],
+    meta: Object.create(null),
+    projectName,
+    file: undefined!,
+  }
+  file.file = file
+  return file
 }

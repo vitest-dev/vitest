@@ -193,15 +193,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             console.log('[debug] watcher is ready')
           })
         }
-        try {
-          await ctx.setServer(options, server, userConfig)
-          if (options.api && options.watch)
-            (await import('../../api/setup')).setup(ctx)
-        }
-        catch (err) {
-          ctx.logger.printError(err, { fullStack: true })
-          process.exit(1)
-        }
+        await ctx.setServer(options, server, userConfig)
+        if (options.api && options.watch)
+          (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)

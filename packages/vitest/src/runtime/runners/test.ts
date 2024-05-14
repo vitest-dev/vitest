@@ -23,6 +23,10 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
+  onCollectStart(file: File) {
+    this.workerState.current = file
+  }
+
   onBeforeRunFiles() {
     this.snapshotClient.clear()
   }

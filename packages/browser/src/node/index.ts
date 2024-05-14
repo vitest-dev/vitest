@@ -2,12 +2,15 @@ import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { Plugin, ViteDevServer } from 'vite'
+import type { ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
-import { coverageConfigDefaults } from 'vitest/config'
+import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
+import BrowserContext from './plugins/context'
+
+export type { BrowserCommand } from 'vitest/node'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -187,6 +190,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         return useId
       },
     },
+    BrowserContext(project),
     {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
@@ -242,7 +246,7 @@ function wrapConfig(config: ResolvedConfig): ResolvedConfig {
 }
 
 function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
+  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? '')
 }
 
 async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteDevServer) {

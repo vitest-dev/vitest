@@ -18,8 +18,7 @@ export function NormalizeURLPlugin(): Plugin {
         return
 
       const cleanString = stripLiteral(code)
-      const assetImportMetaUrlRE
-      = /\bnew\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
+      const assetImportMetaUrlRE = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code
       let match: RegExpExecArray | null

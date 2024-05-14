@@ -9,11 +9,11 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { CancelReason, File } from '@vitest/runner'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, SerializableSpec, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
@@ -28,6 +28,7 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
+import { BlobReporter, readBlobs } from './reporters/blob'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -192,6 +193,12 @@ export class Vitest {
     const task = this.state.idMap.get(taskId)
     const projectName = (task as File).projectName || task?.file?.projectName
     return this.projects.find(p => p.getName() === projectName)
+      || this.getCoreWorkspaceProject()
+      || this.projects[0]
+  }
+
+  public getProjectByName(name: string) {
+    return this.projects.find(p => p.getName() === name)
       || this.getCoreWorkspaceProject()
       || this.projects[0]
   }
@@ -382,6 +389,58 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
+  async mergeReports() {
+    if (this.reporters.some(r => r instanceof BlobReporter))
+      throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
+
+    const { files, errors } = await readBlobs(this.config.mergeReports, this.projects)
+
+    await this.report('onInit', this)
+    await this.report('onPathsCollected', files.flatMap(f => f.filepath))
+
+    const workspaceSpecs = new Map<WorkspaceProject, File[]>()
+    for (const file of files) {
+      const project = this.getProjectByName(file.projectName)
+      const specs = workspaceSpecs.get(project) || []
+      specs.push(file)
+      workspaceSpecs.set(project, specs)
+    }
+
+    for (const [project, files] of workspaceSpecs) {
+      const filepaths = files.map(f => f.filepath)
+      this.state.clearFiles(project, filepaths)
+      files.forEach((file) => {
+        file.logs?.forEach(log => this.state.updateUserLog(log))
+      })
+      this.state.collectFiles(files)
+    }
+
+    await this.report('onCollected', files).catch(noop)
+
+    for (const file of files) {
+      const logs: UserConsoleLog[] = []
+      const taskPacks: TaskResultPack[] = []
+
+      const tasks = getTasks(file)
+      for (const task of tasks) {
+        if (task.logs)
+          logs.push(...task.logs)
+        taskPacks.push([task.id, task.result, task.meta])
+      }
+      logs.sort((log1, log2) => log1.time - log2.time)
+
+      for (const log of logs)
+        await this.report('onUserConsoleLog', log).catch(noop)
+
+      await this.report('onTaskUpdate', taskPacks).catch(noop)
+    }
+
+    if (hasFailed(files))
+      process.exitCode = 1
+
+    await this.report('onFinished', files, errors)
+  }
+
   async start(filters?: string[]) {
     this._onClose = []
 
@@ -536,13 +595,17 @@ export class Vitest {
     this.distPath = join(vitestDir, 'dist')
   }
 
-  async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
+  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
     await this.initializeDistPath()
 
-    const filepaths = paths.map(([, file]) => file)
+    const filepaths = specs.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
+    await this.report('onSpecsCollected', specs.map(
+      ([project, file]) =>
+        [{ name: project.getName(), root: project.config.root }, file] as SerializableSpec,
+    ))
 
     // previous run
     await this.runningPromise
@@ -562,10 +625,10 @@ export class Vitest {
       if (!this.isFirstRun && this.config.coverage.cleanOnRerun)
         await this.coverageProvider?.clean()
 
-      await this.initializeGlobalSetup(paths)
+      await this.initializeGlobalSetup(specs)
 
       try {
-        await this.pool.runTests(paths, invalidates)
+        await this.pool.runTests(specs, invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
@@ -581,8 +644,8 @@ export class Vitest {
     })()
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
-        const specs = Array.from(new Set(paths.map(([, p]) => p)))
-        await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
+        const files = Array.from(new Set(specs.map(([, p]) => p)))
+        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors())
         await this.reportCoverage(allTestsRun)
 
         this.runningPromise = undefined

@@ -119,6 +119,165 @@ npx vitest --browser.name=chrome --browser.headless
 
 In this case, Vitest will run in headless mode using the Chrome browser.
 
+## Context <Version>2.0.0</Version> {#context}
+
+Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
+
+```ts
+export const server: {
+  /**
+   * Platform the Vitest server is running on.
+   * The same as calling `process.platform` on the server.
+   */
+  platform: Platform
+  /**
+   * Runtime version of the Vitest server.
+   * The same as calling `process.version` on the server.
+   */
+  version: string
+  /**
+   * Available commands for the browser.
+   * @see {@link https://vitest.dev/guide/browser#commands}
+   */
+  commands: BrowserCommands
+}
+
+/**
+ * Available commands for the browser.
+ * A shortcut to `server.commands`.
+ * @see {@link https://vitest.dev/guide/browser#commands}
+ */
+export const commands: BrowserCommands
+
+export const page: {
+  /**
+   * Serialized test config.
+   */
+  config: ResolvedConfig
+}
+```
+
+## Commands <Version>2.0.0</Version> {#commands}
+
+Command is a function that invokes another function on the server and passes down the result back to the browser. Vitest exposes several built-in commands you can use in your browser tests.
+
+## Built-in Commands
+
+### Files Handling
+
+You can use `readFile`, `writeFile` and `removeFile` API to handle files inside your browser tests. All paths are resolved relative to the test file even if they are called in a helper function located in another file.
+
+By default, Vitest uses `utf-8` encoding but you can override it with options.
+
+::: tip
+This API follows [`server.fs`](https://vitejs.dev/config/server-options.html#server-fs-allow) limitations for security reasons.
+:::
+
+```ts
+import { server } from '@vitest/browser/context'
+
+const { readFile, writeFile, removeFile } = server.commands
+
+it('handles files', async () => {
+  const file = './test.txt'
+
+  await writeFile(file, 'hello world')
+  const content = await readFile(file)
+
+  expect(content).toBe('hello world')
+
+  await removeFile(file)
+})
+```
+
+### Keyboard Interactions
+
+Vitest also implements Web Test Runner's [`sendKeys` API](https://modern-web.dev/docs/test-runner/commands/#send-keys). It accepts an object with a single property:
+
+- `type` - types a sequence of characters, this API _is not_ affected by modifier keys, so having `Shift` won't make letters uppercase
+- `press` - presses a single key, this API _is_ affected by modifier keys, so having `Shift` will make subsequent characters uppercase
+- `up` - holds down a key (supported only with `playwright` provider)
+- `down` - releases a key (supported only with `playwright` provider)
+
+```ts
+interface TypePayload { type: string }
+interface PressPayload { press: string }
+interface DownPayload { down: string }
+interface UpPayload { up: string }
+
+type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
+
+declare function sendKeys(payload: SendKeysPayload): Promise<void>
+```
+
+This is just a simple wrapper around providers APIs. Please refer to their respective documentations for details:
+
+- [Playwright Keyboard API](https://playwright.dev/docs/api/class-keyboard)
+- [Webdriver Keyboard API](https://webdriver.io/docs/api/browser/keys/)
+
+## Custom Commands
+
+You can also add your own commands via [`browser.commands`](/config/#browser-commands) config option. If you develop a library, you can provide them via a `config` hook inside a plugin:
+
+```ts
+import type { Plugin } from 'vitest/config'
+import type { BrowserCommand } from 'vitest/node'
+
+const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({
+  testPath,
+  provider
+}, arg1, arg2) => {
+  if (provider.name === 'playwright') {
+    console.log(testPath, arg1, arg2)
+    return { someValue: true }
+  }
+
+  throw new Error(`provider ${provider.name} is not supported`)
+}
+
+export default function BrowserCommands(): Plugin {
+  return {
+    name: 'vitest:custom-commands',
+    config() {
+      return {
+        test: {
+          browser: {
+            commands: {
+              myCustomCommand,
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Then you can call it inside your test by importing it from `@vitest/browser/context`:
+
+```ts
+import { commands } from '@vitest/browser/context'
+import { expect, test } from 'vitest'
+
+test('custom command works correctly', async () => {
+  const result = await commands.myCustomCommand('test1', 'test2')
+  expect(result).toEqual({ someValue: true })
+})
+
+// if you are using TypeScript, you can augment the module
+declare module '@vitest/browser/context' {
+  interface BrowserCommands {
+    myCustomCommand: (arg1: string, arg2: string) => Promise<{
+      someValue: true
+    }>
+  }
+}
+```
+
+::: warning
+Custom functions will override built-in ones if they have the same name.
+:::
+
 ## Limitations
 
 ### Thread Blocking Dialogs

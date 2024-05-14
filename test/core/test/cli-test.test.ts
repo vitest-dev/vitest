@@ -310,6 +310,12 @@ test('clearScreen', async () => {
   `)
 })
 
+test('merge-reports', () => {
+  expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest-reports' })
+  expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
+  expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],

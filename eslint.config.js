@@ -23,6 +23,7 @@ export default antfu(
       'test/coverage-test/src/original.ts',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
+      'packages/browser/**/esm-client-injector.js',
     ],
   },
   {

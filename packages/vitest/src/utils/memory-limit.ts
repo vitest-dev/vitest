@@ -44,7 +44,8 @@ export function stringToBytes(
   if (typeof input === 'string') {
     if (Number.isNaN(Number.parseFloat(input.slice(-1)))) {
       let [, numericString, trailingChars]
-        = input.match(/(.*?)([^0-9.-]+)$/i) || []
+        // eslint-disable-next-line regexp/no-super-linear-backtracking
+        = input.match(/(.*?)([^0-9.-]+)$/) || []
 
       if (trailingChars && numericString) {
         const numericValue = Number.parseFloat(numericString)

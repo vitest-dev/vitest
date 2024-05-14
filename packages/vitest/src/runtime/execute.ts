@@ -41,7 +41,7 @@ export interface ContextExecutorOptions {
   requestStubs: Record<string, any>
 }
 
-const bareVitestRegexp = /^@?vitest(\/|$)/
+const bareVitestRegexp = /^@?vitest(?:\/|$)/
 
 const dispose: (() => void)[] = []
 

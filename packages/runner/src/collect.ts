@@ -1,8 +1,7 @@
-import { relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import type { File, SuiteHooks } from './types'
 import type { VitestRunner } from './types/runner'
-import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
+import { calculateSuiteHash, createFileTask, interpretTaskModes, someTasksAreOnly } from './utils/collect'
 import { clearCollectorContext, createSuiteHooks, getDefaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { collectorContext } from './context'
@@ -16,19 +15,9 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
   const config = runner.config
 
   for (const filepath of paths) {
-    const path = relative(config.root, filepath)
-    const file: File = {
-      id: generateHash(`${path}${config.name || ''}`),
-      name: path,
-      type: 'suite',
-      mode: 'run',
-      filepath,
-      tasks: [],
-      meta: Object.create(null),
-      projectName: config.name,
-      file: undefined!,
-    }
-    file.file = file
+    const file = createFileTask(filepath, config.root, config.name)
+
+    runner.onCollectStart?.(file)
 
     clearCollectorContext(filepath, runner)
 

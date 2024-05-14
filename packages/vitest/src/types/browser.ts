@@ -103,6 +103,23 @@ export interface BrowserConfigOptions {
    * Scripts injected into the main window.
    */
   indexScripts?: BrowserScript[]
+
+  /**
+   * Commands that will be executed on the server
+   * via the browser `import("@vitest/browser/context").commands` API.
+   * @see {@link https://vitest.dev/guide/browser#commands}
+   */
+  commands?: Record<string, BrowserCommand<any>>
+}
+
+export interface BrowserCommandContext {
+  testPath: string | undefined
+  provider: BrowserProvider
+  project: WorkspaceProject
+}
+
+export interface BrowserCommand<Payload extends unknown[]> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
 }
 
 export interface BrowserScript {

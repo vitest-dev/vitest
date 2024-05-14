@@ -18,7 +18,7 @@ interface Options {
 
 type LoupeOptions = Partial<Options>
 
-const formatRegExp = /%[sdjifoOcj%]/g
+const formatRegExp = /%[sdjifoOc%]/g
 
 export function format(...args: unknown[]) {
   if (typeof args[0] !== 'string') {

@@ -7,7 +7,7 @@ import { KNOWN_ASSET_TYPES } from './constants'
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
 
 const ESM_SYNTAX_RE
-  = /([\s;]|^)(import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
+  = /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
@@ -68,7 +68,7 @@ async function isValidNodeImport(id: string) {
   if (package_.type === 'module')
     return true
 
-  if (/\.(\w+-)?esm?(-\w+)?\.js$|\/(esm?)\//.test(id))
+  if (/\.(?:\w+-)?esm?(?:-\w+)?\.js$|\/esm?\//.test(id))
     return false
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
@@ -97,7 +97,7 @@ async function _shouldExternalize(
   // data: should be processed by native import,
   // since it is a feature of ESM.
   // also externalize network imports since nodejs allows it when --experimental-network-imports
-  if (id.startsWith('data:') || /^(https?:)?\/\//.test(id))
+  if (id.startsWith('data:') || /^(?:https?:)?\/\//.test(id))
     return id
 
   id = patchWindowsImportPath(id)

@@ -229,3 +229,14 @@ test('my types work properly', () => {
   assertType(mount({ name: 42 }))
 })
 ```
+
+## Sharding
+
+Run tests on different machines using [`--shard`](/guide/cli#shard) and [`--reporter=blob`](/guide/reporters#blob-reporter) flags.
+All test results can be merged at the end of your CI pipeline using `--merge-reports` command:
+
+```bash
+vitest --shard=1/2 --reporter=blob
+vitest --shard=2/2 --reporter=blob
+vitest --merge-reports --reporter=junit
+```
