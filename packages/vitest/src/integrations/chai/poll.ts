@@ -27,7 +27,6 @@ const unsupported = [
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const { interval = 50, timeout = 1000, message } = options
-    const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
     // @ts-expect-error private poll access
     const assertion = expect(null, message).withContext({ poll: true }) as Assertion
     const proxy: any = new Proxy(assertion, {
@@ -41,6 +40,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           throw new SyntaxError(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
 
         return function (this: any, ...args: any[]) {
+          const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
           return new Promise((resolve, reject) => {
             let intervalId: any
             let lastError: any
