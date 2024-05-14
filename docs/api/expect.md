@@ -68,12 +68,18 @@ test('expect.soft test', () => {
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 
 ```ts twoslash
+function asyncInjectElement() {
+  // example function
+}
+
+// ---cut---
+
 import { expect, test } from 'vitest'
 
 test('element exists', async () => {
   asyncInjectElement()
 
-  await expect.poll(() => document.querySelect('.element')).toBeTruthy()
+  await expect.poll(() => document.querySelector('.element')).toBeTruthy()
 })
 ```
 
