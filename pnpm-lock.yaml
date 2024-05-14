@@ -1091,6 +1091,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@8.1.1)

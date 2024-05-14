@@ -2,6 +2,10 @@
 
 exports[`should fail .dot-folder/dot-test.test.ts > .dot-folder/dot-test.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
+exports[`should fail concurrent-suite-deadlock.test.ts > concurrent-suite-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
+
+exports[`should fail concurrent-test-deadlock.test.ts > concurrent-test-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
+
 exports[`should fail each-timeout.test.ts > each-timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;
 
 exports[`should fail empty.test.ts > empty.test.ts 1`] = `"Error: No test suite found in file <rootDir>/empty.test.ts"`;
