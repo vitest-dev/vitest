@@ -1,5 +1,5 @@
 import { describe, test, vi } from 'vitest'
-import { createDefer } from 'vitest/dist/utils.js'
+import { createDefer } from '@vitest/utils'
 
 // 3 tests depend on each other,
 // so they will deadlock when maxConcurrency < 3
