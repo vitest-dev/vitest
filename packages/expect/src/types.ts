@@ -69,7 +69,6 @@ export interface MatcherState {
     iterableEquality: Tester
     subsetEquality: Tester
   }
-  soft?: boolean
 }
 
 export interface SyncExpectationResult {
