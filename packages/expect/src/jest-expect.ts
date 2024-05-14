@@ -737,7 +737,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const obj = utils.flag(this, 'object')
 
     if (utils.flag(this, 'poll'))
-      throw new SyntaxError(`expect.poll is not supported in combination with .resolves`)
+      throw new SyntaxError(`expect.poll() is not supported in combination with .resolves`)
 
     if (typeof obj?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
@@ -783,7 +783,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
     if (utils.flag(this, 'poll'))
-      throw new SyntaxError(`expect.poll is not supported in combination with .rejects`)
+      throw new SyntaxError(`expect.poll() is not supported in combination with .rejects`)
 
     if (typeof wrapper?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)
