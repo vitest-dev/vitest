@@ -74,30 +74,6 @@ jobs:
         run: pnpm run test:examples
 
   test-ui:
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test UI
-        run: pnpm run -C packages/ui test:ui
-
-  test-ui-e2e:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-14, windows-latest]
@@ -123,7 +99,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test
+      - name: Unit Test UI
+        run: pnpm run -C packages/ui test:ui
+
+      - name: E2E Test UI
         run: pnpm -C test/ui test-e2e
 
   test-browser:
