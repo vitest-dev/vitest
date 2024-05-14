@@ -9,11 +9,12 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
 import { getTestName } from '../../utils/tasks'
 import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
+import { createExpectPoll } from './poll'
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
+    setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test)
@@ -51,12 +52,11 @@ export function createExpect(test?: TaskPopulated) {
     addCustomEqualityTesters(customTesters)
 
   expect.soft = (...args) => {
-    const assert = expect(...args)
-    expect.setState({
-      soft: true,
-    })
-    return assert
+    // @ts-expect-error private soft access
+    return expect(...args).withContext({ soft: true }) as Assertion
   }
+
+  expect.poll = createExpectPoll(expect)
 
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)

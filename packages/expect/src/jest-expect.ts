@@ -722,12 +722,22 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.satisfy(matcher, message)
   })
 
+  // @ts-expect-error @internal
+  def('withContext', function (this: any, context: Record<string, any>) {
+    for (const key in context)
+      utils.flag(this, key, context[key])
+    return this
+  })
+
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     const error = new Error('resolves')
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
+
+    if (utils.flag(this, 'poll'))
+      throw new SyntaxError(`expect.poll() is not supported in combination with .resolves`)
 
     if (typeof obj?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
@@ -771,6 +781,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+    if (utils.flag(this, 'poll'))
+      throw new SyntaxError(`expect.poll() is not supported in combination with .rejects`)
 
     if (typeof wrapper?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)

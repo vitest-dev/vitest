@@ -59,6 +59,47 @@ test('expect.soft test', () => {
 `expect.soft` can only be used inside the [`test`](/api/#test) function.
 :::
 
+## poll
+
+- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+
+`expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
+
+If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
+
+```ts twoslash
+function asyncInjectElement() {
+  // example function
+}
+
+// ---cut---
+import { expect, test } from 'vitest'
+
+test('element exists', async () => {
+  asyncInjectElement()
+
+  await expect.poll(() => document.querySelector('.element')).toBeTruthy()
+})
+```
+
+::: warning
+`expect.poll` makes every assertion asynchronous, so do not forget to await it otherwise you might get unhandled promise rejections.
+
+`expect.poll` doesn't work with several matchers:
+
+- Snapshot matchers are not supported because they will always succeed. If your condition is flaky, consider using [`vi.waitFor`](/api/vi#vi-waitfor) instead to resolve it first:
+
+```ts
+import { expect, vi } from 'vitest'
+
+const flakyValue = await vi.waitFor(() => getFlakyValue())
+expect(flakyValue).toMatchSnapshot()
+```
+
+- `.resolves` and `.rejects` are not supported. `expect.poll` already awaits the condition if it's asynchronous.
+- `toThrow` and its aliases are not supported because the `expect.poll` condition is always resolved before the matcher gets the value
+:::
+
 ## not
 
 Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
