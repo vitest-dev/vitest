@@ -73,7 +73,6 @@ function asyncInjectElement() {
 }
 
 // ---cut---
-
 import { expect, test } from 'vitest'
 
 test('element exists', async () => {
