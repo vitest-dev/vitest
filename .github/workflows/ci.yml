@@ -91,6 +91,9 @@ jobs:
       - name: Install Playwright Dependencies
         run: pnpm exec playwright install chromium
 
+      - name: Build
+        run: pnpm run build
+
       - name: Test UI
         run: pnpm run -C packages/ui test:ui
 
