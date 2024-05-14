@@ -74,7 +74,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       })
     }
     else {
-      const content = buffer.map(i => String(i)).join('')
+      const content = buffer.map(i => String(i[0])).join('')
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
