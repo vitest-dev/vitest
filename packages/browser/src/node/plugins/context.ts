@@ -12,7 +12,7 @@ export default function BrowserContext(project: WorkspaceProject): Plugin {
 
   // validate names because they can't be used as identifiers
   for (const command in project.config.browser.commands) {
-    if (!/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(command))
+    if (!/^[a-z_$][\w$]*$/i.test(command))
       throw new Error(`Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`)
   }
 
@@ -44,6 +44,7 @@ const rpc = () => __vitest_worker__.rpc
 export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
+  provider: ${JSON.stringify(project.browserProvider!.name)},
   commands: {
     ${commandsCode}
   }

@@ -1,8 +1,6 @@
 import { commands, server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
 
-const provider = import.meta.env.PROVIDER || 'playwright'
-
 const { readFile, writeFile, removeFile, sendKeys, myCustomCommand } = server.commands
 
 it('can manipulate files', async () => {
@@ -71,7 +69,7 @@ it('natively presses `Tab`', async () => {
   input2.remove()
 })
 
-it.skipIf(provider === 'webdriverio')('natively presses `Shift+Tab`', async () => {
+it.skipIf(server.provider === 'webdriverio')('natively presses `Shift+Tab`', async () => {
   const input1 = document.createElement('input')
   const input2 = document.createElement('input')
   document.body.append(input1, input2)
@@ -93,7 +91,7 @@ it.skipIf(provider === 'webdriverio')('natively presses `Shift+Tab`', async () =
   input2.remove()
 })
 
-it.skipIf(provider === 'webdriverio')('natively holds and then releases a key', async () => {
+it.skipIf(server.provider === 'webdriverio')('natively holds and then releases a key', async () => {
   const input = document.createElement('input')
   document.body.append(input)
   input.focus()
