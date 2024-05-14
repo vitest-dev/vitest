@@ -100,7 +100,7 @@ export function createCLI(options: CLIOptions = {}) {
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
 
-    const banner = info.find(current => /^vitest\/[0-9]+\.[0-9]+\.[0-9]+$/.test(current.body))
+    const banner = info.find(current => /^vitest\/\d+\.\d+\.\d+$/.test(current.body))
     function addBannerWarning(warning: string) {
       if (typeof banner?.body === 'string') {
         if (banner?.body.includes(warning))

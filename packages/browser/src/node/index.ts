@@ -242,7 +242,7 @@ function wrapConfig(config: ResolvedConfig): ResolvedConfig {
 }
 
 function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
+  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? '')
 }
 
 async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteDevServer) {

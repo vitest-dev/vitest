@@ -241,7 +241,7 @@ export function fnNameFor(func: Function) {
 
   const matches = functionToString
     .call(func)
-    .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/)
+    .match(/^(?:async)?\s*function\s*(?:\*\s*)?([\w$]+)\s*\(/)
   return matches ? matches[1] : '<anonymous>'
 }
 

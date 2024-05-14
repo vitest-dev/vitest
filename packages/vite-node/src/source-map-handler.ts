@@ -79,10 +79,10 @@ function supportRelativeURL(file: string, url: string) {
   if (!file)
     return url
   const dir = path.dirname(file)
-  const match = /^\w+:\/\/[^\/]*/.exec(dir)
+  const match = /^\w+:\/\/[^/]*/.exec(dir)
   let protocol = match ? match[0] : ''
   const startPath = dir.slice(protocol.length)
-  if (protocol && /^\/\w\:/.test(startPath)) {
+  if (protocol && /^\/\w:/.test(startPath)) {
     // handle file:///C:/ paths
     protocol += '/'
     return protocol + path.resolve(dir.slice(protocol.length), url).replace(/\\/g, '/')
@@ -95,7 +95,7 @@ function retrieveSourceMapURL(source: string) {
   const fileData = retrieveFile(source)
   if (!fileData)
     return null
-  const re = /(?:\/\/[@#][\s]*sourceMappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*sourceMappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/mg
+  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
   // Keep executing the search to find the *last* sourceMappingURL to avoid
   // picking up sourceMappingURLs from comments, strings, etc.
   let lastMatch, match
@@ -349,7 +349,7 @@ function wrapCallSite(frame: CallSite, state: State) {
     // Header removed in node at ^10.16 || >=11.11.0
     // v11 is not an LTS candidate, we can just test the one version with it.
     // Test node versions for: 10.16-19, 10.20+, 12-19, 20-99, 100+, or 11.11
-    const noHeader = /^v(10\.1[6-9]|10\.[2-9][0-9]|10\.[0-9]{3,}|1[2-9]\d*|[2-9]\d|\d{3,}|11\.11)/
+    const noHeader = /^v(?:10\.1[6-9]|10\.[2-9]\d|10\.\d{3,}|1[2-9]\d*|[2-9]\d|\d{3,}|11\.11)/
     const headerLength = noHeader.test(globalProcessVersion()) ? 0 : 62
     if (line === 1 && column > headerLength && !frame.isEval())
       column -= headerLength

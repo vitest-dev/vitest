@@ -26,6 +26,7 @@ export function slash(path: string) {
 // convert RegExp.toString to RegExp
 export function parseRegexp(input: string): RegExp {
   // Parse input
+  // eslint-disable-next-line regexp/no-misleading-capturing-group
   const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
 
   // match nothing
@@ -33,6 +34,7 @@ export function parseRegexp(input: string): RegExp {
     return /$^/
 
   // Invalid flags
+  // eslint-disable-next-line regexp/optimal-quantifier-concatenation
   if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3]))
     return RegExp(input)
 

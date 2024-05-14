@@ -112,7 +112,7 @@ export default ({ watch }) => defineConfig([
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
-              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
+              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w-]+$/))),
           )
           if (parts.length)
             return `chunks/${parts.slice(-2).join('-')}.[hash].js`
@@ -231,7 +231,7 @@ function licensePlugin() {
                 += `\n${
                   licenseText
                     .trim()
-                    .replace(/(\r\n|\r)/gm, '\n')
+                    .replace(/(\r\n|\r)/g, '\n')
                     .split('\n')
                     .map(line => line ? `> ${line}` : '>')
                     .join('\n')
