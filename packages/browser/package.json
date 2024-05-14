@@ -24,6 +24,10 @@
       "types": "./providers.d.ts",
       "default": "./dist/providers.js"
     },
+    "./context": {
+      "types": "./context.d.ts",
+      "default": "./context.js"
+    },
     "./providers/webdriverio": {
       "types": "./providers/webdriverio.d.ts"
     },

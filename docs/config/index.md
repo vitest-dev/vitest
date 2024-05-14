@@ -1679,6 +1679,13 @@ Custom scripts that should be injected into the tester HTML before the tests env
 
 The script `src` and `content` will be processed by Vite plugins.
 
+#### browser.commands <Version>2.0.0</Version> {#browser-commands}
+
+- **Type:** `Record<string, BrowserCommand>`
+- **Default:** `{ readFile, writeFile, ... }`
+
+Custom [commands](/guide/browser#commands) that can be import during browser tests from `@vitest/browser/commands`.
+
 ### clearMocks
 
 - **Type:** `boolean`

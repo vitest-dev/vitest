@@ -5,6 +5,7 @@
     "paths": {
       "#src/*": ["./src/*"]
     },
+    "types": ["vite/client"],
     "esModuleInterop": true
   }
 }

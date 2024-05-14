@@ -151,6 +151,18 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
 
         // TODO: have a separate websocket conection for private browser API
+        triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
+          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browserProvider)
+            throw new Error('Commands are only available for browser tests.')
+          const commands = vitestOrWorkspace.config.browser?.commands
+          if (!commands || !commands[command])
+            throw new Error(`Unknown command "${command}".`)
+          return commands[command]({
+            testPath,
+            project: vitestOrWorkspace,
+            provider: vitestOrWorkspace.browserProvider,
+          }, ...payload)
+        },
         getBrowserFiles() {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`getBrowserTestFiles` is only available in the browser API')
