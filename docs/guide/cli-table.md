@@ -120,3 +120,4 @@
 | `--no-color` | Removes colors from the console output |
 | `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
 | `--standalone` | Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`) |
+| `--mergeReports [path]` | Paths to blob reports directory. If this options is used, Vitest won't run any tests, it will only report previously recorded tests |

@@ -18,11 +18,15 @@ const WAIT_FOR_CHANGE_CANCELLED = `\n${c.bold(c.inverse(c.red(' CANCELLED ')))}$
 
 const LAST_RUN_LOG_TIMEOUT = 1_500
 
+export interface BaseOptions {
+  isTTY?: boolean
+}
+
 export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  isTTY = isNode && process.stdout?.isTTY && !isCI
+  isTTY: boolean
   ctx: Vitest = undefined!
 
   private _filesInWatchMode = new Map<string, number>()
@@ -32,7 +36,8 @@ export abstract class BaseReporter implements Reporter {
   private _timeStart = new Date()
   private _offUnhandledRejection?: () => void
 
-  constructor() {
+  constructor(options: BaseOptions = {}) {
+    this.isTTY = options.isTTY ?? (isNode && process.stdout?.isTTY && !isCI)
     this.registerUnhandledRejection()
   }
 

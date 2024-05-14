@@ -22,3 +22,4 @@ docs/public/sponsors
 .eslintcache
 docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache
+.vitest-reports

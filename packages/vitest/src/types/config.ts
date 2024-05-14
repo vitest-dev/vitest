@@ -864,6 +864,12 @@ export interface UserConfig extends InlineConfig {
    * benchmark.outputJson option exposed at the top level for cli
    */
   outputJson?: string
+
+  /**
+   * Directory of blob reports to merge
+   * @default '.vitest-reports'
+   */
+  mergeReports?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {

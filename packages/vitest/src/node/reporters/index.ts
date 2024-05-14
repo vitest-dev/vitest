@@ -9,8 +9,10 @@ import { type JUnitOptions, JUnitReporter } from './junit'
 import { TapFlatReporter } from './tap-flat'
 import { HangingProcessReporter } from './hanging-process'
 import { GithubActionsReporter } from './github-actions'
-import type { BaseReporter } from './base'
+import type { BaseOptions, BaseReporter } from './base'
 import type { HTMLOptions } from './html'
+import type { BlobOptions } from './blob'
+import { BlobReporter } from './blob'
 
 export {
   DefaultReporter,
@@ -31,6 +33,7 @@ export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './jso
 export const ReportersMap = {
   'default': DefaultReporter,
   'basic': BasicReporter,
+  'blob': BlobReporter,
   'verbose': VerboseReporter,
   'dot': DotReporter,
   'json': JsonReporter,
@@ -44,11 +47,12 @@ export const ReportersMap = {
 export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
-  'default': never
-  'basic': never
+  'default': BaseOptions
+  'basic': BaseOptions
   'verbose': never
-  'dot': never
+  'dot': BaseOptions
   'json': JsonOptions
+  'blob': BlobOptions
   'tap': never
   'tap-flat': never
   'junit': JUnitOptions

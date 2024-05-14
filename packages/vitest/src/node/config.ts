@@ -139,6 +139,9 @@ export function resolveConfig(
   if (resolved.standalone && !resolved.watch)
     throw new Error(`Vitest standalone mode requires --watch`)
 
+  if (resolved.mergeReports && resolved.watch)
+    throw new Error(`Cannot merge reports with --watch enabled`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 
