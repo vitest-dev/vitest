@@ -35,8 +35,14 @@ test('simple usage', async () => {
 
 test('timeout', async () => {
   await expect(async () => {
-    await expect.poll(() => false, { timeout: 100 }).toBe(true)
-  }).rejects.toThrowError('Matcher did not succeed in 100ms')
+    await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
+  }).rejects.toThrowError(expect.objectContaining({
+    message: 'Matcher did not succeed in 100ms',
+    stack: expect.stringContaining('test/expect-poll.test.ts:38:68'),
+    cause: expect.objectContaining({
+      message: 'expected false to be true // Object.is equality',
+    }),
+  }))
 })
 
 test('interval', async () => {

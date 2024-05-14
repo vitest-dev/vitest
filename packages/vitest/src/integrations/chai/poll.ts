@@ -36,6 +36,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
+        if (key === 'assert')
+          return result
+
         if (typeof key === 'string' && unsupported.includes(key))
           throw new SyntaxError(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
 
@@ -44,8 +47,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           return new Promise((resolve, reject) => {
             let intervalId: any
             let lastError: any
-            const { setTimeout } = getSafeTimers()
-            setTimeout(() => {
+            const { setTimeout, clearTimeout } = getSafeTimers()
+            const timeoutId = setTimeout(() => {
               clearTimeout(intervalId)
               reject(copyStackTrace(new Error(`Matcher did not succeed in ${timeout}ms`, { cause: lastError }), STACK_TRACE_ERROR))
             }, timeout)
@@ -53,6 +56,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               try {
                 chai.util.flag(this, 'object', await fn())
                 resolve(await result.call(this, ...args))
+                clearTimeout(intervalId)
+                clearTimeout(timeoutId)
               }
               catch (err) {
                 lastError = err
