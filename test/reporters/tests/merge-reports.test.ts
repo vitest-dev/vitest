@@ -18,11 +18,13 @@ test('merge reports', async () => {
   // so we need to correctly resolve it here
   const mergeReports = resolve('./fixtures/merge-reports/.vitest-reports')
 
-  const { stdout: reporterDefault, stderr: stderrDefault } = await runVitest({
+  const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
     root: './fixtures/merge-reports',
     mergeReports,
     reporters: [['default', { isTTY: false }]],
   })
+
+  expect(exitCode).toBe(1)
 
   // remove "RUN v{} path" and "Duration" because it's not stable
   const stdoutCheck = reporterDefault.split('\n').slice(2, -3).join('\n').replace(/Start at [\w\s\d:]+/, 'Start at <time>')

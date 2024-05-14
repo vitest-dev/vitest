@@ -415,7 +415,7 @@ export class Vitest {
       this.state.collectFiles(files)
     }
 
-    await this.report('onCollected', files)
+    await this.report('onCollected', files).catch(noop)
 
     for (const file of files) {
       const logs: UserConsoleLog[] = []
@@ -430,10 +430,13 @@ export class Vitest {
       logs.sort((log1, log2) => log1.time - log2.time)
 
       for (const log of logs)
-        await this.report('onUserConsoleLog', log)
+        await this.report('onUserConsoleLog', log).catch(noop)
 
-      await this.report('onTaskUpdate', taskPacks)
+      await this.report('onTaskUpdate', taskPacks).catch(noop)
     }
+
+    if (hasFailed(files))
+      process.exitCode = 1
 
     await this.report('onFinished', files, errors)
   }
