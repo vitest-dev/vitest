@@ -40,6 +40,8 @@ function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expec
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
+    soft: util.flag(assertion, 'soft') as boolean | undefined,
+    poll: util.flag(assertion, 'poll') as boolean | undefined,
   }
 
   return {

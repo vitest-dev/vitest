@@ -1,5 +1,7 @@
 import { expect, test, vi } from 'vitest'
 
+// TODO: add custom matcher test
+
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
   await expect.poll(() => false).not.toBe(true)
