@@ -70,7 +70,7 @@ test.describe('ui', () => {
     await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
   })
 
-  test.only('console', async ({ page }) => {
+  test('console', async ({ page }) => {
     await page.goto(pageUrl)
     await page.getByText('fixtures/console.test.ts').click()
     await page.getByTestId('btn-console').click()
