@@ -28,10 +28,6 @@ export default defineConfig({
 
 Some reporters can be customized by passing additional options to them. Reporter specific options are described in sections below.
 
-:::tip
-Since Vitest v1.3.0
-:::
-
 ```ts
 export default defineConfig({
   test: {

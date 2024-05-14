@@ -31,7 +31,7 @@ Or you can also set [`environmentMatchGlobs`](https://vitest.dev/config/#environ
 
 ## Custom Environment
 
-Starting from 0.23.0, you can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file (supported since 0.34.0). That package should export an object with the shape of `Environment`:
+You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
 ```ts twoslash
 import type { Environment } from 'vitest'
@@ -64,7 +64,7 @@ export default <Environment>{
 ```
 
 ::: warning
-Since 0.34.0 Vitest requires `transformMode` option on environment object. It should be equal to `ssr` or `web`. This value determines how plugins will transform source code. If it's set to `ssr`, plugin hooks will receive `ssr: true` when transforming or resolving files. Otherwise, `ssr` is set to `false`.
+Vitest requires `transformMode` option on environment object. It should be equal to `ssr` or `web`. This value determines how plugins will transform source code. If it's set to `ssr`, plugin hooks will receive `ssr: true` when transforming or resolving files. Otherwise, `ssr` is set to `false`.
 :::
 
 You also have access to default Vitest environments through `vitest/environments` entry:

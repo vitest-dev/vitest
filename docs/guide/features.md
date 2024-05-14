@@ -187,8 +187,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
-function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts twoslash
 import { bench, describe } from 'vitest'
@@ -215,7 +214,7 @@ describe('sort', () => {
 
 ## Type Testing <Badge type="warning">Experimental</Badge> {#type-testing}
 
-Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
+You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
 ```ts
 import { assertType, expectTypeOf } from 'vitest'

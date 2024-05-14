@@ -159,7 +159,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 #### deps.optimizer.{mode}.enabled
 
 - **Type:** `boolean`
-- **Default:** `false` since Vitest 1.3.0
+- **Default:** `false`
 
 Enable dependency optimization.
 
@@ -471,7 +471,7 @@ export default <Environment>{
 Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
 
 ::: tip
-Since Vitest 1.3.0 jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](https://github.com/jsdom/jsdom) instance. If you want TypeScript to recognize it, you can add `vitest/jsdom` to your `tsconfig.json` when you use this environment:
+jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](https://github.com/jsdom/jsdom) instance. If you want TypeScript to recognize it, you can add `vitest/jsdom` to your `tsconfig.json` when you use this environment:
 
 ```json
 {
@@ -1000,9 +1000,9 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Since Vitest 1.0.0-beta, global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
+Global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
 
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, since 1.0.0 you can pass down serializable data to tests via `provide` method:
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via `provide` method:
 
 :::code-group
 ```js [globalSetup.js]
@@ -1145,7 +1145,7 @@ export default defineConfig({
 #### coverage.all
 
 - **Type:** `boolean`
-- **Default:** `true` (since Vitest `1.0.0`)
+- **Default:** `true`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.all`, `--coverage.all=false`
 
@@ -1209,7 +1209,7 @@ The reporter has three different types:
   }
   ```
 
-Since Vitest 1.2.0, you can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
+You can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
 
 <!-- eslint-skip -->
 ```ts

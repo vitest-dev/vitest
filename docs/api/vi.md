@@ -65,7 +65,7 @@ vi.mock('./path/to/module.js', async (importOriginal) => {
 })
 ```
 
-Since 2.0.0, Vitest supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
+Vitest supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
 
 ```ts
 vi.mock(import('./path/to/module.js'), async (importOriginal) => {
@@ -785,8 +785,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
-Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
-It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+`vi.useFakeTimers()` does not automatically mock `process.nextTick`.
+But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
 ### vi.isFakeTimers {#vi-isfaketimers}

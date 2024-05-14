@@ -70,10 +70,6 @@ Vitest provides two different ways to help you extend the test context.
 
 ### `test.extend`
 
-::: warning
-This API is available since Vitest 0.32.3.
-:::
-
 Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you can use this method to define your own `test` API with custom fixtures and reuse it anywhere.
 
 For example, we first create `myTest` with two fixtures, `todos` and `archive`.
@@ -162,10 +158,6 @@ When using `test.extend()` with fixtures, you should always use the object destr
 :::
 
 #### Automatic fixture
-
-::: warning
-This feature is available since Vitest 1.3.0.
-:::
 
 Vitest also supports the tuple syntax for fixtures, allowing you to pass options for each fixture. For example, you can use it to explicitly initialize a fixture, even if it's not being used in tests.
 

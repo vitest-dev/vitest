@@ -47,7 +47,7 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
 
 :::code-group
 ```ts [dot-syntax] twoslash
@@ -859,7 +859,7 @@ beforeEach(async () => {
 
 Here, the `beforeEach` ensures that user is added for each test.
 
-Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+`beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
 
 ```ts
 import { beforeEach } from 'vitest'
@@ -917,7 +917,7 @@ beforeAll(async () => {
 
 Here the `beforeAll` ensures that the mock data is set up before tests run.
 
-Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+`beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
 
 ```ts
 import { beforeAll } from 'vitest'
