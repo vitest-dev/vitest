@@ -1,7 +1,5 @@
 import { expect, test, vi } from 'vitest'
 
-// TODO: add custom matcher test
-
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
   await expect.poll(() => false).not.toBe(true)
@@ -60,4 +58,22 @@ test('fake timers don\'t break it', async () => {
   vi.useRealTimers()
   const diff = Date.now() - now
   expect(diff >= 100).toBe(true)
+})
+
+test('custom matcher works correctly', async () => {
+  const fn = vi.fn()
+  let idx = 0
+  expect.extend({
+    toBeJestCompatible() {
+      idx++
+      fn({ poll: this.poll })
+      return {
+        pass: idx > 2,
+        message: () => 'ok',
+      }
+    },
+  })
+  await expect.poll(() => 1, { interval: 10 }).toBeJestCompatible()
+  expect(fn).toHaveBeenCalledTimes(3)
+  expect(fn).toHaveBeenCalledWith({ poll: true })
 })
