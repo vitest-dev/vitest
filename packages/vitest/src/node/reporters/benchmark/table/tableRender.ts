@@ -31,7 +31,7 @@ function formatFilepath(path: string) {
 
 function formatNumber(number: number) {
   const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',')
+  return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',')
     + (res[1] ? `.${res[1]}` : '')
 }
 

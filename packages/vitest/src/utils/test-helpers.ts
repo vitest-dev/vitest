@@ -30,7 +30,7 @@ export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string
     const code = await fs.readFile(file, 'utf-8')
 
     // 1. Check for control comments in the file
-    let env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1]
+    let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
     // 2. Check for globals
     if (!env) {
       for (const [glob, target] of project.config.environmentMatchGlobs || []) {

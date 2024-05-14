@@ -401,7 +401,7 @@ export class ViteNodeRunner {
 
     // remove shebang
     if (transformed[0] === '#')
-      transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
+      transformed = transformed.replace(/^#!.*/, s => ' '.repeat(s.length))
 
     await this.runModule(context, transformed)
 

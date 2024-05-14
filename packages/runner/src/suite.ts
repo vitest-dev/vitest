@@ -434,7 +434,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(
-      /\$([$\w_.]+)/g,
+      /\$([$\w.]+)/g,
       // https://github.com/chaijs/chai/pull/1490
       (_, key) => objDisplay(objectAttr(items[0], key), { truncate: runner?.config?.chaiConfig?.truncateThreshold }) as unknown as string,
     )

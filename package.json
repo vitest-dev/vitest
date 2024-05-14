@@ -37,7 +37,7 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.17.0",
+    "@antfu/eslint-config": "^2.18.0",
     "@antfu/ni": "^0.21.12",
     "@playwright/test": "^1.44.0",
     "@rollup/plugin-commonjs": "^25.0.7",

@@ -281,7 +281,7 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
 }
 
 // Define some regex patterns for matching boundaries.
-const nonAlphaNumericRegex_ = /[^a-zA-Z0-9]/
+const nonAlphaNumericRegex_ = /[^a-z0-9]/i
 const whitespaceRegex_ = /\s/
 const linebreakRegex_ = /[\r\n]/
 const blanklineEndRegex_ = /\n\r?\n$/

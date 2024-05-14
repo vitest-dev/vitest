@@ -55,7 +55,7 @@ const internalRequests = [
   '@vite/env',
 ]
 
-const internalRequestRegexp = new RegExp(`^/?(${internalRequests.join('|')})$`)
+const internalRequestRegexp = new RegExp(`^/?(?:${internalRequests.join('|')})$`)
 
 export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)

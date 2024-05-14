@@ -117,7 +117,7 @@ export function deserializeString(stringified: string): string {
 }
 
 export function escapeBacktickString(str: string): string {
-  return str.replace(/`|\\|\${/g, '\\$&')
+  return str.replace(/`|\\|\$\{/g, '\\$&')
 }
 
 function printBacktickString(str: string): string {
@@ -173,7 +173,7 @@ export function prepareExpected(expected?: string) {
   function findStartIndent() {
     // Attempts to find indentation for objects.
     // Matches the ending tag of the object.
-    const matchObject = /^( +)}\s+$/m.exec(expected || '')
+    const matchObject = /^( +)\}\s+$/m.exec(expected || '')
     const objectIndent = matchObject?.[1]?.length
 
     if (objectIndent)
@@ -191,7 +191,7 @@ export function prepareExpected(expected?: string) {
 
   if (startIndent) {
     expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +\}$/, '}')
   }
 
   return expectedTrimmed
