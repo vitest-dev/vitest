@@ -766,6 +766,13 @@ export interface InlineConfig {
   disableConsoleIntercept?: boolean
 
   /**
+   * Always print console stack traces.
+   *
+   * @default false
+   */
+  printConsoleTrace?: boolean
+
+  /**
    * Include "location" property inside the test definition
    *
    * @default false

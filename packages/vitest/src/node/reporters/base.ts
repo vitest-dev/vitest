@@ -1,9 +1,11 @@
 import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
+import { parseStacktrace } from '@vitest/utils/source-map'
+import { relative } from 'pathe'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath, toArray } from '../../utils'
 import type { Vitest } from '../../node'
-import { F_RIGHT } from '../../utils/figures'
+import { F_POINTER, F_RIGHT } from '../../utils/figures'
 import { UNKNOWN_TEST_ID } from '../../runtime/console'
 import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
@@ -200,7 +202,27 @@ export abstract class BaseReporter implements Reporter {
     const output = log.type === 'stdout' ? this.ctx.logger.outputStream : this.ctx.logger.errorStream
 
     // @ts-expect-error -- write() method has different signature on the union type
-    output.write(`${header}\n${log.content}\n`)
+    output.write(`${header}\n${log.content}${log.origin ? '' : '\n'}`)
+
+    if (log.origin) {
+      const project = log.taskId
+        ? this.ctx.getProjectByTaskId(log.taskId)
+        : this.ctx.getCoreWorkspaceProject()
+      const stack = parseStacktrace(log.origin, {
+        getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+        frameFilter: project.config.onStackTrace,
+      })
+      const highlight = task ? stack.find(i => i.file === task.file.filepath) : null
+      for (const frame of stack) {
+        const color = frame === highlight ? c.cyan : c.gray
+        const path = relative(project.config.root, frame.file)
+
+        // @ts-expect-error -- write() method has different signature on the union type
+        output.write(color(` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`].filter(Boolean).join(' ')}\n`))
+      }
+      // @ts-expect-error -- write() method has different signature on the union type
+      output.write('\n')
+    }
   }
 
   shouldLog(log: UserConsoleLog) {

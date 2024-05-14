@@ -35,6 +35,7 @@ export interface Environment {
 
 export interface UserConsoleLog {
   content: string
+  origin?: string
   type: 'stdout' | 'stderr'
   taskId?: string
   time: number

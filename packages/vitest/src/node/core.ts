@@ -315,6 +315,7 @@ export class Vitest {
       'passWithNoTests',
       'bail',
       'isolate',
+      'printConsoleTrace',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {

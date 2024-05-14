@@ -57,33 +57,50 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
     const buffer = stdoutBuffer.get(taskId)
     if (!buffer)
       return
-    const content = buffer.map(i => String(i)).join('')
-    const timer = timers.get(taskId)!
-    state().rpc.onUserConsoleLog({
-      type: 'stdout',
-      content: content || '<empty line>',
-      taskId,
-      time: timer.stdoutTime || RealDate.now(),
-      size: buffer.length,
-    })
-    stdoutBuffer.set(taskId, [])
-    timer.stdoutTime = 0
+    sendBuffer(buffer, taskId, 'stdout')
   }
+
   function sendStderr(taskId: string) {
     const buffer = stderrBuffer.get(taskId)
     if (!buffer)
       return
-    const content = buffer.map(i => String(i)).join('')
+    sendBuffer(buffer, taskId, 'stderr')
+  }
+
+  function sendBuffer(buffer: any[], taskId: string, type: 'stdout' | 'stderr') {
+    if (state().config.printConsoleTrace) {
+      buffer.forEach(([buffer, origin]) => {
+        sendLog(type, taskId, String(buffer), buffer.length, origin)
+      })
+    }
+    else {
+      const content = buffer.map(i => String(i)).join('')
+      sendLog(type, taskId, content, buffer.length)
+    }
+    const timer = timers.get(taskId)!
+    stderrBuffer.set(taskId, [])
+    if (type === 'stderr')
+      timer.stderrTime = 0
+    else
+      timer.stdoutTime = 0
+  }
+
+  function sendLog(
+    type: 'stderr' | 'stdout',
+    taskId: string,
+    content: string,
+    size: number,
+    origin?: string,
+  ) {
     const timer = timers.get(taskId)!
     state().rpc.onUserConsoleLog({
-      type: 'stderr',
+      type,
       content: content || '<empty line>',
       taskId,
       time: timer.stderrTime || RealDate.now(),
-      size: buffer.length,
+      size,
+      origin,
     })
-    stderrBuffer.set(taskId, [])
-    timer.stderrTime = 0
   }
 
   const stdout = new Writable({
@@ -103,7 +120,16 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         buffer = []
         stdoutBuffer.set(id, buffer)
       }
-      buffer.push(data)
+      if (state().config.printConsoleTrace) {
+        const limit = Error.stackTraceLimit
+        Error.stackTraceLimit = 20
+        const trace = new Error('STACK_TRACE').stack?.split('\n').slice(7).join('\n')
+        Error.stackTraceLimit = limit
+        buffer.push([data, trace])
+      }
+      else {
+        buffer.push([data, undefined])
+      }
       schedule(id)
       callback()
     },
@@ -125,7 +151,16 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         buffer = []
         stderrBuffer.set(id, buffer)
       }
-      buffer.push(data)
+      if (state().config.printConsoleTrace) {
+        const limit = Error.stackTraceLimit
+        Error.stackTraceLimit = 20
+        const trace = new Error('STACK_TRACE').stack?.split('\n').slice(7).join('\n')
+        Error.stackTraceLimit = limit
+        buffer.push([data, trace])
+      }
+      else {
+        buffer.push([data, undefined])
+      }
       schedule(id)
       callback()
     },
