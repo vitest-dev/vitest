@@ -1,17 +1,19 @@
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Benchmark, BenchmarkResult, Task } from '../../../../types'
+import type { BenchmarkResult, Task } from '../../../../types'
 import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
+import type { FlatBenchmarkReport } from '.'
 
 export interface TableRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
   slowTestThreshold: number
+  compare?: FlatBenchmarkReport
 }
 
 const outputMap = new WeakMap<Task, string>()
@@ -35,19 +37,6 @@ function formatNumber(number: number) {
 
 const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
 
-function renderTableHead(tasks: Task[]) {
-  const benches = tasks
-    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
-    .filter(notNullish)
-  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
-  return `${' '.repeat(3)}${tableHead.map((i, idx) => {
-    const width = Math.max(...allItems.map(i => i[idx].length))
-    return idx
-      ? i.padStart(width, ' ')
-      : i.padEnd(width, ' ') // name
-  }).map(c.bold).join('  ')}`
-}
-
 function renderBenchmarkItems(result: BenchmarkResult) {
   return [
     result.name,
@@ -63,23 +52,32 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     result.samples.length.toString(),
   ]
 }
-function renderBenchmark(task: Benchmark, tasks: Task[]): string {
-  const result = task.result?.benchmark
-  if (!result)
-    return task.name
 
-  const benches = tasks
-    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
-    .filter(notNullish)
-  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
-  const items = renderBenchmarkItems(result)
-  const padded = items.map((i, idx) => {
-    const width = Math.max(...allItems.map(i => i[idx].length))
-    return idx
-      ? i.padStart(width, ' ')
-      : i.padEnd(width, ' ') // name
-  })
+function computeColumnWidths(results: BenchmarkResult[]): number[] {
+  const rows = [
+    tableHead,
+    ...results.map(v => renderBenchmarkItems(v)),
+  ]
+  return Array.from(
+    tableHead,
+    (_, i) => Math.max(...rows.map(row => stripAnsi(row[i]).length)),
+  )
+}
 
+function padRow(row: string[], widths: number[]) {
+  return row.map((v, i) =>
+    i
+      ? v.padStart(widths[i], ' ')
+      : v.padEnd(widths[i], ' '), // name
+  )
+}
+
+function renderTableHead(widths: number[]) {
+  return ' '.repeat(3) + padRow(tableHead, widths).map(c.bold).join('  ')
+}
+
+function renderBenchmark(result: BenchmarkResult, widths: number[]) {
+  const padded = padRow(renderBenchmarkItems(result), widths)
   return [
     padded[0], // name
     c.blue(padded[1]), // hz
@@ -92,23 +90,42 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.cyan(padded[8]), // p999
     c.dim(padded[9]), // rem
     c.dim(padded[10]), // sample
-    result.rank === 1
-      ? c.bold(c.green(' fastest'))
-      : (result.rank === benches.length && benches.length > 2)
-          ? c.bold(c.gray(' slowest'))
-          : '',
   ].join('  ')
 }
 
 export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0, shallow = false): string {
   const output: string[] = []
 
+  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
+  for (const t of tasks) {
+    if (t.meta.benchmark && t.result?.benchmark) {
+      benchMap[t.id] = {
+        current: t.result.benchmark,
+      }
+      const baseline = options.compare?.[t.id]
+      if (baseline) {
+        benchMap[t.id].baseline = {
+          ...baseline,
+          samples: Array(baseline.sampleCount),
+        }
+      }
+    }
+  }
+  const benchCount = Object.entries(benchMap).length
+
+  // compute column widths
+  const columnWidths = computeColumnWidths(
+    Object.values(benchMap)
+      .flatMap(v => [v.current, v.baseline])
+      .filter(notNullish),
+  )
+
   let idx = 0
   for (const task of tasks) {
     const padding = '  '.repeat(level ? 1 : 0)
     let prefix = ''
     if (idx === 0 && task.meta?.benchmark)
-      prefix += `${renderTableHead(tasks)}\n${padding}`
+      prefix += `${renderTableHead(columnWidths)}\n${padding}`
 
     prefix += ` ${getStateSymbol(task)} `
 
@@ -131,11 +148,37 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
     if (level === 0)
       name = formatFilepath(name)
 
-    const body = task.meta?.benchmark
-      ? renderBenchmark(task as Benchmark, tasks)
-      : name
+    const bench = benchMap[task.id]
+    if (bench) {
+      let body = renderBenchmark(bench.current, columnWidths)
+      if (options.compare && bench.baseline) {
+        if (bench.current.hz) {
+          const diff = bench.current.hz / bench.baseline.hz
+          const diffFixed = diff.toFixed(2)
+          if (diffFixed === '1.0.0')
+            body += `  ${c.gray(`[${diffFixed}x]`)}`
+          if (diff > 1)
+            body += `  ${c.blue(`[${diffFixed}x] ⇑`)}`
+          else
+            body += `  ${c.red(`[${diffFixed}x] ⇓`)}`
+        }
+        output.push(padding + prefix + body + suffix)
+        const bodyBaseline = renderBenchmark(bench.baseline, columnWidths)
+        output.push(`${padding}   ${bodyBaseline}  ${c.dim('(baseline)')}`)
+      }
+      else {
+        if (bench.current.rank === 1 && benchCount > 1)
+          body += `  ${c.bold(c.green(' fastest'))}`
 
-    output.push(padding + prefix + body + suffix)
+        if (bench.current.rank === benchCount && benchCount > 2)
+          body += `  ${c.bold(c.gray(' slowest'))}`
+
+        output.push(padding + prefix + body + suffix)
+      }
+    }
+    else {
+      output.push(padding + prefix + name + suffix)
+    }
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -183,7 +226,7 @@ export function createTableRenderer(_tasks: Task[], options: TableRendererOption
       update()
       return this
     },
-    async stop() {
+    stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined

@@ -18,10 +18,13 @@ test.each(configs)('should isolate environments when %s', async (config) => {
 
   expect(stderr).toBe('')
 
-  expect(stdout).toContain('✓ test/node.test.ts')
-  expect(stdout).toContain('✓ test/jsdom.test.ts')
-  expect(stdout).toContain('✓ test/happy-dom.test.ts')
-  expect(stdout).toContain('✓ test/workspace-project.test.ts')
+  expect(stdout).toContain('✓ |Project #1| test/node.test.ts')
+  expect(stdout).toContain('✓ |Project #1| test/jsdom.test.ts')
+  expect(stdout).toContain('✓ |Project #2| test/jsdom.test.ts')
+  expect(stdout).toContain('✓ |Project #1| test/happy-dom.test.ts')
+  expect(stdout).toContain('✓ |Project #2| test/happy-dom.test.ts')
+  expect(stdout).toContain('✓ |Project #1| test/workspace-project.test.ts')
+  expect(stdout).toContain('✓ |Project #2| test/workspace-project.test.ts')
   expect(stdout).toContain('Test Files  8 passed (8)')
   expect(stdout).toContain('Tests  8 passed (8)')
 })

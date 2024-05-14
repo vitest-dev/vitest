@@ -16,7 +16,7 @@ import type { Logger } from './logger'
 
 function resolvePath(path: string, root: string) {
   return normalize(
-    resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
   )
 }
@@ -136,6 +136,9 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.standalone && !resolved.watch)
+    throw new Error(`Vitest standalone mode requires --watch`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 
@@ -163,11 +166,6 @@ export function resolveConfig(
       throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
-
-  // TODO: V2.0.0 remove
-  // @ts-expect-error -- check for removed API option
-  if (resolved.coverage.provider === 'c8')
-    throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
@@ -247,6 +245,9 @@ export function resolveConfig(
 
   if (resolved.runner)
     resolved.runner = resolvePath(resolved.runner, resolved.root)
+
+  if (resolved.snapshotEnvironment)
+    resolved.snapshotEnvironment = resolvePath(resolved.snapshotEnvironment, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -375,6 +376,12 @@ export function resolveConfig(
 
     if (options.outputFile)
       resolved.benchmark.outputFile = options.outputFile
+
+    // --compare from cli
+    if (options.compare)
+      resolved.benchmark.compare = options.compare
+    if (options.outputJson)
+      resolved.benchmark.outputJson = options.outputJson
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
@@ -501,7 +508,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
-  resolved.sequence.hooks ??= 'parallel'
+  resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer)
     resolved.sequence.seed ??= Date.now()
 

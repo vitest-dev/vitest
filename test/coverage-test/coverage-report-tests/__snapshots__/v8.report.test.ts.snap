@@ -173,16 +173,13 @@ exports[`v8 json report 1`] = `
     "path": "<process-cwd>/src/Counter/Counter.component.ts",
     "s": {
       "0": 1,
-      "1": 1,
       "10": 1,
       "11": 1,
       "12": 0,
       "13": 0,
-      "14": 1,
       "15": 1,
       "16": 2,
       "17": 2,
-      "18": 1,
       "19": 1,
       "2": 1,
       "20": 0,
@@ -190,12 +187,10 @@ exports[`v8 json report 1`] = `
       "22": 1,
       "23": 1,
       "3": 1,
-      "4": 1,
       "5": 1,
       "6": 1,
       "7": 1,
       "8": 1,
-      "9": 1,
     },
     "statementMap": {
       "0": {
@@ -206,16 +201,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 0,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
         },
       },
       "10": {
@@ -258,16 +243,6 @@ exports[`v8 json report 1`] = `
           "line": 14,
         },
       },
-      "14": {
-        "end": {
-          "column": 0,
-          "line": 15,
-        },
-        "start": {
-          "column": 0,
-          "line": 15,
-        },
-      },
       "15": {
         "end": {
           "column": 21,
@@ -296,16 +271,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 18,
-        },
-      },
-      "18": {
-        "end": {
-          "column": 0,
-          "line": 19,
-        },
-        "start": {
-          "column": 0,
-          "line": 19,
         },
       },
       "19": {
@@ -378,16 +343,6 @@ exports[`v8 json report 1`] = `
           "line": 4,
         },
       },
-      "4": {
-        "end": {
-          "column": 0,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
-        },
-      },
       "5": {
         "end": {
           "column": 11,
@@ -426,16 +381,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 9,
-        },
-      },
-      "9": {
-        "end": {
-          "column": 0,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
         },
       },
     },
@@ -536,18 +481,10 @@ exports[`v8 json report 1`] = `
     "path": "<process-cwd>/src/Counter/Counter.vue",
     "s": {
       "0": 1,
-      "1": 1,
-      "10": 1,
-      "11": 1,
-      "12": 1,
-      "13": 1,
-      "2": 1,
       "3": 1,
       "4": 1,
       "5": 1,
-      "6": 1,
       "7": 1,
-      "8": 1,
       "9": 1,
     },
     "statementMap": {
@@ -559,66 +496,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 0,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
-      "10": {
-        "end": {
-          "column": 14,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
-        },
-      },
-      "11": {
-        "end": {
-          "column": 25,
-          "line": 12,
-        },
-        "start": {
-          "column": 0,
-          "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 8,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
-      "13": {
-        "end": {
-          "column": 11,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 10,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
         },
       },
       "3": {
@@ -651,16 +528,6 @@ exports[`v8 json report 1`] = `
           "line": 6,
         },
       },
-      "6": {
-        "end": {
-          "column": 0,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
-        },
-      },
       "7": {
         "end": {
           "column": 25,
@@ -669,16 +536,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 8,
-        },
-      },
-      "8": {
-        "end": {
-          "column": 27,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
         },
       },
       "9": {
@@ -702,8 +559,6 @@ exports[`v8 json report 1`] = `
     "path": "<process-cwd>/src/Counter/index.ts",
     "s": {
       "0": 1,
-      "1": 1,
-      "2": 1,
     },
     "statementMap": {
       "0": {
@@ -714,26 +569,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 0,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 21,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
         },
       },
     },
@@ -779,24 +614,10 @@ exports[`v8 json report 1`] = `
     "s": {
       "0": 1,
       "1": 1,
-      "10": 1,
       "11": 1,
-      "12": 1,
-      "13": 1,
-      "14": 1,
-      "15": 1,
-      "16": 1,
-      "17": 1,
-      "18": 1,
-      "19": 1,
-      "2": 1,
-      "3": 1,
       "4": 1,
       "5": 1,
-      "6": 0,
       "7": 0,
-      "8": 1,
-      "9": 1,
     },
     "statementMap": {
       "0": {
@@ -819,16 +640,6 @@ exports[`v8 json report 1`] = `
           "line": 2,
         },
       },
-      "10": {
-        "end": {
-          "column": 10,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
-        },
-      },
       "11": {
         "end": {
           "column": 15,
@@ -837,106 +648,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 11,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
-      "13": {
-        "end": {
-          "column": 0,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
-      "14": {
-        "end": {
-          "column": 90,
-          "line": 15,
-        },
-        "start": {
-          "column": 0,
-          "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 25,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
-        },
-      },
-      "16": {
-        "end": {
-          "column": 6,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
-        },
-      },
-      "17": {
-        "end": {
-          "column": 25,
-          "line": 18,
-        },
-        "start": {
-          "column": 0,
-          "line": 18,
-        },
-      },
-      "18": {
-        "end": {
-          "column": 1,
-          "line": 19,
-        },
-        "start": {
-          "column": 0,
-          "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 8,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 0,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 31,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
         },
       },
       "4": {
@@ -959,16 +670,6 @@ exports[`v8 json report 1`] = `
           "line": 6,
         },
       },
-      "6": {
-        "end": {
-          "column": 4,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
-        },
-      },
       "7": {
         "end": {
           "column": 36,
@@ -977,26 +678,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 8,
-        },
-      },
-      "8": {
-        "end": {
-          "column": 9,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
-        },
-      },
-      "9": {
-        "end": {
-          "column": 0,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
         },
       },
     },
@@ -1042,21 +723,13 @@ exports[`v8 json report 1`] = `
     "s": {
       "0": 1,
       "1": 1,
-      "10": 1,
-      "11": 1,
       "12": 1,
       "13": 1,
-      "14": 1,
       "15": 1,
-      "16": 1,
-      "2": 1,
       "3": 1,
-      "4": 1,
       "5": 1,
       "6": 1,
-      "7": 1,
       "8": 1,
-      "9": 1,
     },
     "statementMap": {
       "0": {
@@ -1079,26 +752,6 @@ exports[`v8 json report 1`] = `
           "line": 2,
         },
       },
-      "10": {
-        "end": {
-          "column": 0,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
-        },
-      },
-      "11": {
-        "end": {
-          "column": 10,
-          "line": 12,
-        },
-        "start": {
-          "column": 0,
-          "line": 12,
-        },
-      },
       "12": {
         "end": {
           "column": 53,
@@ -1119,16 +772,6 @@ exports[`v8 json report 1`] = `
           "line": 14,
         },
       },
-      "14": {
-        "end": {
-          "column": 6,
-          "line": 15,
-        },
-        "start": {
-          "column": 0,
-          "line": 15,
-        },
-      },
       "15": {
         "end": {
           "column": 11,
@@ -1139,26 +782,6 @@ exports[`v8 json report 1`] = `
           "line": 16,
         },
       },
-      "16": {
-        "end": {
-          "column": 11,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 0,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
       "3": {
         "end": {
           "column": 46,
@@ -1167,16 +790,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 4,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 0,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
         },
       },
       "5": {
@@ -1199,16 +812,6 @@ exports[`v8 json report 1`] = `
           "line": 7,
         },
       },
-      "7": {
-        "end": {
-          "column": 0,
-          "line": 8,
-        },
-        "start": {
-          "column": 0,
-          "line": 8,
-        },
-      },
       "8": {
         "end": {
           "column": 19,
@@ -1217,16 +820,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 9,
-        },
-      },
-      "9": {
-        "end": {
-          "column": 9,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
         },
       },
     },
@@ -1435,31 +1028,22 @@ exports[`v8 json report 1`] = `
     "path": "<process-cwd>/src/decorators.ts",
     "s": {
       "0": 1,
-      "1": 1,
-      "10": 0,
       "11": 0,
       "12": 0,
       "13": 1,
       "14": 1,
-      "15": 1,
       "16": 1,
       "17": 1,
       "18": 1,
       "19": 1,
       "2": 1,
       "20": 1,
-      "21": 1,
-      "22": 1,
-      "23": 1,
       "24": 1,
-      "25": 1,
       "26": 1,
       "3": 1,
       "4": 1,
-      "5": 1,
       "6": 1,
       "7": 1,
-      "8": 1,
       "9": 1,
     },
     "statementMap": {
@@ -1471,26 +1055,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 14,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
-      "10": {
-        "end": {
-          "column": 23,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
         },
       },
       "11": {
@@ -1531,16 +1095,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 0,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
         },
       },
       "16": {
@@ -1603,36 +1157,6 @@ exports[`v8 json report 1`] = `
           "line": 21,
         },
       },
-      "21": {
-        "end": {
-          "column": 0,
-          "line": 22,
-        },
-        "start": {
-          "column": 0,
-          "line": 22,
-        },
-      },
-      "22": {
-        "end": {
-          "column": 24,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
-        },
-      },
-      "23": {
-        "end": {
-          "column": 0,
-          "line": 24,
-        },
-        "start": {
-          "column": 0,
-          "line": 24,
-        },
-      },
       "24": {
         "end": {
           "column": 36,
@@ -1641,16 +1165,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 0,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
         },
       },
       "26": {
@@ -1683,16 +1197,6 @@ exports[`v8 json report 1`] = `
           "line": 5,
         },
       },
-      "5": {
-        "end": {
-          "column": 21,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
-        },
-      },
       "6": {
         "end": {
           "column": 21,
@@ -1711,16 +1215,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 8,
-        },
-      },
-      "8": {
-        "end": {
-          "column": 0,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
         },
       },
       "9": {
@@ -2259,50 +1753,28 @@ exports[`v8 json report 1`] = `
       "0": 1,
       "1": 1,
       "10": 1,
-      "11": 1,
-      "12": 1,
-      "13": 1,
-      "14": 1,
-      "15": 1,
       "16": 1,
-      "17": 1,
       "18": 1,
-      "19": 1,
       "2": 1,
       "20": 1,
       "21": 1,
-      "22": 1,
       "23": 1,
       "24": 1,
-      "25": 1,
       "26": 1,
       "27": 1,
-      "28": 1,
       "29": 1,
-      "3": 1,
       "30": 1,
-      "31": 1,
       "32": 1,
-      "33": 1,
-      "34": 1,
-      "35": 1,
-      "36": 1,
-      "37": 1,
       "38": 1,
-      "39": 1,
       "4": 1,
       "40": 1,
-      "41": 1,
       "42": 1,
       "43": 1,
-      "44": 1,
       "45": 1,
       "46": 1,
       "5": 1,
-      "6": 1,
       "7": 1,
       "8": 1,
-      "9": 1,
     },
     "statementMap": {
       "0": {
@@ -2335,56 +1807,6 @@ exports[`v8 json report 1`] = `
           "line": 11,
         },
       },
-      "11": {
-        "end": {
-          "column": 53,
-          "line": 12,
-        },
-        "start": {
-          "column": 0,
-          "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 23,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
-      "13": {
-        "end": {
-          "column": 23,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
-      "14": {
-        "end": {
-          "column": 1,
-          "line": 15,
-        },
-        "start": {
-          "column": 0,
-          "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 23,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
-        },
-      },
       "16": {
         "end": {
           "column": 20,
@@ -2395,16 +1817,6 @@ exports[`v8 json report 1`] = `
           "line": 17,
         },
       },
-      "17": {
-        "end": {
-          "column": 0,
-          "line": 18,
-        },
-        "start": {
-          "column": 0,
-          "line": 18,
-        },
-      },
       "18": {
         "end": {
           "column": 40,
@@ -2413,16 +1825,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 0,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
         },
       },
       "2": {
@@ -2455,16 +1857,6 @@ exports[`v8 json report 1`] = `
           "line": 22,
         },
       },
-      "22": {
-        "end": {
-          "column": 0,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
-        },
-      },
       "23": {
         "end": {
           "column": 18,
@@ -2483,16 +1875,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 0,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
         },
       },
       "26": {
@@ -2515,16 +1897,6 @@ exports[`v8 json report 1`] = `
           "line": 28,
         },
       },
-      "28": {
-        "end": {
-          "column": 0,
-          "line": 29,
-        },
-        "start": {
-          "column": 0,
-          "line": 29,
-        },
-      },
       "29": {
         "end": {
           "column": 27,
@@ -2533,16 +1905,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 30,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 0,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
         },
       },
       "30": {
@@ -2555,16 +1917,6 @@ exports[`v8 json report 1`] = `
           "line": 31,
         },
       },
-      "31": {
-        "end": {
-          "column": 0,
-          "line": 32,
-        },
-        "start": {
-          "column": 0,
-          "line": 32,
-        },
-      },
       "32": {
         "end": {
           "column": 27,
@@ -2575,56 +1927,6 @@ exports[`v8 json report 1`] = `
           "line": 33,
         },
       },
-      "33": {
-        "end": {
-          "column": 53,
-          "line": 34,
-        },
-        "start": {
-          "column": 0,
-          "line": 34,
-        },
-      },
-      "34": {
-        "end": {
-          "column": 37,
-          "line": 35,
-        },
-        "start": {
-          "column": 0,
-          "line": 35,
-        },
-      },
-      "35": {
-        "end": {
-          "column": 23,
-          "line": 36,
-        },
-        "start": {
-          "column": 0,
-          "line": 36,
-        },
-      },
-      "36": {
-        "end": {
-          "column": 1,
-          "line": 37,
-        },
-        "start": {
-          "column": 0,
-          "line": 37,
-        },
-      },
-      "37": {
-        "end": {
-          "column": 23,
-          "line": 38,
-        },
-        "start": {
-          "column": 0,
-          "line": 38,
-        },
-      },
       "38": {
         "end": {
           "column": 20,
@@ -2633,16 +1935,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 39,
-        },
-      },
-      "39": {
-        "end": {
-          "column": 0,
-          "line": 40,
-        },
-        "start": {
-          "column": 0,
-          "line": 40,
         },
       },
       "4": {
@@ -2665,16 +1957,6 @@ exports[`v8 json report 1`] = `
           "line": 41,
         },
       },
-      "41": {
-        "end": {
-          "column": 0,
-          "line": 42,
-        },
-        "start": {
-          "column": 0,
-          "line": 42,
-        },
-      },
       "42": {
         "end": {
           "column": 31,
@@ -2693,16 +1975,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 44,
-        },
-      },
-      "44": {
-        "end": {
-          "column": 0,
-          "line": 45,
-        },
-        "start": {
-          "column": 0,
-          "line": 45,
         },
       },
       "45": {
@@ -2735,16 +2007,6 @@ exports[`v8 json report 1`] = `
           "line": 6,
         },
       },
-      "6": {
-        "end": {
-          "column": 0,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
-        },
-      },
       "7": {
         "end": {
           "column": 27,
@@ -2765,23 +2027,13 @@ exports[`v8 json report 1`] = `
           "line": 9,
         },
       },
-      "9": {
-        "end": {
-          "column": 0,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
-        },
-      },
     },
   },
   "<process-cwd>/src/empty-lines.ts": {
     "all": true,
     "b": {
       "0": [
-        0,
+        1,
       ],
     },
     "branchMap": {
@@ -2813,7 +2065,7 @@ exports[`v8 json report 1`] = `
       },
     },
     "f": {
-      "0": 0,
+      "0": 1,
     },
     "fnMap": {
       "0": {
@@ -2843,47 +2095,17 @@ exports[`v8 json report 1`] = `
     },
     "path": "<process-cwd>/src/empty-lines.ts",
     "s": {
-      "0": 0,
       "1": 0,
       "10": 0,
-      "11": 0,
-      "12": 0,
-      "13": 0,
       "14": 0,
-      "15": 0,
       "16": 0,
       "17": 0,
-      "18": 0,
-      "19": 0,
-      "2": 0,
-      "20": 0,
-      "21": 0,
-      "22": 0,
-      "23": 0,
-      "24": 0,
-      "25": 0,
-      "26": 0,
       "27": 0,
       "28": 0,
-      "3": 0,
-      "4": 0,
-      "5": 0,
-      "6": 0,
       "7": 0,
-      "8": 0,
       "9": 0,
     },
     "statementMap": {
-      "0": {
-        "end": {
-          "column": 65,
-          "line": 1,
-        },
-        "start": {
-          "column": 0,
-          "line": 1,
-        },
-      },
       "1": {
         "end": {
           "column": 43,
@@ -2904,36 +2126,6 @@ exports[`v8 json report 1`] = `
           "line": 11,
         },
       },
-      "11": {
-        "end": {
-          "column": 0,
-          "line": 12,
-        },
-        "start": {
-          "column": 0,
-          "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 32,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
-      "13": {
-        "end": {
-          "column": 0,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
       "14": {
         "end": {
           "column": 27,
@@ -2942,16 +2134,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 38,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
         },
       },
       "16": {
@@ -2974,106 +2156,6 @@ exports[`v8 json report 1`] = `
           "line": 18,
         },
       },
-      "18": {
-        "end": {
-          "column": 0,
-          "line": 19,
-        },
-        "start": {
-          "column": 0,
-          "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 33,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 5,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
-      "20": {
-        "end": {
-          "column": 13,
-          "line": 21,
-        },
-        "start": {
-          "column": 0,
-          "line": 21,
-        },
-      },
-      "21": {
-        "end": {
-          "column": 11,
-          "line": 22,
-        },
-        "start": {
-          "column": 0,
-          "line": 22,
-        },
-      },
-      "22": {
-        "end": {
-          "column": 22,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
-        },
-      },
-      "23": {
-        "end": {
-          "column": 7,
-          "line": 24,
-        },
-        "start": {
-          "column": 0,
-          "line": 24,
-        },
-      },
-      "24": {
-        "end": {
-          "column": 5,
-          "line": 25,
-        },
-        "start": {
-          "column": 0,
-          "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 3,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
-        },
-      },
-      "26": {
-        "end": {
-          "column": 0,
-          "line": 27,
-        },
-        "start": {
-          "column": 0,
-          "line": 27,
-        },
-      },
       "27": {
         "end": {
           "column": 14,
@@ -3094,46 +2176,6 @@ exports[`v8 json report 1`] = `
           "line": 29,
         },
       },
-      "3": {
-        "end": {
-          "column": 10,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 9,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
-        },
-      },
-      "5": {
-        "end": {
-          "column": 12,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
-        },
-      },
-      "6": {
-        "end": {
-          "column": 5,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
-        },
-      },
       "7": {
         "end": {
           "column": 27,
@@ -3142,16 +2184,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 8,
-        },
-      },
-      "8": {
-        "end": {
-          "column": 38,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
         },
       },
       "9": {
@@ -3235,7 +2267,6 @@ exports[`v8 json report 1`] = `
       "0": 0,
       "1": 0,
       "2": 0,
-      "3": 0,
       "4": 0,
       "5": 0,
       "6": 0,
@@ -3269,16 +2300,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 3,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 0,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
         },
       },
       "4": {
@@ -3537,64 +2558,25 @@ exports[`v8 json report 1`] = `
     },
     "path": "<process-cwd>/src/function-count.ts",
     "s": {
-      "0": 1,
-      "1": 1,
       "10": 1,
       "11": 1,
       "12": 1,
-      "13": 1,
       "14": 1,
-      "15": 1,
-      "16": 1,
       "17": 1,
       "18": 1,
       "19": 1,
-      "2": 1,
       "20": 1,
-      "21": 1,
-      "22": 1,
       "23": 1,
       "24": 0,
       "25": 0,
-      "26": 1,
-      "27": 1,
       "28": 0,
       "29": 0,
-      "3": 1,
       "30": 0,
-      "31": 1,
-      "32": 1,
       "33": 1,
       "34": 1,
       "35": 1,
-      "4": 1,
-      "5": 1,
-      "6": 1,
-      "7": 1,
-      "8": 1,
-      "9": 1,
     },
     "statementMap": {
-      "0": {
-        "end": {
-          "column": 2,
-          "line": 1,
-        },
-        "start": {
-          "column": 0,
-          "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 25,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
       "10": {
         "end": {
           "column": 18,
@@ -3625,16 +2607,6 @@ exports[`v8 json report 1`] = `
           "line": 13,
         },
       },
-      "13": {
-        "end": {
-          "column": 0,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
       "14": {
         "end": {
           "column": 7,
@@ -3643,26 +2615,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 0,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
-        },
-      },
-      "16": {
-        "end": {
-          "column": 27,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
         },
       },
       "17": {
@@ -3695,16 +2647,6 @@ exports[`v8 json report 1`] = `
           "line": 20,
         },
       },
-      "2": {
-        "end": {
-          "column": 25,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
       "20": {
         "end": {
           "column": 1,
@@ -3713,26 +2655,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 21,
-        },
-      },
-      "21": {
-        "end": {
-          "column": 0,
-          "line": 22,
-        },
-        "start": {
-          "column": 0,
-          "line": 22,
-        },
-      },
-      "22": {
-        "end": {
-          "column": 31,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
         },
       },
       "23": {
@@ -3765,26 +2687,6 @@ exports[`v8 json report 1`] = `
           "line": 26,
         },
       },
-      "26": {
-        "end": {
-          "column": 0,
-          "line": 27,
-        },
-        "start": {
-          "column": 0,
-          "line": 27,
-        },
-      },
-      "27": {
-        "end": {
-          "column": 31,
-          "line": 28,
-        },
-        "start": {
-          "column": 0,
-          "line": 28,
-        },
-      },
       "28": {
         "end": {
           "column": 19,
@@ -3805,16 +2707,6 @@ exports[`v8 json report 1`] = `
           "line": 30,
         },
       },
-      "3": {
-        "end": {
-          "column": 24,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
-        },
-      },
       "30": {
         "end": {
           "column": 1,
@@ -3823,26 +2715,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 31,
-        },
-      },
-      "31": {
-        "end": {
-          "column": 0,
-          "line": 32,
-        },
-        "start": {
-          "column": 0,
-          "line": 32,
-        },
-      },
-      "32": {
-        "end": {
-          "column": 27,
-          "line": 33,
-        },
-        "start": {
-          "column": 0,
-          "line": 33,
         },
       },
       "33": {
@@ -3873,66 +2745,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 36,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 26,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
-        },
-      },
-      "5": {
-        "end": {
-          "column": 3,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
-        },
-      },
-      "6": {
-        "end": {
-          "column": 0,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
-        },
-      },
-      "7": {
-        "end": {
-          "column": 50,
-          "line": 8,
-        },
-        "start": {
-          "column": 0,
-          "line": 8,
-        },
-      },
-      "8": {
-        "end": {
-          "column": 0,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
-        },
-      },
-      "9": {
-        "end": {
-          "column": 27,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
         },
       },
     },
@@ -4005,10 +2817,8 @@ exports[`v8 json report 1`] = `
     "s": {
       "0": 1,
       "1": 1,
-      "2": 1,
       "3": 1,
       "4": 1,
-      "5": 1,
       "6": 1,
       "7": 1,
     },
@@ -4033,16 +2843,6 @@ exports[`v8 json report 1`] = `
           "line": 2,
         },
       },
-      "2": {
-        "end": {
-          "column": 0,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
       "3": {
         "end": {
           "column": 16,
@@ -4061,16 +2861,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 5,
-        },
-      },
-      "5": {
-        "end": {
-          "column": 0,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
         },
       },
       "6": {
@@ -4265,9 +3055,7 @@ exports[`v8 json report 1`] = `
     "path": "<process-cwd>/src/index.mts",
     "s": {
       "0": 1,
-      "1": 1,
       "2": 1,
-      "3": 1,
       "4": 1,
       "5": 1,
       "6": 1,
@@ -4283,16 +3071,6 @@ exports[`v8 json report 1`] = `
           "line": 1,
         },
       },
-      "1": {
-        "end": {
-          "column": 0,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
       "2": {
         "end": {
           "column": 23,
@@ -4301,16 +3079,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 3,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 0,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
         },
       },
       "4": {
@@ -4341,6 +3109,56 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 7,
+        },
+      },
+    },
+  },
+  "<process-cwd>/src/load-outside-vite.cjs": {
+    "all": false,
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 35,
+            "line": 1,
+          },
+          "start": {
+            "column": 17,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": 35,
+            "line": 1,
+          },
+          "start": {
+            "column": 17,
+            "line": 1,
+          },
+        },
+        "name": "noop",
+      },
+    },
+    "path": "<process-cwd>/src/load-outside-vite.cjs",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": 35,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
         },
       },
     },
@@ -4703,268 +3521,23 @@ exports[`v8 json report 1`] = `
     "s": {
       "0": 2,
       "1": 2,
-      "10": 4,
-      "11": 0,
-      "12": 0,
-      "13": 0,
-      "14": 4,
-      "15": 4,
-      "16": 1,
-      "17": 1,
-      "18": 1,
-      "19": 3,
-      "2": 2,
-      "20": 0,
-      "21": 0,
-      "22": 0,
-      "23": 3,
-      "24": 1,
-      "25": 1,
-      "26": 1,
-      "27": 2,
-      "28": 2,
-      "29": 2,
-      "3": 2,
-      "30": 2,
-      "4": 2,
-      "5": 2,
-      "6": 4,
-      "7": 4,
-      "8": 4,
-      "9": 4,
+      "10": 0,
+      "11": 3,
+      "12": 1,
+      "13": 1,
+      "14": 2,
+      "15": 2,
+      "2": 4,
+      "3": 0,
+      "4": 0,
+      "5": 4,
+      "6": 1,
+      "7": 1,
+      "8": 3,
+      "9": 0,
     },
     "statementMap": {
       "0": {
-        "end": {
-          "column": 3,
-          "line": 1,
-        },
-        "start": {
-          "column": 0,
-          "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 55,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
-      "10": {
-        "end": {
-          "column": 27,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
-        },
-      },
-      "11": {
-        "end": {
-          "column": 38,
-          "line": 12,
-        },
-        "start": {
-          "column": 0,
-          "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 13,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
-      "13": {
-        "end": {
-          "column": 3,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
-      "14": {
-        "end": {
-          "column": 12,
-          "line": 15,
-        },
-        "start": {
-          "column": 0,
-          "line": 15,
-        },
-      },
-      "15": {
-        "end": {
-          "column": 32,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
-        },
-      },
-      "16": {
-        "end": {
-          "column": 34,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
-        },
-      },
-      "17": {
-        "end": {
-          "column": 12,
-          "line": 18,
-        },
-        "start": {
-          "column": 0,
-          "line": 18,
-        },
-      },
-      "18": {
-        "end": {
-          "column": 3,
-          "line": 19,
-        },
-        "start": {
-          "column": 0,
-          "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 34,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 3,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
-        },
-      },
-      "20": {
-        "end": {
-          "column": 38,
-          "line": 21,
-        },
-        "start": {
-          "column": 0,
-          "line": 21,
-        },
-      },
-      "21": {
-        "end": {
-          "column": 13,
-          "line": 22,
-        },
-        "start": {
-          "column": 0,
-          "line": 22,
-        },
-      },
-      "22": {
-        "end": {
-          "column": 3,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
-        },
-      },
-      "23": {
-        "end": {
-          "column": 34,
-          "line": 24,
-        },
-        "start": {
-          "column": 0,
-          "line": 24,
-        },
-      },
-      "24": {
-        "end": {
-          "column": 34,
-          "line": 25,
-        },
-        "start": {
-          "column": 0,
-          "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 13,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
-        },
-      },
-      "26": {
-        "end": {
-          "column": 3,
-          "line": 27,
-        },
-        "start": {
-          "column": 0,
-          "line": 27,
-        },
-      },
-      "27": {
-        "end": {
-          "column": 0,
-          "line": 28,
-        },
-        "start": {
-          "column": 0,
-          "line": 28,
-        },
-      },
-      "28": {
-        "end": {
-          "column": 61,
-          "line": 29,
-        },
-        "start": {
-          "column": 0,
-          "line": 29,
-        },
-      },
-      "29": {
-        "end": {
-          "column": 14,
-          "line": 30,
-        },
-        "start": {
-          "column": 0,
-          "line": 30,
-        },
-      },
-      "3": {
         "end": {
           "column": 40,
           "line": 4,
@@ -4974,27 +3547,7 @@ exports[`v8 json report 1`] = `
           "line": 4,
         },
       },
-      "30": {
-        "end": {
-          "column": 1,
-          "line": 31,
-        },
-        "start": {
-          "column": 0,
-          "line": 31,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 0,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
-        },
-      },
-      "5": {
+      "1": {
         "end": {
           "column": 43,
           "line": 6,
@@ -5004,44 +3557,144 @@ exports[`v8 json report 1`] = `
           "line": 6,
         },
       },
-      "6": {
+      "10": {
         "end": {
-          "column": 4,
-          "line": 7,
+          "column": 3,
+          "line": 23,
         },
         "start": {
           "column": 0,
-          "line": 7,
+          "line": 23,
+        },
+      },
+      "11": {
+        "end": {
+          "column": 34,
+          "line": 24,
+        },
+        "start": {
+          "column": 0,
+          "line": 24,
+        },
+      },
+      "12": {
+        "end": {
+          "column": 13,
+          "line": 26,
+        },
+        "start": {
+          "column": 0,
+          "line": 26,
+        },
+      },
+      "13": {
+        "end": {
+          "column": 3,
+          "line": 27,
+        },
+        "start": {
+          "column": 0,
+          "line": 27,
+        },
+      },
+      "14": {
+        "end": {
+          "column": 14,
+          "line": 30,
+        },
+        "start": {
+          "column": 0,
+          "line": 30,
+        },
+      },
+      "15": {
+        "end": {
+          "column": 1,
+          "line": 31,
+        },
+        "start": {
+          "column": 0,
+          "line": 31,
+        },
+      },
+      "2": {
+        "end": {
+          "column": 27,
+          "line": 11,
+        },
+        "start": {
+          "column": 0,
+          "line": 11,
+        },
+      },
+      "3": {
+        "end": {
+          "column": 13,
+          "line": 13,
+        },
+        "start": {
+          "column": 0,
+          "line": 13,
+        },
+      },
+      "4": {
+        "end": {
+          "column": 3,
+          "line": 14,
+        },
+        "start": {
+          "column": 0,
+          "line": 14,
+        },
+      },
+      "5": {
+        "end": {
+          "column": 32,
+          "line": 16,
+        },
+        "start": {
+          "column": 0,
+          "line": 16,
+        },
+      },
+      "6": {
+        "end": {
+          "column": 12,
+          "line": 18,
+        },
+        "start": {
+          "column": 0,
+          "line": 18,
         },
       },
       "7": {
         "end": {
-          "column": 64,
-          "line": 8,
+          "column": 3,
+          "line": 19,
         },
         "start": {
           "column": 0,
-          "line": 8,
+          "line": 19,
         },
       },
       "8": {
         "end": {
-          "column": 35,
-          "line": 9,
+          "column": 34,
+          "line": 20,
         },
         "start": {
           "column": 0,
-          "line": 9,
+          "line": 20,
         },
       },
       "9": {
         "end": {
-          "column": 5,
-          "line": 10,
+          "column": 13,
+          "line": 22,
         },
         "start": {
           "column": 0,
-          "line": 10,
+          "line": 22,
         },
       },
     },
@@ -5170,7 +3823,6 @@ exports[`v8 json report 1`] = `
       "1": 1,
       "2": 1,
       "3": 1,
-      "4": 1,
       "5": 1,
       "6": 1,
       "7": 1,
@@ -5215,16 +3867,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 4,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 0,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
         },
       },
       "5": {
@@ -5452,21 +4094,17 @@ exports[`v8 json report 1`] = `
       "10": 0,
       "11": 0,
       "12": 0,
-      "13": 1,
       "14": 1,
       "15": 1,
       "16": 1,
       "17": 1,
       "18": 1,
-      "19": 1,
       "2": 0,
       "20": 2,
       "3": 0,
       "4": 0,
-      "5": 1,
       "6": 1,
       "7": 1,
-      "8": 1,
       "9": 1,
     },
     "statementMap": {
@@ -5520,16 +4158,6 @@ exports[`v8 json report 1`] = `
           "line": 13,
         },
       },
-      "13": {
-        "end": {
-          "column": 0,
-          "line": 14,
-        },
-        "start": {
-          "column": 0,
-          "line": 14,
-        },
-      },
       "14": {
         "end": {
           "column": 26,
@@ -5580,16 +4208,6 @@ exports[`v8 json report 1`] = `
           "line": 19,
         },
       },
-      "19": {
-        "end": {
-          "column": 0,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
-        },
-      },
       "2": {
         "end": {
           "column": 16,
@@ -5630,16 +4248,6 @@ exports[`v8 json report 1`] = `
           "line": 5,
         },
       },
-      "5": {
-        "end": {
-          "column": 0,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
-        },
-      },
       "6": {
         "end": {
           "column": 12,
@@ -5660,16 +4268,6 @@ exports[`v8 json report 1`] = `
           "line": 8,
         },
       },
-      "8": {
-        "end": {
-          "column": 0,
-          "line": 9,
-        },
-        "start": {
-          "column": 0,
-          "line": 9,
-        },
-      },
       "9": {
         "end": {
           "column": 18,
@@ -5686,7 +4284,7 @@ exports[`v8 json report 1`] = `
     "all": true,
     "b": {
       "0": [
-        0,
+        1,
       ],
     },
     "branchMap": {
@@ -5718,7 +4316,7 @@ exports[`v8 json report 1`] = `
       },
     },
     "f": {
-      "0": 0,
+      "0": 1,
     },
     "fnMap": {
       "0": {
@@ -5748,79 +4346,23 @@ exports[`v8 json report 1`] = `
     },
     "path": "<process-cwd>/src/untested-file.ts",
     "s": {
-      "0": 0,
-      "1": 0,
-      "10": 0,
       "11": 0,
-      "12": 0,
       "13": 0,
       "14": 0,
-      "15": 0,
-      "16": 0,
-      "17": 0,
       "18": 0,
-      "19": 0,
-      "2": 0,
       "20": 0,
       "21": 0,
-      "22": 0,
       "23": 0,
-      "24": 0,
-      "25": 0,
-      "26": 0,
-      "27": 0,
-      "28": 0,
-      "29": 0,
-      "3": 0,
-      "30": 0,
-      "31": 0,
       "32": 0,
-      "33": 0,
       "34": 0,
       "35": 0,
-      "36": 0,
-      "4": 0,
-      "43": 0,
-      "44": 0,
       "45": 0,
       "46": 0,
-      "5": 0,
-      "6": 0,
       "7": 0,
       "8": 0,
       "9": 0,
     },
     "statementMap": {
-      "0": {
-        "end": {
-          "column": 2,
-          "line": 1,
-        },
-        "start": {
-          "column": 0,
-          "line": 1,
-        },
-      },
-      "1": {
-        "end": {
-          "column": 68,
-          "line": 2,
-        },
-        "start": {
-          "column": 0,
-          "line": 2,
-        },
-      },
-      "10": {
-        "end": {
-          "column": 0,
-          "line": 11,
-        },
-        "start": {
-          "column": 0,
-          "line": 11,
-        },
-      },
       "11": {
         "end": {
           "column": 36,
@@ -5829,16 +4371,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 12,
-        },
-      },
-      "12": {
-        "end": {
-          "column": 36,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
         },
       },
       "13": {
@@ -5861,36 +4393,6 @@ exports[`v8 json report 1`] = `
           "line": 15,
         },
       },
-      "15": {
-        "end": {
-          "column": 0,
-          "line": 16,
-        },
-        "start": {
-          "column": 0,
-          "line": 16,
-        },
-      },
-      "16": {
-        "end": {
-          "column": 30,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
-        },
-      },
-      "17": {
-        "end": {
-          "column": 0,
-          "line": 18,
-        },
-        "start": {
-          "column": 0,
-          "line": 18,
-        },
-      },
       "18": {
         "end": {
           "column": 41,
@@ -5899,26 +4401,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 36,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
-        },
-      },
-      "2": {
-        "end": {
-          "column": 25,
-          "line": 3,
-        },
-        "start": {
-          "column": 0,
-          "line": 3,
         },
       },
       "20": {
@@ -5941,16 +4423,6 @@ exports[`v8 json report 1`] = `
           "line": 22,
         },
       },
-      "22": {
-        "end": {
-          "column": 0,
-          "line": 23,
-        },
-        "start": {
-          "column": 0,
-          "line": 23,
-        },
-      },
       "23": {
         "end": {
           "column": 65,
@@ -5961,96 +4433,6 @@ exports[`v8 json report 1`] = `
           "line": 24,
         },
       },
-      "24": {
-        "end": {
-          "column": 33,
-          "line": 25,
-        },
-        "start": {
-          "column": 0,
-          "line": 25,
-        },
-      },
-      "25": {
-        "end": {
-          "column": 13,
-          "line": 26,
-        },
-        "start": {
-          "column": 0,
-          "line": 26,
-        },
-      },
-      "26": {
-        "end": {
-          "column": 11,
-          "line": 27,
-        },
-        "start": {
-          "column": 0,
-          "line": 27,
-        },
-      },
-      "27": {
-        "end": {
-          "column": 22,
-          "line": 28,
-        },
-        "start": {
-          "column": 0,
-          "line": 28,
-        },
-      },
-      "28": {
-        "end": {
-          "column": 7,
-          "line": 29,
-        },
-        "start": {
-          "column": 0,
-          "line": 29,
-        },
-      },
-      "29": {
-        "end": {
-          "column": 5,
-          "line": 30,
-        },
-        "start": {
-          "column": 0,
-          "line": 30,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 2,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
-        },
-      },
-      "30": {
-        "end": {
-          "column": 3,
-          "line": 31,
-        },
-        "start": {
-          "column": 0,
-          "line": 31,
-        },
-      },
-      "31": {
-        "end": {
-          "column": 0,
-          "line": 32,
-        },
-        "start": {
-          "column": 0,
-          "line": 32,
-        },
-      },
       "32": {
         "end": {
           "column": 25,
@@ -6059,16 +4441,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 33,
-        },
-      },
-      "33": {
-        "end": {
-          "column": 38,
-          "line": 34,
-        },
-        "start": {
-          "column": 0,
-          "line": 34,
         },
       },
       "34": {
@@ -6091,46 +4463,6 @@ exports[`v8 json report 1`] = `
           "line": 36,
         },
       },
-      "36": {
-        "end": {
-          "column": 0,
-          "line": 37,
-        },
-        "start": {
-          "column": 0,
-          "line": 37,
-        },
-      },
-      "4": {
-        "end": {
-          "column": 0,
-          "line": 5,
-        },
-        "start": {
-          "column": 0,
-          "line": 5,
-        },
-      },
-      "43": {
-        "end": {
-          "column": 0,
-          "line": 44,
-        },
-        "start": {
-          "column": 0,
-          "line": 44,
-        },
-      },
-      "44": {
-        "end": {
-          "column": 36,
-          "line": 45,
-        },
-        "start": {
-          "column": 0,
-          "line": 45,
-        },
-      },
       "45": {
         "end": {
           "column": 41,
@@ -6149,26 +4481,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 47,
-        },
-      },
-      "5": {
-        "end": {
-          "column": 65,
-          "line": 6,
-        },
-        "start": {
-          "column": 0,
-          "line": 6,
-        },
-      },
-      "6": {
-        "end": {
-          "column": 0,
-          "line": 7,
-        },
-        "start": {
-          "column": 0,
-          "line": 7,
         },
       },
       "7": {
@@ -6485,27 +4797,19 @@ exports[`v8 json report 1`] = `
       "1": 1,
       "10": 0,
       "11": 0,
-      "12": 1,
       "13": 1,
       "14": 1,
       "15": 1,
-      "16": 1,
       "17": 1,
       "18": 1,
-      "19": 1,
       "2": 1,
       "20": 1,
-      "21": 0,
       "22": 0,
       "23": 0,
-      "24": 1,
-      "3": 1,
       "4": 1,
       "5": 2,
       "6": 2,
-      "7": 1,
       "8": 1,
-      "9": 0,
     },
     "statementMap": {
       "0": {
@@ -6548,16 +4852,6 @@ exports[`v8 json report 1`] = `
           "line": 12,
         },
       },
-      "12": {
-        "end": {
-          "column": 0,
-          "line": 13,
-        },
-        "start": {
-          "column": 0,
-          "line": 13,
-        },
-      },
       "13": {
         "end": {
           "column": 33,
@@ -6588,16 +4882,6 @@ exports[`v8 json report 1`] = `
           "line": 16,
         },
       },
-      "16": {
-        "end": {
-          "column": 0,
-          "line": 17,
-        },
-        "start": {
-          "column": 0,
-          "line": 17,
-        },
-      },
       "17": {
         "end": {
           "column": 21,
@@ -6616,16 +4900,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 19,
-        },
-      },
-      "19": {
-        "end": {
-          "column": 0,
-          "line": 20,
-        },
-        "start": {
-          "column": 0,
-          "line": 20,
         },
       },
       "2": {
@@ -6648,16 +4922,6 @@ exports[`v8 json report 1`] = `
           "line": 21,
         },
       },
-      "21": {
-        "end": {
-          "column": 31,
-          "line": 22,
-        },
-        "start": {
-          "column": 0,
-          "line": 22,
-        },
-      },
       "22": {
         "end": {
           "column": 14,
@@ -6676,26 +4940,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 24,
-        },
-      },
-      "24": {
-        "end": {
-          "column": 0,
-          "line": 25,
-        },
-        "start": {
-          "column": 0,
-          "line": 25,
-        },
-      },
-      "3": {
-        "end": {
-          "column": 0,
-          "line": 4,
-        },
-        "start": {
-          "column": 0,
-          "line": 4,
         },
       },
       "4": {
@@ -6728,16 +4972,6 @@ exports[`v8 json report 1`] = `
           "line": 7,
         },
       },
-      "7": {
-        "end": {
-          "column": 0,
-          "line": 8,
-        },
-        "start": {
-          "column": 0,
-          "line": 8,
-        },
-      },
       "8": {
         "end": {
           "column": 46,
@@ -6746,16 +4980,6 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 9,
-        },
-      },
-      "9": {
-        "end": {
-          "column": 31,
-          "line": 10,
-        },
-        "start": {
-          "column": 0,
-          "line": 10,
         },
       },
     },

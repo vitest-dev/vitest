@@ -49,13 +49,6 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('c8 coverage provider is not supported', async () => {
-  // @ts-expect-error -- check for removed API option
-  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'c8' } })
-
-  expect(stderr).toMatch('Error: "coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
-})
-
 test('v8 coverage provider cannot be used with browser', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
@@ -144,7 +137,6 @@ test('boolean flag 100 should not crash CLI', async () => {
 
 test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
-    pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fake-timers.test.ts'],
   })
@@ -154,6 +146,7 @@ test('nextTick cannot be mocked inside child_process', async () => {
 
 test('nextTick can be mocked inside worker_threads', async () => {
   const { stderr } = await runVitest({
+    pool: 'threads',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fixtures/test/fake-timers.test.ts'],
   })

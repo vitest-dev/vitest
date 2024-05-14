@@ -19,7 +19,6 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/index.ts',
   'cli': 'src/node/cli.ts',
-  'cli-wrapper': 'src/node/cli/cli-wrapper.ts',
   'node': 'src/node.ts',
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',
@@ -41,6 +40,8 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
+
+  'snapshot': 'src/snapshot.ts',
 }
 
 const dtsEntries = {
@@ -56,6 +57,7 @@ const dtsEntries = {
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   workers: 'src/workers.ts',
+  snapshot: 'src/snapshot.ts',
 }
 
 const external = [

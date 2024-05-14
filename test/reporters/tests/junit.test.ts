@@ -1,4 +1,4 @@
-import type { Suite, Task, TaskResult } from 'vitest'
+import type { File, Suite, Task, TaskResult } from 'vitest'
 import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
 import { runVitest } from '../../test-utils'
@@ -8,25 +8,40 @@ const root = resolve(__dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
   const result: TaskResult = { state: 'pass', duration: 0 }
-  const suite: Suite = {
+  const file: File = {
     id: '1',
+    filepath: 'test.ts',
+    file: null!,
+    projectName: '',
+    type: 'suite',
+    tasks: [],
+    name: 'test.ts',
+    mode: 'run',
+    meta: {},
+  }
+  file.file = file
+  const suite: Suite = {
+    id: '1_0',
     type: 'suite',
     name: 'suite',
     mode: 'run',
     tasks: [],
+    file,
     meta: {},
-    projectName: '',
   }
   const task: Task = {
-    id: '1',
+    id: '1_0_0',
     type: 'test',
     name: 'timeout',
     mode: 'run',
     result,
+    file,
     context: null as any,
     suite,
     meta: {},
   }
+  file.tasks = [suite]
+  suite.tasks = [task]
   expect(getDuration(task)).toBe('0')
   result.duration = 0.12
   expect(getDuration(task)).toBe('0.00012')
@@ -102,3 +117,21 @@ test('options.suiteName changes name property', async () => {
 function stabilizeReport(report: string) {
   return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
 }
+
+test.each([true, false])('includeConsoleOutput %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { includeConsoleOutput: t }]],
+    root,
+    include: ['console-simple.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})
+
+test.each([true, false])('addFileAttribute %s', async (t) => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { addFileAttribute: t }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+  expect(stabilizeReport(stdout)).matchSnapshot()
+})

@@ -184,7 +184,10 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  mock: (path: string, factory?: MockFactoryWithHelper) => void
+  // eslint-disable-next-line ts/method-signature-style
+  mock(path: string, factory?: MockFactoryWithHelper): void
+  // eslint-disable-next-line ts/method-signature-style
+  mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
 
   /**
    * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
@@ -192,7 +195,10 @@ export interface VitestUtils {
    * This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  unmock: (path: string) => void
+  // eslint-disable-next-line ts/method-signature-style
+  unmock(path: string): void
+  // eslint-disable-next-line ts/method-signature-style
+  unmock(module: Promise<unknown>): void
 
   /**
    * Mocks every subsequent [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) call.
@@ -203,14 +209,20 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  doMock: (path: string, factory?: MockFactoryWithHelper) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock(path: string, factory?: MockFactoryWithHelper): void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
    * Unlike [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock), this method is not hoisted to the top of the file.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  doUnmock: (path: string) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(path: string): void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(module: Promise<unknown>): void
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -476,7 +488,9 @@ function createVitest(): VitestUtils {
       return factory()
     },
 
-    mock(path: string, factory?: MockFactoryWithHelper) {
+    mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.mock() expects a string path, but received a ${typeof path}`)
       const importer = getImporter()
       _mocker.queueMock(
         path,
@@ -486,11 +500,15 @@ function createVitest(): VitestUtils {
       )
     },
 
-    unmock(path: string) {
+    unmock(path: string | Promise<unknown>) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.unmock() expects a string path, but received a ${typeof path}`)
       _mocker.queueUnmock(path, getImporter())
     },
 
-    doMock(path: string, factory?: MockFactoryWithHelper) {
+    doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doMock() expects a string path, but received a ${typeof path}`)
       const importer = getImporter()
       _mocker.queueMock(
         path,
@@ -500,7 +518,9 @@ function createVitest(): VitestUtils {
       )
     },
 
-    doUnmock(path: string) {
+    doUnmock(path: string | Promise<unknown>) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
       _mocker.queueUnmock(path, getImporter())
     },
 

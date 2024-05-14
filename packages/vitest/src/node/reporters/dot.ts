@@ -18,7 +18,7 @@ export class DotReporter extends BaseReporter {
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
     this.ctx.logger.log()
-    await super.onFinished(files, errors)
+    super.onFinished(files, errors)
   }
 
   async onWatcherStart() {
@@ -34,7 +34,7 @@ export class DotReporter extends BaseReporter {
 
   async onWatcherRerun(files: string[], trigger?: string) {
     await this.stopListRender()
-    await super.onWatcherRerun(files, trigger)
+    super.onWatcherRerun(files, trigger)
   }
 
   onUserConsoleLog(log: UserConsoleLog) {

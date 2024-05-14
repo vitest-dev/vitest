@@ -1,22 +1,22 @@
 // since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
-// @ts-expect-error doesn't have types
 import * as loupe from 'loupe'
 
-interface LoupeOptions {
-  showHidden?: boolean | undefined
-  depth?: number | null | undefined
-  colors?: boolean | undefined
-  customInspect?: boolean | undefined
-  showProxy?: boolean | undefined
-  maxArrayLength?: number | null | undefined
-  maxStringLength?: number | null | undefined
-  breakLength?: number | undefined
-  compact?: boolean | number | undefined
-  sorted?: boolean | ((a: string, b: string) => number) | undefined
-  getters?: 'get' | 'set' | boolean | undefined
-  numericSeparator?: boolean | undefined
-  truncate?: number
+type Inspect = (value: unknown, options: Options) => string
+interface Options {
+  showHidden: boolean
+  depth: number
+  colors: boolean
+  customInspect: boolean
+  showProxy: boolean
+  maxArrayLength: number
+  breakLength: number
+  truncate: number
+  seen: unknown[]
+  inspect: Inspect
+  stylize: (value: string, styleType: string) => string
 }
+
+type LoupeOptions = Partial<Options>
 
 const formatRegExp = /%[sdjifoOcj%]/g
 
@@ -24,7 +24,7 @@ export function format(...args: unknown[]) {
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++)
-      objects.push(inspect(args[i], { depth: 0, colors: false, compact: 3 }))
+      objects.push(inspect(args[i], { depth: 0, colors: false }))
     return objects.join(' ')
   }
 
@@ -44,7 +44,7 @@ export function format(...args: unknown[]) {
         if (typeof value === 'number' && value === 0 && 1 / value < 0)
           return '-0'
         if (typeof value === 'object' && value !== null)
-          return inspect(value, { depth: 0, colors: false, compact: 3 })
+          return inspect(value, { depth: 0, colors: false })
         return String(value)
       }
       case '%d': {

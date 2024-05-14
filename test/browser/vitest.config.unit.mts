@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     include: ['specs/**/*.{spec,test}.ts'],
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: true,
       },
     },
     hookTimeout: process.env.CI ? 120_000 : 10_000,

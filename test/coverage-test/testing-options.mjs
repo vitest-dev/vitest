@@ -59,6 +59,7 @@ const testCases = [
     assertionConfig: null,
   },
   {
+    skip: !!process.env.ECOSYSTEM_CI,
     testConfig: {
       name: 'changed',
       changed: 'HEAD',
@@ -97,13 +98,28 @@ const testCases = [
       coverage: {
         provider: 'v8',
         reporter: 'json',
-        ignoreEmptyLines: true,
         all: true,
         include: ['src/empty-lines.ts', 'src/untested-file.ts'],
       },
     },
     assertionConfig: {
-      include: ['coverage-report-tests/empty-lines.test.ts'],
+      include: ['coverage-report-tests/ignore-empty-lines.test.ts'],
+    },
+  },
+  {
+    testConfig: {
+      name: 'include empty lines',
+      include: ['option-tests/empty-lines.test.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: 'json',
+        ignoreEmptyLines: false,
+        all: true,
+        include: ['src/empty-lines.ts', 'src/untested-file.ts'],
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/include-empty-lines.test.ts'],
     },
   },
   {
@@ -134,7 +150,9 @@ const testCases = [
 ]
 
 for (const provider of ['v8', 'istanbul']) {
-  for (const { after, before, testConfig, assertionConfig } of testCases) {
+  for (const { after, before, testConfig, assertionConfig, skip } of testCases) {
+    if (skip)
+      continue
     // Test config may specify which provider the test is for
     if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider)
       continue

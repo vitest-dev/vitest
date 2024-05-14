@@ -5,8 +5,12 @@ import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
 
 export class VitestCache {
-  results = new ResultsCache()
+  results: ResultsCache
   stats = new FilesStatsCache()
+
+  constructor(version: string) {
+    this.results = new ResultsCache(version)
+  }
 
   getFileTestResults(key: string) {
     return this.results.getResults(key)

@@ -102,6 +102,10 @@ describe('jest-expect', () => {
     }).toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
     }))
+    expect(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw ''
+    }).toThrow(/^$/)
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -876,6 +880,19 @@ it('correctly prints diff', () => {
     const error = processError(err)
     expect(error.diff).toContain('-   "a": 2')
     expect(error.diff).toContain('+   "a": 1')
+  }
+})
+
+it('correctly prints diff for the cause', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(new Error('wrapper', { cause: err }))
+    expect(error.cause.diff).toContain('-   "a": 2')
+    expect(error.cause.diff).toContain('+   "a": 1')
   }
 })
 

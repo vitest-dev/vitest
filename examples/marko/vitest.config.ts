@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 import { defineConfig } from 'vite'
 import marko from '@marko/vite'
 
@@ -6,7 +8,7 @@ export default defineConfig({
     marko(),
   ],
   test: {
-    globals: true,
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
   },
 })

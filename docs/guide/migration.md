@@ -5,7 +5,15 @@ outline: deep
 
 # Migration Guide
 
-## Migrating from Vitest 0.34.6
+## Migrating to Vitest 2.0
+
+### Hooks are running in a stack
+
+Before Vitest 2.0, all hooks were running in parallel. In 2.0, all hooks run serially. In addition to this, `afterAll`/`afterEach` are running in a reverse order.
+
+You can revert to the previous behaviour by changing [`sequence.hooks`](/config/#sequence-hooks) to `'parallel'`.
+
+## Migrating to Vitest 1.0
 
 <!-- introduction -->
 
@@ -184,6 +192,14 @@ If you are only partially mocking a package, you might have previously used Jest
 ```ts
 const { cloneDeep } = jest.requireActual('lodash/cloneDeep') // [!code --]
 const { cloneDeep } = await vi.importActual('lodash/cloneDeep') // [!code ++]
+```
+
+### Extends mocking to external libraries
+
+Where Jest does it by default, when mocking a module and wanting this mocking to be extended to other external libraries that use the same module, you should explicitly tell which 3rd-party library you want to be mocked, so the external library would be part of your source code, by using [server.deps.inline](https://vitest.dev/config/#server-deps-inline).
+
+```
+server.deps.inline: ["lib-name"]
 ```
 
 ### Accessing the Return Values of a Mocked Promise

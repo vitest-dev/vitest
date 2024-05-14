@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "jsx": "react",
+    "lib": ["esnext", "dom"],
+    "module": "node16",
+    "moduleResolution": "node16",
+    "types": ["@testing-library/jest-dom"],
+    "strict": true,
+    "declaration": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "./vitest.setup.ts"
+  ],
+  "exclude": ["node_modules"]
+}

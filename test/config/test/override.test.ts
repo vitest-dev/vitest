@@ -1,4 +1,3 @@
-import { Writable } from 'node:stream'
 import type { UserConfig } from 'vitest'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { describe, expect, it } from 'vitest'
@@ -291,7 +290,7 @@ describe.each([
       waitForDebugger: inspectFlagName === '--inspect-brk' && inspect.enabled,
     })
   })
-  it('cannot use a URL', async () => {
+  it('cannot use URL', async () => {
     const url = 'https://www.remote.com:1002'
     const rawConfig = parseCLI([
       'vitest',
@@ -299,19 +298,8 @@ describe.each([
       inspectFlagName,
       url,
     ])
-    const errors: string[] = []
-    const stderr = new Writable({
-      write(chunk, _encoding, callback) {
-        errors.push(chunk.toString())
-        callback()
-      },
-    })
     await expect(async () => {
-      await config(rawConfig.options, {}, {}, { stderr })
-    }).rejects.toThrowError()
-
-    expect(errors[0]).toEqual(
-      expect.stringContaining(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`),
-    )
+      await config(rawConfig.options)
+    }).rejects.toThrowError(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
   })
 })

@@ -40,9 +40,15 @@ export function getRunner() {
   return runner
 }
 
+function createDefaultSuite(runner: VitestRunner) {
+  const config = runner.config.sequence
+  const api = config.shuffle ? suite.shuffle : suite
+  return api('', { concurrent: config.concurrent }, () => {})
+}
+
 export function clearCollectorContext(filepath: string, currentRunner: VitestRunner) {
   if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
+    defaultSuite = createDefaultSuite(currentRunner)
   runner = currentRunner
   currentTestFilepath = filepath
   collectorContext.tasks.length = 0
@@ -121,6 +127,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       fails: options.fails,
       context: undefined!,
       type: 'custom',
+      file: undefined!,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
       mode: options.only ? 'only' : options.skip ? 'skip' : options.todo ? 'todo' : 'run',
@@ -211,10 +218,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       name,
       mode,
       each,
+      file: undefined!,
       shuffle,
       tasks: [],
       meta: Object.create(null),
-      projectName: '',
       concurrent: suiteOptions?.concurrentSuite,
     }
 
@@ -237,7 +244,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     initSuite(false)
   }
 
-  async function collect(file?: File) {
+  async function collect(file: File) {
+    if (!file)
+      throw new TypeError('File is required to collect tasks.')
+
     factoryQueue.length = 0
     if (factory)
       await runWithSuite(collector, () => factory(test))
@@ -252,8 +262,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     allChildren.forEach((task) => {
       task.suite = suite
-      if (file)
-        task.file = file
+      task.file = file
     })
 
     return suite
@@ -300,11 +309,20 @@ function createSuite() {
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        arrayOnlyCases
-          ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
-          : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), () => handler(...items), options)
+            : suite(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)
@@ -342,12 +360,21 @@ export function createTaskCollector(
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
-        arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), options, () => handler(...items))
-          : test(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), () => handler(...items), options)
+            : test(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), options, () => handler(...items))
+            : test(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)

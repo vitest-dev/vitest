@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
@@ -65,8 +66,13 @@ export function getRunnerOptions(): any {
   const { config, rpc, mockMap, moduleCache } = state
 
   return {
-    fetchModule(id: string) {
-      return rpc.fetch(id, 'web')
+    async fetchModule(id: string) {
+      const result = await rpc.fetch(id, 'web')
+      if (result.id && !result.externalize) {
+        const code = readFileSync(result.id, 'utf-8')
+        return { code }
+      }
+      return result
     },
     resolveId(id: string, importer?: string) {
       return rpc.resolveId(id, importer, 'web')

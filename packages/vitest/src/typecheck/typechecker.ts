@@ -138,6 +138,8 @@ export class Typechecker {
         }
         if (task.suite)
           markState(task.suite, state)
+        else if (task.file && task !== task.file)
+          markState(task.file, state)
       }
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
@@ -159,8 +161,12 @@ export class Typechecker {
           errors,
         }
         errors.push(error)
-        if (state === 'fail' && suite.suite)
-          markState(suite.suite, 'fail')
+        if (state === 'fail') {
+          if (suite.suite)
+            markState(suite.suite, 'fail')
+          else if (suite.file && suite !== suite.file)
+            markState(suite.file, 'fail')
+        }
       })
 
       this.markPassed(file)

@@ -2,11 +2,12 @@ import { promises as fs } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-test('print stdout and stderr correctly when called in the setup file', async () => {
+test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
   const { stdout, stderr } = await runVitest({
     root: 'fixtures/setup-files',
     include: ['empty.test.ts'],
     setupFiles: ['./console-setup.ts'],
+    pool,
   })
 
   const filepath = 'console-setup.ts'
@@ -27,7 +28,7 @@ describe('setup files with forceRerunTrigger', () => {
   }
 
   // Note that this test will fail locally if you have uncommitted changes
-  it.runIf(process.env.GITHUB_ACTIONS)('should run no tests if setup file is not changed', async () => {
+  it.runIf(process.env.GITHUB_ACTIONS && !process.env.ECOSYSTEM_CI)('should run no tests if setup file is not changed', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })

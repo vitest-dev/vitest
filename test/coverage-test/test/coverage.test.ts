@@ -84,3 +84,10 @@ test.runIf(provider === 'v8' || provider === 'custom')('pre-transpiled code with
 
   transpiled.hello()
 })
+
+test.runIf(provider === 'v8' || provider === 'custom')('file loaded outside Vite, #5639', async () => {
+  const { Module: { createRequire } } = await import('node:module')
+
+  const noop = createRequire(import.meta.url)('../src/load-outside-vite.cjs')
+  expect(noop).toBeTypeOf('function')
+})

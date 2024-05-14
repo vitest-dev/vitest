@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
-    "types": ["vitest/globals"]
-  }
-}

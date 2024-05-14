@@ -8,7 +8,8 @@ const fileName = 'fixtures/git-changed/related/rerun.temp'
 // NOTE: if there are any changes in fixtures/git-changed,
 // most tests will probably fail
 
-describe('forceRerunTrigger', () => {
+// ecosystem-ci updated package.json and make this test fail
+describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
   async function run() {
     return runVitest({
       root: join(process.cwd(), 'fixtures/git-changed/related'),
@@ -33,7 +34,7 @@ describe('forceRerunTrigger', () => {
   })
 })
 
-it('related correctly runs only related tests', async () => {
+it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
   const { stdout, stderr } = await runVitest({
     related: 'src/sourceA.ts',
     root: './fixtures/git-changed/related',
@@ -48,7 +49,7 @@ it('related correctly runs only related tests', async () => {
   expect(stdout).not.toContain('not-related.test.ts')
 })
 
-it('doesn\'t run any test in a workspace because there are no changes', async () => {
+it.skipIf(process.env.ECOSYSTEM_CI)('doesn\'t run any test in a workspace because there are no changes', async () => {
   const { stdout } = await runVitest({
     changed: true,
     root: './fixtures/git-changed/workspace',
@@ -58,7 +59,7 @@ it('doesn\'t run any test in a workspace because there are no changes', async ()
 })
 
 // Fixes #4674
-it('related correctly runs only related tests inside a workspace', async () => {
+it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests inside a workspace', async () => {
   editFile(
     resolvePath(import.meta.url, '../fixtures/git-changed/workspace/packages/packageA/index.js'),
     content => `${content}\n`,

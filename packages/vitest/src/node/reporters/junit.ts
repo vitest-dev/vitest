@@ -8,13 +8,23 @@ import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { getOutputFile } from '../../utils/config-helpers'
-import { captuerPrintError } from '../error'
+import { capturePrintError } from '../error'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface JUnitOptions {
   outputFile?: string
   classname?: string
   suiteName?: string
+  /**
+   * Write <system-out> and <system-err> for console output
+   * @default true
+   */
+  includeConsoleOutput?: boolean
+  /**
+   * Add <testcase file="..."> attribute (validated on CIRCLE CI and GitLab CI)
+   * @default false
+   */
+  addFileAttribute?: boolean
 }
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -88,7 +98,8 @@ export class JUnitReporter implements Reporter {
   private options: JUnitOptions
 
   constructor(options: JUnitOptions) {
-    this.options = options
+    this.options = { ...options }
+    this.options.includeConsoleOutput ??= true
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -158,13 +169,15 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
-        classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        classname: this.options.classname ?? filename,
+        file: this.options.addFileAttribute ? filename : undefined,
         name: task.name,
         time: getDuration(task),
       }, async () => {
-        await this.writeLogs(task, 'out')
-        await this.writeLogs(task, 'err')
+        if (this.options.includeConsoleOutput) {
+          await this.writeLogs(task, 'out')
+          await this.writeLogs(task, 'err')
+        }
 
         if (task.mode === 'skip' || task.mode === 'todo')
           await this.logger.log('<skipped/>')
@@ -179,7 +192,7 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              const result = await captuerPrintError(
+              const result = capturePrintError(
                 error,
                 this.ctx,
                 this.ctx.getProjectByTaskId(task.id),
@@ -234,6 +247,7 @@ export class JUnitReporter implements Reporter {
             // NOTE: not used in JUnitReporter
             context: null as any,
             suite: null as any,
+            file: null as any,
           } satisfies Task)
         }
 
@@ -249,8 +263,7 @@ export class JUnitReporter implements Reporter {
       stats.failures += file.stats.failures
       return stats
     }, {
-      // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { suiteName: 'something' }]]"
-      name: this.options.suiteName || process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      name: this.options.suiteName || 'vitest tests',
       tests: 0,
       failures: 0,
       errors: 0, // we cannot detect those
@@ -259,8 +272,9 @@ export class JUnitReporter implements Reporter {
 
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
+        const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement('testsuite', {
-          name: relative(this.ctx.config.root, file.filepath),
+          name: filename,
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
@@ -269,7 +283,7 @@ export class JUnitReporter implements Reporter {
           skipped: file.stats.skipped,
           time: getDuration(file),
         }, async () => {
-          await this.writeTasks(file.tasks, file.name)
+          await this.writeTasks(file.tasks, filename)
         })
       }
     })

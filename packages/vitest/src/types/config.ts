@@ -16,6 +16,7 @@ import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions } from './pool-options'
 
+export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
@@ -390,7 +391,6 @@ export interface InlineConfig {
    */
   reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
-  // TODO: v2.0.0 Remove in favor of custom reporter options, e.g. "reporters: [['json', { outputFile: 'some-dir/file.html' }]]"
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
@@ -441,12 +441,6 @@ export interface InlineConfig {
    * Path to global setup files
    */
   globalSetup?: string | string[]
-
-  /**
-   * Glob pattern of file paths to be ignore from triggering watch rerun
-   * @deprecated Use server.watch.ignored instead
-   */
-  watchExclude?: string[]
 
   /**
    * Glob patter of file paths that will trigger the whole suite rerun
@@ -559,6 +553,11 @@ export interface InlineConfig {
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string
+
+  /**
+   * Path to a custom snapshot environment module that has a defualt export of `SnapshotEnvironment` object.
+   */
+  snapshotEnvironment?: string
 
   /**
    * Pass with no tests
@@ -802,6 +801,15 @@ export interface UserConfig extends InlineConfig {
   config?: string | false | undefined
 
   /**
+   * Do not run tests when Vitest starts.
+   *
+   * Vitest will only run tests if it's called programmatically or the test file changes.
+   *
+   * CLI file filters will be ignored.
+   */
+  standalone?: boolean
+
+  /**
    * Use happy-dom
    */
   dom?: boolean
@@ -846,6 +854,16 @@ export interface UserConfig extends InlineConfig {
    * Override vite config's clearScreen from cli
    */
   clearScreen?: boolean
+
+  /**
+   * benchmark.compare option exposed at the top level for cli
+   */
+  compare?: string
+
+  /**
+   * benchmark.outputJson option exposed at the top level for cli
+   */
+  outputJson?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
@@ -872,7 +890,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   api?: ApiConfig
   cliExclude?: string[]
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & Pick<BenchmarkUserOptions, 'outputFile'>
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   shard?: {
     index: number
     count: number
@@ -913,7 +931,6 @@ export type ProjectConfig = Omit<
   | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
-  | 'watchExclude'
   | 'forceRerunTriggers'
   | 'testNamePattern'
   | 'ui'

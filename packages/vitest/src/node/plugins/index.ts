@@ -80,9 +80,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           },
           server: {
             ...testConfig.api,
-            watch: {
-              ignored: testConfig.watchExclude,
-            },
             open,
             hmr: false,
             preTransformRequests: false,
@@ -132,8 +129,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
-          config.server!.watch!.useFsEvents = false
-          config.server!.watch!.usePolling = false
+          const watch = config.server!.watch
+          if (watch) {
+            watch.useFsEvents = false
+            watch.usePolling = false
+          }
         }
 
         const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
@@ -193,15 +193,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             console.log('[debug] watcher is ready')
           })
         }
-        try {
-          await ctx.setServer(options, server, userConfig)
-          if (options.api && options.watch)
-            (await import('../../api/setup')).setup(ctx)
-        }
-        catch (err) {
-          await ctx.logger.printError(err, { fullStack: true })
-          process.exit(1)
-        }
+        await ctx.setServer(options, server, userConfig)
+        if (options.api && options.watch)
+          (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)

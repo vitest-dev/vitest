@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import { dirname, relative, resolve } from 'pathe'
 import type { File, ResolvedConfig } from '../../types'
-import { version } from '../../../package.json'
 
 export interface SuiteResultCache {
   failed: boolean
@@ -12,8 +11,12 @@ export class ResultsCache {
   private cache = new Map<string, SuiteResultCache>()
   private workspacesKeyMap = new Map<string, string[]>()
   private cachePath: string | null = null
-  private version: string = version
+  private version: string
   private root = '/'
+
+  constructor(version: string) {
+    this.version = version
+  }
 
   public getCachePath() {
     return this.cachePath

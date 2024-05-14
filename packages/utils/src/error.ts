@@ -44,6 +44,8 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return val.tagName
   if (typeof val.asymmetricMatch === 'function')
     return `${val.toString()} ${format(val.sample)}`
+  if (typeof val.toJSON === 'function')
+    return val.toJSON()
 
   if (seen.has(val))
     return seen.get(val)
@@ -92,7 +94,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
-export function processError(err: any, diffOptions?: DiffOptions) {
+export function processError(err: any, diffOptions?: DiffOptions, seen = new WeakSet()) {
   if (!err || typeof err !== 'object')
     return { message: err }
   // stack is not serialized in worker communication
@@ -119,9 +121,16 @@ export function processError(err: any, diffOptions?: DiffOptions) {
   try {
     if (typeof err.message === 'string')
       err.message = normalizeErrorMessage(err.message)
+  }
+  catch {}
 
-    if (typeof err.cause === 'object' && typeof err.cause.message === 'string')
-      err.cause.message = normalizeErrorMessage(err.cause.message)
+  // some Error implementations may not allow rewriting cause
+  // in most cases, the assignment will lead to "err.cause = err.cause"
+  try {
+    if (!seen.has(err) && typeof err.cause === 'object') {
+      seen.add(err)
+      err.cause = processError(err.cause, diffOptions, seen)
+    }
   }
   catch {}
 

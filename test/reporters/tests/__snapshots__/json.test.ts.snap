@@ -2,16 +2,15 @@
 
 exports[`json reporter > generates correct report 1`] = `
 {
-  "ancestorTitles": [
-    "",
-  ],
+  "ancestorTitles": [],
   "failureMessages": [
-    "expected 2 to deeply equal 1",
+    "AssertionError: expected 2 to deeply equal 1
+    at <root>/test/reporters/fixtures/json-fail.test.ts:8:13",
   ],
-  "fullName": " should fail",
+  "fullName": "should fail",
   "location": {
-    "column": 13,
-    "line": 8,
+    "column": 1,
+    "line": 5,
   },
   "status": "failed",
   "title": "should fail",

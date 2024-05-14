@@ -12,8 +12,9 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
+import { version } from '../../package.json' with { type: 'json' }
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
-import { hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
+import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
@@ -38,6 +39,8 @@ export interface VitestOptions {
 }
 
 export class Vitest {
+  version = version
+
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> = {}
 
@@ -95,6 +98,7 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.distPath = undefined!
     this.projectsTestFiles.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
@@ -102,18 +106,13 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
-    this.cache = new VitestCache()
+    this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch)
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
-
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
 
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
@@ -422,6 +421,25 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
+  async init() {
+    this._onClose = []
+
+    try {
+      await this.initCoverageProvider()
+      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.initBrowserProviders()
+    }
+    finally {
+      await this.report('onInit', this)
+    }
+
+    // populate test files cache so watch mode can trigger a file rerun
+    await this.globTestFiles()
+
+    if (this.config.watch)
+      await this.report('onWatcherStart')
+  }
+
   private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async ([project, filepath]: WorkspaceSpec) => {
       if (deps.has(filepath))
@@ -508,7 +526,19 @@ export class Vitest {
       await project.initializeGlobalSetup()
   }
 
+  private async initializeDistPath() {
+    if (this.distPath)
+      return
+
+    // if Vitest is running globally, then we should still import local vitest if possible
+    const projectVitestPath = await this.vitenode.resolveId('vitest')
+    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    this.distPath = join(vitestDir, 'dist')
+  }
+
   async runFiles(paths: WorkspaceSpec[], allTestsRun: boolean) {
+    await this.initializeDistPath()
+
     const filepaths = paths.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
@@ -599,14 +629,24 @@ export class Vitest {
     if (pattern === '')
       this.filenamePattern = undefined
 
-    this.configOverride.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    const testNamePattern = pattern ? new RegExp(pattern) : undefined
+    this.configOverride.testNamePattern = testNamePattern
+    // filter only test files that have tests matching the pattern
+    if (testNamePattern) {
+      files = files.filter((filepath) => {
+        const files = this.state.getFiles([filepath])
+        return !files.length || files.some((file) => {
+          const tasks = getTasks(file)
+          return !tasks.length || tasks.some(task => testNamePattern.test(task.name))
+        })
+      })
+    }
     await this.rerunFiles(files, trigger)
   }
 
-  async changeFilenamePattern(pattern: string) {
+  async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
     this.filenamePattern = pattern
 
-    const files = this.state.getFilepaths()
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
     await this.rerunFiles(files, trigger)
@@ -750,8 +790,10 @@ export class Vitest {
 
       const matchingProjects: WorkspaceProject[] = []
       await Promise.all(this.projects.map(async (project) => {
-        if (await project.isTargetFile(id))
+        if (await project.isTargetFile(id)) {
           matchingProjects.push(project)
+          project.testFilesList?.push(id)
+        }
       }))
 
       if (matchingProjects.length > 0) {
@@ -770,8 +812,6 @@ export class Vitest {
 
     if (this.config.forceRerunTriggers.length)
       watcher.add(this.config.forceRerunTriggers)
-
-    watcher.unwatch(this.config.watchExclude)
 
     watcher.on('change', onChange)
     watcher.on('unlink', onUnlink)
@@ -930,6 +970,10 @@ export class Vitest {
       // @ts-expect-error let me go
       ...args,
     )))
+  }
+
+  public async getTestFilepaths() {
+    return this.globTestFiles().then(files => files.map(([, file]) => file))
   }
 
   public async globTestFiles(filters: string[] = []) {

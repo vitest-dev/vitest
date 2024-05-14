@@ -1,7 +1,7 @@
-import type { SnapshotEnvironment } from 'vitest'
-import { rpc } from './rpc'
+import type { VitestClient } from '@vitest/ws-client'
+import type { SnapshotEnvironment } from 'vitest/snapshot'
 
-export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
+export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   getVersion(): string {
     return '1'
   }
@@ -29,4 +29,9 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
   removeSnapshotFile(filepath: string): Promise<void> {
     return rpc().removeSnapshotFile(filepath)
   }
+}
+
+function rpc(): VitestClient['rpc'] {
+  // @ts-expect-error not typed global
+  return globalThis.__vitest_worker__.rpc
 }
