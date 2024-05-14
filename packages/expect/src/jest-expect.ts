@@ -4,11 +4,13 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
+
+import matchers from './jest-assertions/index'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -24,6 +26,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
   const c = () => getColors()
   const customTesters = getCustomEqualityTesters()
+
+  matchers.forEach(define => define(chai, utils))
 
   function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Assertion) => {
@@ -76,46 +80,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this
   })
 
-  def('toEqual', function (expected) {
-    const actual = utils.flag(this, 'object')
-    const equal = jestEquals(
-      actual,
-      expected,
-      [...customTesters, iterableEquality],
-    )
-
-    return this.assert(
-      equal,
-      'expected #{this} to deeply equal #{exp}',
-      'expected #{this} to not deeply equal #{exp}',
-      expected,
-      actual,
-    )
-  })
-
-  def('toStrictEqual', function (expected) {
-    const obj = utils.flag(this, 'object')
-    const equal = jestEquals(
-      obj,
-      expected,
-      [
-        ...customTesters,
-        iterableEquality,
-        typeEquality,
-        sparseArrayEquality,
-        arrayBufferEquality,
-      ],
-      true,
-    )
-
-    return this.assert(
-      equal,
-      'expected #{this} to strictly equal #{exp}',
-      'expected #{this} to not strictly equal #{exp}',
-      expected,
-      obj,
-    )
-  })
   def('toBe', function (expected) {
     const actual = this._obj
     const pass = Object.is(actual, expected)
@@ -158,27 +122,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       expected,
       actual,
     )
-  })
-  def('toMatchObject', function (expected) {
-    const actual = this._obj
-    const pass = jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality])
-    const isNot = utils.flag(this, 'negate') as boolean
-    const { subset: actualSubset, stripped } = getObjectSubset(actual, expected)
-    if ((pass && isNot) || (!pass && !isNot)) {
-      const msg = utils.getMessage(
-        this,
-        [
-          pass,
-          'expected #{this} to match object #{exp}',
-          'expected #{this} to not match object #{exp}',
-          expected,
-          actualSubset,
-          false,
-        ],
-      )
-      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${stripped === 1 ? 'property' : 'properties'} omitted from actual)`
-      throw new AssertionError(message, { showDiff: true, expected, actual: actualSubset })
-    }
   })
   def('toMatch', function (expected: string | RegExp) {
     const actual = this._obj as string
