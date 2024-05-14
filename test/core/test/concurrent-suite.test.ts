@@ -1,5 +1,5 @@
 import { createDefer } from '@vitest/utils'
-import { afterAll, describe, test } from 'vitest'
+import { afterAll, describe, expect, test } from 'vitest'
 
 describe('basic', () => {
   const defers = [
@@ -107,3 +107,69 @@ describe('works with describe.each', () => {
     }
   })
 })
+
+describe('override concurrent', { concurrent: true }, () => {
+  checkParallelSuites()
+
+  describe('s-x', { concurrent: false }, () => {
+    checkSequentialTests()
+  })
+
+  describe('s-y', () => {
+    checkParallelTests()
+  })
+})
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+function checkSequentialTests() {
+  let x = 0
+
+  test('t1', async () => {
+    await sleep(200)
+    expect(x).toBe(0)
+    x++
+  })
+
+  test('t2', async () => {
+    expect(x).toBe(1)
+  })
+}
+
+function checkParallelTests() {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  test('t1', async () => {
+    defers[0].resolve()
+    await defers[1]
+  })
+
+  test('t2', async () => {
+    await defers[0]
+    defers[1].resolve()
+  })
+}
+
+function checkParallelSuites() {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  describe('s1', () => {
+    test('t1', async () => {
+      defers[0].resolve()
+      await defers[1]
+    })
+  })
+
+  describe('s2', () => {
+    test('t1', async () => {
+      await defers[0]
+      defers[1].resolve()
+    })
+  })
+}
