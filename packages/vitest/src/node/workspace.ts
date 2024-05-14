@@ -7,7 +7,6 @@ import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from '
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
@@ -21,7 +20,6 @@ import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
-import { divider } from './reporters/renderers/utils'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -150,9 +148,8 @@ export class WorkspaceProject {
       }
     }
     catch (e) {
-      this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-      this.logger.printError(e)
-      process.exit(1)
+      process.exitCode = 1
+      throw e
     }
   }
 
@@ -164,9 +161,8 @@ export class WorkspaceProject {
         await globalSetupFile.teardown?.()
       }
       catch (error) {
-        this.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
-        this.logger.printError(error)
         process.exitCode = 1
+        throw error
       }
     }
   }
