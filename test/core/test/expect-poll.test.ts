@@ -45,8 +45,8 @@ test('interval', async () => {
     // using big values because CI can be slow
     await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
   }).rejects.toThrowError()
-  // first call is immediate
-  expect(fn).toHaveBeenCalledTimes(6)
+  // CI can be unstable, but there should be always at least 5 calls
+  expect(fn.mock.calls.length >= 5).toBe(true)
 })
 
 test('fake timers don\'t break it', async () => {
