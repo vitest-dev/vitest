@@ -70,7 +70,6 @@ export interface MatcherState {
     subsetEquality: Tester
   }
   soft?: boolean
-  poll?: boolean
 }
 
 export interface SyncExpectationResult {

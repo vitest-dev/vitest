@@ -62,10 +62,9 @@ export function createExpect(test?: TaskPopulated) {
   expect.poll = function poll(fn, options = {}): any {
     const { interval = 50, timeout = 1000, message } = options
     const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-    expect.setState({
-      poll: true,
-    })
-    const proxy: any = new Proxy(expect(null, message), {
+    // @ts-expect-error private poll access
+    const assertion = expect(null, message).withContext({ poll: true }) as Assertion
+    const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver)
 

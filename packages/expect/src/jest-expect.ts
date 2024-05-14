@@ -3,13 +3,12 @@ import type { Constructable } from '@vitest/utils'
 import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
-import type { Assertion, ChaiPlugin, MatcherState } from './types'
+import type { Assertion, ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
-import { GLOBAL_EXPECT, JEST_MATCHERS_OBJECT } from './constants'
+import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
-import { getState } from './state'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -723,6 +722,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.satisfy(matcher, message)
   })
 
+  // @ts-expect-error @internal
+  def('withContext', function (this: any, context: Record<string, any>) {
+    for (const key in context)
+      utils.flag(this, key, context[key])
+    return this
+  })
+
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     const error = new Error('resolves')
     utils.flag(this, 'promise', 'resolves')
@@ -730,12 +736,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
-    // @ts-expect-error local is untyped
-    const state: MatcherState = test?.context._local
-      ? test.context.expect.getState()
-      : getState((globalThis as any)[GLOBAL_EXPECT])
-
-    if (state.poll)
+    if (utils.flag(this, 'poll'))
       throw new SyntaxError(`expect.poll is not supported in combination with .resolves`)
 
     if (typeof obj?.then !== 'function')
@@ -781,12 +782,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
-    // @ts-expect-error local is untyped
-    const state: MatcherState = test?.context._local
-      ? test.context.expect.getState()
-      : getState((globalThis as any)[GLOBAL_EXPECT])
-
-    if (state.poll)
+    if (utils.flag(this, 'poll'))
       throw new SyntaxError(`expect.poll is not supported in combination with .rejects`)
 
     if (typeof wrapper?.then !== 'function')
