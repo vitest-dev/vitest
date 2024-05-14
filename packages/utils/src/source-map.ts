@@ -65,7 +65,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     return null
 
   // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const functionNameRegex = /(([^\n\r"\u2028\u2029]*".[^\n\r"\u2028\u2029]*"[^\n\r@\u2028\u2029]*(?:@[^\n\r"\u2028\u2029]*"[^\n\r@\u2028\u2029]*)*(?:[\n\r\u2028\u2029][^@]*)?)?[^@]*)@/
+  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
   const matches = line.match(functionNameRegex)
   const functionName = matches && matches[1] ? matches[1] : undefined
   const [url, lineNumber, columnNumber] = extractLocation(line.replace(functionNameRegex, ''))
