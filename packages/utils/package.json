@@ -63,7 +63,7 @@
   "dependencies": {
     "diff-sequences": "^29.6.3",
     "estree-walker": "^3.0.3",
-    "loupe": "^3.1.0",
+    "loupe": "^3.1.1",
     "pretty-format": "^29.7.0"
   },
   "devDependencies": {
