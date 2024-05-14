@@ -684,15 +684,18 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 - **Alias:** `suite.concurrent`
 
-`describe.concurrent` in a suite marks every tests as concurrent
+`describe.concurrent` runs all inner suites and tests in parallel
 
 ```ts twoslash
 import { describe, test } from 'vitest'
 // ---cut---
-// All tests within this suite will be run in parallel
+// All suites and tests within this suite will be run in parallel
 describe.concurrent('suite', () => {
   test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
+  describe('concurrent suite 2', async () => {
+    test('concurrent test inner 1', async () => { /* ... */ })
+    test('concurrent test inner 2', async () => { /* ... */ })
+  })
   test.concurrent('concurrent test 3', async () => { /* ... */ })
 })
 ```
