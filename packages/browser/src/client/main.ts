@@ -69,9 +69,9 @@ client.ws.addEventListener('open', async () => {
         const filenames = e.data.filenames
         filenames.forEach(filename => runningFiles.delete(filename))
 
-        // const iframeId = filenames.length > 1 ? ID_ALL : filenames[0]
-        // iframes.get(iframeId)?.remove()
-        // iframes.delete(iframeId)
+        const iframeId = filenames.length > 1 ? ID_ALL : filenames[0]
+        iframes.get(iframeId)?.remove()
+        iframes.delete(iframeId)
 
         if (!runningFiles.size)
           await done()
