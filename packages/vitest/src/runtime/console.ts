@@ -54,20 +54,18 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
     })
   }
   function sendStdout(taskId: string) {
-    const buffer = stdoutBuffer.get(taskId)
-    if (!buffer)
-      return
-    sendBuffer(buffer, taskId, 'stdout')
+    sendBuffer('stdout', taskId)
   }
 
   function sendStderr(taskId: string) {
-    const buffer = stderrBuffer.get(taskId)
-    if (!buffer)
-      return
-    sendBuffer(buffer, taskId, 'stderr')
+    sendBuffer('stderr', taskId)
   }
 
-  function sendBuffer(buffer: any[], taskId: string, type: 'stdout' | 'stderr') {
+  function sendBuffer(type: 'stdout' | 'stderr', taskId: string) {
+    const buffers = type === 'stdout' ? stdoutBuffer : stderrBuffer
+    const buffer = buffers.get(taskId)
+    if (!buffer)
+      return
     if (state().config.printConsoleTrace) {
       buffer.forEach(([buffer, origin]) => {
         sendLog(type, taskId, String(buffer), buffer.length, origin)
@@ -78,7 +76,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
-    stderrBuffer.set(taskId, [])
+    buffers.set(taskId, [])
     if (type === 'stderr')
       timer.stderrTime = 0
     else
@@ -93,11 +91,12 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
     origin?: string,
   ) {
     const timer = timers.get(taskId)!
+    const time = type === 'stderr' ? timer.stderrTime : timer.stdoutTime
     state().rpc.onUserConsoleLog({
       type,
       content: content || '<empty line>',
       taskId,
-      time: timer.stderrTime || RealDate.now(),
+      time: time || RealDate.now(),
       size,
       origin,
     })
