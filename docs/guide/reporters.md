@@ -28,10 +28,6 @@ export default defineConfig({
 
 Some reporters can be customized by passing additional options to them. Reporter specific options are described in sections below.
 
-:::tip
-Since Vitest v1.3.0
-:::
-
 ```ts
 export default defineConfig({
   test: {
@@ -444,7 +440,7 @@ export default defineConfig({
 ```
 :::
 
-### Github Actions Reporter <Badge type="info">1.3.0+</Badge> {#github-actions-reporter}
+### Github Actions Reporter {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
 to provide annotations for test failures. This reporter is automatically enabled with a [`default`](#default-reporter) reporter when `process.env.GITHUB_ACTIONS === 'true'`.

@@ -47,7 +47,7 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
 
 :::code-group
 ```ts [dot-syntax] twoslash
@@ -57,7 +57,7 @@ test.skip('skipped test', () => {
   // some logic that fails right now
 })
 ```
-```ts [object-syntax <Version>1.3.0</Version>] twoslash
+```ts [object-syntax] twoslash
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
@@ -82,7 +82,7 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend <Version>0.32.3</Version> {#test-extended}
+### test.extend {#test-extended}
 
 - **Alias:** `it.extend`
 
@@ -859,7 +859,7 @@ beforeEach(async () => {
 
 Here, the `beforeEach` ensures that user is added for each test.
 
-Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+`beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
 
 ```ts
 import { beforeEach } from 'vitest'
@@ -917,7 +917,7 @@ beforeAll(async () => {
 
 Here the `beforeAll` ensures that the mock data is set up before tests run.
 
-Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+`beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
 
 ```ts
 import { beforeAll } from 'vitest'
@@ -960,7 +960,7 @@ Vitest provides a few hooks that you can call _during_ the test execution to cle
 These hooks will throw an error if they are called outside of the test body.
 :::
 
-### onTestFinished <Version>1.3.0</Version> {#ontestfinished}
+### onTestFinished {#ontestfinished}
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 

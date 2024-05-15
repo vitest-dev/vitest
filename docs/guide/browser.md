@@ -119,7 +119,7 @@ npx vitest --browser.name=chrome --browser.headless
 
 In this case, Vitest will run in headless mode using the Chrome browser.
 
-## Context <Version>2.0.0</Version> {#context}
+## Context
 
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
@@ -157,7 +157,7 @@ export const page: {
 }
 ```
 
-## Commands <Version>2.0.0</Version> {#commands}
+## Commands
 
 Command is a function that invokes another function on the server and passes down the result back to the browser. Vitest exposes several built-in commands you can use in your browser tests.
 

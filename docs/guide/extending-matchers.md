@@ -23,7 +23,7 @@ expect.extend({
 })
 ```
 
-If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+If you are using TypeScript, you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
 import type { Assertion, AsymmetricMatchersContaining } from 'vitest'
