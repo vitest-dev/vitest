@@ -999,6 +999,7 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
+  | 'expect'
 > & {
   sequence?: {
     concurrent?: boolean

@@ -10,7 +10,9 @@ describe('error thrown in beforeEach fixtures', () => {
   // eslint-disable-next-line unused-imports/no-unused-vars
   beforeEach<{ a: never }>(({ a }) => {})
 
-  myTest('error is handled', () => {})
+  myTest('error is handled', () => {
+    expect(1).toBe(1)
+  })
 })
 
 describe('error thrown in afterEach fixtures', () => {
@@ -24,6 +26,7 @@ describe('error thrown in afterEach fixtures', () => {
   afterEach<{ a: never }>(({ a }) => {})
 
   myTest('fixture errors', () => {
+    expect(1).toBe(1)
     expectTypeOf(1).toEqualTypeOf<number>()
   })
 })
