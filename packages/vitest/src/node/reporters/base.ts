@@ -200,7 +200,7 @@ export abstract class BaseReporter implements Reporter {
     const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : log.taskId !== UNKNOWN_TEST_ID ? log.taskId : 'unknown test'}`))
 
     const output = log.type === 'stdout' ? this.ctx.logger.outputStream : this.ctx.logger.errorStream
-    const write = output.write as (str: string) => void
+    const write = output.write.bind(output) as (str: string) => void
 
     write(`${header}\n${log.content}`)
 
