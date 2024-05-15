@@ -48,9 +48,9 @@ export default defineConfig({
 
 Previously, specifying `concurrent` on a suite would still group concurrent tests by suites and run them together one by one. Now, it follows jest's behaviour and runs all of them at once (still limited by [`maxConcurrency`](/config/#maxConcurrency))
 
-### enable `coverage.ignoreEmptyLines` by default
+### enable V8 coverage's `coverage.ignoreEmptyLines` by default
 
-Changes default value of `coverage.ignoreEmptyLines` to `true`. This change will have major impact on users' code coverage reports. It is likely that projects using coverage thresholds need to adjust those values after this.
+Changes default value of `coverage.ignoreEmptyLines` to `true`. This change will have major impact on users' code coverage reports. It is likely that projects using coverage thresholds need to adjust those values after this. This change affects only the default `coverage.provider: 'v8'`.
 
 ### No more `watchExclude` option
 
