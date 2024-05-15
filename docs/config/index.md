@@ -2287,3 +2287,38 @@ If you just need to configure snapshots feature, use [`snapshotFormat`](#snapsho
 - **Type:** `Partial<NodeJS.ProcessEnv>`
 
 Environment variables available on `process.env` and `import.meta.env` during tests. These variables will not be available in the main process (in `globalSetup`, for example).
+
+### expect
+
+- **Type:** `ExpectOptions`
+
+#### expect.requireAssertions
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+The same as calling [`expect.hasAssertions()`](/api/expect#expect-hasassertions) at the start of every test. This makes sure that no test will pass accidentally.
+
+::: tip
+This only works with Vitest's `expect`. If you use `assert` ot `.should` assertions, they will not count, and your test will fail due to the lack of expect assertions.
+
+You can change the value of this by calling `vi.setConfig({ expect: { requireAssertions: false } })`. The config will be applied to every subsequent `expect` call until the `vi.resetConfig` is called manually.
+:::
+
+#### expect.poll
+
+Global configuration options for [`expect.poll`](/api/expect#poll). These are the same options you can pass down to `expect.poll(condition, options)`.
+
+##### expect.poll.interval
+
+- **Type:** `number`
+- **Default:** `50`
+
+Polling interval in milliseconds
+
+##### expect.poll.timeout
+
+- **Type:** `number`
+- **Default:** `1000`
+
+Polling timeout in milliseconds
