@@ -68,7 +68,7 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/hello from console.trace\s+(\w+|@)/)
   })
 
-  test.runIf(browser !== 'safari')(`logs have stack traces in non-safari`, () => {
+  test.runIf(browser !== 'webkit')(`logs have stack traces in non-safari`, () => {
     expect(stdout).toMatch(`
 log with a stack
  ❯ test/logs.test.ts:58:10
@@ -81,7 +81,7 @@ error with a stack
     expect(stderr).not.toMatch('test/logs.test.ts:60:10')
   })
 
-  test.runIf(browser === 'safari')(`logs have stack traces in safari`, () => {
+  test.runIf(browser === 'webkit')(`logs have stack traces in safari`, () => {
     // safari print stack trace in a different place
     expect(stdout).toMatch(`
 log with a stack
