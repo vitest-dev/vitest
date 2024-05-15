@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import type { UserConfig } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const browser = process.env.BROWSER || (process.env.PROVIDER !== 'playwright' ? 'chromium' : 'chrome')
+export const browser = process.env.BROWSER || (process.env.PROVIDER !== 'playwright' ? 'chromium' : 'chrome')
 
 export async function runBrowserTests(config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> }, include?: string[]) {
   const result = await runVitest({

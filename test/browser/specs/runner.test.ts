@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { browser, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
   let stderr: string
@@ -7,7 +7,6 @@ describe('running browser tests', async () => {
   let browserResultJson: any
   let passedTests: any[]
   let failedTests: any[]
-  let browser: string
 
   beforeAll(async () => {
     ({
@@ -16,7 +15,6 @@ describe('running browser tests', async () => {
       browserResultJson,
       passedTests,
       failedTests,
-      browser,
     } = await runBrowserTests())
   })
 
