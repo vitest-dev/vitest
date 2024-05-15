@@ -707,6 +707,29 @@ export interface InlineConfig {
   }
 
   /**
+   * Configuration options for expect() matches.
+   */
+  expect?: {
+    /**
+     * Throw an error if tests don't have any expect() assertions.
+     */
+    requireAssertions?: boolean
+    /**
+     * Default options for expect.poll()
+     */
+    poll?: {
+      /**
+       * Timeout in milliseconds
+       */
+      timeout?: number
+      /**
+       * Polling interval in milliseconds
+       */
+      interval?: number
+    }
+  }
+
+  /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
    */
