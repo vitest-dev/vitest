@@ -7,6 +7,7 @@ describe('running browser tests', async () => {
   let browserResultJson: any
   let passedTests: any[]
   let failedTests: any[]
+  let browser: string
 
   beforeAll(async () => {
     ({
@@ -15,6 +16,7 @@ describe('running browser tests', async () => {
       browserResultJson,
       passedTests,
       failedTests,
+      browser,
     } = await runBrowserTests())
   })
 
@@ -66,7 +68,7 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/hello from console.trace\s+(\w+|@)/)
   })
 
-  test(`[${description}] logs have stack traces`, () => {
+  test.runIf(browser !== 'safari')(`logs have stack traces in non-safari`, () => {
     expect(stdout).toMatch(`
 log with a stack
  ❯ test/logs.test.ts:58:10
@@ -79,8 +81,22 @@ error with a stack
     expect(stderr).not.toMatch('test/logs.test.ts:60:10')
   })
 
-  test('stack trace points to correct file in every browser', () => {
-    // dependeing on the browser it references either '.toBe()' or 'expect()'
+  test.runIf(browser === 'safari')(`logs have stack traces in safari`, () => {
+    // safari print stack trace in a different place
+    expect(stdout).toMatch(`
+log with a stack
+ ❯ test/logs.test.ts:58:14
+    `.trim())
+    expect(stderr).toMatch(`
+error with a stack
+ ❯ test/logs.test.ts:59:16
+    `.trim())
+    // console.trace doens't add additional stack trace
+    expect(stderr).not.toMatch('test/logs.test.ts:60:16')
+  })
+
+  test(`stack trace points to correct file in every browser`, () => {
+    // dependeing on the browser it references either `.toBe()` or `expect()`
     expect(stderr).toMatch(/test\/failing.test.ts:4:(12|17)/)
   })
 

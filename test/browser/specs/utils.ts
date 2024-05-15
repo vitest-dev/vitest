@@ -24,5 +24,5 @@ export async function runBrowserTests(config?: Omit<UserConfig, 'browser'> & { b
   const passedTests = getPassed(browserResultJson.testResults)
   const failedTests = getFailed(browserResultJson.testResults)
 
-  return { ...result, browserResultJson, passedTests, failedTests }
+  return { ...result, browserResultJson, passedTests, failedTests, browser }
 }
