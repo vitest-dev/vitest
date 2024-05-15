@@ -585,6 +585,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Maximum number of concurrent tests in a suite (default: `5`)',
     argument: '<number>',
   },
+  expect: {
+    description: 'Configuration options for `expect()` matches',
+    argument: '', // no displayed
+    subcommands: {
+      requireAssertions: {
+        description: 'Require that all tests have at least one assertion',
+      },
+      poll: {
+        description: 'Default options for `expect.poll()`',
+        argument: '',
+        subcommands: {
+          interval: {
+            description: 'Poll interval in milliseconds for `expect.poll()` assertions (default: `50`)',
+            argument: '<interval>',
+          },
+          timeout: {
+            description: 'Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)',
+            argument: '<timeout>',
+          },
+        },
+      },
+    },
+  },
 
   // CLI only options
   run: {

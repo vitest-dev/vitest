@@ -720,10 +720,12 @@ export interface InlineConfig {
     poll?: {
       /**
        * Timeout in milliseconds
+       * @default 1000
        */
       timeout?: number
       /**
        * Polling interval in milliseconds
+       * @default 50
        */
       interval?: number
     }
