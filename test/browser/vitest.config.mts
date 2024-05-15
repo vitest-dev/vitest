@@ -86,5 +86,8 @@ export default defineConfig({
       onServerRestart: noop,
       onUserConsoleLog: noop,
     }, 'default'],
+    env: {
+      BROWSER: browser,
+    },
   },
 })
