@@ -592,11 +592,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   run: {
     description: 'Disable watch mode',
   },
-  segfaultRetry: {
-    description: 'Retry the test suite if it crashes due to a segfault (default: `true`)',
-    argument: '<times>',
-    default: 0,
-  },
   color: {
     description: 'Removes colors from the console output',
     alias: 'no-color',

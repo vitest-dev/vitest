@@ -116,7 +116,6 @@
 | `--teardownTimeout <timeout>` | Default timeout of a teardown function in milliseconds (default: `10000`) |
 | `--maxConcurrency <number>` | Maximum number of concurrent tests in a suite (default: `5`) |
 | `--run` | Disable watch mode |
-| `--segfaultRetry <times>` | Retry the test suite if it crashes due to a segfault (default: `true`) |
 | `--no-color` | Removes colors from the console output |
 | `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
 | `--standalone` | Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`) |
