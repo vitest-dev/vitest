@@ -121,8 +121,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       }
       if (state().config.printConsoleTrace) {
         const limit = Error.stackTraceLimit
-        Error.stackTraceLimit = 20
-        const trace = new Error('STACK_TRACE').stack?.split('\n').slice(7).join('\n')
+        Error.stackTraceLimit = limit + 6
+        const stack = new Error('STACK_TRACE').stack
+        const trace = stack?.split('\n').slice(7).join('\n')
         Error.stackTraceLimit = limit
         buffer.push([data, trace])
       }
@@ -152,10 +153,18 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       }
       if (state().config.printConsoleTrace) {
         const limit = Error.stackTraceLimit
-        Error.stackTraceLimit = 20
-        const trace = new Error('STACK_TRACE').stack?.split('\n').slice(7).join('\n')
+        Error.stackTraceLimit = limit + 6
+        const stack = new Error('STACK_TRACE').stack?.split('\n')
         Error.stackTraceLimit = limit
-        buffer.push([data, trace])
+        const isTrace = stack?.some(line => line.includes('at Console.trace'))
+        if (isTrace) {
+          buffer.push([data, undefined])
+        }
+        else {
+          const trace = stack?.slice(7).join('\n')
+          Error.stackTraceLimit = limit
+          buffer.push([data, trace])
+        }
       }
       else {
         buffer.push([data, undefined])

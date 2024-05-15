@@ -45,8 +45,6 @@ describe('running browser tests', async () => {
     expect(stdout).toContain('hello from console.debug')
     expect(stdout).toContain('{ hello: \'from dir\' }')
     expect(stdout).toContain('{ hello: \'from dirxml\' }')
-    // safari logs the stack files with @https://...
-    expect(stdout).toMatch(/hello from console.trace\s+(\w+|@)/)
     expect(stdout).toContain('dom <div />')
     expect(stdout).toContain('default: 1')
     expect(stdout).toContain('default: 2')
@@ -64,6 +62,21 @@ describe('running browser tests', async () => {
     expect(stderr).toContain('hello from console.warn')
     expect(stderr).toContain('Timer "invalid timeLog" does not exist')
     expect(stderr).toContain('Timer "invalid timeEnd" does not exist')
+    // safari logs the stack files with @https://...
+    expect(stderr).toMatch(/hello from console.trace\s+(\w+|@)/)
+  })
+
+  test(`[${description}] logs have stack traces`, () => {
+    expect(stdout).toMatch(`
+log with a stack
+ ❯ test/logs.test.ts:58:10
+    `.trim())
+    expect(stderr).toMatch(`
+error with a stack
+ ❯ test/logs.test.ts:59:10
+    `.trim())
+    // console.trace doens't add additional stack trace
+    expect(stderr).not.toMatch('test/logs.test.ts:60:10')
   })
 
   test('stack trace points to correct file in every browser', () => {

@@ -200,11 +200,14 @@ export abstract class BaseReporter implements Reporter {
     const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : log.taskId !== UNKNOWN_TEST_ID ? log.taskId : 'unknown test'}`))
 
     const output = log.type === 'stdout' ? this.ctx.logger.outputStream : this.ctx.logger.errorStream
+    const write = output.write as (str: string) => void
 
-    // @ts-expect-error -- write() method has different signature on the union type
-    output.write(`${header}\n${log.content}${log.origin ? '' : '\n'}`)
+    write(`${header}\n${log.content}`)
 
     if (log.origin) {
+      // browser logs don't have an extra end of line at the end like Node.js does
+      if (log.browser)
+        write('\n')
       const project = log.taskId
         ? this.ctx.getProjectByTaskId(log.taskId)
         : this.ctx.getCoreWorkspaceProject()
@@ -217,12 +220,11 @@ export abstract class BaseReporter implements Reporter {
         const color = frame === highlight ? c.cyan : c.gray
         const path = relative(project.config.root, frame.file)
 
-        // @ts-expect-error -- write() method has different signature on the union type
-        output.write(color(` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`].filter(Boolean).join(' ')}\n`))
+        write(color(` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`].filter(Boolean).join(' ')}\n`))
       }
-      // @ts-expect-error -- write() method has different signature on the union type
-      output.write('\n')
     }
+
+    write('\n')
   }
 
   shouldLog(log: UserConsoleLog) {

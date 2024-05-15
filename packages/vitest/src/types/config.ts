@@ -1007,6 +1007,7 @@ export type RuntimeConfig = Pick<
   | 'fakeTimers'
   | 'maxConcurrency'
   | 'expect'
+  | 'printConsoleTrace'
 > & {
   sequence?: {
     concurrent?: boolean
