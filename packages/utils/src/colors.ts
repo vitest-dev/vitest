@@ -74,10 +74,14 @@ export function createColors(isTTY = false): Colors {
     || 'CI' in process.env)
 
   const replaceClose = (string: string, close: string, replace: string, index: number): string => {
-    const start = string.substring(0, index) + replace
-    const end = string.substring(index + close.length)
-    const nextIndex = end.indexOf(close)
-    return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end
+    let result = ''
+    let cursor = 0
+    do {
+      result += string.substring(cursor, index) + replace
+      cursor = index + close.length
+      index = string.indexOf(close, cursor)
+    } while (~index)
+    return result + string.substring(cursor)
   }
 
   const formatter = (open: string, close: string, replace = open) => {
