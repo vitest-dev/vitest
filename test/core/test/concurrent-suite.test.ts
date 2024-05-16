@@ -119,10 +119,9 @@ describe('override concurrent', { concurrent: true }, () => {
     checkSequentialTests()
   })
 
-  // TODO: not working?
-  // describe('s-x-2', { sequential: true, }, () => {
-  //   checkSequentialTests()
-  // })
+  describe('s-x-2', { sequential: true }, () => {
+    checkSequentialTests()
+  })
 
   describe('s-y', () => {
     checkParallelTests()
