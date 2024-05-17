@@ -129,6 +129,7 @@ interface FormattedBenchmarkGroup {
 export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
   id: string
   sampleCount: number
+  median: number
 }
 
 function createFormattedBenchamrkReport(files: File[]) {
@@ -145,6 +146,9 @@ function createFormattedBenchamrkReport(files: File[]) {
             benchmarks.push({
               id: t.id,
               sampleCount: samples.length,
+              median: samples.length % 2
+                ? samples[Math.floor(samples.length / 2)]
+                : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2,
               ...rest,
             })
           }
