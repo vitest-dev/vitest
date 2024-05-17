@@ -286,9 +286,11 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    // inherit concurrent / sequential from current suite
-    options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
-    options.sequential = this.sequential || (!this.concurrent && options?.sequential)
+    // inherit concurrent / sequential from suite
+    const isConcurrent = options.concurrent || (this.concurrent && !this.sequential)
+    const isSequential = options.sequential || (this.sequential && !this.concurrent)
+    options.concurrent = isConcurrent && !isSequential
+    options.sequential = isSequential && !isConcurrent
 
     return createSuiteCollector(formatName(name), factory, mode, this.shuffle, this.each, options)
   }
