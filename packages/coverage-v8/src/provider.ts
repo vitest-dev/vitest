@@ -1,4 +1,4 @@
-import { existsSync, promises as fs, writeFileSync } from 'node:fs'
+import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import type { Profiler } from 'node:inspector'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import v8ToIstanbul from 'v8-to-istanbul'
@@ -246,6 +246,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     if (!keepResults) {
       this.coverageFiles = new Map()
       await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0)
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
     }
   }
 

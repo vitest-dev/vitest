@@ -1,4 +1,4 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { startVitest } from 'vitest/node'
 
 /**
@@ -145,6 +145,25 @@ const testCases = [
         throw new Error('Expected test to fail as thresholds are not met')
 
       process.exitCode = 0
+    },
+  },
+  {
+    testConfig: {
+      name: 'remove empty coverages directory',
+      include: ['option-tests/fixture.test.ts'],
+      coverage: {
+        reporter: 'text',
+        all: false,
+        include: ['src/utils.ts'],
+      },
+    },
+    after() {
+      if (existsSync('./coverage')) {
+        if (readdirSync('./coverage').length !== 0)
+          throw new Error('Test case expected coverage directory to be empty')
+
+        throw new Error('Empty coverage directory was not cleaned')
+      }
     },
   },
 ]

@@ -1,4 +1,4 @@
-import { existsSync, promises as fs, writeFileSync } from 'node:fs'
+import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
@@ -255,6 +255,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     if (!keepResults) {
       this.coverageFiles = new Map()
       await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0)
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
     }
   }
 
