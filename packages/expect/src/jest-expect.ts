@@ -1,6 +1,6 @@
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
-import type { MockInstance } from '@vitest/spy'
+import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
@@ -434,12 +434,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return `${i}th`
   }
-  const formatCalls = (spy: MockInstance, msg: string, actualCall?: any) => {
+  const formatCalls = (spy: MockInstance, msg: string, showActualCall?: any) => {
     if (spy.mock.calls) {
       msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
         let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
-        if (actualCall)
-          methodCall += diff(actualCall, callArg, { omitAnnotationLines: true })
+        if (showActualCall)
+          methodCall += diff(showActualCall, callArg, { omitAnnotationLines: true })
         else
           methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -450,11 +450,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
-  const formatReturns = (spy: MockInstance, msg: string, actualReturn?: any) => {
-    msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
+  const formatReturns = (spy: MockInstance, results: MockResult<any>[] | MockSettledResult<any>[], msg: string, showActualReturn?: any) => {
+    msg += c().gray(`\n\nReceived: \n\n${results.map((callReturn, i) => {
       let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
-      if (actualReturn)
-        methodCall += diff(actualReturn, callReturn.value, { omitAnnotationLines: true })
+      if (showActualReturn)
+        methodCall += diff(showActualReturn, callReturn.value, { omitAnnotationLines: true })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 
@@ -640,83 +640,211 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     throw new Error(`"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`)
   })
-  def(['toHaveReturned', 'toReturn'], function () {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const calledAndNotThrew = spy.mock.calls.length > 0 && spy.mock.results.some(({ type }) => type !== 'throw')
-    this.assert(
-      calledAndNotThrew,
-      `expected "${spyName}" to be successfully called at least once`,
-      `expected "${spyName}" to not be successfully called`,
-      calledAndNotThrew,
-      !calledAndNotThrew,
-      false,
-    )
-  })
-  def(['toHaveReturnedTimes', 'toReturnTimes'], function (times: number) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const successfulReturns = spy.mock.results.reduce((success, { type }) => type === 'throw' ? success : ++success, 0)
-    this.assert(
-      successfulReturns === times,
-      `expected "${spyName}" to be successfully called ${times} times`,
-      `expected "${spyName}" to not be successfully called ${times} times`,
-      `expected number of returns: ${times}`,
-      `received number of returns: ${successfulReturns}`,
-      false,
-    )
-  })
-  def(['toHaveReturnedWith', 'toReturnWith'], function (value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
-    const isNot = utils.flag(this, 'negate') as boolean
 
-    const msg = utils.getMessage(
-      this,
-      [
+  interface ReturnMatcher<T extends any[] = []> {
+    name: keyof Assertion | (keyof Assertion)[]
+    condition: (spy: MockInstance, ...args: T) => boolean
+    action: string
+  }
+
+  ;([
+    {
+      name: 'toHaveResolved',
+      condition: spy =>
+        spy.mock.settledResults.length > 0
+        && spy.mock.settledResults.some(({ type }) => type === 'fulfilled'),
+      action: 'resolved',
+    },
+    {
+      name: 'toHaveRejected',
+      condition: spy =>
+        spy.mock.settledResults.length > 0
+        && spy.mock.settledResults.some(({ type }) => type === 'rejected'),
+      action: 'rejected',
+    },
+    {
+      name: ['toHaveReturned', 'toReturn'],
+      condition: spy => spy.mock.calls.length > 0 && spy.mock.results.some(({ type }) => type !== 'throw'),
+      action: 'called',
+    },
+  ] satisfies ReturnMatcher[]).forEach(({ name, condition, action }) => {
+    def(name, function () {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const pass = condition(spy)
+      this.assert(
         pass,
-        `expected "${spyName}" to return with: #{exp} at least once`,
-        `expected "${spyName}" to not return with: #{exp}`,
+        `expected "${spyName}" to be successfully ${action} at least once`,
+        `expected "${spyName}" to not be successfully ${action}`,
+        pass,
+        !pass,
+        false,
+      )
+    })
+  })
+  ;([
+    {
+      name: 'toHaveResolvedTimes',
+      condition: (spy, times) =>
+        spy.mock.settledResults.reduce((s, { type }) => type === 'fulfilled' ? s : ++s, 0) === times,
+      action: 'resolved',
+    },
+    {
+      name: 'toHaveRejectedTimes',
+      condition: (spy, times) =>
+        spy.mock.settledResults.reduce((s, { type }) => type === 'rejected' ? s : ++s, 0) === times,
+      action: 'rejected',
+    },
+    {
+      name: ['toHaveReturnedTimes', 'toReturnTimes'],
+      condition: (spy, times) =>
+        spy.mock.results.reduce((s, { type }) => type !== 'throw' ? s : ++s, 0) === times,
+      action: 'called',
+    },
+  ] satisfies ReturnMatcher<[number]>[]).forEach(({ name, condition, action }) => {
+    def(name, function (times: number) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const pass = condition(spy, times)
+      this.assert(
+        pass,
+        `expected "${spyName}" to be successfully ${action} ${times} times`,
+        `expected "${spyName}" to not be successfully ${action} ${times} times`,
+        `expected resolved times: ${times}`,
+        `received resolved times: ${pass}`,
+        false,
+      )
+    })
+  })
+  ;([
+    {
+      name: 'toHaveResolvedWith',
+      condition: (spy, value) =>
+        spy.mock.settledResults.some(({ type, value: result }) => type === 'fulfilled' && jestEquals(value, result)),
+      action: 'resolve',
+    },
+    {
+      name: 'toHaveRejectedWith',
+      condition: (spy, value) =>
+        spy.mock.settledResults.some(({ type, value: result }) => type === 'rejected' && jestEquals(value, result)),
+      action: 'reject',
+    },
+    {
+      name: ['toHaveReturnedWith', 'toReturnWith'],
+      condition: (spy, value) =>
+        spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result)),
+      action: 'return',
+    },
+  ] satisfies ReturnMatcher<[any]>[]).forEach(({ name, condition, action }) => {
+    def(name, function (value: any) {
+      const spy = getSpy(this)
+      const pass = condition(spy, value)
+      const isNot = utils.flag(this, 'negate') as boolean
+
+      if ((pass && isNot) || (!pass && !isNot)) {
+        const spyName = spy.getMockName()
+        const msg = utils.getMessage(
+          this,
+          [
+            pass,
+          `expected "${spyName}" to ${action} with: #{exp} at least once`,
+          `expected "${spyName}" to not ${action} with: #{exp}`,
+          value,
+          ],
+        )
+
+        const results = action === 'return' ? spy.mock.results : spy.mock.settledResults
+        throw new AssertionError(formatReturns(spy, results, msg, value))
+      }
+    })
+  })
+  ;([
+    {
+      name: 'toHaveLastResolvedWith',
+      condition: (spy, value) => {
+        // TODO: test type is 'fulfilled'
+        const { value: lastResult, type } = spy.mock.settledResults[spy.mock.settledResults.length - 1]
+        return type === 'fulfilled' && jestEquals(lastResult, value)
+      },
+      action: 'resolve',
+    },
+    {
+      name: 'toHaveLastRejectedWith',
+      condition: (spy, value) => {
+        // TODO: test type is 'rejected'
+        const { value: lastResult, type } = spy.mock.settledResults[spy.mock.settledResults.length - 1]
+        return type === 'rejected' && jestEquals(lastResult, value)
+      },
+      action: 'reject',
+    },
+    {
+      name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
+      condition: (spy, value) => {
+        // TODO: test type is 'return' instead of 'throw'
+        const { value: lastResult, type } = spy.mock.results[spy.mock.results.length - 1]
+        return type === 'return' && jestEquals(lastResult, value)
+      },
+      action: 'return',
+    },
+  ] satisfies ReturnMatcher<[any]>[]).forEach(({ name, condition, action }) => {
+    def(name, function (value: any) {
+      const spy = getSpy(this)
+      const results = action === 'return' ? spy.mock.results : spy.mock.settledResults
+      const { value: lastResult } = results[results.length - 1]
+      const spyName = spy.getMockName()
+      this.assert(
+        condition(spy, value),
+        `expected last "${spyName}" call to ${action} #{exp}`,
+        `expected last "${spyName}" call to not ${action} #{exp}`,
         value,
-      ],
-    )
-
-    if ((pass && isNot) || (!pass && !isNot))
-      throw new AssertionError(formatReturns(spy, msg, value))
+        lastResult,
+      )
+    })
   })
-  def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const { value: lastResult } = spy.mock.results[spy.mock.results.length - 1]
-    const pass = jestEquals(lastResult, value)
-    this.assert(
-      pass,
-      `expected last "${spyName}" call to return #{exp}`,
-      `expected last "${spyName}" call to not return #{exp}`,
-      value,
-      lastResult,
-    )
-  })
-  def(['toHaveNthReturnedWith', 'nthReturnedWith'], function (nthCall: number, value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const isNot = utils.flag(this, 'negate') as boolean
-    const { type: callType, value: callResult } = spy.mock.results[nthCall - 1]
-    const ordinalCall = `${ordinalOf(nthCall)} call`
+  ;([
+    {
+      name: 'toHaveNthResolvedWith',
+      condition: (spy, index, value) => {
+        // TODO: test type is 'fulfilled'
+        const { value: lastResult, type } = spy.mock.settledResults[index - 1]
+        return type === 'fulfilled' && jestEquals(lastResult, value)
+      },
+      action: 'resolve',
+    },
+    {
+      name: 'toHaveNthRejectedWith',
+      condition: (spy, index, value) => {
+        // TODO: test type is 'rejected'
+        const { value: lastResult, type } = spy.mock.settledResults[index - 1]
+        return type === 'rejected' && jestEquals(lastResult, value)
+      },
+      action: 'reject',
+    },
+    {
+      name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
+      condition: (spy, index, value) => {
+        // TODO: test type is 'return' instead of 'throw'
+        const { value: lastResult, type } = spy.mock.results[index - 1]
+        return type === 'return' && jestEquals(lastResult, value)
+      },
+      action: 'return',
+    },
+  ] satisfies ReturnMatcher<[number, any]>[]).forEach(({ name, condition, action }) => {
+    def(name, function (nthCall: number, value: any) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const results = action === 'return' ? spy.mock.results : spy.mock.settledResults
+      const { value: callResult } = results[nthCall - 1]
+      const ordinalCall = `${ordinalOf(nthCall)} call`
 
-    if (!isNot && callType === 'throw')
-      chai.assert.fail(`expected ${ordinalCall} to return #{exp}, but instead it threw an error`)
-
-    const nthCallReturn = jestEquals(callResult, value)
-
-    this.assert(
-      nthCallReturn,
-      `expected ${ordinalCall} "${spyName}" call to return #{exp}`,
-      `expected ${ordinalCall} "${spyName}" call to not return #{exp}`,
-      value,
-      callResult,
-    )
+      this.assert(
+        condition(spy, nthCall, value),
+        `expected ${ordinalCall} "${spyName}" call to ${action} #{exp}`,
+        `expected ${ordinalCall} "${spyName}" call to not ${action} #{exp}`,
+        value,
+        callResult,
+      )
+    })
   })
   def('toSatisfy', function (matcher: Function, message?: string) {
     return this.be.satisfy(matcher, message)

@@ -20,7 +20,18 @@ interface MockResultThrow {
   value: any
 }
 
-type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
+interface MockSettledResultFulfilled<T> {
+  type: 'fulfilled'
+  value: T
+}
+
+interface MockSettledResultRejected {
+  type: 'rejected'
+  value: any
+}
+
+export type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
+export type MockSettledResult<T> = MockSettledResultFulfilled<T> | MockSettledResultRejected
 
 export interface MockContext<TArgs, TReturns> {
   /**
@@ -86,6 +97,7 @@ export interface MockContext<TArgs, TReturns> {
    * ]
    */
   results: MockResult<TReturns>[]
+  settledResults: MockSettledResult<Awaited<TReturns>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
