@@ -698,7 +698,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     {
       name: ['toHaveReturnedTimes', 'toReturnTimes'],
       condition: (spy, times) =>
-        spy.mock.results.reduce((s, { type }) => type !== 'throw' ? s : ++s, 0) === times,
+        spy.mock.results.reduce((s, { type }) => type === 'throw' ? s : ++s, 0) === times,
       action: 'called',
     },
   ] satisfies ReturnMatcher<[number]>[]).forEach(({ name, condition, action }) => {
