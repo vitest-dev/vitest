@@ -69,7 +69,11 @@ class CustomCoverageProvider implements CoverageProvider {
     }))
   }
 
-  reportCoverage(reportContext?: ReportContext) {
+  generateCoverage(_reportContext: ReportContext) {
+    return {}
+  }
+
+  reportCoverage(coverage: unknown, reportContext?: ReportContext) {
     this.calls.add(`reportCoverage with ${JSON.stringify(reportContext)}`)
 
     const jsonReport = JSON.stringify({

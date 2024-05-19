@@ -148,10 +148,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     this.pendingPromises.push(promise)
   }
 
-  async reportCoverage({ allTestsRun }: ReportContext = {}) {
-    if (provider === 'stackblitz')
-      this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-v8 does not work on Stackblitz. Report will be empty.'))
-
+  async generateCoverage({ allTestsRun }: ReportContext) {
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
     const total = this.pendingPromises.length
@@ -193,6 +190,32 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       coverageMap.merge(await transformCoverage(converted))
     }
 
+    return coverageMap
+  }
+
+  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext) {
+    if (provider === 'stackblitz')
+      this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-v8 does not work on Stackblitz. Report will be empty.'))
+
+    await this.generateReports(
+      coverageMap as CoverageMap || libCoverage.createCoverageMap({}),
+      allTestsRun,
+    )
+
+    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
+    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
+
+    if (!keepResults) {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0)
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async generateReports(coverageMap: CoverageMap, allTestsRun?: boolean) {
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
@@ -239,18 +262,15 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         })
       }
     }
+  }
 
-    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
-    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
+  async mergeReports(coverageMaps: unknown[]) {
+    const coverageMap = libCoverage.createCoverageMap({})
 
-    if (!keepResults) {
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    for (const coverage of coverageMaps)
+      coverageMap.merge(coverage as CoverageMap)
 
-      // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0)
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
-    }
+    await this.generateReports(coverageMap, true)
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {

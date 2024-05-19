@@ -393,7 +393,7 @@ export class Vitest {
     if (this.reporters.some(r => r instanceof BlobReporter))
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
 
-    const { files, errors } = await readBlobs(this.config.mergeReports, this.projects)
+    const { files, errors, coverages } = await readBlobs(this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -439,6 +439,8 @@ export class Vitest {
       process.exitCode = 1
 
     await this.report('onFinished', files, errors)
+    await this.initCoverageProvider()
+    await this.coverageProvider?.mergeReports?.(coverages)
   }
 
   async start(filters?: string[]) {
@@ -459,7 +461,9 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      await this.reportCoverage(true)
+      // Report coverage for uncovered files
+      const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
+      await this.reportCoverage(coverage, true)
 
       this.logger.printNoTestFound(filters)
 
@@ -645,8 +649,10 @@ export class Vitest {
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(([, p]) => p)))
-        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors())
-        await this.reportCoverage(allTestsRun)
+        const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
+
+        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
+        await this.reportCoverage(coverage, allTestsRun)
 
         this.runningPromise = undefined
         this.isFirstRun = false
@@ -946,12 +952,12 @@ export class Vitest {
     return Array.from(new Set(files))
   }
 
-  private async reportCoverage(allTestsRun: boolean) {
+  private async reportCoverage(coverage: unknown, allTestsRun: boolean) {
     if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
       return
 
     if (this.coverageProvider) {
-      await this.coverageProvider.reportCoverage({ allTestsRun })
+      await this.coverageProvider.reportCoverage(coverage, { allTestsRun })
       // notify coverage iframe reload
       for (const reporter of this.reporters) {
         if (reporter instanceof WebSocketReporter)
