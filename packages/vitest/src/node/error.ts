@@ -88,7 +88,7 @@ export function printError(error: unknown, project: WorkspaceProject | undefined
     ? error.stacks[0]
     : stacks.find((stack) => {
       try {
-        return project.server && project.getModuleById(stack.file) && existsSync(stack.file)
+        return project.isFileProcessed(stack.file) && existsSync(stack.file)
       }
       catch {
         return false

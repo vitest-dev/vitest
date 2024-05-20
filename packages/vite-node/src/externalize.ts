@@ -76,14 +76,24 @@ async function isValidNodeImport(id: string) {
   return !ESM_SYNTAX_RE.test(code)
 }
 
-const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
+const _defaultExternalizeCache = new Map<string, Promise<string | false> | string | false>()
 export async function shouldExternalize(
   id: string,
   options?: DepsHandlingOptions,
   cache = _defaultExternalizeCache,
 ) {
-  if (!cache.has(id))
-    cache.set(id, _shouldExternalize(id, options))
+  if (!cache.has(id)) {
+    cache.set(
+      id,
+      _shouldExternalize(id, options).then((res) => {
+        cache.set(id, res)
+        return res
+      }).catch((err) => {
+        cache.delete(id)
+        throw err
+      }),
+    )
+  }
   return cache.get(id)!
 }
 

@@ -146,14 +146,14 @@ export function createForksPool(ctx: Vitest, { execArgv, env }: PoolProcessOptio
       }
 
       const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
+      for (const { project, file } of specs) {
         const workspaceFiles = workspaceMap.get(file) ?? []
         workspaceFiles.push(project)
         workspaceMap.set(file, workspaceFiles)
       }
 
-      const singleFork = specs.filter(([project]) => project.config.poolOptions?.forks?.singleFork)
-      const multipleForks = specs.filter(([project]) => !project.config.poolOptions?.forks?.singleFork)
+      const singleFork = specs.filter(({ project }) => project.config.poolOptions?.forks?.singleFork)
+      const multipleForks = specs.filter(({ project }) => !project.config.poolOptions?.forks?.singleFork)
 
       if (multipleForks.length) {
         const filesByEnv = await groupFilesByEnv(multipleForks)

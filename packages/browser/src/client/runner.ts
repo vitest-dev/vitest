@@ -49,7 +49,7 @@ export function createBrowserRunner(
       if (coverage) {
         await rpc().onAfterSuiteRun({
           coverage,
-          transformMode: 'web',
+          serverEnvironment: 'client',
           projectName: this.config.name,
         })
       }
@@ -101,7 +101,7 @@ export async function initiateRunner() {
   ])
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, {
-    takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+    takeCoverage: () => takeCoverageInsideWorker(config.coverage, { import: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment)
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()

@@ -49,7 +49,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           config.server.fs.allow.push(
             ...resolveFsAllow(
               project.ctx.config.root,
-              project.ctx.server.config.configFile,
+              project.ctx.sharedConfig.configFile,
             ),
           )
 

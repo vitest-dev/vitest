@@ -2,17 +2,17 @@
  * @format
  */
 import { resolve } from 'pathe'
-import type { ViteNodeRunner } from 'vite-node/client'
 import type { Vitest } from 'vitest'
 import { describe, expect, test } from 'vitest'
+import type { ModuleRunner } from 'vite/module-runner'
 import { createReporters } from '../../../packages/vitest/src/node/reporters/utils'
 import { DefaultReporter } from '../../../packages/vitest/src/node/reporters/default'
 import TestReporter from '../src/custom-reporter'
 
 const customReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 const fetchModule = {
-  executeId: (id: string) => import(id),
-} as ViteNodeRunner
+  import: (id: string) => import(id),
+} as ModuleRunner
 const ctx = {
   runner: fetchModule,
 } as Vitest

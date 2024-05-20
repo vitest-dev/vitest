@@ -23,10 +23,10 @@ function buildWorkspace() {
   } as any as WorkspaceProject
 }
 
-const workspace = buildWorkspace()
+const project = buildWorkspace()
 
 function workspaced(files: string[]) {
-  return files.map(file => [workspace, file] as WorkspaceSpec)
+  return files.map(file => ({ project, file }) as WorkspaceSpec)
 }
 
 describe('base sequencer', () => {

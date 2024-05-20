@@ -13,7 +13,7 @@ async function teardownWindow(win: { happyDOM: { abort?: () => Promise<void>; ca
 
 export default <Environment>({
   name: 'happy-dom',
-  transformMode: 'web',
+  serverEnvironment: 'client',
   async setupVM({ happyDOM = {} }) {
     const { Window } = await import('happy-dom')
     let win = new Window({

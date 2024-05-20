@@ -173,14 +173,15 @@ export class Logger {
     })
 
     if (this.ctx.config.ui) {
-      this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
+      this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.sharedConfig.server.port}`)}${this.ctx.config.uiBase}`)))
     }
     else if (this.ctx.config.api?.port) {
-      const resolvedUrls = this.ctx.server.resolvedUrls
-      // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
-      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
-      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
-      this.log(c.dim(c.green(`      API started at ${new URL('/', origin)}`)))
+      // TODO: when api is implemented
+      // const resolvedUrls = this.ctx.sharedConfig.resolvedUrls
+      // // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
+      // const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
+      // const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
+      // this.log(c.dim(c.green(`      API started at ${new URL('/', origin)}`)))
     }
 
     if (this.ctx.coverageProvider)

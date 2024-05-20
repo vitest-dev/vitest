@@ -29,7 +29,7 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
   setupColors(createColors(isatty(1)))
 
-  if (workerState.environment.transformMode === 'web') {
+  if (workerState.environment.serverEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = () => ({})
@@ -48,7 +48,9 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     getSourceMap: source => workerState.moduleCache.getSourceMap(source),
   })
 
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, {
+    import: id => executor.executeId(id),
+  })
 
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
@@ -80,5 +82,7 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
     vi.restoreAllMocks()
   }
 
-  await stopCoverageInsideWorker(config.coverage, executor)
+  await stopCoverageInsideWorker(config.coverage, {
+    import: id => executor.executeId(id),
+  })
 }

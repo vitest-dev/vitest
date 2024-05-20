@@ -4,22 +4,21 @@ import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
-import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
+import type { EnvironmentModuleNode, TransformResult, ViteDevServer } from 'vite'
+import { resolveConfig } from 'vite'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
+import type { ProvidedContext, ResolvedConfig, UserWorkspaceConfig, ViteResolvedConfig, Vitest } from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
-import { isBrowserEnabled, resolveConfig } from './config'
+import { isBrowserEnabled } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
+import { VitestDevEnvironemnts } from './environment'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -41,7 +40,7 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       : workspacePath.endsWith('/') ? workspacePath : dirname(workspacePath)
   )
 
-  const config: ViteInlineConfig = {
+  const config = await resolveConfig({
     ...options,
     root,
     logLevel: 'error',
@@ -52,9 +51,9 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
       ...options.plugins || [],
       WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
     ],
-  }
+  }, 'serve')
 
-  await createViteServer(config)
+  await project.resolve(config as ViteResolvedConfig)
 
   return project
 }
@@ -63,9 +62,6 @@ export class WorkspaceProject {
   configOverride: Partial<ResolvedConfig> | undefined
 
   config!: ResolvedConfig
-  server!: ViteDevServer
-  vitenode!: ViteNodeServer
-  runner!: ViteNodeRunner
   browser?: ViteDevServer
   typechecker?: Typechecker
 
@@ -85,6 +81,10 @@ export class WorkspaceProject {
 
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
+
+  // TODO
+  sharedConfig!: ViteResolvedConfig
+  environments: Record<string, VitestDevEnvironemnts> = {}
 
   constructor(
     public path: string | number,
@@ -127,7 +127,7 @@ export class WorkspaceProject {
     if (this._globalSetups)
       return
 
-    this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
+    this._globalSetups = await loadGlobalSetupFiles(this.ctx.runner, this.config.globalSetup)
 
     try {
       for (const globalSetupFile of this._globalSetups) {
@@ -165,25 +165,34 @@ export class WorkspaceProject {
     return this.ctx.logger
   }
 
-  // it's possible that file path was imported with different queries (?raw, ?url, etc)
+  isFileProcessed(file: string) {
+    if (this.browser?.environments.client.moduleGraph.getModuleById(file))
+      return true
+
+    for (const name in this.environments) {
+      const environment = this.environments[name]
+      if (environment.moduleGraph.getModuleById(file))
+        return true
+    }
+
+    return false
+  }
+
   getModulesByFilepath(file: string) {
-    const set = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.moduleGraph.getModulesByFile(file)
-    return set || new Set()
-  }
-
-  getModuleById(id: string) {
-    return this.server.moduleGraph.getModuleById(id)
-      || this.browser?.moduleGraph.getModuleById(id)
-  }
-
-  getSourceMapModuleById(id: string): TransformResult['map'] | undefined {
-    const mod = this.server.moduleGraph.getModuleById(id)
-    return mod?.ssrTransformResult?.map || mod?.transformResult?.map
+    const nodes: Set<EnvironmentModuleNode> = new Set()
+    for (const name in this.environments) {
+      const environment = this.environments[name]
+      const modules = environment.moduleGraph.getModulesByFile(file)
+      modules?.forEach(mod => nodes.add(mod))
+    }
+    const browserModules = this.browser?.environments.client.moduleGraph.getModulesByFile(file)
+    browserModules?.forEach(mod => nodes.add(mod))
+    return nodes
   }
 
   getBrowserSourceMapModuleById(id: string): TransformResult['map'] | undefined {
-    return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
+    const moduleGraph = this.browser?.environments.client.moduleGraph
+    return moduleGraph?.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -292,46 +301,23 @@ export class WorkspaceProject {
 
   static createBasicProject(ctx: Vitest) {
     const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
-    project.vitenode = ctx.vitenode
-    project.server = ctx.server
-    project.runner = ctx.runner
     project.config = ctx.config
     return project
   }
 
   static async createCoreProject(ctx: Vitest) {
     const project = WorkspaceProject.createBasicProject(ctx)
-    await project.initBrowserServer(ctx.server.config.configFile)
+    await project.initBrowserServer(ctx.sharedConfig.configFile)
     return project
   }
 
-  async setServer(options: UserConfig, server: ViteDevServer) {
-    this.config = resolveConfig(
-      this.ctx.mode,
-      {
-        ...options,
-        coverage: this.ctx.config.coverage,
-      },
-      server.config,
-      this.ctx.logger,
-    )
+  async resolve(
+    viteConfig: ViteResolvedConfig,
+  ) {
+    this.sharedConfig = viteConfig
+    this.config = viteConfig.test
 
-    this.server = server
-
-    this.vitenode = new ViteNodeServer(server, this.config.server)
-    const node = this.vitenode
-    this.runner = new ViteNodeRunner({
-      root: server.config.root,
-      base: server.config.base,
-      fetchModule(id: string) {
-        return node.fetchModule(id)
-      },
-      resolveId(id: string, importer?: string) {
-        return node.resolveId(id, importer)
-      },
-    })
-
-    await this.initBrowserServer(this.server.config.configFile)
+    await this.initBrowserServer(viteConfig.configFile)
   }
 
   isBrowserEnabled() {
@@ -343,7 +329,8 @@ export class WorkspaceProject {
     const poolOptions = this.config.poolOptions
 
     // Resolve from server.config to avoid comparing against default value
-    const isolate = this.server?.config?.test?.isolate
+    // @ts-expect-error accessing private option
+    const isolate = this.sharedConfig?._test?.isolate
 
     return deepMerge({
       ...this.config,
@@ -395,7 +382,7 @@ export class WorkspaceProject {
       alias: [],
       includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
       env: {
-        ...this.server?.config.env,
+        ...this.sharedConfig.env,
         ...this.config.env,
       },
       browser: {
@@ -408,7 +395,7 @@ export class WorkspaceProject {
   close() {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all([
-        this.server.close(),
+        Object.values(this.environments).map(e => e.close()),
         this.typechecker?.stop(),
         this.browser?.close(),
         this.clearTmpDir(),
@@ -439,5 +426,16 @@ export class WorkspaceProject {
       throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
     const providerOptions = this.config.browser.providerOptions
     await this.browserProvider.initialize(this, { browser, options: providerOptions })
+  }
+
+  async ensureEnvironment(name: string): Promise<VitestDevEnvironemnts> {
+    if (this.environments[name])
+      return this.environments[name]
+    const environment = new VitestDevEnvironemnts(name, this.sharedConfig)
+    this.environments[name] = environment
+    await environment.init()
+    this.sharedConfig.environments[name] = environment.options
+    await environment.pluginContainer.buildStart({})
+    return environment
   }
 }

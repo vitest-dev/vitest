@@ -11,7 +11,11 @@ import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 
-export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
+export interface WorkspaceSpec {
+  project: WorkspaceProject
+  file: string
+}
+
 export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Awaitable<void>
 
 export interface ProcessPool {
@@ -49,7 +53,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     return project.config.pool
   }
 
-  function getPoolName([project, file]: WorkspaceSpec) {
+  function getPoolName({ project, file }: WorkspaceSpec) {
     for (const [glob, pool] of project.config.poolMatchGlobs) {
       if ((pool as Pool) === 'browser')
         throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
@@ -61,12 +65,12 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   // in addition to resolve.conditions Vite also adds production/development,
   // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
-  const potentialConditions = new Set(['production', 'development', ...ctx.server.config.resolve.conditions])
+  const potentialConditions = new Set(['production', 'development', ...ctx.sharedConfig.resolve.conditions])
   const conditions = [...potentialConditions].filter((condition) => {
     if (condition === 'production')
-      return ctx.server.config.isProduction
+      return ctx.sharedConfig.isProduction
     if (condition === 'development')
-      return !ctx.server.config.isProduction
+      return !ctx.sharedConfig.isProduction
     return true
   }).flatMap(c => ['--conditions', c])
 
@@ -103,7 +107,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (customPools.has(filepath))
         return customPools.get(filepath)!
 
-      const pool = await ctx.runner.executeId(filepath)
+      const pool = await ctx.runner.import(filepath)
       if (typeof pool.default !== 'function')
         throw new Error(`Custom pool "${filepath}" must export a function as default export`)
 

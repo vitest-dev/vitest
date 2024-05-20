@@ -83,7 +83,7 @@ async function prepareTestEnvironment(files: string[]) {
     config,
     environment: {
       name: 'browser',
-      transformMode: 'web',
+      serverEnvironment: 'client',
       setup() {
         throw new Error('Not called in the browser')
       },

@@ -1,6 +1,6 @@
 import { createDefer } from '@vitest/utils'
 import type { Vitest } from '../core'
-import type { ProcessPool } from '../pool'
+import type { ProcessPool, WorkspaceSpec } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import type { BrowserProvider } from '../../types/browser'
 
@@ -45,9 +45,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     await promise
   }
 
-  const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
+  const runWorkspaceTests = async (specs: WorkspaceSpec[]) => {
     const groupedFiles = new Map<WorkspaceProject, string[]>()
-    for (const [project, file] of specs) {
+    for (const { project, file } of specs) {
       const files = groupedFiles.get(project) || []
       files.push(file)
       groupedFiles.set(project, files)

@@ -1,4 +1,4 @@
-import type { ModuleNode } from 'vite'
+import type { EnvironmentModuleNode } from 'vite'
 import type { ModuleGraphData, Vitest } from '../types'
 
 export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGraphData> {
@@ -9,14 +9,16 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
   function clearId(id?: string | null) {
     return id?.replace(/\?v=\w+$/, '') || ''
   }
-  async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
+  // TODO: implement for all environments
+  const environment = ctx.getCoreWorkspaceProject().environments.client
+  async function get(mod?: EnvironmentModuleNode, seen = new Map<EnvironmentModuleNode, string>()) {
     if (!mod || !mod.id)
       return
     if (seen.has(mod))
       return seen.get(mod)
     let id = clearId(mod.id)
     seen.set(mod, id)
-    const rewrote = await ctx.vitenode.shouldExternalize(id)
+    const rewrote = await environment.shouldExternalize(id)
     if (rewrote) {
       id = rewrote
       externalized.add(id)
@@ -29,7 +31,7 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
     return id
   }
-  await get(ctx.server.moduleGraph.getModuleById(id))
+  await get(environment.moduleGraph.getModuleById(id))
   return {
     graph,
     externalized: Array.from(externalized),

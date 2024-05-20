@@ -1,4 +1,4 @@
-import type { AliasOptions, DepOptimizationConfig, ServerOptions } from 'vite'
+import type { AliasOptions, DepOptimizationConfig, ServerOptions, ResolvedConfig as _ViteResolvedConfig } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -979,6 +979,10 @@ export type RuntimeConfig = Pick<
     concurrent?: boolean
     hooks?: SequenceHooks
   }
+}
+
+export type ViteResolvedConfig = Omit<_ViteResolvedConfig, 'test'> & {
+  test: ResolvedConfig
 }
 
 export type { UserWorkspaceConfig } from '../config'

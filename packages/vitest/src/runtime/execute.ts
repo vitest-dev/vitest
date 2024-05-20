@@ -84,8 +84,8 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
 
   listenForErrors(state)
 
-  const getTransformMode = () => {
-    return state().environment.transformMode ?? 'ssr'
+  const getEnvironmentName = () => {
+    return state().environment.serverEnvironment ?? 'ssr'
   }
 
   return await createVitestExecutor({
@@ -105,7 +105,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
         return { externalize: id }
       }
 
-      const result = await rpc().fetch(id, getTransformMode())
+      const result = await rpc().fetch(id, getEnvironmentName())
       if (result.id && !result.externalize) {
         const code = readFileSync(result.id, 'utf-8')
         return { code }
@@ -113,7 +113,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
       return result
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer, getTransformMode())
+      return rpc().resolveId(id, importer, getEnvironmentName())
     },
     get moduleCache() { return state().moduleCache },
     get mockMap() { return state().mockMap },
@@ -217,10 +217,10 @@ export class VitestExecutor extends ViteNodeRunner {
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
     if (isInternalRequest(id) || id.startsWith('data:'))
       return false
-    const transformMode = this.state.environment?.transformMode ?? 'ssr'
+    const environmentName = this.state.environment?.serverEnvironment ?? 'ssr'
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
-    return transformMode === 'ssr' ? !isNodeBuiltin(id) : !id.startsWith('node:')
+    return environmentName === 'client' ? !id.startsWith('node:') : !isNodeBuiltin(id)
   }
 
   async originalResolveUrl(id: string, importer?: string) {

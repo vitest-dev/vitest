@@ -19,7 +19,7 @@ import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
 type Filename = string
-type CoverageFilesByTransformMode = Record<AfterSuiteRunMeta['transformMode'], Filename[]>
+type CoverageFilesByServerEnvironment = Record<AfterSuiteRunMeta['serverEnvironment'], Filename[]>
 type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
 
 interface TestExclude {
@@ -48,7 +48,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
-  coverageFiles = new Map<ProjectName, CoverageFilesByTransformMode>()
+  coverageFiles = new Map<ProjectName, CoverageFilesByServerEnvironment>()
   coverageFilesDirectory!: string
   pendingPromises: Promise<void>[] = []
 
@@ -128,22 +128,20 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
+  onAfterSuiteRun({ coverage, serverEnvironment, projectName }: AfterSuiteRunMeta) {
     if (!coverage)
       return
-
-    if (transformMode !== 'web' && transformMode !== 'ssr')
-      throw new Error(`Invalid transform mode: ${transformMode}`)
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [] }
+      entry = { client: [], ssr: [] }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
     const filename = resolve(this.coverageFilesDirectory, `coverage-${uniqueId++}.json`)
-    entry[transformMode].push(filename)
+    entry[serverEnvironment] ??= []
+    entry[serverEnvironment].push(filename)
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
@@ -172,7 +170,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     for (const coveragePerProject of this.coverageFiles.values()) {
       for (const filenames of [coveragePerProject.ssr, coveragePerProject.web]) {
-        const coverageMapByTransformMode = libCoverage.createCoverageMap({})
+        const coverageMapByServerEnvironment = libCoverage.createCoverageMap({})
 
         for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (debug.enabled) {
@@ -184,13 +182,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
             const contents = await fs.readFile(filename, 'utf-8')
             const coverage = JSON.parse(contents) as CoverageMap
 
-            coverageMapByTransformMode.merge(coverage)
+            coverageMapByServerEnvironment.merge(coverage)
           }))
         }
 
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(coverageMapByTransformMode)
+        const transformedCoverage = await transformCoverage(coverageMapByServerEnvironment)
         coverageMap.merge(transformedCoverage)
       }
     }
@@ -234,10 +232,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       })
 
       if (this.options.thresholds.autoUpdate && allTestsRun) {
-        if (!this.ctx.server.config.configFile)
+        if (!this.ctx.sharedConfig.configFile)
           throw new Error('Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.')
 
-        const configFilePath = this.ctx.server.config.configFile
+        const configFilePath = this.ctx.sharedConfig.configFile
         const configModule = parseModule(await fs.readFile(configFilePath, 'utf8'))
 
         this.updateThresholds({
@@ -281,7 +279,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await this.ctx.vitenode.transformRequest(`${filename}?v=${cacheKey}`)
+      await this.ctx.environment.transformRequest(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
     }

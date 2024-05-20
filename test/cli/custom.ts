@@ -7,7 +7,7 @@ const log = debug('test:env')
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  serverEnvironment: 'ssr',
   setupVM({ custom }) {
     const context = vm.createContext({
       testEnvironment: 'custom',

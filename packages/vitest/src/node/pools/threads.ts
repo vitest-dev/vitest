@@ -140,14 +140,14 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       }
 
       const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
+      for (const { project, file } of specs) {
         const workspaceFiles = workspaceMap.get(file) ?? []
         workspaceFiles.push(project)
         workspaceMap.set(file, workspaceFiles)
       }
 
-      const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
+      const singleThreads = specs.filter(s => s.project.config.poolOptions?.threads?.singleThread)
+      const multipleThreads = specs.filter(s => !s.project.config.poolOptions?.threads?.singleThread)
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)

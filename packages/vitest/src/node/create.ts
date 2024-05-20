@@ -1,38 +1,40 @@
 import { resolve } from 'pathe'
-import { mergeConfig } from 'vite'
-import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
+import { mergeConfig, resolveConfig } from 'vite'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import { findUp } from 'find-up'
-import type { UserConfig, VitestRunMode } from '../types'
+import type { UserConfig, ViteResolvedConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import type { VitestOptions } from './core'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
-import { createViteServer } from './vite'
 
-export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const ctx = new Vitest(mode, vitestOptions)
-  const root = resolve(options.root || process.cwd())
+export async function createVitest(mode: VitestRunMode, cliOptions: UserConfig, viteOverrides: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+  const root = resolve(cliOptions.root || process.cwd())
 
-  const configPath = options.config === false
+  const configPath = cliOptions.config === false
     ? false
-    : options.config
-      ? resolve(root, options.config)
+    : cliOptions.config
+      ? resolve(root, cliOptions.config)
       : await findUp(configFiles, { cwd: root } as any)
 
-  options.config = configPath
+  cliOptions.config = configPath
 
-  const config: ViteInlineConfig = {
+  const ctx = new Vitest(mode, vitestOptions)
+
+  const config = await resolveConfig({
     logLevel: 'error',
+    mode: cliOptions.mode || mode,
+    test: cliOptions,
     configFile: configPath,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.mode || mode,
-    plugins: await VitestPlugin(options, ctx),
-  }
+    plugins: await VitestPlugin(cliOptions, ctx),
+  }, 'serve') as ViteResolvedConfig
 
-  const server = await createViteServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
+  const resolvedConfig = mergeConfig(
+    config,
+    mergeConfig(viteOverrides, { root: cliOptions.root }),
+  ) as ViteResolvedConfig
 
-  if (ctx.config.api?.port)
-    await server.listen()
+  await ctx.resolve(resolvedConfig, cliOptions)
 
   return ctx
 }

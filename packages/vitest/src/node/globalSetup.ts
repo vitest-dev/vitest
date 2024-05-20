@@ -1,5 +1,5 @@
 import { toArray } from '@vitest/utils'
-import type { ViteNodeRunner } from 'vite-node/client'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { ProvidedContext } from '../types/general'
 import type { ResolvedConfig } from '../types/config'
 
@@ -14,13 +14,13 @@ export interface GlobalSetupFile {
   teardown?: Function
 }
 
-export async function loadGlobalSetupFiles(runner: ViteNodeRunner, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
+export async function loadGlobalSetupFiles(runner: ModuleRunner, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
   const globalSetupFiles = toArray(globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
 
-async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promise<GlobalSetupFile> {
-  const m = await runner.executeFile(file)
+async function loadGlobalSetupFile(file: string, runner: ModuleRunner): Promise<GlobalSetupFile> {
+  const m = await runner.import(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function')
       throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)

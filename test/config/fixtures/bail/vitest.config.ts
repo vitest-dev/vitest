@@ -3,7 +3,7 @@ import type { WorkspaceSpec } from 'vitest/node'
 
 class TestNameSequencer {
   async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
-    return [...files].sort(([, filenameA], [, filenameB]) => {
+    return [...files].sort(({ file: filenameA }, { file: filenameB }) => {
       if (filenameA > filenameB)
         return 1
 

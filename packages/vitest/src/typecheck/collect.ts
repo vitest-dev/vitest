@@ -40,7 +40,8 @@ export interface FileInformation {
 }
 
 export async function collectTests(ctx: WorkspaceProject, filepath: string): Promise<null | FileInformation> {
-  const request = await ctx.vitenode.transformRequest(filepath, filepath)
+  const environment = await ctx.ensureEnvironment('client')
+  const request = await environment.transformRequest(filepath)
   if (!request)
     return null
   const ast = await parseAstAsync(request.code)

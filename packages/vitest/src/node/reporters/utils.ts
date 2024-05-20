@@ -1,12 +1,12 @@
-import type { ViteNodeRunner } from 'vite-node/client'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { Reporter, ResolvedConfig, Vitest } from '../../types'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
-async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ViteNodeRunner): Promise<new (options?: unknown) => C> {
+async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ModuleRunner): Promise<new (options?: unknown) => C> {
   let customReporterModule: { default: new () => C }
   try {
-    customReporterModule = await runner.executeId(path)
+    customReporterModule = await runner.import(path)
   }
   catch (customReporterModuleError) {
     throw new Error(`Failed to load custom Reporter from ${path}`, { cause: customReporterModuleError as Error })
@@ -25,7 +25,7 @@ function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: V
       const [reporterName, reporterOptions] = referenceOrInstance
 
       if (reporterName === 'html') {
-        await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root)
+        await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.options.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
         return new CustomReporter(reporterOptions)
       }
@@ -44,7 +44,7 @@ function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: V
   return Promise.all(promisedReporters)
 }
 
-function createBenchmarkReporters(reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>, runner: ViteNodeRunner) {
+function createBenchmarkReporters(reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>, runner: ModuleRunner) {
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance in BenchmarkReportsMap) {

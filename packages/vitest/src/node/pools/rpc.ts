@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
-import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
 import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
@@ -17,17 +16,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     resolveSnapshotPath(testPath: string) {
       return ctx.snapshot.resolvePath(testPath)
     },
-    async getSourceMap(id, force) {
-      if (force) {
-        const mod = project.server.moduleGraph.getModuleById(id)
-        if (mod)
-          project.server.moduleGraph.invalidateModule(mod)
-      }
-      const r = await project.vitenode.transformRequest(id)
-      return r?.map as RawSourceMap | undefined
-    },
-    async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchResult(id, transformMode)
+    async fetch(id, envName) {
+      const environment = await project.ensureEnvironment(envName)
+      const result = await environment.processModule(id)
       const code = result.code
       if (result.externalize)
         return result
@@ -37,7 +28,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       if (code == null)
         throw new Error(`Failed to fetch module ${id}`)
 
-      const dir = join(project.tmpDir, transformMode)
+      const dir = join(project.tmpDir, environment.name)
       const name = createHash('sha1').update(id).digest('hex')
       const tmp = join(dir, name)
       if (promises.has(tmp)) {
@@ -53,11 +44,17 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
       Object.assign(result, { id: tmp })
       return { id: tmp }
     },
-    resolveId(id, importer, transformMode) {
-      return project.vitenode.resolveId(id, importer, transformMode)
+    async resolveId(id, importer, envName) {
+      const environment = await project.ensureEnvironment(envName)
+      return environment.resolveId(id, importer)
     },
-    transform(id, environment) {
-      return project.vitenode.transformModule(id, environment)
+    // TODO: store the result on the FS like in "fetch"
+    async transform(id, envName) {
+      const environment = await project.ensureEnvironment(envName)
+      const result = await environment.transformModule(id)
+      if (result?.code == null)
+        throw new Error(`Failed to fetch module ${id}`)
+      return { code: result.code }
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)

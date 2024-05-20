@@ -69,12 +69,14 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
   const originalOnAfterRun = testRunner.onAfterRunFiles
   testRunner.onAfterRunFiles = async (files) => {
     const state = getWorkerState()
-    const coverage = await takeCoverageInsideWorker(config.coverage, executor)
+    const coverage = await takeCoverageInsideWorker(config.coverage, {
+      import: id => executor.executeId(id),
+    })
 
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
-        transformMode: state.environment.transformMode,
+        serverEnvironment: state.environment.serverEnvironment,
         projectName: state.ctx.projectName,
       })
     }

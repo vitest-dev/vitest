@@ -24,7 +24,10 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
-  const server = _server || ctx.server
+  const server = _server // || ctx.server
+
+  if (!server)
+    throw new Error('expected a server')
 
   server.httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
@@ -41,7 +44,8 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
   })
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, server))
+    // TODO: use isFileLoadingAllowed
+    if (!isFileServingAllowed(path, { config: ctx.sharedConfig } as any))
       throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
   }
 
@@ -108,7 +112,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           ctx.snapshot.add(snapshot)
         },
         async rerun(files) {
-          await ctx.rerunFiles(files)
+          await ctx.rerunSpecs(ctx.getFilesSpecs(files))
         },
         getConfig() {
           return vitestOrWorkspace.config
@@ -116,11 +120,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         async getBrowserFileSourceMap(id) {
           if (!('ctx' in vitestOrWorkspace))
             return undefined
-          const mod = vitestOrWorkspace.browser?.moduleGraph.getModuleById(id)
+          const environment = vitestOrWorkspace.browser?.environments.client
+          const mod = environment?.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
         async getTransformResult(id) {
-          const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
+          const result: TransformResultWithSource | null | undefined = await ctx.environment.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))
@@ -178,7 +183,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
         async getTestFiles() {
           const spec = await ctx.globTestFiles()
-          return spec.map(([project, file]) => [{
+          return spec.map(({ project, file }) => [{
             name: project.getName(),
             root: project.config.root,
           }, file])

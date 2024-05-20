@@ -1,6 +1,4 @@
-import type { InlineConfig } from './config'
-
-type VitestInlineConfig = InlineConfig
+import type { InlineConfig as VitestInlineConfig } from './config'
 
 declare module 'vite' {
   interface UserConfig {

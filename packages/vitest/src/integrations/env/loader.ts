@@ -46,12 +46,12 @@ export async function loadEnvironment(ctx: ContextRPC, rpc: WorkerRPC): Promise<
       + `Path "${packageId}" should export default object with a "setup" or/and "setupVM" method.`,
     )
   }
-  const environment = pkg.default
-  if (environment.transformMode !== 'web' && environment.transformMode !== 'ssr') {
-    throw new TypeError(
-      `Environment "${name}" is not a valid environment. `
-      + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
-    )
-  }
+  const environment = pkg.default as Environment
+  // if (environment.transformMode !== 'web' && environment.transformMode !== 'ssr') {
+  //   throw new TypeError(
+  //     `Environment "${name}" is not a valid environment. `
+  //     + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
+  //   )
+  // }
   return environment
 }
