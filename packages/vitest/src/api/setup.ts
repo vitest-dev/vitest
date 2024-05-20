@@ -125,7 +125,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           return mod?.transformResult?.map
         },
         async getTransformResult(id) {
-          const result: TransformResultWithSource | null | undefined = await ctx.environment.transformRequest(id)
+          const result: TransformResultWithSource | null | undefined = await ctx.importer.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))

@@ -1,7 +1,7 @@
 import { toArray } from '@vitest/utils'
-import type { ModuleRunner } from 'vite/module-runner'
 import type { ProvidedContext } from '../types/general'
 import type { ResolvedConfig } from '../types/config'
+import type { VitestServerImporter } from './importer'
 
 export interface GlobalSetupContext {
   config: ResolvedConfig
@@ -14,12 +14,12 @@ export interface GlobalSetupFile {
   teardown?: Function
 }
 
-export async function loadGlobalSetupFiles(runner: ModuleRunner, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
+export async function loadGlobalSetupFiles(runner: VitestServerImporter, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
   const globalSetupFiles = toArray(globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
 
-async function loadGlobalSetupFile(file: string, runner: ModuleRunner): Promise<GlobalSetupFile> {
+async function loadGlobalSetupFile(file: string, runner: VitestServerImporter): Promise<GlobalSetupFile> {
   const m = await runner.import(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function')

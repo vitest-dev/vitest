@@ -6,7 +6,7 @@ import { shouldExternalize } from 'vite-node/server'
 import { withInlineSourcemap } from 'vite-node/source-map'
 import type { FetchResult } from 'vite-node'
 
-export class VitestDevEnvironemnts extends DevEnvironment {
+export class VitestDevEnvironemnt extends DevEnvironment {
   public readonly fetchCache = new Map<string, FetchCache>()
 
   #fetchPromiseCache = new Map<string, Promise<FetchResult>>()

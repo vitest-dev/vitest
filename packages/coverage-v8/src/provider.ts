@@ -252,7 +252,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
-    const transformResults = normalizeTransformResults(this.ctx.environment.fetchCache)
+    const transformResults = normalizeTransformResults(this.ctx.importer.fetchCache)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
@@ -317,11 +317,11 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const filePath = normalize(fileURLToPath(url))
 
     let isExecuted = true
-    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.environment.transformModule>> = transformResults.get(filePath)
+    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.importer.transformModule>> = transformResults.get(filePath)
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await this.ctx.environment.transformModule(filePath).catch(() => undefined)
+      transformResult = await this.ctx.importer.transformModule(filePath).catch(() => undefined)
     }
 
     const map = transformResult?.map as (EncodedSourceMap | undefined)

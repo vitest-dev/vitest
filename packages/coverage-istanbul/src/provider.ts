@@ -279,7 +279,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await this.ctx.environment.transformRequest(`${filename}?v=${cacheKey}`)
+      await this.ctx.importer.transformRequest(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
     }

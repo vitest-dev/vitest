@@ -9,7 +9,6 @@ import c from 'picocolors'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { defineWorkspace } from 'vitest/config'
-import { ESModulesEvaluator, ModuleRunner } from 'vite/module-runner'
 import { version } from '../../package.json' with { type: 'json' }
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, SerializableSpec, UserConfig, UserConsoleLog, UserWorkspaceConfig, ViteResolvedConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
@@ -26,7 +25,7 @@ import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
-import { VitestDevEnvironemnts } from './environment'
+import { VitestServerImporter } from './importer'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -40,16 +39,18 @@ export interface VitestOptions {
 export class Vitest {
   version = version
 
-  config: ResolvedConfig = undefined!
-  configOverride: Partial<ResolvedConfig> = {}
+  public config: ResolvedConfig = undefined!
+  public configOverride: Partial<ResolvedConfig> = {}
+  public sharedConfig!: ViteResolvedConfig
 
-  state: StateManager = undefined!
-  snapshot: SnapshotManager = undefined!
-  cache: VitestCache = undefined!
-  reporters: Reporter[] = undefined!
-  coverageProvider: CoverageProvider | null | undefined
-  logger: Logger
-  pool: ProcessPool | undefined
+  public importer!: VitestServerImporter
+  public state!: StateManager
+  public snapshot!: SnapshotManager
+  public cache!: VitestCache
+  public reporters!: Reporter[]
+  public coverageProvider: CoverageProvider | null | undefined
+  public logger: Logger
+  public pool: ProcessPool | undefined
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
@@ -61,7 +62,6 @@ export class Vitest {
 
   isFirstRun = true
   restartsCount = 0
-  // runner: ViteNodeRunner = undefined!
 
   public packageInstaller: VitestPackageInstaller
 
@@ -72,12 +72,6 @@ export class Vitest {
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
   public distPath!: string
-
-  public sharedConfig!: ViteResolvedConfig
-
-  // @abstract?
-  public runner!: ModuleRunner
-  public environment!: VitestDevEnvironemnts
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -93,7 +87,7 @@ export class Vitest {
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
   async resolve(
-    viteConfig: ViteResolvedConfig,
+    sharedConfig: ViteResolvedConfig,
     cliOptions: UserConfig,
   ) {
     // TODO: watcher support
@@ -107,27 +101,18 @@ export class Vitest {
     this.distPath = undefined!
     this.projectsTestFiles.clear()
 
-    const resolved = viteConfig.test
+    const resolved = sharedConfig.test
 
     this.config = resolved
     this.state = new StateManager()
     this.cache = new VitestCache(this.version)
-    this.snapshot = new SnapshotManager({ ...viteConfig.test.snapshotOptions })
+    this.snapshot = new SnapshotManager({ ...sharedConfig.test.snapshotOptions })
 
     // if (this.config.watch)
     //   this.registerWatcher()
 
-    this.sharedConfig = viteConfig
-    this.environment = new VitestDevEnvironemnts('vitest', this.sharedConfig)
-    this.runner = new ModuleRunner(
-      {
-        root: viteConfig.root,
-        transport: {
-          fetchModule: (id, importer) => this.environment.fetchModule(id, importer),
-        },
-      },
-      new ESModulesEvaluator(),
-    )
+    this.sharedConfig = sharedConfig
+    this.importer = new VitestServerImporter(sharedConfig)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
 
@@ -138,14 +123,14 @@ export class Vitest {
         }
         catch { }
       })(),
-      this.environment.init(),
+      this.importer.init(),
       ...this._onSetServer.map(fn => fn()),
     ])
 
-    this.sharedConfig.environments.vitest = this.environment.options
+    this.sharedConfig.environments.vitest = this.importer.options
 
     this.reporters = resolved.mode === 'benchmark'
-      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
+      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.importer)
       : await createReporters(resolved.reporters, this)
 
     const projects = await this.resolveWorkspace(cliOptions)
@@ -210,7 +195,7 @@ export class Vitest {
     if (!workspaceConfigPath)
       return [await this.createCoreProject()]
 
-    const workspaceModule = await this.runner.import(workspaceConfigPath) as {
+    const workspaceModule = await this.importer.import(workspaceConfigPath) as {
       default: ReturnType<typeof defineWorkspace>
     }
 
@@ -358,7 +343,7 @@ export class Vitest {
   private async initCoverageProvider() {
     if (this.coverageProvider !== undefined)
       return
-    this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
+    this.coverageProvider = await getCoverageProvider(this.config.coverage, this.importer)
     if (this.coverageProvider) {
       await this.coverageProvider.initialize(this)
       this.config.coverage = this.coverageProvider.resolveOptions()
@@ -461,7 +446,7 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
-  async init() {
+  async standalone() {
     this._onClose = []
 
     try {
@@ -572,7 +557,7 @@ export class Vitest {
       return
 
     // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.environment.pluginContainer.resolveId('vitest', this.config.root)
+    const projectVitestPath = await this.importer.pluginContainer.resolveId('vitest', this.config.root)
     const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
     this.distPath = join(vitestDir, 'dist')
   }
@@ -661,18 +646,11 @@ export class Vitest {
   }
 
   getFilesSpecs(files: string[]) {
-    return this.state.getFiles(files).flatMap(file => this.convertFileTaskToSpec(file))
+    return this.state.getFiles(files).flatMap(file => this.#convertFileTaskToSpec(file))
   }
 
   getCurrentSpecs() {
-    return this.state.getFiles().flatMap(file => this.convertFileTaskToSpec(file))
-  }
-
-  private convertFileTaskToSpec(file: File): WorkspaceSpec {
-    return {
-      project: this.getProjectByName(file.projectName),
-      file: file.filepath,
-    }
+    return this.state.getFiles().flatMap(file => this.#convertFileTaskToSpec(file))
   }
 
   async changeProjectName(pattern: string) {
@@ -980,7 +958,10 @@ export class Vitest {
           })())
         }
 
-        closePromises.push(...this._onClose.map(fn => fn()))
+        closePromises.push(
+          this.importer.close(),
+          ...this._onClose.map(fn => fn()),
+        )
 
         return Promise.allSettled(closePromises).then((results) => {
           results.filter(r => r.status === 'rejected').forEach((err) => {
@@ -1064,6 +1045,13 @@ export class Vitest {
 
   onClose(fn: () => void) {
     this._onClose.push(fn)
+  }
+
+  #convertFileTaskToSpec(file: File): WorkspaceSpec {
+    return {
+      project: this.getProjectByName(file.projectName),
+      file: file.filepath,
+    }
   }
 }
 

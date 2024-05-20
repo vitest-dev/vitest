@@ -1,9 +1,9 @@
-import type { ModuleRunner } from 'vite/module-runner'
 import type { Reporter, ResolvedConfig, Vitest } from '../../types'
+import type { VitestServerImporter } from '../importer'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
-async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ModuleRunner): Promise<new (options?: unknown) => C> {
+async function loadCustomReporterModule<C extends Reporter>(path: string, runner: VitestServerImporter): Promise<new (options?: unknown) => C> {
   let customReporterModule: { default: new () => C }
   try {
     customReporterModule = await runner.import(path)
@@ -19,13 +19,13 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
 }
 
 function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: Vitest) {
-  const runner = ctx.runner
+  const runner = ctx.importer
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (Array.isArray(referenceOrInstance)) {
       const [reporterName, reporterOptions] = referenceOrInstance
 
       if (reporterName === 'html') {
-        await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.options.root)
+        await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.config.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
         return new CustomReporter(reporterOptions)
       }
@@ -44,7 +44,7 @@ function createReporters(reporterReferences: ResolvedConfig['reporters'], ctx: V
   return Promise.all(promisedReporters)
 }
 
-function createBenchmarkReporters(reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>, runner: ModuleRunner) {
+function createBenchmarkReporters(reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>, runner: VitestServerImporter) {
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance in BenchmarkReportsMap) {

@@ -67,7 +67,7 @@ export function getRunnerOptions(): any {
 
   return {
     async fetchModule(id: string) {
-      const result = await rpc.fetch(id, 'web')
+      const result = await rpc.fetch(id, 'client')
       if (result.id && !result.externalize) {
         const code = readFileSync(result.id, 'utf-8')
         return { code }
@@ -75,7 +75,7 @@ export function getRunnerOptions(): any {
       return result
     },
     resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, 'web')
+      return rpc.resolveId(id, importer, 'client')
     },
     moduleCache,
     mockMap,

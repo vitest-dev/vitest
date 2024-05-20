@@ -18,7 +18,7 @@ import { WorkspaceVitestPlugin } from './plugins/workspace'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
-import { VitestDevEnvironemnts } from './environment'
+import { VitestDevEnvironemnt } from './environment'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -61,14 +61,17 @@ export async function initializeProject(workspacePath: string | number, ctx: Vit
 export class WorkspaceProject {
   configOverride: Partial<ResolvedConfig> | undefined
 
-  config!: ResolvedConfig
-  browser?: ViteDevServer
-  typechecker?: Typechecker
+  public sharedConfig!: ViteResolvedConfig
+  public config!: ResolvedConfig
+  public typechecker?: Typechecker
 
-  closingPromise: Promise<unknown> | undefined
-  browserProvider: BrowserProvider | undefined
+  public closingPromise: Promise<unknown> | undefined
 
-  browserState: {
+  // TODO: abstract browser
+  public browser?: ViteDevServer
+  public browserProvider: BrowserProvider | undefined
+
+  public browserState: {
     files: string[]
     resolve: () => void
     reject: (v: unknown) => void
@@ -82,9 +85,7 @@ export class WorkspaceProject {
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
 
-  // TODO
-  sharedConfig!: ViteResolvedConfig
-  environments: Record<string, VitestDevEnvironemnts> = {}
+  public environments: Record<string, VitestDevEnvironemnt> = {}
 
   constructor(
     public path: string | number,
@@ -127,7 +128,9 @@ export class WorkspaceProject {
     if (this._globalSetups)
       return
 
-    this._globalSetups = await loadGlobalSetupFiles(this.ctx.runner, this.config.globalSetup)
+    const importer = this.ctx.importer.withRoot(this.config.root)
+
+    this._globalSetups = await loadGlobalSetupFiles(importer, this.config.globalSetup)
 
     try {
       for (const globalSetupFile of this._globalSetups) {
@@ -143,6 +146,9 @@ export class WorkspaceProject {
       this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
       this.logger.printError(e)
       process.exit(1)
+    }
+    finally {
+      importer.withRoot(this.ctx.config.root)
     }
   }
 
@@ -312,12 +318,12 @@ export class WorkspaceProject {
   }
 
   async resolve(
-    viteConfig: ViteResolvedConfig,
+    sharedConfig: ViteResolvedConfig,
   ) {
-    this.sharedConfig = viteConfig
-    this.config = viteConfig.test
+    this.sharedConfig = sharedConfig
+    this.config = sharedConfig.test
 
-    await this.initBrowserServer(viteConfig.configFile)
+    await this.initBrowserServer(sharedConfig.configFile)
   }
 
   isBrowserEnabled() {
@@ -395,7 +401,7 @@ export class WorkspaceProject {
   close() {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all([
-        Object.values(this.environments).map(e => e.close()),
+        ...Object.values(this.environments).map(e => e.close()),
         this.typechecker?.stop(),
         this.browser?.close(),
         this.clearTmpDir(),
@@ -428,12 +434,13 @@ export class WorkspaceProject {
     await this.browserProvider.initialize(this, { browser, options: providerOptions })
   }
 
-  async ensureEnvironment(name: string): Promise<VitestDevEnvironemnts> {
+  async ensureEnvironment(name: string): Promise<VitestDevEnvironemnt> {
     if (this.environments[name])
       return this.environments[name]
-    const environment = new VitestDevEnvironemnts(name, this.sharedConfig)
+    const environment = new VitestDevEnvironemnt(name, this.sharedConfig)
     this.environments[name] = environment
     await environment.init()
+    // TODO: remove when bug is fixed
     this.sharedConfig.environments[name] = environment.options
     await environment.pluginContainer.buildStart({})
     return environment
