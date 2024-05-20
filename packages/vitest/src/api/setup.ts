@@ -120,7 +120,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         async getBrowserFileSourceMap(id) {
           if (!('ctx' in vitestOrWorkspace))
             return undefined
-          const environment = vitestOrWorkspace.browser?.environments.client
+          const environment = vitestOrWorkspace.browser?.server.environments.client
           const mod = environment?.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
@@ -157,7 +157,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
 
         // TODO: have a separate websocket conection for private browser API
         triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
-          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browserProvider)
+          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browser)
             throw new Error('Commands are only available for browser tests.')
           const commands = vitestOrWorkspace.config.browser?.commands
           if (!commands || !commands[command])
@@ -165,18 +165,18 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           return commands[command]({
             testPath,
             project: vitestOrWorkspace,
-            provider: vitestOrWorkspace.browserProvider,
+            provider: vitestOrWorkspace.browser.provider,
           }, ...payload)
         },
         getBrowserFiles() {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`getBrowserTestFiles` is only available in the browser API')
-          return vitestOrWorkspace.browserState?.files ?? []
+          return vitestOrWorkspace.browser?.state?.files ?? []
         },
         finishBrowserTests() {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`finishBrowserTests` is only available in the browser API')
-          return vitestOrWorkspace.browserState?.resolve()
+          return vitestOrWorkspace.browser?.state?.resolve()
         },
         getProvidedContext() {
           return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)

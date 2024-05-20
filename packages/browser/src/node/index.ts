@@ -53,7 +53,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
 
-          const files = project.browserState?.files ?? []
+          const files = project.browser?.state?.files ?? []
 
           const config = wrapConfig(project.getSerializableConfig())
           config.env ??= {}

@@ -9,12 +9,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const waitForTests = async (project: WorkspaceProject, files: string[]) => {
     const defer = createDefer<void>()
-    project.browserState?.resolve()
-    project.browserState = {
+    project.browser!.state?.resolve()
+    project.browser!.state = {
       files,
       resolve: () => {
         defer.resolve()
-        project.browserState = undefined
+        if (project.browser)
+          project.browser.state = undefined
       },
       reject: defer.reject,
     }
@@ -30,10 +31,10 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     //   isCancelled = true
     // })
 
-    const provider = project.browserProvider!
+    const provider = project.browser!.provider
     providers.add(provider)
 
-    const resolvedUrls = project.browser?.resolvedUrls
+    const resolvedUrls = project.browser!.server.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
     if (!origin)

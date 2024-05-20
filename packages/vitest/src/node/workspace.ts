@@ -4,14 +4,11 @@ import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
-import type { EnvironmentModuleNode, TransformResult, ViteDevServer } from 'vite'
+import type { EnvironmentModuleNode, TransformResult } from 'vite'
 import { resolveConfig } from 'vite'
 import c from 'picocolors'
-import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserWorkspaceConfig, ViteResolvedConfig, Vitest } from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
-import type { BrowserProvider } from '../types/browser'
-import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
 import { isBrowserEnabled } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
@@ -19,6 +16,7 @@ import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
 import { VitestDevEnvironemnt } from './environment'
+import { BrowserTester } from './browser'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -64,18 +62,9 @@ export class WorkspaceProject {
   public sharedConfig!: ViteResolvedConfig
   public config!: ResolvedConfig
   public typechecker?: Typechecker
+  public browser?: BrowserTester
 
   public closingPromise: Promise<unknown> | undefined
-
-  // TODO: abstract browser
-  public browser?: ViteDevServer
-  public browserProvider: BrowserProvider | undefined
-
-  public browserState: {
-    files: string[]
-    resolve: () => void
-    reject: (v: unknown) => void
-  } | undefined
 
   testFilesList: string[] | null = null
 
@@ -172,7 +161,8 @@ export class WorkspaceProject {
   }
 
   isFileProcessed(file: string) {
-    if (this.browser?.environments.client.moduleGraph.getModuleById(file))
+    const browser = this.browser?.server.environments.client
+    if (browser?.moduleGraph.getModuleById(file))
       return true
 
     for (const name in this.environments) {
@@ -191,14 +181,15 @@ export class WorkspaceProject {
       const modules = environment.moduleGraph.getModulesByFile(file)
       modules?.forEach(mod => nodes.add(mod))
     }
-    const browserModules = this.browser?.environments.client.moduleGraph.getModulesByFile(file)
+    const browser = this.browser?.server.environments.client
+    const browserModules = browser?.moduleGraph.getModulesByFile(file)
     browserModules?.forEach(mod => nodes.add(mod))
     return nodes
   }
 
   getBrowserSourceMapModuleById(id: string): TransformResult['map'] | undefined {
-    const moduleGraph = this.browser?.environments.client.moduleGraph
-    return moduleGraph?.getModuleById(id)?.transformResult?.map
+    const browser = this.browser?.server.environments.client
+    return browser?.moduleGraph?.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -298,11 +289,12 @@ export class WorkspaceProject {
     return testFiles
   }
 
-  async initBrowserServer(configFile: string | undefined) {
+  async initBrowserServer() {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, configFile)
+    this.browser = new BrowserTester()
+    await this.browser.startServer(this)
   }
 
   static createBasicProject(ctx: Vitest) {
@@ -313,7 +305,7 @@ export class WorkspaceProject {
 
   static async createCoreProject(ctx: Vitest) {
     const project = WorkspaceProject.createBasicProject(ctx)
-    await project.initBrowserServer(ctx.sharedConfig.configFile)
+    await project.initBrowserServer()
     return project
   }
 
@@ -323,7 +315,7 @@ export class WorkspaceProject {
     this.sharedConfig = sharedConfig
     this.config = sharedConfig.test
 
-    await this.initBrowserServer(sharedConfig.configFile)
+    await this.initBrowserServer()
   }
 
   isBrowserEnabled() {
@@ -420,18 +412,7 @@ export class WorkspaceProject {
   async initBrowserProvider() {
     if (!this.isBrowserEnabled())
       return
-    if (this.browserProvider)
-      return
-    const Provider = await getBrowserProvider(this.config.browser, this)
-    this.browserProvider = new Provider()
-    const browser = this.config.browser.name
-    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
-    if (!browser)
-      throw new Error(`[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`)
-    if (supportedBrowsers.length && !supportedBrowsers.includes(browser))
-      throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
-    const providerOptions = this.config.browser.providerOptions
-    await this.browserProvider.initialize(this, { browser, options: providerOptions })
+    await this.browser?.initialize(this)
   }
 
   async ensureEnvironment(name: string): Promise<VitestDevEnvironemnt> {
