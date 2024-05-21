@@ -24,4 +24,6 @@ export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'
 export type { HTMLOptions } from './reporters/html'
 
-export { isFileServingAllowed } from 'vite'
+export { isFileLoadingAllowed } from 'vite'
+
+export type { VitestServerConnection } from './server'

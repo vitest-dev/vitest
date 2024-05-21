@@ -1,13 +1,14 @@
 import { existsSync, promises as fs } from 'node:fs'
 
+import type { Server } from 'node:http'
+import type { Http2SecureServer } from 'node:http2'
 import { dirname } from 'pathe'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed } from 'vite'
-import type { ViteDevServer } from 'vite'
+import { isFileLoadingAllowed } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
@@ -17,19 +18,14 @@ import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
-  const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
+export function setup(project: WorkspaceProject, server: Server | Http2SecureServer) {
+  const ctx = project.ctx
 
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
 
-  const server = _server // || ctx.server
-
-  if (!server)
-    throw new Error('expected a server')
-
-  server.httpServer?.on('upgrade', (request, socket, head) => {
+  server.on('upgrade', (request, socket, head) => {
     if (!request.url)
       return
 
@@ -44,8 +40,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
   })
 
   function checkFileAccess(path: string) {
-    // TODO: use isFileLoadingAllowed
-    if (!isFileServingAllowed(path, { config: ctx.sharedConfig } as any))
+    if (!isFileLoadingAllowed(project.sharedConfig, path))
       throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
   }
 
@@ -115,12 +110,12 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           await ctx.rerunSpecs(ctx.getFilesSpecs(files))
         },
         getConfig() {
-          return vitestOrWorkspace.config
+          return project.config
         },
         async getBrowserFileSourceMap(id) {
-          if (!('ctx' in vitestOrWorkspace))
+          if (!('ctx' in project))
             return undefined
-          const environment = vitestOrWorkspace.browser?.server.environments.client
+          const environment = project.browser?.server.environments.client
           const mod = environment?.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
@@ -157,29 +152,29 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
 
         // TODO: have a separate websocket conection for private browser API
         triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
-          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browser)
+          if (!('ctx' in project) || !project.browser)
             throw new Error('Commands are only available for browser tests.')
-          const commands = vitestOrWorkspace.config.browser?.commands
+          const commands = project.config.browser?.commands
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
           return commands[command]({
             testPath,
-            project: vitestOrWorkspace,
-            provider: vitestOrWorkspace.browser.provider,
+            project,
+            provider: project.browser.provider,
           }, ...payload)
         },
         getBrowserFiles() {
-          if (!('ctx' in vitestOrWorkspace))
+          if (!('ctx' in project))
             throw new Error('`getBrowserTestFiles` is only available in the browser API')
-          return vitestOrWorkspace.browser?.state?.files ?? []
+          return project.browser?.state?.files ?? []
         },
         finishBrowserTests() {
-          if (!('ctx' in vitestOrWorkspace))
+          if (!('ctx' in project))
             throw new Error('`finishBrowserTests` is only available in the browser API')
-          return vitestOrWorkspace.browser?.state?.resolve()
+          return project.browser?.state?.resolve()
         },
         getProvidedContext() {
-          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
+          return 'ctx' in project ? project.getProvidedContext() : ({} as any)
         },
         async getTestFiles() {
           const spec = await ctx.globTestFiles()
@@ -192,7 +187,14 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onCancel', 'onTaskUpdate'],
+        eventNames: [
+          'onUserConsoleLog',
+          'onFinished',
+          'onFinishedReportCoverage',
+          'onCollected',
+          'onCancel',
+          'onTaskUpdate',
+        ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
         onTimeoutError(functionName) {

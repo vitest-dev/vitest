@@ -26,6 +26,8 @@ import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { VitestServerImporter } from './importer'
+import type { VitestServerConnection } from './server'
+import { createVitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -73,6 +75,8 @@ export class Vitest {
 
   public distPath!: string
 
+  public connection?: VitestServerConnection
+
   constructor(
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
@@ -116,7 +120,13 @@ export class Vitest {
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
 
-    await Promise.all([
+    const [connection] = await Promise.all([
+      (async () => {
+        if (resolved.api?.port) {
+          await this.connection?.close()
+          return await createVitestServer(sharedConfig)
+        }
+      })(),
       (async (): Promise<void> => {
         try {
           await this.cache.results.readFromCache()
@@ -126,6 +136,8 @@ export class Vitest {
       this.importer.init(),
       ...this._onSetServer.map(fn => fn()),
     ])
+
+    this.connection = connection
 
     await this.importer.environment.pluginContainer.buildStart({})
 
@@ -144,6 +156,17 @@ export class Vitest {
     }
     if (!this.coreWorkspaceProject)
       this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
+
+    if (connection) {
+      await Promise.all([
+        import('../api/setup')
+          .then(api => api.setup(this.coreWorkspaceProject, connection.httpServer)),
+        (async () => {
+          await this.packageInstaller.ensureInstalled('@vitest/ui', sharedConfig.root)
+          await import('@vitest/ui').then(ui => ui.default(this, connection))
+        })(),
+      ])
+    }
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
@@ -959,6 +982,7 @@ export class Vitest {
         }
 
         closePromises.push(
+          this.connection?.close(),
           this.importer.close(),
           ...this._onClose.map(fn => fn()),
         )

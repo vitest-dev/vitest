@@ -64,6 +64,7 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
+  /^node:/,
   /^vite\//,
   'vite/module-runner',
   'vite',

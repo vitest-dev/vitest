@@ -71,7 +71,6 @@
   "pnpm": {
     "overrides": {
       "mlly": "^1.7.0",
-      "rollup": "$rollup",
       "vite": "$vite",
       "vitest": "workspace:*"
     },

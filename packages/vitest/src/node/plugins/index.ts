@@ -20,11 +20,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
-  async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
-    return (await import('@vitest/ui')).default(ctx)
-  }
-
   return [
     <VitePlugin>{
       name: 'vitest',
@@ -205,9 +200,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
-    options.ui
-      ? await UIPlugin()
-      : null,
     MocksPlugin(),
     VitestResolver(ctx),
     VitestOptimizer(),
