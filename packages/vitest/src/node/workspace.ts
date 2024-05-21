@@ -17,6 +17,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { divider } from './reporters/renderers/utils'
 import { VitestDevEnvironemnt } from './environment'
 import { BrowserTester } from './browser'
+import { VitestServerImporter } from './importer'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -76,6 +77,8 @@ export class WorkspaceProject {
 
   public environments: Record<string, VitestDevEnvironemnt> = {}
 
+  private importer?: VitestServerImporter
+
   constructor(
     public path: string | number,
     public ctx: Vitest,
@@ -88,6 +91,15 @@ export class WorkspaceProject {
 
   isCore() {
     return this.ctx.getCoreWorkspaceProject() === this
+  }
+
+  public async getImporter() {
+    if (this.importer)
+      return this.importer
+    const importer = new VitestServerImporter(this.sharedConfig)
+    await importer.init()
+    await importer.environment.pluginContainer.buildStart({})
+    return (this.importer = importer)
   }
 
   provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
@@ -117,7 +129,7 @@ export class WorkspaceProject {
     if (this._globalSetups)
       return
 
-    const importer = this.ctx.importer.withRoot(this.config.root)
+    const importer = await this.getImporter()
 
     this._globalSetups = await loadGlobalSetupFiles(importer, this.config.globalSetup)
 
@@ -135,9 +147,6 @@ export class WorkspaceProject {
       this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
       this.logger.printError(e)
       process.exit(1)
-    }
-    finally {
-      importer.withRoot(this.ctx.config.root)
     }
   }
 
@@ -394,6 +403,7 @@ export class WorkspaceProject {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all([
         ...Object.values(this.environments).map(e => e.close()),
+        this.importer?.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
         this.clearTmpDir(),

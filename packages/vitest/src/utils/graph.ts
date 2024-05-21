@@ -18,7 +18,7 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
       return seen.get(mod)
     let id = clearId(mod.id)
     seen.set(mod, id)
-    const rewrote = await environment.shouldExternalize(id)
+    const rewrote = await environment.processor.shouldExternalize(id)
     if (rewrote) {
       id = rewrote
       externalized.add(id)

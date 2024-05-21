@@ -1,4 +1,4 @@
-import type { FetchResult, ViteNodeResolveId } from 'vite-node'
+import type { ViteNodeResolveId } from 'vite-node'
 import type { CancelReason } from '@vitest/runner'
 import type { EnvironmentOptions, Pool, ResolvedConfig, VitestEnvironment } from './config'
 import type { Environment, UserConsoleLog } from './general'
@@ -13,7 +13,7 @@ export interface RuntimeRPC {
     externalize?: string
     id?: string
   }>
-  transform: (id: string, environment: string) => Promise<FetchResult>
+  transform: (id: string, environment: string) => Promise<{ code: string }>
   resolveId: (id: string, importer: string | undefined, environment: string) => Promise<ViteNodeResolveId | null>
 
   onFinished: (files: File[], errors?: unknown[]) => void

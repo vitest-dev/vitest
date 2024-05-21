@@ -44,7 +44,7 @@ const rpc = () => __vitest_worker__.rpc
 export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
-  provider: ${JSON.stringify(project.browserProvider!.name)},
+  provider: ${JSON.stringify(project.browser!.provider.name)},
   commands: {
     ${commandsCode}
   }

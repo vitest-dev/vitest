@@ -1,7 +1,8 @@
 import { join, resolve } from 'pathe'
 import { ViteNodeServer } from 'vite-node/server'
 import { describe, expect, test, vi } from 'vitest'
-import { type Plugin, type ViteDevServer, createServer } from 'vite'
+import type { Plugin, TransformResult, ViteDevServer } from 'vite'
+import { createServer } from 'vite'
 import { extractSourceMap } from '../../../packages/vite-node/src/source-map'
 
 describe('server works correctly', async () => {
@@ -87,7 +88,7 @@ describe('server correctly caches data', () => {
   it('fetchModule with id, and got sourcemap source in absolute path', async ({ viteNode }) => {
     const fetchResult = await viteNode.fetchModule('/src/foo.js')
 
-    const sourceMap = extractSourceMap(fetchResult.code!)
+    const sourceMap = extractSourceMap((fetchResult as TransformResult).code!)
 
     // expect got sourcemap source in a valid filesystem path
     expect(sourceMap?.sources[0]).toBe('foo.js')

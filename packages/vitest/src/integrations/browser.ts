@@ -7,13 +7,8 @@ export async function getBrowserProvider(options: ResolvedBrowserOptions, projec
   if (options.provider == null || builtinProviders.includes(options.provider)) {
     const root = project.config.root
     await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
-    const providersPath = await project.ctx.importer.resolveId(
-      '@vitest/browser/providers',
-      root,
-    )
-    if (!providersPath)
-      throw new Error(`Cannot find "@vitest/browser/providers" installed in ${root}`)
-    const providers = await project.ctx.importer.import(providersPath.id) as {
+    const importer = await project.getImporter()
+    const providers = await importer.import('@vitest/browser/providers') as {
       webdriverio: BrowserProviderModule
       playwright: BrowserProviderModule
       none: BrowserProviderModule
@@ -25,12 +20,8 @@ export async function getBrowserProvider(options: ResolvedBrowserOptions, projec
   let customProviderModule
 
   try {
-    const root = project.config.root
-    const providersPath = await project.ctx.importer.resolveId(options.provider, root)
-    if (!providersPath)
-      throw new Error(`Cannot find "${options.provider}" installed in ${root}`)
-
-    customProviderModule = await project.ctx.importer.import(providersPath.id) as { default: BrowserProviderModule }
+    const importer = await project.getImporter()
+    customProviderModule = await importer.import(options.provider) as { default: BrowserProviderModule }
   }
   catch (error) {
     throw new Error(`Failed to load custom BrowserProvider from ${options.provider}`, { cause: error })

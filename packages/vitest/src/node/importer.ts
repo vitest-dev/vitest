@@ -2,41 +2,40 @@ import { ESModulesEvaluator, ModuleRunner } from 'vite/module-runner'
 import type { ViteResolvedConfig } from '../types/config'
 import { VitestDevEnvironemnt } from './environment'
 
-export class VitestServerImporter extends VitestDevEnvironemnt {
-  #runner: ModuleRunner
-  #root: string
+export class VitestServerImporter {
+  public readonly environment: VitestDevEnvironemnt
 
-  constructor(config: ViteResolvedConfig) {
-    // <_< sorry
-    let root = () => config.root
-    super('vitest', {
-      ...config,
-      get root() {
-        return root()
-      },
-    })
-    root = () => this.#root
+  private readonly runner: ModuleRunner
 
-    this.#root = config.root
-    this.#runner = new ModuleRunner(
+  constructor(public readonly config: ViteResolvedConfig) {
+    this.environment = new VitestDevEnvironemnt('vitest', config)
+    this.runner = new ModuleRunner(
       {
-        get root() {
-          return root()
-        },
+        root: config.root,
         transport: {
-          fetchModule: (id, importer) => this.fetchModule(id, importer),
+          fetchModule: (id, importer) => this.environment.fetchModule(id, importer),
         },
       },
       new ESModulesEvaluator(),
     )
   }
 
-  withRoot(root: string) {
-    this.#root = root
-    return this
+  get processor() {
+    return this.environment.processor
   }
 
   import(id: string) {
-    return this.#runner.import(id)
+    return this.runner.import(id)
+  }
+
+  init() {
+    return this.environment.init()
+  }
+
+  async close() {
+    await Promise.all([
+      this.runner.destroy(),
+      this.environment.close(),
+    ])
   }
 }

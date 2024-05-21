@@ -10,6 +10,8 @@ import { normalizeModuleId, toArray, toFilePath, withTrailingSlash } from './uti
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
+export { ViteNodeProcessor } from './processor'
+
 export * from './externalize'
 
 interface FetchCache {
@@ -138,8 +140,8 @@ export class ViteNodeServer {
 
   getSourceMap(source: string) {
     const fetchResult = this.fetchCache.get(source)?.result
-    if (fetchResult?.map)
-      return fetchResult.map
+    if (fetchResult && 'map' in fetchResult && fetchResult?.map)
+      return fetchResult.map as EncodedSourceMap
     const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
     return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
   }
@@ -152,7 +154,7 @@ export class ViteNodeServer {
     const mode = transformMode || this.getTransformMode(id)
     return this.fetchResult(id, mode)
       .then((r) => {
-        return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+        return this.options.sourcemap !== true ? { ...r, map: null } : r
       })
   }
 
@@ -274,7 +276,9 @@ export class ViteNodeServer {
       const start = performance.now()
       const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as any }
+      if (!r)
+        throw new Error(`Failed to fetch module ${id}`)
+      result = r
     }
 
     const cacheEntry = {

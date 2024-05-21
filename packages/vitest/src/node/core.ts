@@ -127,7 +127,7 @@ export class Vitest {
       ...this._onSetServer.map(fn => fn()),
     ])
 
-    this.sharedConfig.environments.vitest = this.importer.options
+    await this.importer.environment.pluginContainer.buildStart({})
 
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.importer)
@@ -557,7 +557,7 @@ export class Vitest {
       return
 
     // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.importer.pluginContainer.resolveId('vitest', this.config.root)
+    const projectVitestPath = await this.importer.environment.pluginContainer.resolveId('vitest', this.config.root)
     const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
     this.distPath = join(vitestDir, 'dist')
   }

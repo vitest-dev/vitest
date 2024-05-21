@@ -25,10 +25,10 @@ export class NoneBrowserProvider implements BrowserProvider {
     this.open = true
     if (!this.ctx.browser)
       throw new Error('Browser is not initialized')
-    const options = this.ctx.browser.config.server
+    const options = this.ctx.browser.server.config.server
     const _open = options.open
     options.open = _url
-    this.ctx.browser.openBrowser()
+    this.ctx.browser.server.openBrowser()
     options.open = _open
   }
 

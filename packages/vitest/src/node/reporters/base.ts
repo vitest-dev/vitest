@@ -237,7 +237,7 @@ export abstract class BaseReporter implements Reporter {
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
     const transformTime = this.ctx.projects
-      .flatMap(w => Object.values(w.environments).map(env => env.getTotalDuration()))
+      .flatMap(w => Object.values(w.environments).map(env => env.processor.getTotalDuration()))
       .reduce((a, b) => a + b, 0)
     const environmentTime = files.reduce((acc, file) => acc + Math.max(0, file.environmentLoad || 0), 0)
     const prepareTime = files.reduce((acc, file) => acc + Math.max(0, file.prepareDuration || 0), 0)

@@ -18,15 +18,12 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     },
     async fetch(id, envName) {
       const environment = await project.ensureEnvironment(envName)
-      const result = await environment.processModule(id)
-      const code = result.code
-      if (result.externalize)
+      const result = await environment.processor.fetchModule(id)
+      if ('externalize' in result)
         return result
+      const code = result.code
       if ('id' in result && typeof result.id === 'string')
         return { id: result.id as string }
-
-      if (code == null)
-        throw new Error(`Failed to fetch module ${id}`)
 
       const dir = join(project.tmpDir, environment.name)
       const name = createHash('sha1').update(id).digest('hex')
@@ -46,12 +43,12 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     },
     async resolveId(id, importer, envName) {
       const environment = await project.ensureEnvironment(envName)
-      return environment.resolveId(id, importer)
+      return environment.processor.resolveId(id, importer)
     },
     // TODO: store the result on the FS like in "fetch"
     async transform(id, envName) {
       const environment = await project.ensureEnvironment(envName)
-      const result = await environment.transformModule(id)
+      const result = await environment.processor.transformRequest(id)
       if (result?.code == null)
         throw new Error(`Failed to fetch module ${id}`)
       return { code: result.code }

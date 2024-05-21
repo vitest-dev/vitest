@@ -25,6 +25,7 @@ import type { Vitest } from 'vitest/node'
 
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
+import type { TransformResult } from 'vite'
 
 interface TestExclude {
   new(opts: {
@@ -252,7 +253,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
-    const transformResults = normalizeTransformResults(this.ctx.importer.fetchCache)
+    const transformResults = normalizeTransformResults(this.ctx.importer.environment.processor.fetchCache)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
@@ -317,15 +318,15 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const filePath = normalize(fileURLToPath(url))
 
     let isExecuted = true
-    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.importer.transformModule>> = transformResults.get(filePath)
+    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.importer.processor.transformRequest>> = transformResults.get(filePath)
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await this.ctx.importer.transformModule(filePath).catch(() => undefined)
+      transformResult = await this.ctx.importer.processor.transformRequest(filePath).catch(() => undefined)
     }
 
-    const map = transformResult?.map as (EncodedSourceMap | undefined)
-    const code = transformResult?.code
+    const map = (transformResult as TransformResult | undefined)?.map as (EncodedSourceMap | undefined)
+    const code = (transformResult as TransformResult | undefined)?.code
     const sourcesContent = map?.sourcesContent?.[0] || await fs.readFile(filePath, 'utf-8').catch(() => {
       // If file does not exist construct a dummy source for it.
       // These can be files that were generated dynamically during the test run and were removed after it.
@@ -369,7 +370,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     if (!environment)
       throw new Error(`Environment ${serverEnvironment} does not exist. Trying to convert coverage for ${String(projectName || 'core')} project.`)
 
-    const fetchCache = environment.fetchCache
+    const fetchCache = environment.processor.fetchCache
     const transformResults = normalizeTransformResults(fetchCache)
 
     const scriptCoverages = coverage.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))
