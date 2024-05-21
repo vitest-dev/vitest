@@ -1,8 +1,8 @@
 import { resolve } from 'pathe'
-import { mergeConfig, resolveConfig } from 'vite'
-import type { UserConfig as ViteUserConfig } from 'vite'
+import { createServer, mergeConfig } from 'vite'
+import type { InlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { findUp } from 'find-up'
-import type { UserConfig, ViteResolvedConfig, VitestRunMode } from '../types'
+import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import type { VitestOptions } from './core'
 import { Vitest } from './core'
@@ -21,20 +21,19 @@ export async function createVitest(mode: VitestRunMode, cliOptions: UserConfig, 
 
   const ctx = new Vitest(mode, vitestOptions)
 
-  const config = await resolveConfig({
+  const config: InlineConfig = {
     logLevel: 'error',
     mode: cliOptions.mode || mode,
-    test: cliOptions,
     configFile: configPath,
     plugins: await VitestPlugin(cliOptions, ctx),
-  }, 'serve') as ViteResolvedConfig
+  }
 
-  const resolvedConfig = mergeConfig(
-    config,
-    mergeConfig(viteOverrides, { root: cliOptions.root }),
-  ) as ViteResolvedConfig
+  const server = await createServer(
+    mergeConfig(config, mergeConfig(viteOverrides, { root: cliOptions.root })),
+  )
 
-  await ctx.resolve(resolvedConfig, cliOptions)
+  if (ctx.config.api?.port)
+    await server.listen()
 
   return ctx
 }

@@ -1,6 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
 import { isMainThread } from 'node:worker_threads'
+import type { FSWatcher, ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
 import { basename, dirname, join, resolve } from 'pathe'
 import fg from 'fast-glob'
@@ -26,8 +27,6 @@ import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { VitestServerImporter } from './importer'
-import type { VitestServerConnection } from './server'
-import { createVitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -45,6 +44,7 @@ export class Vitest {
   public configOverride: Partial<ResolvedConfig> = {}
   public sharedConfig!: ViteResolvedConfig
 
+  public server!: ViteDevServer
   public importer!: VitestServerImporter
   public state!: StateManager
   public snapshot!: SnapshotManager
@@ -75,8 +75,6 @@ export class Vitest {
 
   public distPath!: string
 
-  public connection?: VitestServerConnection
-
   constructor(
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
@@ -91,11 +89,10 @@ export class Vitest {
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
   async resolve(
-    sharedConfig: ViteResolvedConfig,
+    server: ViteDevServer,
     cliOptions: UserConfig,
   ) {
-    // TODO: watcher support
-    // this.unregisterWatcher?.()
+    this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
     this.pool?.close?.()
@@ -105,28 +102,25 @@ export class Vitest {
     this.distPath = undefined!
     this.projectsTestFiles.clear()
 
+    const sharedConfig = server.config as ViteResolvedConfig
+
     const resolved = sharedConfig.test
 
+    this.server = server
     this.config = resolved
     this.state = new StateManager()
     this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...sharedConfig.test.snapshotOptions })
 
-    // if (this.config.watch)
-    //   this.registerWatcher()
+    if (this.config.watch)
+      this.registerWatcher(server.watcher)
 
     this.sharedConfig = sharedConfig
     this.importer = new VitestServerImporter(sharedConfig)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
 
-    const [connection] = await Promise.all([
-      (async () => {
-        if (resolved.api?.port) {
-          await this.connection?.close()
-          return await createVitestServer(sharedConfig)
-        }
-      })(),
+    await Promise.all([
       (async (): Promise<void> => {
         try {
           await this.cache.results.readFromCache()
@@ -136,8 +130,6 @@ export class Vitest {
       this.importer.init(),
       ...this._onSetServer.map(fn => fn()),
     ])
-
-    this.connection = connection
 
     await this.importer.environment.pluginContainer.buildStart({})
 
@@ -156,17 +148,6 @@ export class Vitest {
     }
     if (!this.coreWorkspaceProject)
       this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
-
-    if (connection) {
-      await Promise.all([
-        import('../api/setup')
-          .then(api => api.setup(this.coreWorkspaceProject, connection.httpServer)),
-        (async () => {
-          await this.packageInstaller.ensureInstalled('@vitest/ui', sharedConfig.root)
-          await import('@vitest/ui').then(ui => ui.default(this, connection))
-        })(),
-      ])
-    }
 
     if (this.config.testNamePattern)
       this.configOverride.testNamePattern = this.config.testNamePattern
@@ -808,82 +789,82 @@ export class Vitest {
     )
   }
 
-  // private unregisterWatcher = noop
-  // private registerWatcher() {
-  //   const updateLastChanged = (_filepath: string) => {
-  //     // const projects = this.getModuleProjects(filepath)
-  //     // projects.forEach(({ server, browser }) => {
-  //     //   const serverMods = server.moduleGraph.getModulesByFile(filepath)
-  //     //   serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+  private unregisterWatcher = noop
+  private registerWatcher(watcher: FSWatcher) {
+    const updateLastChanged = (filepath: string) => {
+      const projects = this.getModuleProjects(filepath)
+      projects.forEach(({ environments, browser }) => {
+        ;[
+          ...Object.values(environments),
+          ...Object.values(browser?.server.environments || {}),
+        ].forEach((environment) => {
+          const moduleGraph = environment.moduleGraph
+          const browserMods = moduleGraph.getModulesByFile(filepath)
+          browserMods?.forEach(mod => moduleGraph.invalidateModule(mod))
+        })
+      })
+    }
 
-  //     //   if (browser) {
-  //     //     const browserMods = browser.moduleGraph.getModulesByFile(filepath)
-  //     //     browserMods?.forEach(mod => browser.moduleGraph.invalidateModule(mod))
-  //     //   }
-  //     // })
-  //   }
+    const onChange = (id: string) => {
+      id = slash(id)
+      this.logger.clearHighlightCache(id)
+      updateLastChanged(id)
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun)
+        this.scheduleRerun(id)
+    }
+    const onUnlink = (id: string) => {
+      id = slash(id)
+      this.logger.clearHighlightCache(id)
+      this.invalidates.add(id)
 
-  //   const onChange = (id: string) => {
-  //     id = slash(id)
-  //     this.logger.clearHighlightCache(id)
-  //     updateLastChanged(id)
-  //     const needsRerun = this.handleFileChanged(id)
-  //     if (needsRerun)
-  //       this.scheduleRerun(id)
-  //   }
-  //   const onUnlink = (id: string) => {
-  //     id = slash(id)
-  //     this.logger.clearHighlightCache(id)
-  //     this.invalidates.add(id)
+      if (this.state.filesMap.has(id)) {
+        this.state.filesMap.delete(id)
+        this.cache.results.removeFromCache(id)
+        this.cache.stats.removeStats(id)
+        this.changedTests.delete(id)
+        this.report('onTestRemoved', id)
+      }
+    }
+    const onAdd = async (id: string) => {
+      id = slash(id)
+      updateLastChanged(id)
 
-  //     if (this.state.filesMap.has(id)) {
-  //       this.state.filesMap.delete(id)
-  //       this.cache.results.removeFromCache(id)
-  //       this.cache.stats.removeStats(id)
-  //       this.changedTests.delete(id)
-  //       this.report('onTestRemoved', id)
-  //     }
-  //   }
-  //   const onAdd = async (id: string) => {
-  //     id = slash(id)
-  //     updateLastChanged(id)
+      const matchingProjects: WorkspaceProject[] = []
+      await Promise.all(this.projects.map(async (project) => {
+        if (await project.isTargetFile(id)) {
+          matchingProjects.push(project)
+          project.testFilesList?.push(id)
+        }
+      }))
 
-  //     const matchingProjects: WorkspaceProject[] = []
-  //     await Promise.all(this.projects.map(async (project) => {
-  //       if (await project.isTargetFile(id)) {
-  //         matchingProjects.push(project)
-  //         project.testFilesList?.push(id)
-  //       }
-  //     }))
+      if (matchingProjects.length > 0) {
+        this.projectsTestFiles.set(id, new Set(matchingProjects))
+        this.changedTests.add(id)
+        this.scheduleRerun(id)
+      }
+      else {
+        // it's possible that file was already there but watcher triggered "add" event instead
+        const needsRerun = this.handleFileChanged(id)
+        if (needsRerun)
+          this.scheduleRerun(id)
+      }
+    }
 
-  //     if (matchingProjects.length > 0) {
-  //       this.projectsTestFiles.set(id, new Set(matchingProjects))
-  //       this.changedTests.add(id)
-  //       this.scheduleRerun(id)
-  //     }
-  //     else {
-  //       // it's possible that file was already there but watcher triggered "add" event instead
-  //       const needsRerun = this.handleFileChanged(id)
-  //       if (needsRerun)
-  //         this.scheduleRerun(id)
-  //     }
-  //   }
-  //   const watcher = this.server.watcher
+    if (this.config.forceRerunTriggers.length)
+      watcher.add(this.config.forceRerunTriggers)
 
-  //   if (this.config.forceRerunTriggers.length)
-  //     watcher.add(this.config.forceRerunTriggers)
+    watcher.on('change', onChange)
+    watcher.on('unlink', onUnlink)
+    watcher.on('add', onAdd)
 
-  //   watcher.on('change', onChange)
-  //   watcher.on('unlink', onUnlink)
-  //   watcher.on('add', onAdd)
-
-  //   this.unregisterWatcher = () => {
-  //     watcher.off('change', onChange)
-  //     watcher.off('unlink', onUnlink)
-  //     watcher.off('add', onAdd)
-  //     this.unregisterWatcher = noop
-  //   }
-  // }
+    this.unregisterWatcher = () => {
+      watcher.off('change', onChange)
+      watcher.off('unlink', onUnlink)
+      watcher.off('add', onAdd)
+      this.unregisterWatcher = noop
+    }
+  }
 
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
@@ -982,7 +963,7 @@ export class Vitest {
         }
 
         closePromises.push(
-          this.connection?.close(),
+          this.server.close(), // TODO: use server environments in importer and don't close it here!
           this.importer.close(),
           ...this._onClose.map(fn => fn()),
         )

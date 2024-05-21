@@ -20,6 +20,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
+  async function UIPlugin() {
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
+    return (await import('@vitest/ui')).default(ctx)
+  }
+
   return [
     <VitePlugin>{
       name: 'vitest',
@@ -181,25 +186,34 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         hijackVitePluginInject(viteConfig)
       },
-      // async configureServer(server) {
-      //   if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
-      //     server.watcher.on('ready', () => {
-      //       // eslint-disable-next-line no-console
-      //       console.log('[debug] watcher is ready')
-      //     })
-      //   }
-      //   await ctx.setServer(options, server, userConfig)
-      //   if (options.api && options.watch)
-      //     (await import('../../api/setup')).setup(ctx)
+      async configureServer(server) {
+        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+          server.watcher.on('ready', () => {
+            // eslint-disable-next-line no-console
+            console.log('[debug] watcher is ready')
+          })
+        }
 
-      //   // #415, in run mode we don't need the watcher, close it would improve the performance
-      //   if (!options.watch)
-      //     await server.watcher.close()
-      // },
+        await ctx.resolve(server, userConfig)
+
+        if (server.httpServer && options.watch) {
+          (await import('../../api/setup')).setup(
+            ctx.getCoreWorkspaceProject(),
+            server.httpServer,
+          )
+        }
+
+        // #415, in run mode we don't need the watcher, close it would improve the performance
+        if (!options.watch)
+          await server.watcher.close()
+      },
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
+    options.ui
+      ? await UIPlugin()
+      : null,
     MocksPlugin(),
     VitestResolver(ctx),
     VitestOptimizer(),
@@ -216,6 +230,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         )
         // @ts-expect-error modifying technically readonly property
         config.test = resolvedConfig
+
+        // disable websocket if middleware mode is enabled
+        if (config.server.middlewareMode) {
+          config.server.hmr = {
+            server: {
+              on: () => {},
+              off: () => {},
+            } as any,
+          }
+        }
       },
     },
   ]
