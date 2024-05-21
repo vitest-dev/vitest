@@ -456,7 +456,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  serverEnvironment: 'ssr',
   setup() {
     // custom setup
     return {
