@@ -309,6 +309,8 @@ export class WorkspaceProject {
   static createBasicProject(ctx: Vitest) {
     const project = new WorkspaceProject(ctx.config.name || ctx.config.root, ctx)
     project.config = ctx.config
+    project.sharedConfig = ctx.sharedConfig
+    project.importer = ctx.importer
     return project
   }
 
