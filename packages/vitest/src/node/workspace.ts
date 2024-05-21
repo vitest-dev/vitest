@@ -427,15 +427,28 @@ export class WorkspaceProject {
     await this.browser?.initialize(this)
   }
 
+  private environmentInitCache = new Map<string, Promise<VitestDevEnvironemnt>>()
+
   async ensureEnvironment(name: string): Promise<VitestDevEnvironemnt> {
+    if (this.environmentInitCache.has(name))
+      return await this.environmentInitCache.get(name)!
+
     if (this.environments[name])
       return this.environments[name]
+
     const environment = new VitestDevEnvironemnt(name, this.sharedConfig)
-    this.environments[name] = environment
-    await environment.init()
-    // TODO: remove when bug is fixed
-    this.sharedConfig.environments[name] = environment.options
-    await environment.pluginContainer.buildStart({})
+    const promise = (async () => {
+      await environment.init()
+      await environment.pluginContainer.buildStart({})
+    })().then(() => {
+      this.environments[name] = environment
+      return environment
+    }).finally(() => {
+      this.environmentInitCache.delete(name)
+    })
+    this.environmentInitCache.set(name, promise)
+    await promise
+
     return environment
   }
 }
