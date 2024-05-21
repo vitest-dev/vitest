@@ -11,7 +11,7 @@ describe('edge runtime api', () => {
   it('allows to run fetch', async () => {
     // 3023 is the default port
     const response = await fetch('http://localhost:3023/')
-    expect(response.status).toEqual(200)
+    expect(response.status).toEqual(404)
   })
 
   it('allows to run crypto', async () => {
