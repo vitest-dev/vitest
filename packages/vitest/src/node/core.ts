@@ -38,9 +38,9 @@ export interface VitestOptions {
 }
 
 export class Vitest {
-  version = version
+  public version = version
 
-  public config: ResolvedConfig = undefined!
+  public config!: ResolvedConfig
   public configOverride: Partial<ResolvedConfig> = {}
   public sharedConfig!: ViteResolvedConfig
 
@@ -71,7 +71,6 @@ export class Vitest {
 
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
-  private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
   public distPath!: string
 
@@ -100,7 +99,6 @@ export class Vitest {
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this.distPath = undefined!
-    this.projectsTestFiles.clear()
 
     const sharedConfig = server.config as ViteResolvedConfig
 
@@ -359,7 +357,7 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  async mergeReports() {
+  public async mergeReports() {
     if (this.reporters.some(r => r instanceof BlobReporter))
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
 
@@ -411,7 +409,7 @@ export class Vitest {
     await this.report('onFinished', files, errors)
   }
 
-  async start(filters?: string[]) {
+  public async start(filters?: string[]) {
     this._onClose = []
 
     try {
@@ -450,7 +448,7 @@ export class Vitest {
       await this.report('onWatcherStart')
   }
 
-  async standalone() {
+  public async standalone() {
     this._onClose = []
 
     try {
@@ -495,7 +493,7 @@ export class Vitest {
     return deps
   }
 
-  async filterTestsBySource(specs: WorkspaceSpec[]) {
+  public async filterTestsBySource(specs: WorkspaceSpec[]) {
     if (this.config.changed && !this.config.related) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
@@ -540,14 +538,7 @@ export class Vitest {
     return runningTests
   }
 
-  getProjectsByTestFile(file: string) {
-    const projects = this.projectsTestFiles.get(file)
-    if (!projects)
-      return []
-    return Array.from(projects).map(project => ({ project, file }) as WorkspaceSpec)
-  }
-
-  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
+  public async initializeGlobalSetup(paths: WorkspaceSpec[]) {
     const projects = new Set(paths.map(({ project }) => project))
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject))
@@ -566,7 +557,7 @@ export class Vitest {
     this.distPath = join(vitestDir, 'dist')
   }
 
-  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
+  public async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
     await this.initializeDistPath()
 
     const filepaths = specs.map(({ file }) => file)
@@ -630,12 +621,12 @@ export class Vitest {
     return await this.runningPromise
   }
 
-  async cancelCurrentRun(reason: CancelReason) {
+  public async cancelCurrentRun(reason: CancelReason) {
     this.isCancelling = true
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunSpecs(specs: WorkspaceSpec[] = this.getCurrentSpecs(), trigger?: string) {
+  public async rerunSpecs(specs: WorkspaceSpec[] = this.getCurrentSpecs(), trigger?: string) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       specs = specs.filter(file => filteredFiles.some(f => f.file === file.file))
@@ -649,15 +640,15 @@ export class Vitest {
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
-  getFilesSpecs(files: string[]) {
-    return this.state.getFiles(files).flatMap(file => this.#convertFileTaskToSpec(file))
+  public getFilesSpecs(files: string[]) {
+    return this.state.getFiles(files).flatMap(file => this.convertFileTaskToSpec(file))
   }
 
-  getCurrentSpecs() {
-    return this.state.getFiles().flatMap(file => this.#convertFileTaskToSpec(file))
+  public getCurrentSpecs() {
+    return this.state.getFiles().flatMap(file => this.convertFileTaskToSpec(file))
   }
 
-  async changeProjectName(pattern: string) {
+  public async changeProjectName(pattern: string) {
     if (pattern === '')
       delete this.configOverride.project
     else
@@ -668,7 +659,7 @@ export class Vitest {
     await this.rerunSpecs(specs, 'change project filter')
   }
 
-  async changeNamePattern(pattern: string, files: WorkspaceSpec[] = this.getCurrentSpecs(), trigger?: string) {
+  public async changeNamePattern(pattern: string, files: WorkspaceSpec[] = this.getCurrentSpecs(), trigger?: string) {
     // Empty test name pattern should reset filename pattern as well
     if (pattern === '')
       this.filenamePattern = undefined
@@ -688,7 +679,7 @@ export class Vitest {
     await this.rerunSpecs(files, trigger)
   }
 
-  async changeFilenamePattern(pattern: string, files: WorkspaceSpec[] = this.getCurrentSpecs()) {
+  public async changeFilenamePattern(pattern: string, files: WorkspaceSpec[] = this.getCurrentSpecs()) {
     this.filenamePattern = pattern
 
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
@@ -696,12 +687,12 @@ export class Vitest {
     await this.rerunSpecs(files, trigger)
   }
 
-  async rerunFailed() {
+  public async rerunFailed() {
     const specs = this.getFilesSpecs(this.state.getFailedFilepaths())
     await this.rerunSpecs(specs, 'rerun failed')
   }
 
-  async updateSnapshot(files?: string[]) {
+  public async updateSnapshot(files?: string[]) {
     // default to failed files
     files = files || [
       ...this.state.getFailedFilepaths(),
@@ -839,7 +830,6 @@ export class Vitest {
       }))
 
       if (matchingProjects.length > 0) {
-        this.projectsTestFiles.set(id, new Set(matchingProjects))
         this.changedTests.add(id)
         this.scheduleRerun(id)
       }
@@ -938,7 +928,7 @@ export class Vitest {
     }
   }
 
-  async close() {
+  public async close() {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
         const teardownProjects = [...this.projects]
@@ -982,7 +972,7 @@ export class Vitest {
   /**
    * Close the thread pool and exit the process
    */
-  async exit(force = false) {
+  public async exit(force = false) {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
@@ -1010,7 +1000,7 @@ export class Vitest {
       process.exit()
   }
 
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
+  public async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
     await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
       ...args,
@@ -1023,36 +1013,33 @@ export class Vitest {
       const specs = await project.globTestFiles(filters)
       specs.forEach((file) => {
         files.push({ project, file })
-        const projects = this.projectsTestFiles.get(file) || new Set()
-        projects.add(project)
-        this.projectsTestFiles.set(file, projects)
       })
     }))
     return files
   }
 
   // The server needs to be running for communication
-  shouldKeepServer() {
+  public shouldKeepServer() {
     return !!this.config?.watch
   }
 
-  onServerRestart(fn: OnServerRestartHandler) {
+  public onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
   }
 
-  onAfterSetServer(fn: OnServerRestartHandler) {
+  public onAfterSetServer(fn: OnServerRestartHandler) {
     this._onSetServer.push(fn)
   }
 
-  onCancel(fn: (reason: CancelReason) => void) {
+  public onCancel(fn: (reason: CancelReason) => void) {
     this._onCancelListeners.push(fn)
   }
 
-  onClose(fn: () => void) {
+  public onClose(fn: () => void) {
     this._onClose.push(fn)
   }
 
-  #convertFileTaskToSpec(file: File): WorkspaceSpec {
+  private convertFileTaskToSpec(file: File): WorkspaceSpec {
     return {
       project: this.getProjectByName(file.projectName),
       file: file.filepath,
