@@ -88,6 +88,11 @@ export function createBrowserRunner(
 }
 
 let cachedRunner: VitestRunner | null = null
+let vitestModule: typeof import('vitest') | null = null
+
+export function getVitestModule() {
+  return vitestModule as typeof import('vitest')
+}
 
 export async function initiateRunner() {
   if (cachedRunner)
@@ -96,10 +101,13 @@ export async function initiateRunner() {
   const [
     { VitestTestRunner, NodeBenchmarkRunner },
     { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
+    vitestLoadedModule,
   ] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+    importId('vitest'),
   ])
+  vitestModule = vitestLoadedModule
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),

@@ -8,8 +8,8 @@ import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
-import BrowserContext from './plugins/context'
-import BrowserMocker from './plugins/mocker'
+import BrowserContext from './plugins/pluginContext'
+import BrowserMocker from './plugins/pluginMocker'
 
 export type { BrowserCommand } from 'vitest/node'
 
@@ -18,7 +18,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
 
   return [
-    BrowserMocker(project),
+    ...BrowserMocker(project),
     {
       enforce: 'pre',
       name: 'vitest:browser',
