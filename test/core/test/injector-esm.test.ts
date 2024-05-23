@@ -198,7 +198,7 @@ test('dynamic import', async () => {
   )
   expect(result).toMatchInlineSnapshot(`
     "const __vi_inject__ = { [Symbol.toStringTag]: "Module" };
-    const i = () => __vitest_browser_runner__.wrapModule(import('./foo'))
+    const i = () => __vitest_browser_runner__.wrapModule(() => import('./foo'))
     export { __vi_inject__ }"
   `)
 })

@@ -1,6 +1,5 @@
 import type { Plugin } from 'vitest/config'
 import type { WorkspaceProject } from 'vitest/node'
-import type { Reporter } from 'vitest/reporters'
 import type { WebSocketRPC } from 'vitest'
 
 export default (project: WorkspaceProject): Plugin => {
@@ -10,11 +9,11 @@ export default (project: WorkspaceProject): Plugin => {
     async load(id) {
       const queued = project.browserMocks.queued
       if (queued.has(id)) {
-        const reporter = project.ctx.reporters.find(r => 'wss' in r && 'clients' in r && (r.clients as any).size) as Reporter & {
+        const reporter = project.ctx.reporters.find(r => 'wss' in r && 'clients' in r && (r.clients as any).size) as {
           clients: Map<any, WebSocketRPC>
         }
 
-        if (!reporter || !reporter.clients.size)
+        if (!reporter)
           throw new Error('WebSocketReporter not found')
 
         const exports = await startMocking(reporter.clients, id)
@@ -32,7 +31,9 @@ export default (project: WorkspaceProject): Plugin => {
 
 async function startMocking(clients: Map<any, WebSocketRPC>, id: string) {
   const errors: unknown[] = []
-  for (const client of clients.values()) {
+  // start from the end since it's more likely that the last iframe is the one
+  // who subscribed with a running test
+  for (const client of [...clients.values()].reverse()) {
     try {
       const context = await client.getTestContext()
       if (!context)
