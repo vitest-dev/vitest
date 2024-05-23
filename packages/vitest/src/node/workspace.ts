@@ -78,6 +78,10 @@ export class WorkspaceProject {
     reject: (v: unknown) => void
   } | undefined
 
+  browserMocks = {
+    queued: new Set<string>(),
+  }
+
   testFilesList: string[] | null = null
 
   public readonly id = nanoid()

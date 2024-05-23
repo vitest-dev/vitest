@@ -27,6 +27,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
     },
     plugins: [
       ...project.options?.plugins || [],
+      MocksPlugin(),
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {
@@ -59,11 +60,11 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             },
             server: {
               watch: null,
+              preTransformRequests: false,
             },
           }
         },
       },
-      MocksPlugin(),
     ],
   })
 

@@ -1,7 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 
 import { dirname } from 'pathe'
-import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
@@ -15,14 +14,14 @@ import type { Awaitable, File, ModuleGraphData, Reporter, SerializableSpec, Task
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
-import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
+import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers, WebSocketRPC } from './types'
 
 export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
   const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
 
   const wss = new WebSocketServer({ noServer: true })
 
-  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
+  const clients = new Map<WebSocket, WebSocketRPC>()
 
   const server = _server || ctx.server
 
@@ -183,6 +182,35 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
             root: project.config.root,
           }, file])
         },
+        async queueMock(id: string, importer: string) {
+          if (!('ctx' in vitestOrWorkspace))
+            throw new Error('`queueMock` is only available in the browser API')
+          const resolvedId = await vitestOrWorkspace.vitenode.resolveId(id, importer, 'web')
+          if (!resolvedId)
+            throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
+          vitestOrWorkspace.browserMocks.queued.add(resolvedId.id)
+          return resolvedId.id
+        },
+        async queueUnmock(id: string, importer: string) {
+          // TODO: figure out unmocking - just remove from the queue?
+          if (!('ctx' in vitestOrWorkspace))
+            throw new Error('`queueUnmock` is only available in the browser API')
+          const resolvedId = await vitestOrWorkspace.vitenode.resolveId(id, importer, 'web')
+          if (!resolvedId)
+            throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
+          return resolvedId.id
+        },
+        invalidateMocks() {
+          if (!('ctx' in vitestOrWorkspace))
+            throw new Error('`invalidateMocks` is only available in the browser API')
+          const queued = vitestOrWorkspace.browserMocks.queued
+          queued.forEach((id) => {
+            const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
+            const module = moduleGraph.getModuleById(id)
+            if (module)
+              moduleGraph.invalidateModule(module)
+          })
+        },
       },
       {
         post: msg => ws.send(msg),
@@ -212,7 +240,7 @@ export class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
-    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>,
+    public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
   onCollected(files?: File[]) {

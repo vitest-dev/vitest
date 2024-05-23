@@ -52,6 +52,12 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let onMessage: Function
   const functions: WebSocketEvents = {
+    async startMocking(id) {
+      return options.handlers?.startMocking?.(id) ?? []
+    },
+    getTestContext() {
+      return options.handlers?.getTestContext?.() ?? null
+    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -88,7 +94,16 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: stringify,
+    serialize: e => stringify(e, (_, v) => {
+      if (v instanceof Error) {
+        return {
+          name: v.name,
+          message: v.message,
+          stack: v.stack,
+        }
+      }
+      return v
+    }),
     deserialize: parse,
     onTimeoutError(functionName) {
       throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)

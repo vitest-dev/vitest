@@ -1,5 +1,6 @@
 import type { TransformResult } from 'vite'
 import type { CancelReason } from '@vitest/runner'
+import type { BirpcReturn } from 'birpc'
 import type { AfterSuiteRunMeta, File, ModuleGraphData, ProvidedContext, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
@@ -38,9 +39,16 @@ export interface WebSocketHandlers {
   getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
   triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
+  queueMock: (id: string, importer: string) => Promise<string>
+  queueUnmock: (id: string, importer: string) => Promise<string>
+  invalidateMocks: () => void
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected' | 'onSpecsCollected'> {
   onCancel: (reason: CancelReason) => void
+  startMocking: (id: string) => Promise<string[]>
+  getTestContext: () => ({ files: string[] }) | null
   onFinishedReportCoverage: () => void
 }
+
+export type WebSocketRPC = BirpcReturn<WebSocketEvents, WebSocketHandlers>

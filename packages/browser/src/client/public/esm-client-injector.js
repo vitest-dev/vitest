@@ -1,11 +1,18 @@
 const moduleCache = new Map()
 
 function wrapModule(module) {
-  if (module instanceof Promise) {
-    moduleCache.set(module, { promise: module, evaluated: false })
-    return module
+  if (typeof module === 'function') {
+    const promise = new Promise((resolve, reject) => {
+      if (typeof __vitest_mocker__ === 'undefined')
+        return module().then(resolve).catch(reject)
+      __vitest_mocker__.prepare().finally(() => {
+        module().then(resolve).catch(reject)
+      })
+    })
+    moduleCache.set(promise, { promise, evaluated: false })
+    return promise
       .then(m => '__vi_inject__' in m ? m.__vi_inject__ : m)
-      .finally(() => moduleCache.delete(module))
+      .finally(() => moduleCache.delete(promise))
   }
   return '__vi_inject__' in module ? module.__vi_inject__ : module
 }

@@ -43,6 +43,7 @@ export function createBrowserRunner(
     }
 
     onAfterRunFiles = async (files: File[]) => {
+      await rpc().invalidateMocks()
       await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
