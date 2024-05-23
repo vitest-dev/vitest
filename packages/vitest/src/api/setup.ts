@@ -182,42 +182,24 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
             root: project.config.root,
           }, file])
         },
-        async queueMock(id: string, importer: string) {
+        async queueMock(id: string, importer: string, hasFactory: boolean) {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`queueMock` is only available in the browser API')
-          const resolvedId = await vitestOrWorkspace.vitenode.resolveId(id, importer, 'web')
-          if (!resolvedId)
-            throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
-          vitestOrWorkspace.browserMocks.queued.add(resolvedId.id)
-          const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
-          const module = moduleGraph.getModuleById(resolvedId.id)
-          if (module)
-            moduleGraph.invalidateModule(module)
-          return resolvedId.id
+          return vitestOrWorkspace.browserMocker.mock(id, importer, hasFactory)
         },
         async queueUnmock(id: string, importer: string) {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`queueUnmock` is only available in the browser API')
-          const resolvedId = await vitestOrWorkspace.vitenode.resolveId(id, importer, 'web')
-          if (!resolvedId)
-            throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
-          vitestOrWorkspace.browserMocks.queued.delete(resolvedId.id)
-          const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
-          const module = moduleGraph.getModuleById(resolvedId.id)
-          if (module)
-            moduleGraph.invalidateModule(module)
-          return resolvedId.id
+          return vitestOrWorkspace.browserMocker.unmock(id, importer)
         },
         invalidateMocks() {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`invalidateMocks` is only available in the browser API')
-          const queued = vitestOrWorkspace.browserMocks.queued
-          queued.forEach((id) => {
-            const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
-            const module = moduleGraph.getModuleById(id)
-            if (module)
-              moduleGraph.invalidateModule(module)
+          const mocker = vitestOrWorkspace.browserMocker
+          mocker.mocks.forEach((_, id) => {
+            mocker.invalidateModuleById(id)
           })
+          mocker.mocks.clear()
         },
       },
       {

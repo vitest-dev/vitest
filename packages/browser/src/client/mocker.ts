@@ -25,21 +25,39 @@ export class VitestBrowserClientMocker {
     const factory = this.factories[id]
     if (!factory)
       throw new Error(`Cannot resolve ${id} mock: no factory provided`)
-    this.mocks[id] = await factory()
-    return this.mocks[id]
+    try {
+      this.mocks[id] = await factory()
+      return this.mocks[id]
+    }
+    catch (err) {
+      const vitestError = new Error(
+        '[vitest] There was an error when mocking a module. '
+        + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
+        + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
+      )
+      vitestError.cause = err
+      throw vitestError
+    }
   }
 
   public queueMock(id: string, importer: string, factory?: () => any) {
-    const promise = rpc().queueMock(id, importer).then((id) => {
-      this.factories[id] = factory! // TODO: support no factory mocks
-    }).finally(() => {
-      this.queue.delete(promise)
-    })
+    const promise = rpc().queueMock(id, importer, !!factory)
+      .then((id) => {
+        this.factories[id] = factory!
+      }).finally(() => {
+        this.queue.delete(promise)
+      })
     this.queue.add(promise)
   }
 
-  public queueUnmock(_id: string, _importer: string) {
-    throwNotImplemented('queueUnmock')
+  public queueUnmock(id: string, importer: string) {
+    const promise = rpc().queueUnmock(id, importer)
+      .then((id) => {
+        delete this.factories[id]
+      }).finally(() => {
+        this.queue.delete(promise)
+      })
+    this.queue.add(promise)
   }
 
   public async prepare() {

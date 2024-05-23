@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import type { Plugin } from 'vitest/config'
 import type { WorkspaceProject } from 'vitest/node'
 import type { WebSocketRPC } from 'vitest'
@@ -7,9 +8,14 @@ export default (project: WorkspaceProject): Plugin => {
     name: 'vitest:browser:mocker',
     enforce: 'pre',
     async load(id) {
-      const queued = project.browserMocks.queued
-      if (queued.has(id)) {
-        const reporter = project.ctx.reporters.find(r => 'wss' in r && 'clients' in r && (r.clients as any).size) as {
+      if (!project.browserMocker.mocks.has(id))
+        return
+      const mock = project.browserMocker.mocks.get(id)
+      // undefined mock means there is a factory in the browser
+      if (mock === undefined) {
+        const reporter = project.ctx.reporters.find(r =>
+          'wss' in r && 'clients' in r && (r.clients as any).size,
+        ) as {
           clients: Map<any, WebSocketRPC>
         }
 
@@ -17,14 +23,23 @@ export default (project: WorkspaceProject): Plugin => {
           throw new Error('WebSocketReporter not found')
 
         const exports = await startMocking(reporter.clients, id)
-        const module = `const module = __vitest_mocker__.get('${id}')`
+        const module = `const module = __vitest_mocker__.get('${id}');`
         const keys = exports.map((name) => {
           if (name === 'default')
-            return `export default module['default']`
-          return `export const ${name} = module['${name}']`
+            return `export default module['default'];`
+          return `export const ${name} = module['${name}'];`
         }).join('\n')
         return `${module}\n${keys}`
       }
+
+      // should import the same module and automock all exports
+      if (mock === null) {
+        // TODO: support
+        throw new Error('automocking is not supported yet')
+      }
+
+      // file is inside __mocks__
+      return readFile(mock, 'utf-8')
     },
   }
 }

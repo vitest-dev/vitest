@@ -23,7 +23,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
-    invalidateMocks(project)
+    const mocker = project.browserMocker
+    mocker.mocks.forEach((_, id) => {
+      mocker.invalidateModuleById(id)
+    })
+    mocker.mocks.clear()
 
     // TODO
     // let isCancelled = false
@@ -44,16 +48,6 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     await provider.openPage(new URL('/', origin).toString())
     await promise
-  }
-
-  function invalidateMocks(project: WorkspaceProject) {
-    project.browserMocks.queued.forEach((id) => {
-      const moduleGraph = project.browser!.moduleGraph
-      const module = moduleGraph.getModuleById(id)
-      if (module)
-        moduleGraph.invalidateModule(module)
-    })
-    project.browserMocks.queued.clear()
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {

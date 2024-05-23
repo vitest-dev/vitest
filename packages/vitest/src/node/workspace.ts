@@ -14,6 +14,7 @@ import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
+import { VitestBrowserServerMocker } from '../integrations/browser/mocker'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -70,17 +71,15 @@ export class WorkspaceProject {
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
-  browserProvider: BrowserProvider | undefined
 
+  // TODO: abstract browser related things and move to @vitest/browser
+  browserProvider: BrowserProvider | undefined
+  browserMocker = new VitestBrowserServerMocker(this)
   browserState: {
     files: string[]
     resolve: () => void
     reject: (v: unknown) => void
   } | undefined
-
-  browserMocks = {
-    queued: new Set<string>(),
-  }
 
   testFilesList: string[] | null = null
 

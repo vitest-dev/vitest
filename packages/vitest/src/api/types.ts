@@ -39,7 +39,7 @@ export interface WebSocketHandlers {
   getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
   triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
-  queueMock: (id: string, importer: string) => Promise<string>
+  queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<string>
   queueUnmock: (id: string, importer: string) => Promise<string>
   invalidateMocks: () => void
 }
