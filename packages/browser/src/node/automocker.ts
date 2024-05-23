@@ -47,19 +47,18 @@ export function automockModule(code: string, parse: (code: string) => Program) {
   }
   const moduleObject = `
 const __vitest_es_current_module__ = {
-  [globalThis.Symbol.toStringTag]: 'Module',
+  [globalThis.Symbol.toStringTag]: "Module",
   __esModule: true,
   ${allSpecifiers.map(({ name, alias }) => `["${alias || name}"]: ${alias || name},`).join('\n  ')}
 }
 const __vitest_mocked_module__ = __vitest_mocker__.mockObject(__vitest_es_current_module__)
 `
-  const redeclarations = allSpecifiers.map(({ name, alias }) => {
+  const redeclarations = allSpecifiers.map(({ name, alias }, index) => {
     if (name === 'default')
-      return `export default __vitest_mocked_module__['default']`
+      return `export default __vitest_mocked_module__["${alias}"]`
     return `
-const __vitest_mocked_${alias || name} = __vitest_mocked_module__['${alias || name}']
-export { __vitest_mocked_${alias || name} as ${alias || name} }
-    `
+const __vitest_mocked_${index}__ = __vitest_mocked_module__["${alias || name}"]
+export { __vitest_mocked_${index}__ as "${alias || name}" }`.trimStart()
   }).join('\n')
   m.append(moduleObject + redeclarations)
   return m

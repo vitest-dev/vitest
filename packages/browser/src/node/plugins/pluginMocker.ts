@@ -54,11 +54,8 @@ export default (project: WorkspaceProject): Plugin[] => {
 
           return {
             code: m.toString(),
-            map: m.generateMap(),
+            map: m.generateMap({ hires: 'boundary', source: id }),
           }
-
-          // TODO: parse the code and replace exports with __vitest_mock(value)
-          // export function test() {} -> export const test = __vitest_mock(test)
         }
       },
     },

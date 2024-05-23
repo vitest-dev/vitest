@@ -68,6 +68,7 @@ export class VitestBrowserClientMocker {
     await Promise.all([...this.queue.values()])
   }
 
+  // TODO: move this logic into a util(?)
   public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()

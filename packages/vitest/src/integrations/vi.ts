@@ -374,7 +374,11 @@ function createVitest(): VitestUtils {
 
   const getImporter = () => {
     const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
-    const importerStack = stackTrace.split('\n')[4]
+    const stackArray = stackTrace.split('\n')
+    // firefox has the importer in the 3 place because it doesn't have the message
+    const importerStack = stackTrace.includes('stack trace error')
+      ? stackArray[4]
+      : stackArray[3]
     const stack = parseSingleStack(importerStack)
     return stack?.file || ''
   }

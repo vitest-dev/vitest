@@ -33,7 +33,6 @@ export default defineConfig({
       headless: false,
       provider,
       isolate: false,
-      slowHijackESM: true,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',

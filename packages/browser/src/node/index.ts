@@ -7,9 +7,9 @@ import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
-import { injectVitestModule } from './esmInjector'
 import BrowserContext from './plugins/pluginContext'
 import BrowserMocker from './plugins/pluginMocker'
+import DynamicImport from './plugins/pluginDynamicImport'
 
 export type { BrowserCommand } from 'vitest/node'
 
@@ -196,16 +196,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(project),
-    {
-      name: 'vitest:browser:esm-injector',
-      enforce: 'post',
-      transform(source, id) {
-        const hijackESM = project.config.browser.slowHijackESM ?? false
-        if (!hijackESM)
-          return
-        return injectVitestModule(source, id, this.parse)
-      },
-    },
+    DynamicImport(),
   ]
 }
 
