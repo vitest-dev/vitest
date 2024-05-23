@@ -189,15 +189,23 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           if (!resolvedId)
             throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
           vitestOrWorkspace.browserMocks.queued.add(resolvedId.id)
+          const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
+          const module = moduleGraph.getModuleById(resolvedId.id)
+          if (module)
+            moduleGraph.invalidateModule(module)
           return resolvedId.id
         },
         async queueUnmock(id: string, importer: string) {
-          // TODO: figure out unmocking - just remove from the queue?
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`queueUnmock` is only available in the browser API')
           const resolvedId = await vitestOrWorkspace.vitenode.resolveId(id, importer, 'web')
           if (!resolvedId)
             throw new Error(`[mocker] Cannot resolve module "${id}" from "${importer}"`)
+          vitestOrWorkspace.browserMocks.queued.delete(resolvedId.id)
+          const moduleGraph = vitestOrWorkspace.browser!.moduleGraph
+          const module = moduleGraph.getModuleById(resolvedId.id)
+          if (module)
+            moduleGraph.invalidateModule(module)
           return resolvedId.id
         },
         invalidateMocks() {

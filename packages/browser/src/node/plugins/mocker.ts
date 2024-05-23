@@ -38,8 +38,6 @@ async function startMocking(clients: Map<any, WebSocketRPC>, id: string) {
       const context = await client.getTestContext()
       if (!context)
         continue
-      // TODO: check if the same test file(?)
-      // invalidate between tests(?)
       return await client.startMocking(id)
     }
     catch (err) {
