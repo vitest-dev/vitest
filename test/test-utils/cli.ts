@@ -37,7 +37,8 @@ export class Cli {
   }
 
   private capture(source: Source, data: any) {
-    this[source] += stripAnsi(data.toString())
+    const msg = stripAnsi(data.toString())
+    this[source] += msg
     this[`${source}Listeners`].forEach(fn => fn())
   }
 
