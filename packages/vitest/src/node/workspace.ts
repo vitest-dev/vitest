@@ -403,6 +403,8 @@ export class WorkspaceProject {
       },
       browser: {
         ...this.ctx.config.browser,
+        indexScripts: [],
+        testerScripts: [],
         commands: {},
       },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
