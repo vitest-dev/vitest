@@ -2,11 +2,17 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 import { runBrowserTests } from './utils'
 
-test('mocking works correctly', async () => {
+test.each([true, false])('mocking works correctly - isolated %s', async (isolate) => {
   const result = await runVitest({
     root: 'fixtures/mocking',
+    isolate,
   })
   expect(result.stderr).toBe('')
+  expect(result.stdout).toContain('automocked.test')
+  expect(result.stdout).toContain('mocked-__mocks__')
+  expect(result.stdout).toContain('mocked-factory')
+  expect(result.stdout).toContain('mocked-factory-hoisted')
+  expect(result.stdout).toContain('not-mocked')
   expect(result.exitCode).toBe(0)
 })
 

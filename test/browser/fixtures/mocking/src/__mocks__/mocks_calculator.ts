@@ -1,3 +1,3 @@
 export function calculator() {
-  return 4
+  return 42
 }
