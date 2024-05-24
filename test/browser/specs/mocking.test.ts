@@ -8,11 +8,13 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
     isolate,
   })
   expect(result.stderr).toBe('')
-  expect(result.stdout).toContain('automocked.test')
-  expect(result.stdout).toContain('mocked-__mocks__')
-  expect(result.stdout).toContain('mocked-factory')
-  expect(result.stdout).toContain('mocked-factory-hoisted')
-  expect(result.stdout).toContain('not-mocked')
+  expect(result.stdout).toContain('automocked.test.ts')
+  expect(result.stdout).toContain('mocked-__mocks__.test.ts')
+  expect(result.stdout).toContain('mocked-factory.test.ts')
+  expect(result.stdout).toContain('mocked-factory-hoisted.test.ts')
+  expect(result.stdout).toContain('not-mocked.test.ts')
+  expect(result.stdout).toContain('mocked-nested.test.ts')
+  expect(result.stdout).toContain('not-mocked-nested.test.ts')
   expect(result.exitCode).toBe(0)
 })
 
