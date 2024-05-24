@@ -27,7 +27,12 @@ async function tryCall<T>(fn: () => Promise<T>): Promise<T | false | undefined> 
     const now = Date.now()
     // try for 30 seconds
     const canTry = !reloadStart || (now - Number(reloadStart) < 30_000)
-    debug('failed to resolve runner', err?.message, 'trying again:', canTry, 'time is', now, 'reloadStart is', reloadStart)
+    const errorStack = (() => {
+      if (!err)
+        return null
+      return err.stack?.includes(err.message) ? err.stack : `${err.message}\n${err.stack}`
+    })()
+    debug('failed to resolve runner', 'trying again:', canTry, 'time is', now, 'reloadStart is', reloadStart, ':\n', errorStack)
     if (!canTry) {
       const error = serializeError(new Error('Vitest failed to load its runner after 30 seconds.'))
       error.cause = serializeError(err)
