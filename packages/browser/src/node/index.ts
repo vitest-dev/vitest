@@ -157,6 +157,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest/browser',
               'vitest/runners',
               '@vitest/utils',
+              'std-env',
+              'tinybench',
+              'tinyspy',
 
               // loupe is manually transformed
               'loupe',

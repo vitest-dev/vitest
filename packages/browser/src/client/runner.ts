@@ -105,7 +105,7 @@ export async function initiateRunner() {
   ] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-    importId('vitest'),
+    importId('vitest') as Promise<typeof import('vitest')>,
   ])
   vitestModule = vitestLoadedModule
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
