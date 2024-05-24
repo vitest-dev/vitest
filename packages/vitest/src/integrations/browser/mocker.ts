@@ -45,7 +45,7 @@ export class VitestBrowserServerMocker {
     const moduleGraph = this.#project.browser!.moduleGraph
     const module = moduleGraph.getModuleById(id)
     if (module)
-      moduleGraph.invalidateModule(module)
+      moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
   }
 
   private async resolveId(rawId: string, importer: string) {

@@ -108,7 +108,7 @@ async function prepareTestEnvironment(files: string[]) {
 
   const { startTests, setupCommonEnv } = await importId('vitest/browser') as typeof import('vitest/browser')
 
-  const version = url.searchParams.get('browserv') || '0'
+  const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
     if (!currentVersion || currentVersion[1] !== version)
