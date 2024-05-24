@@ -14,7 +14,7 @@ interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
-  wrapModule: <T>(module: T) => T
+  wrapModule: <T>(module: () => T) => T
   runTests: (tests: string[]) => Promise<void>
 }
 
