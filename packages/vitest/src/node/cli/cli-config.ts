@@ -347,6 +347,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       isolate: {
         description: 'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
       },
+      ui: {
+        description: 'Show Vitest UI when running tests',
+      },
       fileParallelism: {
         description: 'Should all test files run in parallel. Use `--browser.file-parallelism=false` to disable (default: same as `--file-parallelism`)',
       },

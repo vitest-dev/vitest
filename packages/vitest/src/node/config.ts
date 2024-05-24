@@ -520,7 +520,9 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
-  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
+  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i =>
+    [resolve(resolved.root, i[0]), i[1]],
+  )
 
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
@@ -533,6 +535,7 @@ export function resolveConfig(
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= false
   resolved.browser.isolate ??= true
+  resolved.browser.ui ??= !isCI
 
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
     resolved.browser.provider = 'none'

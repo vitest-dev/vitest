@@ -88,6 +88,13 @@ export interface BrowserConfigOptions {
   isolate?: boolean
 
   /**
+   * Show Vitest UI
+   *
+   * @default !process.env.CI
+   */
+  ui?: boolean
+
+  /**
    * Run test files in parallel. Fallbacks to `test.fileParallelism`.
    *
    * @default test.fileParallelism
@@ -156,4 +163,5 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   headless: boolean
   isolate: boolean
   api: ApiConfig
+  ui: boolean
 }

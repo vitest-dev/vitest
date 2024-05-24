@@ -1626,6 +1626,14 @@ This option has no effect on tests running inside Node.js.
 
 If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
 
+#### browser.ui {#browser-ui}
+
+- **Type:** `boolean`
+- **Default:** `!isCI`
+- **CLI:** `--browser.ui=false`
+
+Should Vitest UI be injected into the page. By default, injects UI iframe during development.
+
 #### browser.indexScripts {#browser-indexscripts}
 
 - **Type:** `BrowserScript[]`
