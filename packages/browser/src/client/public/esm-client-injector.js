@@ -11,35 +11,12 @@ function wrapModule(module) {
     })
     moduleCache.set(promise, { promise, evaluated: false })
     return promise
-      .then(m => '__vi_inject__' in m ? m.__vi_inject__ : m)
       .finally(() => moduleCache.delete(promise))
   }
-  return '__vi_inject__' in module ? module.__vi_inject__ : module
-}
-
-function exportAll(exports, sourceModule) {
-  if (exports === sourceModule)
-    return
-
-  if (Object(sourceModule) !== sourceModule || Array.isArray(sourceModule))
-    return
-
-  for (const key in sourceModule) {
-    if (key !== 'default') {
-      try {
-        Object.defineProperty(exports, key, {
-          enumerable: true,
-          configurable: true,
-          get: () => sourceModule[key],
-        })
-      }
-      catch (_err) { }
-    }
-  }
+  return module
 }
 
 window.__vitest_browser_runner__ = {
-  exportAll,
   wrapModule,
   moduleCache,
   config: { __VITEST_CONFIG__ },
