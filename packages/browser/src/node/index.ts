@@ -73,6 +73,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               __VITEST_TITLE__: 'Vitest Browser Runner',
               __VITEST_SCRIPTS__: indexScripts,
               __VITEST_INJECTOR__: injector,
+              __VITEST_UI__: project.config.browser.ui
+                ? '<iframe id="vitest-ui" src="/__vitest__/"></iframe>'
+                : '',
             })
             res.write(html, 'utf-8')
             res.end()
