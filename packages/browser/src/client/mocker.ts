@@ -1,6 +1,5 @@
 import { getType } from '@vitest/utils'
 import { rpc } from './rpc'
-import { getVitestModule } from './runner'
 import { getBrowserState } from './utils'
 
 function throwNotImplemented(name: string) {
@@ -11,6 +10,12 @@ export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
   private mocks: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
+
+  private spyModule!: typeof import('vitest')
+
+  public setSpyModule(mod: typeof import('vitest')) {
+    this.spyModule = mod
+  }
 
   public importActual() {
     throwNotImplemented('importActual')
@@ -138,7 +143,7 @@ export class VitestBrowserClientMocker {
           continue
 
         if (isFunction) {
-          const spyModule = getVitestModule()
+          const spyModule = this.spyModule
           if (!spyModule)
             throw new Error('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
           function mockFunction(this: any) {

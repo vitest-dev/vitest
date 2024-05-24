@@ -2,7 +2,7 @@ import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
-import { getConfig, importId } from './utils'
+import { importId } from './utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
@@ -88,26 +88,17 @@ export function createBrowserRunner(
 }
 
 let cachedRunner: VitestRunner | null = null
-let vitestModule: typeof import('vitest') | null = null
 
-export function getVitestModule() {
-  return vitestModule as typeof import('vitest')
-}
-
-export async function initiateRunner() {
+export async function initiateRunner(config: ResolvedConfig) {
   if (cachedRunner)
     return cachedRunner
-  const config = getConfig()
   const [
     { VitestTestRunner, NodeBenchmarkRunner },
     { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
-    vitestLoadedModule,
   ] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-    importId('vitest') as Promise<typeof import('vitest')>,
   ])
-  vitestModule = vitestLoadedModule
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),

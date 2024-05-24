@@ -100,13 +100,12 @@ async function prepareTestEnvironment(files: string[]) {
   globalThis.__vitest_browser__ = true
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = state
+  const mocker = new VitestBrowserClientMocker()
   // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()
+  globalThis.__vitest_mocker__ = mocker
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
-
-  const { startTests, setupCommonEnv } = await importId('vitest/browser') as typeof import('vitest/browser')
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
@@ -115,7 +114,12 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, [true, version])
   })
 
-  const runner = await initiateRunner()
+  const [runner, { startTests, setupCommonEnv, Vitest }] = await Promise.all([
+    initiateRunner(config),
+    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+  ])
+
+  mocker.setSpyModule(Vitest)
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)

@@ -53,8 +53,11 @@ export async function setupConsoleLogSpy() {
 
   console.trace = (...args: unknown[]) => {
     const content = processLog(args)
-    const error = new Error('Trace')
-    const stack = (error.stack || '').split('\n').slice(2).join('\n')
+    const error = new Error('$$Trace')
+    const stack = (error.stack || '')
+      .split('\n')
+      .slice(error.stack?.includes('$$Trace') ? 2 : 1)
+      .join('\n')
     sendLog('stdout', `${content}\n${stack}`)
     return trace(...args)
   }
