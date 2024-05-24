@@ -3,7 +3,7 @@ import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../utils'
-import { resolveApiServerConfig } from '../config'
+import { resolveApiServerConfig, resolveConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -193,9 +193,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             console.log('[debug] watcher is ready')
           })
         }
-        await ctx.setServer(options, server, userConfig)
-        if (options.api && options.watch)
-          (await import('../../api/setup')).setup(ctx)
+
+        await ctx.resolve(server, userConfig)
+
+        if (server.httpServer && options.watch) {
+          (await import('../../api/setup')).setup(
+            ctx.getCoreWorkspaceProject(),
+            server.httpServer,
+          )
+        }
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)
@@ -212,6 +218,30 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
     VitestResolver(ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    <VitePlugin>{
+      name: 'vitest:finalize-config',
+      enforce: 'post',
+      configResolved(config) {
+        const resolvedConfig = resolveConfig(
+          ctx.mode,
+          options,
+          config,
+          ctx.logger,
+        )
+        // @ts-expect-error modifying technically readonly property
+        config.test = resolvedConfig
+
+        // disable websocket if middleware mode is enabled
+        if (config.server.middlewareMode) {
+          config.server.hmr = {
+            server: {
+              on: () => {},
+              off: () => {},
+            } as any,
+          }
+        }
+      },
+    },
   ]
     .filter(notNullish)
 }

@@ -33,7 +33,7 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
   globalSetup = true
   setupColors(createColors(isatty(1)))
 
-  if (environment.transformMode === 'web') {
+  if (environment.serverEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = () => ({})

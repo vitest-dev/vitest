@@ -25,6 +25,7 @@ import type { Vitest } from 'vitest/node'
 
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
+import type { TransformResult } from 'vite'
 
 interface TestExclude {
   new(opts: {
@@ -44,7 +45,7 @@ type Options = ResolvedCoverageOptions<'v8'>
 type TransformResults = Map<string, FetchResult>
 type Filename = string
 type RawCoverage = Profiler.TakePreciseCoverageReturnType
-type CoverageFilesByTransformMode = Record<AfterSuiteRunMeta['transformMode'], Filename[]>
+type CoverageFilesByTransformMode = Record<AfterSuiteRunMeta['serverEnvironment'], Filename[]>
 type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
 
 // TODO: vite-node should export this
@@ -130,19 +131,17 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
-    if (transformMode !== 'web' && transformMode !== 'ssr')
-      throw new Error(`Invalid transform mode: ${transformMode}`)
-
+  onAfterSuiteRun({ coverage, serverEnvironment, projectName }: AfterSuiteRunMeta) {
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [] }
+      entry = { client: [], ssr: [] }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
     const filename = resolve(this.coverageFilesDirectory, `coverage-${uniqueId++}.json`)
-    entry[transformMode].push(filename)
+    entry[serverEnvironment] ??= []
+    entry[serverEnvironment].push(filename)
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
@@ -160,7 +159,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     this.pendingPromises = []
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
-      for (const [transformMode, filenames] of Object.entries(coveragePerProject) as [AfterSuiteRunMeta['transformMode'], Filename[]][]) {
+      for (const [serverEnvironment, filenames] of Object.entries(coveragePerProject) as [AfterSuiteRunMeta['serverEnvironment'], Filename[]][]) {
         let merged: RawCoverage = { result: [] }
 
         for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
@@ -176,7 +175,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           }))
         }
 
-        const converted = await this.convertCoverage(merged, projectName, transformMode)
+        const converted = await this.convertCoverage(merged, projectName, serverEnvironment)
 
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
@@ -225,10 +224,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       })
 
       if (this.options.thresholds.autoUpdate && allTestsRun) {
-        if (!this.ctx.server.config.configFile)
+        if (!this.ctx.sharedConfig.configFile)
           throw new Error('Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.')
 
-        const configFilePath = this.ctx.server.config.configFile
+        const configFilePath = this.ctx.sharedConfig.configFile
         const configModule = parseModule(await fs.readFile(configFilePath, 'utf8'))
 
         this.updateThresholds({
@@ -254,7 +253,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   }
 
   private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
-    const transformResults = normalizeTransformResults(this.ctx.vitenode.fetchCache)
+    const transformResults = normalizeTransformResults(this.ctx.importer.environment.processor.fetchCache)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
@@ -319,15 +318,15 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const filePath = normalize(fileURLToPath(url))
 
     let isExecuted = true
-    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>> = transformResults.get(filePath)
+    let transformResult: FetchResult | Awaited<ReturnType<typeof this.ctx.importer.processor.transformRequest>> = transformResults.get(filePath)
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await this.ctx.vitenode.transformRequest(filePath).catch(() => null)
+      transformResult = await this.ctx.importer.processor.transformRequest(filePath).catch(() => undefined)
     }
 
-    const map = transformResult?.map as (EncodedSourceMap | undefined)
-    const code = transformResult?.code
+    const map = (transformResult as TransformResult | undefined)?.map as (EncodedSourceMap | undefined)
+    const code = (transformResult as TransformResult | undefined)?.code
     const sourcesContent = map?.sourcesContent?.[0] || await fs.readFile(filePath, 'utf-8').catch(() => {
       // If file does not exist construct a dummy source for it.
       // These can be files that were generated dynamically during the test run and were removed after it.
@@ -363,9 +362,15 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     }
   }
 
-  private async convertCoverage(coverage: RawCoverage, projectName?: ProjectName, transformMode?: 'web' | 'ssr'): Promise<CoverageMap> {
-    const viteNode = this.ctx.projects.find(project => project.getName() === projectName)?.vitenode || this.ctx.vitenode
-    const fetchCache = transformMode ? viteNode.fetchCaches[transformMode] : viteNode.fetchCache
+  private async convertCoverage(coverage: RawCoverage, projectName?: ProjectName, serverEnvironment?: string): Promise<CoverageMap> {
+    const project = typeof projectName === 'string'
+      ? this.ctx.getProjectByName(projectName)
+      : this.ctx.getCoreWorkspaceProject()
+    const environment = project.environments[serverEnvironment || 'client']
+    if (!environment)
+      throw new Error(`Environment ${serverEnvironment} does not exist. Trying to convert coverage for ${String(projectName || 'core')} project.`)
+
+    const fetchCache = environment.processor.fetchCache
     const transformResults = normalizeTransformResults(fetchCache)
 
     const scriptCoverages = coverage.result.filter(result => this.testExclude.shouldInstrument(fileURLToPath(result.url)))

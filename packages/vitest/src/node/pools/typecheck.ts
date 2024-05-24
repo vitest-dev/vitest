@@ -78,12 +78,12 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   async function runTests(specs: WorkspaceSpec[]) {
-    const specsByProject = groupBy(specs, ([project]) => project.getName())
+    const specsByProject = groupBy(specs, ({ project }) => project.getName())
     const promises: Promise<void>[] = []
 
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(({ file }) => file)
       const promise = createDefer<void>()
       // check that watcher actually triggered rerun
       const _p = new Promise<boolean>((resolve) => {

@@ -85,7 +85,7 @@ export async function startVitest(
 
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone)
-      ctx.init()
+      ctx.standalone()
     else
       ctx.start(cliFilters)
   })
@@ -94,7 +94,7 @@ export async function startVitest(
     if (ctx.config.mergeReports)
       await ctx.mergeReports()
     else if (ctx.config.standalone)
-      await ctx.init()
+      await ctx.standalone()
     else
       await ctx.start(cliFilters)
   }

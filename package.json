@@ -57,21 +57,20 @@
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
     "rimraf": "^5.0.5",
-    "rollup": "^4.17.2",
+    "rollup": "^4.13.0",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-esbuild": "^6.1.1",
     "rollup-plugin-license": "^3.3.1",
     "simple-git-hooks": "^2.11.1",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5",
-    "vite": "^5.2.6",
+    "vite": "6.0.0-alpha.15",
     "vitest": "workspace:*",
     "zx": "^8.0.2"
   },
   "pnpm": {
     "overrides": {
       "mlly": "^1.7.0",
-      "rollup": "$rollup",
       "vite": "$vite",
       "vitest": "workspace:*"
     },

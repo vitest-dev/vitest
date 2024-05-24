@@ -1,5 +1,5 @@
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
-import type { DepOptimizationOptions, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
+import type { DepOptimizationOptions, Plugin, ResolvedConfig, UserConfig as ViteConfig } from 'vite'
 import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../../types'
 import { VitestCache } from '../cache'
@@ -103,7 +103,7 @@ export function deleteDefineConfig(viteConfig: ViteConfig) {
 
 export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
   // disable replacing `process.env.NODE_ENV` with static string
-  const processEnvPlugin = viteConfig.plugins.find(p => p.name === 'vite:client-inject')
+  const processEnvPlugin = viteConfig.plugins.find(p => p.name === 'vite:client-inject') as Plugin
   if (processEnvPlugin) {
     const originalTransform = processEnvPlugin.transform as any
     processEnvPlugin.transform = function transform(code, id, options) {

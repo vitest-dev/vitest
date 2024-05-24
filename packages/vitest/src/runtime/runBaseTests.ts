@@ -15,7 +15,9 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   const workerState = getWorkerState()
 
   await setupGlobalEnv(config, environment, executor)
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, {
+    import: id => executor.executeId(id),
+  })
 
   if (config.chaiConfig)
     setupChaiConfig(config.chaiConfig)
@@ -52,7 +54,9 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
       vi.restoreAllMocks()
     }
 
-    await stopCoverageInsideWorker(config.coverage, executor)
+    await stopCoverageInsideWorker(config.coverage, {
+      import: id => executor.executeId(id),
+    })
   })
 
   workerState.environmentTeardownRun = true

@@ -1,5 +1,6 @@
 import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import type { TransformResult } from 'vite'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
@@ -41,15 +42,17 @@ export interface RawSourceMap extends StartOfSourceMap {
   mappings: string
 }
 
-export interface FetchResult {
-  code?: string
-  externalize?: string
-  map?: EncodedSourceMap | null
-}
+export type FetchResult = {
+  externalize: string
+} | TransformResult
 
 export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
 
-export type FetchFunction = (id: string) => Promise<FetchResult>
+export type FetchFunction = (id: string) => Promise<{
+  externalize?: string
+  map?: TransformResult['map']
+  code?: string
+}>
 
 export type ResolveIdFunction = (id: string, importer?: string) => Awaitable<ViteNodeResolveId | null | undefined | void>
 

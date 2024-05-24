@@ -27,7 +27,7 @@ export class ViteExecutor {
 
   public resolve = (identifier: string, parent: string) => {
     if (identifier === CLIENT_ID) {
-      if (this.workerState.environment.transformMode === 'web')
+      if (this.workerState.environment.serverEnvironment === 'client')
         return identifier
       const packageName = this.getPackageName(parent)
       throw new Error(
@@ -85,8 +85,8 @@ export class ViteExecutor {
   }
 
   public canResolve = (fileUrl: string) => {
-    const transformMode = this.workerState.environment.transformMode
-    if (transformMode !== 'web')
+    const transformMode = this.workerState.environment.serverEnvironment
+    if (transformMode !== 'client')
       return false
     if (fileUrl === CLIENT_FILE)
       return true

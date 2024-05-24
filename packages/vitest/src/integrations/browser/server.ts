@@ -21,9 +21,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
     // watch is handled by Vitest
     server: {
       hmr: false,
-      watch: {
-        ignored: ['**/**'],
-      },
+      watch: null,
     },
     plugins: [
       ...project.options?.plugins || [],
@@ -49,7 +47,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           config.server.fs.allow.push(
             ...resolveFsAllow(
               project.ctx.config.root,
-              project.ctx.server.config.configFile,
+              project.ctx.sharedConfig.configFile,
             ),
           )
 
@@ -69,7 +67,10 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
 
   await server.listen()
 
-  ;(await import('../../api/setup')).setup(project, server)
+  if (!server.httpServer)
+    throw new Error(`Was not able to start a server. This is a bug, please report it.`)
+
+  ;(await import('../../api/setup')).setup(project, server.httpServer)
 
   return server
 }

@@ -38,7 +38,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  serverEnvironment: 'ssr',
   // optional - only if you support "experimental-vm" pool
   async setupVM() {
     const vm = await import('node:vm')

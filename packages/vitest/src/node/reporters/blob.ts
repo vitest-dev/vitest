@@ -36,7 +36,10 @@ export class BlobReporter implements Reporter {
     }
 
     const moduleKeys = this.ctx.projects.map<MergeReportModuleKeys>((project) => {
-      return [project.getName(), [...project.server.moduleGraph.idToModuleMap.keys()]]
+      const ids = Object.values(project.environments).flatMap(env => [
+        ...env.moduleGraph.idToModuleMap.keys(),
+      ])
+      return [project.getName(), Array.from(new Set(ids))]
     })
 
     const report = stringify([this.ctx.version, files, errors, moduleKeys] satisfies MergeReport)
@@ -73,25 +76,26 @@ export async function readBlobs(blobsDirectory: string, projectsArray: Workspace
   // fake module graph - it is used to check if module is imported, but we don't use values inside
   const projects = Object.fromEntries(projectsArray.map(p => [p.getName(), p]))
 
+  await Promise.all(projectsArray.map(async project => project.ensureEnvironment('client')))
+
   blobs.forEach((blob) => {
     blob.moduleKeys.forEach(([projectName, moduleIds]) => {
       const project = projects[projectName]
       if (!project)
         return
       moduleIds.forEach((moduleId) => {
-        project.server.moduleGraph.idToModuleMap.set(moduleId, {
+        const environment = project.environments.client
+        environment.moduleGraph.idToModuleMap.set(moduleId, {
+          environment: 'client',
           id: moduleId,
           url: moduleId,
           file: cleanUrl(moduleId),
-          ssrTransformResult: null,
           transformResult: null,
           importedBindings: null,
           importedModules: new Set(),
           importers: new Set(),
           type: 'js',
-          clientImportedModules: new Set(),
           ssrError: null,
-          ssrImportedModules: new Set(),
           ssrModule: null,
           acceptedHmrDeps: new Set(),
           acceptedHmrExports: null,

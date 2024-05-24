@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
+import type { WorkspaceSpec } from 'vitest/node'
 import type { ContextTestEnvironment, EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../types'
-import type { WorkspaceProject } from '../node/workspace'
 import { groupBy } from './base'
 
 export const envsOrder = [
@@ -25,8 +25,8 @@ function getTransformMode(patterns: TransformModePatterns, filename: string): 'w
   return undefined
 }
 
-export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string])[]) {
-  const filesWithEnv = await Promise.all(files.map(async ([project, file]) => {
+export async function groupFilesByEnv(files: WorkspaceSpec[]) {
+  const filesWithEnv = await Promise.all(files.map(async ({ project, file }) => {
     const code = await fs.readFile(file, 'utf-8')
 
     // 1. Check for control comments in the file

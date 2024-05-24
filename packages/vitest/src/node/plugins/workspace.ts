@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
+import { resolveConfig } from '../config'
+import { deepMerge } from '../../utils'
+import { configDefaults } from '../../defaults'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -78,7 +79,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
             fs: {
               allow: resolveFsAllow(
                 project.ctx.config.root,
-                project.ctx.server.config.configFile,
+                project.ctx.sharedConfig.configFile,
               ),
             },
           },
@@ -107,22 +108,6 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
       configResolved(viteConfig) {
         hijackVitePluginInject(viteConfig)
       },
-      async configureServer(server) {
-        try {
-          const options = deepMerge(
-            {},
-            configDefaults,
-            server.config.test || {},
-          )
-          await project.setServer(options, server)
-        }
-        catch (err) {
-          project.ctx.logger.printError(err, { fullStack: true })
-          process.exit(1)
-        }
-
-        await server.watcher.close()
-      },
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
@@ -131,5 +116,25 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
     VitestResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    <VitePlugin>{
+      name: 'vitest:finalize-config',
+      enforce: 'post',
+      configResolved(config) {
+        const options = deepMerge(
+          {},
+          configDefaults,
+          config.test || {},
+        )
+        Object.assign(config, { _test: options })
+        const resolvedConfig = resolveConfig(
+          project.ctx.mode,
+          options,
+          config,
+          project.ctx.logger,
+        )
+        // @ts-expect-error modifying technically readonly property
+        config.test = resolvedConfig
+      },
+    },
   ]
 }

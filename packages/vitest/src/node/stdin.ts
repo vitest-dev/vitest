@@ -74,12 +74,12 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
       return ctx.updateSnapshot()
     // rerun all tests
     if (name === 'a' || name === 'return') {
-      const files = await ctx.getTestFilepaths()
+      const files = await ctx.globTestFiles()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
     // rerun current pattern tests
     if (name === 'r')
-      return ctx.rerunFiles()
+      return ctx.rerunSpecs()
     // rerun only failed tests
     if (name === 'f')
       return ctx.rerunFailed()
@@ -118,7 +118,7 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles = ctx.config.standalone && !files.length
-      ? await ctx.getTestFilepaths()
+      ? await ctx.globTestFiles()
       : undefined
 
     await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
@@ -143,8 +143,8 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
 
     const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.globTestFiles([str])
-      return files.map(file =>
-        relative(ctx.config.root, file[1]),
+      return files.map(({ file }) =>
+        relative(ctx.config.root, file),
       )
     })
 
@@ -153,10 +153,13 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     latestFilename = filter?.trim() || ''
     const lastResults = watchFilter.getLastResults()
 
-    await ctx.changeFilenamePattern(
-      latestFilename,
-      filter && lastResults.length ? lastResults.map(i => resolve(ctx.config.root, i)) : undefined,
-    )
+    const files = filter && lastResults.length
+      ? lastResults.map(i => resolve(ctx.config.root, i))
+      : undefined
+
+    const specs = await ctx.globTestFiles(files)
+
+    await ctx.changeFilenamePattern(latestFilename, specs)
   }
 
   let rl: readline.Interface | undefined

@@ -167,13 +167,13 @@ export class Logger {
       const name = project.getName()
       const output = project.isCore() ? '' : ` [${name}]`
 
-      const resolvedUrls = project.browser.resolvedUrls
+      const resolvedUrls = project.browser.server.resolvedUrls
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
       this.log(c.dim(c.green(`     ${output} Browser runner started at ${new URL('/', origin)}`)))
     })
 
     if (this.ctx.config.ui) {
-      this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
+      this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.sharedConfig.server.port}`)}${this.ctx.config.uiBase}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.server.resolvedUrls

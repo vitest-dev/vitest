@@ -53,7 +53,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
 
-          const files = project.browserState?.files ?? []
+          const files = project.browser?.state?.files ?? []
 
           const config = wrapConfig(project.getSerializableConfig())
           config.env ??= {}
@@ -256,11 +256,11 @@ async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteD
   if (!scripts?.length)
     return ''
   const promises = scripts.map(async ({ content, src, async, id, type = 'module' }, index) => {
-    const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
+    const srcLink = (src ? (await server.environments.client.pluginContainer.resolveId(src, undefined))?.id : undefined) || src
     const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
-    await server.moduleGraph.ensureEntryFromUrl(transformId)
+    await server.environments.client.moduleGraph.ensureEntryFromUrl(transformId)
     const contentProcessed = content && type === 'module'
-      ? (await server.pluginContainer.transform(content, transformId)).code
+      ? (await server.environments.client.pluginContainer.transform(content, transformId)).code
       : content
     return `<script type="${type}"${async ? ' async' : ''}${srcLink ? ` src="${slash(`/@fs/${srcLink}`)}"` : ''}>${contentProcessed || ''}</script>`
   })

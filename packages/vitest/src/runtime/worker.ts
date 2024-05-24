@@ -40,8 +40,8 @@ export async function run(ctx: ContextRPC) {
 
     const beforeEnvironmentTime = performance.now()
     const environment = await loadEnvironment(ctx, rpc)
-    if (ctx.environment.transformMode)
-      environment.transformMode = ctx.environment.transformMode
+    // if (ctx.environment.transformMode)
+    //   environment.transformMode = ctx.environment.transformMode
 
     const state = {
       ctx,

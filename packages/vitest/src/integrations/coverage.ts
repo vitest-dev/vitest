@@ -1,7 +1,7 @@
 import type { CoverageOptions, CoverageProvider, CoverageProviderModule } from '../types'
 
 interface Loader {
-  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+  import: (id: string) => Promise<{ default: CoverageProviderModule }>
 }
 
 export const CoverageProviderMap: Record<string, string> = {
@@ -16,7 +16,7 @@ async function resolveCoverageProviderModule(options: CoverageOptions | undefine
   const provider = options.provider
 
   if (provider === 'v8' || provider === 'istanbul') {
-    const { default: coverageModule } = await loader.executeId(CoverageProviderMap[provider])
+    const { default: coverageModule } = await loader.import(CoverageProviderMap[provider])
 
     if (!coverageModule)
       throw new Error(`Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`)
@@ -27,7 +27,7 @@ async function resolveCoverageProviderModule(options: CoverageOptions | undefine
   let customProviderModule
 
   try {
-    customProviderModule = await loader.executeId(options.customProviderModule)
+    customProviderModule = await loader.import(options.customProviderModule)
   }
   catch (error) {
     throw new Error(`Failed to load custom CoverageProviderModule from ${options.customProviderModule}`, { cause: error })
