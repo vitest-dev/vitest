@@ -62,6 +62,10 @@ export const server: {
    */
   provider: string
   /**
+   * Name of the current browser.
+   */
+  browser: string
+  /**
    * Available commands for the browser.
    * @see {@link https://vitest.dev/guide/browser#commands}
    */

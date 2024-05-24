@@ -45,6 +45,7 @@ export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
   provider: ${JSON.stringify(project.browserProvider!.name)},
+  browser: ${JSON.stringify(project.config.browser.name)},
   commands: {
     ${commandsCode}
   }
