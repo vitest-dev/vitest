@@ -33,6 +33,10 @@ export interface BrowserCommands {
   sendKeys: (payload: SendKeysPayload) => Promise<void>
 }
 
+export interface UserEvent {
+  click: (selector: Element, options?: any) => Promise<void>
+}
+
 type Platform =
   | 'aix'
   | 'android'
@@ -71,6 +75,8 @@ export const server: {
    */
   commands: BrowserCommands
 }
+
+export const userEvent: UserEvent
 
 /**
  * Available commands for the browser.

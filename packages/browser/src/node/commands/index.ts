@@ -1,3 +1,4 @@
+import { click } from './click'
 import {
   readFile,
   removeFile,
@@ -10,4 +11,5 @@ export default {
   removeFile,
   writeFile,
   sendKeys,
+  __vitest_click: click,
 }

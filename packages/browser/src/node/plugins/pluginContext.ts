@@ -35,10 +35,11 @@ function generateContextFile(project: WorkspaceProject) {
   const filepathCode = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
 
   const commandsCode = commands.map((command) => {
-    return `    ["${command}"]: (...args) => rpc().triggerCommand("${command}", ${filepathCode}, args),`
+    return `    ["${command}"]: (...args) => rpc().triggerCommand("${command}", filepath(), args),`
   }).join('\n')
 
   return `
+const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
 const channel = new BroadcastChannel('vitest')
 
@@ -71,7 +72,43 @@ export const page = {
         }
       })
     })
+}
+export const userEvent = ${getUserEventScript(project)}
+
+function convertElementToXPath(element) {
+  if (!element || !(element instanceof Element)) {
+    // TODO: better error message
+    throw new Error('Expected element to be an instance of Element')
+  }
+  return \`xpath=\${getPathTo(element)}\`
+}
+
+function getPathTo(element) {
+  if (element.id !== '')
+    return \`id("\${element.id}")\`
+
+  if (element === document.body)
+    return element.tagName
+
+  let ix = 0
+  const siblings = element.parentNode.childNodes
+  for (let i = 0; i < siblings.length; i++) {
+    const sibling = siblings[i]
+    if (sibling === element)
+      return \`\${getPathTo(element.parentNode)}/\${element.tagName}[\${ix + 1}]\`
+    if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
+      ix++
   }
 }
 `
+}
+
+function getUserEventScript(project: WorkspaceProject) {
+  if (project.browserProvider?.name === 'none')
+    return `__vitest_user_event__`
+  return `{
+  async click(element, options) {
+    return rpc().triggerCommand('__vitest_click', filepath(), [convertElementToXPath(element), options]);
+  },
+}`
 }
