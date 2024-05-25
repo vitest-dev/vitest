@@ -26,7 +26,7 @@ export class BlobReporter implements Reporter {
     this.ctx = ctx
   }
 
-  async onFinished(files: File[] = [], errors: unknown[] = []) {
+  async onFinished(files: File[] = [], errors: unknown[] = [], coverage: unknown) {
     let outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
       const shard = this.ctx.config.shard
@@ -39,7 +39,7 @@ export class BlobReporter implements Reporter {
       return [project.getName(), [...project.server.moduleGraph.idToModuleMap.keys()]]
     })
 
-    const report = stringify([this.ctx.version, files, errors, moduleKeys] satisfies MergeReport)
+    const report = stringify([this.ctx.version, files, errors, moduleKeys, coverage] satisfies MergeReport)
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 
@@ -62,8 +62,8 @@ export async function readBlobs(blobsDirectory: string, projectsArray: Workspace
   const blobsFiles = await readdir(resolvedDir)
   const promises = blobsFiles.map(async (file) => {
     const content = await readFile(resolve(resolvedDir, file), 'utf-8')
-    const [version, files, errors, moduleKeys] = parse(content) as MergeReport
-    return { version, files, errors, moduleKeys }
+    const [version, files, errors, moduleKeys, coverage] = parse(content) as MergeReport
+    return { version, files, errors, moduleKeys, coverage }
   })
   const blobs = await Promise.all(promises)
 
@@ -108,10 +108,12 @@ export async function readBlobs(blobsDirectory: string, projectsArray: Workspace
     return time1 - time2
   })
   const errors = blobs.flatMap(blob => blob.errors)
+  const coverages = blobs.map(blob => blob.coverage)
 
   return {
     files,
     errors,
+    coverages,
   }
 }
 
@@ -120,6 +122,7 @@ type MergeReport = [
   files: File[],
   errors: unknown[],
   moduleKeys: MergeReportModuleKeys[],
+  coverage: unknown,
 ]
 
 type MergeReportModuleKeys = [projectName: string, moduleIds: string[]]

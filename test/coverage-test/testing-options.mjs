@@ -166,6 +166,34 @@ const testCases = [
       }
     },
   },
+  ...[1, 2, 3].map(index => ({
+    testConfig: {
+      name: `generate #${index} blob report`,
+      include: ['option-tests/merge-fixture-*.test.ts'],
+      reporters: 'blob',
+      shard: `${index}/3`,
+      coverage: {
+        reporter: [],
+        all: false,
+        include: ['src'],
+      },
+    },
+  })),
+  {
+    testConfig: {
+      name: 'merge blob reports',
+      // Pass default value - this option is publicly only available via CLI so it's a bit hacky usage here
+      mergeReports: '.vitest-reports',
+      reporter: 'dot',
+      coverage: {
+        reporter: 'json',
+        all: false,
+      },
+    },
+    assertionConfig: {
+      include: ['coverage-report-tests/merge-reports.test.ts'],
+    },
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {

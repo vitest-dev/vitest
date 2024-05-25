@@ -24,5 +24,6 @@ it(createVitest, async () => {
       },
     ],
     [],
+    undefined,
   ])
 })

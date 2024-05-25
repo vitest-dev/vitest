@@ -162,7 +162,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     this.pendingPromises = []
   }
 
-  async reportCoverage({ allTestsRun }: ReportContext = {}) {
+  async generateCoverage({ allTestsRun }: ReportContext) {
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
     const total = this.pendingPromises.length
@@ -202,6 +202,29 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
     }
 
+    return coverageMap
+  }
+
+  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext) {
+    await this.generateReports(
+      coverageMap as CoverageMap || libCoverage.createCoverageMap({}),
+      allTestsRun,
+    )
+
+    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
+    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
+
+    if (!keepResults) {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0)
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async generateReports(coverageMap: CoverageMap, allTestsRun: boolean | undefined) {
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
@@ -248,21 +271,18 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         })
       }
     }
-
-    // In watch mode we need to preserve the previous results if cleanOnRerun is disabled
-    const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
-
-    if (!keepResults) {
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
-
-      // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0)
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
-    }
   }
 
-  async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
+  async mergeReports(coverageMaps: unknown[]) {
+    const coverageMap = libCoverage.createCoverageMap({})
+
+    for (const coverage of coverageMaps)
+      coverageMap.merge(coverage as CoverageMap)
+
+    await this.generateReports(coverageMap, true)
+  }
+
+  private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
 
