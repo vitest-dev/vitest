@@ -478,6 +478,12 @@ importers:
       '@wdio/protocols':
         specifier: ^8.32.0
         version: 8.32.0
+      birpc:
+        specifier: 0.2.17
+        version: 0.2.17
+      flatted:
+        specifier: ^3.3.1
+        version: 3.3.1
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2
@@ -495,7 +501,7 @@ importers:
         version: link:../vitest
       webdriverio:
         specifier: ^8.36.1
-        version: 8.36.1
+        version: 8.36.1(typescript@5.4.5)
 
   packages/coverage-istanbul:
     dependencies:
@@ -4489,27 +4495,6 @@ packages:
       '@rollup/pluginutils': 4.2.1
       preact: 10.21.0
       vite: 5.2.10(@types/node@20.12.11)
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@puppeteer/browsers@1.4.6:
-    resolution: {integrity: sha512-x4BEjr2SjOPowNeiguzjozQbsc6h437ovD/wu+JpaenxVLm3jkgzHY2xOslMTp50HoTvQreMjiexiGQw1sqZlQ==}
-    engines: {node: '>=16.3.0'}
-    hasBin: true
-    peerDependencies:
-      typescript: '>= 4.7.4'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      debug: 4.3.4
-      extract-zip: 2.0.1
-      progress: 2.0.3
-      proxy-agent: 6.3.0
-      tar-fs: 3.0.4
-      unbzip2-stream: 1.4.3
-      yargs: 17.7.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13302,28 +13287,6 @@ packages:
       - utf-8-validate
     dev: true
 
-  /puppeteer-core@20.9.0:
-    resolution: {integrity: sha512-H9fYZQzMTRrkboEfPmf7m3CLDN6JvbxXA3qTtS+dFt27tR+CsFHzPsT6pzp6lYL6bJbAPaR0HaPO6uSi+F94Pg==}
-    engines: {node: '>=16.3.0'}
-    peerDependencies:
-      typescript: '>= 4.7.4'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@puppeteer/browsers': 1.4.6
-      chromium-bidi: 0.4.16(devtools-protocol@0.0.1147663)
-      cross-fetch: 4.0.0
-      debug: 4.3.4
-      devtools-protocol: 0.0.1147663
-      ws: 8.13.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /puppeteer-core@20.9.0(typescript@5.4.5):
     resolution: {integrity: sha512-H9fYZQzMTRrkboEfPmf7m3CLDN6JvbxXA3qTtS+dFt27tR+CsFHzPsT6pzp6lYL6bJbAPaR0HaPO6uSi+F94Pg==}
     engines: {node: '>=16.3.0'}
@@ -16178,7 +16141,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /webdriverio@8.36.1:
+  /webdriverio@8.36.1(typescript@5.4.5):
     resolution: {integrity: sha512-vzE09oFQeMbOYJ/75jZ13sDIljzC3HH7uoUJKAMAEtyrn/bu1F9Sg/4IDEsvQaRD3pz3ae6SkRld33lcQk6HJA==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
@@ -16205,7 +16168,7 @@ packages:
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
       minimatch: 9.0.4
-      puppeteer-core: 20.9.0
+      puppeteer-core: 20.9.0(typescript@5.4.5)
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
       rgb2hex: 0.2.5

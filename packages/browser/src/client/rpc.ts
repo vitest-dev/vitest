@@ -1,8 +1,8 @@
 import type {
   getSafeTimers,
 } from '@vitest/utils'
-import type { VitestClient } from '@vitest/ws-client'
 import { importId } from './utils'
+import type { VitestBrowserClient } from './client'
 
 const { get } = Reflect
 
@@ -40,7 +40,7 @@ export async function rpcDone() {
   return Promise.all(awaitable)
 }
 
-export function createSafeRpc(client: VitestClient, getTimers: () => any): VitestClient['rpc'] {
+export function createSafeRpc(client: VitestBrowserClient, getTimers: () => any): VitestBrowserClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
       if (p === 'then')
@@ -62,13 +62,13 @@ export function createSafeRpc(client: VitestClient, getTimers: () => any): Vites
   })
 }
 
-export async function loadSafeRpc(client: VitestClient) {
+export async function loadSafeRpc(client: VitestBrowserClient) {
   // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
   const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
   return createSafeRpc(client, getSafeTimers)
 }
 
-export function rpc(): VitestClient['rpc'] {
+export function rpc(): VitestBrowserClient['rpc'] {
   // @ts-expect-error not typed global
   return globalThis.__vitest_worker__.rpc
 }

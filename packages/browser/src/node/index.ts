@@ -64,6 +64,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const injector = replacer(await injectorJs, {
             __VITEST_CONFIG__: JSON.stringify(config),
             __VITEST_FILES__: JSON.stringify(files),
+            __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
           })
 
           if (url.pathname === base) {
@@ -219,7 +220,7 @@ function resolveCoverageFolder(project: WorkspaceProject) {
 
   // reportsDirectory not resolved yet
   const root = resolve(
-    options.root || options.root || process.cwd(),
+    options.root || process.cwd(),
     options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 

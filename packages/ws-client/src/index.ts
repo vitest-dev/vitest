@@ -4,7 +4,6 @@ import { parse, stringify } from 'flatted'
 
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import type { CancelReason } from '@vitest/runner'
 import { StateManager } from '../../vitest/src/node/state'
 
 export * from '../../vitest/src/utils/tasks'
@@ -52,12 +51,6 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let onMessage: Function
   const functions: WebSocketEvents = {
-    async startMocking(id) {
-      return options.handlers?.startMocking?.(id) ?? []
-    },
-    getTestContext() {
-      return options.handlers?.getTestContext?.() ?? null
-    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -85,9 +78,6 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     },
     onFinishedReportCoverage() {
       handlers.onFinishedReportCoverage?.()
-    },
-    onCancel(reason: CancelReason) {
-      handlers.onCancel?.(reason)
     },
   }
 

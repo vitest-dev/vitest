@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import type { Plugin } from 'vitest/config'
 import type { WorkspaceProject } from 'vitest/node'
-import type { WebSocketRPC } from 'vitest'
 import { automockModule } from '../automocker'
 
 export default (project: WorkspaceProject): Plugin[] => {
@@ -10,21 +9,18 @@ export default (project: WorkspaceProject): Plugin[] => {
       name: 'vitest:browser:mocker',
       enforce: 'pre',
       async load(id) {
-        if (!project.browserMocker.mocks.has(id))
+        const data = project.browserMocker.mocks.get(id)
+        if (!data)
           return
-        const mock = project.browserMocker.mocks.get(id)
+        const { mock, sessionId } = data
         // undefined mock means there is a factory in the browser
         if (mock === undefined) {
-          const reporter = project.ctx.reporters.find(r =>
-            'wss' in r && 'clients' in r && (r.clients as any).size,
-          ) as {
-            clients: Map<any, WebSocketRPC>
-          }
+          const rpc = project.browserRpc.testers.get(sessionId)
 
-          if (!reporter)
-            throw new Error('WebSocketReporter not found')
+          if (!rpc)
+            throw new Error(`WebSocket rpc was destroyed for session ${sessionId}`)
 
-          const exports = await startMocking(reporter.clients, id)
+          const exports = await rpc.startMocking(id)
           const module = `const module = __vitest_mocker__.get('${id}');`
           const keys = exports.map((name) => {
             if (name === 'default')
@@ -46,10 +42,10 @@ export default (project: WorkspaceProject): Plugin[] => {
       name: 'vitest:browser:automocker',
       enforce: 'post',
       transform(code, id) {
-        if (!project.browserMocker.mocks.has(id))
+        const data = project.browserMocker.mocks.get(id)
+        if (!data)
           return
-        const mock = project.browserMocker.mocks.get(id)
-        if (mock === null) {
+        if (data.mock === null) {
           const m = automockModule(code, this.parse)
 
           return {
@@ -60,23 +56,4 @@ export default (project: WorkspaceProject): Plugin[] => {
       },
     },
   ]
-}
-
-async function startMocking(clients: Map<any, WebSocketRPC>, id: string) {
-  const errors: unknown[] = []
-  // start from the end since it's more likely that the last iframe is the one
-  // who subscribed with a running test
-  for (const client of [...clients.values()].reverse()) {
-    try {
-      const context = await client.getTestContext()
-      if (!context)
-        continue
-      return await client.startMocking(id)
-    }
-    catch (err) {
-      errors.push(err)
-    }
-  }
-  console.error(errors)
-  throw new AggregateError(errors, 'No clients available')
 }

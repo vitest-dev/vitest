@@ -7,7 +7,7 @@ export class VitestBrowserServerMocker {
   // string means it will read from __mocks__ folder
   // undefined means there is a factory mock that will be called on the server
   // null means it should be auto mocked
-  public mocks = new Map<string, string | null | undefined>()
+  public mocks = new Map<string, { sessionId: string; mock: string | null | undefined }>()
 
   // private because the typecheck fails on build if it's exposed
   // due to a self reference
@@ -17,18 +17,18 @@ export class VitestBrowserServerMocker {
     this.#project = project
   }
 
-  async mock(rawId: string, importer: string, hasFactory: boolean) {
+  async mock(sessionId: string, rawId: string, importer: string, hasFactory: boolean) {
     const { id, fsPath, external } = await this.resolveId(rawId, importer)
 
     this.invalidateModuleById(id)
 
     if (hasFactory) {
-      this.mocks.set(id, undefined)
+      this.mocks.set(id, { sessionId, mock: undefined })
       return id
     }
 
     const mockPath = this.resolveMockPath(fsPath, external)
-    this.mocks.set(id, mockPath)
+    this.mocks.set(id, { sessionId, mock: mockPath })
 
     return id
   }

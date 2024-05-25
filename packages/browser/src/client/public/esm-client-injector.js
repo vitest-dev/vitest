@@ -4,14 +4,13 @@ function wrapModule(module) {
   if (typeof module === 'function') {
     const promise = new Promise((resolve, reject) => {
       if (typeof __vitest_mocker__ === 'undefined')
-        return module().then(resolve).catch(reject)
+        return module().then(resolve, reject)
       __vitest_mocker__.prepare().finally(() => {
-        module().then(resolve).catch(reject)
+        module().then(resolve, reject)
       })
     })
     moduleCache.set(promise, { promise, evaluated: false })
-    return promise
-      .finally(() => moduleCache.delete(promise))
+    return promise.finally(() => moduleCache.delete(promise))
   }
   return module
 }
@@ -21,6 +20,7 @@ window.__vitest_browser_runner__ = {
   moduleCache,
   config: { __VITEST_CONFIG__ },
   files: { __VITEST_FILES__ },
+  type: { __VITEST_TYPE__ },
 }
 
 const config = __vitest_browser_runner__.config

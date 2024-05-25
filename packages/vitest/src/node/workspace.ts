@@ -15,6 +15,7 @@ import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
 import { VitestBrowserServerMocker } from '../integrations/browser/mocker'
+import type { WebSocketBrowserRPC } from '../api/types'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -75,6 +76,12 @@ export class WorkspaceProject {
   // TODO: abstract browser related things and move to @vitest/browser
   browserProvider: BrowserProvider | undefined
   browserMocker = new VitestBrowserServerMocker(this)
+  // TODO: I mean, we really need to abstract it
+  browserRpc = {
+    orchestrators: new Map<string, WebSocketBrowserRPC>(),
+    testers: new Map<string, WebSocketBrowserRPC>(),
+  }
+
   browserState: {
     files: string[]
     resolve: () => void
