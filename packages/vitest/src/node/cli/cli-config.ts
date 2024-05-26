@@ -494,6 +494,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   exclude: {
     description: 'Additional file globs to be excluded from test',
     argument: '<glob>',
+    array: true,
   },
   expandSnapshotDiff: {
     description: 'Show full diff when snapshot fails',
