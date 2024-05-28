@@ -393,10 +393,10 @@ test('public parseCLI works correctly', () => {
     },
   })
   
-  expect(parseCLI('vitest --exclude="docs/*" --exclude="demo/*"')).toEqual({
+  expect(parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
     filter: [],
     options: {
-      'exclude': ['docs/*', 'demo/*'],
+      'exclude': ['docs', 'demo'],
       '--': [],
       'color': true,
     },
