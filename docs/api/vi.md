@@ -29,10 +29,6 @@ In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates
 Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
-::: warning
-The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub [issue](https://github.com/vitest-dev/vitest/issues/3046).
-:::
-
 If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
