@@ -14,7 +14,6 @@ export function test() {}
     function test() {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
     }
@@ -35,7 +34,6 @@ export class Test {}
     class Test {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["Test"]: Test,
     }
@@ -56,7 +54,6 @@ export default class Test {}
     const __vitest_default = class Test {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -75,7 +72,6 @@ export default function test() {}
     const __vitest_default = function test() {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -94,7 +90,6 @@ export default someVariable
     const __vitest_default = someVariable
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -113,7 +108,6 @@ export default 'test'
     const __vitest_default = 'test'
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -132,7 +126,6 @@ export default null
     const __vitest_default = null
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -153,7 +146,6 @@ export default test
     const __vitest_default = test
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
@@ -178,7 +170,6 @@ export const test3 = function test4() {}
     const test3 = function test4() {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
       ["test2"]: test2,
@@ -207,7 +198,6 @@ export const [...rest2] = []
     const [...rest2] = []
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
       ["rest"]: rest,
@@ -234,7 +224,6 @@ export const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
     const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
       ["test2"]: test2,
@@ -268,7 +257,6 @@ export const { ...rest2 } = {}
     const { ...rest2 } = {}
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
       ["rest"]: rest,
@@ -300,7 +288,6 @@ it('correctly parses export specifiers', () => {
       
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["test"]: test,
       ["test"]: test,
@@ -331,7 +318,6 @@ export { testing as name4 } from './another-module'
     import { testing as __vitest_imported_3__ } from './another-module'
       
     const __vitest_es_current_module__ = {
-      [globalThis.Symbol.toStringTag]: "Module",
       __esModule: true,
       ["__vitest_imported_0__"]: __vitest_imported_0__,
       ["__vitest_imported_1__"]: __vitest_imported_1__,

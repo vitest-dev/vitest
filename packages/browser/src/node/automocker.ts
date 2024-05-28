@@ -126,7 +126,6 @@ export function automockModule(code: string, parse: (code: string) => Program) {
   }
   const moduleObject = `
 const __vitest_es_current_module__ = {
-  [globalThis.Symbol.toStringTag]: "Module",
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
