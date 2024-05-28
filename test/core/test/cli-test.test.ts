@@ -392,7 +392,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  
+
   expect(parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
     filter: [],
     options: {
