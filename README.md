@@ -32,7 +32,7 @@ Next generation testing framework powered by Vite.
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs
 - [Smart & instant watch mode](https://vitest.dev/guide/features.html#watch-mode), like HMR for tests!
 - [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [`v8`](https://v8.dev/blog/javascript-code-coverage) or [`istanbul`](https://istanbul.js.org/).
 - [Tinyspy](https://github.com/tinylibs/tinyspy) built-in for mocking, stubbing, and spies.
@@ -45,6 +45,7 @@ Next generation testing framework powered by Vite.
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
+- Sharding support
 
 > Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 

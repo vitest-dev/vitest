@@ -3,19 +3,28 @@ import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import { getSuites } from '@vitest/runner/utils'
+import stripAnsi from 'strip-ansi'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
-import { parseErrorStacktrace } from '../../utils/source-map'
-import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
+import { capturePrintError } from '../error'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface JUnitOptions {
   outputFile?: string
   classname?: string
   suiteName?: string
+  /**
+   * Write <system-out> and <system-err> for console output
+   * @default true
+   */
+  includeConsoleOutput?: boolean
+  /**
+   * Add <testcase file="..."> attribute (validated on CIRCLE CI and GitLab CI)
+   * @default false
+   */
+  addFileAttribute?: boolean
 }
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -35,21 +44,24 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
 // https://gist.github.com/john-doherty/b9195065884cdbfd2017a4756e6409cc
 function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean): string {
   // eslint-disable-next-line no-control-regex
-  let regex = /((?:[\0-\x08\x0B\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))/g
+  let regex = /([\0-\x08\v\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g
   value = String(value || '').replace(regex, '')
 
   if (removeDiscouragedChars) {
     // remove everything discouraged by XML 1.0 specifications
     regex = new RegExp(
-      '([\\x7F-\\x84]|[\\x86-\\x9F]|[\\uFDD0-\\uFDEF]|(?:\\uD83F[\\uDFFE\\uDFFF])|(?:\\uD87F[\\uDF'
-      + 'FE\\uDFFF])|(?:\\uD8BF[\\uDFFE\\uDFFF])|(?:\\uD8FF[\\uDFFE\\uDFFF])|(?:\\uD93F[\\uDFFE\\uD'
-      + 'FFF])|(?:\\uD97F[\\uDFFE\\uDFFF])|(?:\\uD9BF[\\uDFFE\\uDFFF])|(?:\\uD9FF[\\uDFFE\\uDFFF])'
-      + '|(?:\\uDA3F[\\uDFFE\\uDFFF])|(?:\\uDA7F[\\uDFFE\\uDFFF])|(?:\\uDABF[\\uDFFE\\uDFFF])|(?:\\'
-      + 'uDAFF[\\uDFFE\\uDFFF])|(?:\\uDB3F[\\uDFFE\\uDFFF])|(?:\\uDB7F[\\uDFFE\\uDFFF])|(?:\\uDBBF'
-      + '[\\uDFFE\\uDFFF])|(?:\\uDBFF[\\uDFFE\\uDFFF])(?:[\\0-\\t\\x0B\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
+      /* eslint-disable regexp/prefer-character-class, regexp/no-obscure-range, regexp/no-useless-non-capturing-group */
+      '([\\x7F-\\x84]|[\\x86-\\x9F]|[\\uFDD0-\\uFDEF]|\\uD83F[\\uDFFE\\uDFFF]|(?:\\uD87F[\\uDF'
+      + 'FE\\uDFFF])|\\uD8BF[\\uDFFE\\uDFFF]|\\uD8FF[\\uDFFE\\uDFFF]|(?:\\uD93F[\\uDFFE\\uD'
+      + 'FFF])|\\uD97F[\\uDFFE\\uDFFF]|\\uD9BF[\\uDFFE\\uDFFF]|\\uD9FF[\\uDFFE\\uDFFF]'
+      + '|\\uDA3F[\\uDFFE\\uDFFF]|\\uDA7F[\\uDFFE\\uDFFF]|\\uDABF[\\uDFFE\\uDFFF]|(?:\\'
+      + 'uDAFF[\\uDFFE\\uDFFF])|\\uDB3F[\\uDFFE\\uDFFF]|\\uDB7F[\\uDFFE\\uDFFF]|(?:\\uDBBF'
+      + '[\\uDFFE\\uDFFF])|\\uDBFF[\\uDFFE\\uDFFF](?:[\\0-\\t\\v\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
       + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
+      // eslint-disable-next-line regexp/no-useless-assertions
       + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
       'g',
+      /* eslint-enable */
     )
 
     value = value.replace(regex, '')
@@ -89,7 +101,8 @@ export class JUnitReporter implements Reporter {
   private options: JUnitOptions
 
   constructor(options: JUnitOptions) {
-    this.options = options
+    this.options = { ...options }
+    this.options.includeConsoleOutput ??= true
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -140,31 +153,6 @@ export class JUnitReporter implements Reporter {
     await this.logger.log(`</${name}>`)
   }
 
-  async writeErrorDetails(task: Task, error: ErrorWithDiff): Promise<void> {
-    const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
-    const errorDetails = `${errorName}: ${error.message}`
-
-    // Be sure to escape any XML in the error Details
-    await this.baseLog(escapeXML(errorDetails))
-
-    const project = this.ctx.getProjectByTaskId(task.id)
-    const stack = parseErrorStacktrace(error, {
-      getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-      frameFilter: this.ctx.config.onStackTrace,
-    })
-
-    // TODO: This is same as printStack but without colors. Find a way to reuse code.
-    for (const frame of stack) {
-      const path = relative(this.ctx.config.root, frame.file)
-
-      await this.baseLog(escapeXML(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`))
-
-      // reached at test file, skip the follow stack
-      if (frame.file in this.ctx.state.filesMap)
-        break
-    }
-  }
-
   async writeLogs(task: Task, type: 'err' | 'out'): Promise<void> {
     if (task.logs == null || task.logs.length === 0)
       return
@@ -184,13 +172,15 @@ export class JUnitReporter implements Reporter {
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
       await this.writeElement('testcase', {
-        // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { classname: 'something' }]]"
-        classname: this.options.classname ?? process.env.VITEST_JUNIT_CLASSNAME ?? filename,
+        classname: this.options.classname ?? filename,
+        file: this.options.addFileAttribute ? filename : undefined,
         name: task.name,
         time: getDuration(task),
       }, async () => {
-        await this.writeLogs(task, 'out')
-        await this.writeLogs(task, 'err')
+        if (this.options.includeConsoleOutput) {
+          await this.writeLogs(task, 'out')
+          await this.writeLogs(task, 'err')
+        }
 
         if (task.mode === 'skip' || task.mode === 'todo')
           await this.logger.log('<skipped/>')
@@ -205,7 +195,12 @@ export class JUnitReporter implements Reporter {
               if (!error)
                 return
 
-              await this.writeErrorDetails(task, error)
+              const result = capturePrintError(
+                error,
+                this.ctx,
+                this.ctx.getProjectByTaskId(task.id),
+              )
+              await this.baseLog(escapeXML(stripAnsi(result.output.trim())))
             })
           }
         }
@@ -255,6 +250,7 @@ export class JUnitReporter implements Reporter {
             // NOTE: not used in JUnitReporter
             context: null as any,
             suite: null as any,
+            file: null as any,
           } satisfies Task)
         }
 
@@ -270,8 +266,7 @@ export class JUnitReporter implements Reporter {
       stats.failures += file.stats.failures
       return stats
     }, {
-      // TODO: v2.0.0 Remove env variable in favor of custom reporter options, e.g. "reporters: [['json', { suiteName: 'something' }]]"
-      name: this.options.suiteName || process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      name: this.options.suiteName || 'vitest tests',
       tests: 0,
       failures: 0,
       errors: 0, // we cannot detect those
@@ -280,8 +275,9 @@ export class JUnitReporter implements Reporter {
 
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
+        const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement('testsuite', {
-          name: relative(this.ctx.config.root, file.filepath),
+          name: filename,
           timestamp: (new Date()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
@@ -290,7 +286,7 @@ export class JUnitReporter implements Reporter {
           skipped: file.stats.skipped,
           time: getDuration(file),
         }, async () => {
-          await this.writeTasks(file.tasks, file.name)
+          await this.writeTasks(file.tasks, filename)
         })
       }
     })

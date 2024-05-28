@@ -184,7 +184,10 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  mock: (path: string, factory?: MockFactoryWithHelper) => void
+  // eslint-disable-next-line ts/method-signature-style
+  mock(path: string, factory?: MockFactoryWithHelper): void
+  // eslint-disable-next-line ts/method-signature-style
+  mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
 
   /**
    * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
@@ -192,7 +195,10 @@ export interface VitestUtils {
    * This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  unmock: (path: string) => void
+  // eslint-disable-next-line ts/method-signature-style
+  unmock(path: string): void
+  // eslint-disable-next-line ts/method-signature-style
+  unmock(module: Promise<unknown>): void
 
   /**
    * Mocks every subsequent [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) call.
@@ -203,14 +209,20 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  doMock: (path: string, factory?: MockFactoryWithHelper) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock(path: string, factory?: MockFactoryWithHelper): void
+  // eslint-disable-next-line ts/method-signature-style
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
    * Unlike [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock), this method is not hoisted to the top of the file.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  doUnmock: (path: string) => void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(path: string): void
+  // eslint-disable-next-line ts/method-signature-style
+  doUnmock(module: Promise<unknown>): void
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -292,7 +304,7 @@ export interface VitestUtils {
    * Changes the value of `import.meta.env` and `process.env`.
    * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
-  stubEnv: (name: string, value: string) => VitestUtils
+  stubEnv: <T extends string>(name: T, value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string) => VitestUtils
 
   /**
    * Reset the value to original value that was available before first `vi.stubGlobal` was called.
@@ -348,13 +360,17 @@ function createVitest(): VitestUtils {
 
   const workerState = getWorkerState()
 
-  const _timers = new FakeTimers({
+  let _timers: FakeTimers
+
+  const timers = () => _timers ||= new FakeTimers({
     global: globalThis,
     config: workerState.config.fakeTimers,
   })
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
   const _stubsEnv = new Map()
+
+  const _envBooleans = ['PROD', 'DEV', 'SSR']
 
   const getImporter = () => {
     const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
@@ -374,77 +390,77 @@ function createVitest(): VitestUtils {
       }
 
       if (config)
-        _timers.configure({ ...workerState.config.fakeTimers, ...config })
+        timers().configure({ ...workerState.config.fakeTimers, ...config })
       else
-        _timers.configure(workerState.config.fakeTimers)
+        timers().configure(workerState.config.fakeTimers)
 
-      _timers.useFakeTimers()
+      timers().useFakeTimers()
       return utils
     },
 
     isFakeTimers() {
-      return _timers.isFakeTimers()
+      return timers().isFakeTimers()
     },
 
     useRealTimers() {
-      _timers.useRealTimers()
+      timers().useRealTimers()
       _mockedDate = null
       return utils
     },
 
     runOnlyPendingTimers() {
-      _timers.runOnlyPendingTimers()
+      timers().runOnlyPendingTimers()
       return utils
     },
 
     async runOnlyPendingTimersAsync() {
-      await _timers.runOnlyPendingTimersAsync()
+      await timers().runOnlyPendingTimersAsync()
       return utils
     },
 
     runAllTimers() {
-      _timers.runAllTimers()
+      timers().runAllTimers()
       return utils
     },
 
     async runAllTimersAsync() {
-      await _timers.runAllTimersAsync()
+      await timers().runAllTimersAsync()
       return utils
     },
 
     runAllTicks() {
-      _timers.runAllTicks()
+      timers().runAllTicks()
       return utils
     },
 
     advanceTimersByTime(ms: number) {
-      _timers.advanceTimersByTime(ms)
+      timers().advanceTimersByTime(ms)
       return utils
     },
 
     async advanceTimersByTimeAsync(ms: number) {
-      await _timers.advanceTimersByTimeAsync(ms)
+      await timers().advanceTimersByTimeAsync(ms)
       return utils
     },
 
     advanceTimersToNextTimer() {
-      _timers.advanceTimersToNextTimer()
+      timers().advanceTimersToNextTimer()
       return utils
     },
 
     async advanceTimersToNextTimerAsync() {
-      await _timers.advanceTimersToNextTimerAsync()
+      await timers().advanceTimersToNextTimerAsync()
       return utils
     },
 
     getTimerCount() {
-      return _timers.getTimerCount()
+      return timers().getTimerCount()
     },
 
     setSystemTime(time: number | string | Date) {
       const date = time instanceof Date ? time : new Date(time)
       _mockedDate = date
-      _timers.setSystemTime(date)
+      timers().setSystemTime(date)
       return utils
     },
 
@@ -453,11 +469,11 @@ function createVitest(): VitestUtils {
     },
 
     getRealSystemTime() {
-      return _timers.getRealSystemTime()
+      return timers().getRealSystemTime()
     },
 
     clearAllTimers() {
-      _timers.clearAllTimers()
+      timers().clearAllTimers()
       return utils
     },
 
@@ -472,7 +488,9 @@ function createVitest(): VitestUtils {
       return factory()
     },
 
-    mock(path: string, factory?: MockFactoryWithHelper) {
+    mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.mock() expects a string path, but received a ${typeof path}`)
       const importer = getImporter()
       _mocker.queueMock(
         path,
@@ -482,11 +500,15 @@ function createVitest(): VitestUtils {
       )
     },
 
-    unmock(path: string) {
+    unmock(path: string | Promise<unknown>) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.unmock() expects a string path, but received a ${typeof path}`)
       _mocker.queueUnmock(path, getImporter())
     },
 
-    doMock(path: string, factory?: MockFactoryWithHelper) {
+    doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doMock() expects a string path, but received a ${typeof path}`)
       const importer = getImporter()
       _mocker.queueMock(
         path,
@@ -496,7 +518,9 @@ function createVitest(): VitestUtils {
       )
     },
 
-    doUnmock(path: string) {
+    doUnmock(path: string | Promise<unknown>) {
+      if (typeof path !== 'string')
+        throw new Error(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
       _mocker.queueUnmock(path, getImporter())
     },
 
@@ -548,10 +572,13 @@ function createVitest(): VitestUtils {
       return utils
     },
 
-    stubEnv(name: string, value: string) {
+    stubEnv(name: string, value: string | boolean) {
       if (!_stubsEnv.has(name))
         _stubsEnv.set(name, process.env[name])
-      process.env[name] = value
+      if (_envBooleans.includes(name))
+        process.env[name] = value ? '1' : ''
+      else
+        process.env[name] = String(value)
       return utils
     },
 

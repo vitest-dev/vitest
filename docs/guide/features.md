@@ -48,7 +48,7 @@ Learn more about [Test Filtering](/guide/filtering).
 
 Use `.concurrent` in consecutive tests to run them in parallel.
 
-```ts
+```ts twoslash
 import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
@@ -61,7 +61,7 @@ describe('suite', () => {
 
 If you use `.concurrent` on a suite, every test in it will be run in parallel.
 
-```ts
+```ts twoslash
 import { describe, it } from 'vitest'
 
 // All tests within this suite will be run in parallel
@@ -103,7 +103,7 @@ Notice that if you are using third-party libraries that add matchers, setting `t
 
 [Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
-```ts
+```ts twoslash
 import { expect, vi } from 'vitest'
 
 const fn = vi.fn()
@@ -130,7 +130,7 @@ $ npm i -D jsdom
 
 After that, change the `environment` option in your config file:
 
-```ts
+```ts twoslash
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -187,10 +187,9 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
-function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
-```ts
+```ts twoslash
 import { bench, describe } from 'vitest'
 
 describe('sort', () => {
@@ -210,9 +209,12 @@ describe('sort', () => {
 })
 ```
 
+<img alt="Benchmark report" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/6f0383ea-38ba-4f14-8a05-ab243afea01d">
+<img alt="Benchmark report" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/efbcb427-ecf1-4882-88de-210cd73415f6">
+
 ## Type Testing <Badge type="warning">Experimental</Badge> {#type-testing}
 
-Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
+You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
 ```ts
 import { assertType, expectTypeOf } from 'vitest'
@@ -226,3 +228,16 @@ test('my types work properly', () => {
   assertType(mount({ name: 42 }))
 })
 ```
+
+## Sharding
+
+Run tests on different machines using [`--shard`](/guide/cli#shard) and [`--reporter=blob`](/guide/reporters#blob-reporter) flags.
+All test and coverage results can be merged at the end of your CI pipeline using `--merge-reports` command:
+
+```bash
+vitest --shard=1/2 --reporter=blob
+vitest --shard=2/2 --reporter=blob
+vitest --merge-reports --reporter=junit --coverage.reporter=text
+```
+
+See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) for more information.

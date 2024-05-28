@@ -9,6 +9,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 export { configDefaults, defaultInclude, defaultExclude, coverageConfigDefaults } from './defaults'
 export { mergeConfig } from 'vite'
 export { extraInlineDeps } from './constants'
+export type { Plugin } from 'vite'
 
 export type { ConfigEnv, ViteUserConfig as UserConfig }
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig

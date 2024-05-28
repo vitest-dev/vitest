@@ -18,3 +18,7 @@ export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
 export function getFullName(task: Task, separator = ' > ') {
   return getNames(task).join(separator)
 }
+
+export function getTestName(task: Task, separator = ' > ') {
+  return getNames(task).slice(1).join(separator)
+}

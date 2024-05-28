@@ -33,10 +33,11 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-          CYPRESS_INSTALL_BINARY: '0'
 
       - name: Build
         run: pnpm build
+        env:
+          NO_VITE_TEST_WATCHER_DEBUG: '1'
 
       - name: Publish to npm
         run: pnpm run publish-ci ${{ github.ref_name }}

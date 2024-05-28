@@ -1,10 +1,12 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
+import { Writable } from 'node:stream'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { inspect } from '@vitest/utils'
+import stripAnsi from 'strip-ansi'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
@@ -12,7 +14,7 @@ import { TypeCheckError } from '../typecheck/typechecker'
 import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
-import type { Logger } from './logger'
+import { Logger } from './logger'
 import type { WorkspaceProject } from './workspace'
 
 interface PrintErrorOptions {
@@ -26,7 +28,27 @@ interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
-export async function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): Promise<PrintErrorResult | undefined> {
+// use Logger with custom Console to capture entire error printing
+export function capturePrintError(
+  error: unknown,
+  ctx: Vitest,
+  project: WorkspaceProject,
+) {
+  let output = ''
+  const writable = new Writable({
+    write(chunk, _encoding, callback) {
+      output += String(chunk)
+      callback()
+    },
+  })
+  const result = printError(error, project, {
+    showCodeFrame: false,
+    logger: new Logger(ctx, writable, writable),
+  })
+  return { nearest: result?.nearest, output }
+}
+
+export function printError(error: unknown, project: WorkspaceProject | undefined, options: PrintErrorOptions): PrintErrorResult | undefined {
   const { showCodeFrame = true, fullStack = false, type } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
@@ -118,7 +140,7 @@ export async function printError(error: unknown, project: WorkspaceProject | und
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    await printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
+    printError(e.cause, project, { fullStack, showCodeFrame: false, logger: options.logger })
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
@@ -138,6 +160,8 @@ const skipErrorProperties = new Set([
   'stackStr',
   'type',
   'showDiff',
+  'ok',
+  'operator',
   'diff',
   'codeFrame',
   'actual',
@@ -289,8 +313,8 @@ export function generateCodeFrame(
 
         const lineLength = lines[j].length
 
-        // to long, maybe it's a minified file, skip for codeframe
-        if (lineLength > 200)
+        // too long, maybe it's a minified file, skip for codeframe
+        if (stripAnsi(lines[j]).length > 200)
           return ''
 
         res.push(lineNo(j + 1) + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent))

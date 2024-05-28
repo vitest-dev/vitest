@@ -13,4 +13,15 @@ export { VitestPackageInstaller } from './packageInstaller'
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'
 
-export type { BrowserProviderInitializationOptions, BrowserProvider, BrowserProviderOptions } from '../types/browser'
+export type {
+  BrowserProviderInitializationOptions,
+  BrowserProvider,
+  BrowserProviderOptions,
+  BrowserScript,
+  BrowserCommand,
+} from '../types/browser'
+export type { JsonOptions } from './reporters/json'
+export type { JUnitOptions } from './reporters/junit'
+export type { HTMLOptions } from './reporters/html'
+
+export { isFileServingAllowed } from 'vite'

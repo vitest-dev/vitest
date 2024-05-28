@@ -30,7 +30,7 @@ function formatFilepath(path: string) {
 
 function formatNumber(number: number) {
   const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',')
+  return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',')
     + (res[1] ? `.${res[1]}` : '')
 }
 
@@ -96,7 +96,7 @@ function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxR
     let suffix = ''
     let prefix = ` ${getStateSymbol(task)} `
 
-    if (level === 0 && task.type === 'suite' && task.projectName)
+    if (level === 0 && task.type === 'suite' && 'projectName' in task)
       prefix += formatProjectName(task.projectName)
 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 0)
@@ -215,7 +215,7 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
       tasks = _tasks
       return this
     },
-    async stop() {
+    stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined

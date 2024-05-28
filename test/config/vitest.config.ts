@@ -6,6 +6,15 @@ export default defineConfig({
     include: ['test/**.test.ts'],
     reporters: ['verbose'],
     testTimeout: 60_000,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+      threads: {
+        singleThread: true,
+      },
+    },
     chaiConfig: {
       truncateThreshold: 999,
     },

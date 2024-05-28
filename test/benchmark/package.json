@@ -1,11 +1,9 @@
 {
-  "name": "@vitest/benchmark",
+  "name": "@vitest/test-benchmark",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test specs/* && echo '1'",
-    "bench:json": "vitest bench --reporter=json",
-    "bench": "vitest bench"
+    "test": "vitest"
   },
   "devDependencies": {
     "vitest": "workspace:*"

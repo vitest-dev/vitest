@@ -7,11 +7,8 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
 import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
+import type { HTMLOptions } from 'vitest/node'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
-
-export interface HTMLOptions {
-  outputFile?: string
-}
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>

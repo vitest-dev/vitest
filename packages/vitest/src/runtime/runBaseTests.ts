@@ -8,12 +8,13 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
+import { closeInspector } from './inspector'
 
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig, environment: ResolvedTestEnvironment, executor: VitestExecutor): Promise<void> {
   const workerState = getWorkerState()
 
-  await setupGlobalEnv(config, environment)
+  await setupGlobalEnv(config, environment, executor)
   await startCoverageInsideWorker(config.coverage, executor)
 
   if (config.chaiConfig)
@@ -21,7 +22,10 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
   const runner = await resolveTestRunner(config, executor)
 
-  workerState.onCancel.then(reason => runner.onCancel?.(reason))
+  workerState.onCancel.then((reason) => {
+    closeInspector(config)
+    runner.onCancel?.(reason)
+  })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
   workerState.durations.environment = performance.now()

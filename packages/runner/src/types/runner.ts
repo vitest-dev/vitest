@@ -54,6 +54,10 @@ export interface VitestRunner {
    */
   onBeforeCollect?: (paths: string[]) => unknown
   /**
+   * Called after the file task was created but not collected yet.
+   */
+  onCollectStart?: (file: File) => unknown
+  /**
    * Called after collecting tests and before "onBeforeRun".
    */
   onCollected?: (files: File[]) => unknown

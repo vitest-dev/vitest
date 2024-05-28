@@ -38,7 +38,7 @@ export class Debugger {
   }
 
   encodeId(id: string) {
-    return `${id.replace(/[^\w@_-]/g, '_').replace(/_+/g, '_')}-${hashCode(id)}.js`
+    return `${id.replace(/[^\w@\-]/g, '_').replace(/_+/g, '_')}-${hashCode(id)}.js`
   }
 
   async recordExternalize(id: string, path: string) {
@@ -66,7 +66,7 @@ export class Debugger {
       return null
     const code = await fs.readFile(path, 'utf-8')
     return {
-      code: code.replace(/^\/\/.*?\n/, ''),
+      code: code.replace(/^\/\/.*\n/, ''),
       map: undefined!,
     }
   }

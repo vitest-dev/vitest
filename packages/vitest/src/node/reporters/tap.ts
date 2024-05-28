@@ -104,7 +104,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files = this.ctx.state.getFiles()) {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

@@ -1,7 +1,7 @@
-import { relative } from 'pathe'
 import type { File, Task, TaskResultPack } from '@vitest/runner'
 
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
+import { createFileTask } from '@vitest/runner/utils'
 import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
@@ -91,6 +91,11 @@ export class StateManager {
     files.forEach((file) => {
       const existing = (this.filesMap.get(file.filepath) || [])
       const otherProject = existing.filter(i => i.projectName !== file.projectName)
+      const currentFile = existing.find(i => i.projectName === file.projectName)
+      // keep logs for the previous file because it should alway be initiated before the collections phase
+      // which means that all logs are collected during the collection and not inside tests
+      if (currentFile)
+        file.logs = currentFile.logs
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
@@ -98,17 +103,27 @@ export class StateManager {
   }
 
   // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
-  clearFiles(_project: { config: { name: string } }, paths: string[] = []) {
+  clearFiles(_project: { config: { name: string; root: string } }, paths: string[] = []) {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
-      if (!files)
+      const fileTask = createFileTask(path, project.config.root, project.config.name)
+      this.idMap.set(fileTask.id, fileTask)
+      if (!files) {
+        this.filesMap.set(path, [fileTask])
         return
+      }
       const filtered = files.filter(file => file.projectName !== project.config.name)
-      if (!filtered.length)
-        this.filesMap.delete(path)
-      else
-        this.filesMap.set(path, filtered)
+      // always keep a File task, so we can associate logs with it
+      if (!filtered.length) {
+        this.filesMap.set(path, [fileTask])
+      }
+      else {
+        this.filesMap.set(path, [
+          ...filtered,
+          fileTask,
+        ])
+      }
     })
   }
 
@@ -150,19 +165,6 @@ export class StateManager {
   }
 
   cancelFiles(files: string[], root: string, projectName: string) {
-    this.collectFiles(files.map(filepath => ({
-      filepath,
-      name: relative(root, filepath),
-      id: filepath,
-      mode: 'skip',
-      type: 'suite',
-      result: {
-        state: 'skip',
-      },
-      meta: {},
-      // Cancelled files have not yet collected tests
-      tasks: [],
-      projectName,
-    })))
+    this.collectFiles(files.map(filepath => createFileTask(filepath, root, projectName)))
   }
 }

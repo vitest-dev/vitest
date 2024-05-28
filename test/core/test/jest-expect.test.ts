@@ -102,6 +102,10 @@ describe('jest-expect', () => {
     }).toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
     }))
+    expect(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw ''
+    }).toThrow(/^$/)
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -109,6 +113,8 @@ describe('jest-expect', () => {
     expect(0.2 + 0.1).not.toBe(0.3)
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
     expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
+
+    expect(() => expect(1).toMatch(/\d/)).toThrowErrorMatchingInlineSnapshot(`[TypeError: .toMatch() expects to receive a string, but got number]`)
   })
 
   it('asymmetric matchers (jest style)', () => {
@@ -877,6 +883,19 @@ it('correctly prints diff', () => {
   }
 })
 
+it('correctly prints diff for the cause', () => {
+  try {
+    expect({ a: 1 }).toEqual({ a: 2 })
+    expect.unreachable()
+  }
+  catch (err) {
+    setupColors(getDefaultColors())
+    const error = processError(new Error('wrapper', { cause: err }))
+    expect(error.cause.diff).toContain('-   "a": 2')
+    expect(error.cause.diff).toContain('+   "a": 1')
+  }
+})
+
 it('correctly prints diff with asymmetric matchers', () => {
   try {
     expect({ a: 1, b: 'string' }).toEqual({
@@ -901,24 +920,152 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
 })
 
-it('toHaveProperty error diff', () => {
+// make it easy for dev who trims trailing whitespace on IDE
+function trim(s: string): string {
+  return s.replaceAll(/ *$/gm, '')
+}
+
+function getError(f: () => unknown) {
+  try {
+    f()
+    return expect.unreachable()
+  }
+  catch (error) {
+    const processed = processError(error)
+    return [processed.message, trim(processed.diff)]
+  }
+}
+
+it('toMatchObject error diff', () => {
   setupColors(getDefaultColors())
 
-  // make it easy for dev who trims trailing whitespace on IDE
-  function trim(s: string): string {
-    return s.replaceAll(/ *$/gm, '')
-  }
+  // single property on root (3 total properties, 1 expected)
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: 3 } to match object { c: 4 }
+    (2 matching properties omitted from actual)",
+      "- Expected
+    + Received
 
-  function getError(f: () => unknown) {
-    try {
-      f()
-      return expect.unreachable()
-    }
-    catch (error) {
-      const processed = processError(error)
-      return [processed.message, trim(processed.diff)]
-    }
-  }
+      Object {
+    -   "c": 4,
+    +   "c": 3,
+      }",
+    ]
+  `)
+
+  // single property on root (4 total properties, 1 expected)
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }
+    (3 matching properties omitted from actual)",
+      "- Expected
+    + Received
+
+      Object {
+    -   "b": 3,
+    +   "b": 2,
+      }",
+    ]
+  `)
+
+  // nested property (7 total properties, 2 expected)
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4, e: 5 }, f: { g: 6 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4, e: 5 }, …(1) } to match object { c: { d: 5 } }
+    (5 matching properties omitted from actual)",
+      "- Expected
+    + Received
+
+      Object {
+        "c": Object {
+    -     "d": 5,
+    +     "d": 4,
+        },
+      }",
+    ]
+  `)
+
+  // 3 total properties, 3 expected (0 stripped)
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ a: 1, b: 2, c: 4 }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: 3 } to match object { a: 1, b: 2, c: 4 }",
+      "- Expected
+    + Received
+
+      Object {
+        "a": 1,
+        "b": 2,
+    -   "c": 4,
+    +   "c": 3,
+      }",
+    ]
+  `)
+
+  // 4 total properties, 3 expected
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 3 } }).toMatchObject({ a: 1, c: { d: 4 } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 3 } } to match object { a: 1, c: { d: 4 } }
+    (1 matching property omitted from actual)",
+      "- Expected
+    + Received
+
+      Object {
+        "a": 1,
+        "c": Object {
+    -     "d": 4,
+    +     "d": 3,
+        },
+      }",
+    ]
+  `)
+
+  // 8 total properties, 4 expected
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 }, foo: { value: 'bar' }, bar: { value: 'foo' } }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }))).toMatchInlineSnapshot(`
+    [
+      "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }
+    (4 matching properties omitted from actual)",
+      "- Expected
+    + Received
+
+      Object {
+        "c": Object {
+    -     "d": 5,
+    +     "d": 4,
+        },
+        "foo": Object {
+    -     "value": "biz",
+    +     "value": "bar",
+        },
+      }",
+    ]
+  `)
+
+  // 8 total properties, 3 expected
+  const characters = { firstName: 'Vladimir', lastName: 'Harkonnen', family: 'House Harkonnen', colors: ['red', 'blue'], children: [{ firstName: 'Jessica', lastName: 'Atreides', colors: ['red', 'green', 'black'] }] }
+  expect(getError(() => expect(characters).toMatchObject({ family: 'House Atreides', children: [{ firstName: 'Paul' }] }))).toMatchInlineSnapshot(`
+    [
+      "expected { firstName: 'Vladimir', …(4) } to match object { family: 'House Atreides', …(1) }
+    (5 matching properties omitted from actual)",
+      "- Expected
+    + Received
+
+      Object {
+        "children": Array [
+          Object {
+    -       "firstName": "Paul",
+    +       "firstName": "Jessica",
+          },
+        ],
+    -   "family": "House Atreides",
+    +   "family": "House Harkonnen",
+      }",
+    ]
+  `)
+})
+
+it('toHaveProperty error diff', () => {
+  setupColors(getDefaultColors())
 
   // non match value
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
@@ -1083,6 +1230,14 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new MyError2('hello')
   }).toThrow(MyError1))
+})
+
+it('toHaveBeenNthCalledWith error', () => {
+  const fn = vi.fn()
+  fn('World')
+  fn('Hi')
+  snapshotError(() => expect(fn).toHaveBeenNthCalledWith(2, 'hey'))
+  snapshotError(() => expect(fn).toHaveBeenNthCalledWith(3, 'hey'))
 })
 
 it('toMatch/toContain diff', () => {

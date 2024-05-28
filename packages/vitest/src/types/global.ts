@@ -1,6 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { ExpectStatic } from '@vitest/expect'
+import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { UserConsoleLog } from './general'
 import type { VitestEnvironment } from './config'
 import type { BenchmarkResult } from './benchmark'
@@ -33,7 +33,19 @@ declare module '@vitest/expect' {
     snapshotState: SnapshotState
   }
 
+  interface ExpectPollOptions {
+    interval?: number
+    timeout?: number
+    message?: string
+  }
+
   interface ExpectStatic {
+    unreachable: (message?: string) => never
+    soft: <T>(actual: T, message?: string) => Assertion<T>
+    poll: <T>(actual: () => T, options?: ExpectPollOptions) => PromisifyAssertion<Awaited<T>>
+    addEqualityTesters: (testers: Array<Tester>) => void
+    assertions: (expected: number) => void
+    hasAssertions: () => void
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 

@@ -4,16 +4,17 @@ import timers from 'node:timers'
 import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { createColors, setupColors } from '@vitest/utils'
-import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment, WorkerGlobalState } from '../types'
-import { VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
+import type { EnvironmentOptions, ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
 import { expect } from '../integrations/chai'
+import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { setupCommonEnv } from './setup-common'
+import type { VitestExecutor } from './execute'
 
 // this should only be used in Node
 let globalSetup = false
-export async function setupGlobalEnv(config: ResolvedConfig, { environment }: ResolvedTestEnvironment) {
+export async function setupGlobalEnv(config: ResolvedConfig, { environment }: ResolvedTestEnvironment, executor: VitestExecutor) {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -24,7 +25,7 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
   const state = getWorkerState()
 
   if (!state.config.snapshotOptions.snapshotEnvironment)
-    state.config.snapshotOptions.snapshotEnvironment = new VitestSnapshotEnvironment(state.rpc)
+    state.config.snapshotOptions.snapshotEnvironment = await resolveSnapshotEnvironment(config, executor)
 
   if (globalSetup)
     return
@@ -56,13 +57,13 @@ export async function setupGlobalEnv(config: ResolvedConfig, { environment }: Re
   })
 
   if (!config.disableConsoleIntercept)
-    await setupConsoleLogSpy(state)
+    await setupConsoleLogSpy()
 }
 
-export async function setupConsoleLogSpy(state: WorkerGlobalState) {
+export async function setupConsoleLogSpy() {
   const { createCustomConsole } = await import('./console')
 
-  globalThis.console = createCustomConsole(state)
+  globalThis.console = createCustomConsole()
 }
 
 export async function withEnv(

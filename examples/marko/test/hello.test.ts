@@ -1,12 +1,13 @@
 import { fireEvent, render, screen } from '@marko/testing-library'
+import { describe, expect, it } from 'vitest'
 import Hello from '../components/Hello.marko'
 
 describe('Hello.marko', () => {
   it('mounts', async () => {
-    const { container } = await render(Hello, { count: 4 })
+    await render(Hello, { count: 4 })
+    const container = screen.getByText('4 x 2 = 8')
     expect(container).toBeTruthy()
-    expect(container.innerHTML).toContain('4 x 2 = 8')
-    expect(container.innerHTML).toMatchSnapshot()
+    expect(container).toMatchSnapshot()
   })
 
   it('updates on button click', async () => {

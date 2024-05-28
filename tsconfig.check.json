@@ -12,7 +12,6 @@
     "./packages/*/*.d.ts",
     "./packages/*/*.d.cts",
     "./packages/ui/client/**",
-    "./packages/ui/cypress/**",
     "./examples/**/*.*",
     "./bench/**",
     "./test/typescript/**",

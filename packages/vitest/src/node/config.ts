@@ -3,7 +3,7 @@ import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { defaultBrowserPort, defaultPort, extraInlineDeps } from '../constants'
+import { defaultBrowserPort, defaultInspectPort, defaultPort, extraInlineDeps } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
@@ -12,12 +12,28 @@ import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from './reporters'
 import { builtinPools } from './pool'
+import type { Logger } from './logger'
 
 function resolvePath(path: string, root: string) {
   return normalize(
-    resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
   )
+}
+
+function parseInspector(inspect: string | undefined | boolean | number) {
+  if (typeof inspect === 'boolean' || inspect === undefined)
+    return {}
+  if (typeof inspect === 'number')
+    return { port: inspect }
+
+  if (inspect.match(/https?:\//))
+    throw new Error(`Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`)
+
+  const [host, port] = inspect.split(':')
+  if (!port)
+    return { host }
+  return { host, port: Number(port) || defaultInspectPort }
 }
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
@@ -61,13 +77,14 @@ export function resolveConfig(
   mode: VitestRunMode,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  logger: Logger,
 ): ResolvedConfig {
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
           `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
             viteConfig.test.environment
@@ -88,8 +105,14 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
-  resolved.inspect = Boolean(resolved.inspect)
-  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  const inspector = resolved.inspect || resolved.inspectBrk
+
+  resolved.inspector = {
+    ...resolved.inspector,
+    ...parseInspector(inspector),
+    enabled: !!inspector,
+    waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+  }
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
@@ -113,13 +136,23 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.standalone && !resolved.watch)
+    throw new Error(`Vitest standalone mode requires --watch`)
+
+  if (resolved.mergeReports && resolved.watch)
+    throw new Error(`Cannot merge reports with --watch enabled`)
+
   if (resolved.maxWorkers)
     resolved.maxWorkers = Number(resolved.maxWorkers)
 
   if (resolved.minWorkers)
     resolved.minWorkers = Number(resolved.minWorkers)
 
-  resolved.fileParallelism ??= true
+  resolved.browser ??= {} as any
+  resolved.browser.fileParallelism ??= resolved.fileParallelism ?? false
+
+  // run benchmark sequentially by default
+  resolved.fileParallelism ??= mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
@@ -136,11 +169,6 @@ export function resolveConfig(
       throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`)
     }
   }
-
-  // TODO: V2.0.0 remove
-  // @ts-expect-error -- check for removed API option
-  if (resolved.coverage.provider === 'c8')
-    throw new Error('"coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
 
   if (resolved.coverage.provider === 'v8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
     throw new Error('@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
@@ -184,11 +212,11 @@ export function resolveConfig(
       return
 
     if (option === 'fallbackCJS') {
-      console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
+      logger.console.warn(c.yellow(`${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`))
     }
     else {
       const transformMode = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom' ? 'web' : 'ssr'
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${option === 'external' ? 'exclude' : 'include'}"`,
         ),
@@ -220,6 +248,9 @@ export function resolveConfig(
 
   if (resolved.runner)
     resolved.runner = resolvePath(resolved.runner, resolved.root)
+
+  if (resolved.snapshotEnvironment)
+    resolved.snapshotEnvironment = resolvePath(resolved.snapshotEnvironment, resolved.root)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -348,6 +379,12 @@ export function resolveConfig(
 
     if (options.outputFile)
       resolved.benchmark.outputFile = options.outputFile
+
+    // --compare from cli
+    if (options.compare)
+      resolved.benchmark.compare = options.compare
+    if (options.outputJson)
+      resolved.benchmark.outputJson = options.outputJson
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
@@ -450,7 +487,7 @@ export function resolveConfig(
     let cacheDir = VitestCache.resolveCacheDir('', resolve(viteConfig.cacheDir, 'vitest'), resolved.name)
 
     if (resolved.cache && resolved.cache.dir) {
-      console.warn(
+      logger.console.warn(
         c.yellow(
         `${c.inverse(c.yellow(' Vitest '))} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
         ),
@@ -474,7 +511,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
-  resolved.sequence.hooks ??= 'parallel'
+  resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer)
     resolved.sequence.seed ??= Date.now()
 
@@ -483,19 +520,22 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
-  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
+  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i =>
+    [resolve(resolved.root, i[0]), i[1]],
+  )
 
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
   if (resolved.typecheck.enabled)
-    console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
+    logger.console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.slowHijackESM ??= false
   resolved.browser.isolate ??= true
+  resolved.browser.ui ??= !isCI
 
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
     resolved.browser.provider = 'none'

@@ -40,9 +40,15 @@ export function getRunner() {
   return runner
 }
 
+function createDefaultSuite(runner: VitestRunner) {
+  const config = runner.config.sequence
+  const api = config.shuffle ? suite.shuffle : suite
+  return api('', { concurrent: config.concurrent }, () => {})
+}
+
 export function clearCollectorContext(filepath: string, currentRunner: VitestRunner) {
   if (!defaultSuite)
-    defaultSuite = currentRunner.config.sequence.shuffle ? suite.shuffle('') : currentRunner.config.sequence.concurrent ? suite.concurrent('') : suite('')
+    defaultSuite = createDefaultSuite(currentRunner)
   runner = currentRunner
   currentTestFilepath = filepath
   collectorContext.tasks.length = 0
@@ -121,6 +127,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       fails: options.fails,
       context: undefined!,
       type: 'custom',
+      file: undefined!,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
       mode: options.only ? 'only' : options.skip ? 'skip' : options.todo ? 'todo' : 'run',
@@ -149,11 +156,11 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     if (runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
-      // custom can be called from any place, let's assume the limit is 10 stacks
-      Error.stackTraceLimit = 10
+      // custom can be called from any place, let's assume the limit is 15 stacks
+      Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findStackTrace(error, task.each ?? false)
+      const stack = findTestFileStackTrace(error, task.each ?? false)
       if (stack)
         task.location = stack
     }
@@ -211,26 +218,21 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       name,
       mode,
       each,
+      file: undefined!,
       shuffle,
       tasks: [],
       meta: Object.create(null),
-      projectName: '',
+      concurrent: suiteOptions?.concurrent,
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
-      Error.stackTraceLimit = 5
+      Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = parseSingleStack(error.split('\n')[5])
-      if (stack) {
-        suite.location = {
-          line: stack.line,
-          // because source map is boundary based, this line leads to ")" in test.each()[(]),
-          // but it should be the next opening bracket - here we assume it's on the same line
-          column: each ? stack.column + 1 : stack.column,
-        }
-      }
+      const stack = findTestFileStackTrace(error, suite.each ?? false)
+      if (stack)
+        suite.location = stack
     }
 
     setHooks(suite, createSuiteHooks())
@@ -242,7 +244,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     initSuite(false)
   }
 
-  async function collect(file?: File) {
+  async function collect(file: File) {
+    if (!file)
+      throw new TypeError('File is required to collect tasks.')
+
     factoryQueue.length = 0
     if (factory)
       await runWithSuite(collector, () => factory(test))
@@ -257,8 +262,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     allChildren.forEach((task) => {
       task.suite = suite
-      if (file)
-        task.file = file
+      task.file = file
     })
 
     return suite
@@ -282,9 +286,11 @@ function createSuite() {
     if (currentSuite?.options)
       options = { ...currentSuite.options, ...options }
 
-    // inherit concurrent / sequential from current suite
-    options.concurrent = this.concurrent || (!this.sequential && options?.concurrent)
-    options.sequential = this.sequential || (!this.concurrent && options?.sequential)
+    // inherit concurrent / sequential from suite
+    const isConcurrent = options.concurrent || (this.concurrent && !this.sequential)
+    const isSequential = options.sequential || (this.sequential && !this.concurrent)
+    options.concurrent = isConcurrent && !isSequential
+    options.sequential = isSequential && !isConcurrent
 
     return createSuiteCollector(formatName(name), factory, mode, this.shuffle, this.each, options)
   }
@@ -305,11 +311,20 @@ function createSuite() {
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        arrayOnlyCases
-          ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
-          : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), () => handler(...items), options)
+            : suite(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            : suite(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)
@@ -347,12 +362,21 @@ export function createTaskCollector(
         fnOrOptions,
       )
 
+      const fnFirst = typeof optionsOrFn === 'function'
+
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
 
-        arrayOnlyCases
-          ? test(formatTitle(_name, items, idx), options, () => handler(...items))
-          : test(formatTitle(_name, items, idx), options, () => handler(i))
+        if (fnFirst) {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), () => handler(...items), options)
+            : test(formatTitle(_name, items, idx), () => handler(i), options)
+        }
+        else {
+          arrayOnlyCases
+            ? test(formatTitle(_name, items, idx), options, () => handler(...items))
+            : test(formatTitle(_name, items, idx), options, () => handler(i))
+        }
       })
 
       this.setContext('each', undefined)
@@ -412,7 +436,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(
-      /\$([$\w_.]+)/g,
+      /\$([$\w.]+)/g,
       // https://github.com/chaijs/chai/pull/1490
       (_, key) => objDisplay(objectAttr(items[0], key), { truncate: runner?.config?.chaiConfig?.truncateThreshold }) as unknown as string,
     )
@@ -432,10 +456,9 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-function findStackTrace(error: string, each: boolean) {
+function findTestFileStackTrace(error: string, each: boolean) {
   // first line is the error message
-  // and the first 3 stacks are always from the collector
-  const lines = error.split('\n').slice(4)
+  const lines = error.split('\n').slice(1)
   for (const line of lines) {
     const stack = parseSingleStack(line)
     if (stack && stack.file === getTestFilepath()) {

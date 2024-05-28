@@ -20,12 +20,12 @@ export class DefaultReporter extends BaseReporter {
   }
 
   async onTestRemoved(trigger?: string) {
-    await this.stopListRender()
+    this.stopListRender()
     this.ctx.logger.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
     const files = this.ctx.state.getFiles(this.watchFilters)
     createListRenderer(files, this.rendererOptions).stop()
     this.ctx.logger.log()
-    await super.reportSummary(files, this.ctx.state.getUnhandledErrors())
+    super.reportSummary(files, this.ctx.state.getUnhandledErrors())
     super.onWatcherStart()
   }
 
@@ -43,24 +43,24 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
-    await this.stopListRender()
+  onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+    this.stopListRender()
     this.ctx.logger.log()
-    await super.onFinished(files, errors)
+    super.onFinished(files, errors)
   }
 
   async onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
-    await this.stopListRender()
+    this.stopListRender()
     await super.onWatcherStart(files, errors)
   }
 
-  async stopListRender() {
-    await this.renderer?.stop()
+  stopListRender() {
+    this.renderer?.stop()
     this.renderer = undefined
   }
 
   async onWatcherRerun(files: string[], trigger?: string) {
-    await this.stopListRender()
+    this.stopListRender()
     await super.onWatcherRerun(files, trigger)
   }
 

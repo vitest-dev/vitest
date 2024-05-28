@@ -1,6 +1,7 @@
+import { Console } from 'node:console'
+import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
@@ -24,17 +25,19 @@ const CURSOR_TO_START = `${ESC}1;1H`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
-  outputStream = process.stdout
-  errorStream = process.stderr
-  logUpdate = createLogUpdate(process.stdout)
+  logUpdate: ReturnType<typeof createLogUpdate>
 
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
+  public console: Console
 
   constructor(
     public ctx: Vitest,
-    public console = globalThis.console,
+    public outputStream: NodeJS.WriteStream | Writable = process.stdout,
+    public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
+    this.console = new Console({ stdout: outputStream, stderr: errorStream })
+    this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
   }
 
@@ -82,10 +85,10 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  async printError(err: unknown, options: ErrorOptions = {}) {
+  printError(err: unknown, options: ErrorOptions = {}) {
     const { fullStack = false, type } = options
     const project = options.project ?? this.ctx.getCoreWorkspaceProject() ?? this.ctx.projects[0]
-    await printError(err, project, {
+    printError(err, project, {
       fullStack,
       type,
       showCodeFrame: true,
@@ -131,8 +134,6 @@ export class Logger {
         this.console.error(c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)))
       }
     })
-    if (config.watchExclude)
-      this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
     if (config.watch && (config.changed || config.related?.length)) {
       this.log(`No affected ${config.mode} files found\n`)
@@ -149,8 +150,8 @@ export class Logger {
     this.log()
 
     const versionTest = this.ctx.config.watch
-      ? c.blue(`v${version}`)
-      : c.cyan(`v${version}`)
+      ? c.blue(`v${this.ctx.version}`)
+      : c.cyan(`v${this.ctx.version}`)
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')
@@ -185,31 +186,34 @@ export class Logger {
     if (this.ctx.coverageProvider)
       this.log(c.dim('      Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
 
-    this.log()
+    if (this.ctx.config.standalone)
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+    else
+      this.log()
   }
 
-  async printUnhandledErrors(errors: unknown[]) {
+  printUnhandledErrors(errors: unknown[]) {
     const errorMessage = c.red(c.bold(
       `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run.`
       + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
     ))
     this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
     this.log(errorMessage)
-    await Promise.all(errors.map(async (err) => {
-      await this.printError(err, { fullStack: true, type: (err as ErrorWithDiff).type || 'Unhandled Error' })
-    }))
+    errors.forEach((err) => {
+      this.printError(err, { fullStack: true, type: (err as ErrorWithDiff).type || 'Unhandled Error' })
+    })
     this.log(c.red(divider()))
   }
 
-  async printSourceTypeErrors(errors: TypeCheckError[]) {
+  printSourceTypeErrors(errors: TypeCheckError[]) {
     const errorMessage = c.red(c.bold(
       `\nVitest found ${errors.length} error${errors.length > 1 ? 's' : ''} not related to your test files.`,
     ))
     this.log(c.red(divider(c.bold(c.inverse(' Source Errors ')))))
     this.log(errorMessage)
-    await Promise.all(errors.map(async (err) => {
-      await this.printError(err, { fullStack: true })
-    }))
+    errors.forEach((err) => {
+      this.printError(err, { fullStack: true })
+    })
     this.log(c.red(divider()))
   }
 }

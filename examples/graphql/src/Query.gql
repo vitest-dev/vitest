@@ -1,7 +1,0 @@
-#import "./Fragment.gql"
-
-query Foo {
-  currentUser {
-    ...CurrentUserFields
-  }
-}

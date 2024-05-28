@@ -88,11 +88,74 @@ export interface BrowserConfigOptions {
   isolate?: boolean
 
   /**
+   * Show Vitest UI
+   *
+   * @default !process.env.CI
+   */
+  ui?: boolean
+
+  /**
    * Run test files in parallel. Fallbacks to `test.fileParallelism`.
    *
    * @default test.fileParallelism
    */
   fileParallelism?: boolean
+
+  /**
+   * Scripts injected into the tester iframe.
+   */
+  testerScripts?: BrowserScript[]
+
+  /**
+   * Scripts injected into the main window.
+   */
+  indexScripts?: BrowserScript[]
+
+  /**
+   * Commands that will be executed on the server
+   * via the browser `import("@vitest/browser/context").commands` API.
+   * @see {@link https://vitest.dev/guide/browser#commands}
+   */
+  commands?: Record<string, BrowserCommand<any>>
+}
+
+export interface BrowserCommandContext {
+  testPath: string | undefined
+  provider: BrowserProvider
+  project: WorkspaceProject
+}
+
+export interface BrowserCommand<Payload extends unknown[]> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+}
+
+export interface BrowserScript {
+  /**
+   * If "content" is provided and type is "module", this will be its identifier.
+   *
+   * If you are using TypeScript, you can add `.ts` extension here for example.
+   * @default `injected-${index}.js`
+   */
+  id?: string
+  /**
+   * JavaScript content to be injected. This string is processed by Vite plugins if type is "module".
+   *
+   * You can use `id` to give Vite a hint about the file extension.
+   */
+  content?: string
+  /**
+   * Path to the script. This value is resolved by Vite so it can be a node module or a file path.
+   */
+  src?: string
+  /**
+   * If the script should be loaded asynchronously.
+   */
+  async?: boolean
+  /**
+   * Script type.
+   * @default 'module'
+   */
+  type?: string
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
@@ -100,4 +163,5 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   headless: boolean
   isolate: boolean
   api: ApiConfig
+  ui: boolean
 }

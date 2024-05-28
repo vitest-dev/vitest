@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "1.4.0",
+  "version": "2.0.0-beta.3",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -38,9 +38,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "0.2.15",
-    "flatted": "^3.2.9",
-    "ws": "^8.14.2"
+    "birpc": "0.2.17",
+    "flatted": "^3.3.1",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@vitest/runner": "workspace:*"

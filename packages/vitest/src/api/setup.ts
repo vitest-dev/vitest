@@ -11,7 +11,7 @@ import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
+import type { Awaitable, File, ModuleGraphData, Reporter, SerializableSpec, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
@@ -151,6 +151,18 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
 
         // TODO: have a separate websocket conection for private browser API
+        triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
+          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browserProvider)
+            throw new Error('Commands are only available for browser tests.')
+          const commands = vitestOrWorkspace.config.browser?.commands
+          if (!commands || !commands[command])
+            throw new Error(`Unknown command "${command}".`)
+          return commands[command]({
+            testPath,
+            project: vitestOrWorkspace,
+            provider: vitestOrWorkspace.browserProvider,
+          }, ...payload)
+        },
         getBrowserFiles() {
           if (!('ctx' in vitestOrWorkspace))
             throw new Error('`getBrowserTestFiles` is only available in the browser API')
@@ -163,6 +175,13 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
         getProvidedContext() {
           return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
+        },
+        async getTestFiles() {
+          const spec = await ctx.globTestFiles()
+          return spec.map(([project, file]) => [{
+            name: project.getName(),
+            root: project.config.root,
+          }, file])
         },
       },
       {
@@ -201,6 +220,14 @@ export class WebSocketReporter implements Reporter {
       return
     this.clients.forEach((client) => {
       client.onCollected?.(files)?.catch?.(noop)
+    })
+  }
+
+  onSpecsCollected(specs?: SerializableSpec[] | undefined): Awaitable<void> {
+    if (this.clients.size === 0)
+      return
+    this.clients.forEach((client) => {
+      client.onSpecsCollected?.(specs)?.catch?.(noop)
     })
   }
 

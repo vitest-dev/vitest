@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "nr prefetch && vitepress build",
+    "build": "nr cli-table && nr prefetch && vitepress build",
+    "cli-table": "tsx .vitepress/scripts/cli-generator.ts",
     "build-no-prefetch": "vitepress build",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
@@ -13,23 +14,24 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "^10.6.1",
-    "vue": "latest"
+    "@vueuse/core": "^10.9.0",
+    "vue": "^3.4.27"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.28",
+    "@iconify-json/carbon": "^1.1.32",
     "@iconify-json/logos": "^1.1.42",
-    "@unocss/reset": "^0.57.4",
-    "@vite-pwa/assets-generator": "^0.0.11",
-    "@vite-pwa/vitepress": "^0.2.3",
+    "@shikijs/vitepress-twoslash": "^1.5.1",
+    "@unocss/reset": "^0.60.0",
+    "@vite-pwa/assets-generator": "^0.2.4",
+    "@vite-pwa/vitepress": "^0.5.0",
     "@vitejs/plugin-vue": "latest",
     "fast-glob": "^3.3.2",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.57.4",
-    "unplugin-vue-components": "^0.25.2",
-    "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.16.7",
-    "vitepress": "^1.0.0-rc.35",
-    "workbox-window": "^7.0.0"
+    "unocss": "^0.60.0",
+    "unplugin-vue-components": "^0.27.0",
+    "vite": "^5.2.8",
+    "vite-plugin-pwa": "^0.20.0",
+    "vitepress": "^1.1.4",
+    "workbox-window": "^7.1.0"
   }
 }

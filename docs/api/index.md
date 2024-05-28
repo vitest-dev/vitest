@@ -47,17 +47,17 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
 
 :::code-group
-```ts [dot-syntax]
+```ts [dot-syntax] twoslash
 import { test } from 'vitest'
 
 test.skip('skipped test', () => {
   // some logic that fails right now
 })
 ```
-```ts [object-syntax <Badge type="info">1.3.0+</Badge>]
+```ts [object-syntax] twoslash
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
@@ -74,7 +74,7 @@ test('skipped test', { skip: true }, () => {
 
 Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](/config/#testtimeout)
 
-```ts
+```ts twoslash
 import { expect, test } from 'vitest'
 
 test('should work as expected', () => {
@@ -82,7 +82,7 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend <Badge type="info">0.32.3+</Badge> {#test-extended}
+### test.extend {#test-extended}
 
 - **Alias:** `it.extend`
 
@@ -117,7 +117,7 @@ myTest('add item', ({ todos }) => {
 
 If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
 
-```ts
+```ts twoslash
 import { assert, test } from 'vitest'
 
 test.skip('skipped test', () => {
@@ -128,7 +128,7 @@ test.skip('skipped test', () => {
 
 You can also skip test by calling `skip` on its [context](/guide/test-context) dynamically:
 
-```ts
+```ts twoslash
 import { assert, test } from 'vitest'
 
 test('skipped test', (context) => {
@@ -144,7 +144,7 @@ test('skipped test', (context) => {
 
 In some cases you might run tests multiple times with different environments, and some of the tests might be environment-specific. Instead of wrapping the test code with `if`, you can use `test.skipIf` to skip the test whenever the condition is truthy.
 
-```ts
+```ts twoslash
 import { assert, test } from 'vitest'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -164,7 +164,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 Opposite of [test.skipIf](#test-skipif).
 
-```ts
+```ts twoslash
 import { assert, test } from 'vitest'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -186,7 +186,7 @@ Use `test.only` to only run certain tests in a given suite. This is useful when 
 
 Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](/config/#testtimeout).
 
-```ts
+```ts twoslash
 import { assert, test } from 'vitest'
 
 test.only('test', () => {
@@ -208,7 +208,7 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
 
-```ts
+```ts twoslash
 import { describe, test } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
@@ -249,7 +249,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 `test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
-```ts
+```ts twoslash
+import { describe, test } from 'vitest'
+
+// ---cut---
 // with config option { sequence: { concurrent: true } }
 test('concurrent test 1', async () => { /* ... */ })
 test('concurrent test 2', async () => { /* ... */ })
@@ -284,7 +287,7 @@ test.todo('unimplemented test')
 
 Use `test.fails` to indicate that an assertion will fail explicitly.
 
-```ts
+```ts twoslash
 import { expect, test } from 'vitest'
 
 function myAsyncFunc() {
@@ -315,7 +318,10 @@ You can inject parameters with [printf formatting](https://nodejs.org/api/util.h
 - `%#`: index of the test case
 - `%%`: single percent sign ('%')
 
-```ts
+```ts  twoslash
+import { expect, test } from 'vitest'
+
+// ---cut---
 test.each([
   [1, 1, 2],
   [1, 2, 3],
@@ -370,7 +376,10 @@ Starting from Vitest 0.25.3, you can also use template string table.
 * First row should be column names, separated by `|`;
 * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
-```ts
+```ts  twoslash
+import { expect, test } from 'vitest'
+
+// ---cut---
 test.each`
   a               | b      | expected
   ${1}            | ${1}   | ${2}
@@ -401,7 +410,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
 
-```ts
+```ts twoslash
 import { bench } from 'vitest'
 
 bench('normal sorting', () => {
@@ -466,7 +475,7 @@ export interface Options {
 
 You can use `bench.skip` syntax to skip running certain benchmarks.
 
-```ts
+```ts twoslash
 import { bench } from 'vitest'
 
 bench.skip('normal sorting', () => {
@@ -483,7 +492,7 @@ bench.skip('normal sorting', () => {
 
 Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
 
-```ts
+```ts twoslash
 import { bench } from 'vitest'
 
 bench.only('normal sorting', () => {
@@ -500,7 +509,7 @@ bench.only('normal sorting', () => {
 
 Use `bench.todo` to stub benchmarks to be implemented later.
 
-```ts
+```ts twoslash
 import { bench } from 'vitest'
 
 bench.todo('unimplemented test')
@@ -510,7 +519,7 @@ bench.todo('unimplemented test')
 
 When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
 
-```ts
+```ts twoslash
 // basic.spec.ts
 // organizing tests
 
@@ -536,7 +545,7 @@ describe('person', () => {
 })
 ```
 
-```ts
+```ts twoslash
 // basic.bench.ts
 // organizing benchmarks
 
@@ -561,10 +570,10 @@ describe('sort', () => {
 
 You can also nest describe blocks if you have a hierarchy of tests or benchmarks:
 
-```ts
+```ts twoslash
 import { describe, expect, test } from 'vitest'
 
-function numberToCurrency(value) {
+function numberToCurrency(value: number | string) {
   if (typeof value !== 'number')
     throw new Error('Value must be a number')
 
@@ -592,7 +601,7 @@ describe('numberToCurrency', () => {
 
 Use `describe.skip` in a suite to avoid running a particular describe block.
 
-```ts
+```ts twoslash
 import { assert, describe, test } from 'vitest'
 
 describe.skip('skipped suite', () => {
@@ -609,7 +618,7 @@ describe.skip('skipped suite', () => {
 
 In some cases, you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
 
-```ts
+```ts twoslash
 import { describe, test } from 'vitest'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -629,8 +638,8 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 Opposite of [describe.skipIf](#describe-skipif).
 
-```ts
-import { assert, test } from 'vitest'
+```ts twoslash
+import { assert, describe, test } from 'vitest'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -649,7 +658,9 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 Use `describe.only` to only run certain suites
 
-```ts
+```ts twoslash
+import { assert, describe, test } from 'vitest'
+// ---cut---
 // Only this suite (and others marked with only) are run
 describe.only('suite', () => {
   test('sqrt', () => {
@@ -673,13 +684,18 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 - **Alias:** `suite.concurrent`
 
-`describe.concurrent` in a suite marks every tests as concurrent
+`describe.concurrent` runs all inner suites and tests in parallel
 
-```ts
-// All tests within this suite will be run in parallel
+```ts twoslash
+import { describe, test } from 'vitest'
+// ---cut---
+// All suites and tests within this suite will be run in parallel
 describe.concurrent('suite', () => {
   test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
+  describe('concurrent suite 2', async () => {
+    test('concurrent test inner 1', async () => { /* ... */ })
+    test('concurrent test inner 2', async () => { /* ... */ })
+  })
   test.concurrent('concurrent test 3', async () => { /* ... */ })
 })
 ```
@@ -716,7 +732,9 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 `describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
-```ts
+```ts twoslash
+import { describe, test } from 'vitest'
+// ---cut---
 describe.concurrent('suite', () => {
   test('concurrent test 1', async () => { /* ... */ })
   test('concurrent test 2', async () => { /* ... */ })
@@ -734,7 +752,9 @@ describe.concurrent('suite', () => {
 
 Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
-```ts
+```ts twoslash
+import { describe, test } from 'vitest'
+// ---cut---
 describe.shuffle('suite', () => {
   test('random test 1', async () => { /* ... */ })
   test('random test 2', async () => { /* ... */ })
@@ -766,7 +786,9 @@ describe.todo('unimplemented suite')
 
 Use `describe.each` if you have more than one test that depends on the same data.
 
-```ts
+```ts twoslash
+import { describe, expect, test } from 'vitest'
+// ---cut---
 describe.each([
   { a: 1, b: 1, expected: 2 },
   { a: 1, b: 2, expected: 3 },
@@ -791,7 +813,9 @@ Starting from Vitest 0.25.3, you can also use template string table.
 * First row should be column names, separated by `|`;
 * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
-```ts
+```ts twoslash
+import { describe, expect, test } from 'vitest'
+// ---cut---
 describe.each`
   a               | b      | expected
   ${1}            | ${1}   | ${2}
@@ -835,7 +859,7 @@ beforeEach(async () => {
 
 Here, the `beforeEach` ensures that user is added for each test.
 
-Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+`beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
 
 ```ts
 import { beforeEach } from 'vitest'
@@ -893,7 +917,7 @@ beforeAll(async () => {
 
 Here the `beforeAll` ensures that the mock data is set up before tests run.
 
-Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+`beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
 
 ```ts
 import { beforeAll } from 'vitest'
@@ -936,11 +960,11 @@ Vitest provides a few hooks that you can call _during_ the test execution to cle
 These hooks will throw an error if they are called outside of the test body.
 :::
 
-### onTestFinished <Badge type="info">1.3.0+</Badge> {#ontestfinished}
+### onTestFinished {#ontestfinished}
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 
-```ts
+```ts {1,5}
 import { onTestFinished, test } from 'vitest'
 
 test('performs a query', () => {
@@ -953,12 +977,12 @@ test('performs a query', () => {
 ::: warning
 If you are running tests concurrently, you should always use `onTestFinished` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
 
-```ts
+```ts {3,5}
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFinished }) => {
   const db = connectDb()
-  t.onTestFinished(() => db.close())
+  onTestFinished(() => db.close())
   db.query('SELECT * FROM users')
 })
 ```
@@ -989,11 +1013,15 @@ test('performs an organization query', async () => {
 })
 ```
 
+::: tip
+This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+:::
+
 ### onTestFailed
 
 This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
 
-```ts
+```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
@@ -1008,10 +1036,10 @@ test('performs a query', () => {
 ::: warning
 If you are running tests concurrently, you should always use `onTestFailed` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
 
-```ts
+```ts {3,5-7}
 import { test } from 'vitest'
 
-test.concurrent('performs a query', (t) => {
+test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
   onTestFailed((result) => {
     console.log(result.errors)

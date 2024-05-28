@@ -4,7 +4,7 @@ import type { MockInstance } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, getObjectSubset, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
@@ -161,16 +161,30 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toMatchObject', function (expected) {
     const actual = this._obj
-    return this.assert(
-      jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality]),
-      'expected #{this} to match object #{exp}',
-      'expected #{this} to not match object #{exp}',
-      expected,
-      actual,
-    )
+    const pass = jestEquals(actual, expected, [...customTesters, iterableEquality, subsetEquality])
+    const isNot = utils.flag(this, 'negate') as boolean
+    const { subset: actualSubset, stripped } = getObjectSubset(actual, expected)
+    if ((pass && isNot) || (!pass && !isNot)) {
+      const msg = utils.getMessage(
+        this,
+        [
+          pass,
+          'expected #{this} to match object #{exp}',
+          'expected #{this} to not match object #{exp}',
+          expected,
+          actualSubset,
+          false,
+        ],
+      )
+      const message = stripped === 0 ? msg : `${msg}\n(${stripped} matching ${stripped === 1 ? 'property' : 'properties'} omitted from actual)`
+      throw new AssertionError(message, { showDiff: true, expected, actual: actualSubset })
+    }
   })
   def('toMatch', function (expected: string | RegExp) {
     const actual = this._obj as string
+    if (typeof actual !== 'string')
+      throw new TypeError(`.toMatch() expects to receive a string, but got ${typeof actual}`)
+
     return this.assert(
       typeof expected === 'string'
         ? actual.includes(expected)
@@ -521,13 +535,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const nthCall = spy.mock.calls[times - 1]
-
+    const callCount = spy.mock.calls.length
+    const isCalled = times <= callCount
     this.assert(
       jestEquals(nthCall, args, [...customTesters, iterableEquality]),
-      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}${
+         isCalled ? `` : `, but called only ${callCount} times`}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
       nthCall,
+      isCalled,
     )
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {
@@ -705,12 +722,22 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.satisfy(matcher, message)
   })
 
+  // @ts-expect-error @internal
+  def('withContext', function (this: any, context: Record<string, any>) {
+    for (const key in context)
+      utils.flag(this, key, context[key])
+    return this
+  })
+
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     const error = new Error('resolves')
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', error)
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
+
+    if (utils.flag(this, 'poll'))
+      throw new SyntaxError(`expect.poll() is not supported in combination with .resolves`)
 
     if (typeof obj?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
@@ -754,6 +781,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const test: Test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+    if (utils.flag(this, 'poll'))
+      throw new SyntaxError(`expect.poll() is not supported in combination with .rejects`)
 
     if (typeof wrapper?.then !== 'function')
       throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)

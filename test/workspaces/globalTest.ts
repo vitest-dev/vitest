@@ -33,8 +33,8 @@ export async function teardown() {
   try {
     assert.ok(results.success)
     assert.equal(results.numTotalTestSuites, 28)
-    assert.equal(results.numTotalTests, 29)
-    assert.equal(results.numPassedTests, 29)
+    assert.equal(results.numTotalTests, 31)
+    assert.equal(results.numPassedTests, 31)
 
     const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))
 
@@ -42,6 +42,8 @@ export async function teardown() {
   }
   catch (err) {
     console.error(err)
+    // eslint-disable-next-line no-console
+    console.dir(results, { depth: null })
     process.exit(1)
   }
 }

@@ -183,7 +183,7 @@ function getUsedProps(fn: Function) {
 
   const _first = first.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
-    return prop.replace(/\:.*|\=.*/g, '')
+    return prop.replace(/:.*|=.*/g, '')
   })
 
   const last = props.at(-1)

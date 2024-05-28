@@ -18,8 +18,7 @@ describe('truncateThreshold', () => {
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', …(1) ]
       ok 7 - test-each-title.test.ts > { one: 1, two: 2, three: 3 }
       ok 8 - test-each-title.test.ts > { one: 1, two: 2, three: 3, four: 4 }
-      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, …(2) }
-      "
+      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, …(2) }"
     `)
     expect(result.exitCode).toBe(0)
   })
@@ -43,8 +42,7 @@ describe('truncateThreshold', () => {
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', …(1) ]
       ok 7 - test-each-title.test.ts > { one: 1, two: 2, three: 3 }
       ok 8 - test-each-title.test.ts > { one: 1, two: 2, three: 3, four: 4 }
-      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, …(2) }
-      "
+      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, …(2) }"
     `)
     expect(result.exitCode).toBe(0)
   })
@@ -68,8 +66,7 @@ describe('truncateThreshold', () => {
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', 'five' ]
       ok 7 - test-each-title.test.ts > { one: 1, two: 2, three: 3 }
       ok 8 - test-each-title.test.ts > { one: 1, two: 2, three: 3, four: 4 }
-      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, four: 4, five: 5 }
-      "
+      ok 9 - test-each-title.test.ts > { one: 1, two: 2, three: 3, four: 4, five: 5 }"
     `)
     expect(result.exitCode).toBe(0)
   })
@@ -77,5 +74,5 @@ describe('truncateThreshold', () => {
 
 function cleanOutput(output: string) {
   // remove non-deterministic output
-  return output.replaceAll(/\s*# time=.*/g, '')
+  return output.replaceAll(/\s*# time=.*/g, '').trim()
 }

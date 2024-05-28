@@ -19,7 +19,6 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/index.ts',
   'cli': 'src/node/cli.ts',
-  'cli-wrapper': 'src/node/cli/cli-wrapper.ts',
   'node': 'src/node.ts',
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',
@@ -41,6 +40,8 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
+
+  'snapshot': 'src/snapshot.ts',
 }
 
 const dtsEntries = {
@@ -56,6 +57,7 @@ const dtsEntries = {
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   workers: 'src/workers.ts',
+  snapshot: 'src/snapshot.ts',
 }
 
 const external = [
@@ -65,6 +67,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:stream',
   'node:vm',
   'inspector',
   'vite-node/source-map',
@@ -109,7 +112,7 @@ export default ({ watch }) => defineConfig([
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
-              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
+              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w-]+$/))),
           )
           if (parts.length)
             return `chunks/${parts.slice(-2).join('-')}.[hash].js`
@@ -228,7 +231,7 @@ function licensePlugin() {
                 += `\n${
                   licenseText
                     .trim()
-                    .replace(/(\r\n|\r)/gm, '\n')
+                    .replace(/(\r\n|\r)/g, '\n')
                     .split('\n')
                     .map(line => line ? `> ${line}` : '>')
                     .join('\n')

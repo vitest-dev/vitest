@@ -1,4 +1,5 @@
 import limit from 'p-limit'
+import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
@@ -33,6 +34,19 @@ function getSuiteHooks(suite: Suite, name: keyof SuiteHooks, sequence: SequenceH
   return hooks
 }
 
+async function callTaskHooks(task: Task, hooks: ((result: TaskResult) => Awaitable<void>)[], sequence: SequenceHooks) {
+  if (sequence === 'stack')
+    hooks = hooks.slice().reverse()
+
+  if (sequence === 'parallel') {
+    await Promise.all(hooks.map(fn => fn(task.result!)))
+  }
+  else {
+    for (const fn of hooks)
+      await fn(task.result!)
+  }
+}
+
 export async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
@@ -43,9 +57,14 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   const sequence = runner.config.sequence.hooks
 
   const callbacks: HookCleanupCallback[] = []
-  if (name === 'beforeEach' && suite.suite) {
+  // stop at file level
+  const parentSuite: Suite | null = 'filepath' in suite
+    ? null
+    : (suite.suite || suite.file)
+
+  if (name === 'beforeEach' && parentSuite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
+      ...await callSuiteHook(parentSuite, currentTask, name, runner, args),
     )
   }
 
@@ -63,9 +82,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
   updateSuiteHookState(currentTask, name, 'pass', runner)
 
-  if (name === 'afterEach' && suite.suite) {
+  if (name === 'afterEach' && parentSuite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
+      ...await callSuiteHook(parentSuite, currentTask, name, runner, args),
     )
   }
 
@@ -136,6 +155,8 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
   setCurrentTest(test)
 
+  const suite = test.suite || test.file
+
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = test.retry ?? 0
@@ -146,7 +167,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
         test.result.repeatCount = repeatCount
 
-        beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
+        beforeEachCleanups = await callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite])
 
         if (runner.runTask) {
           await runner.runTask(test)
@@ -188,7 +209,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
       }
 
       try {
-        await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
+        await callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite])
         await callCleanupHooks(beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
@@ -211,7 +232,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
   }
 
   try {
-    await Promise.all(test.onFinished?.map(fn => fn(test.result!)) || [])
+    await callTaskHooks(test, test.onFinished || [], 'stack')
   }
   catch (e) {
     failTask(test.result, e, runner.config.diffOptions)
@@ -219,7 +240,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
 
   if (test.result.state === 'fail') {
     try {
-      await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+      await callTaskHooks(test, test.onFailed || [], runner.config.sequence.hooks)
     }
     catch (e) {
       failTask(test.result, e, runner.config.diffOptions)
@@ -311,8 +332,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       else {
         for (let tasksGroup of partitionSuiteChildren(suite)) {
           if (tasksGroup[0].concurrent === true) {
-            const mutex = limit(runner.config.maxConcurrency)
-            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+            await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
           }
           else {
             const { sequence } = runner.config
@@ -320,7 +340,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
               // run describe block independently from tests
               const suites = tasksGroup.filter(group => group.type === 'suite')
               const tests = tasksGroup.filter(group => group.type === 'test')
-              const groups = shuffle([suites, tests], sequence.seed)
+              const groups = shuffle<Task[]>([suites, tests], sequence.seed)
               tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
             }
             for (const c of tasksGroup)
@@ -365,15 +385,19 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
 }
 
+let limitMaxConcurrency: ReturnType<typeof limit>
+
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   if (c.type === 'test' || c.type === 'custom')
-    return runTest(c, runner)
+    return limitMaxConcurrency(() => runTest(c, runner))
 
   else if (c.type === 'suite')
     return runSuite(c, runner)
 }
 
 export async function runFiles(files: File[], runner: VitestRunner) {
+  limitMaxConcurrency ??= limit(runner.config.maxConcurrency)
+
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {
       if (!file.result?.errors?.length) {

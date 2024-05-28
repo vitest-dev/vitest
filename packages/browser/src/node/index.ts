@@ -1,16 +1,16 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { basename, resolve } from 'pathe'
+import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { Plugin } from 'vite'
+import type { ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
-import { coverageConfigDefaults } from 'vitest/config'
+import type { BrowserScript, WorkspaceProject } from 'vitest/node'
+import { type Plugin, coverageConfigDefaults } from 'vitest/config'
+import { slash } from '@vitest/utils'
 import { injectVitestModule } from './esmInjector'
+import BrowserContext from './plugins/context'
 
-function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/{\s*(\w+)\s*}/g, (_, key) => values[key] ?? '')
-}
+export type { BrowserCommand } from 'vitest/node'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -41,6 +41,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        let indexScripts: string | undefined
+        let testerScripts: string | undefined
         server.middlewares.use(async (req, res, next) => {
           if (!req.url)
             return next()
@@ -63,10 +65,17 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           })
 
           if (url.pathname === base) {
+            if (!indexScripts)
+              indexScripts = await formatScripts(project.config.browser.indexScripts, server)
+
             const html = replacer(await runnerHtml, {
               __VITEST_FAVICON__: favicon,
               __VITEST_TITLE__: 'Vitest Browser Runner',
+              __VITEST_SCRIPTS__: indexScripts,
               __VITEST_INJECTOR__: injector,
+              __VITEST_UI__: project.config.browser.ui
+                ? '<iframe id="vitest-ui" src="/__vitest__/"></iframe>'
+                : '',
             })
             res.write(html, 'utf-8')
             res.end()
@@ -77,9 +86,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
 
+          if (!testerScripts)
+            testerScripts = await formatScripts(project.config.browser.testerScripts, server)
+
           const html = replacer(await testerHtml, {
             __VITEST_FAVICON__: favicon,
             __VITEST_TITLE__: 'Vitest Browser Tester',
+            __VITEST_SCRIPTS__: testerScripts,
             __VITEST_INJECTOR__: injector,
             __VITEST_APPEND__:
             // TODO: have only a single global variable to not pollute the global scope
@@ -180,6 +193,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
         return useId
       },
     },
+    BrowserContext(project),
     {
       name: 'vitest:browser:esm-injector',
       enforce: 'post',
@@ -232,4 +246,23 @@ function wrapConfig(config: ResolvedConfig): ResolvedConfig {
         ? config.testNamePattern.toString() as any as RegExp
         : undefined,
   }
+}
+
+function replacer(code: string, values: Record<string, string>) {
+  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? '')
+}
+
+async function formatScripts(scripts: BrowserScript[] | undefined, server: ViteDevServer) {
+  if (!scripts?.length)
+    return ''
+  const promises = scripts.map(async ({ content, src, async, id, type = 'module' }, index) => {
+    const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
+    const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
+    await server.moduleGraph.ensureEntryFromUrl(transformId)
+    const contentProcessed = content && type === 'module'
+      ? (await server.pluginContainer.transform(content, transformId)).code
+      : content
+    return `<script type="${type}"${async ? ' async' : ''}${srcLink ? ` src="${slash(`/@fs/${srcLink}`)}"` : ''}>${contentProcessed || ''}</script>`
+  })
+  return (await Promise.all(promises)).join('\n')
 }

@@ -1,4 +1,4 @@
-import { util } from 'chai'
+import { use, util } from 'chai'
 import type {
   ChaiPlugin,
   ExpectStatic,
@@ -40,6 +40,8 @@ function getMatcherState(assertion: Chai.AssertionStatic & Chai.Assertion, expec
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
+    soft: util.flag(assertion, 'soft') as boolean | undefined,
+    poll: util.flag(assertion, 'poll') as boolean | undefined,
   }
 
   return {
@@ -55,8 +57,8 @@ class JestExtendError extends Error {
   }
 }
 
-function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiPlugin {
-  return (c, utils) => {
+function JestExtendPlugin(c: Chai.ChaiStatic, expect: ExpectStatic, matchers: MatchersObject): ChaiPlugin {
+  return (_, utils) => {
     Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
         const { state, isNot, obj } = getMatcherState(this, expect)
@@ -139,6 +141,6 @@ function JestExtendPlugin(expect: ExpectStatic, matchers: MatchersObject): ChaiP
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'extend', (expect: ExpectStatic, expects: MatchersObject) => {
-    chai.use(JestExtendPlugin(expect, expects))
+    use(JestExtendPlugin(chai, expect, expects))
   })
 }

@@ -56,7 +56,9 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
     end: ast.end,
     projectName: ctx.getName(),
     meta: { typecheck: true },
+    file: null!,
   }
+  file.file = file
   const definitions: LocalCallDefinition[] = []
   const getName = (callee: any): string | null => {
     if (!callee)
@@ -119,7 +121,6 @@ export async function collectTests(ctx: WorkspaceProject, filepath: string): Pro
         name: definition.name,
         end: definition.end,
         start: definition.start,
-        projectName: ctx.getName(),
         meta: {
           typecheck: true,
         },

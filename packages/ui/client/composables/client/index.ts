@@ -3,6 +3,7 @@ import type { WebSocketStatus } from '@vueuse/core'
 import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
+import { createFileTask } from '@vitest/runner/utils'
 import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
@@ -40,9 +41,13 @@ export const client = (function createVitestClient() {
   }
 })()
 
+function sort(a: File, b: File) {
+  return a.name.localeCompare(b.name)
+}
+
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
-export const files = computed(() => client.state.getFiles())
+export const files = computed(() => client.state.getFiles().sort(sort))
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
@@ -84,7 +89,16 @@ watch(
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
       ])
-      client.state.collectFiles(files)
+      if (_config.standalone) {
+        const filenames = await client.rpc.getTestFiles()
+        const files = filenames.map<File>(([{ name, root }, filepath]) => {
+          return /* #__PURE__ */ createFileTask(filepath, root, name)
+        })
+        client.state.collectFiles(files)
+      }
+      else {
+        client.state.collectFiles(files)
+      }
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })

@@ -13,8 +13,8 @@ export interface StackTraceParserOptions {
   frameFilter?: (error: Error, frame: ParsedStack) => boolean | void
 }
 
-const CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m
-const SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code])?$/
+const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
+const SAFARI_NATIVE_CODE_REGEXP = /^(?:eval@)?(?:\[native code\])?$/
 
 const stackIgnorePatterns = [
   'node:internal',
@@ -64,7 +64,8 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   if (!line.includes('@') && !line.includes(':'))
     return null
 
-  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(?:@)/
+  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
+  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
   const matches = line.match(functionNameRegex)
   const functionName = matches && matches[1] ? matches[1] : undefined
   const [url, lineNumber, columnNumber] = extractLocation(line.replace(functionNameRegex, ''))

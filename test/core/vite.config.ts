@@ -36,6 +36,7 @@ export default defineConfig({
     '__NULL__': null,
     '__ZERO__': 0,
     '__FALSE__': false,
+    'import.meta.vitest': false,
   },
   resolve: {
     alias: [
@@ -48,10 +49,17 @@ export default defineConfig({
     port: 3022,
   },
   test: {
+    reporters: ['dot'],
+    api: {
+      port: 3023,
+    },
     name: 'core',
+    includeSource: [
+      'src/in-source/*.ts',
+    ],
     exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
-    testTimeout: 2000,
+    testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
       './test/setup.ts',
     ],
@@ -59,6 +67,27 @@ export default defineConfig({
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'html'],
+    },
+    environmentMatchGlobs: [
+      ['**/*.dom.test.ts', 'happy-dom'],
+      ['test/env-glob-dom/**', 'jsdom'],
+    ],
+    poolMatchGlobs: [
+      ['**/test/*.child_process.test.ts', 'forks'],
+      ['**/test/*.threads.test.ts', 'threads'],
+    ],
+    environmentOptions: {
+      custom: {
+        option: 'config-option',
+      },
+    },
+    poolOptions: {
+      threads: {
+        execArgv: ['--experimental-wasm-modules'],
+      },
+      forks: {
+        execArgv: ['--experimental-wasm-modules'],
+      },
     },
     env: {
       CUSTOM_ENV: 'foo',
@@ -71,12 +100,20 @@ export default defineConfig({
     sequence: {
       seed: 101,
     },
+    allowOnly: true,
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
     server: {
       deps: {
-        external: ['tinyspy', /src\/external/, /esm\/esm/],
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+        ],
         inline: ['inline-lib'],
       },
     },
@@ -88,5 +125,11 @@ export default defineConfig({
         customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
       },
     ],
+    onConsoleLog(log) {
+      if (log.includes('Failed to load url') && log.includes('web-worker'))
+        return false
+      if (log.includes('Importing WebAssembly '))
+        return false
+    },
   },
 })

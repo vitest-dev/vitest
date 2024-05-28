@@ -1,11 +1,13 @@
 import { test } from 'vitest'
 import { resolve } from 'pathe'
-import { editFile, runVitestCli } from '../../test-utils'
-
-const cliArgs = ['--root', 'fixtures', '--watch', '--changed']
+import { editFile, runVitest } from '../../test-utils'
 
 test('when nothing is changed, run nothing but keep watching', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await runVitest({
+    root: 'fixtures',
+    watch: true,
+    changed: true,
+  })
 
   await vitest.waitForStdout('No affected test files found')
   await vitest.waitForStdout('Waiting for file changes...')

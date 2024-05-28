@@ -78,7 +78,7 @@ describe('waitFor', () => {
     }
     catch (error) {
       expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
-      expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*\)?/)
+      expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*/)
     }
   })
 

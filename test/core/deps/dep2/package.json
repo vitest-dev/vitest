@@ -1,0 +1,8 @@
+{
+  "name": "@vitest/test-dep2",
+  "type": "module",
+  "exports": "./index.js",
+  "dependencies": {
+    "@vitest/test-dep1": "file:../dep1"
+  }
+}

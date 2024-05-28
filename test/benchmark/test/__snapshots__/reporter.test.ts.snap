@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`summary 1`] = `
+"
+
+  good - summary.bench.ts > suite-a
+    (?) faster than bad
+
+  good - summary.bench.ts > suite-b
+
+  good - summary.bench.ts > suite-b > suite-b-nested
+
+"
+`;

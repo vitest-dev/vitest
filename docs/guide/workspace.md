@@ -51,7 +51,7 @@ If you are referencing filenames with glob pattern, make sure your config file s
 You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
 
 :::code-group
-```ts [vitest.workspace.ts]
+```ts [vitest.workspace.ts] twoslash
 import { defineWorkspace } from 'vitest/config'
 
 // defineWorkspace provides a nice type hinting DX
@@ -95,7 +95,7 @@ If you don't rely on inline configs, you can just create a small json file in yo
 Workspace projects don't support all configuration properties. For better type safety, use `defineProject` instead of `defineConfig` method inside project configuration files:
 
 :::code-group
-```ts [packages/a/vitest.config.ts]
+```ts [packages/a/vitest.config.ts] twoslash
 import { defineProject } from 'vitest/config'
 
 export default defineProject({

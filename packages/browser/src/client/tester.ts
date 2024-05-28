@@ -92,7 +92,7 @@ async function prepareTestEnvironment(files: string[]) {
     rpc,
     durations: {
       environment: 0,
-      prepare: 0,
+      prepare: performance.now(),
     },
     providedContext,
   }
@@ -168,6 +168,8 @@ async function runTests(files: string[]) {
   debug('runner resolved successfully')
 
   const { config, runner, state, setupCommonEnv, startTests } = preparedData
+
+  state.durations.prepare = performance.now() - state.durations.prepare
 
   try {
     await setupCommonEnv(config)

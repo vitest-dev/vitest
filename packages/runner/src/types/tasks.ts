@@ -14,7 +14,6 @@ export interface TaskBase {
   concurrent?: boolean
   shuffle?: boolean
   suite?: Suite
-  file?: File
   result?: TaskResult
   retry?: number
   repeats?: number
@@ -25,7 +24,7 @@ export interface TaskBase {
 }
 
 export interface TaskPopulated extends TaskBase {
-  suite: Suite
+  file: File
   pending?: boolean
   result?: TaskResult
   fails?: boolean
@@ -54,14 +53,14 @@ export interface TaskResult {
 export type TaskResultPack = [id: string, result: TaskResult | undefined, meta: TaskMeta]
 
 export interface Suite extends TaskBase {
+  file: File
   type: 'suite'
   tasks: Task[]
-  filepath?: string
-  projectName: string
 }
 
 export interface File extends Suite {
   filepath: string
+  projectName: string
   collectDuration?: number
   setupDuration?: number
 }
@@ -181,7 +180,7 @@ export interface TestOptions {
    */
   repeats?: number
   /**
-   * Whether tests run concurrently.
+   * Whether suites and tests run concurrently.
    * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
    */
   concurrent?: boolean
@@ -251,9 +250,9 @@ interface SuiteCollectorCallable<ExtraContext = {}> {
   /**
    * @deprecated Use options as the second argument instead
    */
-  (name: string | Function, fn: SuiteFactory<ExtraContext>, options: TestOptions): SuiteCollector<ExtraContext>
-  (name: string | Function, fn?: SuiteFactory<ExtraContext>, options?: number | TestOptions): SuiteCollector<ExtraContext>
-  (name: string | Function, options: TestOptions, fn?: SuiteFactory<ExtraContext>): SuiteCollector<ExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, fn: SuiteFactory<OverrideExtraContext>, options: TestOptions): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, fn?: SuiteFactory<OverrideExtraContext>, options?: number | TestOptions): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(name: string | Function, options: TestOptions, fn?: SuiteFactory<OverrideExtraContext>): SuiteCollector<OverrideExtraContext>
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
@@ -301,12 +300,12 @@ export interface SuiteCollector<ExtraContext = {}> {
   test: TestAPI<ExtraContext>
   tasks: (Suite | Custom<ExtraContext> | Test<ExtraContext> | SuiteCollector<ExtraContext>)[]
   task: (name: string, options?: TaskCustomOptions) => Custom<ExtraContext>
-  collect: (file?: File) => Promise<Suite>
+  collect: (file: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }
 
-export type SuiteFactory<ExtraContext = {}> = (test: (name: string | Function, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (test: TestAPI<ExtraContext>) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]

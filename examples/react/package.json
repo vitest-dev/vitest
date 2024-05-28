@@ -8,16 +8,15 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "react": "^17.0.2"
+    "react": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^17.0.45",
-    "@types/react-test-renderer": "^17.0.2",
-    "@vitejs/plugin-react": "latest",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^13.2.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.79",
     "@vitest/ui": "latest",
-    "happy-dom": "latest",
-    "jsdom": "latest",
-    "react-test-renderer": "17.0.2",
+    "jsdom": "^24.0.0",
     "vite": "latest",
     "vitest": "latest"
   },

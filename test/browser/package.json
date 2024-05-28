@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
-    "test:webdriverio": "PROVIDER=webdriverio node --test --test-concurrency=1 specs/",
-    "test:playwright": "PROVIDER=playwright node --test --test-concurrency=1 specs/",
-    "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari node --test --test-concurrency=1 specs/",
+    "test:unit": "vitest --no-watch --config=vitest.config.unit.mts",
+    "test:webdriverio": "PROVIDER=webdriverio pnpm run test:unit",
+    "test:playwright": "PROVIDER=playwright pnpm run test:unit",
+    "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
   },
@@ -14,6 +15,7 @@
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitest/browser": "workspace:*",
     "@vitest/cjs-lib": "link:./cjs-lib",
+    "@vitest/injected-lib": "link:./injected-lib",
     "execa": "^7.1.1",
     "playwright": "^1.41.0",
     "url": "^0.11.3",

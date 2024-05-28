@@ -1,17 +1,19 @@
 import { promises as fs } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import { dirname, join, relative, resolve, toNamespacedPath } from 'pathe'
+import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from 'pathe'
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge } from '../utils'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { deepMerge, nanoid } from '../utils/base'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -78,6 +80,9 @@ export class WorkspaceProject {
 
   testFilesList: string[] | null = null
 
+  public readonly id = nanoid()
+  public readonly tmpDir = join(tmpdir(), this.id)
+
   private _globalSetups: GlobalSetupFile[] | undefined
   private _provided: ProvidedContext = {} as any
 
@@ -95,7 +100,7 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = (key: string, value: unknown) => {
+  provide = <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => {
     try {
       structuredClone(value)
     }
@@ -136,7 +141,7 @@ export class WorkspaceProject {
     }
     catch (e) {
       this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-      await this.logger.printError(e)
+      this.logger.printError(e)
       process.exit(1)
     }
   }
@@ -150,7 +155,7 @@ export class WorkspaceProject {
       }
       catch (error) {
         this.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
-        await this.logger.printError(error)
+        this.logger.printError(error)
         process.exitCode = 1
       }
     }
@@ -257,7 +262,7 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
+  filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
@@ -265,6 +270,10 @@ export class WorkspaceProject {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
+          // if filter is a full file path, we should include it if it's in the same folder
+          if (isAbsolute(f) && t.startsWith(f))
+            return true
+
           const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return testFile.includes(f.toLocaleLowerCase()) || testFile.includes(relativePath.toLocaleLowerCase())
         })
@@ -304,6 +313,7 @@ export class WorkspaceProject {
         coverage: this.ctx.config.coverage,
       },
       server.config,
+      this.ctx.logger,
     )
 
     this.server = server
@@ -381,8 +391,17 @@ export class WorkspaceProject {
       },
       inspect: this.ctx.config.inspect,
       inspectBrk: this.ctx.config.inspectBrk,
+      inspector: this.ctx.config.inspector,
       alias: [],
       includeTaskLocation: this.config.includeTaskLocation ?? this.ctx.config.includeTaskLocation,
+      env: {
+        ...this.server?.config.env,
+        ...this.config.env,
+      },
+      browser: {
+        ...this.ctx.config.browser,
+        commands: {},
+      },
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 
@@ -392,9 +411,17 @@ export class WorkspaceProject {
         this.server.close(),
         this.typechecker?.stop(),
         this.browser?.close(),
+        this.clearTmpDir(),
       ].filter(Boolean)).then(() => this._provided = {} as any)
     }
     return this.closingPromise
+  }
+
+  private async clearTmpDir() {
+    try {
+      await rm(this.tmpDir, { force: true, recursive: true })
+    }
+    catch {}
   }
 
   async initBrowserProvider() {

@@ -10,7 +10,7 @@ Inspired by [Playwright Fixtures](https://playwright.dev/docs/test-fixtures), Vi
 
 The first argument for each test callback is a test context.
 
-```ts
+```ts twoslash
 import { it } from 'vitest'
 
 it('should work', (ctx) => {
@@ -29,7 +29,7 @@ A readonly object containing metadata about the test.
 
 The `expect` API bound to the current test:
 
-```ts
+```ts twoslash
 import { it } from 'vitest'
 
 it('math is easy', ({ expect }) => {
@@ -39,7 +39,7 @@ it('math is easy', ({ expect }) => {
 
 This API is useful for running snapshot tests concurrently because global expect cannot track them:
 
-```ts
+```ts twoslash
 import { it } from 'vitest'
 
 it.concurrent('math is easy', ({ expect }) => {
@@ -69,10 +69,6 @@ it('math is hard', ({ skip }) => {
 Vitest provides two different ways to help you extend the test context.
 
 ### `test.extend`
-
-::: warning
-This API is available since Vitest 0.32.3.
-:::
 
 Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you can use this method to define your own `test` API with custom fixtures and reuse it anywhere.
 
@@ -162,10 +158,6 @@ When using `test.extend()` with fixtures, you should always use the object destr
 :::
 
 #### Automatic fixture
-
-::: warning
-This feature is available since Vitest 1.3.0.
-:::
 
 Vitest also supports the tuple syntax for fixtures, allowing you to pass options for each fixture. For example, you can use it to explicitly initialize a fixture, even if it's not being used in tests.
 

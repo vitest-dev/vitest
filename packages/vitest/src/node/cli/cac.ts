@@ -1,16 +1,14 @@
 import { normalize } from 'pathe'
-import cac, { type CAC } from 'cac'
+import cac, { type CAC, type Command } from 'cac'
 import c from 'picocolors'
-import { version } from '../../../package.json'
-import { toArray } from '../../utils'
+import { version } from '../../../package.json' with { type: 'json' }
+import { toArray } from '../../utils/base'
 import type { Vitest, VitestRunMode } from '../../types'
-import { divider } from '../reporters/renderers/utils'
 import type { CliOptions } from './cli-api'
-import { startVitest } from './cli-api'
-import type { CLIOption } from './cli-config'
-import { cliOptionsConfig } from './cli-config'
+import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
+import { benchCliOptionsConfig, cliOptionsConfig } from './cli-config'
 
-function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
+function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
   let command = option.shorthand ? `-${option.shorthand}, --${commandName}` : `--${commandName}`
   if ('argument' in option)
@@ -35,7 +33,7 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
   const hasSubcommands = 'subcommands' in option && option.subcommands
 
   if (option.description) {
-    let description = option.description
+    let description = option.description.replace(/\[.*\]\((.*)\)/, '$1').replace(/`/g, '')
 
     if (hasSubcommands)
       description += `. Use '--help --${commandName}' for more info.`
@@ -58,17 +56,19 @@ interface CLIOptions {
   allowUnknownOptions?: boolean
 }
 
-export function createCLI(options: CLIOptions = {}) {
-  const cli = cac('vitest')
-
-  cli
-    .version(version)
-
-  for (const optionName in cliOptionsConfig) {
-    const option = (cliOptionsConfig as any)[optionName] as CLIOption<any> | null
+function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
+  for (const [optionName, option] of Object.entries(options)) {
     if (option)
       addCommand(cli, optionName, option)
   }
+}
+
+export function createCLI(options: CLIOptions = {}) {
+  const cli = cac('vitest')
+
+  cli.version(version)
+
+  addCliOptions(cli, cliOptionsConfig)
 
   cli.help((info) => {
     const helpSection = info.find(current => current.title?.startsWith('For more info, run any command'))
@@ -100,7 +100,7 @@ export function createCLI(options: CLIOptions = {}) {
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
 
-    const banner = info.find(current => /^vitest\/[0-9]+\.[0-9]+\.[0-9]+$/.test(current.body))
+    const banner = info.find(current => /^vitest\/\d+\.\d+\.\d+$/.test(current.body))
     function addBannerWarning(warning: string) {
       if (typeof banner?.body === 'string') {
         if (banner?.body.includes(warning))
@@ -160,16 +160,12 @@ export function createCLI(options: CLIOptions = {}) {
     .command('dev [...filters]', undefined, options)
     .action(watch)
 
-  cli
-    .command('bench [...filters]', undefined, options)
-    .action(benchmark)
-
-  // TODO: remove in Vitest 2.0
-  cli
-    .command('typecheck [...filters]')
-    .action(() => {
-      throw new Error(`Running typecheck via "typecheck" command is removed. Please use "--typecheck" to run your regular tests alongside typechecking, or "--typecheck.only" to run only typecheck tests.`)
-    })
+  addCliOptions(
+    cli
+      .command('bench [...filters]', undefined, options)
+      .action(benchmark),
+    benchCliOptionsConfig,
+  )
 
   cli
     .command('[...filters]', undefined, options)
@@ -242,12 +238,14 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
   catch {}
 
   try {
+    const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
     if (!ctx?.shouldKeepServer())
       await ctx?.exit()
     return ctx
   }
   catch (e) {
+    const { divider } = await import('../reporters/renderers/utils')
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
     console.error(e)
     console.error('\n\n')

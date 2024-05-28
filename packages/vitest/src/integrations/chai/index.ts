@@ -7,13 +7,14 @@ import { getCurrentTest } from '@vitest/runner'
 import { ASYMMETRIC_MATCHERS_OBJECT, GLOBAL_EXPECT, addCustomEqualityTesters, getState, setState } from '@vitest/expect'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getFullName } from '../../utils/tasks'
-import { getCurrentEnvironment } from '../../utils/global'
+import { getTestName } from '../../utils/tasks'
+import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
+import { createExpectPoll } from './poll'
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1, soft: false }, expect)
+    setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test)
@@ -31,6 +32,7 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
+  const testPath = getTestFile(test)
   setState<MatcherState>({
     // this should also add "snapshotState" that is added conditionally
     ...globalState,
@@ -40,8 +42,8 @@ export function createExpect(test?: TaskPopulated) {
     expectedAssertionsNumber: null,
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
-    testPath: test ? test.suite.file?.filepath : globalState.testPath,
-    currentTestName: test ? getFullName(test as Test) : globalState.currentTestName,
+    testPath,
+    currentTestName: test ? getTestName(test as Test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped
@@ -50,12 +52,11 @@ export function createExpect(test?: TaskPopulated) {
     addCustomEqualityTesters(customTesters)
 
   expect.soft = (...args) => {
-    const assert = expect(...args)
-    expect.setState({
-      soft: true,
-    })
-    return assert
+    // @ts-expect-error private soft access
+    return expect(...args).withContext({ soft: true }) as Assertion
   }
+
+  expect.poll = createExpectPoll(expect)
 
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
@@ -87,6 +88,13 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
+}
+
+function getTestFile(test?: TaskPopulated) {
+  if (test)
+    return test.file.filepath
+  const state = getWorkerState()
+  return state.filepath
 }
 
 const globalExpect = createExpect()

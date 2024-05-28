@@ -391,3 +391,48 @@ describe('Error equality', () => {
     }
   })
 })
+
+describe('iterator', () => {
+  test('returns true when given iterator within equal objects', () => {
+    const a = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: [],
+    }
+    const b = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: [],
+    }
+
+    expect(a).toStrictEqual(b)
+  })
+
+  test('returns false when given iterator within inequal objects', () => {
+    const a = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: [1],
+    }
+    const b = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: [],
+    }
+
+    expect(a).not.toStrictEqual(b)
+  })
+
+  test('returns false when given iterator within inequal nested objects', () => {
+    const a = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: {
+        b: [1],
+      },
+    }
+    const b = {
+      [Symbol.iterator]: () => ({ next: () => ({ done: true }) }),
+      a: {
+        b: [],
+      },
+    }
+
+    expect(a).not.toStrictEqual(b)
+  })
+})
