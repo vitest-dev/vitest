@@ -40,6 +40,7 @@ export interface WebSocketBrowserHandlers {
   snapshotSaved: (snapshot: SnapshotResult) => void
   getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
+  resolveId: (id: string, importer?: string) => Promise<string | null>
   triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
   queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<string>
   queueUnmock: (id: string, importer: string) => Promise<string>

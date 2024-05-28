@@ -100,6 +100,12 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         onCancel(reason) {
           ctx.cancelCurrentRun(reason)
         },
+        async resolveId(id, importer) {
+          const result = await project.server.pluginContainer.resolveId(id, importer, {
+            ssr: false,
+          })
+          return result?.id ?? null
+        },
         debug(...args) {
           ctx.logger.console.debug(...args)
         },

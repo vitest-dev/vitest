@@ -13,3 +13,11 @@ test('adds', () => {
   child.mockReturnValue(42)
   expect(parent()).toBe(42)
 })
+
+test('actual', async () => {
+  const { child } = await vi.importActual<
+    typeof import('./src/nested_child')
+  >('./src/nested_child')
+
+  expect(child()).toBe(true)
+})

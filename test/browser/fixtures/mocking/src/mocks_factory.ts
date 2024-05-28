@@ -1,3 +1,5 @@
 export function calculator(_action: string, _a: number, _b: number) {
-  return 100
+  return _a + _b
 }
+
+export const mocked = false

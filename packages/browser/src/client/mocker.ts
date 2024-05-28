@@ -1,4 +1,5 @@
 import { getType } from '@vitest/utils'
+import { extname } from 'pathe'
 import { rpc } from './rpc'
 import { getBrowserState } from './utils'
 
@@ -17,12 +18,26 @@ export class VitestBrowserClientMocker {
     this.spyModule = mod
   }
 
-  public importActual() {
-    throwNotImplemented('importActual')
+  public async importActual(id: string, importer: string) {
+    const resolveId = await rpc().resolveId(id, importer)
+    if (resolveId == null)
+      throw new Error(`[vitest] Cannot resolve ${id} imported from ${importer}`)
+    const ext = extname(resolveId)
+    const base = getBrowserState().config.base || '/'
+    const url = new URL(`/@id${base}${resolveId}`, location.href)
+    const query = `_vitest_original&ext.${ext}`
+    const actualUrl = `${url.pathname}${
+      url.search ? `${url.search}&${query}` : `?${query}`
+    }${url.hash}`
+    return getBrowserState().wrapModule(() => import(actualUrl))
   }
 
   public importMock() {
     throwNotImplemented('importMock')
+  }
+
+  public getMockContext() {
+    return { callstack: null }
   }
 
   public get(id: string) {

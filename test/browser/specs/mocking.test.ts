@@ -15,6 +15,7 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
   expect(result.stdout).toContain('not-mocked.test.ts')
   expect(result.stdout).toContain('mocked-nested.test.ts')
   expect(result.stdout).toContain('not-mocked-nested.test.ts')
+  expect(result.stdout).toContain('import-actual-in-mock.test.ts')
   expect(result.exitCode).toBe(0)
 })
 
