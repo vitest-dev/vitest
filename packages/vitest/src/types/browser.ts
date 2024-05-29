@@ -95,13 +95,6 @@ export interface BrowserConfigOptions {
   ui?: boolean
 
   /**
-   * Run test files in parallel. Fallbacks to `test.fileParallelism`.
-   *
-   * @default test.fileParallelism
-   */
-  fileParallelism?: boolean
-
-  /**
    * Scripts injected into the tester iframe.
    */
   testerScripts?: BrowserScript[]
