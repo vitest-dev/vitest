@@ -25,7 +25,13 @@ function getTransformMode(patterns: TransformModePatterns, filename: string): 'w
   return undefined
 }
 
-export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string])[]) {
+export interface GroupedSpec {
+  file: string
+  project: WorkspaceProject
+  environment: ContextTestEnvironment
+}
+
+export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string])[]): Promise<Record<VitestEnvironment, GroupedSpec[]>> {
   const filesWithEnv = await Promise.all(files.map(async ([project, file]) => {
     const code = await fs.readFile(file, 'utf-8')
 

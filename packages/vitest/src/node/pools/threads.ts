@@ -6,6 +6,7 @@ import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { GroupedSpec } from '../../utils/test-helpers'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
@@ -154,14 +155,26 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         const files = Object.values(filesByEnv).flat()
         const results: PromiseSettledResult<void>[] = []
 
-        if (isolated) {
-          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
+        const { isolatedFiles, nonIsolatedFiles } = files.reduce((acc, spec) => {
+          const key = spec.project.config.isolate ? 'isolatedFiles' : 'nonIsolatedFiles'
+          acc[key].push(spec)
+          return acc
+        }, { isolatedFiles: [] as GroupedSpec[], nonIsolatedFiles: [] as GroupedSpec[] })
+
+        if (isolatedFiles.length) {
+          results.push(...await Promise.allSettled(isolatedFiles.map(({ file, environment, project }) =>
             runFiles(project, getConfig(project), [file], environment, invalidates))))
+
+          // Once all tasks are running or finished, recycle worker for isolation.
+          // On-going workers will run in the previous environment.
+          await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
+          await pool.recycleWorkers()
         }
-        else {
+
+        if (nonIsolatedFiles.length) {
           // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
           // Tasks are still running parallel but environments are isolated between tasks.
-          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
+          const grouped = groupBy(nonIsolatedFiles, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
 
           for (const group of Object.values(grouped)) {
             // Push all files to pool's queue
