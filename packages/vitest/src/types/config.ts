@@ -579,7 +579,7 @@ export interface InlineConfig {
   /**
    * Custom environment variables assigned to `process.env` before running tests.
    */
-  env?: Record<string, string>
+  env?: Partial<NodeJS.ProcessEnv>
 
   /**
    * Options for @sinon/fake-timers

@@ -2292,3 +2292,9 @@ This is a low-level option and should be used only for advanced cases where you 
 
 If you just need to configure snapshots feature, use [`snapshotFormat`](#snapshotformat) or [`resolveSnapshotPath`](#resolvesnapshotpath) options.
 :::
+
+### env {#env}
+
+- **Type:** `Partial<NodeJS.ProcessEnv>`
+
+Environment variables available on `process.env` and `import.meta.env` during tests. These variables will not be available in the main process (in `globalSetup`, for example).
