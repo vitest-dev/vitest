@@ -72,9 +72,9 @@ describe('running browser tests', async () => {
   })
 
   test('popup apis should log a warning', () => {
-    expect(stderr).toContain(`Vitest encountered a 'alert("test")'`)
-    expect(stderr).toContain(`Vitest encountered a 'confirm("test")'`)
-    expect(stderr).toContain(`Vitest encountered a 'prompt("test")'`)
+    expect(stderr).toContain('Vitest encountered a `alert("test")`')
+    expect(stderr).toContain('Vitest encountered a `confirm("test")`')
+    expect(stderr).toContain('Vitest encountered a `prompt("test")`')
   })
 
   test('snapshot inaccessible file debuggability', () => {
