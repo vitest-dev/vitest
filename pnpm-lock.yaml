@@ -717,6 +717,9 @@ importers:
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
+      '@iconify-json/carbon':
+        specifier: ^1.1.32
+        version: 1.1.32
       '@iconify-json/logos':
         specifier: ^1.1.42
         version: 1.1.42
