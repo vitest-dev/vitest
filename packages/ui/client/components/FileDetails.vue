@@ -15,7 +15,8 @@ debouncedWatch(
   current,
   async (c, o) => {
     if (c && c.filepath !== o?.filepath) {
-      data.value = await client.rpc.getModuleGraph(c.filepath)
+      const project = c.file.projectName
+      data.value = await client.rpc.getModuleGraph(project, c.filepath)
       graph.value = getModuleGraph(data.value, c.filepath)
     }
   },
