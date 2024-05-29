@@ -350,9 +350,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ui: {
         description: 'Show Vitest UI when running tests',
       },
-      fileParallelism: {
-        description: 'Should all test files run in parallel. Use `--browser.file-parallelism=false` to disable (default: same as `--file-parallelism`)',
-      },
       indexScripts: null,
       testerScripts: null,
       commands: null,

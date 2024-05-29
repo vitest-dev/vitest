@@ -100,8 +100,6 @@ client.ws.addEventListener('open', async () => {
     }
   })
 
-  const fileParallelism = config.browser.fileParallelism ?? config.fileParallelism
-
   if (config.isolate === false) {
     createIframe(
       container,
@@ -109,33 +107,22 @@ client.ws.addEventListener('open', async () => {
     )
   }
   else {
-    // if fileParallelism is enabled, we can create all iframes at once
-    if (fileParallelism) {
-      for (const file of testFiles) {
-        createIframe(
-          container,
-          file,
-        )
-      }
-    }
-    else {
-      // otherwise, we need to wait for each iframe to finish before creating the next one
-      // this is the most stable way to run tests in the browser
-      for (const file of testFiles) {
-        createIframe(
-          container,
-          file,
-        )
-        await new Promise<void>((resolve) => {
-          channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
-            // done and error can only be triggered by the previous iframe
-            if (e.data.type === 'done' || e.data.type === 'error') {
-              channel.removeEventListener('message', handler)
-              resolve()
-            }
-          })
+    // otherwise, we need to wait for each iframe to finish before creating the next one
+    // this is the most stable way to run tests in the browser
+    for (const file of testFiles) {
+      createIframe(
+        container,
+        file,
+      )
+      await new Promise<void>((resolve) => {
+        channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
+          // done and error can only be triggered by the previous iframe
+          if (e.data.type === 'done' || e.data.type === 'error') {
+            channel.removeEventListener('message', handler)
+            resolve()
+          }
         })
-      }
+      })
     }
   }
 })

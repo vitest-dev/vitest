@@ -149,7 +149,6 @@ export function resolveConfig(
     resolved.minWorkers = Number(resolved.minWorkers)
 
   resolved.browser ??= {} as any
-  resolved.browser.fileParallelism ??= resolved.fileParallelism ?? false
 
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'

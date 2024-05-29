@@ -1,10 +1,7 @@
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { runBrowserTests } from './utils'
 
-describe.each([
-  ['non parallel', false],
-  ['parallel', true],
-])('[%s] running browser tests', async (description, fileParallelism) => {
+describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
   let browserResultJson: any
@@ -18,14 +15,10 @@ describe.each([
       browserResultJson,
       passedTests,
       failedTests,
-    } = await runBrowserTests({
-      browser: {
-        fileParallelism,
-      },
-    }))
+    } = await runBrowserTests())
   })
 
-  test(`[${description}] tests are actually running`, () => {
+  test('tests are actually running', () => {
     onTestFailed(() => {
       console.error(stderr)
     })
@@ -38,14 +31,14 @@ describe.each([
     expect(stderr).not.toContain('Unhandled Error')
   })
 
-  test(`[${description}] correctly prints error`, () => {
+  test('correctly prints error', () => {
     expect(stderr).toContain('expected 1 to be 2')
     expect(stderr).toMatch(/- 2\s+\+ 1/)
     expect(stderr).toContain('Expected to be')
     expect(stderr).toContain('But got')
   })
 
-  test(`[${description}] logs are redirected to stdout`, () => {
+  test('logs are redirected to stdout', () => {
     expect(stdout).toContain('stdout | test/logs.test.ts > logging to stdout')
     expect(stdout).toContain('hello from console.log')
     expect(stdout).toContain('hello from console.info')
@@ -65,7 +58,7 @@ describe.each([
     expect(stdout).toMatch(/time: [\d.]+ ms/)
   })
 
-  test(`[${description}] logs are redirected to stderr`, () => {
+  test('logs are redirected to stderr', () => {
     expect(stderr).toContain('stderr | test/logs.test.ts > logging to stderr')
     expect(stderr).toContain('hello from console.error')
     expect(stderr).toContain('hello from console.warn')
@@ -73,18 +66,18 @@ describe.each([
     expect(stderr).toContain('Timer "invalid timeEnd" does not exist')
   })
 
-  test(`[${description}] stack trace points to correct file in every browser`, () => {
-    // dependeing on the browser it references either `.toBe()` or `expect()`
+  test('stack trace points to correct file in every browser', () => {
+    // dependeing on the browser it references either '.toBe()' or 'expect()'
     expect(stderr).toMatch(/test\/failing.test.ts:4:(12|17)/)
   })
 
-  test(`[${description}] popup apis should log a warning`, () => {
-    expect(stderr).toContain('Vitest encountered a `alert("test")`')
-    expect(stderr).toContain('Vitest encountered a `confirm("test")`')
-    expect(stderr).toContain('Vitest encountered a `prompt("test")`')
+  test('popup apis should log a warning', () => {
+    expect(stderr).toContain(`Vitest encountered a 'alert("test")'`)
+    expect(stderr).toContain(`Vitest encountered a 'confirm("test")'`)
+    expect(stderr).toContain(`Vitest encountered a 'prompt("test")'`)
   })
 
-  test(`[${description}] snapshot inaccessible file debuggability`, () => {
+  test('snapshot inaccessible file debuggability', () => {
     expect(stderr).toContain('Access denied to "/inaccesible/path".')
   })
 })

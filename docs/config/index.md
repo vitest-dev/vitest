@@ -1536,20 +1536,6 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
-### browser.fileParallelism {#browser-fileparallelism}
-
-- **Type:** `boolean`
-- **Default:** the same as [`fileParallelism`](#fileparallelism)
-- **CLI:** `--browser.fileParallelism=false`
-
-Create all test iframes at the same time so they are running in parallel.
-
-This makes it impossible to use interactive APIs (like clicking or hovering) because there are several iframes on the screen at the same time, but if your tests don't rely on those APIs, it might be much faster to just run all of them at the same time.
-
-::: tip
-If you disabled isolation via [`browser.isolate=false`](#browser-isolate), your test files will still run one after another because of the nature of the test runner.
-:::
-
 #### browser.api
 
 - **Type:** `number | { port?, strictPort?, host? }`

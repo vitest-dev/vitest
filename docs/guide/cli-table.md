@@ -57,7 +57,6 @@
 | `--browser.providerOptions <options>` | Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information |
 | `--browser.slowHijackESM` | Let Vitest use its own module resolution on the browser to enable APIs such as vi.mock and vi.spyOn. Visit [`browser.slowHijackESM`](https://vitest.dev/config/#browser-slowhijackesm) for more information (default: `false`) |
 | `--browser.isolate` | Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`) |
-| `--browser.fileParallelism` | Should all test files run in parallel. Use `--browser.file-parallelism=false` to disable (default: same as `--file-parallelism`) |
 | `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`) |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`) |
 | `--poolOptions.threads.singleThread` | Run tests inside a single thread (default: `false`) |
