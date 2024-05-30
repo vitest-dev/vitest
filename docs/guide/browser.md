@@ -6,6 +6,56 @@ title: Browser Mode | Guide
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+## Installation
+
+::: code-group
+```bash [npm]
+# webdriverio/playwright should be installed based on the browsers you wish to run
+npm install -D vitest @vitest/browser webdriverio playwright
+```
+```bash [yarn]
+# webdriverio/playwright should be installed based on the browsers you wish to run
+yarn add -D vitest @vitest/browser webdriverio playwright
+```
+```bash [pnpm]
+# webdriverio/playwright should be installed based on the browsers you wish to run
+pnpm add -D vitest @vitest/browser webdriverio playwright
+```
+```bash [bun]
+# webdriverio/playwright should be installed based on the browsers you wish to run
+bun add -D vitest @vitest/browser webdriverio playwright
+```
+:::
+
+## Configuration
+
+To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      name: 'chrome', // browser name is required
+    },
+  }
+})
+```
+
+## Browser Option Types
+
+The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
+
+- `webdriverio` (default) supports these browsers:
+  - `firefox`
+  - `chrome`
+  - `edge`
+  - `safari`
+- `playwright` supports these browsers:
+  - `firefox`
+  - `webkit`
+  - `chromium`
+
 ## Browser Compatibility
 
 Vitest uses [Vite dev server](https://vitejs.dev/guide/#browser-support) to run your tests, so we only support features specified in the [`esbuild.target`](https://vitejs.dev/config/shared-options.html#esbuild) option (`esnext` by default).
@@ -42,35 +92,6 @@ The browser mode feature of Vitest is still in its early stages of development. 
 ### Longer Initialization
 
 Vitest browser requires spinning up the provider and the browser during the initialization process, which can take some time. This can result in longer initialization times compared to other testing patterns.
-
-## Configuration
-
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      enabled: true,
-      name: 'chrome', // browser name is required
-    },
-  }
-})
-```
-
-## Browser Option Types
-
-The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
-
-- `webdriverio` (default) supports these browsers:
-  - `firefox`
-  - `chrome`
-  - `edge`
-  - `safari`
-- `playwright` supports these browsers:
-  - `firefox`
-  - `webkit`
-  - `chromium`
 
 ## Cross-Browser Testing
 
