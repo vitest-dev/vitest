@@ -56,6 +56,7 @@
 | `--browser.provider <name>` | Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"webdriverio"`) |
 | `--browser.providerOptions <options>` | Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information |
 | `--browser.isolate` | Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`) |
+| `--browser.ui` | Show Vitest UI when running tests (default: `!process.env.CI`) |
 | `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`) |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`) |
 | `--poolOptions.threads.singleThread` | Run tests inside a single thread (default: `false`) |

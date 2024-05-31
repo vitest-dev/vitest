@@ -1034,6 +1034,12 @@ This assertion checks if a function has successfully resolved a value at least o
 If the function returned a promise, but it was not resolved yet, this will fail.
 
 ```ts twoslash
+// @filename: db/apples.js
+/** @type {any} */
+const db = {}
+export default db
+// @filename: test.ts
+// ---cut---
 import { expect, test, vi } from 'vitest'
 import db from './db/apples.js'
 
