@@ -179,6 +179,8 @@ export function resolveConfig(
       throw new Error(`You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`)
   }
 
+  resolved.expect ??= {}
+
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {

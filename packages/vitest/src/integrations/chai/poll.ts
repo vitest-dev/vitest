@@ -1,6 +1,7 @@
 import * as chai from 'chai'
 import type { ExpectStatic } from '@vitest/expect'
 import { getSafeTimers } from '@vitest/utils'
+import { getWorkerState } from '../../utils'
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -26,7 +27,13 @@ const unsupported = [
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
-    const { interval = 50, timeout = 1000, message } = options
+    const state = getWorkerState()
+    const defaults = state.config.expect?.poll ?? {}
+    const {
+      interval = defaults.interval ?? 50,
+      timeout = defaults.timeout ?? 1000,
+      message,
+    } = options
     // @ts-expect-error private poll access
     const assertion = expect(null, message).withContext({ poll: true }) as Assertion
     const proxy: any = new Proxy(assertion, {

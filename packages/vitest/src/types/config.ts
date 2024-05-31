@@ -707,6 +707,31 @@ export interface InlineConfig {
   }
 
   /**
+   * Configuration options for expect() matches.
+   */
+  expect?: {
+    /**
+     * Throw an error if tests don't have any expect() assertions.
+     */
+    requireAssertions?: boolean
+    /**
+     * Default options for expect.poll()
+     */
+    poll?: {
+      /**
+       * Timeout in milliseconds
+       * @default 1000
+       */
+      timeout?: number
+      /**
+       * Polling interval in milliseconds
+       * @default 50
+       */
+      interval?: number
+    }
+  }
+
+  /**
    * Modify default Chai config. Vitest uses Chai for `expect` and `assert` matches.
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
    */
@@ -974,6 +999,7 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
+  | 'expect'
 > & {
   sequence?: {
     concurrent?: boolean

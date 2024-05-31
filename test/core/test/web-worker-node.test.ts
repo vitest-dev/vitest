@@ -263,7 +263,7 @@ it('doesn\'t trigger events, if closed', async () => {
   worker.port.close()
   await new Promise((resolve) => {
     worker.port.addEventListener('message', () => {
-      expect.fail('should not trigger message')
+      expect.unreachable('should not trigger message')
     })
     worker.port.postMessage('event')
     setTimeout(resolve, 100)

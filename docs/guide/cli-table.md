@@ -114,6 +114,9 @@
 | `--slowTestThreshold <threshold>` | Threshold in milliseconds for a test to be considered slow (default: `300`) |
 | `--teardownTimeout <timeout>` | Default timeout of a teardown function in milliseconds (default: `10000`) |
 | `--maxConcurrency <number>` | Maximum number of concurrent tests in a suite (default: `5`) |
+| `--expect.requireAssertions` | Require that all tests have at least one assertion |
+| `--expect.poll.interval <interval>` | Poll interval in milliseconds for `expect.poll()` assertions (default: `50`) |
+| `--expect.poll.timeout <timeout>` | Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`) |
 | `--run` | Disable watch mode |
 | `--no-color` | Removes colors from the console output |
 | `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
