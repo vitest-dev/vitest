@@ -77,8 +77,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
             return result
           }
         },
-        async getModuleGraph(id: string): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, id)
+        async getModuleGraph(project: string, id: string): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id)
         },
         updateSnapshot(file?: File) {
           if (!file)

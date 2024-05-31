@@ -28,7 +28,7 @@ interface HTMLReportData {
   paths: string[]
   files: File[]
   config: ResolvedConfig
-  moduleGraph: Record<string, ModuleGraphData>
+  moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
 }
 
@@ -59,7 +59,9 @@ export default class HTMLReporter implements Reporter {
     }
     await Promise.all(
       result.files.map(async (file) => {
-        result.moduleGraph[file.filepath] = await getModuleGraph(this.ctx as any, file.filepath)
+        const projectName = file.projectName || ''
+        result.moduleGraph[projectName] ??= {}
+        result.moduleGraph[projectName][file.filepath] = await getModuleGraph(this.ctx as any, projectName, file.filepath)
       }),
     )
     await this.writeReport(stringify(result))
