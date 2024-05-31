@@ -17,5 +17,6 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
   expect(result.stdout).toContain('import-actual-in-mock.test.ts')
   expect(result.stdout).toContain('import-actual-query.test.ts')
   expect(result.stdout).toContain('import-mock.test.ts')
+  expect(result.stdout).toContain('mocked-do-mock-factory.test.ts')
   expect(result.exitCode).toBe(0)
 })
