@@ -156,7 +156,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         const results: PromiseSettledResult<void>[] = []
 
         const { isolatedFiles, nonIsolatedFiles } = files.reduce((acc, spec) => {
-          const key = spec.project.config.isolate ? 'isolatedFiles' : 'nonIsolatedFiles'
+          const isolatedProject = getConfig(spec.project).poolOptions?.threads?.isolate ?? isolated
+          const key = isolatedProject ? 'isolatedFiles' : 'nonIsolatedFiles'
           acc[key].push(spec)
           return acc
         }, { isolatedFiles: [] as GroupedSpec[], nonIsolatedFiles: [] as GroupedSpec[] })
