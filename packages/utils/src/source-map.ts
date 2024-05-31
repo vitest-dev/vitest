@@ -51,8 +51,9 @@ function extractLocation(urlLike: string) {
     url = urlObj.pathname
   }
   if (url.startsWith('/@fs/')) {
+    const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url
-       = url.slice(typeof process !== 'undefined' && process.platform === 'win32' ? 5 : 4)
+       = url.slice(isWindows ? 5 : 4)
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
