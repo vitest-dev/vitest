@@ -59,7 +59,7 @@ export default class HTMLReporter implements Reporter {
     }
     await Promise.all(
       result.files.map(async (file) => {
-        const projectName = file.projectName
+        const projectName = file.projectName || ''
         result.moduleGraph[projectName] ??= {}
         result.moduleGraph[projectName][file.filepath] = await getModuleGraph(this.ctx as any, projectName, file.filepath)
       }),
