@@ -137,34 +137,21 @@ export class WorkspaceProject {
 
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
-    try {
-      for (const globalSetupFile of this._globalSetups) {
-        const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
-        if (teardown == null || !!globalSetupFile.teardown)
-          continue
-        if (typeof teardown !== 'function')
-          throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
-        globalSetupFile.teardown = teardown
-      }
-    }
-    catch (e) {
-      process.exitCode = 1
-      throw e
+    for (const globalSetupFile of this._globalSetups) {
+      const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
+      if (teardown == null || !!globalSetupFile.teardown)
+        continue
+      if (typeof teardown !== 'function')
+        throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
+      globalSetupFile.teardown = teardown
     }
   }
 
   async teardownGlobalSetup() {
     if (!this._globalSetups)
       return
-    for (const globalSetupFile of [...this._globalSetups].reverse()) {
-      try {
-        await globalSetupFile.teardown?.()
-      }
-      catch (error) {
-        process.exitCode = 1
-        throw error
-      }
-    }
+    for (const globalSetupFile of [...this._globalSetups].reverse())
+      await globalSetupFile.teardown?.()
   }
 
   get logger() {
