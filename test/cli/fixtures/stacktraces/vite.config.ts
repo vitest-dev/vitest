@@ -45,5 +45,8 @@ export default defineConfig({
     pool: 'forks',
     include: ['**/*.{test,spec}.{imba,?(c|m)[jt]s?(x)}'],
     setupFiles: ['./setup.js'],
+    expect: {
+      requireAssertions: true,
+    },
   },
 })
