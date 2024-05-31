@@ -4,6 +4,7 @@ import type { File, Task } from 'vitest'
 import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
+import { hasFailedSnapshot } from '@vitest/ws-client'
 
 defineOptions({ inheritAttrs: false })
 
@@ -125,6 +126,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -141,6 +143,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -156,6 +159,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :key="task.id"
             :task="task"
             :nested="nested"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -172,6 +176,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :key="task.id"
             :task="task"
             :nested="nested"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -186,6 +191,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
           :key="task.id"
           :task="task"
           :nested="nested"
+          :failed-snapshot="hasFailedSnapshot(task)"
           :search="search"
           :class="activeFileId === task.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"

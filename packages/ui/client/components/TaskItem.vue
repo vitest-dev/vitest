@@ -6,11 +6,13 @@ import { activeFileId } from '~/composables/params';
 const props = defineProps<{
   task: Task
   opened: boolean
+  failedSnapshot: boolean
 }>()
 
 const emit = defineEmits<{
   run: []
   preview: []
+  fixSnapshot: [],
 }>()
 
 const duration = computed(() => {
@@ -49,26 +51,27 @@ const duration = computed(() => {
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div v-if="task.type === 'suite'" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
-      <div 
-        v-if="'filepath' in task" 
-        bg="gray-200" 
-        rounded-1 
-        p-0.5
+    <div v-if="task.type === 'suite' && 'filepath' in task" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+      <IconAction 
+        v-if="failedSnapshot"
+        v-tooltip.bottom="'Fix failed snapshot(s)'"
+        title="Fix failed snapshot(s)"
+        icon="i-carbon-result-old"
+        @click.prevent.stop="emit('fixSnapshot')"
+      />
+      <IconAction 
+        v-tooltip.bottom="'Open test details'"
+        title="Open test details"
+        icon="i-carbon-intrusion-prevention"
         @click.prevent.stop="emit('preview')"
-      >
-        <div i-carbon-intrusion-prevention op50></div>
-      </div>
-
-      <div 
-        v-if="'filepath' in task" 
-        bg="gray-200" 
-        rounded-1 
-        p-0.5 
+      />
+      <IconAction
+        v-tooltip.bottom="'Run current test'"
+        title="Run current test"
+        icon="i-carbon-play-filled-alt"
+        text="green-500"
         @click.prevent.stop="emit('run')"
-      >
-        <div i-carbon-play-filled-alt text="green-500" op50></div>
-      </div>
+      />
     </div>
   </div>
 </template>

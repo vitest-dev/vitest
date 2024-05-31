@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Task } from 'vitest'
-import { runFiles } from '~/composables/client';
+import { nextTick } from 'vue'
+import { runFiles, client } from '~/composables/client';
 import { caseInsensitiveMatch } from '~/utils/task'
 import { openedTreeItems } from '~/composables/navigation';
 
@@ -8,6 +9,7 @@ defineOptions({ inheritAttrs: false })
 
 const { task, indent = 0, nested = false, search, onItemClick } = defineProps<{
   task: Task
+  failedSnapshot: boolean
   indent?: number
   nested?: boolean
   search?: string
@@ -31,7 +33,15 @@ const onClick = () => {
 
 const onRun = async () => {
   onItemClick?.(task)
+  if (coverageEnabled.value) {
+    disableCoverage.value = true
+    await nextTick()
+  }
   await runFiles([task.file])
+}
+
+function updateSnapshot() {
+  return client.rpc.updateSnapshot(task)
 }
 </script>
 
@@ -44,14 +54,17 @@ const onRun = async () => {
     :task="task"
     :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.75 : 1.75)}rem` : '1rem' }"
     :opened="isOpened"
+    :failed-snapshot="failedSnapshot"
     @click="onClick()"
     @run="onRun()"
+    @fix-snapshot="updateSnapshot()"
     @preview="onItemClick?.(task)"
   />
   <div v-if="nested && task.type === 'suite' && task.tasks.length" v-show="isOpened">
     <TaskTree
       v-for="suite in task.tasks"
       :key="suite.id"
+      :failed-snapshot="false"
       :task="suite"
       :nested="nested"
       :indent="indent + 1"
