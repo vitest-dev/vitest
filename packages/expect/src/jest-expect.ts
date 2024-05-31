@@ -686,13 +686,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     {
       name: 'toHaveResolvedTimes',
       condition: (spy, times) =>
-        spy.mock.settledResults.reduce((s, { type }) => type === 'fulfilled' ? s : ++s, 0) === times,
+        spy.mock.settledResults.reduce((s, { type }) => type === 'fulfilled' ? ++s : s, 0) === times,
       action: 'resolved',
     },
     {
       name: 'toHaveRejectedTimes',
       condition: (spy, times) =>
-        spy.mock.settledResults.reduce((s, { type }) => type === 'rejected' ? s : ++s, 0) === times,
+        spy.mock.settledResults.reduce((s, { type }) => type === 'rejected' ? ++s : s, 0) === times,
       action: 'rejected',
     },
     {
