@@ -345,7 +345,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
       },
       ui: {
-        description: 'Show Vitest UI when running tests',
+        description: 'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
       indexScripts: null,
       testerScripts: null,
