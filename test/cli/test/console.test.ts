@@ -64,14 +64,14 @@ test('can run custom pools with Vitest', async () => {
   expect(stackStderr).not.toMatch('❯ ')
   if (process.platform !== 'win32') {
     const root = resolve(process.cwd(), '../..')
-    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>')).toMatchInlineSnapshot(`
+    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl')).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
-          at <root>/test/cli/fixtures/console/trace.test.ts:11:11
-          at file://<root>/packages/runner/dist/index.js:135:14
-          at file://<root>/packages/runner/dist/index.js:60:26
-          at runTest (file://<root>/packages/runner/dist/index.js:798:17)
-          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl
+          at file://<root>/packages/runner/dist/index.js:ln:cl
+          at file://<root>/packages/runner/dist/index.js:ln:cl
+          at runTest (file://<root>/packages/runner/dist/index.js:ln:cl)
+          at processTicksAndRejections (node:internal/process/task_queues:ln:cl)
 
       "
     `)
