@@ -52,7 +52,7 @@ function updateSnapshot() {
     v-if="!nested || !search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
     :task="task"
-    :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.75 : 1.75)}rem` : '1rem' }"
+    :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }"
     :opened="isOpened"
     :failed-snapshot="failedSnapshot"
     @click="onClick()"
