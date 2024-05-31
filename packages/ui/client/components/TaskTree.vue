@@ -3,22 +3,24 @@ import type { Task } from 'vitest'
 import { nextTick } from 'vue'
 import { runFiles, client } from '~/composables/client';
 import { caseInsensitiveMatch } from '~/utils/task'
-import { openedTreeItems } from '~/composables/navigation';
+import { openedTreeItems, coverageEnabled } from '~/composables/navigation';
 
 defineOptions({ inheritAttrs: false })
 
-const { task, indent = 0, nested = false, search, onItemClick } = defineProps<{
+// TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
+const { task, indent = 0, nested = false, search, onItemClick, opened = false } = defineProps<{
   task: Task
   failedSnapshot: boolean
   indent?: number
+  opened?: boolean
   nested?: boolean
   search?: string
   onItemClick?: (task: Task) => void
 }>()
 
-const isOpened = computed(() => openedTreeItems.value.includes(task.id))
+const isOpened = computed(() => opened || openedTreeItems.value.includes(task.id))
 
-const toggleOpen = () => {
+function toggleOpen() {
   if (isOpened.value) {
     const tasksIds = 'tasks' in task ? task.tasks.map(t => t.id) : []
     openedTreeItems.value = openedTreeItems.value.filter(id => id !== task.id && !tasksIds.includes(id))
@@ -27,11 +29,7 @@ const toggleOpen = () => {
   }
 }
 
-const onClick = () => {
-  toggleOpen()
-}
-
-const onRun = async () => {
+async function onRun() {
   onItemClick?.(task)
   if (coverageEnabled.value) {
     disableCoverage.value = true
@@ -49,13 +47,13 @@ function updateSnapshot() {
   <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
   <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
   <TaskItem
-    v-if="!nested || !search || caseInsensitiveMatch(task.name, search)"
+    v-if="opened || !nested || !search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
     :task="task"
     :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }"
     :opened="isOpened && task.type === 'suite' && task.tasks.length"
     :failed-snapshot="failedSnapshot"
-    @click="onClick()"
+    @click="toggleOpen()"
     @run="onRun()"
     @fix-snapshot="updateSnapshot()"
     @preview="onItemClick?.(task)"

@@ -2,6 +2,7 @@
 import type { Task } from 'vitest'
 import { getProjectNameColor } from '~/utils/task';
 import { activeFileId } from '~/composables/params';
+import { isReport } from '~/constants';
 
 const props = defineProps<{
   task: Task
@@ -31,6 +32,7 @@ const duration = computed(() => {
     cursor-pointer
     hover="bg-active"
     class="item-wrapper"
+    :aria-label="task.name"
     :data-current="activeFileId === task.id"
   >
     <div v-if="task.type === 'suite'" pr-1>
@@ -52,21 +54,25 @@ const duration = computed(() => {
       </span>
     </div>
     <div v-if="task.type === 'suite' && 'filepath' in task" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
-      <IconAction 
-        v-if="failedSnapshot"
+      <IconAction
+        v-if="!isReport && failedSnapshot"
         v-tooltip.bottom="'Fix failed snapshot(s)'"
+        data-testid="btn-fix-snapshot"
         title="Fix failed snapshot(s)"
         icon="i-carbon-result-old"
         @click.prevent.stop="emit('fixSnapshot')"
       />
       <IconAction 
         v-tooltip.bottom="'Open test details'"
+        data-testid="btn-open-details"
         title="Open test details"
         icon="i-carbon-intrusion-prevention"
         @click.prevent.stop="emit('preview')"
       />
       <IconAction
+        v-if="!isReport"
         v-tooltip.bottom="'Run current test'"
+        data-testid="btn-run-test"
         title="Run current test"
         icon="i-carbon-play-filled-alt"
         text="green-500"
