@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
+import { browserState } from '~/composables/client';
 import { coverageUrl, coverageVisible, initializeNavigation } from '../composables/navigation'
 
 const dashboardVisible = initializeNavigation()
@@ -41,10 +42,22 @@ function resizeMain() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition>
+        <transition v-if="!browserState">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
           <FileDetails v-else />
+        </transition>
+        <transition v-else>
+          <Splitpanes key="detail" @resized="onModuleResized">
+            <Pane :size="detailSizes[0]">
+              <BrowserIframe />
+            </Pane>
+            <Pane :size="detailSizes[1]">
+              <Dashboard v-if="dashboardVisible" key="summary" />
+              <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
+              <FileDetails v-else />
+            </Pane>
+          </Splitpanes>
         </transition>
       </Pane>
     </Splitpanes>
