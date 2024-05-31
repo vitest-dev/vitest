@@ -108,18 +108,12 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
-        try {
-          const options = deepMerge(
-            {},
-            configDefaults,
-            server.config.test || {},
-          )
-          await project.setServer(options, server)
-        }
-        catch (err) {
-          project.ctx.logger.printError(err, { fullStack: true })
-          process.exit(1)
-        }
+        const options = deepMerge(
+          {},
+          configDefaults,
+          server.config.test || {},
+        )
+        await project.setServer(options, server)
 
         await server.watcher.close()
       },
