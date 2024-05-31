@@ -397,6 +397,7 @@ export class WorkspaceProject {
         testerScripts: [],
         commands: {},
       },
+      printConsoleTrace: this.config.printConsoleTrace ?? this.ctx.config.printConsoleTrace,
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 

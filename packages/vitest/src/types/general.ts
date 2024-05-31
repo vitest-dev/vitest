@@ -35,6 +35,8 @@ export interface Environment {
 
 export interface UserConsoleLog {
   content: string
+  origin?: string
+  browser?: boolean
   type: 'stdout' | 'stderr'
   taskId?: string
   time: number

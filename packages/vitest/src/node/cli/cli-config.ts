@@ -618,6 +618,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  printConsoleTrace: {
+    description: 'Always print console stack traces',
+  },
 
   // CLI only options
   run: {

@@ -2322,3 +2322,10 @@ Polling interval in milliseconds
 - **Default:** `1000`
 
 Polling timeout in milliseconds
+
+### printConsoleTrace
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Always print console traces when calling any `console` method. This is useful for debugging.
