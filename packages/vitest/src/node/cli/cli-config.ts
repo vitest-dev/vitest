@@ -605,7 +605,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
             argument: '<timeout>',
           },
         },
+        transform(value) {
+          if (typeof value !== 'object')
+            throw new Error(`Unexpected value for --expect.poll: ${value}. If you need to configure timeout, use --expect.poll.timeout=<timeout>`)
+          return value
+        },
       },
+    },
+    transform(value) {
+      if (typeof value !== 'object')
+        throw new Error(`Unexpected value for --expect: ${value}. If you need to configure expect options, use --expect.{name}=<value> syntax`)
+      return value
     },
   },
 
