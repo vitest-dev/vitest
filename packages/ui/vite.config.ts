@@ -12,7 +12,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 // for debug:
 // open a static file serve to share the report json
 // and ui using the link to load the report json data
-const debugLink = 'http://127.0.0.1:4173/__vitest__'
+// const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
 export const config: UserConfig = {
   root: __dirname,
@@ -71,13 +71,13 @@ export const config: UserConfig = {
       ],
       injectAtEnd: true,
     }),
-    {
-      name: 'debug-html-report',
-      apply: 'serve',
-      transformIndexHtml(html) {
-        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
-      },
-    },
+    // {
+    //   name: 'debug-html-report',
+    //   apply: 'serve',
+    //   transformIndexHtml(html) {
+    //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
+    //   },
+    // },
   ],
   build: {
     outDir: './dist/client',
