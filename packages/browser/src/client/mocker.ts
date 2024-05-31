@@ -64,9 +64,6 @@ export class VitestBrowserClientMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => any) {
-    const config = getBrowserState().config
-    if (config.browser.fileParallelism)
-      throw new Error(`[vitest] Mocking doesn't work with "browser.fileParallelism" enabled`)
     const promise = rpc().queueMock(id, importer, !!factory)
       .then((id) => {
         this.factories[id] = factory!
@@ -77,9 +74,6 @@ export class VitestBrowserClientMocker {
   }
 
   public queueUnmock(id: string, importer: string) {
-    const config = getBrowserState().config
-    if (config.browser.fileParallelism)
-      throw new Error(`[vitest] Mocking doesn't work with "browser.fileParallelism" enabled`)
     const promise = rpc().queueUnmock(id, importer)
       .then((id) => {
         delete this.factories[id]
