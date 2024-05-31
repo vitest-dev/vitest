@@ -656,13 +656,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       action: 'resolved',
     },
     {
-      name: 'toHaveRejected',
-      condition: spy =>
-        spy.mock.settledResults.length > 0
-        && spy.mock.settledResults.some(({ type }) => type === 'rejected'),
-      action: 'rejected',
-    },
-    {
       name: ['toHaveReturned', 'toReturn'],
       condition: spy => spy.mock.calls.length > 0 && spy.mock.results.some(({ type }) => type !== 'throw'),
       action: 'called',
@@ -688,12 +681,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       condition: (spy, times) =>
         spy.mock.settledResults.reduce((s, { type }) => type === 'fulfilled' ? ++s : s, 0) === times,
       action: 'resolved',
-    },
-    {
-      name: 'toHaveRejectedTimes',
-      condition: (spy, times) =>
-        spy.mock.settledResults.reduce((s, { type }) => type === 'rejected' ? ++s : s, 0) === times,
-      action: 'rejected',
     },
     {
       name: ['toHaveReturnedTimes', 'toReturnTimes'],
@@ -722,12 +709,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       condition: (spy, value) =>
         spy.mock.settledResults.some(({ type, value: result }) => type === 'fulfilled' && jestEquals(value, result)),
       action: 'resolve',
-    },
-    {
-      name: 'toHaveRejectedWith',
-      condition: (spy, value) =>
-        spy.mock.settledResults.some(({ type, value: result }) => type === 'rejected' && jestEquals(value, result)),
-      action: 'reject',
     },
     {
       name: ['toHaveReturnedWith', 'toReturnWith'],
@@ -762,27 +743,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     {
       name: 'toHaveLastResolvedWith',
       condition: (spy, value) => {
-        // TODO: test type is 'fulfilled'
-        const { value: lastResult, type } = spy.mock.settledResults[spy.mock.settledResults.length - 1]
-        return type === 'fulfilled' && jestEquals(lastResult, value)
+        const result = spy.mock.settledResults[spy.mock.settledResults.length - 1]
+        return result && result.type === 'fulfilled' && jestEquals(result.value, value)
       },
       action: 'resolve',
     },
     {
-      name: 'toHaveLastRejectedWith',
-      condition: (spy, value) => {
-        // TODO: test type is 'rejected'
-        const { value: lastResult, type } = spy.mock.settledResults[spy.mock.settledResults.length - 1]
-        return type === 'rejected' && jestEquals(lastResult, value)
-      },
-      action: 'reject',
-    },
-    {
       name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
       condition: (spy, value) => {
-        // TODO: test type is 'return' instead of 'throw'
-        const { value: lastResult, type } = spy.mock.results[spy.mock.results.length - 1]
-        return type === 'return' && jestEquals(lastResult, value)
+        const result = spy.mock.results[spy.mock.results.length - 1]
+        return result && result.type === 'return' && jestEquals(result.value, value)
       },
       action: 'return',
     },
@@ -790,14 +760,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     def(name, function (value: any) {
       const spy = getSpy(this)
       const results = action === 'return' ? spy.mock.results : spy.mock.settledResults
-      const { value: lastResult } = results[results.length - 1]
+      const result = results[results.length - 1]
       const spyName = spy.getMockName()
       this.assert(
         condition(spy, value),
         `expected last "${spyName}" call to ${action} #{exp}`,
         `expected last "${spyName}" call to not ${action} #{exp}`,
         value,
-        lastResult,
+        result?.value,
       )
     })
   })
@@ -805,27 +775,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     {
       name: 'toHaveNthResolvedWith',
       condition: (spy, index, value) => {
-        // TODO: test type is 'fulfilled'
-        const { value: lastResult, type } = spy.mock.settledResults[index - 1]
-        return type === 'fulfilled' && jestEquals(lastResult, value)
+        const result = spy.mock.settledResults[index - 1]
+        return result && result.type === 'fulfilled' && jestEquals(result.value, value)
       },
       action: 'resolve',
     },
     {
-      name: 'toHaveNthRejectedWith',
-      condition: (spy, index, value) => {
-        // TODO: test type is 'rejected'
-        const { value: lastResult, type } = spy.mock.settledResults[index - 1]
-        return type === 'rejected' && jestEquals(lastResult, value)
-      },
-      action: 'reject',
-    },
-    {
       name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
       condition: (spy, index, value) => {
-        // TODO: test type is 'return' instead of 'throw'
-        const { value: lastResult, type } = spy.mock.results[index - 1]
-        return type === 'return' && jestEquals(lastResult, value)
+        const result = spy.mock.results[index - 1]
+        return result && result.type === 'return' && jestEquals(result.value, value)
       },
       action: 'return',
     },
@@ -834,7 +793,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
       const results = action === 'return' ? spy.mock.results : spy.mock.settledResults
-      const { value: callResult } = results[nthCall - 1]
+      const result = results[nthCall - 1]
       const ordinalCall = `${ordinalOf(nthCall)} call`
 
       this.assert(
@@ -842,7 +801,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         `expected ${ordinalCall} "${spyName}" call to ${action} #{exp}`,
         `expected ${ordinalCall} "${spyName}" call to not ${action} #{exp}`,
         value,
-        callResult,
+        result?.value,
       )
     })
   })
