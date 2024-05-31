@@ -104,7 +104,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           const result = await project.server.pluginContainer.resolveId(id, importer, {
             ssr: false,
           })
-          return result?.id ?? null
+          return result
         },
         debug(...args) {
           ctx.logger.console.debug(...args)
@@ -138,6 +138,9 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         },
         async queueUnmock(id: string, importer: string) {
           return project.browserMocker.unmock(id, importer)
+        },
+        resolveMock(rawId: string, importer: string) {
+          return project.browserMocker.resolveMock(rawId, importer, false)
         },
         invalidateMocks() {
           const mocker = project.browserMocker

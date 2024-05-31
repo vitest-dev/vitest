@@ -1,6 +1,7 @@
 import type { TransformResult } from 'vite'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
+import type { ViteNodeResolveId } from 'vite-node'
 import type { AfterSuiteRunMeta, File, ModuleGraphData, ProvidedContext, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
@@ -40,10 +41,15 @@ export interface WebSocketBrowserHandlers {
   snapshotSaved: (snapshot: SnapshotResult) => void
   getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
-  resolveId: (id: string, importer?: string) => Promise<string | null>
+  resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
   triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
   queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<string>
   queueUnmock: (id: string, importer: string) => Promise<string>
+  resolveMock: (id: string, importer: string) => Promise<{
+    type: 'factory' | 'redirect' | 'automock'
+    mockPath?: string | null
+    resolvedId: string
+  }>
   invalidateMocks: () => void
   getBrowserFileSourceMap: (id: string) => Promise<TransformResult['map'] | undefined>
   getProvidedContext: () => ProvidedContext

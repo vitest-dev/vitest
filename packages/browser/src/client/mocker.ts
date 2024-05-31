@@ -3,9 +3,7 @@ import { extname } from 'pathe'
 import { rpc } from './rpc'
 import { getBrowserState } from './utils'
 
-function throwNotImplemented(name: string) {
-  throw new Error(`[vitest] ${name} is not implemented in browser environment yet.`)
-}
+const now = Date.now
 
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
@@ -19,12 +17,12 @@ export class VitestBrowserClientMocker {
   }
 
   public async importActual(id: string, importer: string) {
-    const resolveId = await rpc().resolveId(id, importer)
-    if (resolveId == null)
+    const resolved = await rpc().resolveId(id, importer)
+    if (resolved == null)
       throw new Error(`[vitest] Cannot resolve ${id} imported from ${importer}`)
-    const ext = extname(resolveId)
+    const ext = extname(resolved.id)
     const base = getBrowserState().config.base || '/'
-    const url = new URL(`/@id${base}${resolveId}`, location.href)
+    const url = new URL(`/@id${base}${resolved.id}`, location.href)
     const query = `_vitest_original&ext.${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
@@ -32,8 +30,26 @@ export class VitestBrowserClientMocker {
     return getBrowserState().wrapModule(() => import(actualUrl))
   }
 
-  public importMock() {
-    throwNotImplemented('importMock')
+  public async importMock(rawId: string, importer: string) {
+    await this.prepare()
+    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer)
+
+    const factoryReturn = this.get(resolvedId)
+    if (factoryReturn)
+      return factoryReturn
+
+    if (this.factories[resolvedId])
+      return await this.resolve(resolvedId)
+
+    const base = getBrowserState().config.base || '/'
+    if (type === 'redirect') {
+      const url = new URL(`/@id${base}${mockPath}`, location.href)
+      return import(url.toString())
+    }
+    const url = new URL(`/@id${base}${resolvedId}`, location.href)
+    const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
+    const moduleObject = await import(`${url.pathname}${query}${url.hash}`)
+    return this.mockObject(moduleObject)
   }
 
   public getMockContext() {

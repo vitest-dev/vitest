@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
-import { cleanUrl, isNodeBuiltin } from 'vite-node/utils'
+import { basename, dirname, extname, join, resolve } from 'pathe'
+import { isNodeBuiltin } from 'vite-node/utils'
 import type { WorkspaceProject } from '../../node/workspace'
 
 export class VitestBrowserServerMocker {
@@ -18,19 +18,18 @@ export class VitestBrowserServerMocker {
   }
 
   async mock(sessionId: string, rawId: string, importer: string, hasFactory: boolean) {
-    const { id, fsPath, external } = await this.resolveId(rawId, importer)
+    const { type, mockPath, resolvedId } = await this.resolveMock(rawId, importer, hasFactory)
 
-    this.invalidateModuleById(id)
+    this.invalidateModuleById(resolvedId)
 
-    if (hasFactory) {
-      this.mocks.set(id, { sessionId, mock: undefined })
-      return id
+    if (type === 'factory') {
+      this.mocks.set(resolvedId, { sessionId, mock: undefined })
+      return resolvedId
     }
 
-    const mockPath = this.resolveMockPath(fsPath, external)
-    this.mocks.set(id, { sessionId, mock: mockPath })
+    this.mocks.set(resolvedId, { sessionId, mock: mockPath })
 
-    return id
+    return resolvedId
   }
 
   async unmock(rawId: string, importer: string) {
@@ -41,6 +40,21 @@ export class VitestBrowserServerMocker {
     return id
   }
 
+  public async resolveMock(rawId: string, importer: string, hasFactory: boolean) {
+    const { id, fsPath, external } = await this.resolveId(rawId, importer)
+
+    if (hasFactory)
+      return { type: 'factory' as const, resolvedId: id }
+
+    const mockPath = this.resolveMockPath(fsPath, external)
+
+    return {
+      type: mockPath === null ? 'automock' as const : 'redirect' as const,
+      mockPath,
+      resolvedId: id,
+    }
+  }
+
   public invalidateModuleById(id: string) {
     const moduleGraph = this.#project.browser!.moduleGraph
     const module = moduleGraph.getModuleById(id)
@@ -49,22 +63,13 @@ export class VitestBrowserServerMocker {
   }
 
   private async resolveId(rawId: string, importer: string) {
-    const resolved = await this.#project.vitenode.resolveId(rawId, importer, 'web')
-    const id = resolved?.id || rawId
-    const external = (!isAbsolute(id) || this.isModuleDirectory(id)) ? rawId : null
-    return {
-      id,
-      fsPath: cleanUrl(id),
-      external,
-    }
+    const resolved = await this.#project.browser!.pluginContainer.resolveId(rawId, importer, {
+      ssr: false,
+    })
+    return this.#project.vitenode.resolveModule(rawId, resolved)
   }
 
-  private isModuleDirectory(path: string) {
-    const moduleDirectories = this.#project.config.deps.moduleDirectories || ['/node_modules/']
-    return moduleDirectories.some((dir: string) => path.includes(dir))
-  }
-
-  private resolveMockPath(mockPath: string, external: string | null) {
+  public resolveMockPath(mockPath: string, external: string | null) {
     const path = external || mockPath
 
     // it's a node_module alias

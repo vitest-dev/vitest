@@ -372,14 +372,14 @@ function createVitest(): VitestUtils {
 
   const _envBooleans = ['PROD', 'DEV', 'SSR']
 
-  const getImporter = () => {
-    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
+  const getImporter = (name: string) => {
+    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
     const stackArray = stackTrace.split('\n')
     // if there is no message in a stack trace, use the item - 1
-    const importerStack = stackTrace.includes('$$stack trace error')
-      ? stackArray[4]
-      : stackArray[3]
-    const stack = parseSingleStack(importerStack)
+    const importerStackIndex = stackArray.findIndex((stack) => {
+      return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
+    })
+    const stack = parseSingleStack(stackArray[importerStackIndex + 1])
     return stack?.file || ''
   }
 
@@ -495,7 +495,7 @@ function createVitest(): VitestUtils {
     mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
       if (typeof path !== 'string')
         throw new Error(`vi.mock() expects a string path, but received a ${typeof path}`)
-      const importer = getImporter()
+      const importer = getImporter('mock')
       _mocker.queueMock(
         path,
         importer,
@@ -507,13 +507,13 @@ function createVitest(): VitestUtils {
     unmock(path: string | Promise<unknown>) {
       if (typeof path !== 'string')
         throw new Error(`vi.unmock() expects a string path, but received a ${typeof path}`)
-      _mocker.queueUnmock(path, getImporter())
+      _mocker.queueUnmock(path, getImporter('unmock'))
     },
 
     doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
       if (typeof path !== 'string')
         throw new Error(`vi.doMock() expects a string path, but received a ${typeof path}`)
-      const importer = getImporter()
+      const importer = getImporter('doMock')
       _mocker.queueMock(
         path,
         importer,
@@ -525,19 +525,19 @@ function createVitest(): VitestUtils {
     doUnmock(path: string | Promise<unknown>) {
       if (typeof path !== 'string')
         throw new Error(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
-      _mocker.queueUnmock(path, getImporter())
+      _mocker.queueUnmock(path, getImporter('doUnmock'))
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
       return _mocker.importActual<T>(
         path,
-        getImporter(),
+        getImporter('importActual'),
         _mocker.getMockContext().callstack,
       )
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-      return _mocker.importMock(path, getImporter())
+      return _mocker.importMock(path, getImporter('importMock'))
     },
 
     // this is typed in the interface so it's not necessary to type it here
