@@ -7,8 +7,9 @@ import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash } from '@vitest/utils'
-import { injectVitestModule } from './esmInjector'
-import BrowserContext from './plugins/context'
+import BrowserContext from './plugins/pluginContext'
+import BrowserMocker from './plugins/pluginMocker'
+import DynamicImport from './plugins/pluginDynamicImport'
 
 export type { BrowserCommand } from 'vitest/node'
 
@@ -17,6 +18,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
 
   return [
+    ...BrowserMocker(project),
     {
       enforce: 'pre',
       name: 'vitest:browser',
@@ -62,6 +64,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const injector = replacer(await injectorJs, {
             __VITEST_CONFIG__: JSON.stringify(config),
             __VITEST_FILES__: JSON.stringify(files),
+            __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
           })
 
           if (url.pathname === base) {
@@ -155,6 +158,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest/browser',
               'vitest/runners',
               '@vitest/utils',
+              'std-env',
+              'tinybench',
+              'tinyspy',
 
               // loupe is manually transformed
               'loupe',
@@ -194,16 +200,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(project),
-    {
-      name: 'vitest:browser:esm-injector',
-      enforce: 'post',
-      transform(source, id) {
-        const hijackESM = project.config.browser.slowHijackESM ?? false
-        if (!hijackESM)
-          return
-        return injectVitestModule(source, id, this.parse)
-      },
-    },
+    DynamicImport(),
   ]
 }
 
@@ -223,7 +220,7 @@ function resolveCoverageFolder(project: WorkspaceProject) {
 
   // reportsDirectory not resolved yet
   const root = resolve(
-    options.root || options.root || process.cwd(),
+    options.root || process.cwd(),
     options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 

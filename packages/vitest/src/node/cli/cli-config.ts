@@ -341,9 +341,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<options>',
         subcommands: null, // don't support custom objects
       },
-      slowHijackESM: {
-        description: 'Let Vitest use its own module resolution on the browser to enable APIs such as vi.mock and vi.spyOn. Visit [`browser.slowHijackESM`](https://vitest.dev/config/#browser-slowhijackesm) for more information (default: `false`)',
-      },
       isolate: {
         description: 'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
       },

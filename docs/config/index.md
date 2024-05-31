@@ -1487,7 +1487,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 
 ### browser {#browser}
 
-- **Type:** `{ enabled?, name?, provider?, headless?, api?, slowHijackESM? }`
+- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
@@ -1600,17 +1600,6 @@ To have a better type safety when using built-in providers, you can add one of t
 }
 ```
 :::
-
-#### browser.slowHijackESM {#browser-slowhijackesm}
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
-
-This option has no effect on tests running inside Node.js.
-
-If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
 
 #### browser.ui {#browser-ui}
 

@@ -2,7 +2,7 @@ import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 
 export async function importId(id: string) {
   const name = `${getConfig().base || '/'}@id/${id}`
-  return getBrowserState().wrapModule(import(name))
+  return getBrowserState().wrapModule(() => import(name))
 }
 
 export function getConfig(): ResolvedConfig {
@@ -14,8 +14,8 @@ interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
-  exportAll: () => void
-  wrapModule: (module: any) => any
+  type: 'tester' | 'orchestrator'
+  wrapModule: <T>(module: () => T) => T
   runTests: (tests: string[]) => Promise<void>
 }
 

@@ -478,6 +478,12 @@ importers:
       '@wdio/protocols':
         specifier: ^8.32.0
         version: 8.32.0
+      birpc:
+        specifier: 0.2.17
+        version: 0.2.17
+      flatted:
+        specifier: ^3.3.1
+        version: 3.3.1
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2

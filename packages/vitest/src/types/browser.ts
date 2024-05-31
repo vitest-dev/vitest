@@ -72,15 +72,6 @@ export interface BrowserConfigOptions {
   api?: ApiConfig | number
 
   /**
-   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
-   * Enabled by default when running in browser.
-   *
-   * @default false
-   * @experimental
-   */
-  slowHijackESM?: boolean
-
-  /**
    * Isolate test environment after each test
    *
    * @default true

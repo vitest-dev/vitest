@@ -1,5 +1,5 @@
-import type { VitestClient } from '@vitest/ws-client'
 import type { SnapshotEnvironment } from 'vitest/snapshot'
+import type { VitestBrowserClient } from './client'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   getVersion(): string {
@@ -31,7 +31,7 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   }
 }
 
-function rpc(): VitestClient['rpc'] {
+function rpc(): VitestBrowserClient['rpc'] {
   // @ts-expect-error not typed global
   return globalThis.__vitest_worker__.rpc
 }

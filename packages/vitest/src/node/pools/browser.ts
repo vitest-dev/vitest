@@ -23,6 +23,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
+    const mocker = project.browserMocker
+    mocker.mocks.forEach((_, id) => {
+      mocker.invalidateModuleById(id)
+    })
+    mocker.mocks.clear()
 
     // TODO
     // let isCancelled = false
