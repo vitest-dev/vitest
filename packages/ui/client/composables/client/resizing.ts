@@ -1,24 +1,24 @@
-export type ResizeListener = (isResizing: boolean) => void
+export type ResizingListener = (isResizing: boolean) => void
 
 const resizingSymbol = Symbol.for('resizing')
 
-export function registerResizeListener(listener: ResizeListener) {
-  inject<(listener: ResizeListener) => void>(resizingSymbol)?.(listener)
+export function registerResizingListener(listener: ResizingListener) {
+  inject<(listener: ResizingListener) => void>(resizingSymbol)?.(listener)
 }
 
 export function provideResizing() {
-  const listeners = new Set<ResizeListener>()
+  const listeners = new Set<ResizingListener>()
 
-  function addResizeListener(listener: ResizeListener) {
+  function addResizeListener(listener: ResizingListener) {
     listeners.add(listener)
   }
 
-  function notify(active: boolean) {
+  function notifyResizing(isResizing: boolean) {
     for (const listener of listeners)
-      listener(active)
+      listener(isResizing)
   }
 
   provide(resizingSymbol, addResizeListener)
 
-  return { notify }
+  return { notifyResizing }
 }

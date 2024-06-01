@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { registerResizeListener } from '~/composables/client/resizing'
+import { registerResizingListener } from '~/composables/client/resizing'
 
 const viewport = ref('custom')
-const resize = ref(false)
+const resizingContainer = ref(false)
 
 function changeViewport(name: string) {
   if (viewport.value === name) {
@@ -11,11 +11,11 @@ function changeViewport(name: string) {
     viewport.value = name
   }
 }
-function onResize(resizing: boolean) {
-  resize.value = resizing
+function onResizing(isResizing: boolean) {
+  resizingContainer.value = isResizing
 }
 onMounted(() => {
-  registerResizeListener(onResize)
+  registerResizingListener(onResizing)
 })
 </script>
 
@@ -74,7 +74,7 @@ onMounted(() => {
       <div
         id="tester-ui"
         class="flex font-light op70"
-        :class="resize ? 'resizing': undefined"
+        :class="resizingContainer ? 'resizing': undefined"
         :data-viewport="viewport"
       >
         Select a test to run
