@@ -26,7 +26,6 @@ const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
-console.log(tasks)
   if (!search.value.trim())
     return tasks
 
