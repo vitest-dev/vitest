@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BrowserIframe: typeof import('./components/BrowserIframe.vue')['default']
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
     Coverage: typeof import('./components/Coverage.vue')['default']

@@ -1,6 +1,10 @@
+import type { ResolvedConfig } from 'vitest'
+import { generateHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import { channel, client } from './client'
 import { rpcDone } from './rpc'
 import { getBrowserState, getConfig } from './utils'
+import { getUiAPI } from './ui'
 
 const url = new URL(location.href)
 
@@ -23,6 +27,14 @@ function createIframe(container: HTMLDivElement, file: string) {
   const iframe = document.createElement('iframe')
   iframe.setAttribute('loading', 'eager')
   iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
+  iframe.setAttribute('data-vitest', 'true')
+
+  iframe.style.display = 'block'
+  iframe.style.border = 'none'
+  iframe.style.pointerEvents = 'none'
+  iframe.setAttribute('allowfullscreen', 'true')
+  iframe.setAttribute('allow', 'clipboard-write;')
+
   iframes.set(file, iframe)
   container.appendChild(iframe)
   return iframe
@@ -47,9 +59,23 @@ interface IframeErrorEvent {
 
 type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent
 
+async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
+  if (config.browser.ui) {
+    const element = document.querySelector('#tester-ui')
+    if (!element) {
+      return new Promise<HTMLDivElement>((resolve) => {
+        setTimeout(() => {
+          resolve(getContainer(config))
+        }, 30)
+      })
+    }
+    return element as HTMLDivElement
+  }
+  return document.querySelector('#vitest-tester') as HTMLDivElement
+}
+
 client.ws.addEventListener('open', async () => {
   const config = getConfig()
-  const container = document.querySelector('#vitest-tester') as HTMLDivElement
   const testFiles = getBrowserState().files
 
   debug('test files', testFiles.join(', '))
@@ -60,6 +86,7 @@ client.ws.addEventListener('open', async () => {
     return
   }
 
+  const container = await getContainer(config)
   const runningFiles = new Set<string>(testFiles)
 
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
@@ -70,6 +97,13 @@ client.ws.addEventListener('open', async () => {
         filenames.forEach(filename => runningFiles.delete(filename))
 
         if (!runningFiles.size) {
+          const ui = getUiAPI()
+          // in isolated mode we don't change UI because it will slow down tests,
+          // so we only select it when the run is done
+          if (ui && filenames.length > 1) {
+            const id = generateFileId(filenames[filenames.length - 1])
+            ui.setCurrentById(id)
+          }
           await done()
         }
         else {
@@ -103,6 +137,11 @@ client.ws.addEventListener('open', async () => {
     }
   })
 
+  if (config.browser.ui) {
+    container.className = ''
+    container.textContent = ''
+  }
+
   if (config.isolate === false) {
     createIframe(
       container,
@@ -113,6 +152,13 @@ client.ws.addEventListener('open', async () => {
     // otherwise, we need to wait for each iframe to finish before creating the next one
     // this is the most stable way to run tests in the browser
     for (const file of testFiles) {
+      const ui = getUiAPI()
+
+      if (ui) {
+        const id = generateFileId(file)
+        ui.setCurrentById(id)
+      }
+
       createIframe(
         container,
         file,
@@ -129,3 +175,10 @@ client.ws.addEventListener('open', async () => {
     }
   }
 })
+
+function generateFileId(file: string) {
+  const config = getConfig()
+  const project = config.name || ''
+  const path = relative(config.root, file)
+  return generateHash(`${path}${project}`)
+}
