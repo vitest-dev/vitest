@@ -5,11 +5,14 @@ defineProps({
 </script>
 
 <template>
-  <div 
-    bg="gray-200" 
-    rounded-1 
+  <button
+    type="button"
+    dark="op75"
+    bg="gray-200 dark:#111"
+    hover="op100"
+    rounded-1
     p-0.5
   >
-    <div :class="icon" op50></div>
-  </div>
+    <span block :class="icon" op65 class="dark:op85 hover:op100"></span>
+  </button>
 </template>
