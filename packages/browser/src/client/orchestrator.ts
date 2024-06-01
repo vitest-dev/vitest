@@ -117,8 +117,11 @@ client.ws.addEventListener('open', async () => {
         const heightStr = typeof height === 'number' ? `${height}px` : height
         const iframe = iframes.get(id)
         if (!iframe) {
+          const error = new Error(`Cannot find iframe with id ${id}`)
+          channel.postMessage({ type: 'viewport:fail', id, error: error.message })
           await client.rpc.onUnhandledError({
-            message: `Cannot find iframe with id ${id}`,
+            name: 'Teardown Error',
+            message: error.message,
           }, 'Teardown Error')
           return
         }

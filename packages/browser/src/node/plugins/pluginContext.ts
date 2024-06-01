@@ -65,6 +65,10 @@ export const page = {
           channel.removeEventListener('message', handler)
           resolve()
         }
+        if (e.data.type === 'viewport:fail' && e.data.id === id) {
+          channel.removeEventListener('message', handler)
+          reject(new Error(e.data.error))
+        }
       })
     })
   }
