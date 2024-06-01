@@ -27,10 +27,7 @@ function createIframe(container: HTMLDivElement, file: string) {
   const iframe = document.createElement('iframe')
   iframe.setAttribute('loading', 'eager')
   iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
-
-  // TODO: support changing viewport
-  iframe.style.width = '100%'
-  iframe.style.height = '100%'
+  iframe.setAttribute('data-vitest', 'true')
 
   iframe.style.display = 'block'
   iframe.style.border = 'none'

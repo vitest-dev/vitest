@@ -4,7 +4,7 @@ import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
-import type { BrowserRunnerState, RunState } from '../../../types'
+import type { RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
@@ -77,7 +77,14 @@ export function runCurrent() {
 }
 
 // @ts-expect-error not typed global
-export const browserState = window.__vitest_browser_runner__ as BrowserRunnerState | unefined
+// export const browserState = window.__vitest_browser_runner__ as BrowserRunnerState | unefined
+export const browserState = {
+  config: {
+    browser: {
+      name: 'chrome',
+    },
+  },
+}
 
 watch(
   () => client.ws,
