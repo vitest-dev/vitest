@@ -13,9 +13,10 @@ export default defineConfig({
     outDir: '../../dist/client',
     emptyOutDir: false,
     assetsDir: '__vitest_browser__',
+    manifest: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, './index.html'),
+        orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester.html'),
       },
     },

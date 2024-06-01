@@ -12,6 +12,18 @@ export const coverageEnabled = computed(() => {
   return coverageConfigured.value
     && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
+
+// @ts-expect-error not typed global
+window.__vitest_ui_api__ = {
+  get currentModule() {
+    return currentModule.value
+  },
+  setCurrentById(fileId: string) {
+    activeFileId.value = fileId
+    currentModule.value = findById(fileId)
+    showDashboard(false)
+  },
+}
 export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.

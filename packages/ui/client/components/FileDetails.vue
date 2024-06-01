@@ -50,7 +50,7 @@ function onDraft(value: boolean) {
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
-        <div font-light op-50 text-sm :style="{ color: getProjectNameColor(current?.file.projectName) }">
+        <div v-if="current?.file.projectName" font-light op-50 text-sm :style="{ color: getProjectNameColor(current?.file.projectName) }">
           [{{ current?.file.projectName || '' }}]
         </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
