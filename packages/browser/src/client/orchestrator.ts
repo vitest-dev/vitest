@@ -38,10 +38,9 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
   iframe.setAttribute('data-vitest', 'true')
 
-  if (getConfig().browser.ui) {
-    iframe.style.width = '100%'
-    iframe.style.height = '100%'
-  }
+  const config = getConfig().browser
+  iframe.style.width = `${config.viewport.width}px`
+  iframe.style.height = `${config.viewport.height}px`
 
   iframe.style.display = 'block'
   iframe.style.border = 'none'
@@ -197,6 +196,13 @@ async function createTesters(testFiles: string[]) {
       container,
       ID_ALL,
     )
+
+    const ui = getUiAPI()
+
+    if (ui) {
+      await new Promise(r => requestAnimationFrame(r))
+      ui.recalculateDetailPanels()
+    }
   }
   else {
     // otherwise, we need to wait for each iframe to finish before creating the next one
@@ -204,16 +210,18 @@ async function createTesters(testFiles: string[]) {
     for (const file of testFiles) {
       const ui = getUiAPI()
 
-      if (ui) {
-        const id = generateFileId(file)
-        ui.setCurrentById(id)
-        ui.resetDetailSizes()
-      }
-
       createIframe(
         container,
         file,
       )
+
+      if (ui) {
+        const id = generateFileId(file)
+        ui.setCurrentById(id)
+        await new Promise(r => requestAnimationFrame(r))
+        ui.recalculateDetailPanels()
+      }
+
       await new Promise<void>((resolve) => {
         channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
           // done and error can only be triggered by the previous iframe
