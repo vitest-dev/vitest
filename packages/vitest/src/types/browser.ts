@@ -86,6 +86,22 @@ export interface BrowserConfigOptions {
   ui?: boolean
 
   /**
+   * Default viewport size
+   */
+  viewport?: {
+    /**
+     * Width of the viewport
+     * @default 414
+     */
+    width: number
+    /**
+     * Height of the viewport
+     * @default 896
+     */
+    height: number
+  }
+
+  /**
    * Scripts injected into the tester iframe.
    */
   testerScripts?: BrowserScript[]
@@ -148,4 +164,8 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   isolate: boolean
   api: ApiConfig
   ui: boolean
+  viewport: {
+    width: number
+    height: number
+  }
 }

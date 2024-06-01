@@ -1,12 +1,35 @@
 <script setup lang="ts">
 const viewport = ref('custom')
+import { recalculateDetailPanels } from '~/composables/navigation'
 
-function changeViewport(name: string) {
+const sizes = {
+  'small-mobile': ['320px', '568px'],
+  'large-mobile': ['414px', '896px'],
+  tablet: ['834px', '1112px'],
+  custom: ['100%', '100%'],
+}
+
+async function changeViewport(name: string) {
   if (viewport.value === name) {
     viewport.value = 'custom'
   } else {
     viewport.value = name
   }
+
+  const iframe = document.querySelector('#tester-ui iframe[data-vitest]')
+  if (!iframe) {
+    console.warn('Iframe not found')
+    return
+  }
+
+  const [width, height] = sizes[viewport.value]
+
+  iframe.style.width = width
+  iframe.style.height = height
+
+  await new Promise(r => requestAnimationFrame(r))
+
+  recalculateDetailPanels()
 }
 </script>
 
@@ -62,31 +85,9 @@ function changeViewport(name: string) {
       />
     </div>
     <div flex-auto overflow-auto>
-      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%" :data-viewport="viewport">
+      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
         Select a test to run
       </div>
     </div>
   </div>
 </template>
-
-<style>
-[data-viewport="custom"] iframe {
-  width: 100%;
-  height: 100%;
-}
-
-[data-viewport="small-mobile"] iframe {
-  width: 320px;
-  height: 568px;
-}
-
-[data-viewport="large-mobile"] iframe {
-  width: 414px;
-  height: 896px;
-}
-
-[data-viewport="tablet"] iframe {
-  width: 834px;
-  height: 1112px;
-}
-</style>

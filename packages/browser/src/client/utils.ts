@@ -16,6 +16,7 @@ interface BrowserRunnerState {
   config: ResolvedConfig
   type: 'tester' | 'orchestrator'
   wrapModule: <T>(module: () => T) => T
+  iframeId?: string
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
 }

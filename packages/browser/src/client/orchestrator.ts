@@ -38,6 +38,10 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
   iframe.setAttribute('data-vitest', 'true')
 
+  const config = getConfig().browser
+  iframe.style.width = `${config.viewport.width}px`
+  iframe.style.height = `${config.viewport.height}px`
+
   iframe.style.display = 'block'
   iframe.style.border = 'none'
   iframe.style.pointerEvents = 'none'
@@ -66,7 +70,14 @@ interface IframeErrorEvent {
   files: string[]
 }
 
-type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent
+interface IframeViewportEvent {
+  type: 'viewport'
+  width: number | string
+  height: number | string
+  id: string
+}
+
+type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeViewportEvent
 
 async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
@@ -99,6 +110,30 @@ client.ws.addEventListener('open', async () => {
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
     debug('channel event', JSON.stringify(e.data))
     switch (e.data.type) {
+      case 'viewport': {
+        const { width, height, id } = e.data
+        const widthStr = typeof width === 'number' ? `${width}px` : width
+        const heightStr = typeof height === 'number' ? `${height}px` : height
+        const iframe = iframes.get(id)
+        if (!iframe) {
+          const error = new Error(`Cannot find iframe with id ${id}`)
+          channel.postMessage({ type: 'viewport:fail', id, error: error.message })
+          await client.rpc.onUnhandledError({
+            name: 'Teardown Error',
+            message: error.message,
+          }, 'Teardown Error')
+          return
+        }
+        iframe.style.width = widthStr
+        iframe.style.height = heightStr
+        const ui = getUiAPI()
+        if (ui) {
+          await new Promise(r => requestAnimationFrame(r))
+          ui.recalculateDetailPanels()
+        }
+        channel.postMessage({ type: 'viewport:done', id })
+        break
+      }
       case 'done': {
         const filenames = e.data.filenames
         filenames.forEach(filename => runningFiles.delete(filename))
@@ -161,6 +196,13 @@ async function createTesters(testFiles: string[]) {
       container,
       ID_ALL,
     )
+
+    const ui = getUiAPI()
+
+    if (ui) {
+      await new Promise(r => requestAnimationFrame(r))
+      ui.recalculateDetailPanels()
+    }
   }
   else {
     // otherwise, we need to wait for each iframe to finish before creating the next one
@@ -168,15 +210,18 @@ async function createTesters(testFiles: string[]) {
     for (const file of testFiles) {
       const ui = getUiAPI()
 
-      if (ui) {
-        const id = generateFileId(file)
-        ui.setCurrentById(id)
-      }
-
       createIframe(
         container,
         file,
       )
+
+      if (ui) {
+        const id = generateFileId(file)
+        ui.setCurrentById(id)
+        await new Promise(r => requestAnimationFrame(r))
+        ui.recalculateDetailPanels()
+      }
+
       await new Promise<void>((resolve) => {
         channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
           // done and error can only be triggered by the previous iframe

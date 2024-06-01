@@ -537,6 +537,10 @@ export function resolveConfig(
   resolved.browser.isolate ??= true
   resolved.browser.ui ??= !isCI
 
+  resolved.browser.viewport ??= {} as any
+  resolved.browser.viewport.width ??= 414
+  resolved.browser.viewport.height ??= 896
+
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
     resolved.browser.provider = 'none'
 

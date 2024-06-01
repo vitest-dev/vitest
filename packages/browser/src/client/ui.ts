@@ -3,6 +3,8 @@ import type { File } from '@vitest/runner'
 interface UiAPI {
   currentModule: File
   setCurrentById: (fileId: string) => void
+  resetDetailSizes: () => void
+  recalculateDetailPanels: () => void
 }
 
 export function getUiAPI(): UiAPI | undefined {

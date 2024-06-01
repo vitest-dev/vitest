@@ -84,4 +84,8 @@ export const page: {
    * Serialized test config.
    */
   config: ResolvedConfig
+  /**
+   * Change the size of iframe's viewport.
+   */
+  viewport: (width: number | string, height: number | string) => Promise<void>
 }
