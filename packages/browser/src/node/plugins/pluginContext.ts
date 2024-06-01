@@ -40,6 +40,7 @@ function generateContextFile(project: WorkspaceProject) {
 
   return `
 const rpc = () => __vitest_worker__.rpc
+const channel = new BroadcastChannel('vitest')
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},
@@ -54,6 +55,18 @@ export const commands = server.commands
 export const page = {
   get config() {
     return __vitest_browser_runner__.config
+  },
+  viewport(width, height) {
+    const id = __vitest_browser_runner__.iframeId
+    channel.postMessage({ type: 'viewport', width, height, id })
+    return new Promise((resolve) => {
+      channel.addEventListener('message', function handler(e) {
+        if (e.data.type === 'viewport:done' && e.data.id === id) {
+          channel.removeEventListener('message', handler)
+          resolve()
+        }
+      })
+    })
   }
 }
 `

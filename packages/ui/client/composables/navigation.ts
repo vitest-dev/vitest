@@ -12,6 +12,19 @@ export const coverageEnabled = computed(() => {
   return coverageConfigured.value
     && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
+export const detailSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-detailSizes', [33, 67], {
+  initOnMounted: true,
+})
+
+export function recalculateDetailPanels() {
+  const iframe = document.querySelector('#tester-ui iframe[data-vitest]')!
+  const panel = document.querySelector('#details-splitpanes')!
+  const panelWidth = panel.clientWidth
+  const iframeWidth = iframe.clientWidth
+  const iframePercent = Math.min((iframeWidth / panelWidth) * 100, 95)
+  const detailsPercent = 100 - iframePercent
+  detailSizes.value = [iframePercent, detailsPercent]
+}
 
 // @ts-expect-error not typed global
 window.__vitest_ui_api__ = {
@@ -23,6 +36,10 @@ window.__vitest_ui_api__ = {
     currentModule.value = findById(fileId)
     showDashboard(false)
   },
+  resetDetailSizes() {
+    detailSizes.value = [33, 67]
+  },
+  recalculateDetailPanels,
 }
 export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
 // TODO

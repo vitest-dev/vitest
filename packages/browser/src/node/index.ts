@@ -106,6 +106,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
+          const iframeId = decodedTestFile === '__vitest_all__' ? '"__vitest_all__"' : JSON.stringify(decodedTestFile)
 
           if (!testerScripts)
             testerScripts = await formatScripts(project.config.browser.testerScripts, server)
@@ -119,6 +120,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             // TODO: have only a single global variable to not pollute the global scope
 `<script type="module">
   __vitest_browser_runner__.runningFiles = ${tests}
+  __vitest_browser_runner__.iframeId = ${iframeId}
   __vitest_browser_runner__.runTests(__vitest_browser_runner__.runningFiles)
 </script>`,
           })
