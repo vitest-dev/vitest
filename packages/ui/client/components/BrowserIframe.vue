@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { registerResizeListener } from '~/composables/client/resizing'
+
 const viewport = ref('custom')
+const resize = ref(false)
 
 function changeViewport(name: string) {
   if (viewport.value === name) {
@@ -8,6 +11,12 @@ function changeViewport(name: string) {
     viewport.value = name
   }
 }
+function onResize(resizing: boolean) {
+  resize.value = resizing
+}
+onMounted(() => {
+  registerResizeListener(onResize)
+})
 </script>
 
 <template>
@@ -61,8 +70,13 @@ function changeViewport(name: string) {
         @click="changeViewport('tablet')"
       />
     </div>
-    <div flex-auto overflow-auto>
-      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%" :data-viewport="viewport">
+    <div class="grid scrolls place-items-center" style="height: calc(100vh - 84px)">
+      <div
+        id="tester-ui"
+        class="flex font-light op70"
+        :class="resize ? 'resizing': undefined"
+        :data-viewport="viewport"
+      >
         Select a test to run
       </div>
     </div>
@@ -70,21 +84,40 @@ function changeViewport(name: string) {
 </template>
 
 <style>
+#tester-ui.resizing iframe {
+  pointer-events: none;
+}
+[data-viewport="custom"] {
+  padding: 11px;
+}
+[data-viewport="custom"],
 [data-viewport="custom"] iframe {
   width: 100%;
   height: 100%;
 }
 
+[data-viewport="small-mobile"] {
+  margin: 11px;
+}
+[data-viewport="small-mobile"],
 [data-viewport="small-mobile"] iframe {
   width: 320px;
   height: 568px;
 }
 
+[data-viewport="large-mobile"] {
+  margin: 11px;
+}
+[data-viewport="large-mobile"],
 [data-viewport="large-mobile"] iframe {
   width: 414px;
   height: 896px;
 }
 
+[data-viewport="tablet-mobile"] {
+  margin: 11px;
+}
+[data-viewport="tablet"],
 [data-viewport="tablet"] iframe {
   width: 834px;
   height: 1112px;

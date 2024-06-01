@@ -151,7 +151,7 @@ async function createTesters(testFiles: string[]) {
   const container = await getContainer(config)
 
   if (config.browser.ui) {
-    container.className = ''
+    // container.className = ''
     container.textContent = ''
   }
 

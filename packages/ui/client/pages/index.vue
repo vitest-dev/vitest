@@ -3,8 +3,11 @@
 import { Pane, Splitpanes } from 'splitpanes'
 import { browserState } from '~/composables/client';
 import { coverageUrl, coverageVisible, initializeNavigation } from '../composables/navigation'
+import { provideResizing } from '~/composables/client/resizing'
 
 const dashboardVisible = initializeNavigation()
+const { notify } = provideResizing()
+
 const mainSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-mainSizes', [33, 67], {
   initOnMounted: true,
 })
@@ -21,6 +24,7 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
     detailSizes.value[i] = e.size
   })
+  notify(false)
 }, 0)
 
 function resizeMain() {
@@ -48,7 +52,7 @@ function resizeMain() {
           <FileDetails v-else />
         </transition>
         <transition v-else>
-          <Splitpanes key="detail" @resized="onModuleResized">
+          <Splitpanes key="detail" @resize="notify(true)" @resized="onModuleResized">
             <Pane :size="detailSizes[0]">
               <BrowserIframe v-once />
             </Pane>
