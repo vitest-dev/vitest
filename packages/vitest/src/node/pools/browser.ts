@@ -46,7 +46,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     const promise = waitForTests(project, files)
 
-    await provider.openPage(new URL('/', origin).toString())
+    const orchestrators = project.browserRpc.orchestrators
+    if (orchestrators.size) {
+      orchestrators.forEach((orchestrator) => {
+        orchestrator.createTesters(files)
+      })
+    }
+    else {
+      await provider.openPage(new URL('/', origin).toString())
+    }
+
     await promise
   }
 

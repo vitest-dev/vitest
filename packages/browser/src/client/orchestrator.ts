@@ -12,6 +12,15 @@ const ID_ALL = '__vitest_all__'
 
 const iframes = new Map<string, HTMLIFrameElement>()
 
+let promiseTesters: Promise<void> | undefined
+getBrowserState().createTesters = async (files) => {
+  await promiseTesters
+  promiseTesters = createTesters(files).finally(() => {
+    promiseTesters = undefined
+  })
+  await promiseTesters
+}
+
 function debug(...args: unknown[]) {
   const debug = getConfig().env.VITEST_BROWSER_DEBUG
   if (debug && debug !== 'false')
@@ -20,7 +29,7 @@ function debug(...args: unknown[]) {
 
 function createIframe(container: HTMLDivElement, file: string) {
   if (iframes.has(file)) {
-    container.removeChild(iframes.get(file)!)
+    iframes.get(file)!.remove()
     iframes.delete(file)
   }
 
@@ -75,7 +84,6 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
 }
 
 client.ws.addEventListener('open', async () => {
-  const config = getConfig()
   const testFiles = getBrowserState().files
 
   debug('test files', testFiles.join(', '))
@@ -86,7 +94,6 @@ client.ws.addEventListener('open', async () => {
     return
   }
 
-  const container = await getContainer(config)
   const runningFiles = new Set<string>(testFiles)
 
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
@@ -137,6 +144,13 @@ client.ws.addEventListener('open', async () => {
     }
   })
 
+  await createTesters(testFiles)
+})
+
+async function createTesters(testFiles: string[]) {
+  const config = getConfig()
+  const container = await getContainer(config)
+
   if (config.browser.ui) {
     container.className = ''
     container.textContent = ''
@@ -174,7 +188,7 @@ client.ws.addEventListener('open', async () => {
       })
     }
   }
-})
+}
 
 function generateFileId(file: string) {
   const config = getConfig()

@@ -50,7 +50,7 @@ function resizeMain() {
         <transition v-else>
           <Splitpanes key="detail" @resized="onModuleResized">
             <Pane :size="detailSizes[0]">
-              <BrowserIframe />
+              <BrowserIframe v-once />
             </Pane>
             <Pane :size="detailSizes[1]">
               <Dashboard v-if="dashboardVisible" key="summary" />

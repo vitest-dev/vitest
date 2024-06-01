@@ -191,13 +191,13 @@ export class Vitest {
 
   public getProjectByTaskId(taskId: string): WorkspaceProject {
     const task = this.state.idMap.get(taskId)
-    const projectName = (task as File).projectName || task?.file?.projectName
+    const projectName = (task as File).projectName || task?.file?.projectName || ''
     return this.projects.find(p => p.getName() === projectName)
       || this.getCoreWorkspaceProject()
       || this.projects[0]
   }
 
-  public getProjectByName(name: string) {
+  public getProjectByName(name: string = '') {
     return this.projects.find(p => p.getName() === name)
       || this.getCoreWorkspaceProject()
       || this.projects[0]
@@ -609,7 +609,7 @@ export class Vitest {
     await this.report('onPathsCollected', filepaths)
     await this.report('onSpecsCollected', specs.map(
       ([project, file]) =>
-        [{ name: project.getName(), root: project.config.root }, file] as SerializableSpec,
+        [{ name: project.config.name, root: project.config.root }, file] as SerializableSpec,
     ))
 
     // previous run

@@ -91,7 +91,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         async getTestFiles() {
           const spec = await ctx.globTestFiles()
           return spec.map(([project, file]) => [{
-            name: project.getName(),
+            name: project.config.name,
             root: project.config.root,
           }, file])
         },

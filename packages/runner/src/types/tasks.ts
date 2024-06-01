@@ -60,7 +60,7 @@ export interface Suite extends TaskBase {
 
 export interface File extends Suite {
   filepath: string
-  projectName: string
+  projectName: string | undefined
   collectDuration?: number
   setupDuration?: number
 }
