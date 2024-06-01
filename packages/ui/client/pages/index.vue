@@ -3,7 +3,7 @@
 import { Pane, Splitpanes } from 'splitpanes'
 import { browserState } from '~/composables/client';
 import { coverageUrl, coverageVisible, initializeNavigation, detailSizes } from '~/composables/navigation'
-import { provideResizing } from '~/composables/client/resizing'
+import { provideResizing } from '~/composables/browser'
 
 const { notifyResizing } = provideResizing()
 const dashboardVisible = initializeNavigation()

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { recalculateDetailPanels } from '~/composables/navigation'
-import { registerResizingListener } from '~/composables/client/resizing'
+import { recalculateDetailPanels, registerResizingListener } from '~/composables/browser'
 
 type ViewportSize = 'small-mobile' | 'large-mobile' | 'tablet' | 'custom'
 
