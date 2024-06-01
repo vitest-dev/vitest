@@ -150,10 +150,8 @@ async function createTesters(testFiles: string[]) {
   const config = getConfig()
   const container = await getContainer(config)
 
-  if (config.browser.ui) {
-    // container.className = ''
+  if (config.browser.ui)
     container.textContent = ''
-  }
 
   if (config.isolate === false) {
     createIframe(
