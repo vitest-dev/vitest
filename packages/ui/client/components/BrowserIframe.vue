@@ -1,22 +1,27 @@
 <script setup lang="ts">
-const viewport = ref('custom')
 import { recalculateDetailPanels } from '~/composables/navigation'
+import { registerResizingListener } from '~/composables/client/resizing'
 
-const sizes = {
+type ViewportSize = 'small-mobile' | 'large-mobile' | 'tablet' | 'custom'
+
+const sizes: Record<ViewportSize, [width: string, height: string]> = {
   'small-mobile': ['320px', '568px'],
   'large-mobile': ['414px', '896px'],
   tablet: ['834px', '1112px'],
   custom: ['100%', '100%'],
 }
 
-async function changeViewport(name: string) {
+const testerRef = ref<HTMLDivElement>()
+const viewport = ref<ViewportSize>('custom')
+
+async function changeViewport(name: ViewportSize) {
   if (viewport.value === name) {
     viewport.value = 'custom'
   } else {
     viewport.value = name
   }
 
-  const iframe = document.querySelector('#tester-ui iframe[data-vitest]')
+  const iframe = document.querySelector<HTMLIFrameElement>('#tester-ui iframe[data-vitest]')
   if (!iframe) {
     console.warn('Iframe not found')
     return
@@ -31,6 +36,17 @@ async function changeViewport(name: string) {
 
   recalculateDetailPanels()
 }
+
+function onResizing(isResizing: boolean) {
+  const tester = testerRef.value
+  if (!tester)
+    return
+
+  tester.style.pointerEvents = isResizing ? 'none' : ''
+}
+onMounted(() => {
+  registerResizingListener(onResizing)
+})
 </script>
 
 <template>
@@ -84,10 +100,22 @@ async function changeViewport(name: string) {
         @click="changeViewport('tablet')"
       />
     </div>
-    <div flex-auto overflow-auto>
-      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
+    <div flex-auto class="scrolls">
+      <div id="tester-ui" ref="testerRef" style="overflow: auto; width: 100%; height: 100%">
         Select a test to run
       </div>
     </div>
   </div>
 </template>
+
+<style>
+#tester-ui {
+  @apply flex h-full justify-center items-center font-light op70;
+}
+/* DO NOT REMOVE: class added in browser orchestrator when adding the iframe */
+#tester-ui.testing {
+  display: unset !important;
+  font-family: unset !important;
+  opacity: unset;
+}
+</style>

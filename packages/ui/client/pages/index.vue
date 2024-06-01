@@ -2,9 +2,12 @@
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { browserState } from '~/composables/client';
-import { coverageUrl, coverageVisible, initializeNavigation, detailSizes } from '../composables/navigation'
+import { coverageUrl, coverageVisible, initializeNavigation, detailSizes } from '~/composables/navigation'
+import { provideResizing } from '~/composables/client/resizing'
 
+const { notifyResizing } = provideResizing()
 const dashboardVisible = initializeNavigation()
+
 const mainSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-mainSizes', [33, 67], {
   initOnMounted: true,
 })
@@ -18,6 +21,7 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
     detailSizes.value[i] = e.size
   })
+  notifyResizing(false)
 }, 0)
 
 function resizeMain() {
@@ -41,7 +45,7 @@ function resizeMain() {
           <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
           <FileDetails v-else />
         </transition>
-        <Splitpanes v-else key="detail" id="details-splitpanes" @resized="onModuleResized">
+        <Splitpanes v-else key="detail" id="details-splitpanes" @resize="notifyResizing(true)" @resized="onModuleResized">
           <Pane :size="detailSizes[0]">
             <BrowserIframe v-once />
           </Pane>
