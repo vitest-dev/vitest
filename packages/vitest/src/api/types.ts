@@ -62,6 +62,7 @@ export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinis
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
   startMocking: (id: string) => Promise<string[]>
+  createTesters: (files: string[]) => Promise<void>
 }
 
 export type WebSocketRPC = BirpcReturn<WebSocketEvents, WebSocketHandlers>

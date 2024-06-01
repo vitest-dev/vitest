@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ModuleGraphData } from 'vitest'
-import { client, current, currentLogs, isReport, browserState } from '~/composables/client'
+import { client, current, currentLogs, isReport, browserState, config } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
@@ -43,6 +43,13 @@ const consoleCount = computed(() => {
 function onDraft(value: boolean) {
   draft.value = value
 }
+
+function relativeToRoot(path?: string) {
+  if (!path) return ''
+  if (path.startsWith(config.root))
+    return path.slice(config.root.length)
+  return path
+}
 </script>
 
 <template>
@@ -54,7 +61,7 @@ function onDraft(value: boolean) {
           [{{ current?.file.projectName || '' }}]
         </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.filepath }}
+          {{ relativeToRoot(current?.filepath) }}
         </div>
         <div class="flex text-lg">
           <IconButton

@@ -384,8 +384,8 @@ export abstract class BaseReporter implements Reporter {
           const hasStr = i[0]?.stackStr === error.stackStr
           if (!hasStr)
             return false
-          const currentProjectName = (task as File)?.projectName || task.file?.projectName
-          const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName
+          const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
+          const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
           return projectName === currentProjectName
         })
         if (errorItem)
@@ -397,7 +397,7 @@ export abstract class BaseReporter implements Reporter {
     for (const [error, tasks] of errorsQueue) {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
-        const projectName = (task as File)?.projectName || task.file?.projectName
+        const projectName = (task as File)?.projectName || task.file?.projectName || ''
         let name = getFullName(task, c.dim(' > '))
         if (filepath)
           name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`

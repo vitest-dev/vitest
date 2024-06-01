@@ -26,6 +26,7 @@ const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
+console.log(tasks)
   if (!search.value.trim())
     return tasks
 
@@ -36,11 +37,7 @@ const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? fil
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
 const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => filtered.value.filter(task =>
-  !failed.value.includes(task)
-  && !success.value.includes(task)
-  && !skipped.value.includes(task),
-))
+const running = computed(() => filtered.value.filter(task => !task.result || task.result.state === 'run'))
 
 const disableClearSearch = computed(() => search.value === '')
 
