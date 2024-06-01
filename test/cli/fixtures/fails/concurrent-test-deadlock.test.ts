@@ -1,4 +1,4 @@
-import { describe, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { createDefer } from '@vitest/utils'
 
 // 3 tests depend on each other,
@@ -20,17 +20,20 @@ describe('wrapper', { concurrent: true, timeout: 500 }, () => {
   ]
 
   test('a', async () => {
+    expect(1).toBe(1)
     defers[0].resolve()
     await defers[2]
   })
 
   test('b', async () => {
+    expect(1).toBe(1)
     await defers[0]
     defers[1].resolve()
     await defers[2]
   })
 
   test('c', async () => {
+    expect(1).toBe(1)
     await defers[1]
     defers[2].resolve()
   })

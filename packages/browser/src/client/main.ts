@@ -69,12 +69,15 @@ client.ws.addEventListener('open', async () => {
         const filenames = e.data.filenames
         filenames.forEach(filename => runningFiles.delete(filename))
 
-        const iframeId = filenames.length > 1 ? ID_ALL : filenames[0]
-        iframes.get(iframeId)?.remove()
-        iframes.delete(iframeId)
-
-        if (!runningFiles.size)
+        if (!runningFiles.size) {
           await done()
+        }
+        else {
+          // keep the last iframe
+          const iframeId = filenames.length > 1 ? ID_ALL : filenames[0]
+          iframes.get(iframeId)?.remove()
+          iframes.delete(iframeId)
+        }
         break
       }
       // error happened at the top level, this should never happen in user code, but it can trigger during development

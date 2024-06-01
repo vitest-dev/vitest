@@ -478,6 +478,12 @@ importers:
       '@wdio/protocols':
         specifier: ^8.32.0
         version: 8.32.0
+      birpc:
+        specifier: 0.2.17
+        version: 0.2.17
+      flatted:
+        specifier: ^3.3.1
+        version: 3.3.1
       periscopic:
         specifier: ^4.0.2
         version: 4.0.2
@@ -684,8 +690,8 @@ importers:
   packages/spy:
     dependencies:
       tinyspy:
-        specifier: ^2.2.1
-        version: 2.2.1
+        specifier: ^3.0.0
+        version: 3.0.0
 
   packages/ui:
     dependencies:
@@ -14887,8 +14893,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: true
 
-  /tinyspy@2.2.1:
-    resolution: {integrity: sha512-KYad6Vy5VDWV4GH3fjpseMQ/XU2BhIYP7Vzd0LG44qRWm/Yt2WCOTicFdvmgo6gWaqooMQCawTtILVQJupKu7A==}
+  /tinyspy@3.0.0:
+    resolution: {integrity: sha512-q5nmENpTHgiPVd1cJDDc9cVoYN5x4vCvwT3FMilvKPKneCBZAxn2YWQjDF0UMcE9k0Cay1gBiDfTMU0g+mPMQA==}
     engines: {node: '>=14.0.0'}
     dev: false
 

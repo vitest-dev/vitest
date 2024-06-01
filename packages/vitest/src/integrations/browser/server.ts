@@ -5,6 +5,8 @@ import { CoverageTransform } from '../../node/plugins/coverageTransform'
 import type { WorkspaceProject } from '../../node/workspace'
 import { MocksPlugin } from '../../node/plugins/mocks'
 import { resolveFsAllow } from '../../node/plugins/utils'
+import { setupBrowserRpc } from '../../api/browser'
+import { setup as setupUiRpc } from '../../api/setup'
 
 export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
   const root = project.config.root
@@ -21,12 +23,11 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
     // watch is handled by Vitest
     server: {
       hmr: false,
-      watch: {
-        ignored: ['**/**'],
-      },
+      watch: null,
     },
     plugins: [
       ...project.options?.plugins || [],
+      MocksPlugin(),
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
       {
@@ -59,17 +60,19 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
             },
             server: {
               watch: null,
+              preTransformRequests: false,
             },
           }
         },
       },
-      MocksPlugin(),
     ],
   })
 
   await server.listen()
 
-  ;(await import('../../api/setup')).setup(project, server)
+  setupBrowserRpc(project, server)
+  if (project.config.browser.ui)
+    setupUiRpc(project.ctx, server)
 
   return server
 }

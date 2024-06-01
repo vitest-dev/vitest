@@ -89,6 +89,12 @@ export interface ViteNodeResolveId {
   syntheticNamedExports?: boolean | string | null
 }
 
+export interface ViteNodeResolveModule {
+  external: string | null
+  id: string
+  fsPath: string
+}
+
 export interface ViteNodeServerOptions {
   /**
    * Inject inline sourcemap to modules

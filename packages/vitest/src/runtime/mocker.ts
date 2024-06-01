@@ -105,7 +105,7 @@ export class VitestMocker {
       this.moduleCache.delete(mockId)
   }
 
-  private isAModuleDirectory(path: string) {
+  private isModuleDirectory(path: string) {
     return this.moduleDirectories.some(dir => path.includes(dir))
   }
 
@@ -150,7 +150,7 @@ export class VitestMocker {
     }
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = (!isAbsolute(fsPath) || this.isAModuleDirectory(fsPath)) ? rawId : null
+    const external = (!isAbsolute(fsPath) || this.isModuleDirectory(fsPath)) ? rawId : null
 
     return {
       id,

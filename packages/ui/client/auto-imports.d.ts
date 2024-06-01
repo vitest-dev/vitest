@@ -89,6 +89,7 @@ declare global {
   const onUnmounted: typeof import('vue')['onUnmounted']
   const onUpdated: typeof import('vue')['onUpdated']
   const openInEditor: typeof import('./composables/error')['openInEditor']
+  const openedTreeItems: typeof import('./composables/navigation')['openedTreeItems']
   const params: typeof import('./composables/params')['params']
   const parseError: typeof import('./composables/error')['parseError']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']

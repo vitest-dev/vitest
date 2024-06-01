@@ -44,14 +44,7 @@ function resizeMain() {
         <transition>
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
-          <Splitpanes v-else key="detail" @resized="onModuleResized">
-            <Pane :size="detailSizes[0]">
-              <Suites />
-            </Pane>
-            <Pane :size="detailSizes[1]">
-              <FileDetails />
-            </Pane>
-          </Splitpanes>
+          <FileDetails v-else />
         </transition>
       </Pane>
     </Splitpanes>

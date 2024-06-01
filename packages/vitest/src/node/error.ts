@@ -260,7 +260,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   }
 }
 
-function printStack(
+export function printStack(
   logger: Logger,
   project: WorkspaceProject,
   stack: ParsedStack[],

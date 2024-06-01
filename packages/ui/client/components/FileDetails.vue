@@ -5,6 +5,7 @@ import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
+import { getProjectNameColor } from '~/utils/task';
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
@@ -15,7 +16,8 @@ debouncedWatch(
   current,
   async (c, o) => {
     if (c && c.filepath !== o?.filepath) {
-      data.value = await client.rpc.getModuleGraph(c.filepath)
+      const project = c.file.projectName || ''
+      data.value = await client.rpc.getModuleGraph(project, c.filepath)
       graph.value = getModuleGraph(data.value, c.filepath)
     }
   },
@@ -48,6 +50,9 @@ function onDraft(value: boolean) {
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
+        <div font-light op-50 text-sm :style="{ color: getProjectNameColor(current?.file.projectName) }">
+          [{{ current?.file.projectName || '' }}]
+        </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
           {{ current?.filepath }}
         </div>

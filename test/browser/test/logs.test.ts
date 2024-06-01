@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { test } from 'vitest'
+import { test, vi } from 'vitest'
 
 test('logging to stdout', () => {
   console.log('hello from console.log')
@@ -51,4 +51,11 @@ test('logging custom time', () => {
 test('logging invalid time', () => {
   console.timeLog('invalid timeLog')
   console.timeEnd('invalid timeEnd')
+})
+
+test('logging the stack', () => {
+  vi.setConfig({ printConsoleTrace: true })
+  console.log('log with a stack')
+  console.error('error with a stack')
+  console.trace('trace with a stack')
 })
