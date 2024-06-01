@@ -48,7 +48,7 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.setAttribute('allow', 'clipboard-write;')
 
   iframes.set(file, iframe)
-  container.className = 'testing'
+  container.className = 'scrolls'
   container.appendChild(iframe)
   return iframe
 }

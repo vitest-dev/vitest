@@ -101,21 +101,9 @@ onMounted(() => {
       />
     </div>
     <div flex-auto class="scrolls">
-      <div id="tester-ui" ref="testerRef" style="overflow: auto; width: 100%; height: 100%">
+      <div id="tester-ui" ref="testerRef" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
         Select a test to run
       </div>
     </div>
   </div>
 </template>
-
-<style>
-#tester-ui {
-  @apply flex h-full justify-center items-center font-light op70;
-}
-/* DO NOT REMOVE: class added in browser orchestrator when adding the iframe */
-#tester-ui.testing {
-  display: unset !important;
-  font-family: unset !important;
-  opacity: unset;
-}
-</style>
