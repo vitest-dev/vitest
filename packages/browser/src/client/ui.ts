@@ -1,4 +1,4 @@
-import type { File } from 'vitest'
+import type { File } from '@vitest/runner'
 
 interface UiAPI {
   currentModule: File

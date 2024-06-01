@@ -76,7 +76,6 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
 
 client.ws.addEventListener('open', async () => {
   const config = getConfig()
-  // #tester-ui is in Vitest UI, #vitest-tester if if there is no UI
   const testFiles = getBrowserState().files
 
   debug('test files', testFiles.join(', '))
