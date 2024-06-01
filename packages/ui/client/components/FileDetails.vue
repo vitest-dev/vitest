@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ModuleGraphData } from 'vitest'
-import { client, current, currentLogs, isReport } from '~/composables/client'
+import { client, current, currentLogs, isReport, browserState } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
@@ -17,7 +17,7 @@ debouncedWatch(
   async (c, o) => {
     if (c && c.filepath !== o?.filepath) {
       const project = c.file.projectName || ''
-      data.value = await client.rpc.getModuleGraph(project, c.filepath)
+      data.value = await client.rpc.getModuleGraph(project, c.filepath, !!browserState)
       graph.value = getModuleGraph(data.value, c.filepath)
     }
   },

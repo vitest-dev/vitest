@@ -1,7 +1,7 @@
 import type { ModuleNode } from 'vite'
 import type { ModuleGraphData, Vitest } from '../types'
 
-export async function getModuleGraph(ctx: Vitest, projectName: string, id: string): Promise<ModuleGraphData> {
+export async function getModuleGraph(ctx: Vitest, projectName: string, id: string, browser = false): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
   const inlined = new Set<string>()
@@ -18,7 +18,9 @@ export async function getModuleGraph(ctx: Vitest, projectName: string, id: strin
       return seen.get(mod)
     let id = clearId(mod.id)
     seen.set(mod, id)
-    const rewrote = await project.vitenode.shouldExternalize(id)
+    const rewrote = browser
+      ? (mod.file?.includes(project.browser!.config.cacheDir) ? mod.id : false)
+      : await project.vitenode.shouldExternalize(id)
     if (rewrote) {
       id = rewrote
       externalized.add(id)
@@ -31,7 +33,11 @@ export async function getModuleGraph(ctx: Vitest, projectName: string, id: strin
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
     return id
   }
-  await get(project.server.moduleGraph.getModuleById(id))
+  if (browser && project.browser)
+    await get(project.browser.moduleGraph.getModuleById(id))
+  else
+    await get(project.server.moduleGraph.getModuleById(id))
+
   return {
     graph,
     externalized: Array.from(externalized),
