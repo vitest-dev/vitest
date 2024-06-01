@@ -1,4 +1,4 @@
-export type ResizeListener = (active: boolean) => void
+export type ResizeListener = (isResizing: boolean) => void
 
 const resizingSymbol = Symbol.for('resizing')
 
