@@ -263,14 +263,18 @@ function resolveConfig(configModule: any) {
     if (mod.$type === 'object')
       return mod
 
-    if (mod.$type === 'function-call') {
-      // "export default defineConfig({ test: {...} })"
-      if (mod.$args[0].$type === 'object')
-        return mod.$args[0]
+    // "export default defineConfig(...)"
+    let config = findDefineConfig(mod)
+    if (config)
+      return config
 
-      // "export default defineConfig(() => ({ test: {...} }))"
-      if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
-        return mod.$args[0].$body
+    // "export default mergeConfig(..., defineConfig(...))"
+    if (mod.$type === 'function-call' && mod.$callee === 'mergeConfig') {
+      for (const arg of mod.$args) {
+        config = findDefineConfig(arg)
+        if (config)
+          return config
+      }
     }
   }
   catch (error) {
@@ -279,4 +283,16 @@ function resolveConfig(configModule: any) {
   }
 
   throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
+}
+
+function findDefineConfig(mod: any) {
+  if (mod.$type === 'function-call' && mod.$callee === 'defineConfig') {
+    // "export default defineConfig({ test: {...} })"
+    if (mod.$args[0].$type === 'object')
+      return mod.$args[0]
+
+    // "export default defineConfig(() => ({ test: {...} }))"
+    if (mod.$args[0].$type === 'arrow-function-expression' && mod.$args[0].$body.$type === 'object')
+      return mod.$args[0].$body
+  }
 }
