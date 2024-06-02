@@ -44,7 +44,6 @@ function createIframe(container: HTMLDivElement, file: string) {
 
   iframe.style.display = 'block'
   iframe.style.border = 'none'
-  iframe.style.pointerEvents = 'none'
   iframe.setAttribute('allowfullscreen', 'true')
   iframe.setAttribute('allow', 'clipboard-write;')
 
@@ -187,7 +186,7 @@ async function createTesters(testFiles: string[]) {
   const container = await getContainer(config)
 
   if (config.browser.ui) {
-    container.className = ''
+    container.className = 'scrolls'
     container.textContent = ''
   }
 

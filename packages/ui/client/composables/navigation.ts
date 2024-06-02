@@ -16,16 +16,6 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>('vites
   initOnMounted: true,
 })
 
-export function recalculateDetailPanels() {
-  const iframe = document.querySelector('#tester-ui iframe[data-vitest]')!
-  const panel = document.querySelector('#details-splitpanes')!
-  const panelWidth = panel.clientWidth
-  const iframeWidth = iframe.clientWidth
-  const iframePercent = Math.min((iframeWidth / panelWidth) * 100, 95)
-  const detailsPercent = 100 - iframePercent
-  detailSizes.value = [iframePercent, detailsPercent]
-}
-
 // @ts-expect-error not typed global
 window.__vitest_ui_api__ = {
   get currentModule() {

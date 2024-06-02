@@ -1,22 +1,28 @@
 <script setup lang="ts">
-const viewport = ref('custom')
-import { recalculateDetailPanels } from '~/composables/navigation'
+import { useResizing } from '~/composables/browser'
 
-const sizes = {
+type ViewportSize = 'small-mobile' | 'large-mobile' | 'tablet' | 'custom'
+
+const sizes: Record<ViewportSize, [width: string, height: string]> = {
   'small-mobile': ['320px', '568px'],
   'large-mobile': ['414px', '896px'],
   tablet: ['834px', '1112px'],
   custom: ['100%', '100%'],
 }
 
-async function changeViewport(name: string) {
+const testerRef = ref<HTMLDivElement | undefined>()
+const viewport = ref<ViewportSize>('custom')
+
+const { recalculateDetailPanels } = useResizing(testerRef)
+
+async function changeViewport(name: ViewportSize) {
   if (viewport.value === name) {
     viewport.value = 'custom'
   } else {
     viewport.value = name
   }
 
-  const iframe = document.querySelector('#tester-ui iframe[data-vitest]')
+  const iframe = document.querySelector<HTMLIFrameElement>('#tester-ui iframe[data-vitest]')
   if (!iframe) {
     console.warn('Iframe not found')
     return
@@ -84,8 +90,8 @@ async function changeViewport(name: string) {
         @click="changeViewport('tablet')"
       />
     </div>
-    <div flex-auto overflow-auto>
-      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
+    <div flex-auto class="scrolls">
+      <div id="tester-ui" ref="testerRef" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
         Select a test to run
       </div>
     </div>
