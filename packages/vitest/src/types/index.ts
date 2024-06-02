@@ -24,6 +24,7 @@ export type {
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+export type { BrowserUI } from './ui'
 
 export type {
   ExpectStatic,

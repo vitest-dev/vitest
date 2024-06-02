@@ -1,13 +1,6 @@
-import type { File } from '@vitest/runner'
+import type { BrowserUI } from 'vitest'
 
-interface UiAPI {
-  currentModule: File
-  setCurrentById: (fileId: string) => void
-  resetDetailSizes: () => void
-  recalculateDetailPanels: () => void
-}
-
-export function getUiAPI(): UiAPI | undefined {
+export function getUiAPI(): BrowserUI | undefined {
   // @ts-expect-error not typed global
   return window.__vitest_ui_api__
 }

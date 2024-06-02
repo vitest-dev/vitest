@@ -16,21 +16,6 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>('vites
   initOnMounted: true,
 })
 
-// @ts-expect-error not typed global
-window.__vitest_ui_api__ = {
-  get currentModule() {
-    return currentModule.value
-  },
-  setCurrentById(fileId: string) {
-    activeFileId.value = fileId
-    currentModule.value = findById(fileId)
-    showDashboard(false)
-  },
-  resetDetailSizes() {
-    detailSizes.value = [33, 67]
-  },
-  recalculateDetailPanels,
-}
 export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.

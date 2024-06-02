@@ -3,9 +3,8 @@
 import { Pane, Splitpanes } from 'splitpanes'
 import { browserState } from '~/composables/client';
 import { coverageUrl, coverageVisible, initializeNavigation, detailSizes } from '~/composables/navigation'
-import { useNotifyResizing } from '~/composables/browser'
+import { onBrowserPanelResizing } from '~/composables/browser'
 
-const { notifyResizing } = useNotifyResizing()
 const dashboardVisible = initializeNavigation()
 
 const mainSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-mainSizes', [33, 67], {
@@ -21,7 +20,7 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
     detailSizes.value[i] = e.size
   })
-  notifyResizing(false)
+  onBrowserPanelResizing(false)
 }, 0)
 
 function resizeMain() {
@@ -45,8 +44,8 @@ function resizeMain() {
           <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
           <FileDetails v-else />
         </transition>
-        <Splitpanes v-else key="detail" id="details-splitpanes" @resize="notifyResizing(true)" @resized="onModuleResized">
-          <Pane :size="detailSizes[0]">
+        <Splitpanes v-else key="detail" id="details-splitpanes" @resize="onBrowserPanelResizing(true)" @resized="onModuleResized">
+          <Pane :size="detailSizes[0]" min-size="10">
             <BrowserIframe v-once />
           </Pane>
           <Pane :size="detailSizes[1]" min-size="5">

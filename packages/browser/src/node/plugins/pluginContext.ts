@@ -59,7 +59,7 @@ export const page = {
   viewport(width, height) {
     const id = __vitest_browser_runner__.iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
         if (e.data.type === 'viewport:done' && e.data.id === id) {
           channel.removeEventListener('message', handler)
