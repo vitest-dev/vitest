@@ -62,7 +62,7 @@ const duration = computed(() => {
         icon="i-carbon-result-old"
         @click.prevent.stop="emit('fixSnapshot')"
       />
-      <IconAction 
+      <IconAction
         v-tooltip.bottom="'Open test details'"
         data-testid="btn-open-details"
         title="Open test details"
@@ -74,8 +74,8 @@ const duration = computed(() => {
         v-tooltip.bottom="'Run current test'"
         data-testid="btn-run-test"
         title="Run current test"
-        icon="i-carbon-play-filled-alt"
-        text="green-500"
+        icon="i-carbon:play-filled-alt"
+        text-green5
         @click.prevent.stop="emit('run')"
       />
     </div>
