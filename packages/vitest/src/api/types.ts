@@ -15,7 +15,7 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<[{ name: string; root: string }, file: string][]>
   getPaths: () => string[]
   getConfig: () => ResolvedConfig
-  getModuleGraph: (projectName: string, id: string) => Promise<ModuleGraphData>
+  getModuleGraph: (projectName: string, id: string, browser?: boolean) => Promise<ModuleGraphData>
   getTransformResult: (id: string) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
@@ -62,6 +62,7 @@ export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinis
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
   startMocking: (id: string) => Promise<string[]>
+  createTesters: (files: string[]) => Promise<void>
 }
 
 export type WebSocketRPC = BirpcReturn<WebSocketEvents, WebSocketHandlers>

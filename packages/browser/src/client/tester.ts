@@ -74,7 +74,7 @@ async function prepareTestEnvironment(files: string[]) {
       worker: './browser.js',
       workerId: 1,
       config,
-      projectName: config.name,
+      projectName: config.name || '',
       files,
       environment: {
         name: 'browser',

@@ -10,7 +10,9 @@
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
     "test-mocking": "vitest --root ./fixtures/mocking",
-    "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes"
+    "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes",
+    "test:browser:playwright": "PROVIDER=playwright vitest",
+    "test:browser:webdriverio": "PROVIDER=webdriverio vitest"
   },
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^1.0.2",

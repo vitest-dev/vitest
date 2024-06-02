@@ -1609,6 +1609,13 @@ To have a better type safety when using built-in providers, you can add one of t
 
 Should Vitest UI be injected into the page. By default, injects UI iframe during development.
 
+#### browser.viewport {#browser-viewport}
+
+- **Type:** `{ width, height }`
+- **Default:** `414x896`
+
+Default iframe's viewport.
+
 #### browser.indexScripts {#browser-indexscripts}
 
 - **Type:** `BrowserScript[]`

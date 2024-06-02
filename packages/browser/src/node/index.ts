@@ -31,8 +31,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       },
       async configureServer(server) {
         const testerHtml = readFile(resolve(distRoot, 'client/tester.html'), 'utf8')
-        const runnerHtml = readFile(resolve(distRoot, 'client/index.html'), 'utf8')
+        const orchestratorHtml = project.config.browser.ui
+          ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
+          : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8')
         const injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8')
+        const manifest = (async () => {
+          return JSON.parse(await readFile(`${distRoot}/client/.vite/manifest.json`, 'utf8'))
+        })()
         const favicon = `${base}favicon.svg`
         const testerPrefix = `${base}__vitest_test__/__test__/`
         server.middlewares.use((_req, res, next) => {
@@ -71,14 +76,27 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             if (!indexScripts)
               indexScripts = await formatScripts(project.config.browser.indexScripts, server)
 
-            const html = replacer(await runnerHtml, {
+            let baseHtml = await orchestratorHtml
+
+            // if UI is enabled, use UI HTML and inject the orchestrator script
+            if (project.config.browser.ui) {
+              const manifestContent = await manifest
+              const jsEntry = manifestContent['orchestrator.html'].file
+              baseHtml = baseHtml.replaceAll('./assets/', `${base}__vitest__/assets/`).replace(
+                '<!-- !LOAD_METADATA! -->',
+                [
+                  '<script>{__VITEST_INJECTOR__}</script>',
+                  '{__VITEST_SCRIPTS__}',
+                  `<script type="module" crossorigin src="${jsEntry}"></script>`,
+                ].join('\n'),
+              )
+            }
+
+            const html = replacer(baseHtml, {
               __VITEST_FAVICON__: favicon,
               __VITEST_TITLE__: 'Vitest Browser Runner',
               __VITEST_SCRIPTS__: indexScripts,
               __VITEST_INJECTOR__: injector,
-              __VITEST_UI__: project.config.browser.ui
-                ? '<iframe id="vitest-ui" src="/__vitest__/"></iframe>'
-                : '',
             })
             res.write(html, 'utf-8')
             res.end()
@@ -88,6 +106,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
+          const iframeId = decodedTestFile === '__vitest_all__' ? '"__vitest_all__"' : JSON.stringify(decodedTestFile)
 
           if (!testerScripts)
             testerScripts = await formatScripts(project.config.browser.testerScripts, server)
@@ -101,6 +120,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             // TODO: have only a single global variable to not pollute the global scope
 `<script type="module">
   __vitest_browser_runner__.runningFiles = ${tests}
+  __vitest_browser_runner__.iframeId = ${iframeId}
   __vitest_browser_runner__.runTests(__vitest_browser_runner__.runningFiles)
 </script>`,
           })
