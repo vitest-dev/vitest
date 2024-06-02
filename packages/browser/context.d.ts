@@ -87,5 +87,5 @@ export const page: {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport: (width: number | string, height: number | string) => Promise<void>
+  viewport: (width: number, height: number) => Promise<void>
 }

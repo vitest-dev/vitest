@@ -38,12 +38,9 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
   iframe.setAttribute('data-vitest', 'true')
 
-  const config = getConfig().browser
-  iframe.style.width = `${config.viewport.width}px`
-  iframe.style.height = `${config.viewport.height}px`
-
   iframe.style.display = 'block'
   iframe.style.border = 'none'
+  iframe.style.zIndex = '1'
   iframe.setAttribute('allowfullscreen', 'true')
   iframe.setAttribute('allow', 'clipboard-write;')
 
@@ -71,8 +68,8 @@ interface IframeErrorEvent {
 
 interface IframeViewportEvent {
   type: 'viewport'
-  width: number | string
-  height: number | string
+  width: number
+  height: number
   id: string
 }
 
@@ -111,8 +108,6 @@ client.ws.addEventListener('open', async () => {
     switch (e.data.type) {
       case 'viewport': {
         const { width, height, id } = e.data
-        const widthStr = typeof width === 'number' ? `${width}px` : width
-        const heightStr = typeof height === 'number' ? `${height}px` : height
         const iframe = iframes.get(id)
         if (!iframe) {
           const error = new Error(`Cannot find iframe with id ${id}`)
@@ -123,13 +118,7 @@ client.ws.addEventListener('open', async () => {
           }, 'Teardown Error')
           return
         }
-        iframe.style.width = widthStr
-        iframe.style.height = heightStr
-        const ui = getUiAPI()
-        if (ui) {
-          await new Promise(r => requestAnimationFrame(r))
-          ui.recalculateDetailPanels()
-        }
+        await setIframeViewport(iframe, width, height)
         channel.postMessage({ type: 'viewport:done', id })
         break
       }
@@ -143,7 +132,7 @@ client.ws.addEventListener('open', async () => {
           // so we only select it when the run is done
           if (ui && filenames.length > 1) {
             const id = generateFileId(filenames[filenames.length - 1])
-            ui.setCurrentById(id)
+            ui.setCurrentFileId(id)
           }
           await done()
         }
@@ -189,37 +178,26 @@ async function createTesters(testFiles: string[]) {
     container.className = 'scrolls'
     container.textContent = ''
   }
+  const { width, height } = config.browser.viewport
 
   if (config.isolate === false) {
-    createIframe(
+    const iframe = createIframe(
       container,
       ID_ALL,
     )
 
-    const ui = getUiAPI()
-
-    if (ui) {
-      await new Promise(r => requestAnimationFrame(r))
-      ui.recalculateDetailPanels()
-    }
+    await setIframeViewport(iframe, width, height)
   }
   else {
     // otherwise, we need to wait for each iframe to finish before creating the next one
     // this is the most stable way to run tests in the browser
     for (const file of testFiles) {
-      const ui = getUiAPI()
-
-      createIframe(
+      const iframe = createIframe(
         container,
         file,
       )
 
-      if (ui) {
-        const id = generateFileId(file)
-        ui.setCurrentById(id)
-        await new Promise(r => requestAnimationFrame(r))
-        ui.recalculateDetailPanels()
-      }
+      await setIframeViewport(iframe, width, height)
 
       await new Promise<void>((resolve) => {
         channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
@@ -239,4 +217,15 @@ function generateFileId(file: string) {
   const project = config.name || ''
   const path = relative(config.root, file)
   return generateHash(`${path}${project}`)
+}
+
+async function setIframeViewport(iframe: HTMLIFrameElement, width: number, height: number) {
+  const ui = getUiAPI()
+  if (ui) {
+    await ui.setIframeViewport(width, height)
+  }
+  else {
+    iframe.style.width = `${width}px`
+    iframe.style.height = `${height}px`
+  }
 }

@@ -1,41 +1,34 @@
 <script setup lang="ts">
-import { useResizing } from '~/composables/browser'
+import { viewport, customViewport } from '~/composables/browser'
+import type { ViewportSize } from '~/composables/browser'
+import { setIframeViewport, getCurrentBrowserIframe } from '~/composables/api'
 
-type ViewportSize = 'small-mobile' | 'large-mobile' | 'tablet' | 'custom'
-
-const sizes: Record<ViewportSize, [width: string, height: string]> = {
+const sizes: Record<ViewportSize, [width: string, height: string] | null> = {
   'small-mobile': ['320px', '568px'],
   'large-mobile': ['414px', '896px'],
   tablet: ['834px', '1112px'],
-  custom: ['100%', '100%'],
+  full: ['100%', '100%'],
+  // should not be used manually, this is just
+  // a fallback for the case when the viewport is not set correctly
+  custom: null,
 }
-
-const testerRef = ref<HTMLDivElement | undefined>()
-const viewport = ref<ViewportSize>('custom')
-
-const { recalculateDetailPanels } = useResizing(testerRef)
 
 async function changeViewport(name: ViewportSize) {
   if (viewport.value === name) {
-    viewport.value = 'custom'
+    viewport.value = customViewport.value ? 'custom' : 'full'
   } else {
     viewport.value = name
   }
 
-  const iframe = document.querySelector<HTMLIFrameElement>('#tester-ui iframe[data-vitest]')
+  const iframe = getCurrentBrowserIframe()
   if (!iframe) {
     console.warn('Iframe not found')
     return
   }
 
-  const [width, height] = sizes[viewport.value]
+  const [width, height] = sizes[viewport.value] || customViewport.value || sizes.full
 
-  iframe.style.width = width
-  iframe.style.height = height
-
-  await new Promise(r => requestAnimationFrame(r))
-
-  recalculateDetailPanels()
+  await setIframeViewport(width, height)
 }
 </script>
 
@@ -69,6 +62,13 @@ async function changeViewport(name: ViewportSize) {
     >
       <!-- TODO: these are only for preview (thank you Storybook!), we need to support more different and custom sizes (as a dropdown) -->
       <IconButton
+        v-tooltip.bottom="'Flexible'"
+        title="Flexible"
+        icon="i-carbon:fit-to-screen"
+        :active="viewport === 'full'"
+        @click="changeViewport('full')"
+      />
+      <IconButton
         v-tooltip.bottom="'Small mobile'"
         title="Small mobile"
         icon="i-carbon:mobile"
@@ -91,7 +91,7 @@ async function changeViewport(name: ViewportSize) {
       />
     </div>
     <div flex-auto class="scrolls">
-      <div id="tester-ui" ref="testerRef" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
+      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
         Select a test to run
       </div>
     </div>
