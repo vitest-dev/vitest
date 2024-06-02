@@ -48,7 +48,6 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.setAttribute('allow', 'clipboard-write;')
 
   iframes.set(file, iframe)
-  container.className = 'scrolls'
   container.appendChild(iframe)
   return iframe
 }
@@ -187,7 +186,7 @@ async function createTesters(testFiles: string[]) {
   const container = await getContainer(config)
 
   if (config.browser.ui) {
-    container.className = ''
+    container.className = 'scrolls'
     container.textContent = ''
   }
 
