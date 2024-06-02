@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { recalculateDetailPanels, registerResizingListener } from '~/composables/browser'
+import { useResizing } from '~/composables/browser'
 
 type ViewportSize = 'small-mobile' | 'large-mobile' | 'tablet' | 'custom'
 
@@ -10,8 +10,10 @@ const sizes: Record<ViewportSize, [width: string, height: string]> = {
   custom: ['100%', '100%'],
 }
 
-const testerRef = ref<HTMLDivElement>()
+const testerRef = ref<HTMLDivElement | undefined>()
 const viewport = ref<ViewportSize>('custom')
+
+const { recalculateDetailPanels } = useResizing(testerRef)
 
 async function changeViewport(name: ViewportSize) {
   if (viewport.value === name) {
@@ -35,17 +37,6 @@ async function changeViewport(name: ViewportSize) {
 
   recalculateDetailPanels()
 }
-
-function onResizing(isResizing: boolean) {
-  const tester = testerRef.value
-  if (!tester)
-    return
-
-  tester.style.pointerEvents = isResizing ? 'none' : ''
-}
-onMounted(() => {
-  registerResizingListener(onResizing)
-})
 </script>
 
 <template>

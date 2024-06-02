@@ -1,8 +1,9 @@
+import type { Ref } from 'vue'
 import { detailSizes } from '~/composables/navigation'
 
-export type ResizingListener = (isResizing: boolean) => void
+type ResizingListener = (isResizing: boolean) => void
 
-const resizingSymbol = Symbol.for('resizing')
+const resizingListeners = new Set<ResizingListener>()
 
 export function recalculateDetailPanels() {
   const iframe = document.querySelector('#tester-ui iframe[data-vitest]')!
@@ -14,23 +15,31 @@ export function recalculateDetailPanels() {
   detailSizes.value = [iframePercent, detailsPercent]
 }
 
-export function registerResizingListener(listener: ResizingListener) {
-  inject<(listener: ResizingListener) => void>(resizingSymbol)?.(listener)
+export function useResizing(testerRef: Ref<HTMLDivElement | undefined>) {
+  function onResizing(isResizing: boolean) {
+    const tester = testerRef.value
+    if (!tester)
+      return
+
+    tester.style.pointerEvents = isResizing ? 'none' : ''
+  }
+
+  onMounted(() => {
+    resizingListeners.add(onResizing)
+  })
+
+  onUnmounted(() => {
+    resizingListeners.delete(onResizing)
+  })
+
+  return { recalculateDetailPanels }
 }
 
-export function provideResizing() {
-  const listeners = new Set<ResizingListener>()
-
-  function addResizeListener(listener: ResizingListener) {
-    listeners.add(listener)
-  }
-
+export function useNotifyResizing() {
   function notifyResizing(isResizing: boolean) {
-    for (const listener of listeners)
+    for (const listener of resizingListeners)
       listener(isResizing)
   }
-
-  provide(resizingSymbol, addResizeListener)
 
   return { notifyResizing }
 }
