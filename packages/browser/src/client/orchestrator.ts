@@ -41,6 +41,7 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.style.display = 'block'
   iframe.style.border = 'none'
   iframe.style.zIndex = '1'
+  iframe.style.position = 'relative'
   iframe.setAttribute('allowfullscreen', 'true')
   iframe.setAttribute('allow', 'clipboard-write;')
 
