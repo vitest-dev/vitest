@@ -96,12 +96,6 @@ client.ws.addEventListener('open', async () => {
 
   debug('test files', testFiles.join(', '))
 
-  // TODO: fail tests suite because no tests found?
-  if (!testFiles.length) {
-    await done()
-    return
-  }
-
   const runningFiles = new Set<string>(testFiles)
 
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
@@ -168,7 +162,10 @@ client.ws.addEventListener('open', async () => {
     }
   })
 
-  await createTesters(testFiles)
+  // if page was refreshed, there will be no test files
+  // createTesters will be called again when tests are running in the UI
+  if (testFiles.length)
+    await createTesters(testFiles)
 })
 
 async function createTesters(testFiles: string[]) {
