@@ -16,7 +16,7 @@ export interface WebSocketHandlers {
   getPaths: () => string[]
   getConfig: () => ResolvedConfig
   getModuleGraph: (projectName: string, id: string, browser?: boolean) => Promise<ModuleGraphData>
-  getTransformResult: (id: string) => Promise<TransformResultWithSource | undefined>
+  getTransformResult: (projectName: string, id: string, browser?: boolean) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
   rerun: (files: string[]) => Promise<void>

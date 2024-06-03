@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { client } from '~/composables/client'
+import { client, browserState } from '~/composables/client'
 
-const props = defineProps<{ id: string }>()
+const props = defineProps<{ id: string; projectName: string }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-const result = asyncComputed(() => client.rpc.getTransformResult(props.id))
+const result = asyncComputed(() => client.rpc.getTransformResult(props.projectName, props.id, !!browserState))
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')

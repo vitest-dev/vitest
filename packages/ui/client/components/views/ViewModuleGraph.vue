@@ -7,6 +7,7 @@ import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, Module
 
 const props = defineProps<{
   graph: ModuleGraph
+  projectName: string
 }>()
 
 const { graph } = toRefs(props)
@@ -161,7 +162,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
-          <ModuleTransformResultView :id="selectedModule" @close="modalShow = false" />
+          <ModuleTransformResultView :id="selectedModule" :project-name="projectName" @close="modalShow = false" />
         </Suspense>
       </template>
     </Modal>
