@@ -11,7 +11,6 @@ export default defineConfig({
       provider,
       name,
       headless: true,
-      fileParallelism: false,
     },
   },
 })
