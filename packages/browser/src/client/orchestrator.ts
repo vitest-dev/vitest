@@ -58,6 +58,7 @@ async function done() {
 interface IframeDoneEvent {
   type: 'done'
   filenames: string[]
+  id: string
 }
 
 interface IframeErrorEvent {
@@ -65,6 +66,7 @@ interface IframeErrorEvent {
   error: any
   errorType: string
   files: string[]
+  id: string
 }
 
 interface IframeViewportEvent {
@@ -133,7 +135,7 @@ client.ws.addEventListener('open', async () => {
         }
         else {
           // keep the last iframe
-          const iframeId = filenames.length > 1 ? ID_ALL : filenames[0]
+          const iframeId = e.data.id
           iframes.get(iframeId)?.remove()
           iframes.delete(iframeId)
         }
@@ -141,7 +143,7 @@ client.ws.addEventListener('open', async () => {
       }
       // error happened at the top level, this should never happen in user code, but it can trigger during development
       case 'error': {
-        const iframeId = e.data.files.length > 1 ? ID_ALL : e.data.files[0]
+        const iframeId = e.data.id
         iframes.delete(iframeId)
         await client.rpc.onUnhandledError(e.data.error, e.data.errorType)
         if (iframeId === ID_ALL)
@@ -177,6 +179,9 @@ async function createTesters(testFiles: string[]) {
     container.textContent = ''
   }
   const { width, height } = config.browser.viewport
+
+  iframes.forEach(iframe => iframe.remove())
+  iframes.clear()
 
   if (config.isolate === false) {
     const iframe = createIframe(

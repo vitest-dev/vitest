@@ -140,7 +140,11 @@ async function prepareTestEnvironment(files: string[]) {
 }
 
 function done(files: string[]) {
-  channel.postMessage({ type: 'done', filenames: files })
+  channel.postMessage({
+    type: 'done',
+    filenames: files,
+    id: getBrowserState().iframeId!,
+  })
 }
 
 async function runTests(files: string[]) {
