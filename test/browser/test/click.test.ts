@@ -1,5 +1,5 @@
 import { userEvent } from '@vitest/browser/context'
-import { test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('clicks on an element', async () => {
   const button = document.createElement('button')
@@ -13,5 +13,5 @@ test('clicks on an element', async () => {
   await userEvent.click(button, {
     timeout: 2000,
   })
-  // expect(fn).toHaveBeenCalled()
+  expect(fn).toHaveBeenCalled()
 })

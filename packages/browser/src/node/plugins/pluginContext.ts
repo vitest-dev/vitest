@@ -33,6 +33,7 @@ export default function BrowserContext(project: WorkspaceProject): Plugin {
 function generateContextFile(project: WorkspaceProject) {
   const commands = Object.keys(project.config.browser.commands ?? {})
   const filepathCode = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
+  const provider = project.browserProvider!
 
   const commandsCode = commands.map((command) => {
     return `    ["${command}"]: (...args) => rpc().triggerCommand("${command}", filepath(), args),`
@@ -46,7 +47,7 @@ const channel = new BroadcastChannel('vitest')
 export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
-  provider: ${JSON.stringify(project.browserProvider!.name)},
+  provider: ${JSON.stringify(provider.name)},
   browser: ${JSON.stringify(project.config.browser.name)},
   commands: {
     ${commandsCode}
@@ -72,7 +73,9 @@ export const page = {
         }
       })
     })
+  },
 }
+
 export const userEvent = ${getUserEventScript(project)}
 
 function convertElementToXPath(element) {
@@ -80,14 +83,14 @@ function convertElementToXPath(element) {
     // TODO: better error message
     throw new Error('Expected element to be an instance of Element')
   }
-  return \`xpath=\${getPathTo(element)}\`
+  return getPathTo(element)
 }
 
 function getPathTo(element) {
   if (element.id !== '')
     return \`id("\${element.id}")\`
 
-  if (element === document.body)
+  if (element === document.documentElement)
     return element.tagName
 
   let ix = 0

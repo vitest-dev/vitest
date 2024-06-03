@@ -10,13 +10,15 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 ) => {
   if (provider.name === 'playwright') {
     const page = (provider as any).page as Page
-    await page.frameLocator('#vitest-tester-frame').locator(element).click(options)
+    await page.frameLocator('iframe[data-vitest]').locator(`xpath=${element}`).click(options)
+    return
   }
   if (provider.name === 'webdriverio') {
-    // TODO: test
     const page = (provider as any).browser as WebdriverIO.Browser
-    const frame = await page.findElement('css selector', '#vitest-tester-frame')
+    const frame = await page.findElement('css selector', 'iframe[data-vitest]')
     await page.switchToFrame(frame)
-    ;(await page.$(element)).click(options)
+    await (await page.$(`//${element}`)).click(options)
+    return
   }
+  throw new Error(`Provider "${provider.name}" doesn't support click command`)
 }
