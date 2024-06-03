@@ -160,7 +160,7 @@
     "picocolors": "^1.0.0",
     "std-env": "^3.7.0",
     "tinybench": "^2.8.0",
-    "tinypool": "^0.9.0",
+    "tinypool": "^1.0.0",
     "vite": "^5.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
