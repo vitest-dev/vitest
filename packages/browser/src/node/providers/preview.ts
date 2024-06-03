@@ -1,7 +1,7 @@
 import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
 
-export class NoneBrowserProvider implements BrowserProvider {
-  public name = 'none'
+export class PreviewBrowserProvider implements BrowserProvider {
+  public name = 'preview'
   private ctx!: WorkspaceProject
   private open = false
 
@@ -18,7 +18,7 @@ export class NoneBrowserProvider implements BrowserProvider {
     this.ctx = ctx
     this.open = false
     if (ctx.config.browser.headless)
-      throw new Error('You\'ve enabled headless mode for "none" provider but it doesn\'t support it.')
+      throw new Error('You\'ve enabled headless mode for "preview" provider but it doesn\'t support it.')
   }
 
   async openPage(_url: string) {
