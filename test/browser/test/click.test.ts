@@ -10,8 +10,6 @@ test('clicks on an element', async () => {
   }
   document.body.appendChild(button)
 
-  await userEvent.click(button, {
-    timeout: 2000,
-  })
+  await userEvent.click(button)
   expect(fn).toHaveBeenCalled()
 })
