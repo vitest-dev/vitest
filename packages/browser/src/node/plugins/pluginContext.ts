@@ -129,7 +129,8 @@ function getUserEventScript(project: WorkspaceProject) {
     return `__vitest_user_event__`
   return `{
   async click(element, options) {
-    return rpc().triggerCommand('__vitest_click', filepath(), [convertElementToXPath(element), options]);
+    const xpath = convertElementToXPath(element)
+    return rpc().triggerCommand('__vitest_click', filepath(), options ? [xpath, options] : [xpath]);
   },
 }`
 }

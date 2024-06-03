@@ -2,7 +2,6 @@ import type { Page } from 'playwright'
 import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 
-// TODO: options
 export const click: UserEventCommand<UserEvent['click']> = async (
   { provider },
   element,
@@ -17,7 +16,9 @@ export const click: UserEventCommand<UserEvent['click']> = async (
     const page = (provider as any).browser as WebdriverIO.Browser
     const frame = await page.findElement('css selector', 'iframe[data-vitest]')
     await page.switchToFrame(frame)
-    await (await page.$(`//${element}`)).click(options)
+    const xpath = `//${element}`
+    await (await page.$(xpath)).click(options)
+    return
   }
   throw new Error(`Provider "${provider.name}" doesn't support click command`)
 }
