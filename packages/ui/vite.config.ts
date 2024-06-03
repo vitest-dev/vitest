@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module'
 import { resolve } from 'pathe'
 import type { UserConfig } from 'vite'
 import { defineConfig } from 'vite'
@@ -87,21 +86,6 @@ export const config: UserConfig = {
       'vue',
       '@vue/test-utils',
     ],
-    esbuildOptions: {
-      plugins: [
-        {
-          name: 'test-utils-rewrite',
-          setup(build) {
-            const _require = createRequire(import.meta.url)
-            build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
-              // resolve to CJS instead of the browser because the browser version expects a global Vue object
-              const resolved = _require.resolve(args.path, { paths: [args.importer] })
-              return { path: resolved }
-            })
-          },
-        },
-      ],
-    },
   },
   test: {
     browser: {
