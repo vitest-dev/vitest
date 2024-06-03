@@ -150,6 +150,21 @@ export const server: {
 }
 
 /**
+ * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
+ * If used with `none` provider, fallbacks to simulated events via `@testing-library/user-event`.
+ * @experimental
+ */
+export const userEvent: {
+  /**
+   * Click on an element. Uses provider's API under the hood and supports all its options.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/click/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
+   */
+  click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+}
+
+/**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
  */

@@ -33,6 +33,20 @@ export interface BrowserCommands {
   sendKeys: (payload: SendKeysPayload) => Promise<void>
 }
 
+export interface UserEvent {
+  /**
+   * Click on an element. Uses provider's API under the hood and supports all its options.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/click/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
+   */
+  click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+}
+
+export interface UserEventClickOptions {
+  [key: string]: any
+}
+
 type Platform =
   | 'aix'
   | 'android'
@@ -71,6 +85,13 @@ export const server: {
    */
   commands: BrowserCommands
 }
+
+/**
+ * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
+ * If used with `none` provider, fallbacks to simulated events via `@testing-library/user-event`.
+ * @experimental
+ */
+export const userEvent: UserEvent
 
 /**
  * Available commands for the browser.
