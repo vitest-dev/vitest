@@ -542,7 +542,7 @@ export function resolveConfig(
   resolved.browser.viewport.height ??= 896
 
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
-    resolved.browser.provider = 'none'
+    resolved.browser.provider = 'preview'
 
   resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
     port: defaultBrowserPort,
