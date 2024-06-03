@@ -6,6 +6,93 @@ title: Browser Mode | Guide
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+## Installation
+
+By default, Browser Mode doesn't require any provider to run tests locally because it reuses your existing browser.
+
+::: code-group
+```bash [npm]
+npm install -D vitest @vitest/browser
+```
+```bash [yarn]
+yarn add -D vitest @vitest/browser
+```
+```bash [pnpm]
+pnpm add -D vitest @vitest/browser
+```
+```bash [bun]
+bun add -D vitest @vitest/browser
+```
+:::
+
+::: warning
+However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `none` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
+:::
+
+### Using Playwright
+
+::: code-group
+```bash [npm]
+npm install -D vitest @vitest/browser playwright
+```
+```bash [yarn]
+yarn add -D vitest @vitest/browser playwright
+```
+```bash [pnpm]
+pnpm add -D vitest @vitest/browser playwright
+```
+```bash [bun]
+bun add -D vitest @vitest/browser playwright
+```
+:::
+
+### Using Webdriverio
+
+::: code-group
+```bash [npm]
+npm install -D vitest @vitest/browser webdriverio
+```
+```bash [yarn]
+yarn add -D vitest @vitest/browser webdriverio
+```
+```bash [pnpm]
+pnpm add -D vitest @vitest/browser webdriverio
+```
+```bash [bun]
+bun add -D vitest @vitest/browser webdriverio
+```
+:::
+
+## Configuration
+
+To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'playwright', // or 'webdriverio'
+      enabled: true,
+      name: 'chrome', // browser name is required
+    },
+  }
+})
+```
+
+## Browser Option Types
+
+The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
+
+- `webdriverio` supports these browsers:
+  - `firefox`
+  - `chrome`
+  - `edge`
+  - `safari`
+- `playwright` supports these browsers:
+  - `firefox`
+  - `webkit`
+  - `chromium`
+
 ## Browser Compatibility
 
 Vitest uses [Vite dev server](https://vitejs.dev/guide/#browser-support) to run your tests, so we only support features specified in the [`esbuild.target`](https://vitejs.dev/config/shared-options.html#esbuild) option (`esnext` by default).
@@ -43,35 +130,6 @@ The browser mode feature of Vitest is still in its early stages of development. 
 
 Vitest browser requires spinning up the provider and the browser during the initialization process, which can take some time. This can result in longer initialization times compared to other testing patterns.
 
-## Configuration
-
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      enabled: true,
-      name: 'chrome', // browser name is required
-    },
-  }
-})
-```
-
-## Browser Option Types
-
-The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
-
-- `webdriverio` (default) supports these browsers:
-  - `firefox`
-  - `chrome`
-  - `edge`
-  - `safari`
-- `playwright` supports these browsers:
-  - `firefox`
-  - `webkit`
-  - `chromium`
-
 ## Cross-Browser Testing
 
 When you specify a browser name in the browser option, Vitest will try to run the specified browser using [WebdriverIO](https://webdriver.io/) by default, and then run the tests there. This feature makes cross-browser testing easy to use and configure in environments like a CI. If you don't want to use WebdriverIO, you can configure the custom browser provider by using `browser.provider` option.
@@ -88,12 +146,6 @@ Or you can provide browser options to CLI with dot notation:
 npx vitest --browser.name=chrome --browser.headless
 ```
 
-::: tip NOTE
-When using the Safari browser option with WebdriverIO, the `safaridriver` needs to be activated by running `sudo safaridriver --enable` on your device.
-
-Additionally, when running your tests, Vitest will attempt to install some drivers for compatibility with `safaridriver`.
-:::
-
 ## Headless
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.
@@ -104,6 +156,7 @@ Here's an example configuration enabling headless mode:
 export default defineConfig({
   test: {
     browser: {
+      provider: 'playwright',
       enabled: true,
       headless: true,
     },
@@ -118,6 +171,10 @@ npx vitest --browser.name=chrome --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.
+
+::: warning
+Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
+:::
 
 ## Context
 
