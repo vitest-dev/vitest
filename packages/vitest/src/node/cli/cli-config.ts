@@ -534,7 +534,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Run only typecheck tests. This automatically enables typecheck (default: `false`)',
       },
       checker: {
-        description: 'Specify the typechecker to use. Available values are: "tcs" and "vue-tsc" and a path to an executable (default: `"tsc"`)',
+        description: 'Specify the typechecker to use. Available values are: "tsc" and "vue-tsc" and a path to an executable (default: `"tsc"`)',
         argument: '<name>',
         subcommands: null,
       },

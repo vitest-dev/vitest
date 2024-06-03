@@ -106,7 +106,7 @@
 | `--disableConsoleIntercept` | Disable automatic interception of console logging (default: `false`) |
 | `--typecheck.enabled` | Enable typechecking alongside tests (default: `false`) |
 | `--typecheck.only` | Run only typecheck tests. This automatically enables typecheck (default: `false`) |
-| `--typecheck.checker <name>` | Specify the typechecker to use. Available values are: "tcs" and "vue-tsc" and a path to an executable (default: `"tsc"`) |
+| `--typecheck.checker <name>` | Specify the typechecker to use. Available values are: "tsc" and "vue-tsc" and a path to an executable (default: `"tsc"`) |
 | `--typecheck.allowJs` | Allow JavaScript files to be typechecked. By default takes the value from tsconfig.json |
 | `--typecheck.ignoreSourceErrors` | Ignore type errors from source files |
 | `--typecheck.tsconfig <path>` | Path to a custom tsconfig file |
