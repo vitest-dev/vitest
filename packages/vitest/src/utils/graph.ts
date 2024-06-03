@@ -14,6 +14,8 @@ export async function getModuleGraph(ctx: Vitest, projectName: string, id: strin
   async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
     if (!mod || !mod.id)
       return
+    if (mod.id === '\0@vitest/browser/context')
+      return
     if (seen.has(mod))
       return seen.get(mod)
     let id = clearId(mod.id)

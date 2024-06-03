@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest'
-import { assertTypes, createColors, deepClone, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { assertTypes, createColors, deepClone, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
@@ -293,5 +293,21 @@ describe(createColors, () => {
     const c = createColors()
     expect(c.isColorSupported).toBe(true)
     expect(c.blue(c.blue('x').repeat(10000))).toBeTruthy()
+  })
+})
+
+describe('isNegativeNaN', () => {
+  test.each`
+  value | expected
+  ${Number.NaN} | ${false}
+  ${-Number.NaN} | ${true}
+  ${0} | ${false}
+  ${-0} | ${false}
+  ${1} | ${false}
+  ${-1} | ${false}
+  ${Number.POSITIVE_INFINITY} | ${false}
+  ${Number.NEGATIVE_INFINITY} | ${false}
+  `('isNegativeNaN($value) -> $expected', ({ value, expected }) => {
+    expect(isNegativeNaN(value)).toBe(expected)
   })
 })

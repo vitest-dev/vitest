@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, SnapshotSummary, Suite, TaskState } from '../../types'
+import type { File, Reporter, SnapshotSummary, Suite, TaskMeta, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
 
@@ -30,6 +30,7 @@ export interface JsonAssertionResult {
   fullName: string
   status: Status
   title: string
+  meta: TaskMeta
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
@@ -123,6 +124,7 @@ export class JsonReporter implements Reporter {
           duration: t.result?.duration,
           failureMessages: t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
+          meta: t.meta,
         } satisfies JsonAssertionResult
       })
 

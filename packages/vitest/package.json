@@ -193,7 +193,6 @@
     "local-pkg": "^0.5.0",
     "log-update": "^5.0.1",
     "micromatch": "^4.0.5",
-    "p-limit": "^5.0.0",
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",

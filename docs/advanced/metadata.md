@@ -48,7 +48,7 @@ Vitest uses different methods to communicate with the Node.js process.
 - If Vitest uses child process, the data will be send as a serialized Buffer via [`process.send`](https://nodejs.org/api/process.html#processsendmessage-sendhandle-options-callback) API
 - If Vitest runs tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
 
-The general rule of thumb is that you can send almost anything, except for functions, Promises, regexp (`v8.stringify` cannot serialize it, but you can send a string version and parse it in the Node.js process yourself), and other non-serializable data, but you can have cyclic references inside.
+This property is also present on every test in the `json` reporter, so make sure that data can be serialized into JSON.
 
 Also, make sure you serialize [Error properties](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#error_types) before you set them.
 :::
