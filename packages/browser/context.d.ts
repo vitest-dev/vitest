@@ -62,6 +62,10 @@ export const server: {
    */
   provider: string
   /**
+   * Name of the current browser.
+   */
+  browser: string
+  /**
    * Available commands for the browser.
    * @see {@link https://vitest.dev/guide/browser#commands}
    */
@@ -80,4 +84,8 @@ export const page: {
    * Serialized test config.
    */
   config: ResolvedConfig
+  /**
+   * Change the size of iframe's viewport.
+   */
+  viewport: (width: number, height: number) => Promise<void>
 }

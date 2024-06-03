@@ -22,4 +22,4 @@ export interface Reporter {
 }
 
 export type { Vitest }
-export type SerializableSpec = [project: { name: string; root: string }, file: string]
+export type SerializableSpec = [project: { name: string | undefined; root: string }, file: string]

@@ -27,7 +27,12 @@ async function tryCall<T>(fn: () => Promise<T>): Promise<T | false | undefined> 
     const now = Date.now()
     // try for 30 seconds
     const canTry = !reloadStart || (now - Number(reloadStart) < 30_000)
-    debug('failed to resolve runner', err?.message, 'trying again:', canTry, 'time is', now, 'reloadStart is', reloadStart)
+    const errorStack = (() => {
+      if (!err)
+        return null
+      return err.stack?.includes(err.message) ? err.stack : `${err.message}\n${err.stack}`
+    })()
+    debug('failed to resolve runner', 'trying again:', canTry, 'time is', now, 'reloadStart is', reloadStart, ':\n', errorStack)
     if (!canTry) {
       const error = serializeError(new Error('Vitest failed to load its runner after 30 seconds.'))
       error.cause = serializeError(err)
@@ -69,7 +74,7 @@ async function prepareTestEnvironment(files: string[]) {
       worker: './browser.js',
       workerId: 1,
       config,
-      projectName: config.name,
+      projectName: config.name || '',
       files,
       environment: {
         name: 'browser',
@@ -100,22 +105,26 @@ async function prepareTestEnvironment(files: string[]) {
   globalThis.__vitest_browser__ = true
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = state
+  const mocker = new VitestBrowserClientMocker()
   // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_mocker__ = new VitestBrowserClientMocker()
+  globalThis.__vitest_mocker__ = mocker
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
 
-  const { startTests, setupCommonEnv } = await importId('vitest/browser') as typeof import('vitest/browser')
-
-  const version = url.searchParams.get('browserv') || '0'
+  const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
     if (!currentVersion || currentVersion[1] !== version)
       browserHashMap.set(filename, [true, version])
   })
 
-  const runner = await initiateRunner()
+  const [runner, { startTests, setupCommonEnv, Vitest }] = await Promise.all([
+    initiateRunner(config),
+    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+  ])
+
+  mocker.setSpyModule(Vitest)
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)
@@ -131,7 +140,11 @@ async function prepareTestEnvironment(files: string[]) {
 }
 
 function done(files: string[]) {
-  channel.postMessage({ type: 'done', filenames: files })
+  channel.postMessage({
+    type: 'done',
+    filenames: files,
+    id: getBrowserState().iframeId!,
+  })
 }
 
 async function runTests(files: string[]) {

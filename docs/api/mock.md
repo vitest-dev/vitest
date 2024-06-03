@@ -304,7 +304,7 @@ This is an array containing all values that were `returned` from the function. O
 - `'return'` - function returned without throwing.
 - `'throw'` - function threw a value.
 
-The `value` property contains the returned value or thrown error. If the function returned a promise, the `value` will be the _resolved_ value, not the actual `Promise`, unless it was never resolved.
+The `value` property contains the returned value or thrown error. If the function returned a `Promise`, then `result` will always be `'return'` even if the promise was rejected.
 
 ```js
 const fn = vi.fn()
@@ -328,6 +328,29 @@ fn.mock.results === [
   {
     type: 'throw',
     value: Error,
+  },
+]
+```
+
+## mock.settledResults
+
+An array containing all values that were `resolved` or `rejected` from the function.
+
+This array will be empty if the function was never resolved or rejected.
+
+```js
+const fn = vi.fn().mockResolvedValueOnce('result')
+
+const result = fn()
+
+fn.mock.settledResults === []
+
+await result
+
+fn.mock.settledResults === [
+  {
+    type: 'fulfilled',
+    value: 'result',
   },
 ]
 ```

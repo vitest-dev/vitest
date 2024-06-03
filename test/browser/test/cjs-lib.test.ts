@@ -9,6 +9,13 @@ test('cjs namespace import', () => {
     object: {
       h: 'h',
     },
+    default: {
+      a: 'a',
+      b: 'b',
+      object: {
+        h: 'h',
+      },
+    },
   })
 })
 
@@ -17,5 +24,11 @@ test('cjs named import', () => {
 })
 
 test('cjs default import not supported when slowHijackESM', () => {
-  expect(cjsDefault).toBeUndefined()
+  expect(cjsDefault).toEqual({
+    a: 'a',
+    b: 'b',
+    object: {
+      h: 'h',
+    },
+  })
 })

@@ -4,7 +4,6 @@ import { parse, stringify } from 'flatted'
 
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import type { CancelReason } from '@vitest/runner'
 import { StateManager } from '../../vitest/src/node/state'
 
 export * from '../../vitest/src/utils/tasks'
@@ -80,15 +79,21 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     onFinishedReportCoverage() {
       handlers.onFinishedReportCoverage?.()
     },
-    onCancel(reason: CancelReason) {
-      handlers.onCancel?.(reason)
-    },
   }
 
   const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: stringify,
+    serialize: e => stringify(e, (_, v) => {
+      if (v instanceof Error) {
+        return {
+          name: v.name,
+          message: v.message,
+          stack: v.stack,
+        }
+      }
+      return v
+    }),
     deserialize: parse,
     onTimeoutError(functionName) {
       throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)

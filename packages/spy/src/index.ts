@@ -20,7 +20,18 @@ interface MockResultThrow {
   value: any
 }
 
-type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
+interface MockSettledResultFulfilled<T> {
+  type: 'fulfilled'
+  value: T
+}
+
+interface MockSettledResultRejected {
+  type: 'rejected'
+  value: any
+}
+
+export type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
+export type MockSettledResult<T> = MockSettledResultFulfilled<T> | MockSettledResultRejected
 
 export interface MockContext<TArgs, TReturns> {
   /**
@@ -60,7 +71,7 @@ export interface MockContext<TArgs, TReturns> {
   /**
    * This is an array containing all values that were `returned` from the function.
    *
-   * The `value` property contains the returned value or thrown error. If the function returned a promise, the `value` will be the _resolved_ value, not the actual `Promise`, unless it was never resolved.
+   * The `value` property contains the returned value or thrown error. If the function returned a `Promise`, then `result` will always be `'return'` even if the promise was rejected.
    *
    * @example
    * const fn = vi.fn()
@@ -86,6 +97,34 @@ export interface MockContext<TArgs, TReturns> {
    * ]
    */
   results: MockResult<TReturns>[]
+  /**
+   * An array containing all values that were `resolved` or `rejected` from the function.
+   *
+   * This array will be empty if the function was never resolved or rejected.
+   *
+   * @example
+   * const fn = vi.fn().mockResolvedValueOnce('result')
+   *
+   * const result = fn()
+   *
+   * fn.mock.settledResults === []
+   * fn.mock.results === [
+   *   {
+   *     type: 'return',
+   *     value: Promise<'result'>,
+   *   },
+   * ]
+   *
+   * await result
+   *
+   * fn.mock.settledResults === [
+   *   {
+   *     type: 'fulfilled',
+   *     value: 'result',
+   *   },
+   * ]
+   */
+  settledResults: MockSettledResult<Awaited<TReturns>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
@@ -368,7 +407,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   const state = tinyspy.getInternalState(spy)
 
-  const mockContext = {
+  const mockContext: MockContext<TArgs, TReturns> = {
     get calls() {
       return state.calls
     },
@@ -380,7 +419,13 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     },
     get results() {
       return state.results.map(([callType, value]) => {
-        const type = callType === 'error' ? 'throw' : 'return'
+        const type = callType === 'error' ? 'throw' as const : 'return' as const
+        return { type, value }
+      })
+    },
+    get settledResults() {
+      return state.resolves.map(([callType, value]) => {
+        const type = callType === 'error' ? 'rejected' as const : 'fulfilled' as const
         return { type, value }
       })
     },

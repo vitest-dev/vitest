@@ -1487,7 +1487,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 
 ### browser {#browser}
 
-- **Type:** `{ enabled?, name?, provider?, headless?, api?, slowHijackESM? }`
+- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
@@ -1601,17 +1601,6 @@ To have a better type safety when using built-in providers, you can add one of t
 ```
 :::
 
-#### browser.slowHijackESM {#browser-slowhijackesm}
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-When running tests in Node.js Vitest can use its own module resolution to easily mock modules with `vi.mock` syntax. However it's not so easy to replicate ES module resolution in browser, so we need to transform your source files before browser can consume it.
-
-This option has no effect on tests running inside Node.js.
-
-If you rely on spying on ES modules with `vi.spyOn`, you can enable this experimental feature to allow spying on module exports.
-
 #### browser.ui {#browser-ui}
 
 - **Type:** `boolean`
@@ -1619,6 +1608,13 @@ If you rely on spying on ES modules with `vi.spyOn`, you can enable this experim
 - **CLI:** `--browser.ui=false`
 
 Should Vitest UI be injected into the page. By default, injects UI iframe during development.
+
+#### browser.viewport {#browser-viewport}
+
+- **Type:** `{ width, height }`
+- **Default:** `414x896`
+
+Default iframe's viewport.
 
 #### browser.indexScripts {#browser-indexscripts}
 
@@ -2298,3 +2294,45 @@ If you just need to configure snapshots feature, use [`snapshotFormat`](#snapsho
 - **Type:** `Partial<NodeJS.ProcessEnv>`
 
 Environment variables available on `process.env` and `import.meta.env` during tests. These variables will not be available in the main process (in `globalSetup`, for example).
+
+### expect
+
+- **Type:** `ExpectOptions`
+
+#### expect.requireAssertions
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+The same as calling [`expect.hasAssertions()`](/api/expect#expect-hasassertions) at the start of every test. This makes sure that no test will pass accidentally.
+
+::: tip
+This only works with Vitest's `expect`. If you use `assert` ot `.should` assertions, they will not count, and your test will fail due to the lack of expect assertions.
+
+You can change the value of this by calling `vi.setConfig({ expect: { requireAssertions: false } })`. The config will be applied to every subsequent `expect` call until the `vi.resetConfig` is called manually.
+:::
+
+#### expect.poll
+
+Global configuration options for [`expect.poll`](/api/expect#poll). These are the same options you can pass down to `expect.poll(condition, options)`.
+
+##### expect.poll.interval
+
+- **Type:** `number`
+- **Default:** `50`
+
+Polling interval in milliseconds
+
+##### expect.poll.timeout
+
+- **Type:** `number`
+- **Default:** `1000`
+
+Polling timeout in milliseconds
+
+### printConsoleTrace
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Always print console traces when calling any `console` method. This is useful for debugging.

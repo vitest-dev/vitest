@@ -4,6 +4,7 @@ import type { File, Task } from 'vitest'
 import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
+import { hasFailedSnapshot } from '@vitest/ws-client'
 
 defineOptions({ inheritAttrs: false })
 
@@ -35,11 +36,7 @@ const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? fil
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
 const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => filtered.value.filter(task =>
-  !failed.value.includes(task)
-  && !success.value.includes(task)
-  && !skipped.value.includes(task),
-))
+const running = computed(() => filtered.value.filter(task => !task.result || task.result.state === 'run'))
 
 const disableClearSearch = computed(() => search.value === '')
 
@@ -125,6 +122,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -141,6 +140,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -156,6 +157,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :key="task.id"
             :task="task"
             :nested="nested"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -171,7 +174,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
             v-for="task in skipped"
             :key="task.id"
             :task="task"
+            :opened="isFiltered"
             :nested="nested"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -186,6 +191,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
           :key="task.id"
           :task="task"
           :nested="nested"
+          :opened="isFiltered"
+          :failed-snapshot="hasFailedSnapshot(task)"
           :search="search"
           :class="activeFileId === task.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"

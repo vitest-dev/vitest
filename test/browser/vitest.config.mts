@@ -33,7 +33,6 @@ export default defineConfig({
       headless: false,
       provider,
       isolate: false,
-      slowHijackESM: true,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',
@@ -87,5 +86,8 @@ export default defineConfig({
       onServerRestart: noop,
       onUserConsoleLog: noop,
     }, 'default'],
+    env: {
+      BROWSER: browser,
+    },
   },
 })

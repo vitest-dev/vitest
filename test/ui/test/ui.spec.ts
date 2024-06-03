@@ -49,9 +49,10 @@ test.describe('ui', () => {
     await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
     // report
-    await page.getByTestId('details-panel').getByText('sample.test.ts').click()
+    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    await sample.hover()
+    await sample.getByTestId('btn-open-details').click()
     await page.getByText('All tests passed in this file').click()
-    await expect(page.getByTestId('filenames')).toContainText('sample.test.ts')
 
     // graph tab
     await page.getByTestId('btn-graph').click()
@@ -72,7 +73,9 @@ test.describe('ui', () => {
 
   test('console', async ({ page }) => {
     await page.goto(pageUrl)
-    await page.getByText('fixtures/console.test.ts').click()
+    const item = page.getByLabel('fixtures/console.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click()
     await page.getByTestId('btn-console').click()
     await page.getByText('/(?<char>\\w)/').click()
 
@@ -82,7 +85,9 @@ test.describe('ui', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    await page.getByText('fixtures/error.test.ts').click()
+    const item = page.getByLabel('fixtures/error.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click()
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 

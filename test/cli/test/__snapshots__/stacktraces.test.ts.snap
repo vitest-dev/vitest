@@ -158,6 +158,17 @@ exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts > mocke
 "
 `;
 
+exports[`stacktraces should respect sourcemaps > require-assertions.test.js > require-assertions.test.js 1`] = `
+" ❯ require-assertions.test.js:3:1
+      1| import { test } from 'vitest'
+      2| 
+      3| test('assertion is not called', () => {
+       | ^
+      4|   // no expect
+      5| })
+"
+`;
+
 exports[`stacktraces should respect sourcemaps > reset-modules.test.ts > reset-modules.test.ts 1`] = `
 " ❯ reset-modules.test.ts:16:26
      14|     expect(2 + 1).eq(3)

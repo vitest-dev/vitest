@@ -316,6 +316,24 @@ test('merge-reports', () => {
   expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
 })
 
+test('configure expect', () => {
+  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(`[Error: Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>]`)
+  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(`[Error: Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax]`)
+  expect(getCLIOptions('vitest --expect.poll.interval=100 --expect.poll.timeout=300')).toEqual({
+    expect: {
+      poll: {
+        interval: 100,
+        timeout: 300,
+      },
+    },
+  })
+  expect(getCLIOptions('vitest --expect.requireAssertions')).toEqual({
+    expect: {
+      requireAssertions: true,
+    },
+  })
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],

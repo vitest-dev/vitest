@@ -179,6 +179,8 @@ export function resolveConfig(
       throw new Error(`You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`)
   }
 
+  resolved.expect ??= {}
+
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map((dir) => {
@@ -532,9 +534,12 @@ export function resolveConfig(
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.slowHijackESM ??= false
   resolved.browser.isolate ??= true
   resolved.browser.ui ??= !isCI
+
+  resolved.browser.viewport ??= {} as any
+  resolved.browser.viewport.width ??= 414
+  resolved.browser.viewport.height ??= 896
 
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
     resolved.browser.provider = 'none'

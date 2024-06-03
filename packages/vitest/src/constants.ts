@@ -6,6 +6,7 @@ export const defaultInspectPort = 9229
 export const EXIT_CODE_RESTART = 43
 
 export const API_PATH = '/__vitest_api__'
+export const BROWSER_API_PATH = '/__vitest_browser_api__'
 
 export const extraInlineDeps = [
   /^(?!.*node_modules).*\.mjs$/,

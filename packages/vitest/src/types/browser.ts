@@ -72,15 +72,6 @@ export interface BrowserConfigOptions {
   api?: ApiConfig | number
 
   /**
-   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
-   * Enabled by default when running in browser.
-   *
-   * @default false
-   * @experimental
-   */
-  slowHijackESM?: boolean
-
-  /**
    * Isolate test environment after each test
    *
    * @default true
@@ -93,6 +84,22 @@ export interface BrowserConfigOptions {
    * @default !process.env.CI
    */
   ui?: boolean
+
+  /**
+   * Default viewport size
+   */
+  viewport?: {
+    /**
+     * Width of the viewport
+     * @default 414
+     */
+    width: number
+    /**
+     * Height of the viewport
+     * @default 896
+     */
+    height: number
+  }
 
   /**
    * Scripts injected into the tester iframe.
@@ -157,4 +164,8 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   isolate: boolean
   api: ApiConfig
   ui: boolean
+  viewport: {
+    width: number
+    height: number
+  }
 }

@@ -2,7 +2,7 @@ import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
-import { getConfig, importId } from './utils'
+import { importId } from './utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
@@ -43,6 +43,7 @@ export function createBrowserRunner(
     }
 
     onAfterRunFiles = async (files: File[]) => {
+      await rpc().invalidateMocks()
       await super.onAfterRunFiles?.(files)
       const coverage = await coverageModule?.takeCoverage?.()
 
@@ -88,10 +89,9 @@ export function createBrowserRunner(
 
 let cachedRunner: VitestRunner | null = null
 
-export async function initiateRunner() {
+export async function initiateRunner(config: ResolvedConfig) {
   if (cachedRunner)
     return cachedRunner
-  const config = getConfig()
   const [
     { VitestTestRunner, NodeBenchmarkRunner },
     { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },

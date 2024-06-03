@@ -14,7 +14,6 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       files,
       resolve: () => {
         defer.resolve()
-        project.browserState = undefined
       },
       reject: defer.reject,
     }
@@ -23,6 +22,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
+    const mocker = project.browserMocker
+    mocker.mocks.forEach((_, id) => {
+      mocker.invalidateModuleById(id)
+    })
+    mocker.mocks.clear()
 
     // TODO
     // let isCancelled = false
@@ -41,7 +45,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     const promise = waitForTests(project, files)
 
-    await provider.openPage(new URL('/', origin).toString())
+    const orchestrators = project.browserRpc.orchestrators
+    if (orchestrators.size) {
+      orchestrators.forEach((orchestrator) => {
+        orchestrator.createTesters(files)
+      })
+    }
+    else {
+      await provider.openPage(new URL('/', origin).toString())
+    }
+
     await promise
   }
 

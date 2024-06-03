@@ -56,6 +56,27 @@ describe('mock', () => {
     expect(fn).toHaveLastReturnedWith('3')
   })
 
+  it('resolved', async () => {
+    let i = 0
+
+    const fn = vitest.fn(() => Promise.resolve(String(++i)))
+
+    expect(fn).not.toHaveResolved()
+
+    await fn()
+
+    expect(fn).toHaveResolved()
+    expect(fn).toHaveResolvedTimes(1)
+    expect(fn).toHaveResolvedWith('1')
+
+    await fn()
+    await fn()
+
+    expect(fn).toHaveResolvedTimes(3)
+    expect(fn).toHaveNthResolvedWith(2, '2')
+    expect(fn).toHaveLastResolvedWith('3')
+  })
+
   it('throws', () => {
     let i = 0
 
@@ -90,5 +111,41 @@ describe('mock', () => {
 
     expect(fn).toHaveReturnedTimes(2)
     expect(fn).toHaveNthReturnedWith(3, '3')
+  })
+
+  it('rejects', async () => {
+    let i = 0
+
+    const fn = vitest.fn(async () => {
+      if (i === 0) {
+        ++i
+        throw new Error('error')
+      }
+
+      return String(++i)
+    })
+
+    try {
+      await fn()
+    }
+    catch {}
+    expect(fn).not.toHaveResolved()
+
+    await fn()
+    expect(fn).toHaveResolved()
+
+    await fn()
+
+    try {
+      expect(fn).toHaveNthResolvedWith(1, '1')
+      assert.fail('expect should throw, since 1st call is thrown')
+    }
+    catch {}
+
+    // not throws
+    expect(fn).not.toHaveNthResolvedWith(1, '1')
+
+    expect(fn).toHaveResolvedTimes(2)
+    expect(fn).toHaveNthResolvedWith(3, '3')
   })
 })

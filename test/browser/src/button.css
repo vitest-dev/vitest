@@ -1,0 +1,17 @@
+.wrapper {
+  padding: 12px;
+  font-family: Readex Pro,sans-serif;
+  font-size: large;
+  font-weight: bold;
+  text-align: center;
+}
+
+.node {
+  background-color: #3f3f3f;
+  border-radius: 12px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}

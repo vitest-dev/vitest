@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, isConnected, isConnecting } from '~/composables/client'
+import { client, isConnected, isConnecting, browserState } from '~/composables/client'
 </script>
 
 <template>
@@ -27,7 +27,7 @@ import { client, isConnected, isConnecting } from '~/composables/client'
           {{ isConnecting ? 'Connecting...' : 'Disconnected' }}
         </div>
         <div text-lg op50>
-          Check your terminal or start a new server with `vitest --ui`
+          Check your terminal or start a new server with `{{ browserState ? `vitest --browser=${browserState.config.browser.name}` : 'vitest --ui' }}`
         </div>
       </div>
     </div>

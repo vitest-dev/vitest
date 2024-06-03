@@ -7,19 +7,19 @@ import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from '
 import type { TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import c from 'picocolors'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ProvidedContext, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
+import { VitestBrowserServerMocker } from '../integrations/browser/mocker'
+import type { WebSocketBrowserRPC } from '../api/types'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
-import { divider } from './reporters/renderers/utils'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -70,7 +70,15 @@ export class WorkspaceProject {
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
+
+  // TODO: abstract browser related things and move to @vitest/browser
   browserProvider: BrowserProvider | undefined
+  browserMocker = new VitestBrowserServerMocker(this)
+  // TODO: I mean, we really need to abstract it
+  browserRpc = {
+    orchestrators: new Map<string, WebSocketBrowserRPC>(),
+    testers: new Map<string, WebSocketBrowserRPC>(),
+  }
 
   browserState: {
     files: string[]
@@ -129,36 +137,21 @@ export class WorkspaceProject {
 
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
-    try {
-      for (const globalSetupFile of this._globalSetups) {
-        const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
-        if (teardown == null || !!globalSetupFile.teardown)
-          continue
-        if (typeof teardown !== 'function')
-          throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
-        globalSetupFile.teardown = teardown
-      }
-    }
-    catch (e) {
-      this.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-      this.logger.printError(e)
-      process.exit(1)
+    for (const globalSetupFile of this._globalSetups) {
+      const teardown = await globalSetupFile.setup?.({ provide: this.provide, config: this.config })
+      if (teardown == null || !!globalSetupFile.teardown)
+        continue
+      if (typeof teardown !== 'function')
+        throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
+      globalSetupFile.teardown = teardown
     }
   }
 
   async teardownGlobalSetup() {
     if (!this._globalSetups)
       return
-    for (const globalSetupFile of [...this._globalSetups].reverse()) {
-      try {
-        await globalSetupFile.teardown?.()
-      }
-      catch (error) {
-        this.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
-        this.logger.printError(error)
-        process.exitCode = 1
-      }
-    }
+    for (const globalSetupFile of [...this._globalSetups].reverse())
+      await globalSetupFile.teardown?.()
   }
 
   get logger() {
@@ -400,8 +393,11 @@ export class WorkspaceProject {
       },
       browser: {
         ...this.ctx.config.browser,
+        indexScripts: [],
+        testerScripts: [],
         commands: {},
       },
+      printConsoleTrace: this.config.printConsoleTrace ?? this.ctx.config.printConsoleTrace,
     }, this.ctx.configOverride || {} as any) as ResolvedConfig
   }
 

@@ -12,6 +12,11 @@ export const coverageEnabled = computed(() => {
   return coverageConfigured.value
     && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
 })
+export const detailSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-detailSizes', [33, 67], {
+  initOnMounted: true,
+})
+
+export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.

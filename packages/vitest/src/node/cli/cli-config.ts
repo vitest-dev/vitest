@@ -341,18 +341,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<options>',
         subcommands: null, // don't support custom objects
       },
-      slowHijackESM: {
-        description: 'Let Vitest use its own module resolution on the browser to enable APIs such as vi.mock and vi.spyOn. Visit [`browser.slowHijackESM`](https://vitest.dev/config/#browser-slowhijackesm) for more information (default: `false`)',
-      },
       isolate: {
         description: 'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
       },
       ui: {
-        description: 'Show Vitest UI when running tests',
+        description: 'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
       indexScripts: null,
       testerScripts: null,
       commands: null,
+      viewport: null,
     },
   },
   pool: {
@@ -587,6 +585,42 @@ export const cliOptionsConfig: VitestCLIOptions = {
   maxConcurrency: {
     description: 'Maximum number of concurrent tests in a suite (default: `5`)',
     argument: '<number>',
+  },
+  expect: {
+    description: 'Configuration options for `expect()` matches',
+    argument: '', // no displayed
+    subcommands: {
+      requireAssertions: {
+        description: 'Require that all tests have at least one assertion',
+      },
+      poll: {
+        description: 'Default options for `expect.poll()`',
+        argument: '',
+        subcommands: {
+          interval: {
+            description: 'Poll interval in milliseconds for `expect.poll()` assertions (default: `50`)',
+            argument: '<interval>',
+          },
+          timeout: {
+            description: 'Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)',
+            argument: '<timeout>',
+          },
+        },
+        transform(value) {
+          if (typeof value !== 'object')
+            throw new Error(`Unexpected value for --expect.poll: ${value}. If you need to configure timeout, use --expect.poll.timeout=<timeout>`)
+          return value
+        },
+      },
+    },
+    transform(value) {
+      if (typeof value !== 'object')
+        throw new Error(`Unexpected value for --expect: ${value}. If you need to configure expect options, use --expect.{name}=<value> syntax`)
+      return value
+    },
+  },
+  printConsoleTrace: {
+    description: 'Always print console stack traces',
   },
 
   // CLI only options

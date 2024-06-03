@@ -178,6 +178,12 @@ export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, 
   toHaveBeenCalledOnce: () => void
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
+  toHaveResolved: () => void
+  toHaveResolvedWith: <E>(value: E) => void
+  toHaveResolvedTimes: (times: number) => void
+  toHaveLastResolvedWith: <E>(value: E) => void
+  toHaveNthResolvedWith: <E>(nthCall: number, value: E) => void
+
   resolves: PromisifyAssertion<T>
   rejects: PromisifyAssertion<T>
 }

@@ -8,5 +8,8 @@ export default defineConfig({
         isolate: false,
       },
     },
+    expect: {
+      requireAssertions: true,
+    }
   },
 })

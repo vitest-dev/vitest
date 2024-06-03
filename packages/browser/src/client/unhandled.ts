@@ -19,7 +19,13 @@ export function serializeError(unhandledError: any) {
 // we can't import "processError" yet because error might've been thrown before the module was loaded
 async function defaultErrorReport(type: string, unhandledError: any) {
   const error = serializeError(unhandledError)
-  channel.postMessage({ type: 'error', files: getBrowserState().runningFiles, error, errorType: type })
+  channel.postMessage({
+    type: 'error',
+    files: getBrowserState().runningFiles,
+    error,
+    errorType: type,
+    id: getBrowserState().iframeId!,
+  })
 }
 
 function catchWindowErrors(cb: (e: ErrorEvent) => void) {

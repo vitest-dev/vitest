@@ -40,7 +40,7 @@ Vitest also isolates each file's environment so env mutations in one file don't 
 
 ## Test Filtering
 
-Vitest provided many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
+Vitest provides many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
 
 Learn more about [Test Filtering](/guide/filtering).
 

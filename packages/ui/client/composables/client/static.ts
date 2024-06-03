@@ -9,7 +9,7 @@ interface HTMLReportMetadata {
   paths: string[]
   files: File[]
   config: ResolvedConfig
-  moduleGraph: Record<string, ModuleGraphData>
+  moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
 }
 
@@ -39,8 +39,8 @@ export function createStaticClient(): VitestClient {
     getConfig: () => {
       return metadata.config
     },
-    getModuleGraph: async (id) => {
-      return metadata.moduleGraph[id]
+    getModuleGraph: async (projectName, id) => {
+      return metadata.moduleGraph[projectName]?.[id]
     },
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
@@ -72,6 +72,7 @@ export function createStaticClient(): VitestClient {
     onUnhandledError: noop,
     saveTestFile: asyncNoop,
     getProvidedContext: () => ({}),
+    getTestFiles: asyncNoop,
   } as WebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>

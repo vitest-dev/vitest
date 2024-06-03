@@ -1,5 +1,5 @@
 import { rpc } from './rpc'
-import { importId } from './utils'
+import { getConfig, importId } from './utils'
 
 const { Date, console } = globalThis
 
@@ -12,14 +12,19 @@ export async function setupConsoleLogSpy() {
     return format(input)
   }
   const processLog = (args: unknown[]) => args.map(formatInput).join(' ')
-  const sendLog = (type: 'stdout' | 'stderr', content: string) => {
+  const sendLog = (type: 'stdout' | 'stderr', content: string, disableStack?: boolean) => {
     if (content.startsWith('[vite]'))
       return
     const unknownTestId = '__vitest__unknown_test__'
     // @ts-expect-error untyped global
     const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
+    const origin = getConfig().printConsoleTrace && !disableStack
+      ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
+      : undefined
     rpc().sendLog({
+      origin,
       content,
+      browser: true,
       time: Date.now(),
       taskId,
       type,
@@ -53,9 +58,12 @@ export async function setupConsoleLogSpy() {
 
   console.trace = (...args: unknown[]) => {
     const content = processLog(args)
-    const error = new Error('Trace')
-    const stack = (error.stack || '').split('\n').slice(2).join('\n')
-    sendLog('stdout', `${content}\n${stack}`)
+    const error = new Error('$$Trace')
+    const stack = (error.stack || '')
+      .split('\n')
+      .slice(error.stack?.includes('$$Trace') ? 2 : 1)
+      .join('\n')
+    sendLog('stderr', `${content}\n${stack}`, true)
     return trace(...args)
   }
 

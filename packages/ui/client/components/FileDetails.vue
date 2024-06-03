@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { ModuleGraphData } from 'vitest'
-import { client, current, currentLogs, isReport } from '~/composables/client'
+import { client, current, currentLogs, isReport, browserState, config } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
+import { getProjectNameColor } from '~/utils/task';
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
@@ -15,7 +16,8 @@ debouncedWatch(
   current,
   async (c, o) => {
     if (c && c.filepath !== o?.filepath) {
-      data.value = await client.rpc.getModuleGraph(c.filepath)
+      const project = c.file.projectName || ''
+      data.value = await client.rpc.getModuleGraph(project, c.filepath, !!browserState)
       graph.value = getModuleGraph(data.value, c.filepath)
     }
   },
@@ -41,6 +43,13 @@ const consoleCount = computed(() => {
 function onDraft(value: boolean) {
   draft.value = value
 }
+
+function relativeToRoot(path?: string) {
+  if (!path) return ''
+  if (path.startsWith(config.root))
+    return path.slice(config.root.length)
+  return path
+}
 </script>
 
 <template>
@@ -48,8 +57,11 @@ function onDraft(value: boolean) {
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
+        <div v-if="current?.file.projectName" font-light op-50 text-sm :style="{ color: getProjectNameColor(current?.file.projectName) }">
+          [{{ current?.file.projectName || '' }}]
+        </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.filepath }}
+          {{ relativeToRoot(current?.filepath) }}
         </div>
         <div class="flex text-lg">
           <IconButton

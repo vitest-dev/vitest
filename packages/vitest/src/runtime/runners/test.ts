@@ -15,6 +15,8 @@ export class VitestTestRunner implements VitestRunner {
   private __vitest_executor!: VitestExecutor
   private cancelRun = false
 
+  private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
+
   constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
@@ -123,9 +125,14 @@ export class VitestTestRunner implements VitestRunner {
       throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
       throw isExpectingAssertionsError
+    if (this.config.expect.requireAssertions && assertionCalls === 0)
+      throw this.assertionsErrors.get(test)
   }
 
   extendTaskContext<T extends Test | Custom>(context: TaskContext<T>): ExtendedContext<T> {
+    // create error during the test initialization so we have a nice stack trace
+    if (this.config.expect.requireAssertions)
+      this.assertionsErrors.set(context.task, new Error('expected any number of assertion, but got none'))
     let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {

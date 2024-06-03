@@ -1,28 +1,22 @@
 import { existsSync, promises as fs } from 'node:fs'
 
-import { dirname } from 'pathe'
-import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed } from 'vite'
-import type { ViteDevServer } from 'vite'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
+import type { ViteDevServer } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { Awaitable, File, ModuleGraphData, Reporter, SerializableSpec, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
-import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
-import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
+import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers, WebSocketRPC } from './types'
 
-export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
-  const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
-
+export function setup(ctx: Vitest, _server?: ViteDevServer) {
   const wss = new WebSocketServer({ noServer: true })
 
-  const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>()
+  const clients = new Map<WebSocket, WebSocketRPC>()
 
   const server = _server || ctx.server
 
@@ -40,17 +34,9 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
     })
   })
 
-  function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, server))
-      throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
-  }
-
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onUnhandledError(error, type) {
-          ctx.state.catchError(error, type)
-        },
         async onCollected(files) {
           ctx.state.collectFiles(files)
           await ctx.report('onCollected', files)
@@ -59,29 +45,11 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
           ctx.state.updateTasks(packs)
           await ctx.report('onTaskUpdate', packs)
         },
-        onAfterSuiteRun(meta) {
-          ctx.coverageProvider?.onAfterSuiteRun(meta)
-        },
         getFiles() {
           return ctx.state.getFiles()
         },
         getPaths() {
           return ctx.state.getPaths()
-        },
-        sendLog(log) {
-          return ctx.report('onUserConsoleLog', log)
-        },
-        resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath(testPath)
-        },
-        resolveSnapshotRawPath(testPath, rawPath) {
-          return ctx.snapshot.resolveRawPath(testPath, rawPath)
-        },
-        async readSnapshotFile(snapshotPath) {
-          checkFileAccess(snapshotPath)
-          if (!existsSync(snapshotPath))
-            return null
-          return fs.readFile(snapshotPath, 'utf-8')
         },
         async readTestFile(id) {
           if (!ctx.state.filesMap.has(id) || !existsSync(id))
@@ -93,31 +61,11 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
             throw new Error(`Test file "${id}" was not registered, so it cannot be updated using the API.`)
           return fs.writeFile(id, content, 'utf-8')
         },
-        async saveSnapshotFile(id, content) {
-          checkFileAccess(id)
-          await fs.mkdir(dirname(id), { recursive: true })
-          return fs.writeFile(id, content, 'utf-8')
-        },
-        async removeSnapshotFile(id) {
-          checkFileAccess(id)
-          if (!existsSync(id))
-            throw new Error(`Snapshot file "${id}" does not exist.`)
-          return fs.unlink(id)
-        },
-        snapshotSaved(snapshot) {
-          ctx.snapshot.add(snapshot)
-        },
         async rerun(files) {
           await ctx.rerunFiles(files)
         },
         getConfig() {
-          return vitestOrWorkspace.config
-        },
-        async getBrowserFileSourceMap(id) {
-          if (!('ctx' in vitestOrWorkspace))
-            return undefined
-          const mod = vitestOrWorkspace.browser?.moduleGraph.getModuleById(id)
-          return mod?.transformResult?.map
+          return ctx.config
         },
         async getTransformResult(id) {
           const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
@@ -129,57 +77,21 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
             return result
           }
         },
-        async getModuleGraph(id: string): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, id)
+        async getModuleGraph(project: string, id: string, browser?: boolean): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id, browser)
         },
         updateSnapshot(file?: File) {
           if (!file)
             return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
-        onCancel(reason) {
-          ctx.cancelCurrentRun(reason)
-        },
-        debug(...args) {
-          ctx.logger.console.debug(...args)
-        },
-        getCountOfFailedTests() {
-          return ctx.state.getCountOfFailedTests()
-        },
         getUnhandledErrors() {
           return ctx.state.getUnhandledErrors()
-        },
-
-        // TODO: have a separate websocket conection for private browser API
-        triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
-          if (!('ctx' in vitestOrWorkspace) || !vitestOrWorkspace.browserProvider)
-            throw new Error('Commands are only available for browser tests.')
-          const commands = vitestOrWorkspace.config.browser?.commands
-          if (!commands || !commands[command])
-            throw new Error(`Unknown command "${command}".`)
-          return commands[command]({
-            testPath,
-            project: vitestOrWorkspace,
-            provider: vitestOrWorkspace.browserProvider,
-          }, ...payload)
-        },
-        getBrowserFiles() {
-          if (!('ctx' in vitestOrWorkspace))
-            throw new Error('`getBrowserTestFiles` is only available in the browser API')
-          return vitestOrWorkspace.browserState?.files ?? []
-        },
-        finishBrowserTests() {
-          if (!('ctx' in vitestOrWorkspace))
-            throw new Error('`finishBrowserTests` is only available in the browser API')
-          return vitestOrWorkspace.browserState?.resolve()
-        },
-        getProvidedContext() {
-          return 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.getProvidedContext() : ({} as any)
         },
         async getTestFiles() {
           const spec = await ctx.globTestFiles()
           return spec.map(([project, file]) => [{
-            name: project.getName(),
+            name: project.config.name,
             root: project.config.root,
           }, file])
         },
@@ -187,7 +99,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onCancel', 'onTaskUpdate'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onFinishedReportCoverage', 'onCollected', 'onTaskUpdate'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
         onTimeoutError(functionName) {
@@ -195,8 +107,6 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
         },
       },
     )
-
-    ctx.onCancel(reason => rpc.onCancel(reason))
 
     clients.set(ws, rpc)
 
@@ -212,7 +122,7 @@ export class WebSocketReporter implements Reporter {
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
-    public clients: Map<WebSocket, BirpcReturn<WebSocketEvents, WebSocketHandlers>>,
+    public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
   onCollected(files?: File[]) {

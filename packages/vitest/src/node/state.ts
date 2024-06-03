@@ -103,7 +103,7 @@ export class StateManager {
   }
 
   // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
-  clearFiles(_project: { config: { name: string; root: string } }, paths: string[] = []) {
+  clearFiles(_project: { config: { name: string | undefined; root: string } }, paths: string[] = []) {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
