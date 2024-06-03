@@ -8,22 +8,58 @@ This page provides information about the experimental browser mode feature in th
 
 ## Installation
 
+By default, Browser Mode doesn't require any provider to run tests locally because it reuses your existing browser.
+
 ::: code-group
 ```bash [npm]
-# webdriverio/playwright should be installed based on the browsers you wish to run
-npm install -D vitest @vitest/browser webdriverio playwright
+npm install -D vitest @vitest/browser
 ```
 ```bash [yarn]
-# webdriverio/playwright should be installed based on the browsers you wish to run
-yarn add -D vitest @vitest/browser webdriverio playwright
+yarn add -D vitest @vitest/browser
 ```
 ```bash [pnpm]
-# webdriverio/playwright should be installed based on the browsers you wish to run
-pnpm add -D vitest @vitest/browser webdriverio playwright
+pnpm add -D vitest @vitest/browser
 ```
 ```bash [bun]
-# webdriverio/playwright should be installed based on the browsers you wish to run
-bun add -D vitest @vitest/browser webdriverio playwright
+bun add -D vitest @vitest/browser
+```
+:::
+
+::: warning
+However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `none` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
+:::
+
+### Using Playwright
+
+::: code-group
+```bash [npm]
+npm install -D vitest @vitest/browser playwright
+```
+```bash [yarn]
+yarn add -D vitest @vitest/browser playwright
+```
+```bash [pnpm]
+pnpm add -D vitest @vitest/browser playwright
+```
+```bash [bun]
+bun add -D vitest @vitest/browser playwright
+```
+:::
+
+### Using Webdriverio
+
+::: code-group
+```bash [npm]
+npm install -D vitest @vitest/browser webdriverio
+```
+```bash [yarn]
+yarn add -D vitest @vitest/browser webdriverio
+```
+```bash [pnpm]
+pnpm add -D vitest @vitest/browser webdriverio
+```
+```bash [bun]
+bun add -D vitest @vitest/browser webdriverio
 ```
 :::
 
@@ -35,6 +71,7 @@ To activate browser mode in your Vitest configuration, you can use the `--browse
 export default defineConfig({
   test: {
     browser: {
+      provider: 'playwright', // or 'webdriverio'
       enabled: true,
       name: 'chrome', // browser name is required
     },
@@ -46,7 +83,7 @@ export default defineConfig({
 
 The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
 
-- `webdriverio` (default) supports these browsers:
+- `webdriverio` supports these browsers:
   - `firefox`
   - `chrome`
   - `edge`
@@ -109,12 +146,6 @@ Or you can provide browser options to CLI with dot notation:
 npx vitest --browser.name=chrome --browser.headless
 ```
 
-::: tip NOTE
-When using the Safari browser option with WebdriverIO, the `safaridriver` needs to be activated by running `sudo safaridriver --enable` on your device.
-
-Additionally, when running your tests, Vitest will attempt to install some drivers for compatibility with `safaridriver`.
-:::
-
 ## Headless
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.
@@ -125,6 +156,7 @@ Here's an example configuration enabling headless mode:
 export default defineConfig({
   test: {
     browser: {
+      provider: 'playwright',
       enabled: true,
       headless: true,
     },
@@ -139,6 +171,10 @@ npx vitest --browser.name=chrome --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.
+
+::: warning
+Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
+:::
 
 ## Context
 
