@@ -446,7 +446,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
             description: 'Run files in a random order. Long running tests will not start earlier if you enable this option. (default: `false`)',
           },
           tests: {
-            description: 'Run tests in a random oder (default: `false`)',
+            description: 'Run tests in a random order (default: `false`)',
           },
         },
       },
