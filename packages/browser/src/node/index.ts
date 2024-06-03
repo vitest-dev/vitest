@@ -153,25 +153,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const {
-          include,
-          exclude,
-          includeSource,
-          dir,
-          root,
-        } = project.config
-        const projectRoot = dir || root
-        const entries = await project.globAllTestFiles(include, exclude, includeSource, projectRoot)
         return {
           optimizeDeps: {
-            entries: [
-              ...entries,
-              'vitest',
-              'vitest/utils',
-              'vitest/browser',
-              'vitest/runners',
-              '@vitest/utils',
-            ],
             exclude: [
               'vitest',
               'vitest/utils',
@@ -181,6 +164,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'std-env',
               'tinybench',
               'tinyspy',
+              'pathe',
 
               // loupe is manually transformed
               'loupe',
@@ -189,11 +173,14 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'vitest > @vitest/utils > pretty-format',
               'vitest > @vitest/snapshot > pretty-format',
               'vitest > @vitest/snapshot > magic-string',
-              'vitest > diff-sequences',
               'vitest > pretty-format',
               'vitest > pretty-format > ansi-styles',
               'vitest > pretty-format > ansi-regex',
               'vitest > chai',
+              'vitest > @vitest/runner > p-limit',
+              'vitest > @vitest/utils > diff-sequences',
+              '@vitest/browser > @testing-library/user-event',
+              '@vitest/browser > @testing-library/dom',
             ],
           },
         }
