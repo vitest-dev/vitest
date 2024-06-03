@@ -180,6 +180,9 @@ async function createTesters(testFiles: string[]) {
   }
   const { width, height } = config.browser.viewport
 
+  iframes.forEach(iframe => iframe.remove())
+  iframes.clear()
+
   if (config.isolate === false) {
     const iframe = createIframe(
       container,

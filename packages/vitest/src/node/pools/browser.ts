@@ -14,7 +14,6 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       files,
       resolve: () => {
         defer.resolve()
-        project.browserState = undefined
       },
       reject: defer.reject,
     }
