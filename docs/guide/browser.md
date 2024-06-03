@@ -150,7 +150,7 @@ export const server: {
 }
 
 /**
- * User handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
+ * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
  * If used with `none` provider, fallbacks to simulated events via `@testing-library/user-event`.
  * @experimental
  */
