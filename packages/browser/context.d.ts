@@ -88,7 +88,7 @@ export const server: {
 
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
- * If used with `none` provider, fallbacks to simulated events via `@testing-library/user-event`.
+ * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
  * @experimental
  */
 export const userEvent: UserEvent

@@ -8,7 +8,7 @@ This page provides information about the experimental browser mode feature in th
 
 ## Installation
 
-By default, Browser Mode doesn't require any provider to run tests locally because it reuses your existing browser.
+By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
 
 ::: code-group
 ```bash [npm]
@@ -26,7 +26,7 @@ bun add -D vitest @vitest/browser
 :::
 
 ::: warning
-However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `none` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
+However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
 :::
 
 ### Using Playwright
@@ -208,7 +208,7 @@ export const server: {
 
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
- * If used with `none` provider, fallbacks to simulated events via `@testing-library/user-event`.
+ * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
  * @experimental
  */
 export const userEvent: {
