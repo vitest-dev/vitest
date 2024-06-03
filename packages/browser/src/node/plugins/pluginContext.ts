@@ -90,7 +90,7 @@ function getPathTo(element) {
   if (element.id !== '')
     return \`id("\${element.id}")\`
 
-  if (element === document.documentElement)
+  if (!element.parentNode || element === document.documentElement)
     return element.tagName
 
   let ix = 0
