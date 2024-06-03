@@ -60,7 +60,7 @@ describe('format', () => {
     expect(format(formatString, ...args), `failed ${formatString}`).toBe(util.format(formatString, ...args))
   })
 
-  test('cannont serialize some values', () => {
+  test('cannot serialize some values', () => {
     expect(() => format('%j', 100n)).toThrowErrorMatchingInlineSnapshot(`[TypeError: Do not know how to serialize a BigInt]`)
   })
 

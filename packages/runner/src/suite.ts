@@ -1,4 +1,4 @@
-import { format, isObject, objDisplay, objectAttr } from '@vitest/utils'
+import { format, isNegativeNaN, isObject, objDisplay, objectAttr } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import type { Custom, CustomAPI, File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustomOptions, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
@@ -433,6 +433,21 @@ function formatTitle(template: string, items: any[], idx: number) {
       .replace(/__vitest_escaped_%__/g, '%%')
   }
   const count = template.split('%').length - 1
+
+  if (template.includes('%f')) {
+    const placeholders = template.match(/%f/g) || []
+    placeholders.forEach((_, i) => {
+      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
+        // Replace the i-th occurrence of '%f' with '-%f'
+        let occurrence = 0
+        template = template.replace(/%f/g, (match) => {
+          occurrence++
+          return occurrence === i + 1 ? '-%f' : match
+        })
+      }
+    })
+  }
+
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(
