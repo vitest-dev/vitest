@@ -909,8 +909,8 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
       tinypool:
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^1.0.0
+        version: 1.0.0
       vite:
         specifier: ^5.2.6
         version: 5.2.6(@types/node@20.12.11)
@@ -14784,8 +14784,8 @@ packages:
       js-tokens: 8.0.2
     dev: true
 
-  /tinypool@0.9.0:
-    resolution: {integrity: sha512-/aMLccuigz3ZZV8pv/LvOVkOzOfcKkz0V2d5JfHhXUSlp0JJ8h2lAjveUZFTKqII9L4iJh4jod5bfZxx3mditw==}
+  /tinypool@1.0.0:
+    resolution: {integrity: sha512-KIKExllK7jp3uvrNtvRBYBWBOAXSX8ZvoaD8T+7KB/QHIuoJW3Pmr60zucywjAlMb5TeXUkcs/MWeWLu0qvuAQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     dev: false
 
