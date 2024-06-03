@@ -89,7 +89,7 @@
 | `--shard <shards>` | Test suite shard to execute in a format of `<index>/<count>` |
 | `--changed [since]` | Run tests that are affected by the changed files (default: `false`) |
 | `--sequence.shuffle.files` | Run files in a random order. Long running tests will not start earlier if you enable this option. (default: `false`) |
-| `--sequence.shuffle.tests` | Run tests in a random oder (default: `false`) |
+| `--sequence.shuffle.tests` | Run tests in a random order (default: `false`) |
 | `--sequence.concurrent` | Make tests run in parallel (default: `false`) |
 | `--sequence.seed <seed>` | Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information |
 | `--sequence.hooks <order>` | Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/#sequence-hooks) for more information (default: `"parallel"`) |
