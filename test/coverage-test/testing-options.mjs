@@ -194,6 +194,13 @@ const testCases = [
       include: ['coverage-report-tests/merge-reports.test.ts'],
     },
   },
+  {
+    testConfig: {
+      name: 'thresholds autoUpdate',
+      include: ['option-tests/thresholds-auto-update.test.ts'],
+      coverage: { provider: 'v8', enabled: false },
+    },
+  },
 ]
 
 for (const provider of ['v8', 'istanbul']) {
