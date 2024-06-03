@@ -15,8 +15,16 @@ function cloneByOwnProperties(value: any) {
  * flatted.stringify().
  */
 export function stringifyReplace(key: string, value: any) {
-  if (value instanceof Error)
-    return cloneByOwnProperties(value)
-  else
+  if (value instanceof Error) {
+    const cloned = cloneByOwnProperties(value)
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+      ...cloned,
+    }
+  }
+  else {
     return value
+  }
 }

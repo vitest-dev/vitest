@@ -104,8 +104,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           }
 
           const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
+          const testFiles = await project.globTestFiles()
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
-          const tests = decodedTestFile === '__vitest_all__' || !files.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
+          const tests = decodedTestFile === '__vitest_all__' || !testFiles.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
           const iframeId = JSON.stringify(decodedTestFile)
 
           if (!testerScripts)
