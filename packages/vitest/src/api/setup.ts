@@ -67,8 +67,12 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         getConfig() {
           return ctx.config
         },
-        async getTransformResult(id) {
-          const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
+        async getTransformResult(projectName: string, id, browser = false) {
+          const project = ctx.getProjectByName(projectName)
+          const result: TransformResultWithSource | null | undefined
+            = browser
+              ? await project.browser!.transformRequest(id)
+              : await project.vitenode.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))

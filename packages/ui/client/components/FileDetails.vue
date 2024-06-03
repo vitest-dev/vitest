@@ -113,7 +113,7 @@ function relativeToRoot(path?: string) {
 
     <div flex flex-col flex-1 overflow="hidden">
       <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
-        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" data-testid="graph" />
+        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" data-testid="graph" :project-name="current.file.projectName || ''" />
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" data-testid="editor" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />
