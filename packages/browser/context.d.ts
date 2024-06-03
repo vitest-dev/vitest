@@ -34,7 +34,15 @@ export interface BrowserCommands {
 }
 
 export interface UserEvent {
-  click: (selector: Element, options?: any) => Promise<void>
+  click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+}
+
+export interface UserEventClickOptions {
+  /**
+   * Time in milliseconds to wait for the element to be present in the DOM.
+   */
+  timeout?: number
+  [key: string]: any
 }
 
 type Platform =
