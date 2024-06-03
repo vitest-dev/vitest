@@ -76,7 +76,11 @@ interface IframeViewportEvent {
   id: string
 }
 
-type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeViewportEvent
+interface IframeViewportChannelEvent {
+  type: 'viewport:done' | 'viewport:fail'
+}
+
+type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeViewportEvent | IframeViewportChannelEvent
 
 async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
@@ -93,12 +97,15 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   return document.querySelector('#vitest-tester') as HTMLDivElement
 }
 
+const runningFiles = new Set<string>()
+
 client.ws.addEventListener('open', async () => {
   const testFiles = getBrowserState().files
 
   debug('test files', testFiles.join(', '))
 
-  const runningFiles = new Set<string>(testFiles)
+  runningFiles.clear()
+  testFiles.forEach(file => runningFiles.add(file))
 
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
     debug('channel event', JSON.stringify(e.data))
@@ -171,6 +178,9 @@ client.ws.addEventListener('open', async () => {
 })
 
 async function createTesters(testFiles: string[]) {
+  runningFiles.clear()
+  testFiles.forEach(file => runningFiles.add(file))
+
   const config = getConfig()
   const container = await getContainer(config)
 

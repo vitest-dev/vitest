@@ -36,7 +36,11 @@ const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? fil
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
 const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => filtered.value.filter(task => !task.result || task.result.state === 'run'))
+const running = computed(() => filtered.value.filter(task =>
+  !failed.value.includes(task)
+  && !success.value.includes(task)
+  && !skipped.value.includes(task),
+))
 
 const disableClearSearch = computed(() => search.value === '')
 
@@ -128,7 +132,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :on-item-click="onItemClick"
           />
         </DetailsPanel>
-        <DetailsPanel v-if="running.length || testRunState === 'running'">
+        <DetailsPanel v-if="throttledRunning.length">
           <template #summary>
             <div text-yellow5>
               RUNNING ({{ throttledRunning.length }})
