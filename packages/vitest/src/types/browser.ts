@@ -41,9 +41,9 @@ export interface BrowserConfigOptions {
   /**
    * Browser provider
    *
-   * @default 'webdriverio'
+   * @default 'preview'
    */
-  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'preview' | (string & {})
 
   /**
    * Options that are passed down to a browser provider.

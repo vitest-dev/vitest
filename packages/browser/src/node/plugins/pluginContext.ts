@@ -116,7 +116,7 @@ function getPathTo(element) {
 }
 
 async function getUserEventImport(provider: BrowserProvider, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
-  if (provider.name !== 'none')
+  if (provider.name !== 'preview')
     return ''
   const resolved = await resolve('@testing-library/user-event', __dirname)
   if (!resolved)
@@ -125,7 +125,7 @@ async function getUserEventImport(provider: BrowserProvider, resolve: (id: strin
 }
 
 function getUserEventScript(project: WorkspaceProject) {
-  if (project.browserProvider?.name === 'none')
+  if (project.browserProvider?.name === 'preview')
     return `__vitest_user_event__`
   return `{
   async click(element, options) {
