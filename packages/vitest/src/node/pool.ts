@@ -39,7 +39,7 @@ function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
   return project.config.pool
 }
 
-export function getFilePoolName([project, file]: WorkspaceSpec) {
+export function getFilePoolName(project: WorkspaceProject, file: string) {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser')
       throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
@@ -137,7 +137,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const pool = getFilePoolName(spec)
+      const pool = getFilePoolName(spec[0], spec[1])
       filesByPool[pool] ??= []
       filesByPool[pool].push(spec)
     }

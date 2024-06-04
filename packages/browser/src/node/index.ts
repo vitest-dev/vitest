@@ -157,7 +157,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       enforce: 'pre',
       async config() {
         const allTestFiles = await project.globTestFiles()
-        const browserTestFiles = allTestFiles.filter(file => getFilePoolName([project, file]) === 'browser')
+        const browserTestFiles = allTestFiles.filter(file => getFilePoolName(project, file) === 'browser')
         const setupFiles = toArray(project.config.setupFiles)
         const vitestPaths = [
           resolve(vitestDist, 'index.js'),
