@@ -74,7 +74,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
           })
 
+          // remove custom iframe related headers to allow the iframe to load
+          res.removeHeader('X-Frame-Options')
+
           if (url.pathname === base) {
+            // disable CSP for the orchestrator as we are the ones controlling it
+            res.removeHeader('Content-Security-Policy')
+
             if (!indexScripts)
               indexScripts = await formatScripts(project.config.browser.indexScripts, server)
 
@@ -103,6 +109,13 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             res.write(html, 'utf-8')
             res.end()
             return
+          }
+
+          const csp = res.getHeader('Content-Security-Policy')
+          if (typeof csp === 'string') {
+            // add frame-ancestors to allow the iframe to be loaded by Vitest,
+            // but keep the rest of the CSP
+            res.setHeader('Content-Security-Policy', csp.replace(/frame-ancestors [^;]+/, 'frame-ancestors *'))
           }
 
           const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))

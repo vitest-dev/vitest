@@ -18,6 +18,9 @@ export default defineConfig({
   server: {
     headers: {
       'x-custom': 'hello',
+      // Vitest iframe should still be loaded
+      'X-Frame-Options': 'DENY',
+      'content-security-policy': 'frame-src https://example.com; frame-ancestors https://example.com',
     },
   },
   optimizeDeps: {
