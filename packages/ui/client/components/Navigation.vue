@@ -11,8 +11,8 @@ import {
   disableCoverage,
   showCoverage,
   showDashboard,
-} from '../composables/navigation'
-import { client, findById } from '../composables/client'
+} from '~/composables/navigation'
+import { client, findById } from '~/composables/client'
 import { isDark, toggleDark } from '~/composables'
 import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
@@ -63,18 +63,18 @@ function expandTests() {
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
-        <IconButton 
+        <IconButton
           v-show="openedTreeItems.length > 0"
           v-tooltip.bottom="'Collapse tests'"
           title="Collapse tests"
-          icon="i-carbon:collapse-all" 
+          icon="i-carbon:collapse-all"
           @click="collapseTests()"
         />
-        <IconButton 
+        <IconButton
           v-show="openedTreeItems.length === 0"
           v-tooltip.bottom="'Expand tests'"
           title="Expand tests"
-          icon="i-carbon:expand-all" 
+          icon="i-carbon:expand-all"
           @click="expandTests()"
         />
         <IconButton

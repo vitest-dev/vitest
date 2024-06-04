@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ErrorWithDiff } from 'vitest'
 import { openInEditor, shouldOpenInEditor } from '~/composables/error'
-import { escapeHtml } from '~/utils/escape';
+import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
   root: string

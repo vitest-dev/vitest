@@ -1,7 +1,9 @@
 <script setup lang="ts">
-  const props = defineProps<{
-    error: ErrorWithDiff
-  }>()
+import type { ErrorWithDiff } from '@vitest/utils'
+
+defineProps<{
+  error: ErrorWithDiff
+}>()
 </script>
 
 <template>

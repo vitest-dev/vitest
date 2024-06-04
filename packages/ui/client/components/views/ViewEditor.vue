@@ -3,7 +3,7 @@
 import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
-import { openInEditor } from '../../composables/error'
+import { openInEditor } from '~/composables/error'
 import { client } from '~/composables/client'
 
 const props = defineProps<{
