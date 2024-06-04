@@ -1616,12 +1616,12 @@ Should Vitest UI be injected into the page. By default, injects UI iframe during
 
 Default iframe's viewport.
 
-#### browser.indexScripts {#browser-indexscripts}
+#### browser.orchestratorScripts {#browser-orchestratorscripts}
 
 - **Type:** `BrowserScript[]`
 - **Default:** `[]`
 
-Custom scripts that should be injected into the index HTML before test iframes are initiated. This HTML document only sets up iframes and doesn't actually import your code.
+Custom scripts that should be injected into the orchestrator HTML before test iframes are initiated. This HTML document only sets up iframes and doesn't actually import your code.
 
 The script `src` and `content` will be processed by Vite plugins. Script should be provided in the following shape:
 

@@ -347,7 +347,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ui: {
         description: 'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
-      indexScripts: null,
+      orchestratorScripts: null,
       testerScripts: null,
       commands: null,
       viewport: null,

@@ -393,7 +393,7 @@ export class WorkspaceProject {
       },
       browser: {
         ...this.ctx.config.browser,
-        indexScripts: [],
+        orchestratorScripts: [],
         testerScripts: [],
         commands: {},
       },

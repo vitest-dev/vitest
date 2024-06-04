@@ -109,7 +109,7 @@ export interface BrowserConfigOptions {
   /**
    * Scripts injected into the main window.
    */
-  indexScripts?: BrowserScript[]
+  orchestratorScripts?: BrowserScript[]
 
   /**
    * Commands that will be executed on the server

@@ -55,7 +55,7 @@ export default defineConfig({
           src: '@vitest/injected-lib',
         },
       ],
-      indexScripts: [
+      orchestratorScripts: [
         {
           content: 'console.log("Hello, World");globalThis.__injected = []',
           type: 'text/javascript',
