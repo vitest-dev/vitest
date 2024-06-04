@@ -50,7 +50,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           }
           next()
         })
-        let indexScripts: string | undefined
+        let orchestratorScripts: string | undefined
         let testerScripts: string | undefined
         server.middlewares.use(async (req, res, next) => {
           if (!req.url)
@@ -81,8 +81,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             // disable CSP for the orchestrator as we are the ones controlling it
             res.removeHeader('Content-Security-Policy')
 
-            if (!indexScripts)
-              indexScripts = await formatScripts(project.config.browser.indexScripts, server)
+            if (!orchestratorScripts)
+              orchestratorScripts = await formatScripts(project.config.browser.orchestratorScripts, server)
 
             let baseHtml = await orchestratorHtml
 
@@ -103,7 +103,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             const html = replacer(baseHtml, {
               __VITEST_FAVICON__: favicon,
               __VITEST_TITLE__: 'Vitest Browser Runner',
-              __VITEST_SCRIPTS__: indexScripts,
+              __VITEST_SCRIPTS__: orchestratorScripts,
               __VITEST_INJECTOR__: injector,
             })
             res.write(html, 'utf-8')
