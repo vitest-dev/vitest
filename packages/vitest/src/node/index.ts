@@ -8,7 +8,10 @@ export { registerConsoleShortcuts } from './stdin'
 export type { GlobalSetupContext } from './globalSetup'
 export type { WorkspaceSpec, ProcessPool } from './pool'
 export { createMethodsRPC } from './pools/rpc'
+export { getFilePoolName } from './pool'
 export { VitestPackageInstaller } from './packageInstaller'
+
+export { distDir, rootDir } from '../paths'
 
 export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'

@@ -24,6 +24,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
     server: {
       hmr: false,
       watch: null,
+      preTransformRequests: false,
     },
     plugins: [
       ...project.options?.plugins || [],
@@ -57,10 +58,6 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           return {
             resolve: {
               alias: config.test?.alias,
-            },
-            server: {
-              watch: null,
-              preTransformRequests: false,
             },
           }
         },

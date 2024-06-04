@@ -27,6 +27,28 @@ export interface PoolProcessOptions {
 
 export const builtinPools: BuiltinPool[] = ['forks', 'threads', 'browser', 'vmThreads', 'vmForks', 'typescript']
 
+function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
+  if (project.config.typecheck.enabled) {
+    for (const glob of project.config.typecheck.include) {
+      if (mm.isMatch(file, glob, { cwd: project.config.root }))
+        return 'typescript'
+    }
+  }
+  if (project.config.browser.enabled)
+    return 'browser'
+  return project.config.pool
+}
+
+export function getFilePoolName(project: WorkspaceProject, file: string) {
+  for (const [glob, pool] of project.config.poolMatchGlobs) {
+    if ((pool as Pool) === 'browser')
+      throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
+    if (mm.isMatch(file, glob, { cwd: project.config.root }))
+      return pool as Pool
+  }
+  return getDefaultPoolName(project, file)
+}
+
 export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<Pool, ProcessPool | null> = {
     forks: null,
@@ -35,28 +57,6 @@ export function createPool(ctx: Vitest): ProcessPool {
     vmThreads: null,
     vmForks: null,
     typescript: null,
-  }
-
-  function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
-    if (project.config.typecheck.enabled) {
-      for (const glob of project.config.typecheck.include) {
-        if (mm.isMatch(file, glob, { cwd: project.config.root }))
-          return 'typescript'
-      }
-    }
-    if (project.config.browser.enabled)
-      return 'browser'
-    return project.config.pool
-  }
-
-  function getPoolName([project, file]: WorkspaceSpec) {
-    for (const [glob, pool] of project.config.poolMatchGlobs) {
-      if ((pool as Pool) === 'browser')
-        throw new Error('Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace')
-      if (mm.isMatch(file, glob, { cwd: project.config.root }))
-        return pool as Pool
-    }
-    return getDefaultPoolName(project, file)
   }
 
   // in addition to resolve.conditions Vite also adds production/development,
@@ -137,7 +137,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const pool = getPoolName(spec)
+      const pool = getFilePoolName(spec[0], spec[1])
       filesByPool[pool] ??= []
       filesByPool[pool].push(spec)
     }
