@@ -6,8 +6,9 @@ import sirv from 'sirv'
 import type { ViteDevServer } from 'vite'
 import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
+import { getFilePoolName, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
-import { slash } from '@vitest/utils'
+import { slash, toArray } from '@vitest/utils'
 import BrowserContext from './plugins/pluginContext'
 import BrowserMocker from './plugins/pluginMocker'
 import DynamicImport from './plugins/pluginDynamicImport'
@@ -155,8 +156,22 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
+        const allTestFiles = await project.globTestFiles()
+        const browserTestFiles = allTestFiles.filter(file => getFilePoolName([project, file]) === 'browser')
+        const setupFiles = toArray(project.config.setupFiles)
+        const vitestPaths = [
+          resolve(vitestDist, 'index.js'),
+          resolve(vitestDist, 'browser.js'),
+          resolve(vitestDist, 'runners.js'),
+          resolve(vitestDist, 'utils.js'),
+        ]
         return {
           optimizeDeps: {
+            entries: [
+              ...browserTestFiles,
+              ...setupFiles,
+              ...vitestPaths,
+            ],
             exclude: [
               'vitest',
               'vitest/utils',
