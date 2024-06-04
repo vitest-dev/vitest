@@ -102,7 +102,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
                 isolate: options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions?.threads?.isolate ?? viteConfig.test?.isolate,
               },
               forks: {
-                isolate: options.poolOptions?.threads?.isolate ?? options.isolate ?? testConfig.poolOptions?.threads?.isolate ?? viteConfig.test?.isolate,
+                isolate: options.poolOptions?.forks?.isolate ?? options.isolate ?? testConfig.poolOptions?.forks?.isolate ?? viteConfig.test?.isolate,
               },
             },
           },
