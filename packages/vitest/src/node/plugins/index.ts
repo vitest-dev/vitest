@@ -6,6 +6,7 @@ import { deepMerge, notNullish, removeUndefinedValues, toArray } from '../../uti
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { defaultPort } from '../../constants'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
@@ -48,7 +49,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           removeUndefinedValues(viteConfig.test ?? {}),
           options,
         )
-        testConfig.api = resolveApiServerConfig(testConfig)
+        testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
@@ -166,7 +167,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           viteConfigTest,
           options,
         )
-        options.api = resolveApiServerConfig(options)
+        options.api = resolveApiServerConfig(options, defaultPort)
 
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env

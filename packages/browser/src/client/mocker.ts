@@ -5,14 +5,18 @@ import { getBrowserState } from './utils'
 
 const now = Date.now
 
+interface SpyModule {
+  spyOn: typeof import('vitest').vi['spyOn']
+}
+
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
   private mocks: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
 
-  private spyModule!: typeof import('vitest')
+  private spyModule!: SpyModule
 
-  public setSpyModule(mod: typeof import('vitest')) {
+  public setSpyModule(mod: SpyModule) {
     this.spyModule = mod
   }
 
@@ -187,7 +191,7 @@ export class VitestBrowserClientMocker {
                 if (isFunction) {
                   // mock and delegate calls to original prototype method, which should be also mocked already
                   const original = this[key]
-                  const mock = spyModule.vi.spyOn(this, key as string).mockImplementation(original)
+                  const mock = spyModule.spyOn(this, key as string).mockImplementation(original)
                   mock.mockRestore = () => {
                     mock.mockReset()
                     mock.mockImplementation(original)
@@ -197,7 +201,7 @@ export class VitestBrowserClientMocker {
               }
             }
           }
-          const mock = spyModule.vi.spyOn(newContainer, property).mockImplementation(mockFunction)
+          const mock = spyModule.spyOn(newContainer, property).mockImplementation(mockFunction)
           mock.mockRestore = () => {
             mock.mockReset()
             mock.mockImplementation(mockFunction)

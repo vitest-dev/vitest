@@ -35,7 +35,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
         enforce: 'post',
         name: 'vitest:browser:config',
         async config(config) {
-          const server = resolveApiServerConfig(config.test?.browser || {}) || {
+          const server = resolveApiServerConfig(config.test?.browser || {}, defaultBrowserPort) || {
             port: defaultBrowserPort,
           }
 
@@ -45,6 +45,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
           config.server = {
             ...config.server,
             ...server,
+            open: false,
           }
           config.server.fs ??= {}
           config.server.fs.allow = config.server.fs.allow || []
