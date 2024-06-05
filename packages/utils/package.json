@@ -49,7 +49,7 @@
     "*": {
       "ast": [
         "dist/ast.d.ts"
-      ],  
+      ],
       "source-map": [
         "dist/source-map.d.ts"
       ]
