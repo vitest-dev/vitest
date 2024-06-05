@@ -10,4 +10,4 @@ export {
   getCoverageProvider,
   startCoverageInsideWorker,
 } from './integrations/coverage'
-export * as Vitest from './index'
+export * as Spy from './integrations/spy'

@@ -63,9 +63,6 @@ async function prepareTestEnvironment(files: string[]) {
 
   const rpc: any = await loadSafeRpc(client)
 
-  stopErrorHandler()
-  registerUnexpectedErrors(rpc)
-
   const providedContext = await client.rpc.getProvidedContext()
 
   const state: WorkerGlobalState = {
@@ -119,16 +116,19 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, [true, version])
   })
 
-  const [runner, { startTests, setupCommonEnv, Vitest }] = await Promise.all([
+  const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
     initiateRunner(config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
-  mocker.setSpyModule(Vitest)
+  mocker.setSpyModule(Spy)
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)
   })
+
+  stopErrorHandler()
+  registerUnexpectedErrors(rpc)
 
   return {
     runner,

@@ -38,6 +38,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
 
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
+  defaultPort: number,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -407,7 +408,7 @@ export function resolveConfig(
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options)
+  resolved.api = resolveApiServerConfig(options, defaultPort)
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
@@ -535,7 +536,8 @@ export function resolveConfig(
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.isolate ??= true
-  resolved.browser.ui ??= !isCI
+  // disable in headless mode by default, and if CI is detected
+  resolved.browser.ui ??= resolved.browser.headless === false ? false : !isCI
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
@@ -544,7 +546,7 @@ export function resolveConfig(
   if (resolved.browser.enabled && stdProvider === 'stackblitz')
     resolved.browser.provider = 'preview'
 
-  resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
+  resolved.browser.api = resolveApiServerConfig(resolved.browser, defaultBrowserPort) || {
     port: defaultBrowserPort,
   }
 
