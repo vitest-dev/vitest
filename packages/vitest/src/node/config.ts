@@ -537,7 +537,7 @@ export function resolveConfig(
   resolved.browser.headless ??= isCI
   resolved.browser.isolate ??= true
   // disable in headless mode by default, and if CI is detected
-  resolved.browser.ui ??= resolved.browser.headless === false ? false : !isCI
+  resolved.browser.ui ??= resolved.browser.headless === false ? true : !isCI
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
