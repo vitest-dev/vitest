@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "2.0.0-beta.8",
+  "version": "2.0.0-beta.9",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",

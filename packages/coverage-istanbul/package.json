@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-istanbul",
   "type": "module",
-  "version": "2.0.0-beta.8",
+  "version": "2.0.0-beta.9",
   "description": "Istanbul coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
