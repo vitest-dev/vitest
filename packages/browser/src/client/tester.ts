@@ -54,6 +54,8 @@ async function tryCall<T>(fn: () => Promise<T>): Promise<T | false | undefined> 
   }
 }
 
+const startTime = performance.now()
+
 async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
@@ -94,7 +96,7 @@ async function prepareTestEnvironment(files: string[]) {
     rpc,
     durations: {
       environment: 0,
-      prepare: performance.now(),
+      prepare: startTime,
     },
     providedContext,
   }
@@ -117,7 +119,7 @@ async function prepareTestEnvironment(files: string[]) {
   })
 
   const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
-    initiateRunner(config),
+    initiateRunner(state, config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
@@ -183,6 +185,8 @@ async function runTests(files: string[]) {
   const { config, runner, state, setupCommonEnv, startTests } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
+
+  debug('prepare time', state.durations.prepare, 'ms')
 
   try {
     await setupCommonEnv(config)
