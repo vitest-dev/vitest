@@ -117,7 +117,7 @@ async function prepareTestEnvironment(files: string[]) {
   })
 
   const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
-    initiateRunner(config),
+    initiateRunner(state, config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
@@ -183,6 +183,8 @@ async function runTests(files: string[]) {
   const { config, runner, state, setupCommonEnv, startTests } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
+
+  debug('prepare time', state.durations.prepare, 'ms')
 
   try {
     await setupCommonEnv(config)

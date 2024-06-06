@@ -1,5 +1,5 @@
 import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { ResolvedConfig } from 'vitest'
+import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
 import { importId } from './utils'
@@ -17,6 +17,7 @@ interface CoverageHandler {
 
 export function createBrowserRunner(
   runnerClass: { new(config: ResolvedConfig): VitestRunner },
+  state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
@@ -57,6 +58,14 @@ export function createBrowserRunner(
     }
 
     onCollected = async (files: File[]): Promise<unknown> => {
+      files.forEach((file) => {
+        file.prepareDuration = state.durations.prepare
+        file.environmentLoad = state.durations.environment
+        // should be collected only for a single test file in a batch
+        state.durations.prepare = 0
+        state.durations.environment = 0
+      })
+
       if (this.config.includeTaskLocation) {
         try {
           await updateFilesLocations(files)
@@ -89,7 +98,7 @@ export function createBrowserRunner(
 
 let cachedRunner: VitestRunner | null = null
 
-export async function initiateRunner(config: ResolvedConfig) {
+export async function initiateRunner(state: WorkerGlobalState, config: ResolvedConfig) {
   if (cachedRunner)
     return cachedRunner
   const [
@@ -100,7 +109,7 @@ export async function initiateRunner(config: ResolvedConfig) {
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
-  const BrowserRunner = createBrowserRunner(runnerClass, {
+  const BrowserRunner = createBrowserRunner(runnerClass, state, {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment)
