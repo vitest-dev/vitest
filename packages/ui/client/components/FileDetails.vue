@@ -51,7 +51,7 @@ function relativeToRoot(path?: string) {
 }
 
 async function loadModuleGraph() {
-  if (loadingModuleGraph.value)
+  if (loadingModuleGraph.value || graphData.value?.filepath === currentFilepath.value)
     return
 
   loadingModuleGraph.value = true
@@ -77,6 +77,15 @@ async function loadModuleGraph() {
     loadingModuleGraph.value = false
   }
 }
+
+debouncedWatch(
+  () => [graphData.value, viewMode.value] as const,
+  ([, vm]) => {
+    if (vm === 'graph')
+      loadModuleGraph()
+  },
+  { debounce: 100, immediate: true },
+)
 </script>
 
 <template>
@@ -117,7 +126,7 @@ async function loadModuleGraph() {
           data-testid="btn-graph"
           class="flex items-center gap-2"
           :class="{ 'tab-button-active': viewMode === 'graph' }"
-          @click="loadModuleGraph()"
+          @click="changeViewMode('graph')"
         >
           <span v-if="loadingModuleGraph" class="block w-1.4em h-1.4em i-carbon:circle-dash animate-spin animate-2s"></span>
           <span v-else class="block  w-1.4em h-1.4em i-carbon:chart-relationship"></span>
@@ -149,7 +158,7 @@ async function loadModuleGraph() {
 
     <div flex flex-col flex-1 overflow="hidden">
       <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
-        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" data-testid="graph" :project-name="current.file.projectName || ''" />
+        <ViewModuleGraph v-show="viewMode === 'graph' && !loadingModuleGraph" :graph="graph" data-testid="graph" :project-name="current.file.projectName || ''" />
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" data-testid="editor" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />

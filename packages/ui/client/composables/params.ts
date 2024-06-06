@@ -12,9 +12,3 @@ export const params = useUrlSearchParams<Params>('hash', {
 
 export const activeFileId = toRef(params, 'file')
 export const viewMode = toRef(params, 'view')
-
-// reset tab to reload the graph
-watch(activeFileId, (id) => {
-  if (id && viewMode.value)
-    viewMode.value = null
-}, { immediate: true, flush: 'post' })
