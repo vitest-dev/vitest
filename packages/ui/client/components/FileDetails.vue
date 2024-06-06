@@ -43,13 +43,6 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
-function relativeToRoot(path?: string) {
-  if (!path) return ''
-  if (path.startsWith(config.value.root))
-    return path.slice(config.value.root.length)
-  return path
-}
-
 async function loadModuleGraph() {
   if (loadingModuleGraph.value || graphData.value?.filepath === currentFilepath.value)
     return
@@ -97,7 +90,7 @@ debouncedWatch(
           [{{ current?.file.projectName || '' }}]
         </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ relativeToRoot(current?.filepath) }}
+          {{ current?.name }}
         </div>
         <div class="flex text-lg">
           <IconButton
