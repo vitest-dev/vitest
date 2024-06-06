@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { files } from '~/composables/client'
-import { filesFailed, filesSuccess, finished } from '~/composables/summary'
+// import { files } from '~/composables/client'
+// import { filesFailed, filesSuccess, finished } from '~/composables/summary'
+import { finished, testStatus } from "~/composables/tests-status";
 
 const { width } = useWindowSize()
 const classes = computed(() => {
   // if there is no files, then in progress and gray
-  if (files.value.length === 0)
+  if (testStatus.files === 0)
     return '!bg-gray-4 !dark:bg-gray-7 in-progress'
   else if (!finished.value)
     return 'in-progress'
 
   return null
 })
-const total = computed(() => files.value.length)
-const pass = computed(() => filesSuccess.value.length)
-const failed = computed(() => filesFailed.value.length)
+const total = computed(() => testStatus.files)
+const pass = computed(() => testStatus.filesSuccess)
+const failed = computed(() => testStatus.filesFailed)
 
 const widthPass = computed(() => {
   const t = unref(total)

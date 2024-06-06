@@ -1,26 +1,28 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Custom, Task, Test } from 'vitest'
-import { files, testRunState } from '~/composables/client'
+import { files, findById } from '~/composables/client'
 
 type Nullable<T> = T | null | undefined
 type Arrayable<T> = T | Array<T>
 
 // files
-export const filesFailed = computed(() => files.value.filter(f => f.result?.state === 'fail'))
-export const filesSuccess = computed(() => files.value.filter(f => f.result?.state === 'pass'))
+export const filesFailed = computed(() => files.value.filter(f => f.state === 'fail'))
+export const filesSuccess = computed(() => files.value.filter(f => f.state === 'pass'))
 export const filesIgnore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
 export const filesRunning = computed(() => files.value.filter(f =>
   !filesFailed.value.includes(f)
   && !filesSuccess.value.includes(f)
   && !filesIgnore.value.includes(f),
 ))
+const tasks = computed(() => files.value.map(f => findById(f.id) as Task))
 export const filesSkipped = computed(() => filesIgnore.value.filter(f => f.mode === 'skip'))
-export const filesSnapshotFailed = computed(() => files.value.filter(hasFailedSnapshot))
+export const filesSnapshotFailed = computed(() => tasks.value.filter(hasFailedSnapshot))
+// export const filesSnapshotFailed = computed(() => files.value.filter(f => hasFailedSnapshot))
 export const filesTodo = computed(() => filesIgnore.value.filter(f => f.mode === 'todo'))
-export const finished = computed(() => testRunState.value === 'idle')
+// export const finished = computed(() => testRunState.value === 'idle')
 // tests
 export const tests = computed(() => {
-  return getTests(files.value)
+  return getTests(tasks.value)
 })
 export const testsFailed = computed(() => {
   return tests.value.filter(f => f.result?.state === 'fail')
@@ -36,7 +38,7 @@ export const time = computed(() => {
   const t = files.value.reduce((acc, t) => {
     acc += Math.max(0, t.collectDuration || 0)
     acc += Math.max(0, t.setupDuration || 0)
-    acc += Math.max(0, t.result?.duration || 0)
+    acc += Math.max(0, t.duration || 0)
     acc += Math.max(0, t.environmentLoad || 0)
     acc += Math.max(0, t.prepareDuration || 0)
     return acc
