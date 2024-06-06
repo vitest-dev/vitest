@@ -1,4 +1,4 @@
-import type { Browser, LaunchOptions, Page } from 'playwright'
+import type { Browser, BrowserContext, BrowserContextOptions, LaunchOptions, Page } from 'playwright'
 import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
@@ -13,13 +13,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public browser: Browser | null = null
   public page: Page | null = null
+  public context: BrowserContext | null = null
 
   private browserName!: PlaywrightBrowser
   private ctx!: WorkspaceProject
 
   private options?: {
     launch?: LaunchOptions
-    page?: Parameters<Browser['newPage']>[0]
+    context?: BrowserContextOptions
   }
 
   getSupportedBrowsers() {
@@ -32,9 +33,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.options = options as any
   }
 
-  private async openBrowserPage() {
-    if (this.page)
-      return this.page
+  private async createContext() {
+    if (this.context)
+      return this.context
 
     const options = this.ctx.config.browser
 
@@ -45,7 +46,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       headless: options.headless,
     })
     this.browser = browser
-    this.page = await browser.newPage(this.options?.page)
+    this.context = await browser.newContext(this.options?.context)
+    return this.context
+  }
+
+  private async openBrowserPage() {
+    this.context = await this.createContext()
+    this.page = await this.context.newPage()
 
     return this.page
   }

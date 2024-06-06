@@ -21,6 +21,7 @@ window.__vitest_browser_runner__ = {
   config: { __VITEST_CONFIG__ },
   files: { __VITEST_FILES__ },
   type: { __VITEST_TYPE__ },
+  contextId: { __VITEST_CONTEXT_ID__ },
 }
 
 const config = __vitest_browser_runner__.config

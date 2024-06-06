@@ -80,11 +80,11 @@ export class WorkspaceProject {
     testers: new Map<string, WebSocketBrowserRPC>(),
   }
 
-  browserState: {
+  browserState = new Map<string, {
     files: string[]
     resolve: () => void
     reject: (v: unknown) => void
-  } | undefined
+  }>()
 
   testFilesList: string[] | null = null
 

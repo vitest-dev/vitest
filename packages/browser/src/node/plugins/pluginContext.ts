@@ -51,7 +51,7 @@ async function generateContextFile(this: PluginContext, project: WorkspaceProjec
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
-const channel = new BroadcastChannel('vitest')
+const channel = new BroadcastChannel('vitest:' + __vitest_browser_runner__.contextId)
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},

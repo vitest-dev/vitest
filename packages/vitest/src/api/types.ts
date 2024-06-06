@@ -37,9 +37,8 @@ export interface WebSocketBrowserHandlers {
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (log: UserConsoleLog) => void
-  finishBrowserTests: () => void
+  finishBrowserTests: (contextId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
-  getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
   resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
   triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>

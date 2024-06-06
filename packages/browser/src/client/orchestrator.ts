@@ -35,7 +35,7 @@ function createIframe(container: HTMLDivElement, file: string) {
 
   const iframe = document.createElement('iframe')
   iframe.setAttribute('loading', 'eager')
-  iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
+  iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${getBrowserState().contextId}/${encodeURIComponent(file)}`)
   iframe.setAttribute('data-vitest', 'true')
 
   iframe.style.display = 'block'
@@ -52,7 +52,7 @@ function createIframe(container: HTMLDivElement, file: string) {
 
 async function done() {
   await rpcDone()
-  await client.rpc.finishBrowserTests()
+  await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
 
 interface IframeDoneEvent {

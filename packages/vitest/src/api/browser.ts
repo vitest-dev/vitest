@@ -124,11 +124,8 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
             provider: project.browserProvider,
           }, ...payload)
         },
-        getBrowserFiles() {
-          return project.browserState?.files ?? []
-        },
-        finishBrowserTests() {
-          return project.browserState?.resolve()
+        finishBrowserTests(contextId: string) {
+          return project.browserState.get(contextId)?.resolve()
         },
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
