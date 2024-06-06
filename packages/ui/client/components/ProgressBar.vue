@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { files } from '../composables/client'
-import { filesFailed, filesSuccess, finished } from '../composables/summary'
+import { files } from '~/composables/client'
+import { filesFailed, filesSuccess, finished } from '~/composables/summary'
 
 const { width } = useWindowSize()
 const classes = computed(() => {

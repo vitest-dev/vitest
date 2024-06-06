@@ -1,28 +1,27 @@
 <script setup lang="ts">
-import type { ModuleGraphData } from 'vitest'
 import { client, current, currentLogs, isReport, browserState, config } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
-import { getProjectNameColor } from '~/utils/task';
+import { getProjectNameColor } from '~/utils/task'
 
-const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
 const hasGraphBeenDisplayed = ref(false)
+const loadingModuleGraph = ref(false)
+const currentFilepath = ref<string | undefined>(undefined)
 
-debouncedWatch(
-  current,
-  async (c, o) => {
-    if (c && c.filepath !== o?.filepath) {
-      const project = c.file.projectName || ''
-      data.value = await client.rpc.getModuleGraph(project, c.filepath, !!browserState)
-      graph.value = getModuleGraph(data.value, c.filepath)
-    }
-  },
-  { debounce: 100, immediate: true },
-)
+const graphData = computed(() => {
+  const c = current.value
+  if (!c || !c.filepath)
+    return
+
+  return {
+    filepath: c.filepath,
+    projectName: c.file.projectName || '',
+  }
+})
 
 function open() {
   const filePath = current.value?.filepath
@@ -44,12 +43,42 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
-function relativeToRoot(path?: string) {
-  if (!path) return ''
-  if (path.startsWith(config.root))
-    return path.slice(config.root.length)
-  return path
+async function loadModuleGraph() {
+  if (loadingModuleGraph.value || graphData.value?.filepath === currentFilepath.value)
+    return
+
+  loadingModuleGraph.value = true
+
+  await nextTick()
+
+  try {
+    const gd = graphData.value
+    if (!gd)
+      return
+
+    if (!currentFilepath.value || gd.filepath !== currentFilepath.value || (!graph.value.nodes.length && !graph.value.links.length)) {
+      graph.value = getModuleGraph(
+        await client.rpc.getModuleGraph(gd.projectName, gd.filepath, !!browserState),
+        gd.filepath,
+      )
+      currentFilepath.value = gd.filepath
+    }
+    changeViewMode('graph')
+  }
+  finally {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    loadingModuleGraph.value = false
+  }
 }
+
+debouncedWatch(
+  () => [graphData.value, viewMode.value] as const,
+  ([, vm]) => {
+    if (vm === 'graph')
+      loadModuleGraph()
+  },
+  { debounce: 100, immediate: true },
+)
 </script>
 
 <template>
@@ -61,7 +90,7 @@ function relativeToRoot(path?: string) {
           [{{ current?.file.projectName || '' }}]
         </div>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ relativeToRoot(current?.filepath) }}
+          {{ current?.name }}
         </div>
         <div class="flex text-lg">
           <IconButton
@@ -77,35 +106,44 @@ function relativeToRoot(path?: string) {
       <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
         <button
           tab-button
+          class="flex items-center gap-2"
           :class="{ 'tab-button-active': viewMode == null }"
           data-testid="btn-report"
           @click="changeViewMode(null)"
         >
+          <span class="block  w-1.4em h-1.4em i-carbon:report"></span>
           Report
         </button>
         <button
           tab-button
           data-testid="btn-graph"
+          class="flex items-center gap-2"
           :class="{ 'tab-button-active': viewMode === 'graph' }"
           @click="changeViewMode('graph')"
         >
+          <span v-if="loadingModuleGraph" class="block w-1.4em h-1.4em i-carbon:circle-dash animate-spin animate-2s"></span>
+          <span v-else class="block  w-1.4em h-1.4em i-carbon:chart-relationship"></span>
           Module Graph
         </button>
         <button
           v-if="!isReport"
           tab-button
           data-testid="btn-code"
+          class="flex items-center gap-2"
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
+          <span class="block w-1.4em h-1.4em i-carbon:code"></span>
           {{ draft ? '*&#160;' : '' }}Code
         </button>
         <button
           tab-button
           data-testid="btn-console"
+          class="flex items-center gap-2"
           :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && consoleCount === 0 }"
           @click="changeViewMode('console')"
         >
+          <span class="block w-1.4em h-1.4em i-carbon:terminal-3270"></span>
           Console ({{ consoleCount }})
         </button>
       </div>
@@ -113,7 +151,7 @@ function relativeToRoot(path?: string) {
 
     <div flex flex-col flex-1 overflow="hidden">
       <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
-        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" data-testid="graph" :project-name="current.file.projectName || ''" />
+        <ViewModuleGraph v-show="viewMode === 'graph' && !loadingModuleGraph" :graph="graph" data-testid="graph" :project-name="current.file.projectName || ''" />
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" data-testid="editor" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />

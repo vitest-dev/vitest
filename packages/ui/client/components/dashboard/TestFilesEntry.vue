@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { files, unhandledErrors } from '../../composables/client'
-import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../composables/summary'
+import { files, unhandledErrors } from '~/composables/client'
+import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composables/summary'
 </script>
 
 <template>

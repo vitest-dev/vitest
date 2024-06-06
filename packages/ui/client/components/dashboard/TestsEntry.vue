@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { tests, testsFailed, testsSkipped, testsSuccess, testsTodo } from '../../composables/summary'
+import { tests, testsFailed, testsSkipped, testsSuccess, testsTodo } from '~/composables/summary'
 
 const total = computed(() => tests.value.length)
 const pass = computed(() => testsSuccess.value.length)

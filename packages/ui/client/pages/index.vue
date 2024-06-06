@@ -39,19 +39,19 @@ function resizeMain() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition v-if="!browserState">
+        <transition v-if="!browserState" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
-          <FileDetails v-else />
+          <FileDetails v-else key="details" />
         </transition>
-        <Splitpanes v-else key="detail" id="details-splitpanes" @resize="onBrowserPanelResizing(true)" @resized="onModuleResized">
+        <Splitpanes v-else key="browser-detail" id="details-splitpanes" @resize="onBrowserPanelResizing(true)" @resized="onModuleResized">
           <Pane :size="detailSizes[0]" min-size="10">
             <BrowserIframe v-once />
           </Pane>
           <Pane :size="detailSizes[1]" min-size="5">
             <Dashboard v-if="dashboardVisible" key="summary" />
             <Coverage v-else-if="coverageVisible" key="coverage" :src="coverageUrl" />
-            <FileDetails v-else />
+            <FileDetails v-else key="details" />
           </Pane>
         </Splitpanes>
       </Pane>
