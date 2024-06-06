@@ -54,6 +54,8 @@ async function tryCall<T>(fn: () => Promise<T>): Promise<T | false | undefined> 
   }
 }
 
+const startTime = performance.now()
+
 async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
@@ -94,7 +96,7 @@ async function prepareTestEnvironment(files: string[]) {
     rpc,
     durations: {
       environment: 0,
-      prepare: performance.now(),
+      prepare: startTime,
     },
     providedContext,
   }
