@@ -119,6 +119,7 @@ export const testStatus = reactive<TestStatus>(<InternalTestState>{
         }
         data.totalTests = data.testsFailed + data.testsSuccess
       }
+      // eslint-disable-next-line no-console
       console.log(`collect took: ${performance.now() - now}ms`)
     }
     requestAnimationFrame(() => {
@@ -138,39 +139,6 @@ export const testStatus = reactive<TestStatus>(<InternalTestState>{
       testStatus.testsIgnore = data.testsIgnore
       testStatus.totalTests = data.totalTests
     })
-    /* files.value.forEach((file) => {
-      if (file.state) {
-        this.testsFailed += file.state.failed
-        this.testsSuccess += file.result.success
-        this.testsIgnore += file.result.ignore
-        this.testsSkipped += file.result.skipped
-        this.testsTodo += file.result.todo
-        this.totalTests += file.result.total
-        switch (file.result.state) {
-          case 'failed':
-            this.filesFailed++
-            break
-          case 'success':
-            this.filesSuccess++
-            break
-          case 'ignore':
-            this.filesIgnore++
-            break
-          case 'running':
-            this.filesRunning++
-            break
-          case 'skipped':
-            this.filesSkipped++
-            break
-          case 'snapshotFailed':
-            this.filesSnapshotFailed++
-            break
-          case 'todo':
-            this.filesTodo++
-            break
-        }
-      }
-    }) */
   },
   start() {
     this.files = 0
@@ -187,12 +155,12 @@ export const testStatus = reactive<TestStatus>(<InternalTestState>{
     this.testsSkipped = 0
     this.testsTodo = 0
     this.totalTests = 0
-    this.time = ''
+    this.time = '0ms'
     clearInterval(this._timeout)
     this._timeout = setInterval(this._collect, timeout)
   },
   restart() {
-    clearInterval(this._timeout)
+    this.end()
     this._timeout = setInterval(this._collect, timeout)
   },
   end() {
