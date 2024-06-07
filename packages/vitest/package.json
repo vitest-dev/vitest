@@ -147,6 +147,7 @@
     }
   },
   "dependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
@@ -166,7 +167,6 @@
     "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@antfu/install-pkg": "0.3.1",
     "@edge-runtime/vm": "^3.2.0",
     "@sinonjs/fake-timers": "11.1.0",
@@ -184,7 +184,6 @@
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",
-    "debug": "^4.3.4",
     "expect-type": "^0.19.0",
     "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",

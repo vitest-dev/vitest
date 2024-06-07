@@ -133,7 +133,7 @@ async function prepareTestEnvironment(files: string[]) {
   registerUnexpectedErrors(rpc)
 
   try {
-    await mocker.startWorker()
+    await mocker.setupWorker()
   }
   catch (err) {
     console.error(err)

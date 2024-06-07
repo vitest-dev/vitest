@@ -1,5 +1,6 @@
 import { getType } from '@vitest/utils'
 import { extname, join } from 'pathe'
+import type { SetupWorker } from 'msw/browser'
 import { setupWorker } from 'msw/browser'
 import { HttpResponse, http, passthrough } from 'msw'
 import { rpc } from './rpc'
@@ -24,9 +25,13 @@ export class VitestBrowserClientMocker {
   private factories: Record<string, () => any> = {}
 
   private spyModule!: SpyModule
+  private mswWorker!: SetupWorker
 
-  startWorker() {
-    const worker = setupWorker(
+  private _mswStarted = false
+  private _mswPromise: Promise<unknown> | null = null
+
+  setupWorker() {
+    this.mswWorker = setupWorker(
       http.get(/.+/, async ({ request }) => {
         const path = cleanTimestamp(request.url.slice(location.origin.length))
         if (!(path in this.mocks))
@@ -63,12 +68,23 @@ export class VitestBrowserClientMocker {
         })
       }),
     )
-    return worker.start({
+  }
+
+  public async startMSW() {
+    if (this._mswStarted)
+      return
+    if (this._mswPromise)
+      return this._mswPromise
+    this._mswPromise = this.mswWorker.start({
       serviceWorker: {
         url: '/__virtual_vitest__:mocker-worker.js',
       },
       quiet: true,
+    }).then(() => {
+      this._mswStarted = true
+      this._mswPromise = null
     })
+    await this._mswPromise
   }
 
   public setSpyModule(mod: SpyModule) {
@@ -168,7 +184,10 @@ export class VitestBrowserClientMocker {
   public async prepare() {
     if (!this.queue.size)
       return
-    await Promise.all([...this.queue.values()])
+    await Promise.all([
+      this.startMSW(),
+      ...this.queue.values(),
+    ])
   }
 
   // TODO: move this logic into a util(?)
