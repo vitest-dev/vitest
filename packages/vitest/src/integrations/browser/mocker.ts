@@ -17,35 +17,6 @@ export class VitestBrowserServerMocker {
     this.#project = project
   }
 
-  async mock(sessionId: string, rawId: string, importer: string, hasFactory: boolean) {
-    const { type, mockPath, resolvedId } = await this.resolveMock(rawId, importer, hasFactory)
-
-    this.invalidateModuleById(resolvedId)
-
-    if (type === 'factory') {
-      this.mocks.set(resolvedId, { sessionId, mock: undefined })
-      return {
-        id: resolvedId,
-        mock: undefined,
-      }
-    }
-
-    this.mocks.set(resolvedId, { sessionId, mock: mockPath })
-
-    return {
-      id: resolvedId,
-      mock: mockPath,
-    }
-  }
-
-  async unmock(rawId: string, importer: string) {
-    const { id } = await this.resolveId(rawId, importer)
-
-    this.invalidateModuleById(id)
-    this.mocks.delete(id)
-    return id
-  }
-
   public async resolveMock(rawId: string, importer: string, hasFactory: boolean) {
     const { id, fsPath, external } = await this.resolveId(rawId, importer)
 
@@ -59,13 +30,6 @@ export class VitestBrowserServerMocker {
       mockPath,
       resolvedId: id,
     }
-  }
-
-  public invalidateModuleById(id: string) {
-    const moduleGraph = this.#project.browser!.moduleGraph
-    const module = moduleGraph.getModuleById(id)
-    if (module)
-      moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
   }
 
   private async resolveId(rawId: string, importer: string) {

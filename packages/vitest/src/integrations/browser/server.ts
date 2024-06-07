@@ -17,6 +17,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
 
   const server = await createServer({
     ...project.options, // spread project config inlined in root workspace config
+    base: '/',
     logLevel: 'error',
     mode: project.config.mode,
     configFile: configPath,

@@ -2,7 +2,7 @@ import { getType } from '@vitest/utils'
 import { extname, join } from 'pathe'
 import type { SetupWorker } from 'msw/browser'
 import { setupWorker } from 'msw/browser'
-import { HttpResponse, http, passthrough } from 'msw'
+import { http } from 'msw/core/http'
 import { rpc } from './rpc'
 import { getBrowserState } from './utils'
 
@@ -14,7 +14,7 @@ interface SpyModule {
 
 const timestampRegexp = /(\?|&)t=\d{13}/
 
-function cleanTimestamp(url: string) {
+function removeTimestamp(url: string) {
   return url.replace(timestampRegexp, '')
 }
 
@@ -23,6 +23,7 @@ export class VitestBrowserClientMocker {
   private mocks: Record<string, undefined | null | string> = {}
   private mockObjects: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
+  private ids = new Set<string>()
 
   private spyModule!: SpyModule
   private mswWorker!: SetupWorker
@@ -33,7 +34,7 @@ export class VitestBrowserClientMocker {
   setupWorker() {
     this.mswWorker = setupWorker(
       http.get(/.+/, async ({ request }) => {
-        const path = cleanTimestamp(request.url.slice(location.origin.length))
+        const path = removeTimestamp(request.url.slice(location.origin.length))
         if (!(path in this.mocks))
           return passthrough()
 
@@ -58,7 +59,7 @@ export class VitestBrowserClientMocker {
         }
 
         if (typeof mock === 'string')
-          return HttpResponse.redirect(mock)
+          return Response.redirect(mock)
 
         const content = await rpc().automock(path)
         return new Response(content, {
@@ -107,7 +108,7 @@ export class VitestBrowserClientMocker {
 
   public async importMock(rawId: string, importer: string) {
     await this.prepare()
-    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer)
+    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer, false)
 
     const factoryReturn = this.get(resolvedId)
     if (factoryReturn)
@@ -135,6 +136,17 @@ export class VitestBrowserClientMocker {
     return this.mockObjects[id]
   }
 
+  public async invalidate() {
+    const ids = Array.from(this.ids)
+    if (!ids.length)
+      return
+    await rpc().invalidate(ids)
+    this.ids.clear()
+    this.mocks = {}
+    this.mockObjects = {}
+    this.factories = {}
+  }
+
   public async resolve(id: string) {
     const factory = this.factories[id]
     if (!factory)
@@ -155,12 +167,13 @@ export class VitestBrowserClientMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => any) {
-    const promise = rpc().queueMock(id, importer, !!factory)
-      .then(({ id, mock }) => {
-        const urlPaths = resolveMockPaths(id)
-        const resolvedMock = typeof mock === 'string'
-          ? new URL(resolvedMockedPath(mock), location.href).toString()
-          : mock
+    const promise = rpc().resolveMock(id, importer, !!factory)
+      .then(({ mockPath, resolvedId }) => {
+        this.ids.add(resolvedId)
+        const urlPaths = resolveMockPaths(resolvedId)
+        const resolvedMock = typeof mockPath === 'string'
+          ? new URL(resolvedMockedPath(mockPath), location.href).toString()
+          : mockPath
         urlPaths.forEach((url) => {
           this.mocks[url] = resolvedMock
           this.factories[url] = factory!
@@ -172,10 +185,19 @@ export class VitestBrowserClientMocker {
   }
 
   public queueUnmock(id: string, importer: string) {
-    const promise = rpc().queueUnmock(id, importer)
-      .then((id) => {
-        delete this.factories[id]
-      }).finally(() => {
+    const promise = rpc().resolveId(id, importer)
+      .then((resolved) => {
+        if (!resolved)
+          return
+        this.ids.delete(resolved.id)
+        const urlPaths = resolveMockPaths(resolved.id)
+        urlPaths.forEach((url) => {
+          delete this.mocks[url]
+          delete this.factories[url]
+          delete this.mockObjects[url]
+        })
+      })
+      .finally(() => {
         this.queue.delete(promise)
       })
     this.queue.add(promise)
@@ -387,4 +409,14 @@ function resolveMockPaths(path: string) {
     paths.push(path.slice(fsRoot.length))
 
   return paths
+}
+
+function passthrough() {
+  return new Response(null, {
+    status: 302,
+    statusText: 'Passthrough',
+    headers: {
+      'x-msw-intention': 'passthrough',
+    },
+  })
 }

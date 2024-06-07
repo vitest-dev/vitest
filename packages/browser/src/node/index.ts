@@ -10,7 +10,6 @@ import { getFilePoolName, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash, toArray } from '@vitest/utils'
 import BrowserContext from './plugins/pluginContext'
-import BrowserMocker from './plugins/pluginMocker'
 import DynamicImport from './plugins/pluginDynamicImport'
 
 export type { BrowserCommand } from 'vitest/node'
@@ -21,7 +20,6 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
 
   return [
-    ...BrowserMocker(project),
     {
       enforce: 'pre',
       name: 'vitest:browser',
@@ -262,12 +260,11 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
         if (rawId.startsWith('/__virtual_vitest__:')) {
-          const id = rawId.slice('/__virtual_vitest__:'.length)
+          let id = rawId.slice('/__virtual_vitest__:'.length)
           // TODO: don't hardcode
-          if (id === 'mocker-worker.js') {
-            const path = resolve(distRoot, './mocker-worker.js')
-            return path
-          }
+          if (id === 'mocker-worker.js')
+            id = 'msw/mockServiceWorker.js'
+
           const resolved = await this.resolve(
             id,
             distRoot,

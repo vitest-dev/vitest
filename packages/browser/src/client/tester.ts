@@ -119,11 +119,12 @@ async function prepareTestEnvironment(files: string[]) {
   })
 
   const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
-    initiateRunner(state, config),
+    initiateRunner(state, mocker, config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
   mocker.setSpyModule(Spy)
+  mocker.setupWorker()
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)
@@ -131,13 +132,6 @@ async function prepareTestEnvironment(files: string[]) {
 
   stopErrorHandler()
   registerUnexpectedErrors(rpc)
-
-  try {
-    await mocker.setupWorker()
-  }
-  catch (err) {
-    console.error(err)
-  }
 
   return {
     runner,

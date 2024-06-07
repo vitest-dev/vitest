@@ -4,6 +4,7 @@ import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
 import { importId } from './utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
+import type { VitestBrowserClientMocker } from './mocker'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
@@ -17,6 +18,7 @@ interface CoverageHandler {
 
 export function createBrowserRunner(
   runnerClass: { new(config: ResolvedConfig): VitestRunner },
+  mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
 ): { new(options: BrowserRunnerOptions): VitestRunner } {
@@ -44,9 +46,11 @@ export function createBrowserRunner(
     }
 
     onAfterRunFiles = async (files: File[]) => {
-      await rpc().invalidateMocks()
-      await super.onAfterRunFiles?.(files)
-      const coverage = await coverageModule?.takeCoverage?.()
+      const [coverage] = await Promise.all([
+        coverageModule?.takeCoverage?.(),
+        mocker.invalidate(),
+        super.onAfterRunFiles?.(files),
+      ])
 
       if (coverage) {
         await rpc().onAfterSuiteRun({
@@ -98,7 +102,7 @@ export function createBrowserRunner(
 
 let cachedRunner: VitestRunner | null = null
 
-export async function initiateRunner(state: WorkerGlobalState, config: ResolvedConfig) {
+export async function initiateRunner(state: WorkerGlobalState, mocker: VitestBrowserClientMocker, config: ResolvedConfig) {
   if (cachedRunner)
     return cachedRunner
   const [
@@ -109,7 +113,7 @@ export async function initiateRunner(state: WorkerGlobalState, config: ResolvedC
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
   const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
-  const BrowserRunner = createBrowserRunner(runnerClass, state, {
+  const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment)

@@ -121,7 +121,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
-        triggerCommand(contextId: string, command: string, testPath: string | undefined, payload: unknown[]) {
+        triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
           if (!project.browserProvider)
             throw new Error('Commands are only available for browser tests.')
@@ -142,7 +142,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
         },
-        async automock(id: string) {
+        async automock(id) {
           const request = await project.browser!.transformRequest(id)
           if (!request)
             throw new Error(`Module "${id}" not found.`)
@@ -157,21 +157,16 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
             : sourcemap
           return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
         },
-        async queueMock(id: string, importer: string, hasFactory: boolean) {
-          return project.browserMocker.mock(sessionId, id, importer, hasFactory)
+        resolveMock(rawId, importer, hasFactory) {
+          return project.browserMocker.resolveMock(rawId, importer, hasFactory)
         },
-        async queueUnmock(id: string, importer: string) {
-          return project.browserMocker.unmock(id, importer)
-        },
-        resolveMock(rawId: string, importer: string) {
-          return project.browserMocker.resolveMock(rawId, importer, false)
-        },
-        invalidateMocks() {
-          const mocker = project.browserMocker
-          mocker.mocks.forEach((_, id) => {
-            mocker.invalidateModuleById(id)
+        invalidate(ids) {
+          ids.forEach((id) => {
+            const moduleGraph = project.browser!.moduleGraph
+            const module = moduleGraph.getModuleById(id)
+            if (module)
+              moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
           })
-          mocker.mocks.clear()
         },
       },
       {
