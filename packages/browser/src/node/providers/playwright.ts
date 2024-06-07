@@ -66,7 +66,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       return this.contexts.get(contextId)!
 
     const browser = await this.openBrowser()
-    const context = await browser.newContext(this.options?.context)
+    const context = await browser.newContext({
+      ignoreHTTPSErrors: true,
+      ...this.options?.context,
+    })
     this.contexts.set(contextId, context)
     return context
   }
