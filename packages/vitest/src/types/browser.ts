@@ -121,7 +121,7 @@ export interface BrowserConfigOptions {
 
 export interface BrowserCommandContext {
   testPath: string | undefined
-  // provider: BrowserProvider
+  provider: BrowserProvider
   project: WorkspaceProject
   contextId: string
 }
