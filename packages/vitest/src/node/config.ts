@@ -536,6 +536,7 @@ export function resolveConfig(
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.isolate ??= true
+  resolved.browser.fileParallelism ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
 

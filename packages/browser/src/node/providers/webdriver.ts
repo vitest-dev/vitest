@@ -10,6 +10,7 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 
 export class WebdriverBrowserProvider implements BrowserProvider {
   public name = 'webdriverio' as const
+  public supportsParallelism: boolean = false
 
   public browser: WebdriverIO.Browser | null = null
 

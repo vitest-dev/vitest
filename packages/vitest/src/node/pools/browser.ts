@@ -120,7 +120,10 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   function getThreadsCount(project: WorkspaceProject) {
     const config = project.config.browser
-    if (!config.headless || config.ui)
+    if (!config.headless || !project.browserProvider!.supportsParallelism)
+      return 1
+
+    if (!config.fileParallelism)
       return 1
 
     return ctx.config.watch

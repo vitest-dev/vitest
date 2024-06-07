@@ -9,6 +9,10 @@ export interface BrowserProviderInitializationOptions {
 
 export interface BrowserProvider {
   name: string
+  /**
+   * @experimental opt-in into file parallelisation
+   */
+  supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
   openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>
@@ -77,6 +81,14 @@ export interface BrowserConfigOptions {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Run test files in parallel if provider supports this option
+   * This option only has effect in headless mode (enabled in CI by default)
+   *
+   * @default // Same as "test.fileParallelism"
+   */
+  fileParallelism?: boolean
 
   /**
    * Show Vitest UI
@@ -163,6 +175,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   enabled: boolean
   headless: boolean
   isolate: boolean
+  fileParallelism: boolean
   api: ApiConfig
   ui: boolean
   viewport: {

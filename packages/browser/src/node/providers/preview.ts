@@ -1,7 +1,8 @@
 import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
 
 export class PreviewBrowserProvider implements BrowserProvider {
-  public name = 'preview'
+  public name = 'preview' as const
+  public supportsParallelism: boolean = false
   private ctx!: WorkspaceProject
   private open = false
 
