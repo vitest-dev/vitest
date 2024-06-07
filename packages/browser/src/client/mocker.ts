@@ -1,5 +1,7 @@
 import { getType } from '@vitest/utils'
-import { extname } from 'pathe'
+import { extname, join } from 'pathe'
+import { setupWorker } from 'msw/browser'
+import { HttpResponse, http, passthrough } from 'msw'
 import { rpc } from './rpc'
 import { getBrowserState } from './utils'
 
@@ -9,12 +11,65 @@ interface SpyModule {
   spyOn: typeof import('vitest').vi['spyOn']
 }
 
+const timestampRegexp = /(\?|&)t=\d{13}/
+
+function cleanTimestamp(url: string) {
+  return url.replace(timestampRegexp, '')
+}
+
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
-  private mocks: Record<string, any> = {}
+  private mocks: Record<string, undefined | null | string> = {}
+  private mockObjects: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
 
   private spyModule!: SpyModule
+
+  startWorker() {
+    const worker = setupWorker(
+      http.get(/.+/, async ({ request }) => {
+        const path = cleanTimestamp(request.url.slice(location.origin.length))
+        if (!(path in this.mocks))
+          return passthrough()
+
+        const mock = this.mocks[path]
+
+        // using a factory
+        if (mock === undefined) {
+          const exportsModule = await this.resolve(path)
+          const exports = Object.keys(exportsModule)
+          const module = `const module = __vitest_mocker__.get('${path}');`
+          const keys = exports.map((name) => {
+            if (name === 'default')
+              return `export default module['default'];`
+            return `export const ${name} = module['${name}'];`
+          }).join('\n')
+          const text = `${module}\n${keys}`
+          return new Response(text, {
+            headers: {
+              'Content-Type': 'application/javascript',
+            },
+          })
+        }
+
+        if (typeof mock === 'string')
+          return HttpResponse.redirect(mock)
+
+        const content = await rpc().automock(path)
+        return new Response(content, {
+          headers: {
+            'Content-Type': 'application/javascript',
+          },
+        })
+      }),
+    )
+    return worker.start({
+      serviceWorker: {
+        url: '/__virtual_vitest__:mocker-worker.js',
+      },
+      quiet: true,
+    })
+  }
 
   public setSpyModule(mod: SpyModule) {
     this.spyModule = mod
@@ -61,7 +116,7 @@ export class VitestBrowserClientMocker {
   }
 
   public get(id: string) {
-    return this.mocks[id]
+    return this.mockObjects[id]
   }
 
   public async resolve(id: string) {
@@ -69,8 +124,8 @@ export class VitestBrowserClientMocker {
     if (!factory)
       throw new Error(`Cannot resolve ${id} mock: no factory provided`)
     try {
-      this.mocks[id] = await factory()
-      return this.mocks[id]
+      this.mockObjects[id] = await factory()
+      return this.mockObjects[id]
     }
     catch (err) {
       const vitestError = new Error(
@@ -85,8 +140,15 @@ export class VitestBrowserClientMocker {
 
   public queueMock(id: string, importer: string, factory?: () => any) {
     const promise = rpc().queueMock(id, importer, !!factory)
-      .then((id) => {
-        this.factories[id] = factory!
+      .then(({ id, mock }) => {
+        const urlPaths = resolveMockPaths(id)
+        const resolvedMock = typeof mock === 'string'
+          ? new URL(resolvedMockedPath(mock), location.href).toString()
+          : mock
+        urlPaths.forEach((url) => {
+          this.mocks[url] = resolvedMock
+          this.factories[url] = factory!
+        })
       }).finally(() => {
         this.queue.delete(promise)
       })
@@ -283,4 +345,27 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
+}
+
+function resolvedMockedPath(path: string) {
+  const config = getBrowserState().viteConfig
+  if (path.startsWith(config.root))
+    return path.slice(config.root.length)
+  return path
+}
+
+// TODO: check _base_ path
+function resolveMockPaths(path: string) {
+  const config = getBrowserState().viteConfig
+  const fsRoot = join('/@fs/', config.root)
+  const paths = [path, join('/@fs/', path)]
+
+  // URL can be /file/path.js, but path is resolved to /file/path
+  if (path.startsWith(config.root))
+    paths.push(path.slice(config.root.length))
+
+  if (path.startsWith(fsRoot))
+    paths.push(path.slice(fsRoot.length))
+
+  return paths
 }

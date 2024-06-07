@@ -5,12 +5,15 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed } from 'vite'
+import { isFileServingAllowed, parseAst } from 'vite'
 import type { ViteDevServer } from 'vite'
+import type { EncodedSourceMap } from '@ampproject/remapping'
+import remapping from '@ampproject/remapping'
 import { BROWSER_API_PATH } from '../constants'
 import { stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { createDebugger } from '../utils/debugger'
+import { automockModule } from '../node/automockBrowser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 
 const debug = createDebugger('vitest:browser:api')
@@ -138,6 +141,21 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         },
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
+        },
+        async automock(id: string) {
+          const request = await project.browser!.transformRequest(id)
+          if (!request)
+            throw new Error(`Module "${id}" not found.`)
+          const ms = automockModule(request.code, parseAst)
+          const code = ms.toString()
+          const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
+          const combinedMap = request.map && request.map.mappings
+            ? remapping(
+              [{ ...sourcemap, version: 3 }, request.map as EncodedSourceMap],
+              () => null,
+            )
+            : sourcemap
+          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
         },
         async queueMock(id: string, importer: string, hasFactory: boolean) {
           return project.browserMocker.mock(sessionId, id, importer, hasFactory)

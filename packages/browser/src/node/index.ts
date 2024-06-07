@@ -81,6 +81,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
 
             const injector = replacer(await injectorJs, {
               __VITEST_CONFIG__: JSON.stringify(config),
+              __VITEST_VITE_CONFIG__: JSON.stringify({
+                root: project.browser!.config.root,
+              }),
               __VITEST_FILES__: JSON.stringify(files),
               __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
               __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
@@ -138,6 +141,9 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const injector = replacer(await injectorJs, {
             __VITEST_CONFIG__: JSON.stringify(config),
             __VITEST_FILES__: JSON.stringify(files),
+            __VITEST_VITE_CONFIG__: JSON.stringify({
+              root: project.browser!.config.root,
+            }),
             __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
             __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
           })
@@ -218,6 +224,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'tinybench',
               'tinyspy',
               'pathe',
+              'msw',
+              'msw/browser',
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
@@ -248,6 +256,27 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           useId = useId.replace(/\\/g, '/')
 
         return useId
+      },
+    },
+    {
+      name: 'vitest:browser:resolve-virtual',
+      async resolveId(rawId) {
+        if (rawId.startsWith('/__virtual_vitest__:')) {
+          const id = rawId.slice('/__virtual_vitest__:'.length)
+          // TODO: don't hardcode
+          if (id === 'mocker-worker.js') {
+            const path = resolve(distRoot, './mocker-worker.js')
+            return path
+          }
+          const resolved = await this.resolve(
+            id,
+            distRoot,
+            {
+              skipSelf: true,
+            },
+          )
+          return resolved
+        }
       },
     },
     BrowserContext(project),

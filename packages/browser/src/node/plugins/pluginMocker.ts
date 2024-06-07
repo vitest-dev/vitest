@@ -4,6 +4,7 @@ import type { WorkspaceProject } from 'vitest/node'
 import { automockModule } from '../automocker'
 
 export default (project: WorkspaceProject): Plugin[] => {
+  return []
   return [
     {
       name: 'vitest:browser:mocker',

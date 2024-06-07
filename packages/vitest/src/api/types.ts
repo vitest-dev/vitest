@@ -42,13 +42,17 @@ export interface WebSocketBrowserHandlers {
   debug: (...args: string[]) => void
   resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
   triggerCommand: (contextId: string, command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
-  queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<string>
+  queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<{
+    id: string
+    mock: string | undefined | null
+  }>
   queueUnmock: (id: string, importer: string) => Promise<string>
   resolveMock: (id: string, importer: string) => Promise<{
     type: 'factory' | 'redirect' | 'automock'
     mockPath?: string | null
     resolvedId: string
   }>
+  automock: (id: string) => Promise<string>
   invalidateMocks: () => void
   getBrowserFileSourceMap: (id: string) => Promise<TransformResult['map'] | undefined>
   getProvidedContext: () => ProvidedContext

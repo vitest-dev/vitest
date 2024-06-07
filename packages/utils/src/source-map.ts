@@ -34,6 +34,7 @@ const stackIgnorePatterns = [
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  /\/deps\/vitest_/,
 ]
 
 function extractLocation(urlLike: string) {

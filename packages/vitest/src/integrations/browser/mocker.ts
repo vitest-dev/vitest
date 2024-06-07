@@ -24,12 +24,18 @@ export class VitestBrowserServerMocker {
 
     if (type === 'factory') {
       this.mocks.set(resolvedId, { sessionId, mock: undefined })
-      return resolvedId
+      return {
+        id: resolvedId,
+        mock: undefined,
+      }
     }
 
     this.mocks.set(resolvedId, { sessionId, mock: mockPath })
 
-    return resolvedId
+    return {
+      id: resolvedId,
+      mock: mockPath,
+    }
   }
 
   async unmock(rawId: string, importer: string) {

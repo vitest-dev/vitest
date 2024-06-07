@@ -132,6 +132,13 @@ async function prepareTestEnvironment(files: string[]) {
   stopErrorHandler()
   registerUnexpectedErrors(rpc)
 
+  try {
+    await mocker.startWorker()
+  }
+  catch (err) {
+    console.error(err)
+  }
+
   return {
     runner,
     config,

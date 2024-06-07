@@ -4,6 +4,7 @@ import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import copy from 'rollup-plugin-copy'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -24,6 +25,11 @@ const plugins = [
   commonjs(),
   esbuild({
     target: 'node18',
+  }),
+  copy({
+    targets: [
+      { src: './msw/sw.js', dest: 'dist', rename: 'mocker-worker.js' },
+    ],
   }),
 ]
 

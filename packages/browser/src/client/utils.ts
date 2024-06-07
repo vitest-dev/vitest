@@ -14,6 +14,9 @@ interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
+  viteConfig: {
+    root: string
+  }
   type: 'tester' | 'orchestrator'
   wrapModule: <T>(module: () => T) => T
   iframeId?: string

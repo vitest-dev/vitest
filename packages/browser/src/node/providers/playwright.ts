@@ -10,7 +10,7 @@ export interface PlaywrightProviderOptions extends BrowserProviderInitialization
 
 export class PlaywrightBrowserProvider implements BrowserProvider {
   public name = 'playwright' as const
-  public supportsParallelism: boolean = true
+  public supportsParallelism = true
 
   public browser: Browser | null = null
 

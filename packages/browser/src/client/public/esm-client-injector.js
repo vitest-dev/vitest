@@ -19,6 +19,7 @@ window.__vitest_browser_runner__ = {
   wrapModule,
   moduleCache,
   config: { __VITEST_CONFIG__ },
+  viteConfig: { __VITEST_VITE_CONFIG__ },
   files: { __VITEST_FILES__ },
   type: { __VITEST_TYPE__ },
   contextId: { __VITEST_CONTEXT_ID__ },
