@@ -100,9 +100,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const browser = this.browser
     this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
+    this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
     this.contexts.clear()
-    this.pages.clear()
     await browser?.close()
   }
 }

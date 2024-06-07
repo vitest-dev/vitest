@@ -75,7 +75,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(url: string) {
+  async openPage(_contextId: string, url: string) {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }

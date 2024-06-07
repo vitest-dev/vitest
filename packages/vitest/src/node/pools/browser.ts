@@ -1,4 +1,5 @@
 import * as nodeos from 'node:os'
+import crypto from 'node:crypto'
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { Vitest } from '../core'

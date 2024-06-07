@@ -21,13 +21,13 @@ export class PreviewBrowserProvider implements BrowserProvider {
       throw new Error('You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser#configuration')
   }
 
-  async openPage(_url: string) {
+  async openPage(_contextId: string, url: string) {
     this.open = true
     if (!this.ctx.browser)
       throw new Error('Browser is not initialized')
     const options = this.ctx.browser.config.server
     const _open = options.open
-    options.open = _url
+    options.open = url
     this.ctx.browser.openBrowser()
     options.open = _open
   }
