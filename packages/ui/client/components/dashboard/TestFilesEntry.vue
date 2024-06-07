@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { unhandledErrors } from '~/composables/client'
-// import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composables/summary'
-import { testStatus } from '~/composables/tests-status'
+import { testStatus } from '~/composables/summary'
 </script>
 
 <template>

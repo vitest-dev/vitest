@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Task } from 'vitest'
 import { getProjectNameColor } from '~/utils/task';
 import { activeFileId } from '~/composables/params';
 import { isReport } from '~/constants';
+import {client} from "~/composables/client";
 
 const props = defineProps<{
-  task: Task
+  taskId: string
   opened: boolean
   failedSnapshot: boolean
 }>()
@@ -16,9 +16,13 @@ const emit = defineEmits<{
   fixSnapshot: [],
 }>()
 
+const task = computed(() => {
+  return client.state.idMap.get(props.taskId)
+})
+
 const duration = computed(() => {
-  const { result } = props.task
-  return result && Math.round(result.duration || 0)
+  const duration = task.value?.result?.duration || 0
+  return Math.round(duration)
 })
 </script>
 

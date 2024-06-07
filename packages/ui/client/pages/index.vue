@@ -36,7 +36,7 @@ function resizeMain() {
   <div h-screen w-screen overflow="hidden">
     <Splitpanes class="pt-4px" @resized="onMainResized" @ready="resizeMain">
       <Pane :size="mainSizes[0]">
-        <NewNavigation />
+        <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
         <transition v-if="!browserState" key="ui-detail">

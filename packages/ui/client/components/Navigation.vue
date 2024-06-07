@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import type { File, Task } from 'vitest'
 import {
@@ -12,13 +11,14 @@ import {
   showCoverage,
   showDashboard,
 } from '~/composables/navigation'
-import { client, findById } from '~/composables/client'
+import { client, findById, runFiles } from '~/composables/client'
 import { isDark, toggleDark } from '~/composables'
 import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { openedTreeItems } from '~/composables/navigation'
+import { testStatus } from "~/composables/summary";
 
-const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value))
+// const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value.map(f => findById(f.id)!)))
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
 }
@@ -40,7 +40,10 @@ async function onRunAll(files?: File[]) {
       await nextTick()
     }
   }
-  await runAll(files)
+  if (files?.length)
+    await runFiles(files)
+  else
+    await runAll()
 }
 
 function collapseTests() {
@@ -58,7 +61,7 @@ function expandTests() {
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <TasksList border="r base" :tasks="files" :on-item-click="onItemClick" :group-by-type="true" @run="onRunAll" :nested="true">
+  <TestExplorer border="r base" :on-item-click="onItemClick" @run="onRunAll" :nested="true">
     <template #header="{ filteredTests }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
@@ -114,10 +117,11 @@ function expandTests() {
           @click="showCoverage()"
         />
         <IconButton
-          v-if="(failedSnapshot && !isReport)"
+          v-if="(testStatus.failedSnapshot && !isReport)"
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon:result-old"
-          @click="updateSnapshot()"
+          :disabled="!testStatus.failedSnapshotEnabled"
+          @click="testStatus.failedSnapshotEnabled && updateSnapshot()"
         />
         <IconButton
           v-if="!isReport"
@@ -133,5 +137,5 @@ function expandTests() {
         />
       </div>
     </template>
-  </TasksList>
+  </TestExplorer>
 </template>

@@ -1,54 +1,189 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Custom, Task, Test } from 'vitest'
-import { files, findById } from '~/composables/client'
+import { client, findById, testRunState } from '~/composables/client'
+import type { UIFile } from '~/composables/client/types'
 
 type Nullable<T> = T | null | undefined
 type Arrayable<T> = T | Array<T>
 
-// files
-export const filesFailed = computed(() => files.value.filter(f => f.state === 'fail'))
-export const filesSuccess = computed(() => files.value.filter(f => f.state === 'pass'))
-export const filesIgnore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
-export const filesRunning = computed(() => files.value.filter(f =>
-  !filesFailed.value.includes(f)
-  && !filesSuccess.value.includes(f)
-  && !filesIgnore.value.includes(f),
-))
-const tasks = computed(() => files.value.map(f => findById(f.id) as Task))
-export const filesSkipped = computed(() => filesIgnore.value.filter(f => f.mode === 'skip'))
-export const filesSnapshotFailed = computed(() => tasks.value.filter(hasFailedSnapshot))
-// export const filesSnapshotFailed = computed(() => files.value.filter(f => hasFailedSnapshot))
-export const filesTodo = computed(() => filesIgnore.value.filter(f => f.mode === 'todo'))
-// export const finished = computed(() => testRunState.value === 'idle')
-// tests
-export const tests = computed(() => {
-  return getTests(tasks.value)
-})
-export const testsFailed = computed(() => {
-  return tests.value.filter(f => f.result?.state === 'fail')
-})
-export const testsSuccess = computed(() => {
-  return tests.value.filter(f => f.result?.state === 'pass')
-})
-export const testsIgnore = computed(() => tests.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
-export const testsSkipped = computed(() => testsIgnore.value.filter(f => f.mode === 'skip'))
-export const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode === 'todo'))
-export const totalTests = computed(() => testsFailed.value.length + testsSuccess.value.length)
-export const time = computed(() => {
-  const t = files.value.reduce((acc, t) => {
-    acc += Math.max(0, t.collectDuration || 0)
-    acc += Math.max(0, t.setupDuration || 0)
-    acc += Math.max(0, t.duration || 0)
-    acc += Math.max(0, t.environmentLoad || 0)
-    acc += Math.max(0, t.prepareDuration || 0)
-    return acc
-  }, 0)
+interface TestStatus {
+  files: number
+  filesFailed: number
+  filesSuccess: number
+  filesIgnore: number
+  filesRunning: number
+  filesSkipped: number
+  filesSnapshotFailed: number
+  filesTodo: number
+  testsFailed: number
+  testsSuccess: number
+  testsIgnore: number
+  testsSkipped: number
+  testsTodo: number
+  totalTests: number
+  time: string
+  failedSnapshot: boolean
+  failedSnapshotEnabled: boolean
+}
 
-  if (t > 1000)
-    return `${(t / 1000).toFixed(2)}s`
+export const files = shallowRef<UIFile[]>([])
+export const finished = computed(() => testRunState.value === 'idle')
 
-  return `${Math.round(t)}ms`
+export const testStatus = reactive(<TestStatus>{
+  files: 0,
+  filesFailed: 0,
+  filesSuccess: 0,
+  filesIgnore: 0,
+  filesRunning: 0,
+  filesSkipped: 0,
+  filesSnapshotFailed: 0,
+  filesTodo: 0,
+  testsFailed: 0,
+  testsSuccess: 0,
+  testsIgnore: 0,
+  testsSkipped: 0,
+  testsTodo: 0,
+  totalTests: 0,
+  failedSnapshot: false,
+  failedSnapshotEnabled: false,
 })
+
+const { pause, resume } = useRafFn(collect, { fpsLimit: 10, immediate: false })
+
+function collect() {
+  const now = performance.now()
+  const idMap = client.state.idMap
+  const filesMap = new Map(files.value.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
+  const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
+  const data = {
+    files: filesMap.size,
+    timeString: '',
+    filesFailed: 0,
+    filesSuccess: 0,
+    filesIgnore: 0,
+    filesRunning: 0,
+    filesSkipped: 0,
+    filesTodo: 0,
+    filesSnapshotFailed: 0,
+    testsFailed: 0,
+    testsSuccess: 0,
+    testsIgnore: 0,
+    testsSkipped: 0,
+    testsTodo: 0,
+    totalTests: 0,
+  }
+  let time = 0
+  for (const [id, f] of useFiles) {
+    if (!f)
+      continue
+    const file = filesMap.get(id)
+    if (file) {
+      file.mode = f.mode
+      file.setupDuration = f.setupDuration
+      file.prepareDuration = f.prepareDuration
+      file.environmentLoad = f.environmentLoad
+      file.collectDuration = f.collectDuration
+      file.duration = f.result?.duration
+      file.state = f.result?.state
+    }
+    time += Math.max(0, f.collectDuration || 0)
+    time += Math.max(0, f.setupDuration || 0)
+    time += Math.max(0, f.result?.duration || 0)
+    time += Math.max(0, f.environmentLoad || 0)
+    time += Math.max(0, f.prepareDuration || 0)
+    data.timeString = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`
+    if (f.result?.state === 'fail') {
+      data.filesFailed++
+    }
+    else if (f.result?.state === 'pass') {
+      data.filesSuccess++
+    }
+    else if (f.mode === 'skip') {
+      data.filesIgnore++
+      data.filesSkipped++
+    }
+    else if (f.mode === 'todo') {
+      data.filesIgnore++
+      data.filesTodo++
+    }
+    else {
+      data.filesRunning++
+    }
+
+    const tests = getTests(f)
+
+    data.totalTests += tests.length
+
+    for (const t of tests) {
+      if (t.result?.state === 'fail') {
+        data.testsFailed++
+      }
+      else if (t.result?.state === 'pass') {
+        data.testsSuccess++
+      }
+      else if (t.mode === 'skip') {
+        data.testsIgnore++
+        data.testsSkipped++
+      }
+      else if (t.mode === 'todo') {
+        data.testsIgnore++
+        data.testsTodo++
+      }
+    }
+  }
+  // eslint-disable-next-line no-console
+  console.log(`collect took: ${performance.now() - now}ms`)
+  testStatus.files = data.files
+  testStatus.time = data.timeString
+  testStatus.filesFailed = data.filesFailed
+  testStatus.filesSuccess = data.filesSuccess
+  testStatus.filesIgnore = data.filesIgnore
+  testStatus.filesRunning = data.filesRunning
+  testStatus.filesSkipped = data.filesSkipped
+  testStatus.filesTodo = data.filesTodo
+  testStatus.testsFailed = data.testsFailed
+  testStatus.testsSuccess = data.testsSuccess
+  testStatus.testsFailed = data.testsFailed
+  testStatus.testsTodo = data.testsTodo
+  testStatus.testsIgnore = data.testsIgnore
+  testStatus.testsSkipped = data.testsSkipped
+  testStatus.totalTests = data.totalTests
+}
+
+export function endRun() {
+  pause()
+  collect()
+  testStatus.failedSnapshot = files.value && hasFailedSnapshot(files.value.map(f => findById(f.id)!))
+  testStatus.failedSnapshotEnabled = true
+}
+
+// TODO: re-check if this is the correct way to check if the test run is finished
+async function checkFinished() {
+  if (testRunState.value === 'idle' && files.value.every(f => !!f.state || f.mode === 'skip' || f.mode === 'todo'))
+    endRun()
+}
+
+export function startRun() {
+  testStatus.files = 0
+  testStatus.filesFailed = 0
+  testStatus.filesSuccess = 0
+  testStatus.filesIgnore = 0
+  testStatus.filesRunning = 0
+  testStatus.filesSkipped = 0
+  testStatus.filesSnapshotFailed = 0
+  testStatus.filesTodo = 0
+  testStatus.testsFailed = 0
+  testStatus.testsSuccess = 0
+  testStatus.testsIgnore = 0
+  testStatus.testsSkipped = 0
+  testStatus.testsTodo = 0
+  testStatus.totalTests = 0
+  testStatus.failedSnapshotEnabled = false
+  resume()
+  collect()
+  // fire and forget: on page refresh we don't have the state, we need to check the initial state
+  setTimeout(checkFinished, 512)
+}
 
 function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   array = array || []

@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { Task } from 'vitest'
 import { nextTick } from 'vue'
-import { runFiles, client } from '~/composables/client';
+import {runFiles, client, files, findById} from '~/composables/client';
 import { caseInsensitiveMatch } from '~/utils/task'
 import { openedTreeItems, coverageEnabled } from '~/composables/navigation';
+import { hasFailedSnapshot } from '@vitest/ws-client'
 
 defineOptions({ inheritAttrs: false })
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
-const { task, indent = 0, nested = false, search, onItemClick, opened = false } = defineProps<{
-  task: Task
-  failedSnapshot: boolean
+const { taskId, indent = 0, nested = false, search, onItemClick, opened = false } = defineProps<{
+  taskId: string
   indent?: number
   opened?: boolean
   nested?: boolean
@@ -18,28 +18,31 @@ const { task, indent = 0, nested = false, search, onItemClick, opened = false } 
   onItemClick?: (task: Task) => void
 }>()
 
-const isOpened = computed(() => opened || openedTreeItems.value.includes(task.id))
+const task = computed(() => client.state.idMap.get(taskId)!)
+const isOpened = computed(() => opened || openedTreeItems.value.includes(taskId))
+const failedSnapshot = computed(() => hasFailedSnapshot(task.value))
 
 function toggleOpen() {
   if (isOpened.value) {
-    const tasksIds = 'tasks' in task ? task.tasks.map(t => t.id) : []
-    openedTreeItems.value = openedTreeItems.value.filter(id => id !== task.id && !tasksIds.includes(id))
+    const currentTask = client.state.idMap.get(taskId)!
+    const tasksIds = 'tasks' in currentTask ? currentTask.tasks.map(t => t.id) : []
+    openedTreeItems.value = openedTreeItems.value.filter(id => id !== taskId && !tasksIds.includes(id))
   } else {
-    openedTreeItems.value = [...openedTreeItems.value, task.id]
+    openedTreeItems.value = [...openedTreeItems.value, task.value.id]
   }
 }
 
 async function onRun() {
-  onItemClick?.(task)
+  onItemClick?.(task.value)
   if (coverageEnabled.value) {
     disableCoverage.value = true
     await nextTick()
   }
-  await runFiles([task.file])
+  await runFiles([task.value.file])
 }
 
 function updateSnapshot() {
-  return client.rpc.updateSnapshot(task)
+  return client.rpc.updateSnapshot(task.value)
 }
 </script>
 
@@ -49,7 +52,7 @@ function updateSnapshot() {
   <TaskItem
     v-if="opened || !nested || !search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
-    :task="task"
+    :task-id="task.id"
     :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }"
     :opened="isOpened && task.type === 'suite' && task.tasks.length"
     :failed-snapshot="failedSnapshot"
@@ -63,7 +66,7 @@ function updateSnapshot() {
       v-for="suite in task.tasks"
       :key="suite.id"
       :failed-snapshot="false"
-      :task="suite"
+      :task-id="suite.id"
       :nested="nested"
       :indent="indent + 1"
       :search="search"

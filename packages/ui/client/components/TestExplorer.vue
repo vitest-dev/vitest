@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
 import type { File, Task } from 'vitest'
-import { files, findById, testRunState } from '~/composables/client'
+import { files, findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 
 const { onItemClick } = defineProps<{
   onItemClick?: (task: Task) => void
@@ -102,7 +101,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
     </div>
     <div class="scrolls" flex-auto py-1 v-bind="containerProps">
       <DetailsPanel v-bind="wrapperProps">
-        <NewTaskTree
+        <TaskTree
           v-for="file in list"
           :key="file.index"
           nested
@@ -111,7 +110,6 @@ function matchTasks(tasks: Task[], search: string): boolean {
           :opened="isFiltered"
           :class="activeFileId === file.data.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"
-          :failed-snapshot="hasFailedSnapshot(findById(file.data.id)!)"
         />
       </DetailsPanel>
     </div>

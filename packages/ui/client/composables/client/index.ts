@@ -10,7 +10,7 @@ import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 import type { UIFile } from '~/composables/client/types'
-import { files, testStatus } from '~/composables/tests-status'
+import { endRun, files, startRun } from '~/composables/summary'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
@@ -24,57 +24,18 @@ export const client = (function createVitestClient() {
     return createStaticClient()
   }
   else {
-    // const callbacks = /* #__PURE__ */ new WeakMap<{ key: string }, () => void>()
-    function onCollected(collectedFiles: File[] = [], cb?: () => void) {
-      try {
-        // trigger update to all files
-        collectedFiles.forEach((file) => {
-          const entry = files.value.find(f => f.id === file.id)
-          if (entry) {
-            // callbacks.get({ key: file.id })?.()
-            /* const number = */requestAnimationFrame(() => {
-              entry.mode = file.mode
-              entry.setupDuration = file.setupDuration
-              entry.prepareDuration = file.prepareDuration
-              entry.environmentLoad = file.environmentLoad
-              entry.collectDuration = file.collectDuration
-              entry.duration = file.result?.duration
-              entry.state = file.result?.state
-            })
-            // callbacks.set({ key: file.id }, () => cancelAnimationFrame(number))
-          }
-        })
-      }
-      finally {
-        cb && requestAnimationFrame(cb)
-      }
-    }
     return createClient(ENTRY_URL, {
       reactive: (data, ctxKey) => {
-        return ctxKey === 'state' ? reactiveVue(data as any) as any : data
+        return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
-        onTaskUpdate(tasks) {
+        onTaskUpdate() {
           testRunState.value = 'running'
-          tasks.forEach(([id, result]) => {
-            if (result) {
-              const file = files.value.find(file => file.id === id)
-              if (file) {
-                requestAnimationFrame(() => {
-                  file.state = result.state
-                  file.duration = result.duration
-                })
-              }
-            }
-          })
         },
-        onCollected,
-        onFinished(finishedFiles, errors) {
-          onCollected(finishedFiles, () => {
-            testStatus.end()
-            testRunState.value = 'idle'
-            unhandledErrors.value = (errors || []).map(parseError)
-          })
+        onFinished(_files, errors) {
+          endRun()
+          testRunState.value = 'idle'
+          unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
           // reload coverage iframe
@@ -87,22 +48,8 @@ export const client = (function createVitestClient() {
   }
 })()
 
-/*
-function sort(a: File, b: File) {
-  return a.name.localeCompare(b.name)
-}
-*/
-
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
-// export const files = computed(() => client.state.getFiles().sort(sort))
-// export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
-
-/*
-export function findById(id: string) {
-  return files.value.find(file => file.id === id)
-}
-*/
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
@@ -121,27 +68,30 @@ export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
-  return runFiles(client.state.getFiles(), true)
+  return runFiles(client.state.getFiles()/* , true */)
 }
 
 function clearResults(useFiles: File[]) {
+  // todo: do we need to reflect server result?
+  // if so, we need to add a new filtered flag to the ui file and reset it properly
+  // we will need to change collect logic in summary.ts
   const map = new Map(files.value.map(i => [i.id, i]))
   useFiles.forEach((f) => {
     delete f.result
     getTasks(f).forEach(i => delete i.result)
     const file = map.get(f.id)
-    if (file)
+    if (file) {
       file.state = undefined
+      file.duration = undefined
+      file.collectDuration = undefined
+    }
   })
 }
 
-export function runFiles(useFiles: File[], fromAll = false) {
+export function runFiles(useFiles: File[]/* , fromAll = false */) {
   clearResults(useFiles)
 
-  if (fromAll)
-    testStatus.start()
-  else
-    testStatus.restart()
+  startRun()
 
   return client.rpc.rerun(useFiles.map(i => i.filepath))
 }
@@ -187,8 +137,9 @@ watch(
         })).sort((a, b) => {
           return a.name.localeCompare(b.name)
         })
-        testStatus.start()
         client.state.collectFiles(remoteFiles)
+        // must be after collectFiles
+        startRun()
       }
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config

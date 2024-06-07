@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// import { files } from '~/composables/client'
-// import { filesFailed, filesSuccess, finished } from '~/composables/summary'
-import { finished, testStatus } from "~/composables/tests-status";
+import { finished, testStatus } from "~/composables/summary";
 
 const { width } = useWindowSize()
 const classes = computed(() => {
-  // if there is no files, then in progress and gray
+  // if there are no files, then in progress and gray
   if (testStatus.files === 0)
     return '!bg-gray-4 !dark:bg-gray-7 in-progress'
   else if (!finished.value)
@@ -13,24 +11,24 @@ const classes = computed(() => {
 
   return null
 })
-const total = computed(() => testStatus.files)
-const pass = computed(() => testStatus.filesSuccess)
-const failed = computed(() => testStatus.filesFailed)
+// const total = computed(() => testStatus.files)
+// const pass = computed(() => testStatus.filesSuccess)
+// const failed = computed(() => testStatus.filesFailed)
 
 const widthPass = computed(() => {
-  const t = unref(total)
-  return t > 0 ? (width.value * pass.value / t) : 0
+  const t = testStatus.files
+  return t > 0 ? (width.value * testStatus.filesSuccess / t) : 0
 })
 const widthFailed = computed(() => {
-  const t = unref(total)
-  return t > 0 ? (width.value * failed.value / t) : 0
+  const t = testStatus.files
+  return t > 0 ? (width.value * testStatus.filesFailed / t) : 0
 })
 const pending = computed(() => {
-  const t = unref(total)
-  return t - failed.value - pass.value
+  const t = testStatus.files
+  return t - testStatus.filesFailed - testStatus.filesSuccess
 })
 const widthPending = computed(() => {
-  const t = unref(total)
+  const t = testStatus.files
   return t > 0 ? (width.value * pending.value / t) : 0
 })
 </script>
