@@ -9,7 +9,7 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
-  public name = 'webdriverio'
+  public name = 'webdriverio' as const
 
   public browser: WebdriverIO.Browser | null = null
 

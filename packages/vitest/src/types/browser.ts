@@ -10,7 +10,7 @@ export interface BrowserProviderInitializationOptions {
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers: () => readonly string[]
-  openPage: (url: string) => Awaitable<void>
+  openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -121,8 +121,9 @@ export interface BrowserConfigOptions {
 
 export interface BrowserCommandContext {
   testPath: string | undefined
-  provider: BrowserProvider
+  // provider: BrowserProvider
   project: WorkspaceProject
+  contextId: string
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {

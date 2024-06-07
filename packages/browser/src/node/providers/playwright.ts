@@ -9,11 +9,9 @@ export interface PlaywrightProviderOptions extends BrowserProviderInitialization
 }
 
 export class PlaywrightBrowserProvider implements BrowserProvider {
-  public name = 'playwright'
+  public name = 'playwright' as const
 
   public browser: Browser | null = null
-  public page: Page | null = null
-  public context: BrowserContext | null = null
 
   private browserName!: PlaywrightBrowser
   private ctx!: WorkspaceProject
@@ -22,6 +20,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     launch?: LaunchOptions
     context?: BrowserContextOptions
   }
+
+  public contexts = new Map<string, BrowserContext>()
+  public pages = new Map<string, Page>()
+
+  private browserPromise: Promise<Browser> | null = null
 
   getSupportedBrowsers() {
     return playwrightBrowsers
@@ -33,41 +36,73 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.options = options as any
   }
 
-  private async createContext() {
-    if (this.context)
-      return this.context
+  private async openBrowser() {
+    if (this.browserPromise)
+      return this.browserPromise
 
-    const options = this.ctx.config.browser
+    if (this.browser)
+      return this.browser
 
-    const playwright = await import('playwright')
+    this.browserPromise = (async () => {
+      const options = this.ctx.config.browser
 
-    const browser = await playwright[this.browserName].launch({
-      ...this.options?.launch,
-      headless: options.headless,
-    })
-    this.browser = browser
-    this.context = await browser.newContext(this.options?.context)
-    return this.context
+      const playwright = await import('playwright')
+
+      const browser = await playwright[this.browserName].launch({
+        ...this.options?.launch,
+        headless: options.headless,
+      })
+      this.browser = browser
+      this.browserPromise = null
+      return this.browser
+    })()
+
+    return this.browserPromise
   }
 
-  private async openBrowserPage() {
-    this.context = await this.createContext()
-    this.page = await this.context.newPage()
+  private async createContext(contextId: string) {
+    if (this.contexts.has(contextId))
+      return this.contexts.get(contextId)!
 
-    return this.page
+    const browser = await this.openBrowser()
+    const context = await browser.newContext(this.options?.context)
+    this.contexts.set(contextId, context)
+    return context
   }
 
-  async openPage(url: string) {
-    const browserPage = await this.openBrowserPage()
+  public getPage(contextId: string) {
+    const page = this.pages.get(contextId)
+    if (!page)
+      throw new Error(`Page "${contextId}" not found`)
+    return page
+  }
+
+  private async openBrowserPage(contextId: string) {
+    if (this.pages.has(contextId)) {
+      const page = this.pages.get(contextId)!
+      await page.close()
+      this.pages.delete(contextId)
+    }
+
+    const context = await this.createContext(contextId)
+    const page = await context.newPage()
+    this.pages.set(contextId, page)
+
+    return page
+  }
+
+  async openPage(contextId: string, url: string) {
+    const browserPage = await this.openBrowserPage(contextId)
     await browserPage.goto(url)
   }
 
   async close() {
-    const page = this.page
-    this.page = null
     const browser = this.browser
     this.browser = null
-    await page?.close()
+    await Promise.all([...this.pages.values()].map(p => p.close()))
+    await Promise.all([...this.contexts.values()].map(c => c.close()))
+    this.contexts.clear()
+    this.pages.clear()
     await browser?.close()
   }
 }

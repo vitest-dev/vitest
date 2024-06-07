@@ -1,15 +1,19 @@
+import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils'
+import { relative } from 'pathe'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import type { BrowserProvider } from '../../types/browser'
+import { createDebugger } from '../../utils/debugger'
+
+const debug = createDebugger('vitest:browser:pool')
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
   const waitForTests = async (contextId: string, project: WorkspaceProject, files: string[]) => {
     const defer = createDefer<void>()
-    project.browserState.forEach(state => state.resolve())
     project.browserState.set(contextId, {
       files,
       resolve: () => {
@@ -29,6 +33,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     })
     mocker.mocks.clear()
 
+    const threadsCount = getThreadsCount(project)
     // TODO
     // let isCancelled = false
     // project.ctx.onCancel(() => {
@@ -44,25 +49,54 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     if (!origin)
       throw new Error(`Can't find browser origin URL for project "${project.config.name}"`)
 
-    const contextId = crypto.randomUUID()
-    const promise = waitForTests(contextId, project, files)
+    const filesPerThread = Math.ceil(files.length / threadsCount)
 
-    // const orchestrators = project.browserRpc.orchestrators
-    // TODO: rerun only opened ones
-    // expect to have 4 opened pages and distribute tests amongst them
-    // if there is a UI, have only a sinle page - or just don't support this in watch mode for now?
-    // if (orchestrators.size) {
-    //   orchestrators.forEach(orchestrator =>
-    //     orchestrator.createTesters(files),
-    //   )
-    // }
-    // else {
-    const url = new URL('/', origin)
-    url.searchParams.set('contextId', contextId)
-    await provider.openPage(url.toString())
-    // }
+    const chunks: string[][] = []
+    for (let i = 0; i < files.length; i += filesPerThread) {
+      const chunk = files.slice(i, i + filesPerThread)
+      chunks.push(chunk)
+    }
 
-    await promise
+    debug?.(
+      `[%s] Running %s tests in %s chunks (%s threads)`,
+      project.getName() || 'core',
+      files.length,
+      chunks.length,
+      threadsCount,
+    )
+
+    const orchestrators = [...project.browserRpc.orchestrators.entries()]
+
+    const promises: Promise<void>[] = []
+
+    chunks.forEach((files, index) => {
+      if (orchestrators[index]) {
+        const [contextId, orchestrator] = orchestrators[index]
+        debug?.(
+          'Reusing orchestrator (context %s) for files: %s',
+          contextId,
+          [...files.map(f => relative(project.config.root, f))].join(', '),
+        )
+        const promise = waitForTests(contextId, project, files)
+        promises.push(promise)
+        orchestrator.createTesters(files)
+      }
+      else {
+        const contextId = crypto.randomUUID()
+        const waitPromise = waitForTests(contextId, project, files)
+        debug?.(
+          'Opening a new context %s for files: %s',
+          contextId,
+          [...files.map(f => relative(project.config.root, f))].join(', '),
+        )
+        const url = new URL('/', origin)
+        url.searchParams.set('contextId', contextId)
+        const page = provider.openPage(contextId, url.toString()).then(() => waitPromise)
+        promises.push(page)
+      }
+    })
+
+    await Promise.all(promises)
   }
 
   const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
@@ -76,6 +110,21 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     // TODO: paralellize tests instead of running them sequentially (based on CPU?)
     for (const [project, files] of groupedFiles.entries())
       await runTests(project, files)
+  }
+
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
+
+  function getThreadsCount(project: WorkspaceProject) {
+    const config = project.config.browser
+    if (!config.headless || config.ui)
+      return 1
+
+    return ctx.config.watch
+      ? Math.max(Math.floor(numCpus / 2), 1)
+      : Math.max(numCpus - 1, 1)
   }
 
   return {

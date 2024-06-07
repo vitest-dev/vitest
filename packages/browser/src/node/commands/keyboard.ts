@@ -1,6 +1,5 @@
 // based on https://github.com/modernweb-dev/web/blob/f7fcf29cb79e82ad5622665d76da3f6b23d0ef43/packages/test-runner-commands/src/sendKeysPlugin.ts
 
-import type { Page } from 'playwright'
 import type { BrowserCommand } from 'vitest/node'
 import type {
   BrowserCommands,
@@ -10,6 +9,7 @@ import type {
   TypePayload,
   UpPayload,
 } from '../../../context'
+import { PlaywrightBrowserProvider } from '../providers/playwright'
 
 function isObject(payload: unknown): payload is Record<string, unknown> {
   return payload != null && typeof payload === 'object'
@@ -62,12 +62,12 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async ({ provider }, payload) => {
+export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async ({ provider, contextId }, payload) => {
   if (!isSendKeysPayload(payload) || !payload)
     throw new Error('You must provide a `SendKeysPayload` object')
 
-  if (provider.name === 'playwright') {
-    const page = (provider as any).page as Page
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const page = provider.getPage(contextId)
     if (isTypePayload(payload))
       await page.keyboard.type(payload.type)
     else if (isPressPayload(payload))

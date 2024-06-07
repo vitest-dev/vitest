@@ -14,6 +14,7 @@ import BrowserMocker from './plugins/pluginMocker'
 import DynamicImport from './plugins/pluginDynamicImport'
 
 export type { BrowserCommand } from 'vitest/node'
+export { defineBrowserCommand } from './commands/utils'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')

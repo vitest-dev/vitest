@@ -10,7 +10,10 @@ import type { ViteDevServer } from 'vite'
 import { BROWSER_API_PATH } from '../constants'
 import { stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
+import { createDebugger } from '../utils/debugger'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
+
+const debug = createDebugger('vitest:browser:api')
 
 export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer) {
   const ctx = project.ctx
@@ -36,7 +39,10 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
       const clients = type === 'tester' ? rpcs.testers : rpcs.orchestrators
       clients.set(sessionId, rpc)
 
+      debug?.('[%s] Browser API connected to %s', sessionId, type)
+
       ws.on('close', () => {
+        debug?.('[%s] Browser API disconnected from %s', sessionId, type)
         clients.delete(sessionId)
       })
     })
@@ -112,7 +118,8 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
-        triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
+        triggerCommand(contextId: string, command: string, testPath: string | undefined, payload: unknown[]) {
+          debug?.('[%s] Triggering command "%s"', contextId, command)
           if (!project.browserProvider)
             throw new Error('Commands are only available for browser tests.')
           const commands = project.config.browser?.commands
@@ -122,9 +129,11 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
             testPath,
             project,
             provider: project.browserProvider,
+            contextId,
           }, ...payload)
         },
         finishBrowserTests(contextId: string) {
+          debug?.('[%s] Finishing browser tests for context', contextId)
           return project.browserState.get(contextId)?.resolve()
         },
         getProvidedContext() {

@@ -1,14 +1,14 @@
-import type { Page } from 'playwright'
 import type { UserEvent } from '../../../context'
+import { PlaywrightBrowserProvider } from '../providers/playwright'
 import type { UserEventCommand } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
-  { provider },
+  { provider, contextId },
   element,
   options = {},
 ) => {
-  if (provider.name === 'playwright') {
-    const page = (provider as any).page as Page
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const page = provider.getPage(contextId)
     await page.frameLocator('iframe[data-vitest]').locator(`xpath=${element}`).click(options)
     return
   }

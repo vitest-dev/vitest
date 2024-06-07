@@ -42,7 +42,7 @@ async function generateContextFile(this: PluginContext, project: WorkspaceProjec
   const provider = project.browserProvider!
 
   const commandsCode = commands.map((command) => {
-    return `    ["${command}"]: (...args) => rpc().triggerCommand("${command}", filepath(), args),`
+    return `    ["${command}"]: (...args) => rpc().triggerCommand(contextId, "${command}", filepath(), args),`
   }).join('\n')
 
   const userEventNonProviderImport = await getUserEventImport(provider, this.resolve.bind(this))
@@ -51,7 +51,8 @@ async function generateContextFile(this: PluginContext, project: WorkspaceProjec
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
-const channel = new BroadcastChannel('vitest:' + __vitest_browser_runner__.contextId)
+const contextId = __vitest_browser_runner__.contextId
+const channel = new BroadcastChannel('vitest:' + contextId)
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},
@@ -130,7 +131,7 @@ function getUserEventScript(project: WorkspaceProject) {
   return `{
   async click(element, options) {
     const xpath = convertElementToXPath(element)
-    return rpc().triggerCommand('__vitest_click', filepath(), options ? [xpath, options] : [xpath]);
+    return rpc().triggerCommand(contextId, '__vitest_click', filepath(), options ? [xpath, options] : [xpath]);
   },
 }`
 }
