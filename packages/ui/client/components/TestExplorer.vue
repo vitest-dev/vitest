@@ -67,6 +67,18 @@ function matchTasks(tasks: Task[], search: string): boolean {
 
   return result
 }
+
+const filter = reactive({
+  failed: false,
+  success: false,
+  skipped: false,
+})
+const disableFilter = computed(() => !filter.failed && !filter.success && !filter.skipped)
+function clearFilter() {
+  filter.failed = false
+  filter.success = false
+  filter.skipped = false
+}
 </script>
 
 <template>
@@ -104,6 +116,28 @@ function matchTasks(tasks: Task[], search: string): boolean {
           icon="i-carbon:filter-remove"
           @click.passive="clearSearch(true)"
         />
+      </div>
+      <div
+        p="l3 y2 r2"
+        items-center
+        bg-header
+        border="b-2 base"
+        grid="~ items-center gap-x-2 cols-[auto_auto] rows-[min-content_min-content]"
+      >
+        <div grid-col-span-2 flex="~ gap-2 items-center">
+          <div aria-hidden="true" class="i-carbon:filter"></div>
+          <div flex-grow-1>Filter</div>
+          <IconButton
+            v-tooltip.bottom="'Clear Filter'"
+            :disabled="disableFilter"
+            title="Clear search"
+            icon="i-carbon:filter-remove"
+            @click.passive="clearFilter()"
+          />
+        </div>
+        <FilterStatus label="Failed" v-model="filter.failed" />
+        <FilterStatus label="Success" v-model="filter.success" />
+        <FilterStatus label="Skipped" v-model="filter.skipped" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 v-bind="containerProps">

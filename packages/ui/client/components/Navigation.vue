@@ -18,7 +18,6 @@ import { activeFileId } from '~/composables/params'
 import { openedTreeItems } from '~/composables/navigation'
 import { testStatus } from '~/composables/summary'
 
-// const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value.map(f => findById(f.id)!)))
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
 }

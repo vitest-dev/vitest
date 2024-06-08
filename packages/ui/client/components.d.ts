@@ -16,6 +16,7 @@ declare module 'vue' {
     DetailsPanel: typeof import('./components/DetailsPanel.vue')['default']
     ErrorEntry: typeof import('./components/dashboard/ErrorEntry.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
+    FilterStatus: typeof import('./components/FilterStatus.vue')['default']
     IconAction: typeof import('./components/IconAction.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
     Modal: typeof import('./components/Modal.vue')['default']
