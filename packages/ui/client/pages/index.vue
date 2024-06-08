@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
-import { browserState } from '~/composables/client';
+import { browserState } from '~/composables/client'
 import { coverageUrl, coverageVisible, initializeNavigation, detailSizes } from '~/composables/navigation'
 import { onBrowserPanelResizing } from '~/composables/browser'
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { getProjectNameColor } from '~/utils/task';
-import { activeFileId } from '~/composables/params';
-import { isReport } from '~/constants';
-import {client} from "~/composables/client";
+import { getProjectNameColor } from '~/utils/task'
+import { activeFileId } from '~/composables/params'
+import { isReport } from '~/constants'
+import {client} from '~/composables/client'
 
 const props = defineProps<{
   taskId: string

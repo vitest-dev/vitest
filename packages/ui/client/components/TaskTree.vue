@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Task } from 'vitest'
 import { nextTick } from 'vue'
-import {runFiles, client, files, findById} from '~/composables/client';
+import { runFiles, client } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
-import { openedTreeItems, coverageEnabled } from '~/composables/navigation';
+import { openedTreeItems, coverageEnabled } from '~/composables/navigation'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 
 defineOptions({ inheritAttrs: false })

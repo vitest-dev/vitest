@@ -16,7 +16,7 @@ import { isDark, toggleDark } from '~/composables'
 import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { openedTreeItems } from '~/composables/navigation'
-import { testStatus } from "~/composables/summary";
+import { testStatus } from '~/composables/summary'
 
 // const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value.map(f => findById(f.id)!)))
 function updateSnapshot() {

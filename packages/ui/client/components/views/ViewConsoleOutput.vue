@@ -3,7 +3,7 @@ import { getNames } from '@vitest/ws-client'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { escapeHtml } from "~/utils/escape"
+import { escapeHtml } from '~/utils/escape'
 
 const formattedLogs = computed(() => {
   const data = logs.value
