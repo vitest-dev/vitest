@@ -20,6 +20,23 @@ const failedFilter = computed(() => filter.failed)
 const successFilter = computed(() => filter.success)
 const skipFilter = computed(() => filter.skipped)
 
+export function useSearchTasks(task: Ref<Task>) {
+  const filteredTasks = computed(() => {
+    const useSearch = search.value.trim()
+    const tasks = task.value && 'tasks' in task.value ? task.value.tasks : []
+    if (!useSearch && !failedFilter.value && !successFilter.value && !skipFilter.value)
+      return tasks
+
+    return tasks.filter(task => matchTasks([task], useSearch, {
+      failed: failedFilter.value,
+      success: successFilter.value,
+      skipped: skipFilter.value,
+    }))
+  })
+
+  return { filteredTasks }
+}
+
 export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableFilter = computed(() => !failedFilter.value && !successFilter.value && !skipFilter.value)
 

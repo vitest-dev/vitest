@@ -5,6 +5,7 @@ import { runFiles, client } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { openedTreeItems, coverageEnabled } from '~/composables/navigation'
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { useSearchTasks} from '~/composables/seach'
 
 defineOptions({ inheritAttrs: false })
 
@@ -21,6 +22,8 @@ const { taskId, indent = 0, nested = false, search, onItemClick, opened = false 
 const task = computed(() => client.state.idMap.get(taskId)!)
 const isOpened = computed(() => opened || openedTreeItems.value.includes(taskId))
 const failedSnapshot = computed(() => hasFailedSnapshot(task.value))
+
+const { filteredTasks } = useSearchTasks(task)
 
 function toggleOpen() {
   if (isOpened.value) {
@@ -63,7 +66,7 @@ function updateSnapshot() {
   />
   <div v-if="nested && task.type === 'suite' && task.tasks.length" v-show="isOpened">
     <TaskTree
-      v-for="suite in task.tasks"
+      v-for="suite in filteredTasks"
       :key="suite.id"
       :failed-snapshot="false"
       :task-id="suite.id"
