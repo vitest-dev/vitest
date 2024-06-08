@@ -404,7 +404,11 @@ export function createTaskCollector(
       const _name = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
-        test(formatTitle(_name, toArray(item), idx), options, () => handler(item))
+        // monkey-patch handler to allow parsing fixture
+        const handlerWrapper = (ctx: any) => handler(item, ctx);
+        (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
+        (handlerWrapper as any).toString = () => handler.toString()
+        test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
     }
   }

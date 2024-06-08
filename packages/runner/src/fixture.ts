@@ -177,7 +177,13 @@ function getUsedProps(fn: Function) {
   if (!args.length)
     return []
 
-  const first = args[0]
+  let first = args[0]
+  if ('__VITEST_FIXTURE_INDEX__' in fn) {
+    first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
+    if (!first)
+      return []
+  }
+
   if (!(first.startsWith('{') && first.endsWith('}')))
     throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
 

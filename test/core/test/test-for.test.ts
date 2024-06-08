@@ -6,7 +6,7 @@ const myTest = test.extend<{ myFixture: number }>({
   },
 })
 
-test.only.for(['case1', 'case2'])(
+test.for(['case1', 'case2'])(
   'basic %s',
   (args) => {
     expectTypeOf(args).toEqualTypeOf<string>()
