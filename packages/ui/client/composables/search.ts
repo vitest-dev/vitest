@@ -135,22 +135,3 @@ function matchTasks(tasks: Task[], search: string, filter: Filter) {
 
   return result
 }
-
-/* async function* searchFiles(canceled: () => boolean, query: string) {
-  for (const file of files) {
-    if (canceled())
-      break
-    if (file.name.toLowerCase().includes(query.toLowerCase())) {
-    }
-    yield * matchTasks([file], query)
-  }
-}
-
-async function* collect(query: string) {
-  for await (const file of searchFiles(query))
-    yield file
-}
-
-function collectFiles(query: string) {
-  return Array.from(collect(query))
-} */

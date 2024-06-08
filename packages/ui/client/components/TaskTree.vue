@@ -5,7 +5,7 @@ import { runFiles, client } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { openedTreeItems, coverageEnabled } from '~/composables/navigation'
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import { useSearchTasks} from '~/composables/search'
+import { useSearchTasks } from '~/composables/search'
 
 defineOptions({ inheritAttrs: false })
 
