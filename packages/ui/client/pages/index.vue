@@ -34,7 +34,7 @@ function resizeMain() {
 <template>
   <ProgressBar />
   <div h-screen w-screen overflow="hidden">
-    <Splitpanes class="pt-4px" @resized="onMainResized" @ready="resizeMain">
+    <Splitpanes class="pt-4px" @resized="onMainResized" @resize="onBrowserPanelResizing(true)" @ready="resizeMain">
       <Pane :size="mainSizes[0]">
         <Navigation />
       </Pane>
