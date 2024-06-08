@@ -16,9 +16,11 @@ const filter = reactive(<Filter>{
   success: false,
   skipped: false,
 })
+// don't remove this computed, reactive filter is not working inside computed filtered
 const failedFilter = computed(() => filter.failed)
 const successFilter = computed(() => filter.success)
 const skipFilter = computed(() => filter.skipped)
+const isFilteredByStatus = computed(() => failedFilter.value || successFilter.value || skipFilter.value)
 
 export function useSearchTasks(task: Ref<Task>) {
   const filteredTasks = computed(() => {
@@ -78,6 +80,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     search,
     disableFilter,
     isFiltered,
+    isFilteredByStatus,
     disableClearSearch,
     clearSearch,
     clearFilter,

@@ -50,30 +50,32 @@ function updateSnapshot() {
 </script>
 
 <template>
-  <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
-  <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
-  <TaskItem
-    v-if="opened || !nested || !search || caseInsensitiveMatch(task.name, search)"
-    v-bind="$attrs"
-    :task-id="task.id"
-    :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }"
-    :opened="isOpened && task.type === 'suite' && task.tasks.length"
-    :failed-snapshot="failedSnapshot"
-    @click="toggleOpen()"
-    @run="onRun()"
-    @fix-snapshot="updateSnapshot()"
-    @preview="onItemClick?.(task)"
-  />
-  <div v-if="nested && task.type === 'suite' && task.tasks.length" v-show="isOpened">
-    <TaskTree
-      v-for="suite in filteredTasks"
-      :key="suite.id"
-      :failed-snapshot="false"
-      :task-id="suite.id"
-      :nested="nested"
-      :indent="indent + 1"
-      :search="search"
-      :on-item-click="onItemClick"
+  <div>
+    <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
+    <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
+    <TaskItem
+      v-if="opened || !nested || !search || caseInsensitiveMatch(task.name, search)"
+      v-bind="$attrs"
+      :task-id="task.id"
+      :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }"
+      :opened="isOpened && task.type === 'suite' && task.tasks.length"
+      :failed-snapshot="failedSnapshot"
+      @click="toggleOpen()"
+      @run="onRun()"
+      @fix-snapshot="updateSnapshot()"
+      @preview="onItemClick?.(task)"
     />
+    <div v-if="nested && task.type === 'suite' && task.tasks.length" v-show="isOpened">
+      <TaskTree
+        v-for="suite in filteredTasks"
+        :key="suite.id"
+        :failed-snapshot="false"
+        :task-id="suite.id"
+        :nested="nested"
+        :indent="indent + 1"
+        :search="search"
+        :on-item-click="onItemClick"
+      />
+    </div>
   </div>
 </template>

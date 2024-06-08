@@ -20,6 +20,7 @@ const searchBox = ref<HTMLInputElement | undefined>()
 const {
   search,
   isFiltered,
+  isFilteredByStatus,
   filter,
   disableFilter,
   filtered,
@@ -136,7 +137,7 @@ useResizeObserver(testExplorerRef, (entries) => {
           </div>
         </template>
         <!-- empty-state -->
-        <template v-if="isFiltered && filtered.length === 0">
+        <template v-if="(isFiltered || isFilteredByStatus) && filtered.length === 0">
           <div flex="~ col" items-center p="x4 y4" font-light>
             <div op30>
               No matched test
