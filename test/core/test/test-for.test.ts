@@ -87,3 +87,11 @@ myTest.concurrent.for`
     expect({ args, myFixture }).toMatchSnapshot()
   },
 )
+
+test.concurrent.for([
+  [1, 1],
+  [1, 2],
+  [2, 1],
+])('[docs] add(%i, %i)', ([a, b], { expect }) => {
+  expect(a + b).matchSnapshot()
+})

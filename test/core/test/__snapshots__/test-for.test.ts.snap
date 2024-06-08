@@ -1,5 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`[docs] add(1, 1) 1`] = `2`;
+
+exports[`[docs] add(1, 2) 1`] = `3`;
+
+exports[`[docs] add(2, 1) 1`] = `3`;
+
 exports[`array case1-x case1-y 1`] = `
 {
   "args": [
