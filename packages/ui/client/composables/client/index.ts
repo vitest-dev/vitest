@@ -28,6 +28,7 @@ export const client = (function createVitestClient() {
       },
       handlers: {
         onTaskUpdate() {
+          console.log('onTaskUpdate')
           if (testRunState.value === 'idle' && !onTaskUpdateCalled) {
             onTaskUpdateCalled = true
             resumeRun()
@@ -35,6 +36,7 @@ export const client = (function createVitestClient() {
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
+          console.log('onFinished', _files?.length, errors?.length)
           endRun()
           testRunState.value = 'idle'
           onTaskUpdateCalled = false

@@ -5,7 +5,7 @@ const modelValue = defineModel<boolean | null>()
 
 <template>
   <label
-    class="font-light text-sm checkbox flex items-center cursor-pointer py-1 text-md w-full gap-y-1"
+    class="font-light text-sm checkbox flex items-center cursor-pointer py-1 text-md w-full gap-y-1 mb-1px"
     v-bind="$attrs"
     @click.prevent="modelValue = !modelValue"
   >
@@ -21,13 +21,13 @@ const modelValue = defineModel<boolean | null>()
       type="checkbox"
       sr-only
     >
-    <span flex-1 ms-2 pointer-events-none>{{ label }}</span>
+    <span flex-1 ms-2 select-none>{{ label }}</span>
   </label>
 </template>
 
 <style>
 .checkbox:focus-within {
   outline: none;
-  @apply border-base border-b-base;
+  @apply focus-base border-b-1 !mb-none;
 }
 </style>

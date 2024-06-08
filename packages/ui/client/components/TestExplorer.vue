@@ -5,6 +5,7 @@ import { files, findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 import { testStatus } from '~/composables/summary'
+import { useSearch } from '~/composables/seach'
 
 const { onItemClick } = defineProps<{
   onItemClick?: (task: Task) => void
@@ -17,17 +18,19 @@ const emit = defineEmits<{
   (event: 'run', files?: File[]): void
 }>()
 
-const search = ref<string>('')
 const searchBox = ref<HTMLInputElement | undefined>()
-const isFiltered = computed(() => search.value.trim() !== '')
 
-const filtered = computed(() => {
-  if (!search.value.trim())
-    return files.value
-
-  return files.value.filter(task => matchTasks([findById(task.id) as Task], search.value))
-})
-const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+const {
+  search,
+  isFiltered,
+  filter,
+  disableFilter,
+  filtered,
+  filteredTests,
+  disableClearSearch,
+  clearSearch,
+  clearFilter,
+} = useSearch(searchBox)
 
 // todo: remove this and include custom component to filter tests
 const failed = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'fail').length : testStatus.filesFailed)
@@ -39,50 +42,24 @@ const { list, containerProps, wrapperProps } = useVirtualList(filtered, {
   itemHeight: 28,
 })
 
-const disableClearSearch = computed(() => search.value === '')
+const filterClass = ref<string>('grid-cols-2')
+const filterHeaderClass = ref<string>('grid-col-span-2')
+const testExplorerRef = ref<HTMLInputElement | undefined>()
 
-function clearSearch(focus: boolean) {
-  search.value = ''
-  focus && searchBox.value?.focus()
-}
-
-function matchTasks(tasks: Task[], search: string): boolean {
-  let result = false
-
-  for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i]
-
-    if (caseInsensitiveMatch(task.name, search)) {
-      result = true
-      break
-    }
-
-    // walk whole task tree
-    if (isSuite(task) && task.tasks) {
-      result = matchTasks(task.tasks, search)
-      if (result)
-        break
-    }
+useResizeObserver(testExplorerRef, (entries) => {
+  const { width } = entries[0].contentRect
+  if (width < 300) {
+    filterClass.value = 'grid-cols-2'
+    filterHeaderClass.value = 'grid-col-span-2'
+  } else {
+    filterClass.value = 'grid-cols-3'
+    filterHeaderClass.value = 'grid-col-span-3'
   }
-
-  return result
-}
-
-const filter = reactive({
-  failed: false,
-  success: false,
-  skipped: false,
 })
-const disableFilter = computed(() => !filter.failed && !filter.success && !filter.skipped)
-function clearFilter() {
-  filter.failed = false
-  filter.success = false
-  filter.skipped = false
-}
 </script>
 
 <template>
-  <div h="full" flex="~ col">
+  <div ref="testExplorerRef" h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <slot name="header" :filtered-tests="isFiltered ? filteredTests : undefined" />
@@ -122,9 +99,10 @@ function clearFilter() {
         items-center
         bg-header
         border="b-2 base"
-        grid="~ items-center gap-x-2 cols-[auto_auto] rows-[min-content_min-content]"
+        grid="~ items-center gap-x-2 rows-[auto_auto]"
+        :class="filterClass"
       >
-        <div grid-col-span-2 flex="~ gap-2 items-center">
+        <div :class="filterHeaderClass" flex="~ gap-2 items-center">
           <div aria-hidden="true" class="i-carbon:filter"></div>
           <div flex-grow-1>Filter</div>
           <IconButton
@@ -135,9 +113,9 @@ function clearFilter() {
             @click.passive="clearFilter()"
           />
         </div>
-        <FilterStatus label="Failed" v-model="filter.failed" />
-        <FilterStatus label="Success" v-model="filter.success" />
-        <FilterStatus label="Skipped" v-model="filter.skipped" />
+        <FilterStatus label="Fail" v-model="filter.failed" />
+        <FilterStatus label="Pass" v-model="filter.success" />
+        <FilterStatus label="Skip" v-model="filter.skipped" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 v-bind="containerProps">
