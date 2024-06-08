@@ -28,6 +28,7 @@ export const client = (function createVitestClient() {
       },
       handlers: {
         onTaskUpdate() {
+          // eslint-disable-next-line no-console
           console.log('onTaskUpdate')
           if (testRunState.value === 'idle' && !onTaskUpdateCalled) {
             onTaskUpdateCalled = true
@@ -36,6 +37,7 @@ export const client = (function createVitestClient() {
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
+          // eslint-disable-next-line no-console
           console.log('onFinished', _files?.length, errors?.length)
           endRun()
           testRunState.value = 'idle'
