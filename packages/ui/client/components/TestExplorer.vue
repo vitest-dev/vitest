@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type { ComputedRef } from 'vue'
 import type { File, Task } from 'vitest'
-import { files, findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
-import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 import { testStatus } from '~/composables/summary'
-import { useSearch } from '~/composables/seach'
+import { useSearch } from '~/composables/search'
 
 const { onItemClick } = defineProps<{
   onItemClick?: (task: Task) => void
