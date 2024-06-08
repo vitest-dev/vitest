@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`basic case1 1`] = `
+{
+  "args": "case1",
+}
+`;
+
+exports[`basic case2 1`] = `
+{
+  "args": "case2",
+}
+`;

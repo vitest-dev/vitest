@@ -1,4 +1,4 @@
-import { expectTypeOf, test } from 'vitest'
+import { expect, expectTypeOf, test } from 'vitest'
 
 const myTest = test.extend<{ myFixture: number }>({
   myFixture: async ({}, use) => {
@@ -6,8 +6,25 @@ const myTest = test.extend<{ myFixture: number }>({
   },
 })
 
-myTest.concurrent.for(['case1', 'case2'])(
+test.only.for(['case1', 'case2'])(
   'basic %s',
+  (args) => {
+    expectTypeOf(args).toEqualTypeOf<string>()
+    expect({ args }).matchSnapshot()
+  },
+)
+
+myTest.for(['case1', 'case2'])(
+  'fixture %s',
+  (args, { myFixture }) => {
+    expectTypeOf(args).toEqualTypeOf<string>()
+    expectTypeOf(myFixture).toEqualTypeOf<number>()
+    expect({ args, myFixture }).matchSnapshot()
+  },
+)
+
+myTest.concurrent.for(['case1', 'case2'])(
+  'concurrent %s',
   (args, { expect, myFixture }) => {
     expectTypeOf(args).toEqualTypeOf<string>()
     expectTypeOf(myFixture).toEqualTypeOf<number>()
