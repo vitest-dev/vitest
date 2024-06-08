@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`array case1-x 1`] = `
+exports[`array case1-x case1-y 1`] = `
 {
   "args": [
     "case1-x",
@@ -10,17 +10,17 @@ exports[`array case1-x 1`] = `
 }
 `;
 
-exports[`array case2-x 1`] = `
+exports[`array case2-x case2-y 1`] = `
 {
   "args": [
     "case2-x",
-    "case1-y",
+    "case2-y",
   ],
   "myFixture": 1234,
 }
 `;
 
-exports[`array destructure case1-x 1`] = `
+exports[`array destructure case1-x case1-y 1`] = `
 {
   "myFixture": 1234,
   "x": "case1-x",
@@ -28,11 +28,11 @@ exports[`array destructure case1-x 1`] = `
 }
 `;
 
-exports[`array destructure case2-x 1`] = `
+exports[`array destructure case2-x case2-y 1`] = `
 {
   "myFixture": 1234,
   "x": "case2-x",
-  "y": "case1-y",
+  "y": "case2-y",
 }
 `;
 
@@ -90,7 +90,7 @@ exports[`fixture case2 1`] = `
 }
 `;
 
-exports[`object { k: 'case1' } 1`] = `
+exports[`object 'case1' 1`] = `
 {
   "args": {
     "k": "case1",
@@ -99,7 +99,7 @@ exports[`object { k: 'case1' } 1`] = `
 }
 `;
 
-exports[`object { k: 'case2' } 1`] = `
+exports[`object 'case2' 1`] = `
 {
   "args": {
     "k": "case2",
@@ -108,21 +108,21 @@ exports[`object { k: 'case2' } 1`] = `
 }
 `;
 
-exports[`object destructure { k: 'case1' } 1`] = `
+exports[`object destructure 'case1' 1`] = `
 {
   "myFixture": 1234,
   "v": "case1",
 }
 `;
 
-exports[`object destructure { k: 'case2' } 1`] = `
+exports[`object destructure 'case2' 1`] = `
 {
   "myFixture": 1234,
   "v": "case2",
 }
 `;
 
-exports[`template context false 'x' true 1`] = `
+exports[`template 'x' true 1`] = `
 {
   "args": {
     "a": "x",
@@ -132,7 +132,7 @@ exports[`template context false 'x' true 1`] = `
 }
 `;
 
-exports[`template context false 'y' false 1`] = `
+exports[`template 'y' false 1`] = `
 {
   "args": {
     "a": "y",

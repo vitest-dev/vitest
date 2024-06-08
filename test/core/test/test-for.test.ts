@@ -41,8 +41,8 @@ myTest.concurrent.for(['case1', 'case2'] as const)(
   },
 )
 
-myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case1-y']])(
-  'array %s',
+myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case2-y']])(
+  'array %s %s',
   (args, { expect, myFixture }) => {
     expectTypeOf(args).toEqualTypeOf<string[]>()
     expectTypeOf(myFixture).toEqualTypeOf<number>()
@@ -50,8 +50,8 @@ myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case1-y']])(
   },
 )
 
-myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case1-y']])(
-  'array destructure %s',
+myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case2-y']])(
+  'array destructure %s %s',
   ([x, y], { expect, myFixture }) => {
     expectTypeOf(myFixture).toEqualTypeOf<number>()
     expect({ x, y, myFixture }).matchSnapshot()
@@ -59,7 +59,7 @@ myTest.concurrent.for([['case1-x', 'case1-y'], ['case2-x', 'case1-y']])(
 )
 
 myTest.concurrent.for([{ k: 'case1' }, { k: 'case2' }])(
-  'object %s',
+  'object $k',
   (args, { expect, myFixture }) => {
     expectTypeOf(args).toEqualTypeOf<{ k: string }>()
     expectTypeOf(myFixture).toEqualTypeOf<number>()
@@ -68,7 +68,7 @@ myTest.concurrent.for([{ k: 'case1' }, { k: 'case2' }])(
 )
 
 myTest.concurrent.for([{ k: 'case1' }, { k: 'case2' }])(
-  'object destructure %s',
+  'object destructure $k',
   ({ k: v }, { expect, myFixture }) => {
     expectTypeOf(myFixture).toEqualTypeOf<number>()
     expect({ v, myFixture }).matchSnapshot()
@@ -80,7 +80,7 @@ myTest.concurrent.for`
   ${'x'}    | ${true}
   ${'y'}    | ${false}
 `(
-  'template context false $a $b',
+  'template $a $b',
   (args, { expect, myFixture }) => {
     expectTypeOf(args).toEqualTypeOf<any>()
     expectTypeOf(myFixture).toEqualTypeOf<number>()
