@@ -29,6 +29,7 @@ const filtered = computed(() => {
 })
 const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
 
+// todo: remove this and include custom component to filter tests
 const failed = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'fail').length : testStatus.filesFailed)
 const success = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'pass').length : testStatus.filesSuccess)
 const skipped = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.mode === 'skip' || task.mode === 'todo').length : testStatus.filesSkipped)

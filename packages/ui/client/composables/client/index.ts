@@ -1,40 +1,43 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
-import type { Ref } from 'vue'
+import type { File, ResolvedConfig } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
-import type { BrowserRunnerState, RunState } from '../../../types'
+import type { BrowserRunnerState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
+import { files, testRunState, unhandledErrors } from './state'
 import type { UIFile } from '~/composables/client/types'
-import { endRun, files, startRun } from '~/composables/summary'
+import { endRun, resumeRun, startRun } from '~/composables/summary'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
-export const testRunState: Ref<RunState> = ref('idle')
-export const unhandledErrors: Ref<ErrorWithDiff[]> = ref([])
-
-export { files }
+export { files, testRunState, unhandledErrors }
 
 export const client = (function createVitestClient() {
   if (isReport) {
     return createStaticClient()
   }
   else {
+    let onTaskUpdateCalled = false
     return createClient(ENTRY_URL, {
       reactive: (data, ctxKey) => {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
         onTaskUpdate() {
+          if (testRunState.value === 'idle' && !onTaskUpdateCalled) {
+            onTaskUpdateCalled = true
+            resumeRun()
+          }
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
           endRun()
           testRunState.value = 'idle'
+          onTaskUpdateCalled = false
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {

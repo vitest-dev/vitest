@@ -1,7 +1,7 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Custom, Task, Test } from 'vitest'
-import { client, findById, testRunState } from '~/composables/client'
-import type { UIFile } from '~/composables/client/types'
+import { client, findById } from '~/composables/client'
+import { files } from '~/composables/client/state'
 
 type Nullable<T> = T | null | undefined
 type Arrayable<T> = T | Array<T>
@@ -25,9 +25,6 @@ interface TestStatus {
   failedSnapshot: boolean
   failedSnapshotEnabled: boolean
 }
-
-export const files = shallowRef<UIFile[]>([])
-export const finished = computed(() => testRunState.value === 'idle')
 
 export const testStatus = reactive(<TestStatus>{
   files: 0,
@@ -157,10 +154,8 @@ export function endRun() {
   testStatus.failedSnapshotEnabled = true
 }
 
-// TODO: re-check if this is the correct way to check if the test run is finished
-async function checkFinished() {
-  if (testRunState.value === 'idle' && files.value.every(f => !!f.state || f.mode === 'skip' || f.mode === 'todo'))
-    endRun()
+export function resumeRun() {
+  resume()
 }
 
 export function startRun() {
@@ -179,10 +174,7 @@ export function startRun() {
   testStatus.testsTodo = 0
   testStatus.totalTests = 0
   testStatus.failedSnapshotEnabled = false
-  resume()
   collect()
-  // fire and forget: on page refresh we don't have the state, we need to check the initial state
-  setTimeout(checkFinished, 512)
 }
 
 function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
