@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { testStatus } from "~/composables/summary";
-import { finished } from "~/composables/client/state";
+import { testStatus } from '~/composables/summary'
+import { finished } from '~/composables/client/state'
 
 const { width } = useWindowSize()
 const classes = computed(() => {
