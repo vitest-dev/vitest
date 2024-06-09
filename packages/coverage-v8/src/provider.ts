@@ -324,6 +324,7 @@ export class V8CoverageProvider
       this.checkThresholds({
         thresholds: resolvedThresholds,
         perFile: this.options.thresholds.perFile,
+        onError: error => this.ctx.logger.error(error),
       })
 
       if (this.options.thresholds.autoUpdate && allTestsRun) {
