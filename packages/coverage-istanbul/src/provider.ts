@@ -291,6 +291,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     const uncoveredFiles = includedFiles
       .filter(file => !coveredFiles.includes(file))
+      .sort()
 
     const cacheKey = new Date().getTime()
     const coverageMap = libCoverage.createCoverageMap({})
