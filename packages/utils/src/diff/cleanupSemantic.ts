@@ -98,8 +98,9 @@ const diff_commonPrefix = function (text1: string, text2: string): number {
 const diff_commonSuffix = function (text1: string, text2: string): number {
   // Quick check for common null cases.
   if (!text1 || !text2
-    || text1.charAt(text1.length - 1) !== text2.charAt(text2.length - 1))
+    || text1.charAt(text1.length - 1) !== text2.charAt(text2.length - 1)) {
     return 0
+  }
 
   // Binary search.
   // Performance analysis: https://neil.fraser.name/news/2007/10/09/

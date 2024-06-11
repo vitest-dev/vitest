@@ -339,8 +339,9 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
     || Array.isArray(b)
     || !hasIterator(a)
     || !hasIterator(b)
-  )
+  ) {
     return undefined
+  }
 
   if (a.constructor !== b.constructor)
     return false
@@ -437,8 +438,9 @@ export function iterableEquality(a: any, b: any, customTesters: Array<Tester> = 
     if (
       nextB.done
       || !equals(aValue, nextB.value, filteredCustomTesters)
-    )
+    ) {
       return false
+    }
   }
   if (!bIterator.next().done)
     return false

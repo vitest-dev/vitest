@@ -76,8 +76,9 @@ export class BaseCoverageProvider {
       if (thresholds.branches === undefined
         && thresholds.functions === undefined
         && thresholds.lines === undefined
-        && thresholds.statements === undefined)
+        && thresholds.statements === undefined) {
         continue
+      }
 
       // Construct list of coverage summaries where thresholds are compared against
       const summaries = perFile

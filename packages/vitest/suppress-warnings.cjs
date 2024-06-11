@@ -15,8 +15,9 @@ process.emit = function (event, warning) {
   if (
     event === 'warning'
     && ignoreWarnings.has(warning.message)
-  )
+  ) {
     return
+  }
 
   // eslint-disable-next-line prefer-rest-params
   return Reflect.apply(emit, this, arguments)

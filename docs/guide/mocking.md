@@ -79,16 +79,16 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 ```js twoslash
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-function getLatest(index = messages.items.length - 1) {
-  return messages.items[index]
-}
-
 const messages = {
   items: [
     { message: 'Simple test message', from: 'Testman' },
     // ...
   ],
   getLatest, // can also be a `getter or setter if supported`
+}
+
+function getLatest(index = messages.items.length - 1) {
+  return messages.items[index]
 }
 
 describe('reading messages', () => {
@@ -266,10 +266,6 @@ This is the intended behaviour. It is usually a sign of bad code when mocking is
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
 import { failure, success } from './handlers.js'
-
-// handlers
-export function success(data) {}
-export function failure(data) {}
 
 // get todos
 export async function getTodos(event, context) {

@@ -41,7 +41,8 @@ export default antfu(
           singleline: { delimiter: 'semi' },
         },
       ],
-
+      // let TypeScript handle this
+      'no-undef': 'off',
       'ts/no-invalid-this': 'off',
 
       // TODO: migrate and turn it back on
