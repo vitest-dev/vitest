@@ -40,10 +40,10 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
         clearTimeout(timeoutId)
       if (intervalId)
         clearInterval(intervalId)
-    
-    resolve(result)
+
+      resolve(result)
     }
-    
+
     const handleTimeout = () => {
       if (intervalId)
         clearInterval(intervalId)
