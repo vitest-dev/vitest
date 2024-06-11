@@ -44,14 +44,14 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "debug": "^4.3.4",
+    "debug": "^4.3.5",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-instrument": "^6.0.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.4",
     "istanbul-reports": "^3.1.7",
     "magicast": "^0.3.4",
-    "picocolors": "^1.0.0",
+    "picocolors": "^1.0.1",
     "test-exclude": "^6.0.0"
   },
   "devDependencies": {
