@@ -1,4 +1,4 @@
-import { format, isNegativeNaN, isObject, objDisplay, objectAttr } from '@vitest/utils'
+import { format, isNegativeNaN, isObject, objDisplay, objectAttr, toArray } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import type { Custom, CustomAPI, File, Fixtures, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustomOptions, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
@@ -380,6 +380,36 @@ export function createTaskCollector(
       })
 
       this.setContext('each', undefined)
+    }
+  }
+
+  taskFn.for = function <T>(
+    this: {
+      withContext: () => SuiteAPI
+      setContext: (key: string, value: boolean | undefined) => SuiteAPI
+    },
+    cases: ReadonlyArray<T>,
+    ...args: any[]
+  ) {
+    const test = this.withContext()
+
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
+
+    return (
+      name: string | Function,
+      optionsOrFn: ((...args: T[]) => void) | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+    ) => {
+      const _name = formatName(name)
+      const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
+      cases.forEach((item, idx) => {
+        // monkey-patch handler to allow parsing fixture
+        const handlerWrapper = (ctx: any) => handler(item, ctx);
+        (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
+        (handlerWrapper as any).toString = () => handler.toString()
+        test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
+      })
     }
   }
 

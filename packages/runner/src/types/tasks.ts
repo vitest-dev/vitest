@@ -143,6 +143,31 @@ interface TestEachFunction {
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
+interface TestForFunctionReturn<Arg, Context> {
+  (
+    name: string | Function,
+    fn: (arg: Arg, context: Context) => Awaitable<void>,
+  ): void
+  (
+    name: string | Function,
+    options: TestOptions,
+    fn: (args: Arg, context: Context) => Awaitable<void>,
+  ): void
+}
+
+interface TestForFunction<ExtraContext> {
+  // test.for([1, 2, 3])
+  // test.for([[1, 2], [3, 4, 5]])
+  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<T, ExtendedContext<Test> & ExtraContext>
+
+  // test.for`
+  //    a  |  b
+  //   {1} | {2}
+  //   {3} | {4}
+  // `
+  (strings: TemplateStringsArray, ...values: any[]): TestForFunctionReturn<any, ExtendedContext<Test> & ExtraContext>
+}
+
 interface TestCollectorCallable<C = {}> {
   /**
    * @deprecated Use options as the second argument instead
@@ -157,6 +182,7 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   TestCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
+    for: TestForFunction<ExtraContext>
   }
 >
 

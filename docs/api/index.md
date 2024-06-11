@@ -306,6 +306,11 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 - **Alias:** `it.each`
 
+::: tip
+While `test.each` is provided for Jest compatibility,
+Vitest also has [`test.for`](#test-for) with an additional feature to integrate [`TestContext`](/guide/test-context).
+:::
+
 Use `test.each` when you need to run the same test with different variables.
 You can inject parameters with [printf formatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
@@ -392,8 +397,6 @@ test.each`
 })
 ```
 
-If you want to have access to `TestContext`, use `describe.each` with a single test.
-
 ::: tip
 Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
 :::
@@ -401,6 +404,47 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
+
+### test.for
+
+- **Alias:** `it.for`
+
+Alternative of `test.each` to provide [`TestContext`](/guide/test-context).
+
+The difference from `test.each` is how array case is provided in the arguments.
+Other non array case (including template string usage) works exactly same.
+
+```ts
+// `each` spreads array case
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => { // [!code --]
+  expect(a + b).toBe(expected)
+})
+
+// `for` doesn't spread array case
+test.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => { // [!code ++]
+  expect(a + b).toBe(expected)
+})
+```
+
+2nd argument is [`TestContext`](/guide/test-context) and it can be used for concurrent snapshot, for example,
+
+```ts
+test.concurrent.for([
+  [1, 1],
+  [1, 2],
+  [2, 1],
+])('add(%i, %i)', ([a, b], { expect }) => {
+  expect(a + b).matchSnapshot()
+})
+```
 
 ## bench
 
