@@ -18,7 +18,6 @@
     "docs:serve": "pnpm -C docs run serve",
     "docs:https": "pnpm -C docs run preview-https",
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
-    "docs:examples": "tsx scripts/update-examples.ts",
     "docs:contributors": "tsx scripts/update-contributors.ts",
     "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
