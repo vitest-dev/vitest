@@ -87,8 +87,9 @@ export default <Environment>({
       if (
         typeof value !== 'undefined'
         && typeof dom.window[name] === 'undefined'
-      )
+      ) {
         dom.window[name] = value
+      }
     }
 
     return {

@@ -79,8 +79,9 @@ export function format(...args: unknown[]) {
             || m.includes('cyclic structures')
             // firefox
             || m.includes('cyclic object')
-          )
+          ) {
             return '[Circular]'
+          }
           throw err
         }
       default:

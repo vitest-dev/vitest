@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { fireEvent, render } from '@solidjs/testing-library'
+// eslint-disable-next-line no-unused-vars, unused-imports/no-unused-imports
 import { Hello } from '../components/Hello'
 
 describe('<Hello />', () => {

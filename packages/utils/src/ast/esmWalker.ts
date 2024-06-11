@@ -102,8 +102,9 @@ export function esmWalker(
       if (
         parent
         && !(parent.type === 'IfStatement' && node === parent.alternate)
-      )
+      ) {
         parentStack.unshift(parent)
+      }
 
       // track variable declaration kind stack used by VariableDeclarator
       if (node.type === 'VariableDeclaration')
@@ -145,8 +146,9 @@ export function esmWalker(
               if (
                 parent?.type === 'AssignmentPattern'
                 && parent?.right === child
-              )
+              ) {
                 return this.skip()
+              }
 
               if (child.type !== 'Identifier')
                 return
@@ -159,8 +161,9 @@ export function esmWalker(
                 (parent?.type === 'TemplateLiteral'
                 && parent?.expressions.includes(child))
                 || (parent?.type === 'CallExpression' && parent?.callee === child)
-              )
+              ) {
                 return
+              }
 
               setScope(node, child.name)
             },
@@ -189,8 +192,9 @@ export function esmWalker(
       if (
         parent
         && !(parent.type === 'IfStatement' && node === parent.alternate)
-      )
+      ) {
         parentStack.shift()
+      }
 
       if (node.type === 'VariableDeclaration')
         varKindStack.shift()
@@ -212,8 +216,9 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
     || ((parent.type === 'VariableDeclarator'
     || parent.type === 'ClassDeclaration')
     && parent.id === id)
-  )
+  ) {
     return false
+  }
 
   if (isFunctionNode(parent)) {
     // function declaration/expression id
@@ -241,16 +246,18 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   if (
     parent.type === 'ArrayPattern'
     && !isInDestructuringAssignment(parent, parentStack)
-  )
+  ) {
     return false
+  }
 
   // member expression property
   if (
     parent.type === 'MemberExpression'
     && parent.property === id
     && !parent.computed
-  )
+  ) {
     return false
+  }
 
   if (parent.type === 'ExportSpecifier')
     return false
@@ -294,8 +301,9 @@ export function isInDestructuringAssignment(
   if (
     parent
     && (parent.type === 'Property' || parent.type === 'ArrayPattern')
-  )
+  ) {
     return parentStack.some(i => i.type === 'AssignmentExpression')
+  }
 
   return false
 }

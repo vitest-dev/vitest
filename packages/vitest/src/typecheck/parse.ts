@@ -18,8 +18,9 @@ export async function makeTscErrorInfo(
     !errFilePathPos
     || errMsgRawArr.length === 0
     || errMsgRawArr.join('').length === 0
-  )
+  ) {
     return ['unknown filepath', null]
+  }
 
   const errMsgRaw = errMsgRawArr.join('').trim()
 

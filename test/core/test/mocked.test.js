@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // this file should not be converted to ts
 // so it won't be transformed by esbuild
 
