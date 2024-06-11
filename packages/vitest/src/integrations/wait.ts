@@ -115,6 +115,8 @@ export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | W
     let intervalId: ReturnType<typeof setInterval>
 
     const onReject = (error?: Error) => {
+      if (intervalId)
+        clearInterval(intervalId)
       if (!error)
         error = copyStackTrace(new Error('Timed out in waitUntil!'), STACK_TRACE_ERROR)
       reject(error)
