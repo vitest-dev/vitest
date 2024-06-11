@@ -46,14 +46,14 @@
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@bcoe/v8-coverage": "^0.2.3",
-    "debug": "^4.3.4",
+    "debug": "^4.3.5",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.4",
     "istanbul-reports": "^3.1.7",
     "magic-string": "^0.30.10",
     "magicast": "^0.3.4",
-    "picocolors": "^1.0.0",
+    "picocolors": "^1.0.1",
     "std-env": "^3.7.0",
     "strip-literal": "^2.1.0",
     "test-exclude": "^6.0.0"

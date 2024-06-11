@@ -83,9 +83,9 @@
   },
   "dependencies": {
     "cac": "^6.7.14",
-    "debug": "^4.3.4",
+    "debug": "^4.3.5",
     "pathe": "^1.1.2",
-    "picocolors": "^1.0.0",
+    "picocolors": "^1.0.1",
     "vite": "^5.0.0"
   },
   "devDependencies": {
