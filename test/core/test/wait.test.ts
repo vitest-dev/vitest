@@ -99,6 +99,28 @@ describe('waitFor', () => {
 
     vi.useRealTimers()
   })
+
+  test('callback stops running after timeout', async () => {
+    vi.useFakeTimers()
+    let timedOut = false
+    let callbackRanAfterTimeout = false
+    try {
+      await vi.waitFor(() => {
+        callbackRanAfterTimeout = timedOut
+        throw new Error('waitFor error')
+      }, {
+        interval: 100,
+        timeout: 200,
+      })
+    }
+    catch (error) {
+      timedOut = true
+    }
+    await vi.advanceTimersByTimeAsync(100)
+    expect(timedOut).toBe(true)
+    expect(callbackRanAfterTimeout).toBe(false)
+    vi.useRealTimers()
+  })
 })
 
 describe('waitUntil', () => {
@@ -178,6 +200,28 @@ describe('waitUntil', () => {
       })
     }, 200)
 
+    vi.useRealTimers()
+  })
+
+  test('callback stops running after timeout', async () => {
+    vi.useFakeTimers()
+    let timedOut = false
+    let callbackRanAfterTimeout = false
+    try {
+      await vi.waitUntil(() => {
+        callbackRanAfterTimeout = timedOut
+        return false
+      }, {
+        interval: 100,
+        timeout: 200,
+      })
+    }
+    catch (error) {
+      timedOut = true
+    }
+    await vi.advanceTimersByTimeAsync(100)
+    expect(timedOut).toBe(true)
+    expect(callbackRanAfterTimeout).toBe(false)
     vi.useRealTimers()
   })
 })
