@@ -66,7 +66,7 @@
     "@types/ws": "^8.5.10",
     "@unocss/reset": "^0.60.4",
     "@vitejs/plugin-vue": "^5.0.5",
-    "@vitejs/plugin-vue-jsx": "^3.1.0",
+    "@vitejs/plugin-vue-jsx": "^4.0.0",
     "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^10.10.1",
