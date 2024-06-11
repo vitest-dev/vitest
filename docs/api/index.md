@@ -420,7 +420,7 @@ test.each([
   [1, 1, 2],
   [1, 2, 3],
   [2, 1, 3],
-])('add(%i, %i) -> %i', (a, b, expected) => {
+])('add(%i, %i) -> %i', (a, b, expected) => { // [!code --]
   expect(a + b).toBe(expected)
 })
 
@@ -429,7 +429,7 @@ test.for([
   [1, 1, 2],
   [1, 2, 3],
   [2, 1, 3],
-])('add(%i, %i) -> %i', ([a, b, expected]) => {
+])('add(%i, %i) -> %i', ([a, b, expected]) => { // [!code ++]
   expect(a + b).toBe(expected)
 })
 ```
