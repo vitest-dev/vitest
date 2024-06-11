@@ -122,4 +122,5 @@ function createClient() {
 }
 
 export const client = createClient()
-export const channel = new BroadcastChannel(`vitest:${getBrowserState().contextId}`)
+
+export { channel, waitForChannel } from './channel'

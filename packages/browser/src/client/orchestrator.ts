@@ -5,6 +5,7 @@ import { channel, client } from './client'
 import { rpcDone } from './rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
+import type { IframeChannelEvent, IframeChannelIncomingEvent } from './channel'
 
 const url = new URL(location.href)
 
@@ -55,33 +56,6 @@ async function done() {
   await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
 
-interface IframeDoneEvent {
-  type: 'done'
-  filenames: string[]
-  id: string
-}
-
-interface IframeErrorEvent {
-  type: 'error'
-  error: any
-  errorType: string
-  files: string[]
-  id: string
-}
-
-interface IframeViewportEvent {
-  type: 'viewport'
-  width: number
-  height: number
-  id: string
-}
-
-interface IframeViewportChannelEvent {
-  type: 'viewport:done' | 'viewport:fail'
-}
-
-type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeViewportEvent | IframeViewportChannelEvent
-
 async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
     const element = document.querySelector('#tester-ui')
@@ -107,7 +81,7 @@ client.ws.addEventListener('open', async () => {
   runningFiles.clear()
   testFiles.forEach(file => runningFiles.add(file))
 
-  channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
+  channel.addEventListener('message', async (e: MessageEvent<IframeChannelIncomingEvent>): Promise<void> => {
     debug('channel event', JSON.stringify(e.data))
     switch (e.data.type) {
       case 'viewport': {
@@ -161,7 +135,14 @@ client.ws.addEventListener('open', async () => {
           await done()
         break
       }
+      case 'mock-factory:response':
+      case 'unmock':
+      case 'mock':
+        // ignore, it is processed by the mocker
+        break
       default: {
+        e.data satisfies never
+
         await client.rpc.onUnhandledError({
           name: 'Unexpected Event',
           message: `Unexpected event: ${(e.data as any).type}`,

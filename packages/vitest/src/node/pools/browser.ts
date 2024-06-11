@@ -28,11 +28,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
-    const mocker = project.browserMocker
-    mocker.mocks.forEach((_, id) => {
-      mocker.invalidateModuleById(id)
-    })
-    mocker.mocks.clear()
+    // const mocker = project.browserMocker
+    // mocker.mocks.forEach((_, id) => {
+    //   mocker.invalidateModuleById(id)
+    // })
+    // mocker.mocks.clear()
 
     const threadsCount = getThreadsCount(project)
     // TODO
@@ -52,6 +52,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     const filesPerThread = Math.ceil(files.length / threadsCount)
 
+    // TODO: make it smarter,
+    // Currently if we run 4/4/4/4 tests, and one of the chunks ends,
+    // but there are pending tests in another chunks, we can't redistribute them
     const chunks: string[][] = []
     for (let i = 0; i < files.length; i += filesPerThread) {
       const chunk = files.slice(i, i + filesPerThread)

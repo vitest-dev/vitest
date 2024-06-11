@@ -1,21 +1,14 @@
 import { getType } from '@vitest/utils'
 import { extname, join } from 'pathe'
-import type { SetupWorker } from 'msw/browser'
-import { setupWorker } from 'msw/browser'
-import { http } from 'msw/core/http'
 import { rpc } from './rpc'
 import { getBrowserState } from './utils'
+import { channel, waitForChannel } from './client'
+import type { IframeChannelOutgoingEvent } from './channel'
 
 const now = Date.now
 
 interface SpyModule {
   spyOn: typeof import('vitest').vi['spyOn']
-}
-
-const timestampRegexp = /(\?|&)t=\d{13}/
-
-function removeTimestamp(url: string) {
-  return url.replace(timestampRegexp, '')
 }
 
 export class VitestBrowserClientMocker {
@@ -26,66 +19,18 @@ export class VitestBrowserClientMocker {
   private ids = new Set<string>()
 
   private spyModule!: SpyModule
-  private mswWorker!: SetupWorker
-
-  private _mswStarted = false
-  private _mswPromise: Promise<unknown> | null = null
 
   setupWorker() {
-    this.mswWorker = setupWorker(
-      http.get(/.+/, async ({ request }) => {
-        const path = removeTimestamp(request.url.slice(location.origin.length))
-        if (!(path in this.mocks))
-          return passthrough()
-
-        const mock = this.mocks[path]
-
-        // using a factory
-        if (mock === undefined) {
-          const exportsModule = await this.resolve(path)
-          const exports = Object.keys(exportsModule)
-          const module = `const module = __vitest_mocker__.get('${path}');`
-          const keys = exports.map((name) => {
-            if (name === 'default')
-              return `export default module['default'];`
-            return `export const ${name} = module['${name}'];`
-          }).join('\n')
-          const text = `${module}\n${keys}`
-          return new Response(text, {
-            headers: {
-              'Content-Type': 'application/javascript',
-            },
-          })
-        }
-
-        if (typeof mock === 'string')
-          return Response.redirect(mock)
-
-        const content = await rpc().automock(path)
-        return new Response(content, {
-          headers: {
-            'Content-Type': 'application/javascript',
-          },
+    channel.addEventListener('message', async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
+      if (e.data.type === 'mock-factory:request') {
+        const module = await this.resolve(e.data.id)
+        const exports = Object.keys(module)
+        channel.postMessage({
+          type: 'mock-factory:response',
+          exports,
         })
-      }),
-    )
-  }
-
-  public async startMSW() {
-    if (this._mswStarted)
-      return
-    if (this._mswPromise)
-      return this._mswPromise
-    this._mswPromise = this.mswWorker.start({
-      serviceWorker: {
-        url: '/__virtual_vitest__:mocker-worker.js',
-      },
-      quiet: true,
-    }).then(() => {
-      this._mswStarted = true
-      this._mswPromise = null
+      }
     })
-    await this._mswPromise
   }
 
   public setSpyModule(mod: SpyModule) {
@@ -168,7 +113,7 @@ export class VitestBrowserClientMocker {
 
   public queueMock(id: string, importer: string, factory?: () => any) {
     const promise = rpc().resolveMock(id, importer, !!factory)
-      .then(({ mockPath, resolvedId }) => {
+      .then(async ({ mockPath, resolvedId }) => {
         this.ids.add(resolvedId)
         const urlPaths = resolveMockPaths(resolvedId)
         const resolvedMock = typeof mockPath === 'string'
@@ -178,6 +123,12 @@ export class VitestBrowserClientMocker {
           this.mocks[url] = resolvedMock
           this.factories[url] = factory!
         })
+        channel.postMessage({
+          type: 'mock',
+          paths: urlPaths,
+          mock: resolvedMock,
+        })
+        await waitForChannel('mock:done')
       }).finally(() => {
         this.queue.delete(promise)
       })
@@ -186,7 +137,7 @@ export class VitestBrowserClientMocker {
 
   public queueUnmock(id: string, importer: string) {
     const promise = rpc().resolveId(id, importer)
-      .then((resolved) => {
+      .then(async (resolved) => {
         if (!resolved)
           return
         this.ids.delete(resolved.id)
@@ -196,6 +147,11 @@ export class VitestBrowserClientMocker {
           delete this.factories[url]
           delete this.mockObjects[url]
         })
+        channel.postMessage({
+          type: 'unmock',
+          paths: urlPaths,
+        })
+        await waitForChannel('unmock:done')
       })
       .finally(() => {
         this.queue.delete(promise)
@@ -207,7 +163,6 @@ export class VitestBrowserClientMocker {
     if (!this.queue.size)
       return
     await Promise.all([
-      this.startMSW(),
       ...this.queue.values(),
     ])
   }
@@ -409,14 +364,4 @@ function resolveMockPaths(path: string) {
     paths.push(path.slice(fsRoot.length))
 
   return paths
-}
-
-function passthrough() {
-  return new Response(null, {
-    status: 302,
-    statusText: 'Passthrough',
-    headers: {
-      'x-msw-intention': 'passthrough',
-    },
-  })
 }
