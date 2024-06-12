@@ -23,3 +23,4 @@ docs/public/sponsors
 docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache
 .vitest-reports
+test/browser/**/__screenshots__/*

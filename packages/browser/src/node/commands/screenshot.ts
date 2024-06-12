@@ -30,7 +30,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
-    const page = context.provider.browser!
+    const page = context.browser
     if (!options.element) {
       const body = await page.$('body')
       await body.saveScreenshot(savePath)

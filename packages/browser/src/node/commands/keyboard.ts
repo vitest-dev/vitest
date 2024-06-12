@@ -63,7 +63,9 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async ({ provider, contextId }, payload) => {
+export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async (context, payload) => {
+  const { provider, contextId } = context
+
   if (!isSendKeysPayload(payload) || !payload)
     throw new Error('You must provide a `SendKeysPayload` object')
 
@@ -79,7 +81,7 @@ export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> =
       await page.keyboard.up(payload.up)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
-    const browser = provider.browser!
+    const browser = context.browser
     if (isTypePayload(payload))
       await browser.keys(payload.type.split(''))
     else if (isPressPayload(payload))

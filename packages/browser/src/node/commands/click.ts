@@ -15,7 +15,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
     return
   }
   if (provider instanceof WebdriverBrowserProvider) {
-    const page = provider.browser!
+    const page = context.browser
     const markedXpath = `//${xpath}`
     const element = await page.$(markedXpath)
     await element.click(options)
