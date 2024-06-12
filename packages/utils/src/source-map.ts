@@ -47,6 +47,8 @@ function extractLocation(urlLike: string) {
   if (!parts)
     return [urlLike]
   let url = parts[1]
+  if (url.startsWith('async '))
+    url = url.slice(6)
   if (url.startsWith('http:') || url.startsWith('https:')) {
     const urlObj = new URL(url)
     url = urlObj.pathname
