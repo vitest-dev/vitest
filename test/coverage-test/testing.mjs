@@ -35,7 +35,7 @@ const configs = [
       isBrowser && '**/no-esbuild-transform.test.js',
     ].filter(Boolean),
     coverage: { enabled: true },
-    browser: { enabled: isBrowser, name: 'chrome', headless: true },
+    browser: { enabled: isBrowser, name: 'chromium', provider: 'playwright', headless: true },
 
     // Regression vitest#3330
     reporters: ['default', 'junit'],
