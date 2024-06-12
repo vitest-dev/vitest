@@ -478,9 +478,6 @@ importers:
       playwright-core:
         specifier: ^1.44.0
         version: 1.44.0
-      rollup-plugin-copy:
-        specifier: ^3.5.0
-        version: 3.5.0
       safaridriver:
         specifier: ^0.1.2
         version: 0.1.2
