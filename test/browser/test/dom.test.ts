@@ -12,7 +12,9 @@ describe('dom related activity', () => {
     const div = createNode()
     wrapper.appendChild(div)
     expect(div.textContent).toBe('Hello World!')
-    const screenshotPath = await page.screenshot()
+    const screenshotPath = await page.screenshot({
+      element: wrapper,
+    })
     expect(screenshotPath).toMatch(/__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/)
   })
 })
