@@ -295,8 +295,8 @@ describe('Error equality', () => {
       // different custom property
       const e1 = new MyError('hi', 'a')
       const e2 = new MyError('hi', 'b')
-      expect(e1).toEqual(e2)
-      expect(e1).toStrictEqual(e2)
+      expect(e1).not.toEqual(e2)
+      expect(e1).not.toStrictEqual(e2)
       assert.deepEqual(e1, e2)
       nodeAssert.notDeepStrictEqual(e1, e2)
     }
@@ -315,7 +315,7 @@ describe('Error equality', () => {
       // different class
       const e1 = new MyError('hello', 'a')
       const e2 = new YourError('hello', 'a')
-      expect(e1).toEqual(e2)
+      expect(e1).not.toEqual(e2)
       expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
       assert.deepEqual(e1, e2)
       nodeAssert.notDeepStrictEqual(e1, e2)

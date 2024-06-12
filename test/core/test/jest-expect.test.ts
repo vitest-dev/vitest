@@ -845,7 +845,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
+      expect(error).toMatchObject({ message: 'promise resolved "+0" instead of rejecting' })
     }
 
     try {
@@ -853,7 +853,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
+      expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
 })
