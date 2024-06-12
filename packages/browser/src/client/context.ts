@@ -92,7 +92,7 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount] ??= {}
     screenshotIds[repeatCount][taskName] = number + 1
 
-    const name = `${taskName.replace(/[^a-z0-9]/g, '-')}-${number}.png`
+    const name = options.path || `${taskName.replace(/[^a-z0-9]/g, '-')}-${number}.png`
 
     return triggerCommand(
       '__vitest_screenshot',
