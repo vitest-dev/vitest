@@ -8,7 +8,7 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
   browser: WebdriverBrowser
 }
 
-export class WebdriverBrowserProvider implements BrowserProvider {
+export class WebdriverIOBrowserProvider implements BrowserProvider {
   public name = 'webdriverio' as const
   public supportsParallelism: boolean = true
 
@@ -107,10 +107,13 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async close() {
     await Promise.all(
-      Array.from(this.browsers.values()).flatMap(browser => [
-        browser.closeWindow(),
-        browser.sessionId ? browser.deleteSession?.() : null,
-      ]),
+      Array.from(this.browsers.values()).flatMap(async (browser) => {
+        const handles = await browser.getWindowHandles()
+        for (const handle of handles) {
+          await browser.switchToWindow(handle)
+          await browser.deleteSession()
+        }
+      }),
     )
     this.browsers.clear()
   }

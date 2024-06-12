@@ -10,7 +10,7 @@ import type {
   UpPayload,
 } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverIOBrowserProvider } from '../providers/webdriver'
 
 function isObject(payload: unknown): payload is Record<string, unknown> {
   return payload != null && typeof payload === 'object'
@@ -80,7 +80,7 @@ export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> =
     else if (isUpPayload(payload))
       await page.keyboard.up(payload.up)
   }
-  else if (provider instanceof WebdriverBrowserProvider) {
+  else if (provider instanceof WebdriverIOBrowserProvider) {
     const browser = context.browser
     if (isTypePayload(payload))
       await browser.keys(payload.type.split(''))

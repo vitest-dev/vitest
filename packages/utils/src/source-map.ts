@@ -31,6 +31,7 @@ const stackIgnorePatterns = [
   '/deps/chai.js',
   '/deps/vitest___chai.js',
   '/deps/p-limit.js',
+  '/deps/chunk-',
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
