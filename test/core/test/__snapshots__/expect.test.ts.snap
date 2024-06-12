@@ -3,7 +3,7 @@
 exports[`Error equality > basic 1`] = `
 {
   "actual": "[Error: hi]",
-  "diff": "[2mCompared values have no visual difference.[22m",
+  "diff": "Compared values have no visual difference.",
   "expected": "[Error: hi]",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hi { custom: 'b' }",
 }
@@ -12,11 +12,11 @@ exports[`Error equality > basic 1`] = `
 exports[`Error equality > basic 2`] = `
 {
   "actual": "[Error: hi]",
-  "diff": "[32m- Expected[39m
-[31m+ Received[39m
+  "diff": "- Expected
++ Received
 
-[32m- [Error: hello][39m
-[31m+ [Error: hi][39m",
+- [Error: hello]
++ [Error: hi]",
   "expected": "[Error: hello]",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }
@@ -25,7 +25,7 @@ exports[`Error equality > basic 2`] = `
 exports[`Error equality > basic 3`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "[2mCompared values have no visual difference.[22m",
+  "diff": "Compared values have no visual difference.",
   "expected": "[Error: hello]",
   "message": "expected Error: hello { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }
@@ -34,7 +34,7 @@ exports[`Error equality > basic 3`] = `
 exports[`Error equality > basic 4`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "[2mCompared values have no visual difference.[22m",
+  "diff": "Compared values have no visual difference.",
   "expected": "[Error: hello]",
   "message": "expected Error: hello { cause: 'x' } to deeply equal Error: hello { cause: 'y' }",
 }

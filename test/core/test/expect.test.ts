@@ -3,6 +3,8 @@ import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { processError } from '@vitest/utils/error'
+import { setupColors } from '@vitest/expect'
+import { getDefaultColors } from '@vitest/utils'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -305,6 +307,8 @@ describe('Error equality', () => {
   }
 
   test('basic', () => {
+    setupColors(getDefaultColors())
+
     //
     // default behavior
     //
