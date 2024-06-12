@@ -201,12 +201,22 @@ function isErrorEqual(a: Error, b: Error, customTesters: Tester[]) {
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
   //   (NOTE: causes and errors are added in v22)
 
-  // TODO: causes and errors
+  // TODO: handle cyclic objects
+  // TODO: check how NodeJs prints error diff
+
   return (
     Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
     && a.name === b.name
     && a.message === b.message
-    && equals({ ...a }, { ...b }, customTesters)
+    // check Error.cause asymmetrically
+    && (typeof b.cause !== 'undefined'
+      ? equals(a.cause, b.cause, customTesters)
+      : true)
+    // AggregateError.errors
+      && (a instanceof AggregateError && b instanceof AggregateError
+        ? equals(a.errors, b.errors, customTesters)
+        : true)
+        && equals({ ...a }, { ...b }, customTesters)
   )
 }
 
