@@ -51,8 +51,7 @@ export class VitestBrowserClientMocker {
     if (resolved == null)
       throw new Error(`[vitest] Cannot resolve ${id} imported from ${importer}`)
     const ext = extname(resolved.id)
-    const base = getBrowserState().config.base || '/'
-    const url = new URL(`/@id${base}${resolved.id}`, location.href)
+    const url = new URL(`/@id/${resolved.id}`, location.href)
     const query = `_vitest_original&ext.${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
@@ -71,12 +70,11 @@ export class VitestBrowserClientMocker {
     if (this.factories[resolvedId])
       return await this.resolve(resolvedId)
 
-    const base = getBrowserState().config.base || '/'
     if (type === 'redirect') {
-      const url = new URL(`/@id${base}${mockPath}`, location.href)
+      const url = new URL(`/@id/${mockPath}`, location.href)
       return import(url.toString())
     }
-    const url = new URL(`/@id${base}${resolvedId}`, location.href)
+    const url = new URL(`/@id/${resolvedId}`, location.href)
     const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
     const moduleObject = await import(`${url.pathname}${query}${url.hash}`)
     return this.mockObject(moduleObject)

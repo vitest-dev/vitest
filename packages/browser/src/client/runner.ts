@@ -89,10 +89,9 @@ export function createBrowserRunner(
         hash = Date.now().toString()
         this.hashMap.set(filepath, [false, hash])
       }
-      const base = this.config.base || '/'
 
       // on Windows we need the unit to resolve the test file
-      const prefix = `${base}${/^\w:/.test(filepath) ? '@fs/' : ''}`
+      const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `${test ? 'browserv' : 'v'}=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(importpath)

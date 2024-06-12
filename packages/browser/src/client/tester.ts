@@ -60,7 +60,7 @@ async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
-  const viteClientPath = `${config.base || '/'}@vite/client`
+  const viteClientPath = `/@vite/client`
   await import(viteClientPath)
 
   const rpc: any = await loadSafeRpc(client)
