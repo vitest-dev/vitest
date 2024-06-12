@@ -40,7 +40,9 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   getCommandsContext() {
-    return {}
+    return {
+      browser: this.browser,
+    }
   }
 
   async openBrowser() {
