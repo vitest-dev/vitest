@@ -67,8 +67,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const browser = await this.openBrowser()
     const context = await browser.newContext({
-      ignoreHTTPSErrors: true,
       ...this.options?.context,
+      ignoreHTTPSErrors: true,
+      serviceWorkers: 'allow',
     })
     this.contexts.set(contextId, context)
     return context
@@ -79,6 +80,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (!page)
       throw new Error(`Page "${contextId}" not found`)
     return page
+  }
+
+  public getCommandsContext(contextId: string) {
+    const page = this.getPage(contextId)
+    const tester = page.frameLocator('iframe[data-vitest]')
+    return {
+      page,
+      tester,
+      get body() {
+        return page.frameLocator('iframe[data-vitest]').locator('body')
+      },
+    }
   }
 
   private async openBrowserPage(contextId: string) {

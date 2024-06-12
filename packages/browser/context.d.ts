@@ -26,6 +26,14 @@ export interface UpPayload { up: string }
 
 export type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
 
+export interface ScreenshotOptions {
+  element?: Element
+  /**
+   * Path relative to the `screenshotDirectory` in the test config.
+   */
+  path?: string
+}
+
 export interface BrowserCommands {
   readFile: (path: string, options?: BufferEncoding | FsOptions) => Promise<string>
   writeFile: (path: string, content: string, options?: BufferEncoding | FsOptions & { mode?: number | string }) => Promise<void>
@@ -100,7 +108,7 @@ export const userEvent: UserEvent
  */
 export const commands: BrowserCommands
 
-export const page: {
+export interface BrowserPage {
   /**
    * Serialized test config.
    */
@@ -109,4 +117,11 @@ export const page: {
    * Change the size of iframe's viewport.
    */
   viewport: (width: number, height: number) => Promise<void>
+  /**
+   * Make a screenshot of the test iframe or a specific element.
+   * @returns Path to the screenshot file.
+   */
+  screenshot: (options?: ScreenshotOptions) => Promise<string>
 }
+
+export const page: BrowserPage

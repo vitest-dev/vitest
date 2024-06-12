@@ -15,6 +15,10 @@ export class PreviewBrowserProvider implements BrowserProvider {
     return this.open
   }
 
+  getCommandsContext() {
+    return {}
+  }
+
   async initialize(ctx: WorkspaceProject) {
     this.ctx = ctx
     this.open = false

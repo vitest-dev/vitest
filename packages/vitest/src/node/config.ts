@@ -539,6 +539,8 @@ export function resolveConfig(
   resolved.browser.fileParallelism ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
+  if (resolved.browser.screenshotDirectory)
+    resolved.browser.screenshotDirectory = resolve(resolved.root, resolved.browser.screenshotDirectory)
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414

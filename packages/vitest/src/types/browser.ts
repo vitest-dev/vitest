@@ -14,6 +14,7 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
+  getCommandsContext: (contextId: string) => Record<string, unknown>
   openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
@@ -114,6 +115,13 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * Directory where screenshots will be saved when page.screenshot() is called
+   * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
+   * If this is set, it will be resolved relative to the project root.
+   * @default __screenshots__
+   */
+  screenshotDirectory?: string
+  /**
    * Scripts injected into the tester iframe.
    */
   testerScripts?: BrowserScript[]
@@ -133,7 +141,7 @@ export interface BrowserConfigOptions {
 
 export interface BrowserCommandContext {
   testPath: string | undefined
-  provider: BrowserProvider
+  // provider: BrowserProvider
   project: WorkspaceProject
   contextId: string
 }

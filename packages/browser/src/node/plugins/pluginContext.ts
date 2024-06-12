@@ -64,6 +64,8 @@ export const server = {
   }
 }
 export const commands = server.commands
+
+const screenshotIds = {}
 export const page = {
   get config() {
     return __vitest_browser_runner__.config
@@ -84,9 +86,31 @@ export const page = {
       })
     })
   },
+  screenshot(options) {
+    const currentTest = __vitest_worker__.current
+    if (!currentTest) {
+      throw new Error('Cannot take a screenshot outside of a test')
+    }
+    if (currentTest.concurrent) {
+      throw new Error('Cannot take a screenshot in a concurrent test')
+    }
+    const repeatCount = currentTest.result.repeatCount ?? 0
+    const taskName = getTaskFullName(currentTest)
+    const number = screenshotIds[repeatCount]?.[taskName] ?? 1
+
+    screenshotIds[repeatCount] ??= {}
+    screenshotIds[repeatCount][taskName] = number + 1
+
+    const name = \`\${taskName.replace(/[^a-z0-9]/g, '-')}-\${number}.png\`
+    return rpc().triggerCommand(contextId, '__vitest_screenshot', currentTest.file.filepath, options ? [name, options] : [name])
+  }
 }
 
 export const userEvent = ${getUserEventScript(project)}
+
+function getTaskFullName(task) {
+  return task.suite ? getTaskFullName(task.suite) + ' ' + task.name : task.name
+}
 
 function convertElementToXPath(element) {
   if (!element || !(element instanceof Element)) {

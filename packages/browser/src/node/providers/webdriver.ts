@@ -29,6 +29,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as RemoteOptions
   }
 
+  getCommandsContext() {
+    return {}
+  }
+
   async openBrowser() {
     if (this.browser)
       return this.browser

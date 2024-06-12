@@ -128,12 +128,13 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           const commands = project.config.browser?.commands
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
-          return commands[command]({
+          const context = Object.assign({
             testPath,
             project,
             provider: project.browserProvider,
             contextId,
-          }, ...payload)
+          }, project.browserProvider.getCommandsContext(contextId))
+          return commands[command](context, ...payload)
         },
         finishBrowserTests(contextId: string) {
           debug?.('[%s] Finishing browser tests for context', contextId)
