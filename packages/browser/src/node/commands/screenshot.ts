@@ -1,4 +1,5 @@
 import { mkdir } from 'node:fs/promises'
+import { normalize } from 'node:path'
 import type { BrowserCommand } from 'vitest/node'
 import { basename, dirname, relative, resolve } from 'pathe'
 import type { ResolvedConfig } from 'vitest'
@@ -12,6 +13,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
     throw new Error(`Cannot take a screenshot without a test path`)
 
   const path = resolveScreenshotPath(context.testPath, name, context.project.config)
+  const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
@@ -19,10 +21,10 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
       const { element: elementXpath, ...config } = options
       const iframe = context.tester
       const element = iframe.locator(`xpath=${elementXpath}`)
-      await element.screenshot({ ...config, path })
+      await element.screenshot({ ...config, path: savePath })
     }
     else {
-      await context.body.screenshot({ ...options, path })
+      await context.body.screenshot({ ...options, path: savePath })
     }
     return path
   }
@@ -31,12 +33,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
     const page = context.provider.browser!
     if (!options.element) {
       const body = await page.$('body')
-      await body.saveScreenshot(path)
+      await body.saveScreenshot(savePath)
       return path
     }
     const xpath = `//${options.element}`
     const element = await page.$(xpath)
-    await element.saveScreenshot(path)
+    await element.saveScreenshot(savePath)
     return path
   }
 
