@@ -195,7 +195,7 @@ function eq(
 }
 
 function isErrorEqual(a: Error, b: Error, customTesters: Tester[]) {
-  // assert.deepStrictEqual https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
+  // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
   // - [[Prototype]] of objects are compared using the === operator.
   // - Only enumerable "own" properties are considered.
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
