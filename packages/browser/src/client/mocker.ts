@@ -1,7 +1,7 @@
 import { getType } from '@vitest/utils'
 import { extname, join } from 'pathe'
 import { rpc } from './rpc'
-import { getBrowserState } from './utils'
+import { getBrowserState, importId } from './utils'
 import { channel, waitForChannel } from './client'
 import type { IframeChannelOutgoingEvent } from './channel'
 
@@ -23,12 +23,21 @@ export class VitestBrowserClientMocker {
   setupWorker() {
     channel.addEventListener('message', async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
       if (e.data.type === 'mock-factory:request') {
-        const module = await this.resolve(e.data.id)
-        const exports = Object.keys(module)
-        channel.postMessage({
-          type: 'mock-factory:response',
-          exports,
-        })
+        try {
+          const module = await this.resolve(e.data.id)
+          const exports = Object.keys(module)
+          channel.postMessage({
+            type: 'mock-factory:response',
+            exports,
+          })
+        }
+        catch (err: any) {
+          const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
+          channel.postMessage({
+            type: 'mock-factory:error',
+            error: processError(err),
+          })
+        }
       }
     })
   }
@@ -86,6 +95,7 @@ export class VitestBrowserClientMocker {
     if (!ids.length)
       return
     await rpc().invalidate(ids)
+    channel.postMessage({ type: 'mock:invalidate' })
     this.ids.clear()
     this.mocks = {}
     this.mockObjects = {}

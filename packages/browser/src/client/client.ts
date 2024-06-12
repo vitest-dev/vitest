@@ -27,7 +27,7 @@ export interface VitestBrowserClient {
   waitForConnection: () => Promise<void>
 }
 
-type BrowserRPC = BirpcReturn<WebSocketBrowserHandlers, WebSocketBrowserEvents>
+export type BrowserRPC = BirpcReturn<WebSocketBrowserHandlers, WebSocketBrowserEvents>
 
 function createClient() {
   const autoReconnect = true

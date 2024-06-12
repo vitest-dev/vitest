@@ -118,12 +118,12 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, [true, version])
   })
 
-  const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
+  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all([
     initiateRunner(state, mocker, config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
-  mocker.setSpyModule(Spy)
+  mocker.setSpyModule(SpyModule)
   mocker.setupWorker()
 
   onCancel.then((reason) => {

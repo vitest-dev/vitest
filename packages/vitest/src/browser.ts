@@ -10,4 +10,4 @@ export {
   getCoverageProvider,
   startCoverageInsideWorker,
 } from './integrations/coverage'
-export * as Spy from './integrations/spy'
+export * as SpyModule from './integrations/spy'

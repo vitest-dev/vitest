@@ -143,16 +143,17 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
         },
+        // TODO: cache this automock result
         async automock(id) {
-          const request = await project.browser!.transformRequest(id)
-          if (!request)
+          const result = await project.browser!.transformRequest(id)
+          if (!result)
             throw new Error(`Module "${id}" not found.`)
-          const ms = automockModule(request.code, parseAst)
+          const ms = automockModule(result.code, parseAst)
           const code = ms.toString()
           const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
-          const combinedMap = request.map && request.map.mappings
+          const combinedMap = result.map && result.map.mappings
             ? remapping(
-              [{ ...sourcemap, version: 3 }, request.map as EncodedSourceMap],
+              [{ ...sourcemap, version: 3 }, result.map as EncodedSourceMap],
               () => null,
             )
             : sourcemap

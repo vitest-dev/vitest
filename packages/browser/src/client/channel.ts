@@ -32,7 +32,7 @@ export interface IframeUnmockEvent {
   paths: string[]
 }
 
-interface IframeMockingDoneEvent {
+export interface IframeMockingDoneEvent {
   type: 'mock:done' | 'unmock:done'
 }
 
@@ -46,8 +46,17 @@ export interface IframeMockFactoryResponseEvent {
   exports: string[]
 }
 
+export interface IframeMockFactoryErrorEvent {
+  type: 'mock-factory:error'
+  error: any
+}
+
 export interface IframeViewportChannelEvent {
   type: 'viewport:done' | 'viewport:fail'
+}
+
+export interface IframeMockInvalidateEvent {
+  type: 'mock:invalidate'
 }
 
 export type IframeChannelIncomingEvent =
@@ -57,6 +66,8 @@ export type IframeChannelIncomingEvent =
   | IframeMockEvent
   | IframeUnmockEvent
   | IframeMockFactoryResponseEvent
+  | IframeMockFactoryErrorEvent
+  | IframeMockInvalidateEvent
 
 export type IframeChannelOutgoingEvent =
   | IframeMockFactoryRequestEvent

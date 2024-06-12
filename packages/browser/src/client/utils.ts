@@ -9,7 +9,7 @@ export function getConfig(): ResolvedConfig {
   return getBrowserState().config
 }
 
-interface BrowserRunnerState {
+export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']

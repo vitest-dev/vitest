@@ -6,6 +6,7 @@ import { rpcDone } from './rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
 import type { IframeChannelEvent, IframeChannelIncomingEvent } from './channel'
+import { createModuleMocker } from './msw'
 
 const url = new URL(location.href)
 
@@ -81,6 +82,8 @@ client.ws.addEventListener('open', async () => {
   runningFiles.clear()
   testFiles.forEach(file => runningFiles.add(file))
 
+  const mocker = createModuleMocker()
+
   channel.addEventListener('message', async (e: MessageEvent<IframeChannelIncomingEvent>): Promise<void> => {
     debug('channel event', JSON.stringify(e.data))
     switch (e.data.type) {
@@ -135,10 +138,18 @@ client.ws.addEventListener('open', async () => {
           await done()
         break
       }
-      case 'mock-factory:response':
+      case 'mock:invalidate':
+        mocker.invalidate()
+        break
       case 'unmock':
+        await mocker.unmock(e.data)
+        break
       case 'mock':
-        // ignore, it is processed by the mocker
+        await mocker.mock(e.data)
+        break
+      case 'mock-factory:error':
+      case 'mock-factory:response':
+        // handled manually
         break
       default: {
         e.data satisfies never

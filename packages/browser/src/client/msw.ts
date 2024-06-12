@@ -1,37 +1,24 @@
 import { http } from 'msw/core/http'
 import { setupWorker } from 'msw/browser'
 import { rpc } from './rpc'
-import type { IframeChannelEvent, IframeChannelIncomingEvent } from './channel'
+import type { IframeChannelEvent, IframeMockEvent, IframeMockingDoneEvent, IframeUnmockEvent } from './channel'
 import { channel } from './channel'
 
-export async function createModuleMocker() {
-  const mocks: Record<string, string | null | undefined> = {}
-
-  channel.addEventListener('message', (e: MessageEvent<IframeChannelIncomingEvent>) => {
-    switch (e.data.type) {
-      case 'mock':
-        for (const path of e.data.paths)
-          mocks[path] = e.data.mock
-        break
-      case 'unmock':
-        for (const path of e.data.paths)
-          delete mocks[path]
-        break
-    }
-  })
+export function createModuleMocker() {
+  const mocks: Map<string, string | null | undefined> = new Map()
 
   const worker = setupWorker(
     http.get(/.+/, async ({ request }) => {
       const path = removeTimestamp(request.url.slice(location.origin.length))
-      if (!(path in mocks))
+      if (!mocks.has(path))
         return passthrough()
 
-      const mock = mocks[path]
+      const mock = mocks.get(path)
 
       // using a factory
       if (mock === undefined) {
-        const exportsModule = await getFactoryExports(path)
-        const exports = Object.keys(exportsModule)
+        // TODO: check how the error looks
+        const exports = await getFactoryExports(path)
         const module = `const module = __vitest_mocker__.get('${path}');`
         const keys = exports.map((name) => {
           if (name === 'default')
@@ -58,12 +45,41 @@ export async function createModuleMocker() {
     }),
   )
 
-  await worker.start({
-    serviceWorker: {
-      url: '/__virtual_vitest__:mocker-worker.js',
+  let started = false
+  let startPromise: undefined | Promise<unknown>
+
+  async function init() {
+    if (started)
+      return
+    if (startPromise)
+      return startPromise
+    startPromise = worker.start({
+      serviceWorker: {
+        url: '/__virtual_vitest__:mocker-worker.js',
+      },
+      quiet: true,
+    }).finally(() => {
+      started = true
+      startPromise = undefined
+    })
+    await startPromise
+  }
+
+  return {
+    async mock(event: IframeMockEvent) {
+      await init()
+      event.paths.forEach(path => mocks.set(path, event.mock))
+      channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
     },
-    quiet: true,
-  })
+    async unmock(event: IframeUnmockEvent) {
+      await init()
+      event.paths.forEach(path => mocks.delete(path))
+      channel.postMessage(<IframeMockingDoneEvent>{ type: 'unmock:done' })
+    },
+    invalidate() {
+      mocks.clear()
+    },
+  }
 }
 
 function getFactoryExports(id: string) {
@@ -71,10 +87,14 @@ function getFactoryExports(id: string) {
     type: 'mock-factory:request',
     id,
   })
-  return new Promise<string[]>((resolve) => {
+  return new Promise<string[]>((resolve, reject) => {
     channel.addEventListener('message', function onMessage(e: MessageEvent<IframeChannelEvent>) {
       if (e.data.type === 'mock-factory:response') {
         resolve(e.data.exports)
+        channel.removeEventListener('message', onMessage)
+      }
+      if (e.data.type === 'mock-factory:error') {
+        reject(e.data.error)
         channel.removeEventListener('message', onMessage)
       }
     })

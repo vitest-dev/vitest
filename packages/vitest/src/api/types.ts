@@ -41,7 +41,7 @@ export interface WebSocketBrowserHandlers {
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
   resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
-  triggerCommand: (contextId: string, command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
+  triggerCommand: <T>(contextId: string, command: string, testPath: string | undefined, payload: unknown[]) => Promise<T>
   resolveMock: (id: string, importer: string, hasFactory: boolean) => Promise<{
     type: 'factory' | 'redirect' | 'automock'
     mockPath?: string | null
