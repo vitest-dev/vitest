@@ -14,6 +14,7 @@ import { stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { createDebugger } from '../utils/debugger'
 import { automockModule } from '../node/automockBrowser'
+import type { BrowserCommandContext } from '../types/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 
 const debug = createDebugger('vitest:browser:api')
@@ -133,7 +134,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
             project,
             provider: project.browserProvider,
             contextId,
-          }, project.browserProvider.getCommandsContext(contextId))
+          }, project.browserProvider.getCommandsContext(contextId)) as any as BrowserCommandContext
           return await commands[command](context, ...payload)
         },
         finishBrowserTests(contextId: string) {
