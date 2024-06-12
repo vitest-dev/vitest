@@ -1,13 +1,4 @@
-import type { BrowserCommand, BrowserProvider } from 'vitest/node'
-import type { PreviewBrowserProvider } from '../providers/preview'
-import type { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { PlaywrightBrowserProvider } from '../providers/playwright'
-
-declare module 'vitest/node' {
-  export interface BrowserCommandContext {
-    provider: PlaywrightBrowserProvider | WebdriverBrowserProvider | BrowserProvider | PreviewBrowserProvider
-  }
-}
+import type { BrowserCommand } from 'vitest/node'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
   ConvertUserEventParameters<Parameters<T>>
