@@ -1,8 +1,8 @@
 import { http } from 'msw/core/http'
 import { setupWorker } from 'msw/browser'
-import { rpc } from './rpc'
 import type { IframeChannelEvent, IframeMockEvent, IframeMockingDoneEvent, IframeUnmockEvent } from './channel'
 import { channel } from './channel'
+import { client } from './client'
 
 export function createModuleMocker() {
   const mocks: Map<string, string | null | undefined> = new Map()
@@ -36,7 +36,7 @@ export function createModuleMocker() {
       if (typeof mock === 'string')
         return Response.redirect(mock)
 
-      const content = await rpc().automock(path)
+      const content = await client.rpc.automock(path)
       return new Response(content, {
         headers: {
           'Content-Type': 'application/javascript',
