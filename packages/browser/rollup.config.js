@@ -4,6 +4,7 @@ import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import { defineConfig } from 'rollup'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -32,7 +33,7 @@ const input = {
   providers: './src/node/providers/index.ts',
 }
 
-export default () => [
+export default () => defineConfig([
   {
     input,
     output: {
@@ -43,6 +44,18 @@ export default () => [
     plugins,
   },
   {
+    input: './src/client/context.ts',
+    output: {
+      file: 'dist/context.js',
+      format: 'esm',
+    },
+    plugins: [
+      esbuild({
+        target: 'node18',
+      }),
+    ],
+  },
+  {
     input: input.index,
     output: {
       file: 'dist/index.d.ts',
@@ -51,4 +64,4 @@ export default () => [
     external,
     plugins: [dts()],
   },
-]
+])

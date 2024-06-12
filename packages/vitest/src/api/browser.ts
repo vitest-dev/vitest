@@ -5,12 +5,19 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed } from 'vite'
+import { isFileServingAllowed, parseAst } from 'vite'
 import type { ViteDevServer } from 'vite'
+import type { EncodedSourceMap } from '@ampproject/remapping'
+import remapping from '@ampproject/remapping'
 import { BROWSER_API_PATH } from '../constants'
 import { stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
+import { createDebugger } from '../utils/debugger'
+import { automockModule } from '../node/automockBrowser'
+import type { BrowserCommandContext } from '../types/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
+
+const debug = createDebugger('vitest:browser:api')
 
 export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer) {
   const ctx = project.ctx
@@ -36,7 +43,10 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
       const clients = type === 'tester' ? rpcs.testers : rpcs.orchestrators
       clients.set(sessionId, rpc)
 
+      debug?.('[%s] Browser API connected to %s', sessionId, type)
+
       ws.on('close', () => {
+        debug?.('[%s] Browser API disconnected from %s', sessionId, type)
         clients.delete(sessionId)
       })
     })
@@ -112,42 +122,65 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
-        triggerCommand(command: string, testPath: string | undefined, payload: unknown[]) {
-          if (!project.browserProvider)
+        async triggerCommand(contextId, command, testPath, payload) {
+          debug?.('[%s] Triggering command "%s"', contextId, command)
+          const provider = project.browserProvider
+          if (!provider)
             throw new Error('Commands are only available for browser tests.')
           const commands = project.config.browser?.commands
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
-          return commands[command]({
+          if (provider.beforeCommand)
+            await provider.beforeCommand(command, payload)
+          const context = Object.assign({
             testPath,
             project,
-            provider: project.browserProvider,
-          }, ...payload)
+            provider,
+            contextId,
+          }, provider.getCommandsContext(contextId)) as any as BrowserCommandContext
+          let result
+          try {
+            result = await commands[command](context, ...payload)
+          }
+          finally {
+            if (provider.afterCommand)
+              await provider.afterCommand(command, payload)
+          }
+          return result
         },
-        getBrowserFiles() {
-          return project.browserState?.files ?? []
-        },
-        finishBrowserTests() {
-          return project.browserState?.resolve()
+        finishBrowserTests(contextId: string) {
+          debug?.('[%s] Finishing browser tests for context', contextId)
+          return project.browserState.get(contextId)?.resolve()
         },
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
         },
-        async queueMock(id: string, importer: string, hasFactory: boolean) {
-          return project.browserMocker.mock(sessionId, id, importer, hasFactory)
+        // TODO: cache this automock result
+        async automock(id) {
+          const result = await project.browser!.transformRequest(id)
+          if (!result)
+            throw new Error(`Module "${id}" not found.`)
+          const ms = automockModule(result.code, parseAst)
+          const code = ms.toString()
+          const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
+          const combinedMap = result.map && result.map.mappings
+            ? remapping(
+              [{ ...sourcemap, version: 3 }, result.map as EncodedSourceMap],
+              () => null,
+            )
+            : sourcemap
+          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
         },
-        async queueUnmock(id: string, importer: string) {
-          return project.browserMocker.unmock(id, importer)
+        resolveMock(rawId, importer, hasFactory) {
+          return project.browserMocker.resolveMock(rawId, importer, hasFactory)
         },
-        resolveMock(rawId: string, importer: string) {
-          return project.browserMocker.resolveMock(rawId, importer, false)
-        },
-        invalidateMocks() {
-          const mocker = project.browserMocker
-          mocker.mocks.forEach((_, id) => {
-            mocker.invalidateModuleById(id)
+        invalidate(ids) {
+          ids.forEach((id) => {
+            const moduleGraph = project.browser!.moduleGraph
+            const module = moduleGraph.getModuleById(id)
+            if (module)
+              moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
           })
-          mocker.mocks.clear()
         },
       },
       {

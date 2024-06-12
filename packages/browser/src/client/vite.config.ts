@@ -19,9 +19,18 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester.html'),
       },
+      external: [/__virtual_vitest__/],
     },
   },
   plugins: [
+    {
+      name: 'virtual:msw',
+      enforce: 'pre',
+      resolveId(id) {
+        if (id.startsWith('msw'))
+          return `/__virtual_vitest__:${id}`
+      },
+    },
     {
       name: 'copy-ui-plugin',
       /* eslint-disable no-console */

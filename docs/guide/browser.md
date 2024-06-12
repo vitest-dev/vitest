@@ -236,6 +236,11 @@ export const page: {
    * Change the size of iframe's viewport.
    */
   viewport: (width: number | string, height: number | string) => Promise<void>
+  /**
+   * Make a screenshot of the test iframe or a specific element.
+   * @returns Path to the screenshot file.
+   */
+  screenshot: (options?: ScreenshotOptions) => Promise<string>
 }
 ```
 
@@ -358,6 +363,63 @@ declare module '@vitest/browser/context' {
 
 ::: warning
 Custom functions will override built-in ones if they have the same name.
+:::
+
+### Custom `playwright` commands
+
+Vitest exposes several `playwright` specific properties on the command context.
+
+- `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
+- `tester` is the iframe locator. The API is pretty limited here, but you can chain it further to access your HTML elements.
+- `body` is the iframe's `body` locator that exposes more Playwright APIs.
+
+```ts
+import { defineCommand } from '@vitest/browser'
+
+export const myCommand = defineCommand(async (ctx, arg1, arg2) => {
+  if (ctx.provider.name === 'playwright') {
+    const element = await ctx.tester.findByRole('alert')
+    const screenshot = await element.screenshot()
+    // do something with the screenshot
+    return difference
+  }
+})
+```
+
+::: tip
+If you are using TypeScript, don't forget to add `@vitest/browser/providers/playwright` to your `tsconfig` "compilerOptions.types" field to get autocompletion:
+
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/playwright"
+    ]
+  }
+}
+```
+:::
+
+### Custom `webdriverio` commands
+
+Vitest exposes some `webdriverio` specific properties on the context object.
+
+- `browser` is the `WebdriverIO.Browser` API.
+
+Vitest automatically switches the `webdriver` context to the test iframe by calling `browser.switchToFrame` before the command is called, so `$` and `$$` methods refer to the elements inside the iframe, not in the orchestrator, but non-webdriver APIs will still refer to the parent frame context.
+
+::: tip
+If you are using TypeScript, don't forget to add `@vitest/browser/providers/webdriverio` to your `tsconfig` "compilerOptions.types" field to get autocompletion:
+
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/webdriverio"
+    ]
+  }
+}
+```
 :::
 
 ## Limitations

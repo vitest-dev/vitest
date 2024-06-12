@@ -147,6 +147,7 @@
     }
   },
   "dependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
@@ -166,10 +167,10 @@
     "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@antfu/install-pkg": "0.3.1",
     "@edge-runtime/vm": "^3.2.0",
     "@sinonjs/fake-timers": "11.1.0",
+    "@types/debug": "^4.1.12",
     "@types/estree": "^1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",
     "@types/istanbul-reports": "^3.0.4",

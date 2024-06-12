@@ -5,6 +5,7 @@ import {
   writeFile,
 } from './fs'
 import { sendKeys } from './keyboard'
+import { screenshot } from './screenshot'
 
 export default {
   readFile,
@@ -12,4 +13,5 @@ export default {
   writeFile,
   sendKeys,
   __vitest_click: click,
+  __vitest_screenshot: screenshot,
 }

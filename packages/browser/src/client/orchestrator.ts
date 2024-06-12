@@ -5,6 +5,8 @@ import { channel, client } from './client'
 import { rpcDone } from './rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
+import type { IframeChannelEvent, IframeChannelIncomingEvent } from './channel'
+import { createModuleMocker } from './msw'
 
 const url = new URL(location.href)
 
@@ -35,7 +37,7 @@ function createIframe(container: HTMLDivElement, file: string) {
 
   const iframe = document.createElement('iframe')
   iframe.setAttribute('loading', 'eager')
-  iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${encodeURIComponent(file)}`)
+  iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${getBrowserState().contextId}/${encodeURIComponent(file)}`)
   iframe.setAttribute('data-vitest', 'true')
 
   iframe.style.display = 'block'
@@ -52,35 +54,8 @@ function createIframe(container: HTMLDivElement, file: string) {
 
 async function done() {
   await rpcDone()
-  await client.rpc.finishBrowserTests()
+  await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
-
-interface IframeDoneEvent {
-  type: 'done'
-  filenames: string[]
-  id: string
-}
-
-interface IframeErrorEvent {
-  type: 'error'
-  error: any
-  errorType: string
-  files: string[]
-  id: string
-}
-
-interface IframeViewportEvent {
-  type: 'viewport'
-  width: number
-  height: number
-  id: string
-}
-
-interface IframeViewportChannelEvent {
-  type: 'viewport:done' | 'viewport:fail'
-}
-
-type IframeChannelEvent = IframeDoneEvent | IframeErrorEvent | IframeViewportEvent | IframeViewportChannelEvent
 
 async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
@@ -107,7 +82,9 @@ client.ws.addEventListener('open', async () => {
   runningFiles.clear()
   testFiles.forEach(file => runningFiles.add(file))
 
-  channel.addEventListener('message', async (e: MessageEvent<IframeChannelEvent>): Promise<void> => {
+  const mocker = createModuleMocker()
+
+  channel.addEventListener('message', async (e: MessageEvent<IframeChannelIncomingEvent>): Promise<void> => {
     debug('channel event', JSON.stringify(e.data))
     switch (e.data.type) {
       case 'viewport': {
@@ -161,7 +138,22 @@ client.ws.addEventListener('open', async () => {
           await done()
         break
       }
+      case 'mock:invalidate':
+        mocker.invalidate()
+        break
+      case 'unmock':
+        await mocker.unmock(e.data)
+        break
+      case 'mock':
+        await mocker.mock(e.data)
+        break
+      case 'mock-factory:error':
+      case 'mock-factory:response':
+        // handled manually
+        break
       default: {
+        e.data satisfies never
+
         await client.rpc.onUnhandledError({
           name: 'Unexpected Event',
           message: `Unexpected event: ${(e.data as any).type}`,

@@ -10,17 +10,16 @@ import { getFilePoolName, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { slash, toArray } from '@vitest/utils'
 import BrowserContext from './plugins/pluginContext'
-import BrowserMocker from './plugins/pluginMocker'
 import DynamicImport from './plugins/pluginDynamicImport'
 
 export type { BrowserCommand } from 'vitest/node'
+export { defineBrowserCommand } from './commands/utils'
 
 export default (project: WorkspaceProject, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
 
   return [
-    ...BrowserMocker(project),
     {
       enforce: 'pre',
       name: 'vitest:browser',
@@ -62,22 +61,32 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
 
-          const files = project.browserState?.files ?? []
-
           const config = wrapConfig(project.getSerializableConfig())
           config.env ??= {}
           config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
-
-          const injector = replacer(await injectorJs, {
-            __VITEST_CONFIG__: JSON.stringify(config),
-            __VITEST_FILES__: JSON.stringify(files),
-            __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
-          })
 
           // remove custom iframe related headers to allow the iframe to load
           res.removeHeader('X-Frame-Options')
 
           if (url.pathname === base) {
+            let contextId = url.searchParams.get('contextId')
+            // it's possible to open the page without a context,
+            // for now, let's assume it should be the first one
+            if (!contextId)
+              contextId = project.browserState.keys().next().value ?? 'none'
+
+            const files = project.browserState.get(contextId!)?.files ?? []
+
+            const injector = replacer(await injectorJs, {
+              __VITEST_CONFIG__: JSON.stringify(config),
+              __VITEST_VITE_CONFIG__: JSON.stringify({
+                root: project.browser!.config.root,
+              }),
+              __VITEST_FILES__: JSON.stringify(files),
+              __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
+              __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+            })
+
             // disable CSP for the orchestrator as we are the ones controlling it
             res.removeHeader('Content-Security-Policy')
 
@@ -105,6 +114,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               __VITEST_TITLE__: 'Vitest Browser Runner',
               __VITEST_SCRIPTS__: orchestratorScripts,
               __VITEST_INJECTOR__: injector,
+              __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
             })
             res.write(html, 'utf-8')
             res.end()
@@ -118,11 +128,23 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             res.setHeader('Content-Security-Policy', csp.replace(/frame-ancestors [^;]+/, 'frame-ancestors *'))
           }
 
-          const decodedTestFile = decodeURIComponent(url.pathname.slice(testerPrefix.length))
+          const [contextId, testFile] = url.pathname.slice(testerPrefix.length).split('/')
+          const decodedTestFile = decodeURIComponent(testFile)
           const testFiles = await project.globTestFiles()
           // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
           const tests = decodedTestFile === '__vitest_all__' || !testFiles.includes(decodedTestFile) ? '__vitest_browser_runner__.files' : JSON.stringify([decodedTestFile])
           const iframeId = JSON.stringify(decodedTestFile)
+          const files = project.browserState.get(contextId)?.files ?? []
+
+          const injector = replacer(await injectorJs, {
+            __VITEST_CONFIG__: JSON.stringify(config),
+            __VITEST_FILES__: JSON.stringify(files),
+            __VITEST_VITE_CONFIG__: JSON.stringify({
+              root: project.browser!.config.root,
+            }),
+            __VITEST_TYPE__: url.pathname === base ? '"orchestrator"' : '"tester"',
+            __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+          })
 
           if (!testerScripts)
             testerScripts = await formatScripts(project.config.browser.testerScripts, server)
@@ -200,6 +222,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               'tinybench',
               'tinyspy',
               'pathe',
+              'msw',
+              'msw/browser',
             ],
             include: [
               'vitest > @vitest/utils > pretty-format',
@@ -230,6 +254,26 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           useId = useId.replace(/\\/g, '/')
 
         return useId
+      },
+    },
+    {
+      name: 'vitest:browser:resolve-virtual',
+      async resolveId(rawId) {
+        if (rawId.startsWith('/__virtual_vitest__:')) {
+          let id = rawId.slice('/__virtual_vitest__:'.length)
+          // TODO: don't hardcode
+          if (id === 'mocker-worker.js')
+            id = 'msw/mockServiceWorker.js'
+
+          const resolved = await this.resolve(
+            id,
+            distRoot,
+            {
+              skipSelf: true,
+            },
+          )
+          return resolved
+        }
       },
     },
     BrowserContext(project),

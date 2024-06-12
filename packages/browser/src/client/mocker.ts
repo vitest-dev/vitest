@@ -1,7 +1,9 @@
 import { getType } from '@vitest/utils'
-import { extname } from 'pathe'
+import { extname, join } from 'pathe'
 import { rpc } from './rpc'
-import { getBrowserState } from './utils'
+import { getBrowserState, importId } from './utils'
+import { channel, waitForChannel } from './client'
+import type { IframeChannelOutgoingEvent } from './channel'
 
 const now = Date.now
 
@@ -11,10 +13,34 @@ interface SpyModule {
 
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
-  private mocks: Record<string, any> = {}
+  private mocks: Record<string, undefined | null | string> = {}
+  private mockObjects: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
+  private ids = new Set<string>()
 
   private spyModule!: SpyModule
+
+  setupWorker() {
+    channel.addEventListener('message', async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
+      if (e.data.type === 'mock-factory:request') {
+        try {
+          const module = await this.resolve(e.data.id)
+          const exports = Object.keys(module)
+          channel.postMessage({
+            type: 'mock-factory:response',
+            exports,
+          })
+        }
+        catch (err: any) {
+          const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
+          channel.postMessage({
+            type: 'mock-factory:error',
+            error: processError(err),
+          })
+        }
+      }
+    })
+  }
 
   public setSpyModule(mod: SpyModule) {
     this.spyModule = mod
@@ -25,8 +51,7 @@ export class VitestBrowserClientMocker {
     if (resolved == null)
       throw new Error(`[vitest] Cannot resolve ${id} imported from ${importer}`)
     const ext = extname(resolved.id)
-    const base = getBrowserState().config.base || '/'
-    const url = new URL(`/@id${base}${resolved.id}`, location.href)
+    const url = new URL(`/@id/${resolved.id}`, location.href)
     const query = `_vitest_original&ext.${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
@@ -36,7 +61,7 @@ export class VitestBrowserClientMocker {
 
   public async importMock(rawId: string, importer: string) {
     await this.prepare()
-    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer)
+    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer, false)
 
     const factoryReturn = this.get(resolvedId)
     if (factoryReturn)
@@ -45,12 +70,11 @@ export class VitestBrowserClientMocker {
     if (this.factories[resolvedId])
       return await this.resolve(resolvedId)
 
-    const base = getBrowserState().config.base || '/'
     if (type === 'redirect') {
-      const url = new URL(`/@id${base}${mockPath}`, location.href)
+      const url = new URL(`/@id/${mockPath}`, location.href)
       return import(url.toString())
     }
-    const url = new URL(`/@id${base}${resolvedId}`, location.href)
+    const url = new URL(`/@id/${resolvedId}`, location.href)
     const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
     const moduleObject = await import(`${url.pathname}${query}${url.hash}`)
     return this.mockObject(moduleObject)
@@ -61,7 +85,19 @@ export class VitestBrowserClientMocker {
   }
 
   public get(id: string) {
-    return this.mocks[id]
+    return this.mockObjects[id]
+  }
+
+  public async invalidate() {
+    const ids = Array.from(this.ids)
+    if (!ids.length)
+      return
+    await rpc().invalidate(ids)
+    channel.postMessage({ type: 'mock:invalidate' })
+    this.ids.clear()
+    this.mocks = {}
+    this.mockObjects = {}
+    this.factories = {}
   }
 
   public async resolve(id: string) {
@@ -69,8 +105,8 @@ export class VitestBrowserClientMocker {
     if (!factory)
       throw new Error(`Cannot resolve ${id} mock: no factory provided`)
     try {
-      this.mocks[id] = await factory()
-      return this.mocks[id]
+      this.mockObjects[id] = await factory()
+      return this.mockObjects[id]
     }
     catch (err) {
       const vitestError = new Error(
@@ -84,9 +120,23 @@ export class VitestBrowserClientMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => any) {
-    const promise = rpc().queueMock(id, importer, !!factory)
-      .then((id) => {
-        this.factories[id] = factory!
+    const promise = rpc().resolveMock(id, importer, !!factory)
+      .then(async ({ mockPath, resolvedId }) => {
+        this.ids.add(resolvedId)
+        const urlPaths = resolveMockPaths(resolvedId)
+        const resolvedMock = typeof mockPath === 'string'
+          ? new URL(resolvedMockedPath(mockPath), location.href).toString()
+          : mockPath
+        urlPaths.forEach((url) => {
+          this.mocks[url] = resolvedMock
+          this.factories[url] = factory!
+        })
+        channel.postMessage({
+          type: 'mock',
+          paths: urlPaths,
+          mock: resolvedMock,
+        })
+        await waitForChannel('mock:done')
       }).finally(() => {
         this.queue.delete(promise)
       })
@@ -94,10 +144,24 @@ export class VitestBrowserClientMocker {
   }
 
   public queueUnmock(id: string, importer: string) {
-    const promise = rpc().queueUnmock(id, importer)
-      .then((id) => {
-        delete this.factories[id]
-      }).finally(() => {
+    const promise = rpc().resolveId(id, importer)
+      .then(async (resolved) => {
+        if (!resolved)
+          return
+        this.ids.delete(resolved.id)
+        const urlPaths = resolveMockPaths(resolved.id)
+        urlPaths.forEach((url) => {
+          delete this.mocks[url]
+          delete this.factories[url]
+          delete this.mockObjects[url]
+        })
+        channel.postMessage({
+          type: 'unmock',
+          paths: urlPaths,
+        })
+        await waitForChannel('unmock:done')
+      })
+      .finally(() => {
         this.queue.delete(promise)
       })
     this.queue.add(promise)
@@ -106,7 +170,9 @@ export class VitestBrowserClientMocker {
   public async prepare() {
     if (!this.queue.size)
       return
-    await Promise.all([...this.queue.values()])
+    await Promise.all([
+      ...this.queue.values(),
+    ])
   }
 
   // TODO: move this logic into a util(?)
@@ -283,4 +349,27 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
+}
+
+function resolvedMockedPath(path: string) {
+  const config = getBrowserState().viteConfig
+  if (path.startsWith(config.root))
+    return path.slice(config.root.length)
+  return path
+}
+
+// TODO: check _base_ path
+function resolveMockPaths(path: string) {
+  const config = getBrowserState().viteConfig
+  const fsRoot = join('/@fs/', config.root)
+  const paths = [path, join('/@fs/', path)]
+
+  // URL can be /file/path.js, but path is resolved to /file/path
+  if (path.startsWith(config.root))
+    paths.push(path.slice(config.root.length))
+
+  if (path.startsWith(fsRoot))
+    paths.push(path.slice(fsRoot.length))
+
+  return paths
 }

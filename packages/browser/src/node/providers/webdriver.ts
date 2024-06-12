@@ -9,7 +9,8 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
-  public name = 'webdriverio'
+  public name = 'webdriverio' as const
+  public supportsParallelism: boolean = false
 
   public browser: WebdriverIO.Browser | null = null
 
@@ -26,6 +27,22 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.ctx = ctx
     this.browserName = browser
     this.options = options as RemoteOptions
+  }
+
+  async beforeCommand() {
+    const page = this.browser!
+    const iframe = await page.findElement('css selector', 'iframe[data-vitest]')
+    await page.switchToFrame(iframe)
+  }
+
+  async afterCommand() {
+    await this.browser!.switchToParentFrame()
+  }
+
+  getCommandsContext() {
+    return {
+      browser: this.browser,
+    }
   }
 
   async openBrowser() {
@@ -75,7 +92,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(url: string) {
+  async openPage(_contextId: string, url: string) {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }

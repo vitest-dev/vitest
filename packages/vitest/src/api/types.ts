@@ -37,20 +37,18 @@ export interface WebSocketBrowserHandlers {
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (log: UserConsoleLog) => void
-  finishBrowserTests: () => void
+  finishBrowserTests: (contextId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
-  getBrowserFiles: () => string[]
   debug: (...args: string[]) => void
   resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
-  triggerCommand: (command: string, testPath: string | undefined, payload: unknown[]) => Promise<void>
-  queueMock: (id: string, importer: string, hasFactory: boolean) => Promise<string>
-  queueUnmock: (id: string, importer: string) => Promise<string>
-  resolveMock: (id: string, importer: string) => Promise<{
+  triggerCommand: <T>(contextId: string, command: string, testPath: string | undefined, payload: unknown[]) => Promise<T>
+  resolveMock: (id: string, importer: string, hasFactory: boolean) => Promise<{
     type: 'factory' | 'redirect' | 'automock'
     mockPath?: string | null
     resolvedId: string
   }>
-  invalidateMocks: () => void
+  automock: (id: string) => Promise<string>
+  invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (id: string) => Promise<TransformResult['map'] | undefined>
   getProvidedContext: () => ProvidedContext
 }

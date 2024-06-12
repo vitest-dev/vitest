@@ -9,8 +9,15 @@ export interface BrowserProviderInitializationOptions {
 
 export interface BrowserProvider {
   name: string
+  /**
+   * @experimental opt-in into file parallelisation
+   */
+  supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
-  openPage: (url: string) => Awaitable<void>
+  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
+  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
+  getCommandsContext: (contextId: string) => Record<string, unknown>
+  openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -79,6 +86,14 @@ export interface BrowserConfigOptions {
   isolate?: boolean
 
   /**
+   * Run test files in parallel if provider supports this option
+   * This option only has effect in headless mode (enabled in CI by default)
+   *
+   * @default // Same as "test.fileParallelism"
+   */
+  fileParallelism?: boolean
+
+  /**
    * Show Vitest UI
    *
    * @default !process.env.CI
@@ -102,6 +117,13 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * Directory where screenshots will be saved when page.screenshot() is called
+   * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
+   * If this is set, it will be resolved relative to the project root.
+   * @default __screenshots__
+   */
+  screenshotDirectory?: string
+  /**
    * Scripts injected into the tester iframe.
    */
   testerScripts?: BrowserScript[]
@@ -123,6 +145,7 @@ export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: WorkspaceProject
+  contextId: string
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {
@@ -162,6 +185,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   enabled: boolean
   headless: boolean
   isolate: boolean
+  fileParallelism: boolean
   api: ApiConfig
   ui: boolean
   viewport: {

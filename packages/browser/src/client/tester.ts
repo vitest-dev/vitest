@@ -60,7 +60,7 @@ async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
-  const viteClientPath = `${config.base || '/'}@vite/client`
+  const viteClientPath = `/@vite/client`
   await import(viteClientPath)
 
   const rpc: any = await loadSafeRpc(client)
@@ -118,12 +118,13 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, [true, version])
   })
 
-  const [runner, { startTests, setupCommonEnv, Spy }] = await Promise.all([
-    initiateRunner(state, config),
+  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all([
+    initiateRunner(state, mocker, config),
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
 
-  mocker.setSpyModule(Spy)
+  mocker.setSpyModule(SpyModule)
+  mocker.setupWorker()
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)

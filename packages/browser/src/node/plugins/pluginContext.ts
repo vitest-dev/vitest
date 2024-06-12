@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vitest/config'
 import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
-import { dirname } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import type { PluginContext } from 'rollup'
 import { slash } from '@vitest/utils'
 import builtinCommands from '../commands/index'
@@ -41,17 +41,19 @@ async function generateContextFile(this: PluginContext, project: WorkspaceProjec
   const filepathCode = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
   const provider = project.browserProvider!
 
-  const commandsCode = commands.map((command) => {
-    return `    ["${command}"]: (...args) => rpc().triggerCommand("${command}", filepath(), args),`
+  const commandsCode = commands.filter(command => !command.startsWith('__vitest')).map((command) => {
+    return `    ["${command}"]: (...args) => rpc().triggerCommand(contextId, "${command}", filepath(), args),`
   }).join('\n')
 
   const userEventNonProviderImport = await getUserEventImport(provider, this.resolve.bind(this))
+  const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
+import { page, userEvent as __userEvent_CDP__ } from '${distContextPath}'
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
-const channel = new BroadcastChannel('vitest')
+const contextId = __vitest_browser_runner__.contextId
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},
@@ -63,55 +65,8 @@ export const server = {
   }
 }
 export const commands = server.commands
-export const page = {
-  get config() {
-    return __vitest_browser_runner__.config
-  },
-  viewport(width, height) {
-    const id = __vitest_browser_runner__.iframeId
-    channel.postMessage({ type: 'viewport', width, height, id })
-    return new Promise((resolve, reject) => {
-      channel.addEventListener('message', function handler(e) {
-        if (e.data.type === 'viewport:done' && e.data.id === id) {
-          channel.removeEventListener('message', handler)
-          resolve()
-        }
-        if (e.data.type === 'viewport:fail' && e.data.id === id) {
-          channel.removeEventListener('message', handler)
-          reject(new Error(e.data.error))
-        }
-      })
-    })
-  },
-}
-
-export const userEvent = ${getUserEventScript(project)}
-
-function convertElementToXPath(element) {
-  if (!element || !(element instanceof Element)) {
-    // TODO: better error message
-    throw new Error('Expected element to be an instance of Element')
-  }
-  return getPathTo(element)
-}
-
-function getPathTo(element) {
-  if (element.id !== '')
-    return \`id("\${element.id}")\`
-
-  if (!element.parentNode || element === document.documentElement)
-    return element.tagName
-
-  let ix = 0
-  const siblings = element.parentNode.childNodes
-  for (let i = 0; i < siblings.length; i++) {
-    const sibling = siblings[i]
-    if (sibling === element)
-      return \`\${getPathTo(element.parentNode)}/\${element.tagName}[\${ix + 1}]\`
-    if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
-      ix++
-  }
-}
+export const userEvent = ${provider.name === 'preview' ? '__vitest_user_event__' : '__userEvent_CDP__'}
+export { page }
 `
 }
 
@@ -122,15 +77,4 @@ async function getUserEventImport(provider: BrowserProvider, resolve: (id: strin
   if (!resolved)
     throw new Error(`Failed to resolve user-event package from ${__dirname}`)
   return `import { userEvent as __vitest_user_event__ } from '${slash(`/@fs/${resolved.id}`)}'`
-}
-
-function getUserEventScript(project: WorkspaceProject) {
-  if (project.browserProvider?.name === 'preview')
-    return `__vitest_user_event__`
-  return `{
-  async click(element, options) {
-    const xpath = convertElementToXPath(element)
-    return rpc().triggerCommand('__vitest_click', filepath(), options ? [xpath, options] : [xpath]);
-  },
-}`
 }
