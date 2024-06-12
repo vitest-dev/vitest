@@ -1232,6 +1232,48 @@ it('asymmetric matcher error', () => {
   }).toThrow(MyError1))
 })
 
+it('error equality', () => {
+  class MyError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  class YourError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  {
+    // different custom property
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'b')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // different message
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // different class
+    const e1 = new MyError('hello', 'a')
+    const e2 = new YourError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+})
+
 it('toHaveBeenNthCalledWith error', () => {
   const fn = vi.fn()
   fn('World')
