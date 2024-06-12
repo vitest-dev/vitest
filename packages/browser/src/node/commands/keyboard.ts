@@ -10,6 +10,7 @@ import type {
   UpPayload,
 } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
+import { WebdriverBrowserProvider } from '../providers/webdriver'
 
 function isObject(payload: unknown): payload is Record<string, unknown> {
   return payload != null && typeof payload === 'object'
@@ -77,8 +78,8 @@ export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> =
     else if (isUpPayload(payload))
       await page.keyboard.up(payload.up)
   }
-  else if (provider.name === 'webdriverio') {
-    const browser = (provider as any).browser as WebdriverIO.Browser
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = provider.browser!
     if (isTypePayload(payload))
       await browser.keys(payload.type.split(''))
     else if (isPressPayload(payload))
@@ -87,6 +88,6 @@ export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> =
       throw new Error('Only "press" and "type" are supported by webdriverio.')
   }
   else {
-    throw new Error(`"sendKeys" is not supported for ${provider.name} browser provider.`)
+    throw new TypeError(`"sendKeys" is not supported for ${provider.name} browser provider.`)
   }
 }

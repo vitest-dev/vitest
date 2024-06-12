@@ -124,18 +124,29 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         },
         async triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
-          if (!project.browserProvider)
+          const provider = project.browserProvider
+          if (!provider)
             throw new Error('Commands are only available for browser tests.')
           const commands = project.config.browser?.commands
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
+          if (provider.beforeCommand)
+            await provider.beforeCommand(command, payload)
           const context = Object.assign({
             testPath,
             project,
-            provider: project.browserProvider,
+            provider,
             contextId,
-          }, project.browserProvider.getCommandsContext(contextId)) as any as BrowserCommandContext
-          return await commands[command](context, ...payload)
+          }, provider.getCommandsContext(contextId)) as any as BrowserCommandContext
+          let result
+          try {
+            result = await commands[command](context, ...payload)
+          }
+          finally {
+            if (provider.afterCommand)
+              await provider.afterCommand(command, payload)
+          }
+          return result
         },
         finishBrowserTests(contextId: string) {
           debug?.('[%s] Finishing browser tests for context', contextId)

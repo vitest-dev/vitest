@@ -29,6 +29,16 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as RemoteOptions
   }
 
+  async beforeCommand() {
+    const page = this.browser!
+    const iframe = await page.findElement('css selector', 'iframe[data-vitest]')
+    await page.switchToFrame(iframe)
+  }
+
+  async afterCommand() {
+    await this.browser!.switchToParentFrame()
+  }
+
   getCommandsContext() {
     return {}
   }

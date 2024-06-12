@@ -30,13 +30,13 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
   if (context.provider instanceof WebdriverBrowserProvider) {
     const page = context.provider.browser!
     if (!options.element) {
-      await (await page.$('iframe[data-vitest]')).saveScreenshot(path)
+      const body = await page.$('body')
+      await body.saveScreenshot(path)
       return path
     }
-    const frame = await page.findElement('css selector', 'iframe[data-vitest]')
-    await page.switchToFrame(frame)
     const xpath = `//${options.element}`
-    await (await page.$(xpath)).saveScreenshot(path)
+    const element = await page.$(xpath)
+    await element.saveScreenshot(path)
     return path
   }
 
