@@ -45,7 +45,7 @@ export async function groupFilesByEnv(files: (readonly [WorkspaceProject, string
 
     const transformMode = getTransformMode(project.config.testTransformMode, file)
 
-    const envOptions = JSON.parse(code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1] || 'null')
+    const envOptions = JSON.parse(code.match(/@(?:vitest|jest)-environment-options\s+?(.+)(?=\*\/$|$)/)?.[1] || 'null')
     const envKey = env === 'happy-dom' ? 'happyDOM' : env
     const environment: ContextTestEnvironment = {
       name: env as VitestEnvironment,
