@@ -4,6 +4,7 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import type { ResolvedConfig } from 'vitest'
 import type { ScreenshotOptions } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
+import { WebdriverBrowserProvider } from '../providers/webdriver'
 
 // TODO: expose provider specific options in types
 export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (context, name: string, options = {}) => {
@@ -23,6 +24,15 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (co
     else {
       await context.body.screenshot({ ...options, path })
     }
+    return path
+  }
+
+  if (context.provider instanceof WebdriverBrowserProvider) {
+    const page = context.provider.browser!
+    const frame = await page.findElement('css selector', 'iframe[data-vitest]')
+    await page.switchToFrame(frame)
+    const element = options.element ? `//${options.element}` : `//body`
+    ;(await page.$(element)).saveScreenshot(path)
     return path
   }
 
