@@ -99,10 +99,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async close() {
     await Promise.all([
+      this.browser?.closeWindow(),
       this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])
-    // TODO: right now process can only exit with timeout, if we use browser
-    // needs investigating
-    process.exit()
   }
 }
