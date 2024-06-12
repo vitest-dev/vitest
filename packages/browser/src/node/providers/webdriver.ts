@@ -10,7 +10,6 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
 
 export class WebdriverIOBrowserProvider implements BrowserProvider {
   public name = 'webdriverio' as const
-  public supportsParallelism: boolean = true
 
   private browserName!: WebdriverBrowser
   private ctx!: WorkspaceProject
@@ -18,6 +17,10 @@ export class WebdriverIOBrowserProvider implements BrowserProvider {
   private options?: RemoteOptions
 
   public browsers = new Map<string, WebdriverIO.Browser>()
+
+  get supportsParallelism() {
+    return this.browserName !== 'firefox'
+  }
 
   getSupportedBrowsers() {
     return webdriverBrowsers
@@ -107,13 +110,7 @@ export class WebdriverIOBrowserProvider implements BrowserProvider {
 
   async close() {
     await Promise.all(
-      Array.from(this.browsers.values()).flatMap(async (browser) => {
-        const handles = await browser.getWindowHandles()
-        for (const handle of handles) {
-          await browser.switchToWindow(handle)
-          await browser.deleteSession()
-        }
-      }),
+      Array.from(this.browsers.values()).map(browser => browser.deleteSession()),
     )
     this.browsers.clear()
   }
