@@ -121,7 +121,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         getCountOfFailedTests() {
           return ctx.state.getCountOfFailedTests()
         },
-        triggerCommand(contextId, command, testPath, payload) {
+        async triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
           if (!project.browserProvider)
             throw new Error('Commands are only available for browser tests.')
@@ -134,7 +134,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
             provider: project.browserProvider,
             contextId,
           }, project.browserProvider.getCommandsContext(contextId))
-          return commands[command](context, ...payload)
+          return await commands[command](context, ...payload)
         },
         finishBrowserTests(contextId: string) {
           debug?.('[%s] Finishing browser tests for context', contextId)
