@@ -2,6 +2,7 @@ import nodeAssert from 'node:assert'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { processError } from '@vitest/utils/error'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -273,6 +274,23 @@ describe('recursive custom equality tester', () => {
   })
 })
 
+function snapshotError(f: () => unknown) {
+  try {
+    f()
+  }
+  catch (error) {
+    const e = processError(error)
+    expect({
+      message: e.message,
+      diff: e.diff,
+      expected: e.expected,
+      actual: e.actual,
+    }).toMatchSnapshot()
+    return
+  }
+  expect.unreachable()
+}
+
 describe('Error equality', () => {
   class MyError extends Error {
     constructor(message: string, public custom: string) {
@@ -295,6 +313,7 @@ describe('Error equality', () => {
       // different custom property
       const e1 = new MyError('hi', 'a')
       const e2 = new MyError('hi', 'b')
+      snapshotError(() => expect(e1).toEqual(e2))
       expect(e1).not.toEqual(e2)
       expect(e1).not.toStrictEqual(e2)
       assert.deepEqual(e1, e2)
@@ -305,6 +324,7 @@ describe('Error equality', () => {
       // different message
       const e1 = new MyError('hi', 'a')
       const e2 = new MyError('hello', 'a')
+      snapshotError(() => expect(e1).toEqual(e2))
       expect(e1).not.toEqual(e2)
       expect(e1).not.toStrictEqual(e2)
       assert.notDeepEqual(e1, e2)
@@ -315,6 +335,7 @@ describe('Error equality', () => {
       // different class
       const e1 = new MyError('hello', 'a')
       const e2 = new YourError('hello', 'a')
+      snapshotError(() => expect(e1).toEqual(e2))
       expect(e1).not.toEqual(e2)
       expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
       assert.deepEqual(e1, e2)
@@ -329,6 +350,14 @@ describe('Error equality', () => {
       expect(e1).toStrictEqual(e2)
       assert.deepEqual(e1, e2)
       nodeAssert.deepStrictEqual(e1, e2)
+    }
+
+    {
+      // different cause
+      const e1 = new Error('hello', { cause: 'x' })
+      const e2 = new Error('hello', { cause: 'y' })
+      snapshotError(() => expect(e1).toEqual(e2))
+      expect(e1).not.toEqual(e2)
     }
 
     //
