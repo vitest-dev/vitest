@@ -44,8 +44,8 @@ importers:
         specifier: ^1.44.1
         version: 1.44.1
       '@rollup/plugin-commonjs':
-        specifier: ^25.0.8
-        version: 25.0.8(rollup@4.18.0)
+        specifier: ^26.0.1
+        version: 26.0.1(rollup@4.18.0)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.18.0)
@@ -289,7 +289,7 @@ importers:
         version: 13.4.0(react-dom@18.0.0)(react@18.2.0)
       '@testing-library/user-event':
         specifier: ^14.5.2
-        version: 14.5.2(@testing-library/dom@9.3.4)
+        version: 14.5.2(@testing-library/dom@10.1.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.2.79
@@ -392,7 +392,7 @@ importers:
         version: 13.4.0(react-dom@18.0.0)(react@18.2.0)
       '@testing-library/user-event':
         specifier: ^14.5.2
-        version: 14.5.2(@testing-library/dom@9.3.4)
+        version: 14.5.2(@testing-library/dom@10.1.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.2.79
@@ -4701,9 +4701,9 @@ packages:
       - supports-color
     dev: true
 
-  /@rollup/plugin-commonjs@25.0.8(rollup@4.18.0):
-    resolution: {integrity: sha512-ZEZWTK5n6Qde0to4vS9Mr5x/0UZoqCxPVR9KRUjU4kA2sO7GEUn1fop0DAwpO6z0Nw/kJON9bDmSxdWxO/TT1A==}
-    engines: {node: '>=14.0.0'}
+  /@rollup/plugin-commonjs@26.0.1(rollup@4.18.0):
+    resolution: {integrity: sha512-UnsKoZK6/aGIH6AdkptXhNvhaqftcjq3zZdT+LY5Ftms6JR06nADcDsYp5hTU9E2lbJUEOhdlY5J4DNTneM+jQ==}
+    engines: {node: '>=16.0.0 || 14 >= 14.17'}
     peerDependencies:
       rollup: ^4.18.0
     peerDependenciesMeta:
@@ -4713,7 +4713,7 @@ packages:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
       commondir: 1.0.1
       estree-walker: 2.0.2
-      glob: 8.1.0
+      glob: 10.4.1
       is-reference: 1.2.1
       magic-string: 0.30.10
       rollup: 4.18.0
@@ -5311,7 +5311,6 @@ packages:
       dom-accessibility-api: 0.5.16
       lz-string: 1.5.0
       pretty-format: 27.5.1
-    dev: false
 
   /@testing-library/dom@8.19.0:
     resolution: {integrity: sha512-6YWYPPpxG3e/xOo6HIWwB/58HukkwIVTOaZ0VwdMVjhRUX/01E4FtQbck9GazOOj7MXHc5RBzMrU86iBJHbI+A==}
@@ -5433,16 +5432,6 @@ packages:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@testing-library/dom': 10.1.0
-    dev: false
-
-  /@testing-library/user-event@14.5.2(@testing-library/dom@9.3.4):
-    resolution: {integrity: sha512-YAh82Wh4TIrxYLmfGcixwD18oIjyC1pFQC2Y01F2lzV2HTMiYrI0nze0FD0ocB//CKS/7jIUgae+adPqxK5yCQ==}
-    engines: {node: '>=12', npm: '>=6'}
-    peerDependencies:
-      '@testing-library/dom': '>=7.21.4'
-    dependencies:
-      '@testing-library/dom': 9.3.4
-    dev: true
 
   /@testing-library/vue@8.1.0(@vue/compiler-sfc@3.4.27)(vue@3.4.27):
     resolution: {integrity: sha512-ls4RiHO1ta4mxqqajWRh8158uFObVrrtAPoxk7cIp4HrnQUj/ScKzqz53HxYpG3X6Zb7H2v+0eTGLSoy8HQ2nA==}
@@ -6898,7 +6887,7 @@ packages:
       '@wdio/utils': 8.32.2
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
-      glob: 10.3.10
+      glob: 10.4.1
       import-meta-resolve: 4.0.0
     transitivePeerDependencies:
       - supports-color
