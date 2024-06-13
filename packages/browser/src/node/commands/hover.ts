@@ -3,24 +3,21 @@ import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 import type { UserEventCommand } from './utils'
 
-export const fill: UserEventCommand<UserEvent['fill']> = async (
+export const hover: UserEventCommand<UserEvent['hover']> = async (
   context,
   xpath,
-  text,
   options = {},
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const { frame } = context
-    const element = frame.locator(`xpath=${xpath}`)
-    await element.fill(text, options)
+    await context.frame.locator(`xpath=${xpath}`).hover(options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     const markedXpath = `//${xpath}`
     const element = await browser.$(markedXpath)
-    await element.setValue(text)
+    await element.moveTo(options)
   }
   else {
-    throw new TypeError(`Provider "${context.provider.name}" does not support clearing elements`)
+    throw new TypeError(`Provider "${context.provider.name}" does not support hover`)
   }
 }

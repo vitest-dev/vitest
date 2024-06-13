@@ -89,6 +89,22 @@ export interface UserEvent {
    */
   tab: (options?: UserEventTabOptions) => Promise<void>
   /**
+   * Hovers over an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-hover} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
+   */
+  hover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
+  /**
+   * Moves cursor position to the body element. Uses provider's API under the hood.
+   * By default, the cursor position is in the center (in webdriverio) or in some visible place (in playwright)
+   * of the body element, so if the current element is already there, this will have no effect.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-hover} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
+   */
+  unhover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
+  /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
    * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
@@ -100,22 +116,20 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/setValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
-  fill: (element: Element, text: string) => Promise<void>
+  fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
 }
 
-export interface UserEventClickOptions {
-  [key: string]: any
-}
+export interface UserEventFillOptions {}
+export interface UserEventHoverOptions {}
+export interface UserEventClickOptions {}
 
 export interface UserEventTabOptions {
   shift?: boolean
-  [key: string]: any
 }
 
 export interface UserEventTypeOptions {
   skipClick?: boolean
   skipAutoClose?: boolean
-  [key: string]: any
 }
 
 type Platform =

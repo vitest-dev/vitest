@@ -75,15 +75,23 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_clear', xpath)
   },
-  fill(element: Element, text: string) {
+  fill(element: Element, text: string, options) {
     const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_fill', xpath, text)
+    return triggerCommand('__vitest_fill', xpath, text, options)
   },
   tab(options: UserEventTabOptions = {}) {
     return triggerCommand('__vitest_tab', options)
   },
   keyboard(text: string) {
     return triggerCommand('__vitest_keyboard', text)
+  },
+  hover(element: Element) {
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_hover', xpath)
+  },
+  unhover(element: Element) {
+    const xpath = convertElementToXPath(element.ownerDocument.body)
+    return triggerCommand('__vitest_hover', xpath)
   },
 }
 
