@@ -8,7 +8,7 @@ import {
   removeFile,
   writeFile,
 } from './fs'
-import { sendKeys } from './keyboard'
+import { sendKeys } from './sendKeys'
 import { screenshot } from './screenshot'
 
 export default {
