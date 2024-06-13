@@ -1,8 +1,7 @@
 import type {
   BrowserContextOptions,
-  FrameLocator,
+  Frame,
   LaunchOptions,
-  Locator,
   Page,
 } from 'playwright'
 
@@ -17,7 +16,6 @@ declare module 'vitest/node' {
 
   export interface BrowserCommandContext {
     page: Page
-    tester: FrameLocator
-    body: Locator
+    frame: Frame
   }
 }

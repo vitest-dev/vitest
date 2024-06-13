@@ -9,8 +9,8 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
   text,
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const { tester } = context
-    const element = tester.locator(`xpath=${xpath}`)
+    const { frame } = context
+    const element = frame.locator(`xpath=${xpath}`)
     await element.fill(text)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {

@@ -3,6 +3,7 @@ import { type } from './type'
 import { clear } from './clear'
 import { fill } from './fill'
 import { tab } from './tab'
+import { keyboard } from './keyboard'
 import {
   readFile,
   removeFile,
@@ -22,4 +23,5 @@ export default {
   __vitest_clear: clear,
   __vitest_fill: fill,
   __vitest_tab: tab,
+  __vitest_keyboard: keyboard,
 }

@@ -10,7 +10,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.tester
+    const tester = context.frame
     await tester.locator(`xpath=${xpath}`).click(options)
     return
   }

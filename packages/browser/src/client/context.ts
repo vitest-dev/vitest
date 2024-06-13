@@ -78,6 +78,9 @@ export const userEvent: UserEvent = {
   tab(options: UserEventTabOptions = {}) {
     return triggerCommand('__vitest_tab', options)
   },
+  keyboard(text: string) {
+    return triggerCommand('__vitest_keyboard', text)
+  },
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}
