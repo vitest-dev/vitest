@@ -21,7 +21,12 @@ export const type: UserEventCommand<UserEvent['type']> = async (
 
       if (!releasePrevious) {
         for (let i = 1; i <= repeat; i++) {
-          await element.press(key)
+          if (key === 'selectall') {
+            await element.selectText()
+          }
+          else {
+            await element.press(key)
+          }
         }
       }
     }
@@ -41,6 +46,13 @@ export const type: UserEventCommand<UserEvent['type']> = async (
       const key = keyDef.key!
       const code = 'location' in keyDef ? keyDef.key! : keyDef.code!
       const special = Key[code as 'Shift']
+      if (code === 'Unknown' && key === 'selectall') {
+        const specialArray = ['selectall']
+        Object.assign(specialArray, { special: true })
+        acc.push(specialArray)
+        return acc
+      }
+
       if (special) {
         const specialArray = [special]
         Object.assign(specialArray, { special: true })
@@ -62,6 +74,16 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     }, [])
 
     for (const key of keys) {
+      if (key[0] === 'selectall') {
+        await browser.execute(() => {
+          const element = document.activeElement as HTMLInputElement
+          if (element) {
+            element.select()
+          }
+        })
+        continue
+      }
+
       await browser.keys(key.join(''))
     }
   }

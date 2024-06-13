@@ -73,4 +73,15 @@ describe('dom related activity', () => {
 
     expect(input.value).toBe('')
   })
+
+  test('selectall works correctly', async () => {
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.placeholder = 'Type here'
+    document.body.appendChild(input)
+    await userEvent.type(input, 'Hello World!')
+    await userEvent.type(input, '{selectall}')
+    await userEvent.type(input, '{backspace}')
+    expect(input.value).toBe('')
+  })
 })
