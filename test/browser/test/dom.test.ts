@@ -102,4 +102,19 @@ describe('dom related activity', () => {
 
     expect(document.activeElement).toBe(input1)
   })
+
+  test('standalone keyboard works correctly', async () => {
+    const pressed: string[] = []
+    document.addEventListener('keydown', (event) => {
+      pressed.push(event.key)
+    })
+    await userEvent.keyboard('Hello')
+    expect(pressed).toEqual([
+      'H',
+      'e',
+      'l',
+      'l',
+      'o',
+    ])
+  })
 })

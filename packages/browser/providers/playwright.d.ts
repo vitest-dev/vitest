@@ -1,4 +1,5 @@
 import type {
+  BrowserContext,
   BrowserContextOptions,
   Frame,
   LaunchOptions,
@@ -17,5 +18,6 @@ declare module 'vitest/node' {
   export interface BrowserCommandContext {
     page: Page
     frame: Frame
+    context: BrowserContext
   }
 }

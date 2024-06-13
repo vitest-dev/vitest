@@ -10,12 +10,21 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
   context,
   text,
 ) => {
+  function focusIframe() {
+    if (
+      !document.activeElement
+      || document.activeElement.ownerDocument !== document
+      || document.activeElement === document.body
+    ) {
+      window.focus()
+    }
+  }
+
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.focus('body')
+    await context.frame.evaluate(focusIframe)
   }
   else if (context.project instanceof WebdriverBrowserProvider) {
-    const body = await context.browser.$('body')
-    await body.click({ y: 0, x: 0 }) // TODO: use actual focus
+    await context.browser.execute(focusIframe)
   }
 
   await keyboardImplementation(
@@ -30,7 +39,7 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
         }
       }
       if (context.provider instanceof PlaywrightBrowserProvider) {
-        await context.page.evaluate(selectAll)
+        await context.frame.evaluate(selectAll)
       }
       else if (context.provider instanceof WebdriverBrowserProvider) {
         await context.browser.execute(selectAll)

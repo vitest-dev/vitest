@@ -59,6 +59,10 @@ function triggerCommand<T>(command: string, ...args: any[]) {
 }
 
 export const userEvent: UserEvent = {
+  // TODO: actually setup userEvent with config options
+  setup() {
+    return userEvent
+  },
   click(element: Element, options: UserEventClickOptions = {}) {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_click', xpath, options)

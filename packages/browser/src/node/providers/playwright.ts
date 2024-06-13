@@ -104,6 +104,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = this.getPage(contextId)
     return {
       page,
+      context: this.contexts.get(contextId)!,
       get frame() {
         return page.frame('vitest-iframe')!
       },
