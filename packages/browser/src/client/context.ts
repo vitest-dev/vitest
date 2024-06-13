@@ -1,5 +1,5 @@
 import type { Task, WorkerGlobalState } from 'vitest'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTypeOptions } from '../../context'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../context'
 import type { BrowserRPC } from './client'
 import type { BrowserRunnerState } from './utils'
 
@@ -74,6 +74,9 @@ export const userEvent: UserEvent = {
   fill(element: Element, text: string) {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_fill', xpath, text)
+  },
+  tab(options: UserEventTabOptions = {}) {
+    return triggerCommand('__vitest_tab', options)
   },
 }
 

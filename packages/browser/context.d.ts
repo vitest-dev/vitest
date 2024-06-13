@@ -84,6 +84,13 @@ export interface UserEvent {
    */
   clear: (element: Element) => Promise<void>
   /**
+   * Sends a `Tab` key event. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/keys} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#tab} testing-library API
+   */
+  tab: (options?: UserEventTabOptions) => Promise<void>
+  /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * This method **doesn't support** [user-uvent `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
    * Uses provider's API under the hood.
@@ -98,7 +105,13 @@ export interface UserEventClickOptions {
   [key: string]: any
 }
 
+export interface UserEventTabOptions {
+  shift?: boolean
+  [key: string]: any
+}
+
 export interface UserEventTypeOptions {
+  skipClick?: boolean
   [key: string]: any
 }
 

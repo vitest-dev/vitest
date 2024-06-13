@@ -84,4 +84,22 @@ describe('dom related activity', () => {
     await userEvent.type(input, '{backspace}')
     expect(input.value).toBe('')
   })
+
+  test('tab works correctly', async () => {
+    const input1 = document.createElement('input')
+    input1.type = 'text'
+    const input2 = document.createElement('input')
+    input2.type = 'text'
+    document.body.appendChild(input1)
+    document.body.appendChild(input2)
+
+    input1.focus()
+    await userEvent.tab()
+
+    expect(document.activeElement).toBe(input2)
+
+    await userEvent.tab({ shift: true })
+
+    expect(document.activeElement).toBe(input1)
+  })
 })
