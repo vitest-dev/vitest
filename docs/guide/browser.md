@@ -277,31 +277,6 @@ it('handles files', async () => {
 })
 ```
 
-### Keyboard Interactions
-
-Vitest also implements Web Test Runner's [`sendKeys` API](https://modern-web.dev/docs/test-runner/commands/#send-keys). It accepts an object with a single property:
-
-- `type` - types a sequence of characters, this API _is not_ affected by modifier keys, so having `Shift` won't make letters uppercase
-- `press` - presses a single key, this API _is_ affected by modifier keys, so having `Shift` will make subsequent characters uppercase
-- `up` - holds down a key (supported only with `playwright` provider)
-- `down` - releases a key (supported only with `playwright` provider)
-
-```ts
-interface TypePayload { type: string }
-interface PressPayload { press: string }
-interface DownPayload { down: string }
-interface UpPayload { up: string }
-
-type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
-
-declare function sendKeys(payload: SendKeysPayload): Promise<void>
-```
-
-This is just a simple wrapper around providers APIs. Please refer to their respective documentations for details:
-
-- [Playwright Keyboard API](https://playwright.dev/docs/api/class-keyboard)
-- [Webdriver Keyboard API](https://webdriver.io/docs/api/browser/keys/)
-
 ## Custom Commands
 
 You can also add your own commands via [`browser.commands`](/config/#browser-commands) config option. If you develop a library, you can provide them via a `config` hook inside a plugin:
@@ -371,6 +346,7 @@ Vitest exposes several `playwright` specific properties on the command context.
 
 - `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
 - `frame` is the tester [iframe instance](https://playwright.dev/docs/api/class-frame). It has a simillar API to the page, but it doesn't support certain methods.
+- `context` refers to the unique [BrowserContext](https://playwright.dev/docs/api/class-browsercontext).
 
 ```ts
 import { defineCommand } from '@vitest/browser'

@@ -19,25 +19,6 @@ export interface FsOptions {
   flag?: string | number
 }
 
-export interface TypePayload {
-  type: string
-}
-export interface PressPayload {
-  press: string
-}
-export interface DownPayload {
-  down: string
-}
-export interface UpPayload {
-  up: string
-}
-
-export type SendKeysPayload =
-  | TypePayload
-  | PressPayload
-  | DownPayload
-  | UpPayload
-
 export interface ScreenshotOptions {
   element?: Element
   /**
@@ -57,10 +38,10 @@ export interface BrowserCommands {
     options?: BufferEncoding | (FsOptions & { mode?: number | string })
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
-  sendKeys: (payload: SendKeysPayload) => Promise<void>
 }
 
 export interface UserEvent {
+  setup: () => UserEvent
   /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API

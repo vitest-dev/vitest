@@ -9,14 +9,12 @@ import {
   removeFile,
   writeFile,
 } from './fs'
-import { sendKeys } from './sendKeys'
 import { screenshot } from './screenshot'
 
 export default {
   readFile,
   removeFile,
   writeFile,
-  sendKeys,
   __vitest_click: click,
   __vitest_screenshot: screenshot,
   __vitest_type: type,
