@@ -68,9 +68,36 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
    */
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+  /**
+   * Types text into an element. Uses provider's API under the hood.
+   * Supports [user-event syntax](https://testing-library.com/docs/user-event/keyboard) even with `playwright` and `webdriverio` providers.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
+   */
+  type: (element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>
+  /**
+   * Removes all text from an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-clear} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
+   */
+  clear: (element: Element) => Promise<void>
+  /**
+   * Fills an input element with text. This will remove any existing text in the input before typing the new text.
+   * Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-fill} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/setValue} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
+   */
+  fill: (element: Element, text: string) => Promise<void>
 }
 
 export interface UserEventClickOptions {
+  [key: string]: any
+}
+
+export interface UserEventTypeOptions {
   [key: string]: any
 }
 

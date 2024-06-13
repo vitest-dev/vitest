@@ -81,17 +81,26 @@ export const server = {
   }
 }
 export const commands = server.commands
-export const userEvent = ${
-    provider.name === 'preview' ? '__vitest_user_event__' : '__userEvent_CDP__'
-  }
+export const userEvent = ${getUserEvent(provider)}
 export { page }
 `
 }
 
-async function getUserEventImport(
-  provider: BrowserProvider,
-  resolve: (id: string, importer: string) => Promise<null | { id: string }>,
-) {
+function getUserEvent(provider: BrowserProvider) {
+  if (provider.name !== 'preview') {
+    return '__userEvent_CDP__'
+  }
+  // TODO: have this in a separate file
+  return `{
+  ...__vitest_user_event__,
+  fill: async (element, text) => {
+    await __vitest_user_event__.clear(element)
+    await __vitest_user_event__.type(element, text)
+  }
+}`
+}
+
+async function getUserEventImport(provider: BrowserProvider, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
   if (provider.name !== 'preview') {
     return ''
   }
