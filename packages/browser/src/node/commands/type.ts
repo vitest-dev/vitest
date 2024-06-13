@@ -9,25 +9,51 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   context,
   xpath,
   text,
-  _options = {},
+  options = {},
 ) => {
+  const { skipClick = false, skipAutoClose = false } = options
+
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const { tester } = context
+    const { tester, page } = context
     const element = tester.locator(`xpath=${xpath}`)
     const actions = parseKeyDef(defaultKeyMap, text)
 
-    for (const { releasePrevious, repeat, keyDef } of actions) {
+    if (!skipClick) {
+      await element.focus()
+    }
+
+    const pressed = new Set<string>()
+
+    for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {
       const key = keyDef.key!
 
+      if (pressed.has(key)) {
+        await page.keyboard.up(key)
+        pressed.delete(key)
+      }
+
       if (!releasePrevious) {
-        for (let i = 1; i <= repeat; i++) {
-          if (key === 'selectall') {
-            await element.selectText()
-          }
-          else {
-            await element.press(key)
-          }
+        if (key === 'selectall') {
+          await element.selectText()
+          continue
         }
+
+        for (let i = 1; i <= repeat; i++) {
+          await page.keyboard.down(key)
+        }
+
+        if (releaseSelf) {
+          await page.keyboard.up(key)
+        }
+        else {
+          pressed.add(key)
+        }
+      }
+    }
+
+    if (!skipAutoClose) {
+      for (const key of pressed) {
+        await page.keyboard.up(key)
       }
     }
   }
@@ -38,7 +64,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     const element = await browser.$(markedXpath)
     const actions = parseKeyDef(defaultKeyMap, text)
 
-    if (!await element.isFocused()) {
+    if (!skipClick && !await element.isFocused()) {
       await element.click()
     }
 

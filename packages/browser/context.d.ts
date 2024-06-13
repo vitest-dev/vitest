@@ -112,6 +112,7 @@ export interface UserEventTabOptions {
 
 export interface UserEventTypeOptions {
   skipClick?: boolean
+  skipAutoClose?: boolean
   [key: string]: any
 }
 
