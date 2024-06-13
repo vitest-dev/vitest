@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { testStatus } from '~/composables/summary'
+import { taskTree } from '~/composables/explorer/tree'
 </script>
 
 <template>
@@ -9,31 +9,31 @@ import { testStatus } from '~/composables/summary'
         Pass
       </template>
       <template #body>
-        {{ testStatus.testsSuccess }}
+        {{ taskTree.summary.testsSuccess }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :class="{ 'text-red5': testStatus.testsFailed, 'op50': !testStatus.testsFailed }" data-testid="fail-entry">
+    <DashboardEntry :class="{ 'text-red5': taskTree.summary.testsFailed, 'op50': !taskTree.summary.testsFailed }" data-testid="fail-entry">
       <template #header>
         Fail
       </template>
       <template #body>
-        {{ testStatus.testsFailed }}
+        {{ taskTree.summary.testsFailed }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="testStatus.testsSkipped" op50 data-testid="skipped-entry">
+    <DashboardEntry v-if="taskTree.summary.testsSkipped" op50 data-testid="skipped-entry">
       <template #header>
         Skip
       </template>
       <template #body>
-        {{ testStatus.testsSkipped }}
+        {{ taskTree.summary.testsSkipped }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="testStatus.testsTodo" op50 data-testid="todo-entry">
+    <DashboardEntry v-if="taskTree.summary.testsTodo" op50 data-testid="todo-entry">
       <template #header>
         Todo
       </template>
       <template #body>
-        {{ testStatus.testsTodo }}
+        {{ taskTree.summary.testsTodo }}
       </template>
     </DashboardEntry>
     <DashboardEntry :tail="true" data-testid="total-entry">
@@ -41,7 +41,7 @@ import { testStatus } from '~/composables/summary'
         Total
       </template>
       <template #body>
-        {{ testStatus.totalTests }}
+        {{ taskTree.summary.totalTests }}
       </template>
     </DashboardEntry>
   </div>

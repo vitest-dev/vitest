@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { testStatus } from '~/composables/summary'
+import { taskTree } from '~/composables/explorer/tree'
 import { finished } from '~/composables/client/state'
 
 const { width } = useWindowSize()
 const classes = computed(() => {
   // if there are no files, then in progress and gray
-  if (testStatus.files === 0)
+  if (taskTree.summary.files === 0)
     return '!bg-gray-4 !dark:bg-gray-7 in-progress'
   else if (!finished.value)
     return 'in-progress'
@@ -17,19 +17,19 @@ const classes = computed(() => {
 // const failed = computed(() => testStatus.filesFailed)
 
 const widthPass = computed(() => {
-  const t = testStatus.files
-  return t > 0 ? (width.value * testStatus.filesSuccess / t) : 0
+  const t = taskTree.summary.files
+  return t > 0 ? (width.value * taskTree.summary.filesSuccess / t) : 0
 })
 const widthFailed = computed(() => {
-  const t = testStatus.files
-  return t > 0 ? (width.value * testStatus.filesFailed / t) : 0
+  const t = taskTree.summary.files
+  return t > 0 ? (width.value * taskTree.summary.filesFailed / t) : 0
 })
 const pending = computed(() => {
-  const t = testStatus.files
-  return t - testStatus.filesFailed - testStatus.filesSuccess
+  const t = taskTree.summary.files
+  return t - taskTree.summary.filesFailed - taskTree.summary.filesSuccess
 })
 const widthPending = computed(() => {
-  const t = testStatus.files
+  const t = taskTree.summary.files
   return t > 0 ? (width.value * pending.value / t) : 0
 })
 </script>

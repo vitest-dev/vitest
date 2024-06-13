@@ -1,7 +1,7 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Custom, Task, Test } from 'vitest'
 import { client, findById } from '~/composables/client'
-import { files } from '~/composables/client/state'
+import { uiFiles } from '~/composables/explorer/tree'
 
 type Nullable<T> = T | null | undefined
 type Arrayable<T> = T | Array<T>
@@ -50,7 +50,7 @@ const { pause, resume } = useRafFn(collect, { fpsLimit: 10, immediate: false })
 function collect() {
   const now = performance.now()
   const idMap = client.state.idMap
-  const filesMap = new Map(files.value.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
+  const filesMap = new Map(uiFiles.value.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
   const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
@@ -150,7 +150,7 @@ function collect() {
 export function endRun() {
   pause()
   collect()
-  testStatus.failedSnapshot = files.value && hasFailedSnapshot(files.value.map(f => findById(f.id)!))
+  testStatus.failedSnapshot = uiFiles.value && hasFailedSnapshot(uiFiles.value.map(f => findById(f.id)!))
   testStatus.failedSnapshotEnabled = true
 }
 

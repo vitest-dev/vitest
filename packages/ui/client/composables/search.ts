@@ -1,7 +1,10 @@
 import type { File, Task } from '@vitest/runner'
 import type { ComputedRef, Ref } from 'vue'
-import { caseInsensitiveMatch, isSuite } from '~/utils/task'
+import { caseInsensitiveMatch } from '~/utils/task'
 import { files, findById } from '~/composables/client'
+import { dirty, setDirty, uiEntries } from '~/composables/client/state'
+import type { UIEntry } from '~/composables/client/types'
+// import { UIEntry } from '~/composables/client/types'
 
 interface Filter {
   failed: boolean
@@ -16,7 +19,7 @@ const filter = reactive(<Filter>{
   success: false,
   skipped: false,
 })
-// don't remove this computed, reactive filter is not working inside computed filtered
+// don't remove these computed, reactive filter is not working inside computed filtered
 const failedFilter = computed(() => filter.failed)
 const successFilter = computed(() => filter.success)
 const skipFilter = computed(() => filter.skipped)
@@ -62,15 +65,45 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   }
 
   const filtered = computed(() => {
-    const useSearch = search.value.trim()
-    if (!useSearch && !failedFilter.value && !successFilter.value && !skipFilter.value)
-      return files.value
+    if (dirty.value === 0)
+      return []
 
-    return files.value.filter(task => matchTasks([findById(task.id) as Task], useSearch, {
+    const useSearch = search.value.trim()
+    if (!useSearch && !failedFilter.value && !successFilter.value && !skipFilter.value) {
+      const match = uiEntries.value.filter(entry => !('parentUI' in entry) || ('expanded' in entry && entry.expanded))
+      return uiEntries.value.filter(entry => match.includes(entry) || match.some(i => 'parentUI' in i && i.parentUI === entry.id))
+    }
+
+    const match = uiEntries.value
+      .filter(entry => 'parentUI' in entry && matchTask(findById(entry.id) as Task, useSearch, {
+        failed: failedFilter.value,
+        success: successFilter.value,
+        skipped: skipFilter.value,
+      }))
+
+    const result = uiEntries.value.filter((entry) => {
+      if (match.includes(entry))
+        return true
+
+      return match.some(i => 'parentUI' in i && i.parentUI === entry.id)
+
+      // todo: include parents in the children: rn only first level
+    })
+
+    let entry: UIEntry
+    for (let i = 0; i < result.length; i++) {
+      entry = result[i]
+      if ('expanded' in entry)
+        entry.expanded = true
+    }
+
+    return result
+
+    /*   return uiEntries.value.filter(task => matchTasks([findById(task.id) as Task], useSearch, {
       failed: failedFilter.value,
       success: successFilter.value,
       skipped: skipFilter.value,
-    }))
+    })) */
   })
 
   const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
@@ -87,6 +120,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filtered,
     filteredTests,
     searchResults,
+    setDirty,
   }
 }
 
@@ -106,35 +140,19 @@ function matchState(task: Task, filter: Filter) {
   return false
 }
 
-function matchTasks(tasks: Task[], search: string, filter: Filter) {
-  let result = false
+function matchTask(task: Task, search: string, filter: Filter) {
+  const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
 
-  for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i]
-
-    const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
-
-    // search and filter will apply together
-    if (match) {
-      if (filter.success || filter.failed || filter.skipped) {
-        if (matchState(task, filter)) {
-          result = true
-          break
-        }
-      }
-      else {
-        result = true
-        break
-      }
+  // search and filter will apply together
+  if (match) {
+    if (filter.success || filter.failed || filter.skipped) {
+      if (matchState(task, filter))
+        return true
     }
-
-    // walk whole task tree
-    if (isSuite(task) && task.tasks) {
-      result = matchTasks(task.tasks, search, filter)
-      if (result)
-        break
+    else {
+      return true
     }
   }
 
-  return result
+  return false
 }

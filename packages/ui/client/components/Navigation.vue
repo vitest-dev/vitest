@@ -13,10 +13,10 @@ import {
 } from '~/composables/navigation'
 import { client, findById, runFiles } from '~/composables/client'
 import { isDark, toggleDark } from '~/composables'
-import { files, isReport, runAll } from '~/composables/client'
+import { isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
-import { openedTreeItems } from '~/composables/navigation'
-import { testStatus } from '~/composables/summary'
+import { taskTree } from '~/composables/explorer/tree'
+import { allExpanded } from '~/composables/explorer/state'
 
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
@@ -46,34 +46,36 @@ async function onRunAll(files?: File[]) {
 }
 
 function collapseTests() {
-  openedTreeItems.value = []
+  allExpanded.value = false
+  // openedTreeItems.value = []
 }
 
 function expandTests() {
-  files.value.forEach(file => {
+  allExpanded.value = true
+  /*files.value.forEach(file => {
     if (!openedTreeItems.value.includes(file.id)) {
       openedTreeItems.value.push(file.id)
     }
-  })
+  })*/
 }
 </script>
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <TestExplorer border="r base" :on-item-click="onItemClick" @run="onRunAll" :nested="true">
-    <template #header="{ filteredTests }">
+  <Explorer border="r base" :on-item-click="onItemClick" @run="onRunAll" :nested="true">
+    <template #header="{ filteredFiles }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
         <IconButton
-          v-show="openedTreeItems.length > 0"
+          v-show="allExpanded"
           v-tooltip.bottom="'Collapse tests'"
           title="Collapse tests"
           icon="i-carbon:collapse-all"
           @click="collapseTests()"
         />
         <IconButton
-          v-show="openedTreeItems.length === 0"
+          v-show="!allExpanded"
           v-tooltip.bottom="'Expand tests'"
           title="Expand tests"
           icon="i-carbon:expand-all"
@@ -116,18 +118,18 @@ function expandTests() {
           @click="showCoverage()"
         />
         <IconButton
-          v-if="(testStatus.failedSnapshot && !isReport)"
+          v-if="(taskTree.summary.failedSnapshot && !isReport)"
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon:result-old"
-          :disabled="!testStatus.failedSnapshotEnabled"
-          @click="testStatus.failedSnapshotEnabled && updateSnapshot()"
+          :disabled="!taskTree.summary.failedSnapshotEnabled"
+          @click="taskTree.summary.failedSnapshotEnabled && updateSnapshot()"
         />
         <IconButton
           v-if="!isReport"
-          v-tooltip.bottom="filteredTests ? (filteredTests.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
-          :disabled="filteredTests?.length === 0"
+          v-tooltip.bottom="filteredFiles ? (filteredFiles.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
+          :disabled="filteredFiles?.length === 0"
           icon="i-carbon:play"
-          @click="onRunAll(filteredTests)"
+          @click="onRunAll(filteredFiles)"
         />
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"
@@ -136,5 +138,5 @@ function expandTests() {
         />
       </div>
     </template>
-  </TestExplorer>
+  </Explorer>
 </template>

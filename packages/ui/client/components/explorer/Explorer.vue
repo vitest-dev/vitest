@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import type { File, Task } from 'vitest'
 import { activeFileId } from '~/composables/params'
-import { testStatus } from '~/composables/summary'
-import { useSearch } from '~/composables/search'
+import { useSearch } from '~/composables/explorer/search'
+import { filteredFiles } from '~/composables/explorer/state'
 // @ts-expect-error missing types
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import { UIEntry, UIFile, UITask } from '~/composables/client/types'
 
 const { onItemClick } = defineProps<{
   onItemClick?: (task: Task) => void
@@ -28,19 +27,18 @@ const {
   isFilteredByStatus,
   filter,
   disableFilter,
-  filtered,
-  filteredTests,
+  uiEntries,
   disableClearSearch,
   clearSearch,
   clearFilter,
-  setDirty,
+  filesTotal,
 } = useSearch(searchBox)
 
 // todo: remove this and include custom component to filter tests
-const failed = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'fail').length : testStatus.filesFailed)
-const success = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'pass').length : testStatus.filesSuccess)
-const skipped = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.mode === 'skip' || task.mode === 'todo').length : testStatus.filesSkipped)
-const running = computed(() => isFiltered.value ? filteredTests.value.length - failed.value - success.value - skipped.value : testStatus.filesRunning)
+// const failed = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'fail').length : taskTree.summary.filesFailed)
+// const success = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'pass').length : taskTree.summary.filesSuccess)
+// const skipped = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.mode === 'skip' || task.mode === 'todo').length : taskTree.summary.filesSkipped)
+// const running = computed(() => isFiltered.value ? filteredTests.value.length - failed.value - success.value - skipped.value : taskTree.summary.filesRunning)
 
 const filterClass = ref<string>('grid-cols-2')
 const filterHeaderClass = ref<string>('grid-col-span-2')
@@ -48,48 +46,21 @@ const testExplorerRef = ref<HTMLInputElement | undefined>()
 
 useResizeObserver(testExplorerRef, (entries) => {
   const { width } = entries[0].contentRect
-  if (width < 300) {
+  if (width < 420) {
     filterClass.value = 'grid-cols-2'
     filterHeaderClass.value = 'grid-col-span-2'
   } else {
-    filterClass.value = 'grid-cols-3'
-    filterHeaderClass.value = 'grid-col-span-3'
+    filterClass.value = 'grid-cols-4'
+    filterHeaderClass.value = 'grid-col-span-4'
   }
 })
-
-const tasks = new Map<string, Record<string, UITask>>()
-
-async function handleResize(entry: UIEntry, expanded: boolean/*, taskId: string, height: number, expanded: boolean, fromChild: boolean*/) {
-  if ('expanded' in entry && entry.expanded !== expanded) {
-    entry.expanded = expanded
-    setDirty()
-  }
-  /*let fileTasks = tasks.get(file.id)
-  if (!fileTasks) {
-    fileTasks = {}
-    fileTasks[taskId] = {
-      expanded,
-      height,
-    }
-    tasks.set(file.id, fileTasks)
-  } else {
-    if (!fromChild) {
-      fileTasks[taskId].expanded = expanded
-    }
-    fileTasks[taskId].height = height
-  }*/
-
-  // file.height = fileTasks[taskId].expanded ? Object.values(fileTasks).map(t => t.height).reduce((a, b) => a + b, 28) : 28
-
-  // nextTick(() => (Object.assign(file, { changes: file.changes + 1 })))
-}
 </script>
 
 <template>
   <div ref="testExplorerRef" h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <slot name="header" :filtered-tests="isFiltered ? filteredTests : undefined" />
+        <slot name="header" :filtered-files="isFiltered ? filteredFiles : undefined" />
       </div>
       <div
         p="l3 y2 r2"
@@ -111,7 +82,7 @@ async function handleResize(entry: UIEntry, expanded: boolean/*, taskId: string,
           pl-1
           :op="search.length ? '100' : '50'"
           @keydown.esc="clearSearch(false)"
-          @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
+          @keydown.enter="emit('run', isFiltered ? filteredFiles : undefined)"
         >
         <IconButton
           v-tooltip.bottom="'Clear search'"
@@ -143,6 +114,7 @@ async function handleResize(entry: UIEntry, expanded: boolean/*, taskId: string,
         <FilterStatus label="Fail" v-model="filter.failed" />
         <FilterStatus label="Pass" v-model="filter.success" />
         <FilterStatus label="Skip" v-model="filter.skipped" />
+        <FilterStatus label="Only Tests" v-model="filter.onlyTests" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1>
@@ -150,23 +122,23 @@ async function handleResize(entry: UIEntry, expanded: boolean/*, taskId: string,
         <template #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
-              FAIL ({{ failed }})
+              FAIL ({{ filesTotal.failed }})
             </span>
             <span>/</span>
             <span text-yellow5>
-              RUNNING ({{ running }})
+              RUNNING ({{ filesTotal.running }})
             </span>
             <span text-green5>
-              PASS ({{ success }})
+              PASS ({{ filesTotal.success }})
             </span>
             <span>/</span>
             <span class="text-purple5:50">
-              SKIP ({{ skipped }})
+              SKIP ({{ filesTotal.skipped }})
             </span>
           </div>
         </template>
         <!-- empty-state -->
-        <template v-if="(isFiltered || isFilteredByStatus) && filtered.length === 0">
+        <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
           <div flex="~ col" items-center p="x4 y4" font-light>
             <div op30>
               No matched test
@@ -186,32 +158,29 @@ async function handleResize(entry: UIEntry, expanded: boolean/*, taskId: string,
           </div>
         </template>
         <template v-else>
-          <DynamicScroller
-            v-slot="{ item, active }"
+          <RecycleScroller
             page-mode
             key-field="id"
             :item-size="28"
-            :items="filtered"
+            :items="uiEntries"
           >
-            <DynamicScrollerItem
+<!--            <DynamicScrollerItem
               :item="item"
               :data-id="item.id"
               :active="active"
-            >
-              <TaskTree
-                :key="item.id"
-                nested
+            >-->
+            <template #default="{ item }">
+              <ExplorerItem
                 :task-id="item.id"
                 :entry="item"
                 :search="search"
-                :opened="isFiltered"
+                class="h-28px m-0 p-0"
                 :class="activeFileId === item.id ? 'bg-active' : ''"
                 :on-item-click="onItemClick"
-                :on-expanded="() => handleResize(item, true/*, id, h, true, fromChild*/)"
-                :on-collapsed="() => handleResize(item, false/*, id, h, false, fromChild*/)"
               />
-            </DynamicScrollerItem>
-          </DynamicScroller>
+            </template>
+<!--            </DynamicScrollerItem>-->
+          </RecycleScroller>
         </template>
       </DetailsPanel>
     </div>

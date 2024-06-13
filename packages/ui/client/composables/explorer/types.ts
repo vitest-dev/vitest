@@ -1,28 +1,32 @@
 import type { RunMode, TaskState } from '@vitest/runner'
 
-export interface UIEntry {
+export interface UITest {
   id: string
   name: string
   mode: RunMode
   state?: TaskState
   duration?: number
+  indent: number
+  expandable: boolean
+  expanded: boolean
 }
 
-export interface UIFile extends UIEntry {
+export interface UISuite extends UITest {
+  tasks: UITest[]
+}
+
+export interface UIFile extends UISuite {
   filepath: string
   projectName: string
   collectDuration?: number
   setupDuration?: number
   environmentLoad?: number
   prepareDuration?: number
-  expanded: boolean
 }
 
-export interface UITest extends UIEntry {
-  parentUI: string
-}
-
-export interface UISuite extends UITest {
-  parentUI: string
-  expanded: boolean
+export interface Filter {
+  failed: boolean
+  success: boolean
+  skipped: boolean
+  onlyTests: boolean
 }

@@ -8,9 +8,8 @@ import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
-import { files, testRunState, unhandledErrors } from './state'
-import type { UIFile } from '~/composables/client/types'
-import { endRun, resumeRun, startRun } from '~/composables/summary'
+import { files, /* prepareUIEntries, */testRunState, unhandledErrors } from './state'
+import { taskTree, uiFiles } from '~/composables/explorer/tree'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
@@ -32,14 +31,14 @@ export const client = (function createVitestClient() {
           console.log('onTaskUpdate')
           if (testRunState.value === 'idle' && !onTaskUpdateCalled) {
             onTaskUpdateCalled = true
-            resumeRun()
+            taskTree.resumeRun()
           }
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
           // eslint-disable-next-line no-console
           console.log('onFinished', _files?.length, errors?.length)
-          endRun()
+          taskTree.endRun()
           testRunState.value = 'idle'
           onTaskUpdateCalled = false
           unhandledErrors.value = (errors || []).map(parseError)
@@ -60,7 +59,7 @@ export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
-  const entry = files.value.find(file => file.id === currentFileId)!
+  const entry = uiFiles.value.find(file => file.id === currentFileId)!
   return entry ? findById(entry.id) : undefined
 })
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
@@ -82,7 +81,7 @@ function clearResults(useFiles: File[]) {
   // todo: do we need to reflect server result?
   // if so, we need to add a new filtered flag to the ui file and reset it properly
   // we will need to change collect logic in summary.ts
-  const map = new Map(files.value.map(i => [i.id, i]))
+  const map = new Map(uiFiles.value.map(i => [i.id, i]))
   useFiles.forEach((f) => {
     delete f.result
     getTasks(f).forEach(i => delete i.result)
@@ -98,7 +97,7 @@ function clearResults(useFiles: File[]) {
 export function runFiles(useFiles: File[]/* , fromAll = false */) {
   clearResults(useFiles)
 
-  startRun()
+  taskTree.startRun()
 
   return client.rpc.rerun(useFiles.map(i => i.filepath))
 }
@@ -132,21 +131,15 @@ watch(
         client.state.collectFiles(files)
       }
       else {
-        files.value = remoteFiles.map<UIFile>(file => ({
-          id: file.id,
-          name: file.name,
-          mode: file.mode,
-          state: file.result?.state,
-          filepath: file.filepath,
-          projectName: file.projectName || '',
-          collectDuration: file.collectDuration,
-          setupDuration: file.setupDuration,
-        })).sort((a, b) => {
-          return a.name.localeCompare(b.name)
-        })
+        taskTree.loadFiles(remoteFiles)
         client.state.collectFiles(remoteFiles)
-        // must be after collectFiles
-        startRun()
+        taskTree.startRun()
+        /* prepareUIEntries(remoteFiles, () => {
+          client.state.collectFiles(remoteFiles)
+          console.log(client.state.idMap)
+          // must be called after collectFiles
+          startRun()
+        }) */
       }
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config

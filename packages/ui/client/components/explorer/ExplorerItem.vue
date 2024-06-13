@@ -5,26 +5,22 @@ import { runFiles, client } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { openedTreeItems, coverageEnabled } from '~/composables/navigation'
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import { useSearchTasks } from '~/composables/search'
-import { UIEntry } from '~/composables/client/types'
-
-defineOptions({ inheritAttrs: false })
+import {taskTree, UITaskTreeNode} from '~/composables/explorer/tree'
+// import { useSearchTasks } from '~/composables/search'
+// import {UISuite, UITest} from '~/composables/explorer/types'
+// import { collapseUIEntry, expandUIEntry } from '~/composables/explorer'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
   taskId,
-  indent = 0,
-  nested = false,
+  entry,
   search,
-  opened = false,
   onItemClick,
   onExpanded,
   onCollapsed,
 } = defineProps<{
   taskId: string
-  indent?: number
-  opened?: boolean
-  nested?: boolean
+  entry: UITaskTreeNode
   search?: string
   onItemClick?: (task: Task) => void
   onExpanded?: () => void
@@ -33,15 +29,44 @@ const {
   // onCollapsed?: (id: string, height: number, fromChild: boolean) => void
 }>()
 
-const task = computed(() => client.state.idMap.get(taskId)!)
-const { filteredTasks } = useSearchTasks(task)
+console.log(`${entry.id} [${taskId}]: ${entry.expandable}`)
 
-const isOpened = computed(() => opened || openedTreeItems.value.includes(taskId))
+// defineOptions({ inheritAttrs: false })
+
+const task = computed(() => client.state.idMap.get(taskId)!)
+// const { filteredTasks } = useSearchTasks(task)
+
+const isOpened = computed(() => {
+  const expandable = entry.expandable
+  const expanded = entry.expanded
+  // openedTreeItems logic will be moved to tree composable
+  return expandable && expanded// || openedTreeItems.value.includes(taskId)
+})
+const hasChildren = computed(() => {
+  if (!entry.expandable)
+    return false
+
+  if (!entry.expanded)
+    return false
+
+  return 'tasks' in entry && entry.tasks.length
+})
 const failedSnapshot = computed(() => hasFailedSnapshot(task.value))
-const height = computed(() => isOpened.value ? 28 * (filteredTasks.value.length + 1) : 28)
+// const height = computed(() => isOpened.value ? 28 * (filteredTasks.value.length + 1) : 28)
 
 function toggleOpen() {
-  if (isOpened.value) {
+  if (!entry.expandable)
+    return
+
+  console.log(`toggleOpen[${taskId}]`, isOpened.value, entry.expanded)
+  taskTree.toggleExpand(taskId)
+  // if (entry.expanded) {
+  //   collapseUIEntry(entry as UISuite, false)
+  // } else {
+  //   expandUIEntry(entry.indent, entry as UISuite, false)
+  // }
+  // recalculateUITreeExplorer()
+  /*if (isOpened.value) {
     const tasksIds = filteredTasks.value.map(t => t.id)
     openedTreeItems.value = openedTreeItems.value.filter(id => id !== taskId && !tasksIds.includes(id))
     nextTick(() => {
@@ -52,7 +77,7 @@ function toggleOpen() {
     nextTick(() => {
       onExpanded?.()
     })
-  }
+  }*/
 }
 
 /*
@@ -72,7 +97,7 @@ function onChildCollapsed(id: string) {
 */
 
 async function onRun() {
-  onItemClick?.(task.value)
+  onItemClick?.(client.state.idMap.get(taskId)!)
   if (coverageEnabled.value) {
     disableCoverage.value = true
     await nextTick()
@@ -81,10 +106,18 @@ async function onRun() {
 }
 
 function updateSnapshot() {
-  return client.rpc.updateSnapshot(task.value)
+  return client.rpc.updateSnapshot(client.state.idMap.get(taskId)?.file)
 }
 
-const containerRef = ref<HTMLDivElement | undefined>()
+const styles = computed(() => {
+  if (entry.indent === 0)
+    return null
+
+  return {
+    paddingLeft: entry.indent ? `${entry.indent * 0.75 + (task.value.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }
+})
+
+/*const containerRef = ref<HTMLDivElement | undefined>()
 const bottom = ref<number>(0)
 
 useResizeObserver(containerRef, (entries) => {
@@ -92,25 +125,23 @@ useResizeObserver(containerRef, (entries) => {
   if (isOpened.value) {
     bottom.value = height
   }
-})
+})*/
 </script>
 
 <template>
-  <div :style="{ paddingLeft: indent ? `${indent * 0.75 + (task.type === 'suite' ? 0.50 : 1.75)}rem` : '1rem' }">
+  <div :style="styles">
     <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
     <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
     <TaskItem
-      v-if="opened || !nested || !search || caseInsensitiveMatch(task.name, search)"
-      v-bind="$attrs"
-      :task-id="task.id"
-      :opened="isOpened && task.type === 'suite' && task.tasks.length"
+      :task-id="taskId"
+      :opened="entry.expandable && entry.expanded"
       :failed-snapshot="failedSnapshot"
       @click="toggleOpen()"
       @run="onRun()"
       @fix-snapshot="updateSnapshot()"
       @preview="onItemClick?.(task)"
     />
-    <div
+<!--    <div
       v-if="nested && task.type === 'suite' && task.tasks.length"
       v-show="isOpened"
       flex
@@ -118,24 +149,10 @@ useResizeObserver(containerRef, (entries) => {
     >
       <div
         v-if="isOpened"
-        flex mt--3px ml-15px justify-center
+        flex mt&#45;&#45;3px ml-15px justify-center
       >
         <div w-1px border="x base" mb-9></div>
       </div>
-<!--      <div>
-        <TaskTree
-          v-for="suite in filteredTasks"
-          :key="suite.id"
-          :failed-snapshot="false"
-          :task-id="suite.id"
-          :nested="nested"
-          :indent="indent + 1"
-          :search="search"
-          :on-item-click="onItemClick"
-          :on-collapsed="onChildCollapsed"
-          :on-expanded="onChildExpanded"
-        />
-      </div>-->
-    </div>
+    </div>-->
   </div>
 </template>
