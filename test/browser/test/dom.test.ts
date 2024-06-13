@@ -117,4 +117,13 @@ describe('dom related activity', () => {
       'o',
     ])
   })
+
+  test('standalone keyboard work correctly with focused input', async () => {
+    const input = document.createElement('input')
+    input.type = 'text'
+    document.body.appendChild(input)
+    input.focus()
+    await userEvent.keyboard('Hello')
+    expect(input.value).toBe('Hello')
+  })
 })
