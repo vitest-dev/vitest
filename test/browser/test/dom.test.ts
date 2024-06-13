@@ -22,7 +22,7 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(/__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/)
   })
 
-  test.only('types into an input', async () => {
+  test('types into an input', async () => {
     const input = document.createElement('input')
     input.type = 'text'
     input.placeholder = 'Type here'
