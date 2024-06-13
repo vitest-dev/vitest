@@ -370,15 +370,14 @@ Custom functions will override built-in ones if they have the same name.
 Vitest exposes several `playwright` specific properties on the command context.
 
 - `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
-- `tester` is the iframe locator. The API is pretty limited here, but you can chain it further to access your HTML elements.
-- `body` is the iframe's `body` locator that exposes more Playwright APIs.
+- `frame` is the tester [iframe instance](https://playwright.dev/docs/api/class-frame). It has a simillar API to the page, but it doesn't support certain methods.
 
 ```ts
 import { defineCommand } from '@vitest/browser'
 
 export const myCommand = defineCommand(async (ctx, arg1, arg2) => {
   if (ctx.provider.name === 'playwright') {
-    const element = await ctx.tester.findByRole('alert')
+    const element = await ctx.frame.findByRole('alert')
     const screenshot = await element.screenshot()
     // do something with the screenshot
     return difference
