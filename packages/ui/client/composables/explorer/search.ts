@@ -110,10 +110,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   }
 }
 
-export function recalculateUITreeExplorer() {
-  // uiEntries.value = taskTree.collectTaskList()
-}
-
 function matchState(task: Task) {
   if (successFilter.value || failedFilter.value) {
     if ('result' in task) {
