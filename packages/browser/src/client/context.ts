@@ -67,6 +67,16 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_click', xpath, options)
   },
+  dblClick(element: Element, options: UserEventClickOptions = {}) {
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_dblClick', xpath, options)
+  },
+  selectOptions(element, value) {
+    const values = (Array.isArray(value) ? value : [value]).map(
+      v => typeof v === 'string' ? v : { element: convertElementToXPath(v) },
+    )
+    return triggerCommand('__vitest_selectOptions', convertElementToXPath(element), values)
+  },
   type(element: Element, text: string, options: UserEventTypeOptions = {}) {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_type', xpath, text, options)
@@ -74,10 +84,6 @@ export const userEvent: UserEvent = {
   clear(element: Element) {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_clear', xpath)
-  },
-  fill(element: Element, text: string, options) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_fill', xpath, text, options)
   },
   tab(options: UserEventTabOptions = {}) {
     return triggerCommand('__vitest_tab', options)
@@ -93,6 +99,13 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element.ownerDocument.body)
     return triggerCommand('__vitest_hover', xpath)
   },
+
+  // non userEvent events, but still useful
+  fill(element: Element, text: string, options) {
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_fill', xpath, text, options)
+  },
+  // TODO: add dragTo
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}

@@ -66,6 +66,9 @@ export async function keyboardImplementation(
     for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {
       const key = keyDef.key!
 
+      // TODO: instead of calling down/up for each key, join non special
+      // together, and call `type` once for all non special keys,
+      // and then `press` for special keys
       if (pressed.has(key)) {
         await page.keyboard.up(key)
         pressed.delete(key)

@@ -49,6 +49,12 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
    */
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+  dblClick: (element: Element, options?: UserEventClickOptions) => Promise<void>
+  selectOptions: (
+    element: Element,
+    values: HTMLElement | HTMLElement[] | string | string[],
+    options?: UserEventSelectOptions,
+  ) => Promise<void>
   /**
    * Type text on the keyboard. If any input is focused, it will receive the text,
    * otherwise it will be typed on the document. Uses provider's API under the hood.
@@ -121,6 +127,7 @@ export interface UserEvent {
 
 export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
+export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
 
 export interface UserEventTabOptions {
