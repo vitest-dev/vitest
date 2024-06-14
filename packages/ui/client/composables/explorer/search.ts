@@ -10,6 +10,7 @@ import {
   search,
   skipFilter,
   successFilter,
+  testsTotal,
 } from './state'
 import type { TreeTaskFilter } from '~/composables/explorer/tree'
 import { taskTree, uiEntries } from '~/composables/explorer/tree'
@@ -24,32 +25,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     return !filter.onlyTests
   })
   const disableClearSearch = computed(() => search.value === '')
-
-  const filesTotal = computed<
-    { failed: number; success: number; skipped: number; running: number }
-  >(() => {
-    if (isFiltered.value) {
-      const data = filteredFiles.value.reduce((acc, task) => {
-        if (task.result?.state === 'fail')
-          acc.failed++
-        else if (task.result?.state === 'pass')
-          acc.success++
-        else if (task.mode === 'skip' || task.mode === 'todo')
-          acc.skipped++
-
-        return acc
-      }, { failed: 0, success: 0, skipped: 0, running: 0 })
-      data.running = filteredFiles.value.length - data.failed - data.success - data.skipped
-      return data
-    }
-
-    return {
-      failed: taskTree.summary.filesFailed,
-      success: taskTree.summary.filesSuccess,
-      skipped: taskTree.summary.filesSkipped,
-      running: taskTree.summary.filesRunning,
-    }
-  })
 
   const debouncedSearch = ref(search.value)
 
@@ -105,7 +80,8 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     disableClearSearch,
     clearSearch,
     clearFilter,
-    filesTotal: readonly(filesTotal),
+    filteredFiles,
+    testsTotal,
     uiEntries,
   }
 }

@@ -2,7 +2,6 @@
 import type { File, Task } from 'vitest'
 import { activeFileId } from '~/composables/params'
 import { useSearch } from '~/composables/explorer/search'
-import { filteredFiles } from '~/composables/explorer/state'
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
 
@@ -22,16 +21,17 @@ const emit = defineEmits<{
 const searchBox = ref<HTMLInputElement | undefined>()
 
 const {
+  filter,
   search,
+  disableFilter,
   isFiltered,
   isFilteredByStatus,
-  filter,
-  disableFilter,
-  uiEntries,
   disableClearSearch,
   clearSearch,
   clearFilter,
-  filesTotal,
+  filteredFiles,
+  testsTotal,
+  uiEntries,
 } = useSearch(searchBox)
 
 // todo: remove this and include custom component to filter tests
@@ -60,7 +60,7 @@ useResizeObserver(testExplorerRef, (entries) => {
   <div ref="testExplorerRef" h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <slot name="header" :filtered-files="isFiltered ? filteredFiles : undefined" />
+        <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
       </div>
       <div
         p="l3 y2 r2"
@@ -82,7 +82,7 @@ useResizeObserver(testExplorerRef, (entries) => {
           pl-1
           :op="search.length ? '100' : '50'"
           @keydown.esc="clearSearch(false)"
-          @keydown.enter="emit('run', isFiltered ? filteredFiles : undefined)"
+          @keydown.enter="emit('run', isFiltered || isFilteredByStatus ? filteredFiles : undefined)"
         >
         <IconButton
           v-tooltip.bottom="'Clear search'"
@@ -122,18 +122,18 @@ useResizeObserver(testExplorerRef, (entries) => {
         <template #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
-              FAIL ({{ filesTotal.failed }})
+              FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
             <span text-yellow5>
-              RUNNING ({{ filesTotal.running }})
+              RUNNING ({{ testsTotal.running }})
             </span>
             <span text-green5>
-              PASS ({{ filesTotal.success }})
+              PASS ({{ testsTotal.success }})
             </span>
             <span>/</span>
             <span class="text-purple5:50">
-              SKIP ({{ filesTotal.skipped }})
+              SKIP ({{ filter.onlyTests ? testsTotal.skipped: '--' }})
             </span>
           </div>
         </template>

@@ -1,5 +1,7 @@
 import type { File } from '@vitest/runner'
 import type { Filter } from './types'
+import type { FilteredTests } from '~/composables/explorer/tree'
+import { taskTree } from '~/composables/explorer/tree'
 
 export const search = ref<string>('')
 export const allExpanded = ref<boolean>(false)
@@ -26,4 +28,25 @@ export const isFilteredByStatus = computed(() => {
 
   return false
 })
-export const filteredFiles = ref<File[]>([])
+export const filteredFiles = shallowRef<File[]>([])
+export const testsTotal = computed<FilteredTests>(() => {
+  const filtered = isFiltered.value
+  const filteredByStatus = isFilteredByStatus.value
+  const onlyTests = filter.onlyTests
+  const failed = taskTree.summary.filesFailed
+  const success = taskTree.summary.filesSuccess
+  const skipped = taskTree.summary.filesSkipped
+  const running = taskTree.summary.filesRunning
+  const files = filteredFiles.value
+  return taskTree.collectTestsTotal(
+    filtered || filteredByStatus,
+    onlyTests,
+    files,
+    {
+      failed,
+      success,
+      skipped,
+      running,
+    },
+  )
+})

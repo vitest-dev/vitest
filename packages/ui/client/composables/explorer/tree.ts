@@ -1,33 +1,12 @@
 import type { Custom, File, RunMode, Task, TaskState, Test } from '@vitest/runner'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
-import { allExpanded, filteredFiles } from '~/composables/explorer/state'
+import { allExpanded, filter, filteredFiles } from '~/composables/explorer/state'
 
 export const uiFiles = shallowRef<FileTreeNode[]>([])
 export const uiEntries = shallowRef<UITaskTreeNode[]>([])
-/*
-export function prepareUIEntries(remoteFiles: File[], cb: () => void) {
-  uiFiles.value = remoteFiles.map<UIFile>(file => ({
-    id: file.id,
-    name: file.name,
-    mode: file.mode,
-    state: file.result?.state,
-    filepath: file.filepath,
-    projectName: file.projectName || '',
-    collectDuration: file.collectDuration,
-    setupDuration: file.setupDuration,
-    expandable: true,
-    expanded: false,
-    tasks: [],
-    indent: 0,
-  })).sort((a, b) => {
-    return a.name.localeCompare(b.name)
-  })
-  cb()
-  uiEntries.value = [...uiFiles.value]
-}
-*/
-export type TreeTaskMatcher = (node: UITaskTreeNode) => boolean
+
+export type TreeTaskMatcher = (node: UITaskTreeNode | Custom | Test) => boolean
 
 export interface TreeTaskFilter {
   /**
@@ -38,6 +17,19 @@ export interface TreeTaskFilter {
    */
   showOnlyTests?: boolean
   matcher?: TreeTaskMatcher
+}
+
+export interface FilteredTests {
+  failed: number
+  success: number
+  skipped: number
+  running: number
+}
+
+export interface CollectFilteredTests extends FilteredTests {
+  total: number
+  ignored: number
+  todo: number
 }
 
 export interface TaskTreeNode {
@@ -242,6 +234,22 @@ class TaskTree {
         data.filesRunning++
       }
 
+      const {
+        failed,
+        success,
+        skipped,
+        total,
+        ignored,
+        todo,
+      } = this.collectTests(f)
+
+      data.totalTests += total
+      data.testsFailed += failed
+      data.testsSuccess += success
+      data.testsSkipped += skipped
+      data.testsTodo += todo
+      data.testsIgnore += ignored
+      /*
       const tests = getTests(f)
 
       data.totalTests += tests.length
@@ -261,7 +269,7 @@ class TaskTree {
           data.testsIgnore++
           data.testsTodo++
         }
-      }
+      } */
     }
 
     this.summary.files = data.files
@@ -532,6 +540,97 @@ class TaskTree {
   private filteredFiles(entries = uiEntries.value) {
     const files = new Set([...this.filterFiles(entries)])
     return Array.from(files)
+  }
+
+  private collectTests(file: File, filter?: TreeTaskFilter) {
+    const data = {
+      failed: 0,
+      success: 0,
+      skipped: 0,
+      running: 0,
+      total: 0,
+      ignored: 0,
+      todo: 0,
+    } satisfies CollectFilteredTests
+    const tests = getTests(file)
+    const matcher = filter?.matcher
+
+    for (const t of tests) {
+      if (!matcher || matcher(t)) {
+        data.total++
+        if (t.result?.state === 'fail') {
+          data.failed++
+        }
+        else if (t.result?.state === 'pass') {
+          data.success++
+        }
+        else if (t.mode === 'skip') {
+          data.ignored++
+          data.skipped++
+        }
+        else if (t.mode === 'todo') {
+          data.ignored++
+          data.todo++
+        }
+      }
+    }
+
+    data.running = data.total - data.failed - data.success - data.ignored
+
+    return data
+  }
+
+  collectTestsTotal(
+    filtered: boolean,
+    onlyTests: boolean,
+    tests: File[],
+    filesSummary: FilteredTests,
+  ) {
+    if (onlyTests) {
+      const useFilter = this.filter
+      return tests
+        .map(file => this.collectTests(file, useFilter))
+        .reduce((acc, {
+          failed,
+          success,
+          ignored,
+          total,
+        }) => {
+          acc.failed += failed
+          acc.success += success
+          acc.skipped += ignored
+          acc.running += total - failed - success - ignored
+          return acc
+        }, { failed: 0, success: 0, skipped: 0, running: 0 })
+    }
+    else if (filtered) {
+      const data = {
+        failed: 0,
+        success: 0,
+        skipped: 0,
+        running: 0,
+      } satisfies FilteredTests
+      // will match when the filter entry is active or none filter is active (skipped excluded)
+      // for example: we should update all when the filter is empty
+      // but shouldn't update failed if we're filtering by pass
+      const match = !filter.success && !filter.failed
+      const applyFailed = filter.failed || match
+      const applySuccess = filter.success || match
+      for (const f of tests) {
+        if (f.result?.state === 'fail')
+          data.failed += applyFailed ? 1 : 0
+        else if (f.result?.state === 'pass')
+          data.success += applySuccess ? 1 : 0
+        // else if (f.mode === 'skip' || f.mode === 'todo')
+        //   data.skipped += filter.skipped ? 1 : (match ? 1 : 0)
+        else
+          data.running++
+      }
+
+      return data
+    }
+
+    return filesSummary
   }
 
   buildNavigationEntries(expandAll: boolean, filter?: TreeTaskFilter) {
