@@ -612,19 +612,23 @@ class TaskTree {
       } satisfies FilteredTests
       // will match when the filter entry is active or none filter is active (skipped excluded)
       // for example: we should update all when the filter is empty
-      // but shouldn't update failed if we're filtering by pass
+      // but shouldn't update failed if we're filtering by success
       const match = !filter.success && !filter.failed
       const applyFailed = filter.failed || match
       const applySuccess = filter.success || match
       for (const f of tests) {
-        if (f.result?.state === 'fail')
+        if (f.result?.state === 'fail') {
           data.failed += applyFailed ? 1 : 0
-        else if (f.result?.state === 'pass')
+        }
+        else if (f.result?.state === 'pass') {
           data.success += applySuccess ? 1 : 0
-        // else if (f.mode === 'skip' || f.mode === 'todo')
-        //   data.skipped += filter.skipped ? 1 : (match ? 1 : 0)
-        else
+        }
+        else if (f.mode === 'skip' || f.mode === 'todo') {
+          // just ignore
+        }
+        else {
           data.running++
+        }
       }
 
       return data
