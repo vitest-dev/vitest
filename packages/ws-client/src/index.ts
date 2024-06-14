@@ -84,16 +84,17 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: e => stringify(e, (_, v) => {
-      if (v instanceof Error) {
-        return {
-          name: v.name,
-          message: v.message,
-          stack: v.stack,
+    serialize: e =>
+      stringify(e, (_, v) => {
+        if (v instanceof Error) {
+          return {
+            name: v.name,
+            message: v.message,
+            stack: v.stack,
+          }
         }
-      }
-      return v
-    }),
+        return v
+      }),
     deserialize: parse,
     onTimeoutError(functionName) {
       throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
@@ -108,8 +109,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   let openPromise: Promise<void>
 
   function reconnect(reset = false) {
-    if (reset)
+    if (reset) {
       tries = reconnectTries
+    }
     ctx.ws = new WebSocketConstructor(url)
     registerWS()
   }
@@ -117,10 +119,15 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   function registerWS() {
     openPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Cannot connect to the server in ${connectTimeout / 1000} seconds`))
+        reject(
+          new Error(
+            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
+          ),
+        )
       }, connectTimeout)?.unref?.()
-      if (ctx.ws.OPEN === ctx.ws.readyState)
+      if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
+      }
       // still have a listener even if it's already open to update tries
       ctx.ws.addEventListener('open', () => {
         tries = reconnectTries
@@ -133,8 +140,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0)
+      if (autoReconnect && tries > 0) {
         setTimeout(reconnect, reconnectInterval)
+      }
     })
   }
 

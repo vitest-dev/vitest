@@ -14,9 +14,16 @@ function getNewLineSymbol(string: string) {
   return string.includes('\r\n') ? '\r\n' : '\n'
 }
 
-function diffStrings(a: string, b: string, options?: DiffOptions): [Array<Diff>, boolean] {
+function diffStrings(
+  a: string,
+  b: string,
+  options?: DiffOptions,
+): [Array<Diff>, boolean] {
   const truncate = options?.truncateThreshold ?? false
-  const truncateThreshold = Math.max(Math.floor(options?.truncateThreshold ?? 0), 0)
+  const truncateThreshold = Math.max(
+    Math.floor(options?.truncateThreshold ?? 0),
+    0,
+  )
   let aLength = a.length
   let bLength = b.length
   if (truncate) {
@@ -25,8 +32,12 @@ function diffStrings(a: string, b: string, options?: DiffOptions): [Array<Diff>,
     const aNewLineSymbol = getNewLineSymbol(a)
     const bNewLineSymbol = getNewLineSymbol(b)
     // multiple-lines string expects a newline to be appended at the end
-    const _a = aMultipleLines ? `${a.split(aNewLineSymbol, truncateThreshold).join(aNewLineSymbol)}\n` : a
-    const _b = bMultipleLines ? `${b.split(bNewLineSymbol, truncateThreshold).join(bNewLineSymbol)}\n` : b
+    const _a = aMultipleLines
+      ? `${a.split(aNewLineSymbol, truncateThreshold).join(aNewLineSymbol)}\n`
+      : a
+    const _b = bMultipleLines
+      ? `${b.split(bNewLineSymbol, truncateThreshold).join(bNewLineSymbol)}\n`
+      : b
     aLength = _a.length
     bLength = _b.length
   }
@@ -43,11 +54,13 @@ function diffStrings(a: string, b: string, options?: DiffOptions): [Array<Diff>,
     aCommon: number,
     bCommon: number,
   ) => {
-    if (aIndex !== aCommon)
+    if (aIndex !== aCommon) {
       diffs.push(new Diff(DIFF_DELETE, a.slice(aIndex, aCommon)))
+    }
 
-    if (bIndex !== bCommon)
+    if (bIndex !== bCommon) {
       diffs.push(new Diff(DIFF_INSERT, b.slice(bIndex, bCommon)))
+    }
 
     aIndex = aCommon + nCommon // number of characters compared in a
     bIndex = bCommon + nCommon // number of characters compared in b
@@ -60,11 +73,13 @@ function diffStrings(a: string, b: string, options?: DiffOptions): [Array<Diff>,
   diffSequences(aLength, bLength, isCommon, foundSubsequence)
 
   // After the last common subsequence, push remaining change items.
-  if (aIndex !== aLength)
+  if (aIndex !== aLength) {
     diffs.push(new Diff(DIFF_DELETE, a.slice(aIndex)))
+  }
 
-  if (bIndex !== bLength)
+  if (bIndex !== bLength) {
     diffs.push(new Diff(DIFF_INSERT, b.slice(bIndex)))
+  }
 
   return [diffs, truncated]
 }

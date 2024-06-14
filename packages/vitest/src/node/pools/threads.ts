@@ -4,7 +4,14 @@ import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
-import type { ContextTestEnvironment, ResolvedConfig, RunnerRPC, RuntimeRPC, Vitest, WorkerContext } from '../../types'
+import type {
+  ContextTestEnvironment,
+  ResolvedConfig,
+  RunnerRPC,
+  RuntimeRPC,
+  Vitest,
+  WorkerContext,
+} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
@@ -16,28 +23,28 @@ function createWorkerChannel(project: WorkspaceProject) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-    createMethodsRPC(project),
-    {
-      eventNames: ['onCancel'],
-      post(v) {
-        port.postMessage(v)
-      },
-      on(fn) {
-        port.on('message', fn)
-      },
-      onTimeoutError(functionName) {
-        throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-      },
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+    eventNames: ['onCancel'],
+    post(v) {
+      port.postMessage(v)
     },
-  )
+    on(fn) {
+      port.on('message', fn)
+    },
+    onTimeoutError(functionName) {
+      throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
+    },
+  })
 
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 
   return { workerPort, port }
 }
 
-export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
+export function createThreadsPool(
+  ctx: Vitest,
+  { execArgv, env }: PoolProcessOptions,
+): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -49,8 +56,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
   const poolOptions = ctx.config.poolOptions?.threads ?? {}
 
-  const maxThreads = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
-  const minThreads = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
+  const maxThreads
+    = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+  const minThreads
+    = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
   const worker = resolve(ctx.distPath, 'workers/threads.js')
 
@@ -64,10 +73,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     minThreads,
 
     env,
-    execArgv: [
-      ...poolOptions.execArgv ?? [],
-      ...execArgv,
-    ],
+    execArgv: [...(poolOptions.execArgv ?? []), ...execArgv],
 
     terminateTimeout: ctx.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
@@ -75,8 +81,9 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
   const isolated = poolOptions.isolate ?? true
 
-  if (isolated)
+  if (isolated) {
     options.isolateWorkers = true
+  }
 
   if (poolOptions.singleThread || !ctx.config.fileParallelism) {
     options.maxThreads = 1
@@ -88,7 +95,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(project: WorkspaceProject, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    async function runFiles(
+      project: WorkspaceProject,
+      config: ResolvedConfig,
+      files: string[],
+      environment: ContextTestEnvironment,
+      invalidates: string[] = [],
+    ) {
       ctx.state.clearFiles(project, files)
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
@@ -109,15 +122,27 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       }
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
-        if (error instanceof Error && /Failed to terminate worker/.test(error.message))
-          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`)
-
+        if (
+          error instanceof Error
+          && /Failed to terminate worker/.test(error.message)
+        ) {
+          ctx.state.addProcessTimeoutCause(
+            `Failed to terminate worker while running ${files.join(
+              ', ',
+            )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
+          )
+        }
         // Intentionally cancelled
-        else if (ctx.isCancelling && error instanceof Error && /The task has been cancelled/.test(error.message))
+        else if (
+          ctx.isCancelling
+          && error instanceof Error
+          && /The task has been cancelled/.test(error.message)
+        ) {
           ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
-
-        else
+        }
+        else {
           throw error
+        }
       }
       finally {
         port.close()
@@ -131,8 +156,9 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       const configs = new Map<WorkspaceProject, ResolvedConfig>()
       const getConfig = (project: WorkspaceProject): ResolvedConfig => {
-        if (configs.has(project))
+        if (configs.has(project)) {
           return configs.get(project)!
+        }
 
         const config = project.getSerializableConfig()
         configs.set(project, config)
@@ -146,8 +172,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         workspaceMap.set(file, workspaceFiles)
       }
 
-      const singleThreads = specs.filter(([project]) => project.config.poolOptions?.threads?.singleThread)
-      const multipleThreads = specs.filter(([project]) => !project.config.poolOptions?.threads?.singleThread)
+      const singleThreads = specs.filter(
+        ([project]) => project.config.poolOptions?.threads?.singleThread,
+      )
+      const multipleThreads = specs.filter(
+        ([project]) => !project.config.poolOptions?.threads?.singleThread,
+      )
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)
@@ -155,29 +185,65 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         const results: PromiseSettledResult<void>[] = []
 
         if (isolated) {
-          results.push(...await Promise.allSettled(files.map(({ file, environment, project }) =>
-            runFiles(project, getConfig(project), [file], environment, invalidates))))
+          results.push(
+            ...(await Promise.allSettled(
+              files.map(({ file, environment, project }) =>
+                runFiles(
+                  project,
+                  getConfig(project),
+                  [file],
+                  environment,
+                  invalidates,
+                ),
+              ),
+            )),
+          )
         }
         else {
           // When isolation is disabled, we still need to isolate environments and workspace projects from each other.
           // Tasks are still running parallel but environments are isolated between tasks.
-          const grouped = groupBy(files, ({ project, environment }) => project.getName() + environment.name + JSON.stringify(environment.options))
+          const grouped = groupBy(
+            files,
+            ({ project, environment }) =>
+              project.getName()
+              + environment.name
+              + JSON.stringify(environment.options),
+          )
 
           for (const group of Object.values(grouped)) {
             // Push all files to pool's queue
-            results.push(...await Promise.allSettled(group.map(({ file, environment, project }) =>
-              runFiles(project, getConfig(project), [file], environment, invalidates))))
+            results.push(
+              ...(await Promise.allSettled(
+                group.map(({ file, environment, project }) =>
+                  runFiles(
+                    project,
+                    getConfig(project),
+                    [file],
+                    environment,
+                    invalidates,
+                  ),
+                ),
+              )),
+            )
 
             // Once all tasks are running or finished, recycle worker for isolation.
             // On-going workers will run in the previous environment.
-            await new Promise<void>(resolve => pool.queueSize === 0 ? resolve() : pool.once('drain', resolve))
+            await new Promise<void>(resolve =>
+              pool.queueSize === 0 ? resolve() : pool.once('drain', resolve),
+            )
             await pool.recycleWorkers()
           }
         }
 
-        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-        if (errors.length > 0)
-          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+        const errors = results
+          .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+          .map(r => r.reason)
+        if (errors.length > 0) {
+          throw new AggregateError(
+            errors,
+            'Errors occurred while running tests. For more information, see serialized error.',
+          )
+        }
       }
 
       if (singleThreads.length) {
@@ -189,17 +255,28 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         for (const env of envs) {
           const files = filesByEnv[env]
 
-          if (!files?.length)
+          if (!files?.length) {
             continue
+          }
 
-          const filesByOptions = groupBy(files, ({ project, environment }) => project.getName() + JSON.stringify(environment.options))
+          const filesByOptions = groupBy(
+            files,
+            ({ project, environment }) =>
+              project.getName() + JSON.stringify(environment.options),
+          )
 
           for (const files of Object.values(filesByOptions)) {
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
             const filenames = files.map(f => f.file)
-            await runFiles(files[0].project, getConfig(files[0].project), filenames, files[0].environment, invalidates)
+            await runFiles(
+              files[0].project,
+              getConfig(files[0].project),
+              filenames,
+              files[0].environment,
+              invalidates,
+            )
           }
         }
       }

@@ -27,27 +27,35 @@ export default defineConfig({
       name: 'virtual:msw',
       enforce: 'pre',
       resolveId(id) {
-        if (id.startsWith('msw'))
+        if (id.startsWith('msw')) {
           return `/__virtual_vitest__:${id}`
+        }
       },
     },
     {
       name: 'copy-ui-plugin',
       /* eslint-disable no-console */
       closeBundle: async () => {
-        const root = resolve(fileURLToPath(import.meta.url), '../../../../../packages')
+        const root = resolve(
+          fileURLToPath(import.meta.url),
+          '../../../../../packages',
+        )
 
         const ui = resolve(root, 'ui/dist/client')
         const browser = resolve(root, 'browser/dist/client/__vitest__/')
 
-        const timeout = setTimeout(() => console.log('[copy-ui-plugin] Waiting for UI to be built...'), 1000)
+        const timeout = setTimeout(
+          () => console.log('[copy-ui-plugin] Waiting for UI to be built...'),
+          1000,
+        )
         await waitFor(() => fs.existsSync(ui))
         clearTimeout(timeout)
 
         const files = fg.sync('**/*', { cwd: ui })
 
-        if (fs.existsSync(browser))
+        if (fs.existsSync(browser)) {
           fs.rmSync(browser, { recursive: true })
+        }
 
         fs.mkdirSync(browser, { recursive: true })
         fs.mkdirSync(resolve(browser, 'assets'))
@@ -63,11 +71,13 @@ export default defineConfig({
 })
 
 async function waitFor(method: () => boolean, retries = 100): Promise<void> {
-  if (method())
+  if (method()) {
     return
+  }
 
-  if (retries === 0)
+  if (retries === 0) {
     throw new Error('Timeout in waitFor')
+  }
 
   await new Promise(resolve => setTimeout(resolve, 500))
 

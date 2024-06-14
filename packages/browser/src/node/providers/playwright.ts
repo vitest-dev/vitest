@@ -1,10 +1,21 @@
-import type { Browser, BrowserContext, BrowserContextOptions, LaunchOptions, Page } from 'playwright'
-import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
+import type {
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
+  LaunchOptions,
+  Page,
+} from 'playwright'
+import type {
+  BrowserProvider,
+  BrowserProviderInitializationOptions,
+  WorkspaceProject,
+} from 'vitest/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
-export type PlaywrightBrowser = typeof playwrightBrowsers[number]
+export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
-export interface PlaywrightProviderOptions extends BrowserProviderInitializationOptions {
+export interface PlaywrightProviderOptions
+  extends BrowserProviderInitializationOptions {
   browser: PlaywrightBrowser
 }
 
@@ -31,18 +42,23 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return playwrightBrowsers
   }
 
-  initialize(project: WorkspaceProject, { browser, options }: PlaywrightProviderOptions) {
+  initialize(
+    project: WorkspaceProject,
+    { browser, options }: PlaywrightProviderOptions,
+  ) {
     this.ctx = project
     this.browserName = browser
     this.options = options as any
   }
 
   private async openBrowser() {
-    if (this.browserPromise)
+    if (this.browserPromise) {
       return this.browserPromise
+    }
 
-    if (this.browser)
+    if (this.browser) {
       return this.browser
+    }
 
     this.browserPromise = (async () => {
       const options = this.ctx.config.browser
@@ -62,8 +78,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async createContext(contextId: string) {
-    if (this.contexts.has(contextId))
+    if (this.contexts.has(contextId)) {
       return this.contexts.get(contextId)!
+    }
 
     const browser = await this.openBrowser()
     const context = await browser.newContext({
@@ -77,8 +94,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public getPage(contextId: string) {
     const page = this.pages.get(contextId)
-    if (!page)
+    if (!page) {
       throw new Error(`Page "${contextId}" not found`)
+    }
     return page
   }
 

@@ -8,14 +8,21 @@ export class DotReporter extends BaseReporter {
   onCollected() {
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
-      if (!this.renderer)
-        this.renderer = createDotRenderer(files, { logger: this.ctx.logger }).start()
-      else
+      if (!this.renderer) {
+        this.renderer = createDotRenderer(files, {
+          logger: this.ctx.logger,
+        }).start()
+      }
+      else {
         this.renderer.update(files)
+      }
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  async onFinished(
+    files = this.ctx.state.getFiles(),
+    errors = this.ctx.state.getUnhandledErrors(),
+  ) {
     await this.stopListRender()
     this.ctx.logger.log()
     super.onFinished(files, errors)

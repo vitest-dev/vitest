@@ -26,14 +26,18 @@ export class TapReporter implements Reporter {
   }
 
   static getComment(task: Task): string {
-    if (task.mode === 'skip')
+    if (task.mode === 'skip') {
       return ' # SKIP'
-    else if (task.mode === 'todo')
+    }
+    else if (task.mode === 'todo') {
       return ' # TODO'
-    else if (task.result?.duration != null)
+    }
+    else if (task.result?.duration != null) {
       return ` # time=${task.result.duration.toFixed(2)}ms`
-    else
+    }
+    else {
       return ''
+    }
   }
 
   private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
@@ -43,7 +47,9 @@ export class TapReporter implements Reporter {
 
     if (stack) {
       // For compatibility with tap-mocha-reporter
-      this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+      this.logger.log(
+        `stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`,
+      )
     }
   }
 
@@ -53,7 +59,12 @@ export class TapReporter implements Reporter {
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
-      const ok = (task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo') ? 'ok' : 'not ok'
+      const ok
+        = task.result?.state === 'pass'
+        || task.mode === 'skip'
+        || task.mode === 'todo'
+          ? 'ok'
+          : 'not ok'
 
       const comment = TapReporter.getComment(task)
 
@@ -76,7 +87,8 @@ export class TapReporter implements Reporter {
 
           task.result.errors.forEach((error) => {
             const stacks = parseErrorStacktrace(error, {
-              getSourceMap: file => project.getBrowserSourceMapModuleById(file),
+              getSourceMap: file =>
+                project.getBrowserSourceMapModuleById(file),
               frameFilter: this.ctx.config.onStackTrace,
             })
             const stack = stacks[0]
@@ -88,8 +100,13 @@ export class TapReporter implements Reporter {
             this.logErrorDetails(error)
             this.logger.unindent()
 
-            if (stack)
-              this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+            if (stack) {
+              this.logger.log(
+                `at: ${yamlString(
+                  `${stack.file}:${stack.line}:${stack.column}`,
+                )}`,
+              )
+            }
 
             if (error.showDiff) {
               this.logger.log(`actual: ${yamlString(error.actual)}`)

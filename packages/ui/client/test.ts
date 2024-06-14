@@ -1,4 +1,8 @@
-import { type RenderOptions, render as _render, cleanup } from '@testing-library/vue'
+import {
+  type RenderOptions,
+  render as _render,
+  cleanup,
+} from '@testing-library/vue'
 import { VTooltip } from 'floating-vue'
 import { afterEach } from 'vitest'
 

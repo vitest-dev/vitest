@@ -78,13 +78,20 @@ export type IframeChannelEvent =
   | IframeChannelIncomingEvent
   | IframeChannelOutgoingEvent
 
-export const channel = new BroadcastChannel(`vitest:${getBrowserState().contextId}`)
+export const channel = new BroadcastChannel(
+  `vitest:${getBrowserState().contextId}`,
+)
 
 export function waitForChannel(event: IframeChannelOutgoingEvent['type']) {
   return new Promise<void>((resolve) => {
-    channel.addEventListener('message', (e) => {
-      if (e.data?.type === event)
-        resolve()
-    }, { once: true })
+    channel.addEventListener(
+      'message',
+      (e) => {
+        if (e.data?.type === event) {
+          resolve()
+        }
+      },
+      { once: true },
+    )
   })
 }

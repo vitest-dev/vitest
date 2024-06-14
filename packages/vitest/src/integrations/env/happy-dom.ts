@@ -1,7 +1,10 @@
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
-async function teardownWindow(win: { happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }; close?: () => void }) {
+async function teardownWindow(win: {
+  happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }
+  close?: () => void
+}) {
   if (win.close && win.happyDOM.abort) {
     await win.happyDOM.abort()
     win.close()
@@ -11,14 +14,14 @@ async function teardownWindow(win: { happyDOM: { abort?: () => Promise<void>; ca
   }
 }
 
-export default <Environment>({
+export default <Environment>{
   name: 'happy-dom',
   transformMode: 'web',
   async setupVM({ happyDOM = {} }) {
     const { Window } = await import('happy-dom')
     let win = new Window({
       ...happyDOM,
-      console: (console && globalThis.console) ? globalThis.console : undefined,
+      console: console && globalThis.console ? globalThis.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
       settings: {
         ...happyDOM.settings,
@@ -30,8 +33,9 @@ export default <Environment>({
     win.Buffer = Buffer
 
     // inject structuredClone if it exists
-    if (typeof structuredClone !== 'undefined' && !win.structuredClone)
+    if (typeof structuredClone !== 'undefined' && !win.structuredClone) {
       win.structuredClone = structuredClone
+    }
 
     return {
       getVmContext() {
@@ -49,7 +53,7 @@ export default <Environment>({
     const { Window, GlobalWindow } = await import('happy-dom')
     const win = new (GlobalWindow || Window)({
       ...happyDOM,
-      console: (console && global.console) ? global.console : undefined,
+      console: console && global.console ? global.console : undefined,
       url: happyDOM.url || 'http://localhost:3000',
       settings: {
         ...happyDOM.settings,
@@ -67,8 +71,8 @@ export default <Environment>({
       async teardown(global) {
         await teardownWindow(win)
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => global[k] = v)
+        originals.forEach((v, k) => (global[k] = v))
       },
     }
   },
-})
+}

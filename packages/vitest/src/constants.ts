@@ -17,33 +17,17 @@ export const extraInlineDeps = [
   '@nuxt/test-utils',
 ]
 
-export const CONFIG_NAMES = [
-  'vitest.config',
-  'vite.config',
-]
+export const CONFIG_NAMES = ['vitest.config', 'vite.config']
 
-const WORKSPACES_NAMES = [
-  'vitest.workspace',
-  'vitest.projects',
-]
+const WORKSPACES_NAMES = ['vitest.workspace', 'vitest.projects']
 
-const CONFIG_EXTENSIONS = [
-  '.ts',
-  '.mts',
-  '.cts',
-  '.js',
-  '.mjs',
-  '.cjs',
-]
+const CONFIG_EXTENSIONS = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
 
 export const configFiles = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),
 )
 
-const WORKSPACES_EXTENSIONS = [
-  ...CONFIG_EXTENSIONS,
-  '.json',
-]
+const WORKSPACES_EXTENSIONS = [...CONFIG_EXTENSIONS, '.json']
 
 export const workspacesFiles = WORKSPACES_NAMES.flatMap(name =>
   WORKSPACES_EXTENSIONS.map(ext => name + ext),

@@ -40,13 +40,13 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new(config: VitestRunnerConfig): VitestRunner
+  new (config: VitestRunnerConfig): VitestRunner
 }
 
 export type CancelReason =
   | 'keyboard-input'
   | 'test-failure'
-  | string & Record<string, never>
+  | (string & Record<string, never>)
 
 export interface VitestRunner {
   /**
@@ -76,7 +76,10 @@ export interface VitestRunner {
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTask?: (test: Task, options: { retry: number; repeats: number }) => unknown
+  onBeforeTryTask?: (
+    test: Task,
+    options: { retry: number; repeats: number }
+  ) => unknown
   /**
    * Called after result and state are set.
    */

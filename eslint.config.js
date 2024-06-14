@@ -45,6 +45,7 @@ export default antfu(
       'no-undef': 'off',
       'ts/no-invalid-this': 'off',
       'eslint-comments/no-unlimited-disable': 'off',
+      'curly': ['error', 'all'],
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',

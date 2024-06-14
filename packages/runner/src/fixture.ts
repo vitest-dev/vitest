@@ -15,14 +15,18 @@ export interface FixtureItem extends FixtureOptions {
   deps?: FixtureItem[]
 }
 
-export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
+export function mergeContextFixtures(
+  fixtures: Record<string, any>,
+  context: { fixtures?: FixtureItem[] } = {},
+) {
   const fixtureOptionKeys = ['auto']
-  const fixtureArray: FixtureItem[] = Object.entries(fixtures)
-    .map(([prop, value]) => {
+  const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
+    ([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
 
       if (
-        Array.isArray(value) && value.length >= 2
+        Array.isArray(value)
+        && value.length >= 2
         && isObject(value[1])
         && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))
       ) {
@@ -34,19 +38,25 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
       fixtureItem.prop = prop
       fixtureItem.isFn = typeof fixtureItem.value === 'function'
       return fixtureItem
-    })
+    },
+  )
 
-  if (Array.isArray(context.fixtures))
+  if (Array.isArray(context.fixtures)) {
     context.fixtures = context.fixtures.concat(fixtureArray)
-  else
+  }
+  else {
     context.fixtures = fixtureArray
+  }
 
   // Update dependencies of fixture functions
   fixtureArray.forEach((fixture) => {
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
-      if (usedProps.length)
-        fixture.deps = context.fixtures!.filter(({ prop }) => prop !== fixture.prop && usedProps.includes(prop))
+      if (usedProps.length) {
+        fixture.deps = context.fixtures!.filter(
+          ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
+        )
+      }
     }
   })
 
@@ -54,52 +64,69 @@ export function mergeContextFixtures(fixtures: Record<string, any>, context: { f
 }
 
 const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
-const cleanupFnArrayMap = new Map<TestContext, Array<() => void | Promise<void>>>()
+const cleanupFnArrayMap = new Map<
+  TestContext,
+  Array<() => void | Promise<void>>
+>()
 
 export async function callFixtureCleanup(context: TestContext) {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
-  for (const cleanup of cleanupFnArray.reverse())
+  for (const cleanup of cleanupFnArray.reverse()) {
     await cleanup()
+  }
   cleanupFnArrayMap.delete(context)
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
   return (hookContext?: TestContext) => {
-    const context: TestContext & { [key: string]: any } | undefined = hookContext || testContext
+    const context: (TestContext & { [key: string]: any }) | undefined
+      = hookContext || testContext
 
-    if (!context)
+    if (!context) {
       return fn({})
+    }
 
     const fixtures = getFixture(context)
-    if (!fixtures?.length)
+    if (!fixtures?.length) {
       return fn(context)
+    }
 
     const usedProps = getUsedProps(fn)
     const hasAutoFixture = fixtures.some(({ auto }) => auto)
-    if (!usedProps.length && !hasAutoFixture)
+    if (!usedProps.length && !hasAutoFixture) {
       return fn(context)
+    }
 
-    if (!fixtureValueMaps.get(context))
+    if (!fixtureValueMaps.get(context)) {
       fixtureValueMaps.set(context, new Map<FixtureItem, any>())
-    const fixtureValueMap: Map<FixtureItem, any> = fixtureValueMaps.get(context)!
+    }
+    const fixtureValueMap: Map<FixtureItem, any>
+      = fixtureValueMaps.get(context)!
 
-    if (!cleanupFnArrayMap.has(context))
+    if (!cleanupFnArrayMap.has(context)) {
       cleanupFnArrayMap.set(context, [])
+    }
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
 
-    const usedFixtures = fixtures.filter(({ prop, auto }) => auto || usedProps.includes(prop))
+    const usedFixtures = fixtures.filter(
+      ({ prop, auto }) => auto || usedProps.includes(prop),
+    )
     const pendingFixtures = resolveDeps(usedFixtures)
 
-    if (!pendingFixtures.length)
+    if (!pendingFixtures.length) {
       return fn(context)
+    }
 
     async function resolveFixtures() {
       for (const fixture of pendingFixtures) {
         // fixture could be already initialized during "before" hook
-        if (fixtureValueMap.has(fixture))
+        if (fixtureValueMap.has(fixture)) {
           continue
+        }
 
-        const resolvedValue = fixture.isFn ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray) : fixture.value
+        const resolvedValue = fixture.isFn
+          ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray)
+          : fixture.value
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
         cleanupFnArray.unshift(() => {
@@ -113,9 +140,12 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 }
 
 async function resolveFixtureFunction(
-  fixtureFn: (context: unknown, useFn: (arg: unknown) => Promise<void>) => Promise<void>,
+  fixtureFn: (
+    context: unknown,
+    useFn: (arg: unknown) => Promise<void>
+  ) => Promise<void>,
   context: unknown,
-  cleanupFnArray: (() => (void | Promise<void>))[],
+  cleanupFnArray: (() => void | Promise<void>)[],
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
@@ -148,16 +178,27 @@ async function resolveFixtureFunction(
   return useFnArgPromise
 }
 
-function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {
+function resolveDeps(
+  fixtures: FixtureItem[],
+  depSet = new Set<FixtureItem>(),
+  pendingFixtures: FixtureItem[] = [],
+) {
   fixtures.forEach((fixture) => {
-    if (pendingFixtures.includes(fixture))
+    if (pendingFixtures.includes(fixture)) {
       return
+    }
     if (!fixture.isFn || !fixture.deps) {
       pendingFixtures.push(fixture)
       return
     }
-    if (depSet.has(fixture))
-      throw new Error(`Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet].reverse().map(d => d.prop).join(' <- ')}`)
+    if (depSet.has(fixture)) {
+      throw new Error(
+        `Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet]
+          .reverse()
+          .map(d => d.prop)
+          .join(' <- ')}`,
+      )
+    }
 
     depSet.add(fixture)
     resolveDeps(fixture.deps, depSet, pendingFixtures)
@@ -170,22 +211,28 @@ function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), p
 
 function getUsedProps(fn: Function) {
   const match = fn.toString().match(/[^(]*\(([^)]*)/)
-  if (!match)
+  if (!match) {
     return []
+  }
 
   const args = splitByComma(match[1])
-  if (!args.length)
+  if (!args.length) {
     return []
+  }
 
   let first = args[0]
   if ('__VITEST_FIXTURE_INDEX__' in fn) {
     first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
-    if (!first)
+    if (!first) {
       return []
+    }
   }
 
-  if (!(first.startsWith('{') && first.endsWith('}')))
-    throw new Error(`The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`)
+  if (!(first.startsWith('{') && first.endsWith('}'))) {
+    throw new Error(
+      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`,
+    )
+  }
 
   const _first = first.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
@@ -193,8 +240,11 @@ function getUsedProps(fn: Function) {
   })
 
   const last = props.at(-1)
-  if (last && last.startsWith('...'))
-    throw new Error(`Rest parameters are not supported in fixtures, received "${last}".`)
+  if (last && last.startsWith('...')) {
+    throw new Error(
+      `Rest parameters are not supported in fixtures, received "${last}".`,
+    )
+  }
 
   return props
 }
@@ -212,13 +262,15 @@ function splitByComma(s: string) {
     }
     else if (!stack.length && s[i] === ',') {
       const token = s.substring(start, i).trim()
-      if (token)
+      if (token) {
         result.push(token)
+      }
       start = i + 1
     }
   }
   const lastToken = s.substring(start).trim()
-  if (lastToken)
+  if (lastToken) {
     result.push(lastToken)
+  }
   return result
 }

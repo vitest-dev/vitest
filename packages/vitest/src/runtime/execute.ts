@@ -3,7 +3,12 @@ import { pathToFileURL } from 'node:url'
 import { readFileSync } from 'node:fs'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
-import { isInternalRequest, isNodeBuiltin, isPrimitive, toFilePath } from 'vite-node/utils'
+import {
+  isInternalRequest,
+  isNodeBuiltin,
+  isPrimitive,
+  toFilePath,
+} from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
@@ -54,8 +59,9 @@ function listenForErrors(state: () => WorkerGlobalState) {
     const error = processError(err)
     if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
-      if (worker.filepath)
+      if (worker.filepath) {
         error.VITEST_TEST_PATH = relative(state().config.root, worker.filepath)
+      }
       error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
     state().rpc.onUnhandledError(error, type)
@@ -75,7 +81,8 @@ function listenForErrors(state: () => WorkerGlobalState) {
 
 export async function startVitestExecutor(options: ContextExecutorOptions) {
   // @ts-expect-error injected untyped global
-  const state = (): WorkerGlobalState => globalThis.__vitest_worker__ || options.state
+  const state = (): WorkerGlobalState =>
+    globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
   process.exit = (code = process.exitCode || 0): never => {
@@ -90,8 +97,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
 
   return await createVitestExecutor({
     async fetchModule(id) {
-      if (externalizeMap.has(id))
+      if (externalizeMap.has(id)) {
         return { externalize: externalizeMap.get(id)! }
+      }
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
       if (id.includes(distDir)) {
@@ -115,19 +123,32 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     resolveId(id, importer) {
       return rpc().resolveId(id, importer, getTransformMode())
     },
-    get moduleCache() { return state().moduleCache },
-    get mockMap() { return state().mockMap },
-    get interopDefault() { return state().config.deps.interopDefault },
-    get moduleDirectories() { return state().config.deps.moduleDirectories },
-    get root() { return state().config.root },
-    get base() { return state().config.base },
+    get moduleCache() {
+      return state().moduleCache
+    },
+    get mockMap() {
+      return state().mockMap
+    },
+    get interopDefault() {
+      return state().config.deps.interopDefault
+    },
+    get moduleDirectories() {
+      return state().config.deps.moduleDirectories
+    },
+    get root() {
+      return state().config.root
+    },
+    get base() {
+      return state().config.base
+    },
     ...options,
   })
 }
 
 function updateStyle(id: string, css: string) {
-  if (typeof document === 'undefined')
+  if (typeof document === 'undefined') {
     return
+  }
 
   const element = document.querySelector(`[data-vite-dev-id="${id}"]`)
   if (element) {
@@ -144,16 +165,22 @@ function updateStyle(id: string, css: string) {
 }
 
 function removeStyle(id: string) {
-  if (typeof document === 'undefined')
+  if (typeof document === 'undefined') {
     return
+  }
   const sheet = document.querySelector(`[data-vite-dev-id="${id}"]`)
-  if (sheet)
+  if (sheet) {
     document.head.removeChild(sheet)
+  }
 }
 
 export function getDefaultRequestStubs(context?: vm.Context) {
   if (!context) {
-    const clientStub = { ...DEFAULT_REQUEST_STUBS['@vite/client'], updateStyle, removeStyle }
+    const clientStub = {
+      ...DEFAULT_REQUEST_STUBS['@vite/client'],
+      updateStyle,
+      removeStyle,
+    }
     return {
       '/@vite/client': clientStub,
       '@vite/client': clientStub,
@@ -197,11 +224,16 @@ export class VitestExecutor extends ViteNodeRunner {
       this.primitives = { Object, Reflect, Symbol }
     }
     else if (options.externalModulesExecutor) {
-      this.primitives = vm.runInContext('({ Object, Reflect, Symbol })', options.context)
+      this.primitives = vm.runInContext(
+        '({ Object, Reflect, Symbol })',
+        options.context,
+      )
       this.externalModules = options.externalModulesExecutor
     }
     else {
-      throw new Error('When context is provided, externalModulesExecutor must be provided as well.')
+      throw new Error(
+        'When context is provided, externalModulesExecutor must be provided as well.',
+      )
     }
   }
 
@@ -215,12 +247,15 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
-    if (isInternalRequest(id) || id.startsWith('data:'))
+    if (isInternalRequest(id) || id.startsWith('data:')) {
       return false
+    }
     const transformMode = this.state.environment?.transformMode ?? 'ssr'
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
-    return transformMode === 'ssr' ? !isNodeBuiltin(id) : !id.startsWith('node:')
+    return transformMode === 'ssr'
+      ? !isNodeBuiltin(id)
+      : !id.startsWith('node:')
   }
 
   async originalResolveUrl(id: string, importer?: string) {
@@ -228,11 +263,13 @@ export class VitestExecutor extends ViteNodeRunner {
   }
 
   async resolveUrl(id: string, importer?: string) {
-    if (VitestMocker.pendingIds.length)
+    if (VitestMocker.pendingIds.length) {
       await this.mocker.resolveMocks()
+    }
 
-    if (importer && importer.startsWith('mock:'))
+    if (importer && importer.startsWith('mock:')) {
       importer = importer.slice(5)
+    }
     try {
       return await super.resolveUrl(id, importer)
     }
@@ -241,8 +278,9 @@ export class VitestExecutor extends ViteNodeRunner {
         const { id } = error[Symbol.for('vitest.error.not_found.data')]
         const path = this.mocker.normalizePath(id)
         const mock = this.mocker.getDependencyMock(path)
-        if (mock !== undefined)
+        if (mock !== undefined) {
           return [id, id] as [string, string]
+        }
       }
       throw error
     }
@@ -251,11 +289,14 @@ export class VitestExecutor extends ViteNodeRunner {
   protected async runModule(context: Record<string, any>, transformed: string) {
     const vmContext = this.options.context
 
-    if (!vmContext || !this.externalModules)
+    if (!vmContext || !this.externalModules) {
       return super.runModule(context, transformed)
+    }
 
     // add 'use strict' since ESM enables it by default
-    const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
+    const codeDefinition = `'use strict';async (${Object.keys(context).join(
+      ',',
+    )})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
     const options = {
       filename: context.__filename,
@@ -266,37 +307,51 @@ export class VitestExecutor extends ViteNodeRunner {
     const fn = vm.runInContext(code, vmContext, {
       ...options,
       // if we encountered an import, it's not inlined
-      importModuleDynamically: this.externalModules.importModuleDynamically as any,
+      importModuleDynamically: this.externalModules
+        .importModuleDynamically as any,
     } as any)
     await fn(...Object.values(context))
   }
 
   public async importExternalModule(path: string): Promise<any> {
-    if (this.externalModules)
+    if (this.externalModules) {
       return this.externalModules.import(path)
+    }
     return super.importExternalModule(path)
   }
 
-  async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {
+  async dependencyRequest(
+    id: string,
+    fsPath: string,
+    callstack: string[],
+  ): Promise<any> {
     const mocked = await this.mocker.requestWithMock(fsPath, callstack)
 
-    if (typeof mocked === 'string')
+    if (typeof mocked === 'string') {
       return super.dependencyRequest(mocked, mocked, callstack)
-    if (mocked && typeof mocked === 'object')
+    }
+    if (mocked && typeof mocked === 'object') {
       return mocked
+    }
     return super.dependencyRequest(id, fsPath, callstack)
   }
 
   prepareContext(context: Record<string, any>) {
     // support `import.meta.vitest` for test entry
-    if (this.state.filepath && normalize(this.state.filepath) === normalize(context.__filename)) {
+    if (
+      this.state.filepath
+      && normalize(this.state.filepath) === normalize(context.__filename)
+    ) {
       const globalNamespace = this.options.context || globalThis
       // @ts-expect-error injected untyped global
-      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalNamespace.__vitest_index__ })
+      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', {
+        get: () => globalNamespace.__vitest_index__,
+      })
     }
 
-    if (this.options.context && this.externalModules)
+    if (this.options.context && this.externalModules) {
       context.require = this.externalModules.createRequire(context.__filename)
+    }
 
     return context
   }

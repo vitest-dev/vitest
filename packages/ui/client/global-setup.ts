@@ -1,6 +1,9 @@
 /// <reference types="vite-plugin-pages/client" />
 
-import { createRouter as _createRouter, createWebHashHistory } from 'vue-router'
+import {
+  createRouter as _createRouter,
+  createWebHashHistory,
+} from 'vue-router'
 import FloatingVue, { VTooltip } from 'floating-vue'
 import routes from 'virtual:generated-pages'
 import 'd3-graph-controller/default.css'

@@ -1,6 +1,11 @@
 import { http } from 'msw/core/http'
 import { setupWorker } from 'msw/browser'
-import type { IframeChannelEvent, IframeMockEvent, IframeMockingDoneEvent, IframeUnmockEvent } from './channel'
+import type {
+  IframeChannelEvent,
+  IframeMockEvent,
+  IframeMockingDoneEvent,
+  IframeUnmockEvent,
+} from './channel'
 import { channel } from './channel'
 import { client } from './client'
 
@@ -10,8 +15,9 @@ export function createModuleMocker() {
   const worker = setupWorker(
     http.get(/.+/, async ({ request }) => {
       const path = removeTimestamp(request.url.slice(location.origin.length))
-      if (!mocks.has(path))
+      if (!mocks.has(path)) {
         return passthrough()
+      }
 
       const mock = mocks.get(path)
 
@@ -20,11 +26,14 @@ export function createModuleMocker() {
         // TODO: check how the error looks
         const exports = await getFactoryExports(path)
         const module = `const module = __vitest_mocker__.get('${path}');`
-        const keys = exports.map((name) => {
-          if (name === 'default')
-            return `export default module['default'];`
-          return `export const ${name} = module['${name}'];`
-        }).join('\n')
+        const keys = exports
+          .map((name) => {
+            if (name === 'default') {
+              return `export default module['default'];`
+            }
+            return `export const ${name} = module['${name}'];`
+          })
+          .join('\n')
         const text = `${module}\n${keys}`
         return new Response(text, {
           headers: {
@@ -33,8 +42,9 @@ export function createModuleMocker() {
         })
       }
 
-      if (typeof mock === 'string')
+      if (typeof mock === 'string') {
         return Response.redirect(mock)
+      }
 
       const content = await client.rpc.automock(path)
       return new Response(content, {
@@ -49,19 +59,23 @@ export function createModuleMocker() {
   let startPromise: undefined | Promise<unknown>
 
   async function init() {
-    if (started)
+    if (started) {
       return
-    if (startPromise)
+    }
+    if (startPromise) {
       return startPromise
-    startPromise = worker.start({
-      serviceWorker: {
-        url: '/__virtual_vitest__:mocker-worker.js',
-      },
-      quiet: true,
-    }).finally(() => {
-      started = true
-      startPromise = undefined
-    })
+    }
+    startPromise = worker
+      .start({
+        serviceWorker: {
+          url: '/__virtual_vitest__:mocker-worker.js',
+        },
+        quiet: true,
+      })
+      .finally(() => {
+        started = true
+        startPromise = undefined
+      })
     await startPromise
   }
 
@@ -88,16 +102,19 @@ function getFactoryExports(id: string) {
     id,
   })
   return new Promise<string[]>((resolve, reject) => {
-    channel.addEventListener('message', function onMessage(e: MessageEvent<IframeChannelEvent>) {
-      if (e.data.type === 'mock-factory:response') {
-        resolve(e.data.exports)
-        channel.removeEventListener('message', onMessage)
-      }
-      if (e.data.type === 'mock-factory:error') {
-        reject(e.data.error)
-        channel.removeEventListener('message', onMessage)
-      }
-    })
+    channel.addEventListener(
+      'message',
+      function onMessage(e: MessageEvent<IframeChannelEvent>) {
+        if (e.data.type === 'mock-factory:response') {
+          resolve(e.data.exports)
+          channel.removeEventListener('message', onMessage)
+        }
+        if (e.data.type === 'mock-factory:error') {
+          reject(e.data.error)
+          channel.removeEventListener('message', onMessage)
+        }
+      },
+    )
   })
 }
 

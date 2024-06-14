@@ -31,20 +31,28 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
   if (task.type === 'suite') {
-    return task.tasks.flatMap(child => flattenTasks(child, `${base}${task.name}`))
+    return task.tasks.flatMap(child =>
+      flattenTasks(child, `${base}${task.name}`),
+    )
   }
   else {
-    return [{
-      ...task,
-      name: `${base}${task.name}`,
-    }]
+    return [
+      {
+        ...task,
+        name: `${base}${task.name}`,
+      },
+    ]
   }
 }
 
 // https://gist.github.com/john-doherty/b9195065884cdbfd2017a4756e6409cc
-function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean): string {
-  // eslint-disable-next-line no-control-regex
-  let regex = /([\0-\x08\v\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g
+function removeInvalidXMLCharacters(
+  value: any,
+  removeDiscouragedChars: boolean,
+): string {
+  let regex
+    // eslint-disable-next-line no-control-regex
+    = /([\0-\x08\v\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g
   value = String(value || '').replace(regex, '')
 
   if (removeDiscouragedChars) {
@@ -83,7 +91,10 @@ function escapeXML(value: any): string {
 }
 
 function executionTime(durationMS: number) {
-  return (durationMS / 1000).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 10 })
+  return (durationMS / 1000).toLocaleString('en-US', {
+    useGrouping: false,
+    maximumFractionDigits: 10,
+  })
 }
 
 export function getDuration(task: Task): string | undefined {
@@ -108,21 +119,24 @@ export class JUnitReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
+    const outputFile
+      = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)
 
       const outputDirectory = dirname(this.reportFile)
-      if (!existsSync(outputDirectory))
+      if (!existsSync(outputDirectory)) {
         await fs.mkdir(outputDirectory, { recursive: true })
+      }
 
       const fileFd = await fs.open(this.reportFile, 'w+')
       this.fileFd = fileFd
 
       this.baseLog = async (text: string) => {
-        if (!this.fileFd)
+        if (!this.fileFd) {
           this.fileFd = await fs.open(this.reportFile!, 'w+')
+        }
 
         await fs.writeFile(this.fileFd, `${text}\n`)
       }
@@ -135,17 +149,24 @@ export class JUnitReporter implements Reporter {
     this.logger = new IndentedLogger(this.baseLog)
   }
 
-  async writeElement(name: string, attrs: Record<string, any>, children: () => Promise<void>) {
+  async writeElement(
+    name: string,
+    attrs: Record<string, any>,
+    children: () => Promise<void>,
+  ) {
     const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
-      if (attr === undefined)
+      if (attr === undefined) {
         continue
+      }
 
       pairs.push(`${key}="${escapeXML(attr)}"`)
     }
 
-    await this.logger.log(`<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`)
+    await this.logger.log(
+      `<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`,
+    )
     this.logger.indent()
     await children.call(this)
     this.logger.unindent()
@@ -154,145 +175,172 @@ export class JUnitReporter implements Reporter {
   }
 
   async writeLogs(task: Task, type: 'err' | 'out'): Promise<void> {
-    if (task.logs == null || task.logs.length === 0)
+    if (task.logs == null || task.logs.length === 0) {
       return
+    }
 
     const logType = type === 'err' ? 'stderr' : 'stdout'
     const logs = task.logs.filter(log => log.type === logType)
 
-    if (logs.length === 0)
+    if (logs.length === 0) {
       return
+    }
 
     await this.writeElement(`system-${type}`, {}, async () => {
-      for (const log of logs)
+      for (const log of logs) {
         await this.baseLog(escapeXML(log.content))
+      }
     })
   }
 
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
-      await this.writeElement('testcase', {
-        classname: this.options.classname ?? filename,
-        file: this.options.addFileAttribute ? filename : undefined,
-        name: task.name,
-        time: getDuration(task),
-      }, async () => {
-        if (this.options.includeConsoleOutput) {
-          await this.writeLogs(task, 'out')
-          await this.writeLogs(task, 'err')
-        }
-
-        if (task.mode === 'skip' || task.mode === 'todo')
-          await this.logger.log('<skipped/>')
-
-        if (task.result?.state === 'fail') {
-          const errors = task.result.errors || []
-          for (const error of errors) {
-            await this.writeElement('failure', {
-              message: error?.message,
-              type: error?.name ?? error?.nameStr,
-            }, async () => {
-              if (!error)
-                return
-
-              const result = capturePrintError(
-                error,
-                this.ctx,
-                this.ctx.getProjectByTaskId(task.id),
-              )
-              await this.baseLog(escapeXML(stripAnsi(result.output.trim())))
-            })
+      await this.writeElement(
+        'testcase',
+        {
+          classname: this.options.classname ?? filename,
+          file: this.options.addFileAttribute ? filename : undefined,
+          name: task.name,
+          time: getDuration(task),
+        },
+        async () => {
+          if (this.options.includeConsoleOutput) {
+            await this.writeLogs(task, 'out')
+            await this.writeLogs(task, 'err')
           }
-        }
-      })
+
+          if (task.mode === 'skip' || task.mode === 'todo') {
+            await this.logger.log('<skipped/>')
+          }
+
+          if (task.result?.state === 'fail') {
+            const errors = task.result.errors || []
+            for (const error of errors) {
+              await this.writeElement(
+                'failure',
+                {
+                  message: error?.message,
+                  type: error?.name ?? error?.nameStr,
+                },
+                async () => {
+                  if (!error) {
+                    return
+                  }
+
+                  const result = capturePrintError(
+                    error,
+                    this.ctx,
+                    this.ctx.getProjectByTaskId(task.id),
+                  )
+                  await this.baseLog(
+                    escapeXML(stripAnsi(result.output.trim())),
+                  )
+                },
+              )
+            }
+          }
+        },
+      )
     }
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
-    const transformed = files
-      .map((file) => {
-        const tasks = file.tasks.flatMap(task => flattenTasks(task))
+    const transformed = files.map((file) => {
+      const tasks = file.tasks.flatMap(task => flattenTasks(task))
 
-        const stats = tasks.reduce((stats, task) => {
+      const stats = tasks.reduce(
+        (stats, task) => {
           return {
             passed: stats.passed + Number(task.result?.state === 'pass'),
             failures: stats.failures + Number(task.result?.state === 'fail'),
-            skipped: stats.skipped + Number(task.mode === 'skip' || task.mode === 'todo'),
+            skipped:
+              stats.skipped
+              + Number(task.mode === 'skip' || task.mode === 'todo'),
           }
-        }, {
+        },
+        {
           passed: 0,
           failures: 0,
           skipped: 0,
-        })
+        },
+      )
 
-        // inject failed suites to surface errors during beforeAll/afterAll
-        const suites = getSuites(file)
-        for (const suite of suites) {
-          if (suite.result?.errors) {
-            tasks.push(suite)
-            stats.failures += 1
-          }
+      // inject failed suites to surface errors during beforeAll/afterAll
+      const suites = getSuites(file)
+      for (const suite of suites) {
+        if (suite.result?.errors) {
+          tasks.push(suite)
+          stats.failures += 1
         }
+      }
 
-        // If there are no tests, but the file failed to load, we still want to report it as a failure
-        if (tasks.length === 0 && file.result?.state === 'fail') {
-          stats.failures = 1
+      // If there are no tests, but the file failed to load, we still want to report it as a failure
+      if (tasks.length === 0 && file.result?.state === 'fail') {
+        stats.failures = 1
 
-          tasks.push({
-            id: file.id,
-            type: 'test',
-            name: file.name,
-            mode: 'run',
-            result: file.result,
-            meta: {},
-            // NOTE: not used in JUnitReporter
-            context: null as any,
-            suite: null as any,
-            file: null as any,
-          } satisfies Task)
-        }
+        tasks.push({
+          id: file.id,
+          type: 'test',
+          name: file.name,
+          mode: 'run',
+          result: file.result,
+          meta: {},
+          // NOTE: not used in JUnitReporter
+          context: null as any,
+          suite: null as any,
+          file: null as any,
+        } satisfies Task)
+      }
 
-        return {
-          ...file,
-          tasks,
-          stats,
-        }
-      })
-
-    const stats = transformed.reduce((stats, file) => {
-      stats.tests += file.tasks.length
-      stats.failures += file.stats.failures
-      return stats
-    }, {
-      name: this.options.suiteName || 'vitest tests',
-      tests: 0,
-      failures: 0,
-      errors: 0, // we cannot detect those
-      time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+      return {
+        ...file,
+        tasks,
+        stats,
+      }
     })
+
+    const stats = transformed.reduce(
+      (stats, file) => {
+        stats.tests += file.tasks.length
+        stats.failures += file.stats.failures
+        return stats
+      },
+      {
+        name: this.options.suiteName || 'vitest tests',
+        tests: 0,
+        failures: 0,
+        errors: 0, // we cannot detect those
+        time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+      },
+    )
 
     await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         const filename = relative(this.ctx.config.root, file.filepath)
-        await this.writeElement('testsuite', {
-          name: filename,
-          timestamp: (new Date()).toISOString(),
-          hostname: hostname(),
-          tests: file.tasks.length,
-          failures: file.stats.failures,
-          errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
-          skipped: file.stats.skipped,
-          time: getDuration(file),
-        }, async () => {
-          await this.writeTasks(file.tasks, filename)
-        })
+        await this.writeElement(
+          'testsuite',
+          {
+            name: filename,
+            timestamp: new Date().toISOString(),
+            hostname: hostname(),
+            tests: file.tasks.length,
+            failures: file.stats.failures,
+            errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
+            skipped: file.stats.skipped,
+            time: getDuration(file),
+          },
+          async () => {
+            await this.writeTasks(file.tasks, filename)
+          },
+        )
       }
     })
 
-    if (this.reportFile)
+    if (this.reportFile) {
       this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)
+    }
 
     await this.fileFd?.close()
     this.fileFd = undefined

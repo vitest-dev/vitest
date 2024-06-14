@@ -20,7 +20,7 @@ interface Visitors {
   onIdentifier: (
     node: Positioned<Identifier>,
     parent: Node,
-    parentStack: Node[],
+    parentStack: Node[]
   ) => void
   onImportMeta: (node: Node) => void
   onDynamicImport: (node: Positioned<ImportExpression>) => void
@@ -49,8 +49,9 @@ export function esmWalker(
 
   const setScope = (node: _Node, name: string) => {
     let scopeIds = scopeMap.get(node)
-    if (scopeIds && scopeIds.has(name))
+    if (scopeIds && scopeIds.has(name)) {
       return
+    }
 
     if (!scopeIds) {
       scopeIds = new Set()
@@ -71,17 +72,19 @@ export function esmWalker(
     }
     else if (p.type === 'ObjectPattern') {
       p.properties.forEach((property) => {
-        if (property.type === 'RestElement')
+        if (property.type === 'RestElement') {
           setScope(parentScope, (property.argument as Identifier).name)
-
-        else
+        }
+        else {
           handlePattern(property.value, parentScope)
+        }
       })
     }
     else if (p.type === 'ArrayPattern') {
       p.elements.forEach((element) => {
-        if (element)
+        if (element) {
           handlePattern(element, parentScope)
+        }
       })
     }
     else if (p.type === 'AssignmentPattern') {
@@ -94,8 +97,9 @@ export function esmWalker(
 
   (eswalk as any)(root, {
     enter(node: Node, parent: Node | null) {
-      if (node.type === 'ImportDeclaration')
+      if (node.type === 'ImportDeclaration') {
         return this.skip()
+      }
 
       // track parent stack, skip for "else-if"/"else" branches as acorn nests
       // the ast within "if" nodes instead of flattening them
@@ -107,14 +111,16 @@ export function esmWalker(
       }
 
       // track variable declaration kind stack used by VariableDeclarator
-      if (node.type === 'VariableDeclaration')
+      if (node.type === 'VariableDeclaration') {
         varKindStack.unshift(node.kind)
+      }
 
-      if (node.type === 'MetaProperty' && node.meta.name === 'import')
+      if (node.type === 'MetaProperty' && node.meta.name === 'import') {
         onImportMeta(node)
-
-      else if (node.type === 'ImportExpression')
+      }
+      else if (node.type === 'ImportExpression') {
         onDynamicImport(node)
+      }
 
       if (node.type === 'Identifier') {
         if (
@@ -130,8 +136,9 @@ export function esmWalker(
         // Add its name to the scope so it won't get replaced
         if (node.type === 'FunctionDeclaration') {
           const parentScope = findParentScope(parentStack)
-          if (parentScope)
+          if (parentScope) {
             setScope(parentScope, node.id!.name)
+          }
         }
         // walk function expressions and add its arguments to known identifiers
         // so that we don't prefix them
@@ -150,11 +157,13 @@ export function esmWalker(
                 return this.skip()
               }
 
-              if (child.type !== 'Identifier')
+              if (child.type !== 'Identifier') {
                 return
+              }
               // do not record as scope variable if is a destructuring keyword
-              if (isStaticPropertyKey(child, parent))
+              if (isStaticPropertyKey(child, parent)) {
                 return
+              }
               // do not record if this is a default value
               // assignment of a destructuring variable
               if (
@@ -179,8 +188,9 @@ export function esmWalker(
           parentStack,
           varKindStack[0] === 'var',
         )
-        if (parentFunction)
+        if (parentFunction) {
           handlePattern(node.id, parentFunction)
+        }
       }
       else if (node.type === 'CatchClause' && node.param) {
         handlePattern(node.param, node)
@@ -196,16 +206,18 @@ export function esmWalker(
         parentStack.shift()
       }
 
-      if (node.type === 'VariableDeclaration')
+      if (node.type === 'VariableDeclaration') {
         varKindStack.shift()
+      }
     },
   })
 
   // emit the identifier events in BFS so the hoisted declarations
   // can be captured correctly
   identifiers.forEach(([node, stack]) => {
-    if (!isInScope(node.name, stack))
+    if (!isInScope(node.name, stack)) {
       onIdentifier(node, stack[0], stack)
+    }
   })
 }
 
@@ -222,25 +234,30 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
 
   if (isFunctionNode(parent)) {
     // function declaration/expression id
-    if ((parent as any).id === id)
+    if ((parent as any).id === id) {
       return false
+    }
 
     // params list
-    if (parent.params.includes(id))
+    if (parent.params.includes(id)) {
       return false
+    }
   }
 
   // class method name
-  if (parent.type === 'MethodDefinition' && !parent.computed)
+  if (parent.type === 'MethodDefinition' && !parent.computed) {
     return false
+  }
 
   // property key
-  if (isStaticPropertyKey(id, parent))
+  if (isStaticPropertyKey(id, parent)) {
     return false
+  }
 
   // object destructuring pattern
-  if (isNodeInPattern(parent) && parent.value === id)
+  if (isNodeInPattern(parent) && parent.value === id) {
     return false
+  }
 
   // non-assignment array destructuring pattern
   if (
@@ -259,12 +276,14 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
     return false
   }
 
-  if (parent.type === 'ExportSpecifier')
+  if (parent.type === 'ExportSpecifier') {
     return false
+  }
 
   // is a special keyword but parsed as identifier
-  if (id.name === 'arguments')
+  if (id.name === 'arguments') {
     return false
+  }
 
   return true
 }

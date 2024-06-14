@@ -6,7 +6,9 @@ import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
 import type { ContextRPC, Environment, WorkerRPC } from '../../types'
 import { environments } from './index'
 
-function isBuiltinEnvironment(env: VitestEnvironment): env is BuiltinEnvironment {
+function isBuiltinEnvironment(
+  env: VitestEnvironment,
+): env is BuiltinEnvironment {
   return env in environments
 }
 
@@ -21,24 +23,31 @@ export async function createEnvironmentLoader(options: ViteNodeRunnerOptions) {
   return _loaders.get(options.root)!
 }
 
-export async function loadEnvironment(ctx: ContextRPC, rpc: WorkerRPC): Promise<Environment> {
+export async function loadEnvironment(
+  ctx: ContextRPC,
+  rpc: WorkerRPC,
+): Promise<Environment> {
   const name = ctx.environment.name
-  if (isBuiltinEnvironment(name))
+  if (isBuiltinEnvironment(name)) {
     return environments[name]
+  }
   const loader = await createEnvironmentLoader({
     root: ctx.config.root,
     fetchModule: async (id) => {
       const result = await rpc.fetch(id, 'ssr')
-      if (result.id)
+      if (result.id) {
         return { code: readFileSync(result.id, 'utf-8') }
+      }
       return result
     },
     resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
   })
   const root = loader.root
-  const packageId = name[0] === '.' || name[0] === '/'
-    ? resolve(root, name)
-    : (await rpc.resolveId(`vitest-environment-${name}`, undefined, 'ssr'))?.id ?? resolve(root, name)
+  const packageId
+    = name[0] === '.' || name[0] === '/'
+      ? resolve(root, name)
+      : (await rpc.resolveId(`vitest-environment-${name}`, undefined, 'ssr'))
+          ?.id ?? resolve(root, name)
   const pkg = await loader.executeId(normalize(packageId))
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
@@ -47,7 +56,10 @@ export async function loadEnvironment(ctx: ContextRPC, rpc: WorkerRPC): Promise<
     )
   }
   const environment = pkg.default
-  if (environment.transformMode !== 'web' && environment.transformMode !== 'ssr') {
+  if (
+    environment.transformMode !== 'web'
+    && environment.transformMode !== 'ssr'
+  ) {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
       + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,

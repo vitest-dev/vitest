@@ -1,5 +1,10 @@
 <script setup lang="ts">
-defineProps<{ icon?: `i-${string}` | `dark:i-${string}`; title?: string; disabled?: boolean; active?: boolean }>()
+defineProps<{
+  icon?: `i-${string}` | `dark:i-${string}`;
+  title?: string;
+  disabled?: boolean;
+  active?: boolean;
+}>();
 </script>
 
 <template>

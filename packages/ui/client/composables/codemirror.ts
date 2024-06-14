@@ -17,14 +17,11 @@ export function useCodeMirror(
   input: Ref<string> | WritableComputedRef<string>,
   options: CodeMirror.EditorConfiguration = {},
 ) {
-  const cm = CodeMirror.fromTextArea(
-    textarea.value!,
-    {
-      theme: 'vars',
-      ...options,
-      scrollbarStyle: 'simple',
-    },
-  )
+  const cm = CodeMirror.fromTextArea(textarea.value!, {
+    theme: 'vars',
+    ...options,
+    scrollbarStyle: 'simple',
+  })
 
   let skip = false
 
@@ -42,7 +39,11 @@ export function useCodeMirror(
       if (v !== cm.getValue()) {
         skip = true
         const selections = cm.listSelections()
-        cm.replaceRange(v, cm.posFromIndex(0), cm.posFromIndex(Number.POSITIVE_INFINITY))
+        cm.replaceRange(
+          v,
+          cm.posFromIndex(0),
+          cm.posFromIndex(Number.POSITIVE_INFINITY),
+        )
         cm.setSelections(selections)
       }
     },

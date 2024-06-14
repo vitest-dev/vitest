@@ -27,8 +27,9 @@ export class ViteExecutor {
 
   public resolve = (identifier: string, parent: string) => {
     if (identifier === CLIENT_ID) {
-      if (this.workerState.environment.transformMode === 'web')
+      if (this.workerState.environment.transformMode === 'web') {
         return identifier
+      }
       const packageName = this.getPackageName(parent)
       throw new Error(
         `[vitest] Vitest cannot handle ${CLIENT_ID} imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
@@ -43,23 +44,30 @@ export class ViteExecutor {
   private getPackageName(modulePath: string) {
     const path = normalize(modulePath)
     let name = path.split('/node_modules/').pop() || ''
-    if (name?.startsWith('@'))
+    if (name?.startsWith('@')) {
       name = name.split('/').slice(0, 2).join('/')
-    else
+    }
+    else {
       name = name.split('/')[0]
+    }
     return name
   }
 
   public async createViteModule(fileUrl: string) {
-    if (fileUrl === CLIENT_FILE)
+    if (fileUrl === CLIENT_FILE) {
       return this.createViteClientModule()
+    }
     const cached = this.esm.resolveCachedModule(fileUrl)
-    if (cached)
+    if (cached) {
       return cached
+    }
     return this.esm.createEsModule(fileUrl, async () => {
       const result = await this.options.transform(fileUrl, 'web')
-      if (!result.code)
-        throw new Error(`[vitest] Failed to transform ${fileUrl}. Does the file exist?`)
+      if (!result.code) {
+        throw new Error(
+          `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
+        )
+      }
       return result.code
     })
   }
@@ -67,8 +75,9 @@ export class ViteExecutor {
   private createViteClientModule() {
     const identifier = CLIENT_ID
     const cached = this.esm.resolveCachedModule(identifier)
-    if (cached)
+    if (cached) {
       return cached
+    }
     const stub = this.options.viteClientModule
     const moduleKeys = Object.keys(stub)
     const module = new SyntheticModule(
@@ -86,18 +95,27 @@ export class ViteExecutor {
 
   public canResolve = (fileUrl: string) => {
     const transformMode = this.workerState.environment.transformMode
-    if (transformMode !== 'web')
+    if (transformMode !== 'web') {
       return false
-    if (fileUrl === CLIENT_FILE)
+    }
+    if (fileUrl === CLIENT_FILE) {
       return true
+    }
     const config = this.workerState.config.deps?.web || {}
     const [modulePath] = fileUrl.split('?')
-    if (config.transformCss && CSS_LANGS_RE.test(modulePath))
+    if (config.transformCss && CSS_LANGS_RE.test(modulePath)) {
       return true
-    if (config.transformAssets && KNOWN_ASSET_RE.test(modulePath))
+    }
+    if (config.transformAssets && KNOWN_ASSET_RE.test(modulePath)) {
       return true
-    if (toArray(config.transformGlobPattern).some(pattern => pattern.test(modulePath)))
+    }
+    if (
+      toArray(config.transformGlobPattern).some(pattern =>
+        pattern.test(modulePath),
+      )
+    ) {
       return true
+    }
     return false
   }
 }

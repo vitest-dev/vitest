@@ -22,10 +22,7 @@ cli
   .option('-v, --version', 'Output the version number')
   .option('-h, --help', 'Display help for command')
 
-cli
-  .command('[...files]')
-  .allowUnknownOptions()
-  .action(run)
+cli.command('[...files]').allowUnknownOptions().action(run)
 
 cli.parse(process.argv, { run: false })
 
@@ -55,7 +52,13 @@ async function run(files: string[], options: CliOptions = {}) {
   if (options.script) {
     files = [files[0]]
     options = {}
-    process.argv = [process.argv[0], resolve(files[0]), ...process.argv.slice(2).filter(arg => arg !== '--script' && arg !== files[0])]
+    process.argv = [
+      process.argv[0],
+      resolve(files[0]),
+      ...process.argv
+        .slice(2)
+        .filter(arg => arg !== '--script' && arg !== files[0]),
+    ]
   }
   else {
     process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
@@ -88,9 +91,7 @@ async function run(files: string[], options: CliOptions = {}) {
     server: {
       hmr: !!options.watch,
     },
-    plugins: [
-      options.watch && viteNodeHmrPlugin(),
-    ],
+    plugins: [options.watch && viteNodeHmrPlugin()],
   })
   await server.pluginContainer.buildStart({})
 
@@ -117,11 +118,13 @@ async function run(files: string[], options: CliOptions = {}) {
   // provide the vite define variable in this context
   await runner.executeId('/@vite/env')
 
-  for (const file of files)
+  for (const file of files) {
     await runner.executeFile(file)
+  }
 
-  if (!options.watch)
+  if (!options.watch) {
     await server.close()
+  }
 
   server.emitter?.on('message', (payload) => {
     handleMessage(runner, server.emitter, files, payload)
@@ -140,8 +143,9 @@ async function run(files: string[], options: CliOptions = {}) {
       const nodePath = await import('node:path')
 
       async function waitForWatched(files: string[]): Promise<void> {
-        while (!files.every(file => isWatched(file)))
+        while (!files.every(file => isWatched(file))) {
           await new Promise(resolve => setTimeout(resolve, 20))
+        }
       }
 
       function isWatched(file: string): boolean {
@@ -159,24 +163,28 @@ async function run(files: string[], options: CliOptions = {}) {
   }
 }
 
-function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
-  const inlineOptions = serverOptions.deps?.inline === true ? true : toArray(serverOptions.deps?.inline)
+function parseServerOptions(
+  serverOptions: ViteNodeServerOptionsCLI,
+): ViteNodeServerOptions {
+  const inlineOptions
+    = serverOptions.deps?.inline === true
+      ? true
+      : toArray(serverOptions.deps?.inline)
 
   return {
     ...serverOptions,
     deps: {
       ...serverOptions.deps,
-      inline: inlineOptions !== true
-        ? inlineOptions.map((dep) => {
-          return (dep.startsWith('/') && dep.endsWith('/'))
-            ? new RegExp(dep)
-            : dep
-        })
-        : true,
+      inline:
+        inlineOptions !== true
+          ? inlineOptions.map((dep) => {
+            return dep.startsWith('/') && dep.endsWith('/')
+              ? new RegExp(dep)
+              : dep
+          })
+          : true,
       external: toArray(serverOptions.deps?.external).map((dep) => {
-        return (dep.startsWith('/') && dep.endsWith('/'))
-          ? new RegExp(dep)
-          : dep
+        return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep
       }),
       moduleDirectories: serverOptions.deps?.moduleDirectories
         ? toArray(serverOptions.deps?.moduleDirectories)
@@ -185,8 +193,12 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
 
     transformMode: {
       ...serverOptions.transformMode,
-      ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
-      web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
+      ssr: toArray(serverOptions.transformMode?.ssr).map(
+        dep => new RegExp(dep),
+      ),
+      web: toArray(serverOptions.transformMode?.web).map(
+        dep => new RegExp(dep),
+      ),
     },
   }
 }
@@ -201,7 +213,8 @@ type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
         ? string | string[] | true
         : T[K] extends Optional<Record<string, any>>
           ? ComputeViteNodeServerOptionsCLI<T[K]>
-          : T[K]
+          : T[K];
 }
 
-export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>
+export type ViteNodeServerOptionsCLI =
+  ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

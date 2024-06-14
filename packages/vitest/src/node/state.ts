@@ -7,8 +7,9 @@ import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
-  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
+  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
     return true
+  }
 
   return err instanceof Error && 'errors' in err
 }
@@ -23,13 +24,16 @@ export class StateManager {
   processTimeoutCauses = new Set<string>()
 
   catchError(err: unknown, type: string): void {
-    if (isAggregateError(err))
+    if (isAggregateError(err)) {
       return err.errors.forEach(error => this.catchError(error, type))
+    }
 
-    if (err === Object(err))
+    if (err === Object(err)) {
       (err as Record<string, unknown>).type = type
-    else
+    }
+    else {
       err = { type, message: err }
+    }
 
     const _err = err as Record<string, any>
     if (_err && typeof _err === 'object' && _err.code === 'VITEST_PENDING') {
@@ -66,8 +70,12 @@ export class StateManager {
   }
 
   getFiles(keys?: string[]): File[] {
-    if (keys)
-      return keys.map(key => this.filesMap.get(key)!).filter(Boolean).flat()
+    if (keys) {
+      return keys
+        .map(key => this.filesMap.get(key)!)
+        .filter(Boolean)
+        .flat()
+    }
     return Array.from(this.filesMap.values()).flat()
   }
 
@@ -89,13 +97,18 @@ export class StateManager {
 
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
-      const existing = (this.filesMap.get(file.filepath) || [])
-      const otherProject = existing.filter(i => i.projectName !== file.projectName)
-      const currentFile = existing.find(i => i.projectName === file.projectName)
+      const existing = this.filesMap.get(file.filepath) || []
+      const otherProject = existing.filter(
+        i => i.projectName !== file.projectName,
+      )
+      const currentFile = existing.find(
+        i => i.projectName === file.projectName,
+      )
       // keep logs for the previous file because it should alway be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests
-      if (currentFile)
+      if (currentFile) {
         file.logs = currentFile.logs
+      }
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
@@ -103,33 +116,40 @@ export class StateManager {
   }
 
   // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
-  clearFiles(_project: { config: { name: string | undefined; root: string } }, paths: string[] = []) {
+  clearFiles(
+    _project: { config: { name: string | undefined; root: string } },
+    paths: string[] = [],
+  ) {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
-      const fileTask = createFileTask(path, project.config.root, project.config.name)
+      const fileTask = createFileTask(
+        path,
+        project.config.root,
+        project.config.name,
+      )
       this.idMap.set(fileTask.id, fileTask)
       if (!files) {
         this.filesMap.set(path, [fileTask])
         return
       }
-      const filtered = files.filter(file => file.projectName !== project.config.name)
+      const filtered = files.filter(
+        file => file.projectName !== project.config.name,
+      )
       // always keep a File task, so we can associate logs with it
       if (!filtered.length) {
         this.filesMap.set(path, [fileTask])
       }
       else {
-        this.filesMap.set(path, [
-          ...filtered,
-          fileTask,
-        ])
+        this.filesMap.set(path, [...filtered, fileTask])
       }
     })
   }
 
   updateId(task: Task) {
-    if (this.idMap.get(task.id) === task)
+    if (this.idMap.get(task.id) === task) {
       return
+    }
     this.idMap.set(task.id, task)
     if (task.type === 'suite') {
       task.tasks.forEach((task) => {
@@ -145,8 +165,9 @@ export class StateManager {
         task.result = result
         task.meta = meta
         // skipped with new PendingError
-        if (result?.state === 'skip')
+        if (result?.state === 'skip') {
           task.mode = 'skip'
+        }
       }
     }
   }
@@ -154,17 +175,22 @@ export class StateManager {
   updateUserLog(log: UserConsoleLog) {
     const task = log.taskId && this.idMap.get(log.taskId)
     if (task) {
-      if (!task.logs)
+      if (!task.logs) {
         task.logs = []
+      }
       task.logs.push(log)
     }
   }
 
   getCountOfFailedTests() {
-    return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
+    return Array.from(this.idMap.values()).filter(
+      t => t.result?.state === 'fail',
+    ).length
   }
 
   cancelFiles(files: string[], root: string, projectName: string) {
-    this.collectFiles(files.map(filepath => createFileTask(filepath, root, projectName)))
+    this.collectFiles(
+      files.map(filepath => createFileTask(filepath, root, projectName)),
+    )
   }
 }

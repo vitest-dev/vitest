@@ -13,7 +13,10 @@ export { VitestPackageInstaller } from './packageInstaller'
 
 export { distDir, rootDir } from '../paths'
 
-export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
+export type {
+  TestSequencer,
+  TestSequencerConstructor,
+} from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'
 
 export type {

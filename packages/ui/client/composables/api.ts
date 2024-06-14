@@ -31,10 +31,15 @@ function recalculateDetailPanels() {
 }
 
 export function getCurrentBrowserIframe() {
-  return document.querySelector<HTMLIFrameElement>('#tester-ui iframe[data-vitest]')!
+  return document.querySelector<HTMLIFrameElement>(
+    '#tester-ui iframe[data-vitest]',
+  )!
 }
 
-export async function setIframeViewport(width: number | string, height: number | string) {
+export async function setIframeViewport(
+  width: number | string,
+  height: number | string,
+) {
   const iframe = getCurrentBrowserIframe()
   // change the viewport of the iframe
   iframe.style.width = typeof width === 'string' ? width : `${width}px`

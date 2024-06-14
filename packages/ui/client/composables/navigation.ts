@@ -9,14 +9,25 @@ export const disableCoverage = ref(true)
 export const coverage = computed(() => config.value?.coverage)
 export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
-  return coverageConfigured.value
-    && coverage.value.reporter.map(([reporterName]) => reporterName).includes('html')
+  return (
+    coverageConfigured.value
+    && coverage.value.reporter
+      .map(([reporterName]) => reporterName)
+      .includes('html')
+  )
 })
-export const detailSizes = useLocalStorage<[left: number, right: number]>('vitest-ui_splitpanes-detailSizes', [33, 67], {
-  initOnMounted: true,
-})
+export const detailSizes = useLocalStorage<[left: number, right: number]>(
+  'vitest-ui_splitpanes-detailSizes',
+  [33, 67],
+  {
+    initOnMounted: true,
+  },
+)
 
-export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
+export const openedTreeItems = useLocalStorage<string[]>(
+  'vitest-ui_task-tree-opened',
+  [],
+)
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
@@ -24,21 +35,28 @@ export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
     const htmlReporter = coverage.value!.reporter.find((reporter) => {
-      if (reporter[0] !== 'html')
+      if (reporter[0] !== 'html') {
         return undefined
+      }
 
       return reporter
     })
     return htmlReporter && 'subdir' in htmlReporter[1]
-      ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${htmlReporter[1].subdir}/index.html`
+      ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
+          htmlReporter[1].subdir
+        }/index.html`
       : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
 
   return undefined
 })
-watch(testRunState, (state) => {
-  disableCoverage.value = state === 'running'
-}, { immediate: true })
+watch(
+  testRunState,
+  (state) => {
+    disableCoverage.value = state === 'running'
+  },
+  { immediate: true },
+)
 export function initializeNavigation() {
   const file = activeFileId.value
   if (file && file.length > 0) {

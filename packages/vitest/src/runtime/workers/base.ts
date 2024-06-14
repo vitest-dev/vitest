@@ -11,8 +11,9 @@ const moduleCache = new ModuleCacheMap()
 const mockMap: MockMap = new Map()
 
 async function startViteNode(options: ContextExecutorOptions) {
-  if (_viteNode)
+  if (_viteNode) {
     return _viteNode
+  }
 
   _viteNode = await startVitestExecutor(options)
   return _viteNode

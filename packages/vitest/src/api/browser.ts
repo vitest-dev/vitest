@@ -19,18 +19,23 @@ import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 
 const debug = createDebugger('vitest:browser:api')
 
-export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer) {
+export function setupBrowserRpc(
+  project: WorkspaceProject,
+  server: ViteDevServer,
+) {
   const ctx = project.ctx
 
   const wss = new WebSocketServer({ noServer: true })
 
   server.httpServer?.on('upgrade', (request, socket, head) => {
-    if (!request.url)
+    if (!request.url) {
       return
+    }
 
     const { pathname, searchParams } = new URL(request.url, 'http://localhost')
-    if (pathname !== BROWSER_API_PATH)
+    if (pathname !== BROWSER_API_PATH) {
       return
+    }
 
     const type = searchParams.get('type') ?? 'tester'
     const sessionId = searchParams.get('sessionId') ?? '0'
@@ -53,8 +58,11 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
   })
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, server))
-      throw new Error(`Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`)
+    if (!isFileServingAllowed(path, server)) {
+      throw new Error(
+        `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
+      )
+    }
   }
 
   function setupClient(sessionId: string, ws: WebSocket) {
@@ -88,8 +96,9 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         },
         async readSnapshotFile(snapshotPath) {
           checkFileAccess(snapshotPath)
-          if (!existsSync(snapshotPath))
+          if (!existsSync(snapshotPath)) {
             return null
+          }
           return fs.readFile(snapshotPath, 'utf-8')
         },
         async saveSnapshotFile(id, content) {
@@ -99,8 +108,9 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
-          if (!existsSync(id))
+          if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
+          }
           return fs.unlink(id)
         },
         async getBrowserFileSourceMap(id) {
@@ -111,9 +121,13 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           ctx.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
-          const result = await project.server.pluginContainer.resolveId(id, importer, {
-            ssr: false,
-          })
+          const result = await project.server.pluginContainer.resolveId(
+            id,
+            importer,
+            {
+              ssr: false,
+            },
+          )
           return result
         },
         debug(...args) {
@@ -125,26 +139,33 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         async triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
           const provider = project.browserProvider
-          if (!provider)
+          if (!provider) {
             throw new Error('Commands are only available for browser tests.')
+          }
           const commands = project.config.browser?.commands
-          if (!commands || !commands[command])
+          if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
-          if (provider.beforeCommand)
+          }
+          if (provider.beforeCommand) {
             await provider.beforeCommand(command, payload)
-          const context = Object.assign({
-            testPath,
-            project,
-            provider,
-            contextId,
-          }, provider.getCommandsContext(contextId)) as any as BrowserCommandContext
+          }
+          const context = Object.assign(
+            {
+              testPath,
+              project,
+              provider,
+              contextId,
+            },
+            provider.getCommandsContext(contextId),
+          ) as any as BrowserCommandContext
           let result
           try {
             result = await commands[command](context, ...payload)
           }
           finally {
-            if (provider.afterCommand)
+            if (provider.afterCommand) {
               await provider.afterCommand(command, payload)
+            }
           }
           return result
         },
@@ -158,18 +179,25 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
         // TODO: cache this automock result
         async automock(id) {
           const result = await project.browser!.transformRequest(id)
-          if (!result)
+          if (!result) {
             throw new Error(`Module "${id}" not found.`)
+          }
           const ms = automockModule(result.code, parseAst)
           const code = ms.toString()
           const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
-          const combinedMap = result.map && result.map.mappings
-            ? remapping(
-              [{ ...sourcemap, version: 3 }, result.map as EncodedSourceMap],
-              () => null,
-            )
-            : sourcemap
-          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
+          const combinedMap
+            = result.map && result.map.mappings
+              ? remapping(
+                [
+                  { ...sourcemap, version: 3 },
+                  result.map as EncodedSourceMap,
+                ],
+                () => null,
+              )
+              : sourcemap
+          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(
+            JSON.stringify(combinedMap),
+          ).toString('base64')}`
         },
         resolveMock(rawId, importer, hasFactory) {
           return project.browserMocker.resolveMock(rawId, importer, hasFactory)
@@ -178,8 +206,9 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           ids.forEach((id) => {
             const moduleGraph = project.browser!.moduleGraph
             const module = moduleGraph.getModuleById(id)
-            if (module)
+            if (module) {
               moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+            }
           })
         },
       },

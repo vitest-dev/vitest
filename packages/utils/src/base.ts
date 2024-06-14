@@ -8,7 +8,8 @@ interface ErrorOptions {
  * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
  */
 export function createSimpleStackTrace(options?: ErrorOptions) {
-  const { message = '$$stack trace error', stackTraceLimit = 1 } = options || {}
+  const { message = '$$stack trace error', stackTraceLimit = 1 }
+    = options || {}
   const limit = Error.stackTraceLimit
   const prepareStackTrace = Error.prepareStackTrace
   Error.stackTraceLimit = stackTraceLimit

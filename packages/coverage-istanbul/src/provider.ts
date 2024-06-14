@@ -1,7 +1,23 @@
-import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  promises as fs,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs'
 import { resolve } from 'pathe'
-import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
-import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import type {
+  AfterSuiteRunMeta,
+  CoverageIstanbulOptions,
+  CoverageProvider,
+  ReportContext,
+  ResolvedCoverageOptions,
+  Vitest,
+} from 'vitest'
+import {
+  coverageConfigDefaults,
+  defaultExclude,
+  defaultInclude,
+} from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
 import { parseModule } from 'magicast'
@@ -19,11 +35,16 @@ import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
 type Filename = string
-type CoverageFilesByTransformMode = Record<AfterSuiteRunMeta['transformMode'], Filename[]>
-type ProjectName = NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT
+type CoverageFilesByTransformMode = Record<
+  AfterSuiteRunMeta['transformMode'],
+  Filename[]
+>
+type ProjectName =
+  | NonNullable<AfterSuiteRunMeta['projectName']>
+  | typeof DEFAULT_PROJECT
 
 interface TestExclude {
-  new(opts: {
+  new (opts: {
     cwd?: string | string[]
     include?: string | string[]
     exclude?: string | string[]
@@ -40,7 +61,9 @@ const DEFAULT_PROJECT = Symbol.for('default-project')
 const debug = createDebug('vitest:coverage')
 let uniqueId = 0
 
-export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
+export class IstanbulCoverageProvider
+  extends BaseCoverageProvider
+  implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -64,15 +87,22 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
       // Resolved fields
       provider: 'istanbul',
-      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
-      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+      reportsDirectory: resolve(
+        ctx.config.root,
+        config.reportsDirectory || coverageConfigDefaults.reportsDirectory,
+      ),
+      reporter: this.resolveReporters(
+        config.reporter || coverageConfigDefaults.reporter,
+      ),
 
       thresholds: config.thresholds && {
         ...config.thresholds,
         lines: config.thresholds['100'] ? 100 : config.thresholds.lines,
         branches: config.thresholds['100'] ? 100 : config.thresholds.branches,
         functions: config.thresholds['100'] ? 100 : config.thresholds.functions,
-        statements: config.thresholds['100'] ? 100 : config.thresholds.statements,
+        statements: config.thresholds['100']
+          ? 100
+          : config.thresholds.statements,
       },
     }
 
@@ -90,7 +120,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     this.testExclude = new _TestExclude({
       cwd: ctx.config.root,
-      include: typeof this.options.include === 'undefined' ? undefined : [...this.options.include],
+      include:
+        typeof this.options.include === 'undefined'
+          ? undefined
+          : [...this.options.include],
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: this.options.extension,
@@ -98,9 +131,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     })
 
     const shard = this.ctx.config.shard
-    const tempDirectory = `.tmp${shard ? `-${shard.index}-${shard.count}` : ''}`
+    const tempDirectory = `.tmp${
+      shard ? `-${shard.index}-${shard.count}` : ''
+    }`
 
-    this.coverageFilesDirectory = resolve(this.options.reportsDirectory, tempDirectory)
+    this.coverageFilesDirectory = resolve(
+      this.options.reportsDirectory,
+      tempDirectory,
+    )
   }
 
   resolveOptions() {
@@ -108,16 +146,24 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   onFileTransform(sourceCode: string, id: string, pluginCtx: any) {
-    if (!this.testExclude.shouldInstrument(id))
+    if (!this.testExclude.shouldInstrument(id)) {
       return
+    }
 
     const sourceMap = pluginCtx.getCombinedSourcemap()
     sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
 
     // Exclude SWC's decorators that are left in source maps
-    sourceCode = sourceCode.replaceAll('_ts_decorate', '/* istanbul ignore next */_ts_decorate')
+    sourceCode = sourceCode.replaceAll(
+      '_ts_decorate',
+      '/* istanbul ignore next */_ts_decorate',
+    )
 
-    const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
+    const code = this.instrumenter.instrumentSync(
+      sourceCode,
+      id,
+      sourceMap as any,
+    )
     const map = this.instrumenter.lastSourceMap() as any
 
     return { code, map }
@@ -129,11 +175,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * backwards compatibility is a breaking change.
    */
   onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
-    if (!coverage)
+    if (!coverage) {
       return
+    }
 
-    if (transformMode !== 'web' && transformMode !== 'ssr')
+    if (transformMode !== 'web' && transformMode !== 'ssr') {
       throw new Error(`Invalid transform mode: ${transformMode}`)
+    }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
@@ -142,7 +190,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
-    const filename = resolve(this.coverageFilesDirectory, `coverage-${uniqueId++}.json`)
+    const filename = resolve(
+      this.coverageFilesDirectory,
+      `coverage-${uniqueId++}.json`,
+    )
     entry[transformMode].push(filename)
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
@@ -150,11 +201,21 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   async clean(clean = true) {
-    if (clean && existsSync(this.options.reportsDirectory))
-      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
+    if (clean && existsSync(this.options.reportsDirectory)) {
+      await fs.rm(this.options.reportsDirectory, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+      })
+    }
 
-    if (existsSync(this.coverageFilesDirectory))
-      await fs.rm(this.coverageFilesDirectory, { recursive: true, force: true, maxRetries: 10 })
+    if (existsSync(this.coverageFilesDirectory)) {
+      await fs.rm(this.coverageFilesDirectory, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+      })
+    }
 
     await fs.mkdir(this.coverageFilesDirectory, { recursive: true })
 
@@ -171,33 +232,45 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     this.pendingPromises = []
 
     for (const coveragePerProject of this.coverageFiles.values()) {
-      for (const filenames of [coveragePerProject.ssr, coveragePerProject.web]) {
+      for (const filenames of [
+        coveragePerProject.ssr,
+        coveragePerProject.web,
+      ]) {
         const coverageMapByTransformMode = libCoverage.createCoverageMap({})
 
-        for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
+        for (const chunk of this.toSlices(
+          filenames,
+          this.options.processingConcurrency,
+        )) {
           if (debug.enabled) {
             index += chunk.length
             debug('Covered files %d/%d', index, total)
           }
 
-          await Promise.all(chunk.map(async (filename) => {
-            const contents = await fs.readFile(filename, 'utf-8')
-            const coverage = JSON.parse(contents) as CoverageMap
+          await Promise.all(
+            chunk.map(async (filename) => {
+              const contents = await fs.readFile(filename, 'utf-8')
+              const coverage = JSON.parse(contents) as CoverageMap
 
-            coverageMapByTransformMode.merge(coverage)
-          }))
+              coverageMapByTransformMode.merge(coverage)
+            }),
+          )
         }
 
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(coverageMapByTransformMode)
+        const transformedCoverage = await transformCoverage(
+          coverageMapByTransformMode,
+        )
         coverageMap.merge(transformedCoverage)
       }
     }
 
     if (this.options.all && allTestsRun) {
       const coveredFiles = coverageMap.files()
-      const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
+      const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(
+        coveredFiles,
+      )
 
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
     }
@@ -207,7 +280,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
   async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext) {
     await this.generateReports(
-      coverageMap as CoverageMap || libCoverage.createCoverageMap({}),
+      (coverageMap as CoverageMap) || libCoverage.createCoverageMap({}),
       allTestsRun,
     )
 
@@ -219,28 +292,37 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
       // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0)
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
         await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
     }
   }
 
-  async generateReports(coverageMap: CoverageMap, allTestsRun: boolean | undefined) {
+  async generateReports(
+    coverageMap: CoverageMap,
+    allTestsRun: boolean | undefined,
+  ) {
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
       watermarks: this.options.watermarks,
     })
 
-    if (this.hasTerminalReporter(this.options.reporter))
-      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
+    if (this.hasTerminalReporter(this.options.reporter)) {
+      this.ctx.logger.log(
+        c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name),
+      )
+    }
 
     for (const reporter of this.options.reporter) {
       // Type assertion required for custom reporters
-      reports.create(reporter[0] as Parameters<typeof reports.create>[0], {
-        skipFull: this.options.skipFull,
-        projectRoot: this.ctx.config.root,
-        ...reporter[1],
-      }).execute(context)
+      reports
+        .create(reporter[0] as Parameters<typeof reports.create>[0], {
+          skipFull: this.options.skipFull,
+          projectRoot: this.ctx.config.root,
+          ...reporter[1],
+        })
+        .execute(context)
     }
 
     if (this.options.thresholds) {
@@ -257,17 +339,27 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       })
 
       if (this.options.thresholds.autoUpdate && allTestsRun) {
-        if (!this.ctx.server.config.configFile)
-          throw new Error('Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.')
+        if (!this.ctx.server.config.configFile) {
+          throw new Error(
+            'Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.',
+          )
+        }
 
         const configFilePath = this.ctx.server.config.configFile
-        const configModule = parseModule(await fs.readFile(configFilePath, 'utf8'))
+        const configModule = parseModule(
+          await fs.readFile(configFilePath, 'utf8'),
+        )
 
         this.updateThresholds({
           thresholds: resolvedThresholds,
           perFile: this.options.thresholds.perFile,
           configurationFile: configModule,
-          onUpdate: () => writeFileSync(configFilePath, configModule.generate().code, 'utf-8'),
+          onUpdate: () =>
+            writeFileSync(
+              configFilePath,
+              configModule.generate().code,
+              'utf-8',
+            ),
         })
       }
     }
@@ -276,18 +368,24 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   async mergeReports(coverageMaps: unknown[]) {
     const coverageMap = libCoverage.createCoverageMap({})
 
-    for (const coverage of coverageMaps)
+    for (const coverage of coverageMaps) {
       coverageMap.merge(coverage as CoverageMap)
+    }
 
     await this.generateReports(coverageMap, true)
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file => resolve(this.ctx.config.root, file))
+    let includedFiles = allFiles.map(file =>
+      resolve(this.ctx.config.root, file),
+    )
 
-    if (this.ctx.config.changed)
-      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+    if (this.ctx.config.changed) {
+      includedFiles = (this.ctx.config.related || []).filter(file =>
+        includedFiles.includes(file),
+      )
+    }
 
     const uncoveredFiles = includedFiles
       .filter(file => !coveredFiles.includes(file))

@@ -11,17 +11,23 @@ export class DefaultReporter extends BaseReporter {
 
   onPathsCollected(paths: string[] = []) {
     if (this.isTTY) {
-      if (this.renderSucceedDefault === undefined)
+      if (this.renderSucceedDefault === undefined) {
         this.renderSucceedDefault = !!this.rendererOptions.renderSucceed
+      }
 
-      if (this.renderSucceedDefault !== true)
+      if (this.renderSucceedDefault !== true) {
         this.rendererOptions.renderSucceed = paths.length <= 1
+      }
     }
   }
 
   async onTestRemoved(trigger?: string) {
     this.stopListRender()
-    this.ctx.logger.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
+    this.ctx.logger.clearScreen(
+      c.yellow('Test removed...')
+      + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''),
+      true,
+    )
     const files = this.ctx.state.getFiles(this.watchFilters)
     createListRenderer(files, this.rendererOptions).stop()
     this.ctx.logger.log()
@@ -33,23 +39,32 @@ export class DefaultReporter extends BaseReporter {
     if (this.isTTY) {
       this.rendererOptions.logger = this.ctx.logger
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
+      this.rendererOptions.slowTestThreshold
+        = this.ctx.config.slowTestThreshold
       this.rendererOptions.mode = this.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
-      if (!this.renderer)
+      if (!this.renderer) {
         this.renderer = createListRenderer(files, this.rendererOptions).start()
-      else
+      }
+      else {
         this.renderer.update(files)
+      }
     }
   }
 
-  onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  onFinished(
+    files = this.ctx.state.getFiles(),
+    errors = this.ctx.state.getUnhandledErrors(),
+  ) {
     this.stopListRender()
     this.ctx.logger.log()
     super.onFinished(files, errors)
   }
 
-  async onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  async onWatcherStart(
+    files = this.ctx.state.getFiles(),
+    errors = this.ctx.state.getUnhandledErrors(),
+  ) {
     this.stopListRender()
     await super.onWatcherStart(files, errors)
   }
@@ -65,8 +80,9 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log))
+    if (!this.shouldLog(log)) {
       return
+    }
     this.renderer?.clear()
     super.onUserConsoleLog(log)
   }

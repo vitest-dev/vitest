@@ -4,9 +4,21 @@ import assert from 'node:assert'
 import { isAbsolute, join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { DebuggerOptions, EncodedSourceMap, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type {
+  DebuggerOptions,
+  EncodedSourceMap,
+  FetchResult,
+  ViteNodeResolveId,
+  ViteNodeServerOptions,
+} from './types'
 import { shouldExternalize } from './externalize'
-import { cleanUrl, normalizeModuleId, toArray, toFilePath, withTrailingSlash } from './utils'
+import {
+  cleanUrl,
+  normalizeModuleId,
+  toArray,
+  toFilePath,
+  withTrailingSlash,
+} from './utils'
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
@@ -56,7 +68,10 @@ export class ViteNodeServer {
     const ssrOptions = server.config.ssr
 
     options.deps ??= {}
-    options.deps.cacheDir = relative(server.config.root, options.deps.cacheDir || server.config.cacheDir)
+    options.deps.cacheDir = relative(
+      server.config.root,
+      options.deps.cacheDir || server.config.cacheDir,
+    )
 
     if (ssrOptions) {
       // we don't externalize ssr, because it has different semantics in Vite
@@ -71,36 +86,52 @@ export class ViteNodeServer {
       else if (options.deps.inline !== true) {
         options.deps.inline ??= []
         const inline = options.deps.inline
-        options.deps.inline.push(...toArray(ssrOptions.noExternal).filter(dep => !inline.includes(dep)))
+        options.deps.inline.push(
+          ...toArray(ssrOptions.noExternal).filter(
+            dep => !inline.includes(dep),
+          ),
+        )
       }
     }
     if (process.env.VITE_NODE_DEBUG_DUMP) {
-      options.debug = Object.assign(<DebuggerOptions>{
-        dumpModules: !!process.env.VITE_NODE_DEBUG_DUMP,
-        loadDumppedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
-      }, options.debug ?? {})
+      options.debug = Object.assign(
+        <DebuggerOptions>{
+          dumpModules: !!process.env.VITE_NODE_DEBUG_DUMP,
+          loadDumppedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
+        },
+        options.debug ?? {},
+      )
     }
-    if (options.debug)
+    if (options.debug) {
       this.debugger = new Debugger(server.config.root, options.debug!)
+    }
 
     options.deps.moduleDirectories ??= []
 
-    const envValue = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
+    const envValue
+      = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES
+      || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
     const customModuleDirectories = envValue?.split(',')
-    if (customModuleDirectories)
+    if (customModuleDirectories) {
       options.deps.moduleDirectories.push(...customModuleDirectories)
+    }
 
-    options.deps.moduleDirectories = options.deps.moduleDirectories.map((dir) => {
-      if (!dir.startsWith('/'))
-        dir = `/${dir}`
-      if (!dir.endsWith('/'))
-        dir += '/'
-      return normalize(dir)
-    })
+    options.deps.moduleDirectories = options.deps.moduleDirectories.map(
+      (dir) => {
+        if (!dir.startsWith('/')) {
+          dir = `/${dir}`
+        }
+        if (!dir.endsWith('/')) {
+          dir += '/'
+        }
+        return normalize(dir)
+      },
+    )
 
     // always add node_modules as a module directory
-    if (!options.deps.moduleDirectories.includes('/node_modules/'))
+    if (!options.deps.moduleDirectories.includes('/node_modules/')) {
       options.deps.moduleDirectories.push('/node_modules/')
+    }
   }
 
   shouldExternalize(id: string) {
@@ -114,8 +145,9 @@ export class ViteNodeServer {
   }
 
   private async ensureExists(id: string): Promise<boolean> {
-    if (this.existingOptimizedDeps.has(id))
+    if (this.existingOptimizedDeps.has(id)) {
       return true
+    }
     if (existsSync(id)) {
       this.existingOptimizedDeps.add(id)
       return true
@@ -129,16 +161,28 @@ export class ViteNodeServer {
     })
   }
 
-  async resolveId(id: string, importer?: string, transformMode?: 'web' | 'ssr'): Promise<ViteNodeResolveId | null> {
-    if (importer && !importer.startsWith(withTrailingSlash(this.server.config.root)))
+  async resolveId(
+    id: string,
+    importer?: string,
+    transformMode?: 'web' | 'ssr',
+  ): Promise<ViteNodeResolveId | null> {
+    if (
+      importer
+      && !importer.startsWith(withTrailingSlash(this.server.config.root))
+    ) {
       importer = resolve(this.server.config.root, importer)
-    const mode = transformMode ?? ((importer && this.getTransformMode(importer)) || 'ssr')
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
+    }
+    const mode
+      = transformMode ?? ((importer && this.getTransformMode(importer)) || 'ssr')
+    return this.server.pluginContainer.resolveId(id, importer, {
+      ssr: mode === 'ssr',
+    })
   }
 
   async resolveModule(rawId: string, resolved: ViteNodeResolveId | null) {
     const id = resolved?.id || rawId
-    const external = (!isAbsolute(id) || this.isModuleDirectory(id)) ? rawId : null
+    const external
+      = !isAbsolute(id) || this.isModuleDirectory(id) ? rawId : null
     return {
       id,
       fsPath: cleanUrl(id),
@@ -147,28 +191,38 @@ export class ViteNodeServer {
   }
 
   private isModuleDirectory(path: string) {
-    const moduleDirectories = this.options.deps?.moduleDirectories || ['/node_modules/']
+    const moduleDirectories = this.options.deps?.moduleDirectories || [
+      '/node_modules/',
+    ]
     return moduleDirectories.some((dir: string) => path.includes(dir))
   }
 
   getSourceMap(source: string) {
     const fetchResult = this.fetchCache.get(source)?.result
-    if (fetchResult?.map)
+    if (fetchResult?.map) {
       return fetchResult.map
-    const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
-    return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
+    }
+    const ssrTransformResult
+      = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
+    return (ssrTransformResult?.map
+      || null) as unknown as EncodedSourceMap | null
   }
 
   private assertMode(mode: 'web' | 'ssr') {
-    assert(mode === 'web' || mode === 'ssr', `"transformMode" can only be "web" or "ssr", received "${mode}".`)
+    assert(
+      mode === 'web' || mode === 'ssr',
+      `"transformMode" can only be "web" or "ssr", received "${mode}".`,
+    )
   }
 
-  async fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
+  async fetchModule(
+    id: string,
+    transformMode?: 'web' | 'ssr',
+  ): Promise<FetchResult> {
     const mode = transformMode || this.getTransformMode(id)
-    return this.fetchResult(id, mode)
-      .then((r) => {
-        return this.options.sourcemap !== true ? { ...r, map: undefined } : r
-      })
+    return this.fetchResult(id, mode).then((r) => {
+      return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+    })
   }
 
   async fetchResult(id: string, mode: 'web' | 'ssr') {
@@ -177,35 +231,48 @@ export class ViteNodeServer {
     const promiseMap = this.fetchPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(moduleId)) {
-      promiseMap.set(moduleId, this._fetchModule(moduleId, mode)
-        .finally(() => {
+      promiseMap.set(
+        moduleId,
+        this._fetchModule(moduleId, mode).finally(() => {
           promiseMap.delete(moduleId)
-        }))
+        }),
+      )
     }
     return promiseMap.get(moduleId)!
   }
 
-  async transformRequest(id: string, filepath = id, transformMode?: 'web' | 'ssr') {
+  async transformRequest(
+    id: string,
+    filepath = id,
+    transformMode?: 'web' | 'ssr',
+  ) {
     const mode = transformMode || this.getTransformMode(id)
     this.assertMode(mode)
     const promiseMap = this.transformPromiseMap[mode]
     // reuse transform for concurrent requests
     if (!promiseMap.has(id)) {
-      promiseMap.set(id, this._transformRequest(id, filepath, mode)
-        .finally(() => {
+      promiseMap.set(
+        id,
+        this._transformRequest(id, filepath, mode).finally(() => {
           promiseMap.delete(id)
-        }))
+        }),
+      )
     }
     return promiseMap.get(id)!
   }
 
   async transformModule(id: string, transformMode?: 'web' | 'ssr') {
-    if (transformMode !== 'web')
-      throw new Error('`transformModule` only supports `transformMode: "web"`.')
+    if (transformMode !== 'web') {
+      throw new Error(
+        '`transformModule` only supports `transformMode: "web"`.',
+      )
+    }
 
     const normalizedId = normalizeModuleId(id)
     const mod = this.server.moduleGraph.getModuleById(normalizedId)
-    const result = mod?.transformResult || await this.server.transformRequest(normalizedId)
+    const result
+      = mod?.transformResult
+      || (await this.server.transformRequest(normalizedId))
 
     return {
       code: result?.code,
@@ -215,32 +282,39 @@ export class ViteNodeServer {
   getTransformMode(id: string) {
     const withoutQuery = id.split('?')[0]
 
-    if (this.options.transformMode?.web?.some(r => withoutQuery.match(r)))
+    if (this.options.transformMode?.web?.some(r => withoutQuery.match(r))) {
       return 'web'
-    if (this.options.transformMode?.ssr?.some(r => withoutQuery.match(r)))
+    }
+    if (this.options.transformMode?.ssr?.some(r => withoutQuery.match(r))) {
       return 'ssr'
+    }
 
-    if (withoutQuery.match(/\.([cm]?[jt]sx?|json)$/))
+    if (withoutQuery.match(/\.([cm]?[jt]sx?|json)$/)) {
       return 'ssr'
+    }
     return 'web'
   }
 
-  private getChangedModule(
-    id: string,
-    file: string,
-  ) {
-    const module = this.server.moduleGraph.getModuleById(id) || this.server.moduleGraph.getModuleById(file)
-    if (module)
+  private getChangedModule(id: string, file: string) {
+    const module
+      = this.server.moduleGraph.getModuleById(id)
+      || this.server.moduleGraph.getModuleById(file)
+    if (module) {
       return module
+    }
     const _modules = this.server.moduleGraph.getModulesByFile(file)
-    if (!_modules || !_modules.size)
+    if (!_modules || !_modules.size) {
       return null
+    }
     // find the latest changed module
     const modules = [..._modules]
     let mod = modules[0]
     let latestMax = -1
     for (const m of _modules) {
-      const timestamp = Math.max(m.lastHMRTimestamp, m.lastInvalidationTimestamp)
+      const timestamp = Math.max(
+        m.lastHMRTimestamp,
+        m.lastInvalidationTimestamp,
+      )
       if (timestamp > latestMax) {
         latestMax = timestamp
         mod = m
@@ -249,16 +323,22 @@ export class ViteNodeServer {
     return mod
   }
 
-  private async _fetchModule(id: string, transformMode: 'web' | 'ssr'): Promise<FetchResult> {
+  private async _fetchModule(
+    id: string,
+    transformMode: 'web' | 'ssr',
+  ): Promise<FetchResult> {
     let result: FetchResult
 
     const cacheDir = this.options.deps?.cacheDir
 
     if (cacheDir && id.includes(cacheDir)) {
-      if (!id.startsWith(withTrailingSlash(this.server.config.root)))
+      if (!id.startsWith(withTrailingSlash(this.server.config.root))) {
         id = join(this.server.config.root, id)
+      }
       const timeout = setTimeout(() => {
-        throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
+        throw new Error(
+          `ViteNodeServer: ${id} not found. This is a bug, please report it.`,
+        )
       }, 5000) // CI can be quite slow
       await this.ensureExists(id)
       clearTimeout(timeout)
@@ -273,10 +353,14 @@ export class ViteNodeServer {
     // if lastUpdateTimestamp is 0, then the module was not changed since the server started
     // we test "timestamp === 0" for expressiveness, but it's not necessary
     const timestamp = moduleNode
-      ? Math.max(moduleNode.lastHMRTimestamp, moduleNode.lastInvalidationTimestamp)
+      ? Math.max(
+        moduleNode.lastHMRTimestamp,
+        moduleNode.lastInvalidationTimestamp,
+      )
       : 0
-    if (cache && (timestamp === 0 || cache.timestamp >= timestamp))
+    if (cache && (timestamp === 0 || cache.timestamp >= timestamp)) {
       return cache.result
+    }
 
     const time = Date.now()
     const externalize = await this.shouldExternalize(filePath)
@@ -299,10 +383,7 @@ export class ViteNodeServer {
     }
 
     const durations = this.durations[transformMode].get(filePath) || []
-    this.durations[transformMode].set(
-      filePath,
-      [...durations, duration ?? 0],
-    )
+    this.durations[transformMode].set(filePath, [...durations, duration ?? 0])
 
     this.fetchCaches[transformMode].set(filePath, cacheEntry)
     this.fetchCache.set(filePath, cacheEntry)
@@ -310,7 +391,10 @@ export class ViteNodeServer {
     return result
   }
 
-  protected async processTransformResult(filepath: string, result: TransformResult) {
+  protected async processTransformResult(
+    filepath: string,
+    result: TransformResult,
+  ) {
     const mod = this.server.moduleGraph.getModuleById(filepath)
     return withInlineSourcemap(result, {
       filepath: mod?.file || filepath,
@@ -318,34 +402,42 @@ export class ViteNodeServer {
     })
   }
 
-  private async _transformRequest(id: string, filepath: string, transformMode: 'web' | 'ssr') {
+  private async _transformRequest(
+    id: string,
+    filepath: string,
+    transformMode: 'web' | 'ssr',
+  ) {
     debugRequest(id)
 
     let result: TransformResult | null = null
 
     if (this.options.debug?.loadDumppedModules) {
-      result = await this.debugger?.loadDump(id) ?? null
-      if (result)
+      result = (await this.debugger?.loadDump(id)) ?? null
+      if (result) {
         return result
+      }
     }
 
     if (transformMode === 'web') {
       // for components like Vue, we want to use the client side
       // plugins but then convert the code to be consumed by the server
       result = await this.server.transformRequest(id)
-      if (result)
+      if (result) {
         result = await this.server.ssrTransform(result.code, result.map, id)
+      }
     }
     else {
       result = await this.server.transformRequest(id, { ssr: true })
     }
 
     const sourcemap = this.options.sourcemap ?? 'inline'
-    if (sourcemap === 'inline' && result && !id.includes('node_modules'))
+    if (sourcemap === 'inline' && result && !id.includes('node_modules')) {
       result = await this.processTransformResult(filepath, result)
+    }
 
-    if (this.options.debug?.dumpModules)
+    if (this.options.debug?.dumpModules) {
       await this.debugger?.dumpFile(id, result)
+    }
 
     return result
   }

@@ -1,23 +1,25 @@
 import { KEYS } from './jsdom-keys'
 
-const skipKeys = [
-  'window',
-  'self',
-  'top',
-  'parent',
-]
+const skipKeys = ['window', 'self', 'top', 'parent']
 
-export function getWindowKeys(global: any, win: any, additionalKeys: string[] = []) {
+export function getWindowKeys(
+  global: any,
+  win: any,
+  additionalKeys: string[] = [],
+) {
   const keysArray = [...additionalKeys, ...KEYS]
-  const keys = new Set(keysArray.concat(Object.getOwnPropertyNames(win))
-    .filter((k) => {
-      if (skipKeys.includes(k))
+  const keys = new Set(
+    keysArray.concat(Object.getOwnPropertyNames(win)).filter((k) => {
+      if (skipKeys.includes(k)) {
         return false
-      if (k in global)
+      }
+      if (k in global) {
         return keysArray.includes(k)
+      }
 
       return true
-    }))
+    }),
+  )
 
   return keys
 }
@@ -36,7 +38,11 @@ interface PopulateOptions {
   additionalKeys?: string[]
 }
 
-export function populateGlobal(global: any, win: any, options: PopulateOptions = {}) {
+export function populateGlobal(
+  global: any,
+  win: any,
+  options: PopulateOptions = {},
+) {
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win, options.additionalKeys)
 
@@ -44,20 +50,24 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
-    const boundFunction = bindFunctions
+    const boundFunction
+      = bindFunctions
       && typeof win[key] === 'function'
       && !isClassLikeName(key)
       && win[key].bind(win)
 
-    if (KEYS.includes(key) && key in global)
+    if (KEYS.includes(key) && key in global) {
       originals.set(key, global[key])
+    }
 
     Object.defineProperty(global, key, {
       get() {
-        if (overrideObject.has(key))
+        if (overrideObject.has(key)) {
           return overrideObject.get(key)
-        if (boundFunction)
+        }
+        if (boundFunction) {
           return boundFunction
+        }
         return win[key]
       },
       set(v) {
@@ -72,8 +82,9 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   global.top = global
   global.parent = global
 
-  if (global.global)
+  if (global.global) {
     global.global = global
+  }
 
   // rewrite defaultView to reference the same global context
   if (global.document && global.document.defaultView) {

@@ -12,15 +12,19 @@ import type { DiffOptionsColor } from './types'
 // * include common strings
 // * include change strings which have argument op with changeColor
 // * exclude change strings which have opposite op
-function concatenateRelevantDiffs(op: number, diffs: Array<Diff>, changeColor: DiffOptionsColor): string {
+function concatenateRelevantDiffs(
+  op: number,
+  diffs: Array<Diff>,
+  changeColor: DiffOptionsColor,
+): string {
   return diffs.reduce(
     (reduced: string, diff: Diff): string =>
       reduced
       + (diff[0] === DIFF_EQUAL
         ? diff[1]
-        : (diff[0] === op && diff[1].length !== 0) // empty if change is newline
-            ? changeColor(diff[1])
-            : ''),
+        : diff[0] === op && diff[1].length !== 0 // empty if change is newline
+          ? changeColor(diff[1])
+          : ''),
     '',
   )
 }
@@ -102,8 +106,9 @@ class ChangeBuffer {
 
   // Output from buffer.
   moveLinesTo(lines: Array<Diff>): void {
-    if (!this.isLineEmpty())
+    if (!this.isLineEmpty()) {
       this.pushLine()
+    }
 
     lines.push(...this.lines)
     this.lines.length = 0
@@ -130,11 +135,13 @@ class CommonBuffer {
     const isDiffEmpty = diff[1].length === 0
 
     // An empty diff string is redundant, unless a change line is empty.
-    if (!isDiffEmpty || this.deleteBuffer.isLineEmpty())
+    if (!isDiffEmpty || this.deleteBuffer.isLineEmpty()) {
       this.deleteBuffer.pushDiff(diff)
+    }
 
-    if (!isDiffEmpty || this.insertBuffer.isLineEmpty())
+    if (!isDiffEmpty || this.insertBuffer.isLineEmpty()) {
       this.insertBuffer.pushDiff(diff)
+    }
   }
 
   private flushChangeLines(): void {
@@ -206,7 +213,10 @@ class CommonBuffer {
 // Assume the function is not called:
 // * if either expected or received is empty string
 // * if neither expected nor received is multiline string
-function getAlignedDiffs(diffs: Array<Diff>, changeColor: DiffOptionsColor): Array<Diff> {
+function getAlignedDiffs(
+  diffs: Array<Diff>,
+  changeColor: DiffOptionsColor,
+): Array<Diff> {
   const deleteBuffer = new ChangeBuffer(DIFF_DELETE, changeColor)
   const insertBuffer = new ChangeBuffer(DIFF_INSERT, changeColor)
   const commonBuffer = new CommonBuffer(deleteBuffer, insertBuffer)

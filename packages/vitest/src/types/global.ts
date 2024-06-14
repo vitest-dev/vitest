@@ -18,12 +18,19 @@ declare global {
 }
 
 interface SnapshotMatcher<T> {
-  <U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
+  <U extends { [P in keyof T]: any }>(
+    snapshot: Partial<U>,
+    message?: string
+  ): void
   (message?: string): void
 }
 
 interface InlineSnapshotMatcher<T> {
-  <U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
+  <U extends { [P in keyof T]: any }>(
+    properties: Partial<U>,
+    snapshot?: string,
+    message?: string
+  ): void
   (message?: string): void
 }
 
@@ -42,7 +49,10 @@ declare module '@vitest/expect' {
   interface ExpectStatic {
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
-    poll: <T>(actual: () => T, options?: ExpectPollOptions) => PromisifyAssertion<Awaited<T>>
+    poll: <T>(
+      actual: () => T,
+      options?: ExpectPollOptions
+    ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
     assertions: (expected: number) => void
     hasAssertions: () => void
@@ -55,7 +65,10 @@ declare module '@vitest/expect' {
     toMatchSnapshot: SnapshotMatcher<T>
     toMatchInlineSnapshot: InlineSnapshotMatcher<T>
     toThrowErrorMatchingSnapshot: (message?: string) => void
-    toThrowErrorMatchingInlineSnapshot: (snapshot?: string, message?: string) => void
+    toThrowErrorMatchingInlineSnapshot: (
+      snapshot?: string,
+      message?: string
+    ) => void
     toMatchFileSnapshot: (filepath: string, message?: string) => Promise<void>
   }
 }

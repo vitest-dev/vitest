@@ -14,11 +14,17 @@ export function NormalizeURLPlugin(): Plugin {
     enforce: 'post',
     transform(code, id, options) {
       const ssr = options?.ssr === true
-      if (ssr || !code.includes('new URL') || !code.includes('import.meta.url'))
+      if (
+        ssr
+        || !code.includes('new URL')
+        || !code.includes('import.meta.url')
+      ) {
         return
+      }
 
       const cleanString = stripLiteral(code)
-      const assetImportMetaUrlRE = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
+      const assetImportMetaUrlRE
+        = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code
       let match: RegExpExecArray | null
@@ -26,7 +32,10 @@ export function NormalizeURLPlugin(): Plugin {
       while ((match = assetImportMetaUrlRE.exec(cleanString))) {
         const { 0: exp, index } = match
         const metaUrlIndex = index + exp.indexOf('import.meta.url')
-        updatedCode = updatedCode.slice(0, metaUrlIndex) + locationString + updatedCode.slice(metaUrlIndex + metaUrlLength)
+        updatedCode
+          = updatedCode.slice(0, metaUrlIndex)
+          + locationString
+          + updatedCode.slice(metaUrlIndex + metaUrlLength)
       }
 
       return {

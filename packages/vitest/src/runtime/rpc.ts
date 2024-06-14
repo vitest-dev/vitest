@@ -1,6 +1,4 @@
-import {
-  getSafeTimers,
-} from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils'
 import type { CancelReason } from '@vitest/runner'
 import { createBirpc } from 'birpc'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
@@ -11,7 +9,8 @@ import type { WorkerRPC } from '../types'
 const { get } = Reflect
 
 function withSafeTimers(fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
+  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate }
+    = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
@@ -26,8 +25,9 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = setImmediate
     globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process)
+    if (globalThis.process) {
       globalThis.process.nextTick = nextTick
+    }
 
     const result = fn()
     return result
@@ -49,39 +49,58 @@ function withSafeTimers(fn: () => void) {
 const promises = new Set<Promise<unknown>>()
 
 export async function rpcDone() {
-  if (!promises.size)
+  if (!promises.size) {
     return
+  }
   const awaitable = Array.from(promises)
   return Promise.all(awaitable)
 }
 
-export function createRuntimeRpc(options: Pick<BirpcOptions<RuntimeRPC>, 'on' | 'post' | 'serialize' | 'deserialize'>) {
+export function createRuntimeRpc(
+  options: Pick<
+    BirpcOptions<RuntimeRPC>,
+    'on' | 'post' | 'serialize' | 'deserialize'
+  >,
+) {
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
   })
 
-  const rpc = createSafeRpc(createBirpc<RuntimeRPC, RunnerRPC>(
-    {
-      onCancel: setCancel,
-    },
-    {
-      eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onCancel'],
-      onTimeoutError(functionName, args) {
-        let message = `[vitest-worker]: Timeout calling "${functionName}"`
-
-        if (functionName === 'fetch' || functionName === 'transform' || functionName === 'resolveId')
-          message += ` with "${JSON.stringify(args)}"`
-
-        // JSON.stringify cannot serialize Error instances
-        if (functionName === 'onUnhandledError')
-          message += ` with "${args[0]?.message || args[0]}"`
-
-        throw new Error(message)
+  const rpc = createSafeRpc(
+    createBirpc<RuntimeRPC, RunnerRPC>(
+      {
+        onCancel: setCancel,
       },
-      ...options,
-    },
-  ))
+      {
+        eventNames: [
+          'onUserConsoleLog',
+          'onFinished',
+          'onCollected',
+          'onCancel',
+        ],
+        onTimeoutError(functionName, args) {
+          let message = `[vitest-worker]: Timeout calling "${functionName}"`
+
+          if (
+            functionName === 'fetch'
+            || functionName === 'transform'
+            || functionName === 'resolveId'
+          ) {
+            message += ` with "${JSON.stringify(args)}"`
+          }
+
+          // JSON.stringify cannot serialize Error instances
+          if (functionName === 'onUnhandledError') {
+            message += ` with "${args[0]?.message || args[0]}"`
+          }
+
+          throw new Error(message)
+        },
+        ...options,
+      },
+    ),
+  )
 
   return {
     rpc,
@@ -93,16 +112,17 @@ export function createSafeRpc(rpc: WorkerRPC) {
   return new Proxy(rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)
-      const safeSendCall = (...args: any[]) => withSafeTimers(async () => {
-        const result = sendCall(...args)
-        promises.add(result)
-        try {
-          return await result
-        }
-        finally {
-          promises.delete(result)
-        }
-      })
+      const safeSendCall = (...args: any[]) =>
+        withSafeTimers(async () => {
+          const result = sendCall(...args)
+          promises.add(result)
+          try {
+            return await result
+          }
+          finally {
+            promises.delete(result)
+          }
+        })
       safeSendCall.asEvent = sendCall.asEvent
       return safeSendCall
     },

@@ -22,20 +22,38 @@ function formatFilepath(path: string) {
   const lastSlash = Math.max(path.lastIndexOf('/') + 1, 0)
   const basename = path.slice(lastSlash)
   let firstDot = basename.indexOf('.')
-  if (firstDot < 0)
+  if (firstDot < 0) {
     firstDot = basename.length
+  }
   firstDot += lastSlash
 
-  return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
+  return (
+    c.dim(path.slice(0, lastSlash))
+    + path.slice(lastSlash, firstDot)
+    + c.dim(path.slice(firstDot))
+  )
 }
 
 function formatNumber(number: number) {
   const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',')
-    + (res[1] ? `.${res[1]}` : '')
+  return (
+    res[0].replace(/(?=(?:\d{3})+$)\B/g, ',') + (res[1] ? `.${res[1]}` : '')
+  )
 }
 
-const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
+const tableHead = [
+  'name',
+  'hz',
+  'min',
+  'max',
+  'mean',
+  'p75',
+  'p99',
+  'p995',
+  'p999',
+  'rme',
+  'samples',
+]
 
 function renderBenchmarkItems(result: BenchmarkResult) {
   return [
@@ -54,21 +72,14 @@ function renderBenchmarkItems(result: BenchmarkResult) {
 }
 
 function computeColumnWidths(results: BenchmarkResult[]): number[] {
-  const rows = [
-    tableHead,
-    ...results.map(v => renderBenchmarkItems(v)),
-  ]
-  return Array.from(
-    tableHead,
-    (_, i) => Math.max(...rows.map(row => stripAnsi(row[i]).length)),
-  )
+  const rows = [tableHead, ...results.map(v => renderBenchmarkItems(v))]
+  return Array.from(tableHead, (_, i) =>
+    Math.max(...rows.map(row => stripAnsi(row[i]).length)))
 }
 
 function padRow(row: string[], widths: number[]) {
-  return row.map((v, i) =>
-    i
-      ? v.padStart(widths[i], ' ')
-      : v.padEnd(widths[i], ' '), // name
+  return row.map(
+    (v, i) => (i ? v.padStart(widths[i], ' ') : v.padEnd(widths[i], ' ')), // name
   )
 }
 
@@ -93,10 +104,18 @@ function renderBenchmark(result: BenchmarkResult, widths: number[]) {
   ].join('  ')
 }
 
-export function renderTree(tasks: Task[], options: TableRendererOptions, level = 0, shallow = false): string {
+export function renderTree(
+  tasks: Task[],
+  options: TableRendererOptions,
+  level = 0,
+  shallow = false,
+): string {
   const output: string[] = []
 
-  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
+  const benchMap: Record<
+    string,
+    { current: BenchmarkResult; baseline?: BenchmarkResult }
+  > = {}
   for (const t of tasks) {
     if (t.meta.benchmark && t.result?.benchmark) {
       benchMap[t.id] = {
@@ -124,29 +143,39 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
   for (const task of tasks) {
     const padding = '  '.repeat(level ? 1 : 0)
     let prefix = ''
-    if (idx === 0 && task.meta?.benchmark)
+    if (idx === 0 && task.meta?.benchmark) {
       prefix += `${renderTableHead(columnWidths)}\n${padding}`
+    }
 
     prefix += ` ${getStateSymbol(task)} `
 
     let suffix = ''
-    if (task.type === 'suite')
+    if (task.type === 'suite') {
       suffix += c.dim(` (${getTests(task).length})`)
-
-    if (task.mode === 'skip' || task.mode === 'todo')
-      suffix += ` ${c.dim(c.gray('[skipped]'))}`
-
-    if (task.result?.duration != null) {
-      if (task.result.duration > options.slowTestThreshold)
-        suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
-    if (options.showHeap && task.result?.heap != null)
-      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+    if (task.mode === 'skip' || task.mode === 'todo') {
+      suffix += ` ${c.dim(c.gray('[skipped]'))}`
+    }
+
+    if (task.result?.duration != null) {
+      if (task.result.duration > options.slowTestThreshold) {
+        suffix += c.yellow(
+          ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+        )
+      }
+    }
+
+    if (options.showHeap && task.result?.heap != null) {
+      suffix += c.magenta(
+        ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+      )
+    }
 
     let name = task.name
-    if (level === 0)
+    if (level === 0) {
       name = formatFilepath(name)
+    }
 
     const bench = benchMap[task.id]
     if (bench) {
@@ -155,23 +184,28 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
         if (bench.current.hz) {
           const diff = bench.current.hz / bench.baseline.hz
           const diffFixed = diff.toFixed(2)
-          if (diffFixed === '1.0.0')
+          if (diffFixed === '1.0.0') {
             body += `  ${c.gray(`[${diffFixed}x]`)}`
-          if (diff > 1)
+          }
+          if (diff > 1) {
             body += `  ${c.blue(`[${diffFixed}x] ⇑`)}`
-          else
+          }
+          else {
             body += `  ${c.red(`[${diffFixed}x] ⇓`)}`
+          }
         }
         output.push(padding + prefix + body + suffix)
         const bodyBaseline = renderBenchmark(bench.baseline, columnWidths)
         output.push(`${padding}   ${bodyBaseline}  ${c.dim('(baseline)')}`)
       }
       else {
-        if (bench.current.rank === 1 && benchCount > 1)
+        if (bench.current.rank === 1 && benchCount > 1) {
           body += `  ${c.bold(c.green(' fastest'))}`
+        }
 
-        if (bench.current.rank === benchCount && benchCount > 2)
+        if (bench.current.rank === benchCount && benchCount > 2) {
           body += `  ${c.bold(c.gray(' slowest'))}`
+        }
 
         output.push(padding + prefix + body + suffix)
       }
@@ -180,12 +214,13 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
       output.push(padding + prefix + name + suffix)
     }
 
-    if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
+    if (task.result?.state !== 'pass' && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
       if (typeof data === 'string') {
         data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
-        if (data === '')
+        if (data === '') {
           data = undefined
+        }
       }
 
       if (data != null) {
@@ -195,8 +230,9 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
     }
 
     if (!shallow && task.type === 'suite' && task.tasks.length > 0) {
-      if (task.result?.state)
+      if (task.result?.state) {
         output.push(renderTree(task.tasks, options, level + 1))
+      }
     }
     idx++
   }
@@ -204,7 +240,10 @@ export function renderTree(tasks: Task[], options: TableRendererOptions, level =
   return output.filter(Boolean).join('\n')
 }
 
-export function createTableRenderer(_tasks: Task[], options: TableRendererOptions) {
+export function createTableRenderer(
+  _tasks: Task[],
+  options: TableRendererOptions,
+) {
   let tasks = _tasks
   let timer: any
 
@@ -216,8 +255,9 @@ export function createTableRenderer(_tasks: Task[], options: TableRendererOption
 
   return {
     start() {
-      if (timer)
+      if (timer) {
         return this
+      }
       timer = setInterval(update, 200)
       return this
     },

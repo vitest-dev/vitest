@@ -19,13 +19,16 @@ function isObject(payload: unknown): payload is Record<string, unknown> {
 function isSendKeysPayload(payload: unknown): boolean {
   const validOptions = ['type', 'press', 'down', 'up']
 
-  if (!isObject(payload))
+  if (!isObject(payload)) {
     throw new Error('You must provide a `SendKeysPayload` object')
+  }
 
   const numberOfValidOptions = Object.keys(payload).filter(key =>
     validOptions.includes(key),
   ).length
-  const unknownOptions = Object.keys(payload).filter(key => !validOptions.includes(key))
+  const unknownOptions = Object.keys(payload).filter(
+    key => !validOptions.includes(key),
+  )
 
   if (numberOfValidOptions > 1) {
     throw new Error(
@@ -41,8 +44,11 @@ function isSendKeysPayload(payload: unknown): boolean {
       )}.`,
     )
   }
-  if (unknownOptions.length > 0)
-    throw new Error(`Unknown options \`${unknownOptions.join(', ')}\` present.`)
+  if (unknownOptions.length > 0) {
+    throw new Error(
+      `Unknown options \`${unknownOptions.join(', ')}\` present.`,
+    )
+  }
 
   return true
 }
@@ -63,31 +69,43 @@ function isUpPayload(payload: SendKeysPayload): payload is UpPayload {
   return 'up' in payload
 }
 
-export const sendKeys: BrowserCommand<Parameters<BrowserCommands['sendKeys']>> = async ({ provider, contextId }, payload) => {
-  if (!isSendKeysPayload(payload) || !payload)
+export const sendKeys: BrowserCommand<
+  Parameters<BrowserCommands['sendKeys']>
+> = async ({ provider, contextId }, payload) => {
+  if (!isSendKeysPayload(payload) || !payload) {
     throw new Error('You must provide a `SendKeysPayload` object')
+  }
 
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(contextId)
-    if (isTypePayload(payload))
+    if (isTypePayload(payload)) {
       await page.keyboard.type(payload.type)
-    else if (isPressPayload(payload))
+    }
+    else if (isPressPayload(payload)) {
       await page.keyboard.press(payload.press)
-    else if (isDownPayload(payload))
+    }
+    else if (isDownPayload(payload)) {
       await page.keyboard.down(payload.down)
-    else if (isUpPayload(payload))
+    }
+    else if (isUpPayload(payload)) {
       await page.keyboard.up(payload.up)
+    }
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = provider.browser!
-    if (isTypePayload(payload))
+    if (isTypePayload(payload)) {
       await browser.keys(payload.type.split(''))
-    else if (isPressPayload(payload))
+    }
+    else if (isPressPayload(payload)) {
       await browser.keys([payload.press])
-    else
+    }
+    else {
       throw new Error('Only "press" and "type" are supported by webdriverio.')
+    }
   }
   else {
-    throw new TypeError(`"sendKeys" is not supported for ${provider.name} browser provider.`)
+    throw new TypeError(
+      `"sendKeys" is not supported for ${provider.name} browser provider.`,
+    )
   }
 }

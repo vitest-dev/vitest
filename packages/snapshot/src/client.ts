@@ -3,7 +3,12 @@ import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 
-function createMismatchError(message: string, expand: boolean | undefined, actual: unknown, expected: unknown) {
+function createMismatchError(
+  message: string,
+  expand: boolean | undefined,
+  actual: unknown,
+  expected: unknown,
+) {
   const error = new Error(message)
   Object.defineProperty(error, 'actual', {
     value: actual,
@@ -52,7 +57,11 @@ export class SnapshotClient {
 
   constructor(private options: SnapshotClientOptions = {}) {}
 
-  async startCurrentRun(filepath: string, name: string, options: SnapshotStateOptions) {
+  async startCurrentRun(
+    filepath: string,
+    name: string,
+    options: SnapshotStateOptions,
+  ) {
     this.filepath = filepath
     this.name = name
 
@@ -62,10 +71,7 @@ export class SnapshotClient {
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          await SnapshotState.create(
-            filepath,
-            options,
-          ),
+          await SnapshotState.create(filepath, options),
         )
       }
       this.snapshotState = this.getSnapshotState(filepath)
@@ -99,20 +105,31 @@ export class SnapshotClient {
     } = options
     let { received } = options
 
-    if (!filepath)
+    if (!filepath) {
       throw new Error('Snapshot cannot be used outside of test')
+    }
 
     if (typeof properties === 'object') {
-      if (typeof received !== 'object' || !received)
-        throw new Error('Received value must be an object when the matcher has properties')
+      if (typeof received !== 'object' || !received) {
+        throw new Error(
+          'Received value must be an object when the matcher has properties',
+        )
+      }
 
       try {
         const pass = this.options.isEqual?.(received, properties) ?? false
         // const pass = equals(received, properties, [iterableEquality, subsetEquality])
-        if (!pass)
-          throw createMismatchError('Snapshot properties mismatched', this.snapshotState?.expand, received, properties)
-        else
+        if (!pass) {
+          throw createMismatchError(
+            'Snapshot properties mismatched',
+            this.snapshotState?.expand,
+            received,
+            properties,
+          )
+        }
+        else {
           received = deepMergeSnapshot(received, properties)
+        }
       }
       catch (err: any) {
         err.message = errorMessage || 'Snapshot mismatched'
@@ -120,10 +137,7 @@ export class SnapshotClient {
       }
     }
 
-    const testName = [
-      name,
-      ...(message ? [message] : []),
-    ].join(' > ')
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     const snapshotState = this.getSnapshotState(filepath)
 
@@ -136,38 +150,49 @@ export class SnapshotClient {
       rawSnapshot,
     })
 
-    if (!pass)
-      throw createMismatchError(`Snapshot \`${key || 'unknown'}\` mismatched`, this.snapshotState?.expand, actual?.trim(), expected?.trim())
+    if (!pass) {
+      throw createMismatchError(
+        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        this.snapshotState?.expand,
+        actual?.trim(),
+        expected?.trim(),
+      )
+    }
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {
-    if (!options.rawSnapshot)
+    if (!options.rawSnapshot) {
       throw new Error('Raw snapshot is required')
+    }
 
-    const {
-      filepath = this.filepath,
-      rawSnapshot,
-    } = options
+    const { filepath = this.filepath, rawSnapshot } = options
 
     if (rawSnapshot.content == null) {
-      if (!filepath)
+      if (!filepath) {
         throw new Error('Snapshot cannot be used outside of test')
+      }
 
       const snapshotState = this.getSnapshotState(filepath)
 
       // save the filepath, so it don't lose even if the await make it out-of-context
       options.filepath ||= filepath
       // resolve and read the raw snapshot file
-      rawSnapshot.file = await snapshotState.environment.resolveRawPath(filepath, rawSnapshot.file)
-      rawSnapshot.content = await snapshotState.environment.readSnapshotFile(rawSnapshot.file) ?? undefined
+      rawSnapshot.file = await snapshotState.environment.resolveRawPath(
+        filepath,
+        rawSnapshot.file,
+      )
+      rawSnapshot.content
+        = (await snapshotState.environment.readSnapshotFile(rawSnapshot.file))
+        ?? undefined
     }
 
     return this.assert(options)
   }
 
   async finishCurrentRun() {
-    if (!this.snapshotState)
+    if (!this.snapshotState) {
       return null
+    }
     const result = await this.snapshotState.pack()
 
     this.snapshotState = undefined

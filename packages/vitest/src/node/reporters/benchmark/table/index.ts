@@ -7,7 +7,11 @@ import { BaseReporter } from '../../base'
 import type { BenchmarkResult, File } from '../../../../types'
 import { getFullName, getTasks } from '../../../../utils'
 import { getStateSymbol } from '../../renderers/utils'
-import { type TableRendererOptions, createTableRenderer, renderTree } from './tableRender'
+import {
+  type TableRendererOptions,
+  createTableRenderer,
+  renderTree,
+} from './tableRender'
 
 export class TableReporter extends BaseReporter {
   renderer?: ReturnType<typeof createTableRenderer>
@@ -15,7 +19,11 @@ export class TableReporter extends BaseReporter {
 
   onTestRemoved(trigger?: string) {
     this.stopListRender()
-    this.ctx.logger.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
+    this.ctx.logger.clearScreen(
+      c.yellow('Test removed...')
+      + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''),
+      true,
+    )
     const files = this.ctx.state.getFiles(this.watchFilters)
     createTableRenderer(files, this.rendererOptions).stop()
     this.ctx.logger.log()
@@ -28,7 +36,10 @@ export class TableReporter extends BaseReporter {
     this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
     this.rendererOptions.slowTestThreshold = this.ctx.config.slowTestThreshold
     if (this.ctx.config.benchmark?.compare) {
-      const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
+      const compareFile = pathe.resolve(
+        this.ctx.config.root,
+        this.ctx.config.benchmark?.compare,
+      )
       try {
         this.rendererOptions.compare = flattenFormattedBenchmarkReport(
           JSON.parse(
@@ -42,33 +53,61 @@ export class TableReporter extends BaseReporter {
     }
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
-      if (!this.renderer)
-        this.renderer = createTableRenderer(files, this.rendererOptions).start()
-      else
+      if (!this.renderer) {
+        this.renderer = createTableRenderer(
+          files,
+          this.rendererOptions,
+        ).start()
+      }
+      else {
         this.renderer.update(files)
+      }
     }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
-    if (this.isTTY)
+    if (this.isTTY) {
       return
+    }
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (task && task.type === 'suite' && task.result?.state && task.result?.state !== 'run') {
+      if (
+        task
+        && task.type === 'suite'
+        && task.result?.state
+        && task.result?.state !== 'run'
+      ) {
         // render static table when all benches inside single suite are finished
         const benches = task.tasks.filter(t => t.meta.benchmark)
-        if (benches.length > 0 && benches.every(t => t.result?.state !== 'run')) {
-          let title = ` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
-          if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
-            title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+        if (
+          benches.length > 0
+          && benches.every(t => t.result?.state !== 'run')
+        ) {
+          let title = ` ${getStateSymbol(task)} ${getFullName(
+            task,
+            c.dim(' > '),
+          )}`
+          if (
+            task.result.duration != null
+            && task.result.duration > this.ctx.config.slowTestThreshold
+          ) {
+            title += c.yellow(
+              ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+            )
+          }
           this.ctx.logger.log(title)
-          this.ctx.logger.log(renderTree(benches, this.rendererOptions, 1, true))
+          this.ctx.logger.log(
+            renderTree(benches, this.rendererOptions, 1, true),
+          )
         }
       }
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  async onFinished(
+    files = this.ctx.state.getFiles(),
+    errors = this.ctx.state.getUnhandledErrors(),
+  ) {
     this.stopListRender()
     this.ctx.logger.log()
     super.onFinished(files, errors)
@@ -78,8 +117,9 @@ export class TableReporter extends BaseReporter {
     if (outputFile) {
       outputFile = pathe.resolve(this.ctx.config.root, outputFile)
       const outputDirectory = pathe.dirname(outputFile)
-      if (!fs.existsSync(outputDirectory))
+      if (!fs.existsSync(outputDirectory)) {
         await fs.promises.mkdir(outputDirectory, { recursive: true })
+      }
       const output = createFormattedBenchmarkReport(files)
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
       this.ctx.logger.log(`Benchmark report written to ${outputFile}`)
@@ -102,8 +142,9 @@ export class TableReporter extends BaseReporter {
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log))
+    if (!this.shouldLog(log)) {
       return
+    }
     this.renderer?.clear()
     super.onUserConsoleLog(log)
   }
@@ -146,9 +187,12 @@ function createFormattedBenchmarkReport(files: File[]) {
             benchmarks.push({
               id: t.id,
               sampleCount: samples.length,
-              median: samples.length % 2
-                ? samples[Math.floor(samples.length / 2)]
-                : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2,
+              median:
+                samples.length % 2
+                  ? samples[Math.floor(samples.length / 2)]
+                  : (samples[samples.length / 2]
+                  + samples[samples.length / 2 - 1])
+                  / 2,
               ...rest,
             })
           }
@@ -173,8 +217,9 @@ function flattenFormattedBenchmarkReport(report: FormattedBenchmarkReport): Flat
   const flat: FlatBenchmarkReport = {}
   for (const file of report.files) {
     for (const group of file.groups) {
-      for (const t of group.benchmarks)
+      for (const t of group.benchmarks) {
         flat[t.id] = t
+      }
     }
   }
   return flat

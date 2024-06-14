@@ -15,8 +15,11 @@ export async function saveRawSnapshots(
   environment: SnapshotEnvironment,
   snapshots: Array<RawSnapshot>,
 ) {
-  await Promise.all(snapshots.map(async (snap) => {
-    if (!snap.readonly)
-      await environment.saveSnapshotFile(snap.file, snap.snapshot)
-  }))
+  await Promise.all(
+    snapshots.map(async (snap) => {
+      if (!snap.readonly) {
+        await environment.saveSnapshotFile(snap.file, snap.snapshot)
+      }
+    }),
+  )
 }

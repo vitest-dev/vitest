@@ -11,19 +11,22 @@ export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 function getTaskIdByStack(root: string) {
   const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')
 
-  if (!stack)
+  if (!stack) {
     return UNKNOWN_TEST_ID
+  }
 
   const index = stack.findIndex(line => line.includes('at Console.value'))
   const line = index === -1 ? null : stack[index + 2]
 
-  if (!line)
+  if (!line) {
     return UNKNOWN_TEST_ID
+  }
 
   const filepath = line.match(/at\s(.*)\s?/)?.[1]
 
-  if (filepath)
+  if (filepath) {
     return relative(root, filepath)
+  }
 
   return UNKNOWN_TEST_ID
 }
@@ -31,7 +34,10 @@ function getTaskIdByStack(root: string) {
 export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
-  const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
+  const timers = new Map<
+    string,
+    { stdoutTime: number; stderrTime: number; timer: any }
+  >()
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
@@ -64,8 +70,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   function sendBuffer(type: 'stdout' | 'stderr', taskId: string) {
     const buffers = type === 'stdout' ? stdoutBuffer : stderrBuffer
     const buffer = buffers.get(taskId)
-    if (!buffer)
+    if (!buffer) {
       return
+    }
     if (state().config.printConsoleTrace) {
       buffer.forEach(([buffer, origin]) => {
         sendLog(type, taskId, String(buffer), buffer.length, origin)
@@ -77,10 +84,12 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
     }
     const timer = timers.get(taskId)!
     buffers.set(taskId, [])
-    if (type === 'stderr')
+    if (type === 'stderr') {
       timer.stderrTime = 0
-    else
+    }
+    else {
       timer.stdoutTime = 0
+    }
   }
 
   function sendLog(
@@ -105,13 +114,21 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id = s?.current?.id || s?.current?.suite?.id || s.current?.file.id || getTaskIdByStack(s.config.root)
+      const id
+        = s?.current?.id
+        || s?.current?.suite?.id
+        || s.current?.file.id
+        || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
       }
       else {
-        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timer = {
+          stdoutTime: RealDate.now(),
+          stderrTime: RealDate.now(),
+          timer: 0,
+        }
         timers.set(id, timer)
       }
       let buffer = stdoutBuffer.get(id)
@@ -137,13 +154,21 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id = s?.current?.id || s?.current?.suite?.id || s.current?.file.id || getTaskIdByStack(s.config.root)
+      const id
+        = s?.current?.id
+        || s?.current?.suite?.id
+        || s.current?.file.id
+        || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
       }
       else {
-        timer = { stderrTime: RealDate.now(), stdoutTime: RealDate.now(), timer: 0 }
+        timer = {
+          stderrTime: RealDate.now(),
+          stdoutTime: RealDate.now(),
+          timer: 0,
+        }
         timers.set(id, timer)
       }
       let buffer = stderrBuffer.get(id)
@@ -156,7 +181,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         Error.stackTraceLimit = limit + 6
         const stack = new Error('STACK_TRACE').stack?.split('\n')
         Error.stackTraceLimit = limit
-        const isTrace = stack?.some(line => line.includes('at Console.trace'))
+        const isTrace = stack?.some(line =>
+          line.includes('at Console.trace'),
+        )
         if (isTrace) {
           buffer.push([data, undefined])
         }

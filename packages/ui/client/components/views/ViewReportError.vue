@@ -1,34 +1,44 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from 'vitest'
-import { openInEditor, shouldOpenInEditor } from '~/composables/error'
-import { escapeHtml } from '~/utils/escape'
+import type { ErrorWithDiff } from "vitest";
+import { openInEditor, shouldOpenInEditor } from "~/composables/error";
+import { escapeHtml } from "~/utils/escape";
 
 const props = defineProps<{
-  root: string
-  filename?: string
-  error: ErrorWithDiff
-}>()
+  root: string;
+  filename?: string;
+  error: ErrorWithDiff;
+}>();
 
 function relative(p: string) {
-  if (p.startsWith(props.root))
-    return p.slice(props.root.length)
-  return p
+  if (p.startsWith(props.root)) return p.slice(props.root.length);
+  return p;
 }
 
-const filter = computed(() => createAnsiToHtmlFilter(isDark.value))
+const filter = computed(() => createAnsiToHtmlFilter(isDark.value));
 
 const isDiffShowable = computed(() => {
-  return !!props.error?.diff
-})
+  return !!props.error?.diff;
+});
 
-const diff = computed(() => props.error.diff ? filter.value.toHtml(escapeHtml(props.error.diff)) : undefined)
+const diff = computed(() =>
+  props.error.diff
+    ? filter.value.toHtml(escapeHtml(props.error.diff))
+    : undefined
+);
 </script>
 
 <template>
   <div class="scrolls scrolls-rounded task-error">
     <pre><b>{{ error.name || error.nameStr }}</b>: {{ error.message }}</pre>
-    <div v-for="(stack, i) of error.stacks" :key="i" class="op80 flex gap-x-2 items-center" data-testid="stack">
-      <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+    <div
+      v-for="(stack, i) of error.stacks"
+      :key="i"
+      class="op80 flex gap-x-2 items-center"
+      data-testid="stack"
+    >
+      <pre>
+ - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre
+      >
       <div
         v-if="shouldOpenInEditor(stack.file, filename)"
         v-tooltip.bottom="'Open in Editor'"
@@ -46,7 +56,7 @@ const diff = computed(() => props.error.diff ? filter.value.toHtml(escapeHtml(pr
 
 <style scoped>
 .task-error {
-  --cm-ttc-c-thumb: #CCC;
+  --cm-ttc-c-thumb: #ccc;
 }
 html.dark .task-error {
   --cm-ttc-c-thumb: #444;

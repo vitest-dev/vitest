@@ -33,35 +33,36 @@ const input = {
   providers: './src/node/providers/index.ts',
 }
 
-export default () => defineConfig([
-  {
-    input,
-    output: {
-      dir: 'dist',
-      format: 'esm',
+export default () =>
+  defineConfig([
+    {
+      input,
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins,
     },
-    external,
-    plugins,
-  },
-  {
-    input: './src/client/context.ts',
-    output: {
-      file: 'dist/context.js',
-      format: 'esm',
+    {
+      input: './src/client/context.ts',
+      output: {
+        file: 'dist/context.js',
+        format: 'esm',
+      },
+      plugins: [
+        esbuild({
+          target: 'node18',
+        }),
+      ],
     },
-    plugins: [
-      esbuild({
-        target: 'node18',
-      }),
-    ],
-  },
-  {
-    input: input.index,
-    output: {
-      file: 'dist/index.d.ts',
-      format: 'esm',
+    {
+      input: input.index,
+      output: {
+        file: 'dist/index.d.ts',
+        format: 'esm',
+      },
+      external,
+      plugins: [dts()],
     },
-    external,
-    plugins: [dts()],
-  },
-])
+  ])

@@ -3,7 +3,11 @@ import type { PluginContext } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
 import type { Expression, Positioned } from '@vitest/utils/ast'
 
-export function injectDynamicImport(code: string, id: string, parse: PluginContext['parse']) {
+export function injectDynamicImport(
+  code: string,
+  id: string,
+  parse: PluginContext['parse'],
+) {
   const s = new MagicString(code)
 
   let ast: any
@@ -23,7 +27,11 @@ export function injectDynamicImport(code: string, id: string, parse: PluginConte
     },
     onDynamicImport(node) {
       const replace = '__vitest_browser_runner__.wrapModule(() => import('
-      s.overwrite(node.start, (node.source as Positioned<Expression>).start, replace)
+      s.overwrite(
+        node.start,
+        (node.source as Positioned<Expression>).start,
+        replace,
+      )
       s.overwrite(node.end - 1, node.end, '))')
     },
   })

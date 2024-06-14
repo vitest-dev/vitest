@@ -4,7 +4,11 @@ import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { ErrorWithDiff, ParsedStack } from './types'
 import { isPrimitive, notNullish } from './helpers'
 
-export { TraceMap, originalPositionFor, generatedPositionFor } from '@jridgewell/trace-mapping'
+export {
+  TraceMap,
+  originalPositionFor,
+  generatedPositionFor,
+} from '@jridgewell/trace-mapping'
 export type { SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface StackTraceParserOptions {
@@ -39,24 +43,26 @@ const stackIgnorePatterns = [
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
-  if (!urlLike.includes(':'))
+  if (!urlLike.includes(':')) {
     return [urlLike]
+  }
 
   const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/
   const parts = regExp.exec(urlLike.replace(/^\(|\)$/g, ''))
-  if (!parts)
+  if (!parts) {
     return [urlLike]
+  }
   let url = parts[1]
-  if (url.startsWith('async '))
+  if (url.startsWith('async ')) {
     url = url.slice(6)
+  }
   if (url.startsWith('http:') || url.startsWith('https:')) {
     const urlObj = new URL(url)
     url = urlObj.pathname
   }
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
-    url
-       = url.slice(isWindows ? 5 : 4)
+    url = url.slice(isWindows ? 5 : 4)
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
@@ -64,23 +70,32 @@ function extractLocation(urlLike: string) {
 export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   let line = raw.trim()
 
-  if (SAFARI_NATIVE_CODE_REGEXP.test(line))
+  if (SAFARI_NATIVE_CODE_REGEXP.test(line)) {
     return null
+  }
 
-  if (line.includes(' > eval'))
-    line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g, ':$1')
+  if (line.includes(' > eval')) {
+    line = line.replace(
+      / line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g,
+      ':$1',
+    )
+  }
 
-  if (!line.includes('@') && !line.includes(':'))
+  if (!line.includes('@') && !line.includes(':')) {
     return null
+  }
 
   // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
   const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
   const matches = line.match(functionNameRegex)
   const functionName = matches && matches[1] ? matches[1] : undefined
-  const [url, lineNumber, columnNumber] = extractLocation(line.replace(functionNameRegex, ''))
+  const [url, lineNumber, columnNumber] = extractLocation(
+    line.replace(functionNameRegex, ''),
+  )
 
-  if (!url || !lineNumber || !columnNumber)
+  if (!url || !lineNumber || !columnNumber) {
     return null
+  }
 
   return {
     file: url,
@@ -92,8 +107,9 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
 
 export function parseSingleStack(raw: string) {
   const line = raw.trim()
-  if (!CHROME_IE_STACK_REGEXP.test(line))
+  if (!CHROME_IE_STACK_REGEXP.test(line)) {
     return parseSingleFFOrSafariStack(line)
+  }
   return parseSingleV8Stack(line)
 }
 
@@ -102,11 +118,15 @@ export function parseSingleStack(raw: string) {
 export function parseSingleV8Stack(raw: string): ParsedStack | null {
   let line = raw.trim()
 
-  if (!CHROME_IE_STACK_REGEXP.test(line))
+  if (!CHROME_IE_STACK_REGEXP.test(line)) {
     return null
+  }
 
-  if (line.includes('(eval '))
-    line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^()]*)|(,.*$)/g, '')
+  if (line.includes('(eval ')) {
+    line = line
+      .replace(/eval code/g, 'eval')
+      .replace(/(\(eval at [^()]*)|(,.*$)/g, '')
+  }
 
   let sanitizedLine = line
     .replace(/^\s+/, '')
@@ -118,28 +138,36 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   const location = sanitizedLine.match(/ (\(.+\)$)/)
 
   // remove the parenthesized location from the line, if it was matched
-  sanitizedLine = location ? sanitizedLine.replace(location[0], '') : sanitizedLine
+  sanitizedLine = location
+    ? sanitizedLine.replace(location[0], '')
+    : sanitizedLine
 
   // if a location was matched, pass it to extractLocation() otherwise pass all sanitizedLine
   // because this line doesn't have function name
-  const [url, lineNumber, columnNumber] = extractLocation(location ? location[1] : sanitizedLine)
+  const [url, lineNumber, columnNumber] = extractLocation(
+    location ? location[1] : sanitizedLine,
+  )
   let method = (location && sanitizedLine) || ''
-  let file = (url && ['eval', '<anonymous>'].includes(url)) ? undefined : url
+  let file = url && ['eval', '<anonymous>'].includes(url) ? undefined : url
 
-  if (!file || !lineNumber || !columnNumber)
+  if (!file || !lineNumber || !columnNumber) {
     return null
+  }
 
-  if (method.startsWith('async '))
+  if (method.startsWith('async ')) {
     method = method.slice(6)
+  }
 
-  if (file.startsWith('file://'))
+  if (file.startsWith('file://')) {
     file = file.slice(7)
+  }
 
   // normalize Windows path (\ -> /)
   file = resolve(file)
 
-  if (method)
+  if (method) {
     method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+  }
 
   return {
     method,
@@ -149,21 +177,32 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 }
 
-export function parseStacktrace(stack: string, options: StackTraceParserOptions = {}): ParsedStack[] {
+export function parseStacktrace(
+  stack: string,
+  options: StackTraceParserOptions = {},
+): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
   let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
-  if (ignoreStackEntries.length)
-    stacks = stacks.filter(stack => !ignoreStackEntries.some(p => stack.file.match(p)))
+  if (ignoreStackEntries.length) {
+    stacks = stacks.filter(
+      stack => !ignoreStackEntries.some(p => stack.file.match(p)),
+    )
+  }
   return stacks.map((stack) => {
-    const map = options.getSourceMap?.(stack.file) as SourceMapInput | null | undefined
-    if (!map || typeof map !== 'object' || !map.version)
+    const map = options.getSourceMap?.(stack.file) as
+      | SourceMapInput
+      | null
+      | undefined
+    if (!map || typeof map !== 'object' || !map.version) {
       return stack
+    }
     const traceMap = new TraceMap(map)
     const { line, column } = originalPositionFor(traceMap, stack)
-    if (line != null && column != null)
+    if (line != null && column != null) {
       return { ...stack, line, column }
+    }
     return stack
   })
 }
@@ -182,18 +221,26 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
     .filter(notNullish)
 }
 
-export function parseErrorStacktrace(e: ErrorWithDiff, options: StackTraceParserOptions = {}): ParsedStack[] {
-  if (!e || isPrimitive(e))
+export function parseErrorStacktrace(
+  e: ErrorWithDiff,
+  options: StackTraceParserOptions = {},
+): ParsedStack[] {
+  if (!e || isPrimitive(e)) {
     return []
+  }
 
-  if (e.stacks)
+  if (e.stacks) {
     return e.stacks
+  }
 
   const stackStr = e.stack || e.stackStr || ''
   let stackFrames = parseStacktrace(stackStr, options)
 
-  if (options.frameFilter)
-    stackFrames = stackFrames.filter(f => options.frameFilter!(e, f) !== false)
+  if (options.frameFilter) {
+    stackFrames = stackFrames.filter(
+      f => options.frameFilter!(e, f) !== false,
+    )
+  }
 
   e.stacks = stackFrames
   return stackFrames

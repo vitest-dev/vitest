@@ -1,4 +1,10 @@
-export type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'
+export type BuiltinPool =
+  | 'browser'
+  | 'threads'
+  | 'forks'
+  | 'vmThreads'
+  | 'vmForks'
+  | 'typescript'
 export type Pool = BuiltinPool | (string & {})
 
 export interface PoolOptions extends Record<string, unknown> {

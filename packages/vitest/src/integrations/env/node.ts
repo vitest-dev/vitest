@@ -30,17 +30,14 @@ const nodeGlobals = new Map(
     }),
 )
 
-export default <Environment>({
+export default <Environment>{
   name: 'node',
   transformMode: 'ssr',
   // this is largely copied from jest's node environment
   async setupVM() {
     const vm = await import('node:vm')
     let context = vm.createContext()
-    let global = vm.runInContext(
-      'this',
-      context,
-    )
+    let global = vm.runInContext('this', context)
 
     const contextGlobals = new Set(Object.getOwnPropertyNames(global))
     for (const [nodeGlobalsKey, descriptor] of nodeGlobals) {
@@ -121,4 +118,4 @@ export default <Environment>({
       },
     }
   },
-})
+}

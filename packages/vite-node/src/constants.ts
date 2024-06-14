@@ -33,6 +33,8 @@ export const KNOWN_ASSET_TYPES = [
   'txt',
 ]
 
-export const KNOWN_ASSET_RE = new RegExp(`\\.(${KNOWN_ASSET_TYPES.join('|')})$`)
+export const KNOWN_ASSET_RE = new RegExp(
+  `\\.(${KNOWN_ASSET_TYPES.join('|')})$`,
+)
 export const CSS_LANGS_RE
   = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/

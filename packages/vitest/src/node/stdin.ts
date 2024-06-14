@@ -24,21 +24,38 @@ export function printShortcutsHelp() {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
-${keys.map(i => c.dim('  press ') + c.reset([i[0]].flat().map(c.bold).join(', ')) + c.dim(` to ${i[1]}`)).join('\n')}
+${keys
+  .map(
+    i =>
+      c.dim('  press ')
+      + c.reset([i[0]].flat().map(c.bold).join(', '))
+      + c.dim(` to ${i[1]}`),
+  )
+  .join('\n')}
 `,
   )
 }
 
-export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream = process.stdin, stdout: NodeJS.WriteStream | Writable) {
+export function registerConsoleShortcuts(
+  ctx: Vitest,
+  stdin: NodeJS.ReadStream = process.stdin,
+  stdout: NodeJS.WriteStream | Writable,
+) {
   let latestFilename = ''
 
   async function _keypressHandler(str: string, key: any) {
     // Cancel run and exit when ctrl-c or esc is pressed.
     // If cancelling takes long and key is pressed multiple times, exit forcefully.
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) {
+    if (
+      str === '\x03'
+      || str === '\x1B'
+      || (key && key.ctrl && key.name === 'c')
+    ) {
       if (!ctx.isCancelling) {
         ctx.logger.logUpdate.clear()
-        ctx.logger.log(c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'))
+        ctx.logger.log(
+          c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
+        )
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
@@ -57,41 +74,50 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     const name = key?.name
 
     if (ctx.runningPromise) {
-      if (cancelKeys.includes(name))
+      if (cancelKeys.includes(name)) {
         await ctx.cancelCurrentRun('keyboard-input')
+      }
       return
     }
 
     // quit
-    if (name === 'q')
+    if (name === 'q') {
       return ctx.exit(true)
+    }
 
     // help
-    if (name === 'h')
+    if (name === 'h') {
       return printShortcutsHelp()
+    }
     // update snapshot
-    if (name === 'u')
+    if (name === 'u') {
       return ctx.updateSnapshot()
+    }
     // rerun all tests
     if (name === 'a' || name === 'return') {
       const files = await ctx.getTestFilepaths()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
     // rerun current pattern tests
-    if (name === 'r')
+    if (name === 'r') {
       return ctx.rerunFiles()
+    }
     // rerun only failed tests
-    if (name === 'f')
+    if (name === 'f') {
       return ctx.rerunFailed()
+    }
     // change project filter
-    if (name === 'w')
+    if (name === 'w') {
       return inputProjectName()
+    }
     // change testNamePattern
-    if (name === 't')
+    if (name === 't') {
       return inputNamePattern()
+    }
     // change fileNamePattern
-    if (name === 'p')
+    if (name === 'p') {
       return inputFilePattern()
+    }
   }
 
   async function keypressHandler(str: string, key: any) {
@@ -100,13 +126,19 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter('Input test name pattern (RegExp)', stdin, stdout)
+    const watchFilter = new WatchFilter(
+      'Input test name pattern (RegExp)',
+      stdin,
+      stdout,
+    )
     const filter = await watchFilter.filter((str: string) => {
       const files = ctx.state.getFiles()
       const tests = getTests(files)
       try {
         const reg = new RegExp(str)
-        return tests.map(test => test.name).filter(testName => testName.match(reg))
+        return tests
+          .map(test => test.name)
+          .filter(testName => testName.match(reg))
       }
       catch {
         // `new RegExp` may throw error when input is invalid regexp
@@ -117,21 +149,28 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     on()
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
-    const cliFiles = ctx.config.standalone && !files.length
-      ? await ctx.getTestFilepaths()
-      : undefined
+    const cliFiles
+      = ctx.config.standalone && !files.length
+        ? await ctx.getTestFilepaths()
+        : undefined
 
-    await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
+    await ctx.changeNamePattern(
+      filter?.trim() || '',
+      cliFiles,
+      'change pattern',
+    )
   }
 
   async function inputProjectName() {
     off()
-    const { filter = '' }: { filter: string } = await prompt([{
-      name: 'filter',
-      type: 'text',
-      message: 'Input a single project name',
-      initial: toArray(ctx.configOverride.project)[0] || '',
-    }])
+    const { filter = '' }: { filter: string } = await prompt([
+      {
+        name: 'filter',
+        type: 'text',
+        message: 'Input a single project name',
+        initial: toArray(ctx.configOverride.project)[0] || '',
+      },
+    ])
     on()
     await ctx.changeProjectName(filter.trim())
   }
@@ -139,13 +178,15 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
   async function inputFilePattern() {
     off()
 
-    const watchFilter = new WatchFilter('Input filename pattern', stdin, stdout)
+    const watchFilter = new WatchFilter(
+      'Input filename pattern',
+      stdin,
+      stdout,
+    )
 
     const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.globTestFiles([str])
-      return files.map(file =>
-        relative(ctx.config.root, file[1]),
-      )
+      return files.map(file => relative(ctx.config.root, file[1]))
     })
 
     on()
@@ -155,7 +196,9 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
 
     await ctx.changeFilenamePattern(
       latestFilename,
-      filter && lastResults.length ? lastResults.map(i => resolve(ctx.config.root, i)) : undefined,
+      filter && lastResults.length
+        ? lastResults.map(i => resolve(ctx.config.root, i))
+        : undefined,
     )
   }
 
@@ -164,8 +207,9 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     off()
     rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 50 })
     readline.emitKeypressEvents(stdin, rl)
-    if (stdin.isTTY)
+    if (stdin.isTTY) {
       stdin.setRawMode(true)
+    }
     stdin.on('keypress', keypressHandler)
   }
 
@@ -173,8 +217,9 @@ export function registerConsoleShortcuts(ctx: Vitest, stdin: NodeJS.ReadStream =
     rl?.close()
     rl = undefined
     stdin.removeListener('keypress', keypressHandler)
-    if (stdin.isTTY)
+    if (stdin.isTTY) {
       stdin.setRawMode(false)
+    }
   }
 
   on()

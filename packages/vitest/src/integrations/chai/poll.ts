@@ -35,19 +35,26 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       message,
     } = options
     // @ts-expect-error private poll access
-    const assertion = expect(null, message).withContext({ poll: true }) as Assertion
+    const assertion = expect(null, message).withContext({
+      poll: true,
+    }) as Assertion
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver)
 
-        if (typeof result !== 'function')
+        if (typeof result !== 'function') {
           return result instanceof chai.Assertion ? proxy : result
+        }
 
-        if (key === 'assert')
+        if (key === 'assert') {
           return result
+        }
 
-        if (typeof key === 'string' && unsupported.includes(key))
-          throw new SyntaxError(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
+        if (typeof key === 'string' && unsupported.includes(key)) {
+          throw new SyntaxError(
+            `expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`,
+          )
+        }
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
@@ -57,7 +64,14 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const { setTimeout, clearTimeout } = getSafeTimers()
             const timeoutId = setTimeout(() => {
               clearTimeout(intervalId)
-              reject(copyStackTrace(new Error(`Matcher did not succeed in ${timeout}ms`, { cause: lastError }), STACK_TRACE_ERROR))
+              reject(
+                copyStackTrace(
+                  new Error(`Matcher did not succeed in ${timeout}ms`, {
+                    cause: lastError,
+                  }),
+                  STACK_TRACE_ERROR,
+                ),
+              )
             }, timeout)
             const check = async () => {
               try {
@@ -81,7 +95,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 }
 
 function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined)
+  if (source.stack !== undefined) {
     target.stack = source.stack.replace(source.message, target.message)
+  }
   return target
 }

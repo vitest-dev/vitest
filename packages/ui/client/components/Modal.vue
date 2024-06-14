@@ -1,41 +1,41 @@
-<script setup lang='ts'>
-const { direction = 'bottom' } = defineProps<{
-  direction?: string
-}>()
+<script setup lang="ts">
+const { direction = "bottom" } = defineProps<{
+  direction?: string;
+}>();
 
-const modelValue = defineModel<boolean>({ default: false })
+const modelValue = defineModel<boolean>({ default: false });
 
 const positionClass = computed(() => {
   switch (direction) {
-    case 'bottom':
-      return 'bottom-0 left-0 right-0 border-t'
-    case 'top':
-      return 'top-0 left-0 right-0 border-b'
-    case 'left':
-      return 'bottom-0 left-0 top-0 border-r'
-    case 'right':
-      return 'bottom-0 top-0 right-0 border-l'
+    case "bottom":
+      return "bottom-0 left-0 right-0 border-t";
+    case "top":
+      return "top-0 left-0 right-0 border-b";
+    case "left":
+      return "bottom-0 left-0 top-0 border-r";
+    case "right":
+      return "bottom-0 top-0 right-0 border-l";
     default:
-      return ''
+      return "";
   }
-})
+});
 
 const transform = computed(() => {
   switch (direction) {
-    case 'bottom':
-      return 'translateY(100%)'
-    case 'top':
-      return 'translateY(-100%)'
-    case 'left':
-      return 'translateX(-100%)'
-    case 'right':
-      return 'translateX(100%)'
+    case "bottom":
+      return "translateY(100%)";
+    case "top":
+      return "translateY(-100%)";
+    case "left":
+      return "translateX(-100%)";
+    case "right":
+      return "translateX(100%)";
     default:
-      return ''
+      return "";
   }
-})
+});
 
-const closeModal = () => modelValue.value = false
+const closeModal = () => (modelValue.value = false);
 </script>
 
 <template>

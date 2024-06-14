@@ -18,10 +18,7 @@ const external = [
   'vite',
 ]
 
-const entries = [
-  'index',
-  'reporter',
-]
+const entries = ['index', 'reporter']
 
 export default () => {
   const options = entries.flatMap(entry => [
@@ -54,15 +51,14 @@ export default () => {
         format: 'esm',
       },
       external,
-      plugins: [
-        dts(),
-      ],
+      plugins: [dts()],
     },
   ]
 }
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
+  }
   console.error(message)
 }

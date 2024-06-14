@@ -34,7 +34,7 @@ export interface ColorMethod {
   close: string
 }
 export type ColorsMethods = {
-  [Key in ColorName]: ColorMethod
+  [Key in ColorName]: ColorMethod;
 }
 
 export type Colors = ColorsMethods & {
@@ -50,10 +50,13 @@ function string(str: unknown) {
 string.open = ''
 string.close = ''
 
-const defaultColors = /* #__PURE__ */ colorsEntries.reduce((acc, [key]) => {
-  acc[key as ColorName] = string
-  return acc
-}, { isColorSupported: false } as Colors)
+const defaultColors = /* #__PURE__ */ colorsEntries.reduce(
+  (acc, [key]) => {
+    acc[key as ColorName] = string
+    return acc
+  },
+  { isColorSupported: false } as Colors,
+)
 
 export function getDefaultColors(): Colors {
   return { ...defaultColors }
@@ -64,7 +67,8 @@ export function getColors(): Colors {
 }
 
 export function createColors(isTTY = false): Colors {
-  const enabled = typeof process !== 'undefined'
+  const enabled
+    = typeof process !== 'undefined'
     && !('NO_COLOR' in process.env || process.argv.includes('--no-color'))
     && !('GITHUB_ACTIONS' in process.env)
     && ('FORCE_COLOR' in process.env
@@ -73,7 +77,12 @@ export function createColors(isTTY = false): Colors {
     || (isTTY && process.env.TERM !== 'dumb')
     || 'CI' in process.env)
 
-  const replaceClose = (string: string, close: string, replace: string, index: number): string => {
+  const replaceClose = (
+    string: string,
+    close: string,
+    replace: string,
+    index: number,
+  ): string => {
     let result = ''
     let cursor = 0
     do {
@@ -105,7 +114,7 @@ export function createColors(isTTY = false): Colors {
 
   for (const [name, formatterArgs] of colorsEntries) {
     colorsObject[name as ColorName] = enabled
-      ? formatter(...formatterArgs as [string, string])
+      ? formatter(...(formatterArgs as [string, string]))
       : string
   }
 

@@ -1,13 +1,12 @@
-import type {
-  getSafeTimers,
-} from '@vitest/utils'
+import type { getSafeTimers } from '@vitest/utils'
 import { importId } from './utils'
 import type { VitestBrowserClient } from './client'
 
 const { get } = Reflect
 
 function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
-  const { setTimeout, clearTimeout, setImmediate, clearImmediate } = getTimers()
+  const { setTimeout, clearTimeout, setImmediate, clearImmediate }
+    = getTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
@@ -34,28 +33,34 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 const promises = new Set<Promise<unknown>>()
 
 export async function rpcDone() {
-  if (!promises.size)
+  if (!promises.size) {
     return
+  }
   const awaitable = Array.from(promises)
   return Promise.all(awaitable)
 }
 
-export function createSafeRpc(client: VitestBrowserClient, getTimers: () => any): VitestBrowserClient['rpc'] {
+export function createSafeRpc(
+  client: VitestBrowserClient,
+  getTimers: () => any,
+): VitestBrowserClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
-      if (p === 'then')
+      if (p === 'then') {
         return
+      }
       const sendCall = get(target, p, handler)
-      const safeSendCall = (...args: any[]) => withSafeTimers(getTimers, async () => {
-        const result = sendCall(...args)
-        promises.add(result)
-        try {
-          return await result
-        }
-        finally {
-          promises.delete(result)
-        }
-      })
+      const safeSendCall = (...args: any[]) =>
+        withSafeTimers(getTimers, async () => {
+          const result = sendCall(...args)
+          promises.add(result)
+          try {
+            return await result
+          }
+          finally {
+            promises.delete(result)
+          }
+        })
       safeSendCall.asEvent = sendCall.asEvent
       return safeSendCall
     },
@@ -64,7 +69,9 @@ export function createSafeRpc(client: VitestBrowserClient, getTimers: () => any)
 
 export async function loadSafeRpc(client: VitestBrowserClient) {
   // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
-  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const { getSafeTimers } = (await importId(
+    'vitest/utils',
+  )) as typeof import('vitest/utils')
   return createSafeRpc(client, getSafeTimers)
 }
 
