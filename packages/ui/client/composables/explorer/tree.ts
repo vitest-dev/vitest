@@ -599,11 +599,3 @@ function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
 }
 
 export { taskTree }
-
-declare global {
-  interface Window {
-    taskTree: TaskTree
-  }
-}
-
-window.taskTree = taskTree
