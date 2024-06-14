@@ -2,14 +2,8 @@ import type { BrowserUI } from 'vitest'
 import { findById } from './client'
 import { customViewport, viewport } from './browser'
 import { detailSizes } from '~/composables/navigation'
-import { testRunState } from '~/composables/client/state'
-import { endRun } from '~/composables/summary'
 
 const ui: BrowserUI = {
-  runTestsFinish() {
-    endRun()
-    testRunState.value = 'idle'
-  },
   setCurrentFileId(fileId: string) {
     activeFileId.value = fileId
     currentModule.value = findById(fileId)

@@ -50,14 +50,9 @@ function createIframe(container: HTMLDivElement, file: string) {
   return iframe
 }
 
-async function done(testFinished = true) {
-  try {
-    await rpcDone()
-    await client.rpc.finishBrowserTests()
-  }
-  finally {
-    testFinished && getUiAPI()?.runTestsFinish()
-  }
+async function done() {
+  await rpcDone()
+  await client.rpc.finishBrowserTests()
 }
 
 interface IframeDoneEvent {
@@ -171,7 +166,7 @@ client.ws.addEventListener('open', async () => {
           name: 'Unexpected Event',
           message: `Unexpected event: ${(e.data as any).type}`,
         }, 'Unexpected Event')
-        await done(false)
+        await done()
       }
     }
   })
