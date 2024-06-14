@@ -143,6 +143,7 @@ export class VitestTestRunner implements VitestRunner {
       isExpectingAssertions,
       isExpectingAssertionsError,
     }
+      // @ts-expect-error _local is untyped
       = 'context' in test && test.context._local
         ? test.context.expect.getState()
         : getState((globalThis as any)[GLOBAL_EXPECT])
