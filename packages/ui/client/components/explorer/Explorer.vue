@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { File, Task } from 'vitest'
+import type { File, Task } from '@vitest/runner'
 import { activeFileId } from '~/composables/params'
 import { useSearch } from '~/composables/explorer/search'
 // @ts-expect-error missing types
@@ -33,12 +33,6 @@ const {
   testsTotal,
   uiEntries,
 } = useSearch(searchBox)
-
-// todo: remove this and include custom component to filter tests
-// const failed = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'fail').length : taskTree.summary.filesFailed)
-// const success = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.result?.state === 'pass').length : taskTree.summary.filesSuccess)
-// const skipped = computed(() => isFiltered.value ? filteredTests.value.filter(task => task.mode === 'skip' || task.mode === 'todo').length : taskTree.summary.filesSkipped)
-// const running = computed(() => isFiltered.value ? filteredTests.value.length - failed.value - success.value - skipped.value : taskTree.summary.filesRunning)
 
 const filterClass = ref<string>('grid-cols-2')
 const filterHeaderClass = ref<string>('grid-col-span-2')

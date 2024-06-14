@@ -2,7 +2,7 @@
 import { getProjectNameColor } from '~/utils/task'
 import { activeFileId } from '~/composables/params'
 import { isReport } from '~/constants'
-import {client} from '~/composables/client'
+import { client } from '~/composables/client'
 
 const props = defineProps<{
   taskId: string
@@ -44,7 +44,7 @@ const duration = computed(() => {
       <div v-else i-carbon-chevron-right op20 />
     </div>
     <StatusIcon :task="task" mr-2 />
-    <div v-if="task.type === 'suite' && task.meta.typecheck" i-logos:typescript-icon flex-shrink-0 mr-2 />
+    <div v-if="task.type === 'suite' && task.meta.typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>
         <!-- only show [] in files view -->

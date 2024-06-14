@@ -1,6 +1,6 @@
 import type { File } from '@vitest/runner'
 import type { Filter } from './types'
-import type { FilteredTests } from '~/composables/explorer/tree'
+import type { FilteredTests } from '~/composables/explorer/types'
 import { taskTree } from '~/composables/explorer/tree'
 
 export const search = ref<string>('')

@@ -12,9 +12,6 @@ const classes = computed(() => {
 
   return null
 })
-// const total = computed(() => testStatus.files)
-// const pass = computed(() => testStatus.filesSuccess)
-// const failed = computed(() => testStatus.filesFailed)
 
 const widthPass = computed(() => {
   const t = taskTree.summary.files
