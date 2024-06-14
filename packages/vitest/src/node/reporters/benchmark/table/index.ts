@@ -30,7 +30,7 @@ export class TableReporter extends BaseReporter {
     if (this.ctx.config.benchmark?.compare) {
       const compareFile = pathe.resolve(this.ctx.config.root, this.ctx.config.benchmark?.compare)
       try {
-        this.rendererOptions.compare = flattenFormattedBenchamrkReport(
+        this.rendererOptions.compare = flattenFormattedBenchmarkReport(
           JSON.parse(
             await fs.promises.readFile(compareFile, 'utf-8'),
           ),
@@ -80,7 +80,7 @@ export class TableReporter extends BaseReporter {
       const outputDirectory = pathe.dirname(outputFile)
       if (!fs.existsSync(outputDirectory))
         await fs.promises.mkdir(outputDirectory, { recursive: true })
-      const output = createFormattedBenchamrkReport(files)
+      const output = createFormattedBenchmarkReport(files)
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
       this.ctx.logger.log(`Benchmark report written to ${outputFile}`)
     }
@@ -109,7 +109,7 @@ export class TableReporter extends BaseReporter {
   }
 }
 
-export interface FormattedBenchamrkReport {
+export interface FormattedBenchmarkReport {
   files: {
     filepath: string
     groups: FormattedBenchmarkGroup[]
@@ -132,8 +132,8 @@ export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
   median: number
 }
 
-function createFormattedBenchamrkReport(files: File[]) {
-  const report: FormattedBenchamrkReport = { files: [] }
+function createFormattedBenchmarkReport(files: File[]) {
+  const report: FormattedBenchmarkReport = { files: [] }
   for (const file of files) {
     const groups: FormattedBenchmarkGroup[] = []
     for (const task of getTasks(file)) {
@@ -169,7 +169,7 @@ function createFormattedBenchamrkReport(files: File[]) {
   return report
 }
 
-function flattenFormattedBenchamrkReport(report: FormattedBenchamrkReport): FlatBenchmarkReport {
+function flattenFormattedBenchmarkReport(report: FormattedBenchmarkReport): FlatBenchmarkReport {
   const flat: FlatBenchmarkReport = {}
   for (const file of report.files) {
     for (const group of file.groups) {

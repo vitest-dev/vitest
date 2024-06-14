@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { expect, it } from 'vitest'
 import * as pathe from 'pathe'
-import type { FormattedBenchamrkReport } from 'vitest/src/node/reporters/benchmark/table/index.js'
+import type { FormattedBenchmarkReport } from 'vitest/src/node/reporters/benchmark/table/index.js'
 import { runVitest } from '../../test-utils'
 
 it('basic', { timeout: 60_000 }, async () => {
@@ -17,7 +17,7 @@ it('basic', { timeout: 60_000 }, async () => {
   expect(result.exitCode).toBe(0)
 
   const benchResult = await fs.promises.readFile(benchFile, 'utf-8')
-  const resultJson: FormattedBenchamrkReport = JSON.parse(benchResult)
+  const resultJson: FormattedBenchmarkReport = JSON.parse(benchResult)
   const names = resultJson.files.map(f => f.groups.map(g => [g.fullName, g.benchmarks.map(b => b.name)]))
   expect(names).toMatchInlineSnapshot(`
     [
