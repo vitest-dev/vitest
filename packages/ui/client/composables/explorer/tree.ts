@@ -78,6 +78,7 @@ type Arrayable<T> = T | Array<T>
 class TaskTree {
   public filter: TreeTaskFilter | undefined
   private rafCollector: ReturnType<typeof useRafFn>
+  private reloadTasksId: ReturnType<typeof setTimeout> | undefined
   constructor(
     private root = <RootTreeNode>{
       id: 'vitest-root-node',
@@ -107,6 +108,7 @@ class TaskTree {
     }),
   ) {
     this.rafCollector = useRafFn(this.collect.bind(this), { fpsLimit: 10, immediate: false })
+    this.reloadTasksId = undefined
   }
 
   loadFiles(remoteFiles: File[]) {
@@ -182,7 +184,6 @@ class TaskTree {
   }
 
   private collect() {
-    const now = performance.now()
     const idMap = client.state.idMap
     const filesMap = new Map(this.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
     const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
@@ -262,8 +263,7 @@ class TaskTree {
         }
       }
     }
-    // eslint-disable-next-line no-console
-    console.log(`collect took: ${performance.now() - now}ms`)
+
     this.summary.files = data.files
     this.summary.time = data.timeString
     this.summary.filesFailed = data.filesFailed
@@ -279,8 +279,23 @@ class TaskTree {
     this.summary.testsIgnore = data.testsIgnore
     this.summary.testsSkipped = data.testsSkipped
     this.summary.totalTests = data.totalTests
-    // update filtered files
-    filteredFiles.value = this.filteredFiles()
+    clearTimeout(this.reloadTasksId)
+    const entries = this.filter?.matcher && allExpanded.value
+      ? this.expandCollapseAll(true)
+      : undefined
+
+    if (!entries)
+      this.reloadTasks()
+
+    // refresh tasks and filtered files
+    this.reloadTasksId = setTimeout(() => {
+      if (entries?.length)
+        uiEntries.value = entries
+
+      nextTick(() => {
+        filteredFiles.value = this.filteredFiles()
+      })
+    }, 0)
   }
 
   startRun() {
