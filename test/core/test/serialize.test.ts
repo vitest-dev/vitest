@@ -9,20 +9,22 @@ describe('error serialize', () => {
     expect(serializeError(null)).toEqual(null)
     expect(serializeError('hi')).toEqual('hi')
 
-    expect(serializeError({
-      foo: 'hi',
-      promise: new Promise(() => {}),
-      fn: () => {},
-      null: null,
-      symbol: Symbol('hi'),
-      nested: {
-        false: false,
-        class: class {},
-      },
-      // Intentionally test with a sparse array to verify it remains sparse during serialization.
-      // eslint-disable-next-line no-sparse-arrays
-      array: [1,, 3],
-    })).toMatchSnapshot()
+    expect(
+      serializeError({
+        foo: 'hi',
+        promise: new Promise(() => {}),
+        fn: () => {},
+        null: null,
+        symbol: Symbol('hi'),
+        nested: {
+          false: false,
+          class: class {},
+        },
+        // Intentionally test with a sparse array to verify it remains sparse during serialization.
+        // eslint-disable-next-line no-sparse-arrays
+        array: [1, , 3],
+      }),
+    ).toMatchSnapshot()
   })
 
   it('Should skip circular references to prevent hit the call stack limit', () => {
@@ -68,7 +70,10 @@ describe('error serialize', () => {
       base: true,
     })
 
-    Object.defineProperty(user, 'fullName', { enumerable: false, value: 'John Smith' })
+    Object.defineProperty(user, 'fullName', {
+      enumerable: false,
+      value: 'John Smith',
+    })
 
     const serialized = serializeError(user)
     expect(serialized).not.toBe(user)
@@ -108,11 +113,13 @@ describe('error serialize', () => {
       },
     })
     Object.defineProperty(error, 'array', {
-      value: [{
-        get name() {
-          throw new Error('name cannot be accessed')
+      value: [
+        {
+          get name() {
+            throw new Error('name cannot be accessed')
+          },
         },
-      }],
+      ],
     })
     expect(serializeError(error)).toEqual({
       array: [
@@ -166,6 +173,34 @@ describe('error serialize', () => {
       immutableRecord: { foo: 'bar' },
       name: 'Error',
       message: 'test',
+    })
+  })
+
+  it('should serialize when toJSON does not return JSON-compatible object', () => {
+    class TestClass {}
+
+    const error = {
+      key: 'value',
+      // Still not serialized, thus second round of serialization is needed
+      toJSON() {
+        return {
+          key: 'value',
+          obj: {
+            fn: () => {},
+            class: TestClass,
+          },
+        }
+      },
+    }
+
+    const serialized = serializeError(error)
+
+    expect(serialized).toEqual({
+      key: 'value',
+      obj: {
+        fn: 'Function<fn>',
+        class: 'Function<TestClass>',
+      },
     })
   })
 })
