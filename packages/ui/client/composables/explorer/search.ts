@@ -12,7 +12,7 @@ import {
   successFilter,
   testsTotal,
 } from './state'
-import type { TreeTaskFilter } from '~/composables/explorer/tree'
+import type { TreeTaskFilter } from '~/composables/explorer/types'
 import { taskTree, uiEntries } from '~/composables/explorer/tree'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { client } from '~/composables/client'
@@ -25,7 +25,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     return !filter.onlyTests
   })
   const disableClearSearch = computed(() => search.value === '')
-
   const debouncedSearch = ref(search.value)
 
   debouncedWatch(search, (value) => {

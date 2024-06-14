@@ -141,11 +141,13 @@ useResizeObserver(testExplorerRef, (entries) => {
             <button
               type="button"
               font-light
-              op="50 hover:100"
               text-sm
               border="~ gray-400/50 rounded"
               p="x2 y0.5"
               m="t2"
+              op="50"
+              :class="disableClearSearch ? null : 'hover:op100'"
+              :disabled="disableClearSearch"
               @click.passive="clearSearch(true)"
             >
               Clear Search
@@ -153,11 +155,13 @@ useResizeObserver(testExplorerRef, (entries) => {
             <button
               type="button"
               font-light
-              op="50 hover:100"
               text-sm
               border="~ gray-400/50 rounded"
               p="x2 y0.5"
               m="t2"
+              op="50"
+              :class="disableFilter ? null : 'hover:op100'"
+              :disabled="disableFilter"
               @click.passive="clearFilter(true)"
             >
               Clear Filter
