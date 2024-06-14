@@ -27,6 +27,7 @@ const {
   isFiltered,
   isFilteredByStatus,
   disableClearSearch,
+  clearAll,
   clearSearch,
   clearFilter,
   filteredFiles,
@@ -102,7 +103,7 @@ useResizeObserver(testExplorerRef, (entries) => {
             :disabled="disableFilter"
             title="Clear search"
             icon="i-carbon:filter-remove"
-            @click.passive="clearFilter()"
+            @click.passive="clearFilter(false)"
           />
         </div>
         <FilterStatus label="Fail" v-model="filter.failed" />
@@ -148,6 +149,30 @@ useResizeObserver(testExplorerRef, (entries) => {
               @click.passive="clearSearch(true)"
             >
               Clear Search
+            </button>
+            <button
+              type="button"
+              font-light
+              op="50 hover:100"
+              text-sm
+              border="~ gray-400/50 rounded"
+              p="x2 y0.5"
+              m="t2"
+              @click.passive="clearFilter(true)"
+            >
+              Clear Filter
+            </button>
+            <button
+              type="button"
+              font-light
+              op="50 hover:100"
+              text-sm
+              border="~ gray-400/50 rounded"
+              p="x2 y0.5"
+              m="t2"
+              @click.passive="clearAll"
+            >
+              Clear All
             </button>
           </div>
         </template>

@@ -37,11 +37,17 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     focus && searchBox.value?.focus()
   }
 
-  function clearFilter() {
+  function clearFilter(focus: boolean) {
     filter.failed = false
     filter.success = false
     filter.skipped = false
     filter.onlyTests = false
+    focus && searchBox.value?.focus()
+  }
+
+  function clearAll() {
+    clearFilter(false)
+    clearSearch(true)
   }
 
   const defaultShowOnlyTests: TreeTaskFilter = {
@@ -74,6 +80,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     isFiltered,
     isFilteredByStatus,
     disableClearSearch,
+    clearAll,
     clearSearch,
     clearFilter,
     filteredFiles,
