@@ -1,5 +1,5 @@
 import * as chai from 'chai'
-import type { ExpectStatic } from '@vitest/expect'
+import type { Assertion, ExpectStatic } from '@vitest/expect'
 import { getSafeTimers } from '@vitest/utils'
 import { getWorkerState } from '../../utils'
 

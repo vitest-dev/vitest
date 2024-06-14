@@ -343,8 +343,8 @@ export class VitestExecutor extends ViteNodeRunner {
       && normalize(this.state.filepath) === normalize(context.__filename)
     ) {
       const globalNamespace = this.options.context || globalThis
-      // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', {
+        // @ts-expect-error injected untyped global
         get: () => globalNamespace.__vitest_index__,
       })
     }
