@@ -44,15 +44,10 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filter.onlyTests = false
   }
 
-  const showOnlyTests = {
-    matcher: node => matchTask(client.state.idMap.get(node.id) as Task),
-    showOnlyTests: true,
-  } satisfies TreeTaskFilter
-
-  const dontShowOnlyTests = {
+  const defaultShowOnlyTests: TreeTaskFilter = {
     matcher: node => matchTask(client.state.idMap.get(node.id) as Task),
     showOnlyTests: false,
-  } satisfies TreeTaskFilter
+  }
 
   const taskId = ref<ReturnType<typeof setTimeout>>()
 
@@ -65,9 +60,10 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     allExpanded.value,
   ], ([search, failed, success, skipped, onlyTests, expandAllFlag]) => {
     clearTimeout(taskId.value)
+    defaultShowOnlyTests.showOnlyTests = onlyTests
     taskId.value = taskTree.buildNavigationEntries(
       expandAllFlag,
-      search || failed || skipped || success ? (onlyTests ? showOnlyTests : dontShowOnlyTests) : undefined,
+      search || failed || skipped || success ? defaultShowOnlyTests : undefined,
     )
   }, { flush: 'post' })
 
