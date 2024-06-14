@@ -618,8 +618,9 @@ You can also nest describe blocks if you have a hierarchy of tests or benchmarks
 import { describe, expect, test } from 'vitest'
 
 function numberToCurrency(value: number | string) {
-  if (typeof value !== 'number')
-    throw new Error('Value must be a number')
+  if (typeof value !== 'number') {
+    throw new TypeError('Value must be a number')
+  }
 
   return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }

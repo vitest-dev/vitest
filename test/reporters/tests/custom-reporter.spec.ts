@@ -17,16 +17,18 @@ async function runWithRetry(...runOptions: string[]) {
       return vitest.stdout
     }
     catch (e) {
-      if (i <= 0)
+      if (i <= 0) {
         throw e
+      }
     }
   }
 }
 
 describe('custom reporters', () => {
   // On Windows and macOS child_process is very unstable, we skip testing it as the functionality is tested on Linux
-  if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI)
+  if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI) {
     return test.skip('skip on windows')
+  }
 
   const TIMEOUT = 60_000
 

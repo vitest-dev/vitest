@@ -61,8 +61,9 @@ async function createChannel(url: string) {
     const message = await receiver.promise
     receiver = defer()
 
-    if (filter && message.method !== filter)
+    if (filter && message.method !== filter) {
       return receive(filter)
+    }
 
     return message
   }

@@ -92,11 +92,13 @@ function VirtualFilesPlugin(): Plugin {
   return {
     name: 'vitest-custom-virtual-files',
     resolveId(id) {
-      if (id === 'virtual:vitest-custom-virtual-file-1')
+      if (id === 'virtual:vitest-custom-virtual-file-1') {
         return 'src/virtual:vitest-custom-virtual-file-1.ts'
+      }
 
-      if (id === '\0vitest-custom-virtual-file-2')
+      if (id === '\0vitest-custom-virtual-file-2') {
         return 'src/\0vitest-custom-virtual-file-2.ts'
+      }
     },
     load(id) {
       if (id === 'src/virtual:vitest-custom-virtual-file-1.ts') {
@@ -136,9 +138,10 @@ function DecoratorsPlugin(): Plugin {
     name: 'custom-swc-decorator',
     enforce: 'pre',
     transform(code, id, options) {
-      if (id.endsWith('decorators.ts'))
+      if (id.endsWith('decorators.ts')) {
         // @ts-expect-error -- Ignore complex type
         return plugin.transform(code, id, options)
+      }
     },
   }
 }

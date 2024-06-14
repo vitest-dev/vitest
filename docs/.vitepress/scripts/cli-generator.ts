@@ -19,18 +19,22 @@ function resolveOptions(options: CLIOptions<any>, parentName?: string) {
 }
 
 function resolveCommand(name: string, config: CLIOption<any> | null): any {
-  if (!config)
+  if (!config) {
     return null
+  }
 
   let title = '`'
-  if (config.shorthand)
+  if (config.shorthand) {
     title += `-${config.shorthand}, `
+  }
   title += `--${config.alias || name}`
-  if ('argument' in config)
+  if ('argument' in config) {
     title += ` ${config.argument}`
+  }
   title += '`'
-  if ('subcommands' in config && config.subcommands)
+  if ('subcommands' in config && config.subcommands) {
     return resolveOptions(config.subcommands, name)
+  }
 
   return {
     title,

@@ -141,8 +141,9 @@ const testCases = [
       },
     },
     after() {
-      if (process.exitCode !== 1)
+      if (process.exitCode !== 1) {
         throw new Error('Expected test to fail as thresholds are not met')
+      }
 
       process.exitCode = 0
     },
@@ -159,8 +160,9 @@ const testCases = [
     },
     after() {
       if (existsSync('./coverage')) {
-        if (readdirSync('./coverage').length !== 0)
+        if (readdirSync('./coverage').length !== 0) {
           throw new Error('Test case expected coverage directory to be empty')
+        }
 
         throw new Error('Empty coverage directory was not cleaned')
       }
@@ -205,11 +207,13 @@ const testCases = [
 
 for (const provider of ['v8', 'istanbul']) {
   for (const { after, before, testConfig, assertionConfig, skip } of testCases) {
-    if (skip)
+    if (skip) {
       continue
+    }
     // Test config may specify which provider the test is for
-    if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider)
+    if (testConfig.coverage?.provider && testConfig.coverage.provider !== provider) {
       continue
+    }
 
     await before?.()
 

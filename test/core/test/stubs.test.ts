@@ -12,8 +12,9 @@ declare global {
 describe('stubbing globals', () => {
   beforeEach(() => {
     delete globalThis.__defined__
-    if (globalThis.__setter__)
+    if (globalThis.__setter__) {
       delete globalThis.__setter__
+    }
     vi.unstubAllGlobals()
   })
 

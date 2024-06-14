@@ -77,19 +77,23 @@ describe('expect.addEqualityTesters', () => {
     const isAAnagramComparator = isAnagramComparator(a)
     const isBAnagramComparator = isAnagramComparator(b)
 
-    if (isAAnagramComparator && isBAnagramComparator)
+    if (isAAnagramComparator && isBAnagramComparator) {
       return a.equals(b)
+    }
 
-    else if (isAAnagramComparator === isBAnagramComparator)
+    else if (isAAnagramComparator === isBAnagramComparator) {
       return undefined
+    }
 
-    else
+    else {
       return false
+    }
   }
 
   function* toIterator<T>(array: Array<T>): Iterator<T> {
-    for (const obj of array)
+    for (const obj of array) {
       yield obj
+    }
   }
 
   const customObject1 = createAnagramComparator('listen')
@@ -178,28 +182,32 @@ describe('recursive custom equality tester', () => {
     const isAPerson = a instanceof Person
     const isBPerson = b instanceof Person
 
-    if (isAPerson && isBPerson)
+    if (isAPerson && isBPerson) {
       return a.name === b.name && this.equals(a.address, b.address, customTesters)
+    }
 
-    else if (isAPerson === isBPerson)
+    else if (isAPerson === isBPerson) {
       return undefined
+    }
 
-    else
+    else {
       return false
+    }
   }
 
   const areAddressesEqual: Tester = (a, b) => {
     const isAAddress = a instanceof Address
     const isBAddress = b instanceof Address
 
-    if (isAAddress && isBAddress)
+    if (isAAddress && isBAddress) {
       return a.address === b.address
+    }
 
-    else if (isAAddress === isBAddress)
+    else if (isAAddress === isBAddress) {
       return undefined
+    }
 
-    else
-      return false
+    else { return false }
   }
 
   const person1 = new Person('Luke Skywalker', new Address('Tatooine'))

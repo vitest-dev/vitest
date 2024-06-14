@@ -7,8 +7,9 @@ module.exports = class CustomReporter extends ReportBase {
   constructor(opts) {
     super()
 
-    if (!opts.file)
+    if (!opts.file) {
       throw new Error('File is required as custom reporter parameter')
+    }
 
     this.file = opts.file
   }

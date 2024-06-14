@@ -15,7 +15,8 @@ export default class TestReporter implements Reporter {
   onFinished() {
     this.ctx.logger.log('hello from custom reporter')
 
-    if (this.options)
+    if (this.options) {
       this.ctx.logger.log(`custom reporter options ${JSON.stringify(this.options)}`)
+    }
   }
 }

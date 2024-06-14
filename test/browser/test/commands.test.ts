@@ -12,10 +12,12 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    if (server.platform === 'win32')
+    if (server.platform === 'win32') {
       expect(err.message).toMatch('test\\browser\\test\\test.txt')
-    else
+    }
+    else {
       expect(err.message).toMatch('test/browser/test/test.txt')
+    }
   }
 
   await writeFile(file, 'hello world')
@@ -31,10 +33,12 @@ it('can manipulate files', async () => {
   }
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
-    if (server.platform === 'win32')
+    if (server.platform === 'win32') {
       expect(err.message).toMatch('test\\browser\\test\\test.txt')
-    else
+    }
+    else {
       expect(err.message).toMatch('test/browser/test/test.txt')
+    }
   }
 })
 
