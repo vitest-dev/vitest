@@ -555,7 +555,7 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
-   * Path to a custom snapshot environment module that has a defualt export of `SnapshotEnvironment` object.
+   * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.
    */
   snapshotEnvironment?: string
 
