@@ -80,8 +80,8 @@ function listenForErrors(state: () => WorkerGlobalState) {
 }
 
 export async function startVitestExecutor(options: ContextExecutorOptions) {
-  // @ts-expect-error injected untyped global
   const state = (): WorkerGlobalState =>
+    // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
