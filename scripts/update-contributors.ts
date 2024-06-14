@@ -12,8 +12,9 @@ async function fetchContributors(page = 1) {
     },
   })).json() as Contributor[] || []
   collaborators.push(...data.map(i => i.login))
-  if (data.length === 100)
+  if (data.length === 100) {
     collaborators.push(...(await fetchContributors(page + 1)))
+  }
   return collaborators.filter(name => !name.includes('[bot]'))
 }
 
