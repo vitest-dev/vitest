@@ -14,8 +14,8 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
+  beforeCommand?: (contextId: string, command: string, args: unknown[]) => Awaitable<void>
+  afterCommand?: (contextId: string, command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (contextId: string) => Record<string, unknown>
   openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>

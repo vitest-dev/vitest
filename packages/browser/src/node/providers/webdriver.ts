@@ -8,16 +8,19 @@ interface WebdriverProviderOptions extends BrowserProviderInitializationOptions 
   browser: WebdriverBrowser
 }
 
-export class WebdriverBrowserProvider implements BrowserProvider {
+export class WebdriverIOBrowserProvider implements BrowserProvider {
   public name = 'webdriverio' as const
-  public supportsParallelism: boolean = false
-
-  public browser: WebdriverIO.Browser | null = null
 
   private browserName!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
   private options?: RemoteOptions
+
+  public browsers = new Map<string, WebdriverIO.Browser>()
+
+  get supportsParallelism() {
+    return this.browserName !== 'firefox'
+  }
 
   getSupportedBrowsers() {
     return webdriverBrowsers
@@ -29,25 +32,33 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as RemoteOptions
   }
 
-  async beforeCommand() {
-    const page = this.browser!
+  async beforeCommand(contextId: string) {
+    const page = this.getBrowser(contextId)
     const iframe = await page.findElement('css selector', 'iframe[data-vitest]')
     await page.switchToFrame(iframe)
   }
 
-  async afterCommand() {
-    await this.browser!.switchToParentFrame()
+  async afterCommand(contextId: string) {
+    const browser = this.getBrowser(contextId)
+    await browser.switchToParentFrame()
   }
 
-  getCommandsContext() {
+  getCommandsContext(contextId: string) {
     return {
-      browser: this.browser,
+      browser: this.getBrowser(contextId),
     }
   }
 
-  async openBrowser() {
-    if (this.browser)
-      return this.browser
+  public getBrowser(contextId: string) {
+    const page = this.browsers.get(contextId)
+    if (!page)
+      throw new Error(`Page "${contextId}" not found`)
+    return page
+  }
+
+  private async openBrowser(contextId: string) {
+    if (this.browsers.has(contextId))
+      return this.browsers.get(contextId)!
 
     const options = this.ctx.config.browser
 
@@ -58,14 +69,14 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     const { remote } = await import('webdriverio')
 
-    // TODO: close everything, if browser is closed from the outside
-    this.browser = await remote({
+    const browser = await remote({
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
     })
+    this.browsers.set(contextId, browser)
 
-    return this.browser
+    return browser
   }
 
   private buildCapabilities() {
@@ -92,17 +103,15 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_contextId: string, url: string) {
-    const browserInstance = await this.openBrowser()
+  async openPage(contextId: string, url: string) {
+    const browserInstance = await this.openBrowser(contextId)
     await browserInstance.url(url)
   }
 
   async close() {
-    await Promise.all([
-      this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
-    ])
-    // TODO: right now process can only exit with timeout, if we use browser
-    // needs investigating
-    process.exit()
+    await Promise.all(
+      Array.from(this.browsers.values()).map(browser => browser.deleteSession()),
+    )
+    this.browsers.clear()
   }
 }

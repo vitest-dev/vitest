@@ -131,7 +131,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           if (!commands || !commands[command])
             throw new Error(`Unknown command "${command}".`)
           if (provider.beforeCommand)
-            await provider.beforeCommand(command, payload)
+            await provider.beforeCommand(contextId, command, payload)
           const context = Object.assign({
             testPath,
             project,
@@ -144,7 +144,7 @@ export function setupBrowserRpc(project: WorkspaceProject, server: ViteDevServer
           }
           finally {
             if (provider.afterCommand)
-              await provider.afterCommand(command, payload)
+              await provider.afterCommand(contextId, command, payload)
           }
           return result
         },

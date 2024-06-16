@@ -1,6 +1,6 @@
 import type { UserEvent } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverIOBrowserProvider } from '../providers/webdriver'
 import type { UserEventCommand } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
@@ -14,8 +14,8 @@ export const click: UserEventCommand<UserEvent['click']> = async (
     await tester.locator(`xpath=${xpath}`).click(options)
     return
   }
-  if (provider instanceof WebdriverBrowserProvider) {
-    const page = provider.browser!
+  if (provider instanceof WebdriverIOBrowserProvider) {
+    const page = context.browser
     const markedXpath = `//${xpath}`
     const element = await page.$(markedXpath)
     await element.click(options)
