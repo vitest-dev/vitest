@@ -20,9 +20,9 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
+    "./implementation": {
+      "types": "./dist/implementation.d.ts",
+      "default": "./dist/implementation.js"
     }
   },
   "main": "./dist/plugin.js",

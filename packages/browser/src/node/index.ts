@@ -8,6 +8,7 @@ import type { ResolvedConfig } from 'vitest'
 import type { BrowserScript, WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
+import AutomockPlugin from '@vitest/mocker'
 import { slash, toArray } from '@vitest/utils'
 import BrowserContext from './plugins/pluginContext'
 import DynamicImport from './plugins/pluginDynamicImport'
@@ -323,6 +324,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
     },
     BrowserContext(project),
     DynamicImport(),
+    ...AutomockPlugin(),
     // TODO: remove this when @testing-library/vue supports ESM
     {
       name: 'vitest:browser:support-vue-testing-library',

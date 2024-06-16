@@ -8,16 +8,16 @@ import json from '@rollup/plugin-json'
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
-const entry = [
-  'src/mocker.ts',
-  'src/plugin.ts',
-]
+const entry = {
+  implementation: 'src/mocker.ts',
+  plugin: 'src/plugin.ts',
+}
 
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
-  'vitest',
+  'vitest/config',
   'vite',
 ]
 

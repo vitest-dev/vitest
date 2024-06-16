@@ -1,4 +1,5 @@
-import type { Plugin } from 'vite'
+import { join } from 'node:path'
+import type { Plugin } from 'vitest/config'
 import { automockModule } from './automocker'
 import { distDir } from './constants'
 
@@ -6,40 +7,49 @@ interface MockerOptions {
   spyModule?: string
 }
 
-export default function MockerPlugin(options: MockerOptions): Plugin {
+export { automockModule }
+
+export default function MockerPlugin(options: MockerOptions = {}): Plugin[] {
   let _spyModule = options.spyModule
 
-  return {
-    name: 'vitest:mocker',
-    async resolveId(id, importer, opts) {
-      // import { value } from './src/file.js' with { mock: 'auto' }
-      if (opts.attributes.mock === 'auto') {
-        const resolved = await this.resolve(id, importer, opts)
-        if (resolved) {
-          const attrs = { ...opts.attributes }
-          delete attrs.mock
-          return {
-            ...resolved,
-            id: injectQuery(resolved.id, 'mock=auto'),
-            attributes: attrs,
+  return [
+    {
+      name: 'vitest:mocker-resolve',
+      enforce: 'pre',
+      async resolveId(id, importer, opts) {
+        // import { value } from './src/file.js' with { mock: 'auto' }
+        if (opts.attributes.mock === 'auto') {
+          const resolved = await this.resolve(id, importer, opts)
+          if (resolved) {
+            const attrs = { ...opts.attributes }
+            delete attrs.mock
+            return {
+              ...resolved,
+              id: injectQuery(resolved.id, 'mock=auto'),
+              attributes: attrs,
+            }
           }
         }
-      }
+      },
     },
-    async transform(code, id) {
-      if (id.includes('mock=auto')) {
-        if (!_spyModule) {
-          _spyModule = (await this.resolve('@vitest/spy', distDir))!.id
-        }
+    {
+      name: 'vitest:mocker-transform',
+      enforce: 'post',
+      async transform(code, id) {
+        if (id.includes('mock=auto')) {
+          if (!_spyModule) {
+            _spyModule = slash(join('/@fs/', (await this.resolve('@vitest/spy', distDir))!.id))
+          }
 
-        const ms = automockModule(code, this.parse, _spyModule)
-        return {
-          code: ms.toString(),
-          map: ms.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+          const ms = automockModule(code, this.parse, _spyModule)
+          return {
+            code: ms.toString(),
+            map: ms.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+          }
         }
-      }
+      },
     },
-  }
+  ]
 }
 
 const postfixRE = /[?#].*$/

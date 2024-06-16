@@ -66,9 +66,6 @@ export function mockObject(
       }
 
       if (isFunction) {
-        if (!spyModule) {
-          throw new Error('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
-        }
         function mockFunction(this: any) {
           // detect constructor call and mock each instance's methods
           // so that mock states between prototype/instances don't affect each other

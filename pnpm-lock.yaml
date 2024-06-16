@@ -435,6 +435,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.5.2
         version: 14.5.2(@testing-library/dom@10.1.0)
+      '@vitest/mocker':
+        specifier: workspace:2.0.0-beta.10
+        version: link:../mocker
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
@@ -867,6 +870,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
+      '@vitest/mocker':
+        specifier: workspace:2.0.0-beta.10
+        version: link:../mocker
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner

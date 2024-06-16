@@ -149,6 +149,7 @@
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:2.0.0-beta.10",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",

@@ -77,7 +77,6 @@ export interface WebSocketBrowserHandlers {
     mockPath?: string | null
     resolvedId: string
   }>
-  automock: (id: string) => Promise<string>
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (
     id: string
