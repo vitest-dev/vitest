@@ -12,12 +12,21 @@ export function getWorkerState(): WorkerGlobalState {
 }
 
 export function assertGlobalExists(name: string) {
-  if (!(name in globalThis))
-    throw new Error(`[@vitest/web-worker] Cannot initiate a custom Web Worker. "${name}" is not supported in this environment. Please, consider using jsdom or happy-dom environment.`)
+  if (!(name in globalThis)) {
+    throw new Error(
+      `[@vitest/web-worker] Cannot initiate a custom Web Worker. "${name}" is not supported in this environment. Please, consider using jsdom or happy-dom environment.`,
+    )
+  }
 }
 
-function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined, clone: CloneOption) {
-  const transfer = Array.isArray(transferOrOptions) ? transferOrOptions : transferOrOptions?.transfer
+function createClonedMessageEvent(
+  data: any,
+  transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined,
+  clone: CloneOption,
+) {
+  const transfer = Array.isArray(transferOrOptions)
+    ? transferOrOptions
+    : transferOrOptions?.transfer
 
   debug('clone worker message %o', data)
   const origin = typeof location === 'undefined' ? undefined : location.origin
@@ -31,7 +40,8 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
   }
   if (clone !== 'none') {
     debug('create message event, using polyfilled structured clone')
-    transfer?.length && console.warn(
+    transfer?.length
+    && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '
       + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
@@ -49,7 +59,11 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
   })
 }
 
-export function createMessageEvent(data: any, transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined, clone: CloneOption) {
+export function createMessageEvent(
+  data: any,
+  transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined,
+  clone: CloneOption,
+) {
   try {
     return createClonedMessageEvent(data, transferOrOptions, clone)
   }
@@ -92,11 +106,14 @@ function stripProtocol(url: string | URL) {
 }
 
 export function getFileIdFromUrl(url: URL | string) {
-  if (typeof self === 'undefined')
+  if (typeof self === 'undefined') {
     return stripProtocol(url)
-  if (!(url instanceof URL))
+  }
+  if (!(url instanceof URL)) {
     url = new URL(url, self.location.origin)
-  if (url.protocol === 'http:' || url.protocol === 'https:')
+  }
+  if (url.protocol === 'http:' || url.protocol === 'https:') {
     return url.pathname
+  }
   return stripProtocol(url)
 }

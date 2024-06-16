@@ -10,18 +10,21 @@ interface BrowserRunnerOptions {
   config: ResolvedConfig
 }
 
-export const browserHashMap = new Map<string, [test: boolean, timstamp: string]>()
+export const browserHashMap = new Map<
+  string,
+  [test: boolean, timstamp: string]
+>()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
 export function createBrowserRunner(
-  runnerClass: { new(config: ResolvedConfig): VitestRunner },
+  runnerClass: { new (config: ResolvedConfig): VitestRunner },
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
-): { new(options: BrowserRunnerOptions): VitestRunner } {
+): { new (options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: ResolvedConfig
     hashMap = browserHashMap
@@ -101,9 +104,14 @@ export function createBrowserRunner(
 
 let cachedRunner: VitestRunner | null = null
 
-export async function initiateRunner(state: WorkerGlobalState, mocker: VitestBrowserClientMocker, config: ResolvedConfig) {
-  if (cachedRunner)
+export async function initiateRunner(
+  state: WorkerGlobalState,
+  mocker: VitestBrowserClientMocker,
+  config: ResolvedConfig,
+) {
+  if (cachedRunner) {
     return cachedRunner
+  }
   const [
     { VitestTestRunner, NodeBenchmarkRunner },
     { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
@@ -111,12 +119,16 @@ export async function initiateRunner(state: WorkerGlobalState, mocker: VitestBro
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
   ])
-  const runnerClass = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+  const runnerClass
+    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
-    takeCoverage: () => takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+    takeCoverage: () =>
+      takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
-  if (!config.snapshotOptions.snapshotEnvironment)
-    config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
+  if (!config.snapshotOptions.snapshotEnvironment) {
+    config.snapshotOptions.snapshotEnvironment
+      = new VitestBrowserSnapshotEnvironment()
+  }
   const runner = new BrowserRunner({
     config,
   })
@@ -131,22 +143,27 @@ export async function initiateRunner(state: WorkerGlobalState, mocker: VitestBro
 }
 
 async function updateFilesLocations(files: File[]) {
-  const { loadSourceMapUtils } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const { loadSourceMapUtils } = (await importId(
+    'vitest/utils',
+  )) as typeof import('vitest/utils')
   const { TraceMap, originalPositionFor } = await loadSourceMapUtils()
 
   const promises = files.map(async (file) => {
     const result = await rpc().getBrowserFileSourceMap(file.filepath)
-    if (!result)
+    if (!result) {
       return null
+    }
     const traceMap = new TraceMap(result as any)
     function updateLocation(task: Task) {
       if (task.location) {
         const { line, column } = originalPositionFor(traceMap, task.location)
-        if (line != null && column != null)
+        if (line != null && column != null) {
           task.location = { line, column: task.each ? column : column + 1 }
+        }
       }
-      if ('tasks' in task)
+      if ('tasks' in task) {
         task.tasks.forEach(updateLocation)
+      }
     }
     file.tasks.forEach(updateLocation)
     return null

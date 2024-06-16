@@ -30,17 +30,35 @@ let now: null | number = null
 class MockDate extends RealDate {
   constructor()
   constructor(value: number | string)
-  constructor(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number)
-  constructor(y?: number | string, m?: number, d?: number, h?: number, M?: number, s?: number, ms?: number) {
+  constructor(
+    year: number,
+    month: number,
+    date?: number,
+    hours?: number,
+    minutes?: number,
+    seconds?: number,
+    ms?: number
+  )
+  constructor(
+    y?: number | string,
+    m?: number,
+    d?: number,
+    h?: number,
+    M?: number,
+    s?: number,
+    ms?: number,
+  ) {
     super()
 
     let date: any
     switch (arguments.length) {
       case 0:
-        if (now !== null)
+        if (now !== null) {
           date = new RealDate(now.valueOf())
-        else
+        }
+        else {
           date = new RealDate()
+        }
         break
       case 1:
         date = new RealDate(y!)
@@ -77,8 +95,9 @@ MockDate.toString = function () {
 
 export function mockDate(date: string | number | Date): void {
   const dateObj = new RealDate(date.valueOf())
-  if (Number.isNaN(dateObj.getTime()))
+  if (Number.isNaN(dateObj.getTime())) {
     throw new TypeError(`mockdate: The time set is an invalid date: ${date}`)
+  }
 
   // @ts-expect-error global
   globalThis.Date = MockDate

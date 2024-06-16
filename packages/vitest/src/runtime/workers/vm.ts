@@ -20,26 +20,35 @@ export async function runVmTests(state: WorkerGlobalState) {
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
-    const packageId = envName[0] === '.' ? envName : `vitest-environment-${envName}`
+    const packageId
+      = envName[0] === '.' ? envName : `vitest-environment-${envName}`
     throw new TypeError(
-    `Environment "${ctx.environment.name}" is not a valid environment. `
-    + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
+      `Environment "${ctx.environment.name}" is not a valid environment. `
+      + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
     )
   }
 
-  const vm = await environment.setupVM(ctx.environment.options || ctx.config.environmentOptions || {})
+  const vm = await environment.setupVM(
+    ctx.environment.options || ctx.config.environmentOptions || {},
+  )
 
   state.durations.environment = performance.now() - state.durations.environment
 
   process.env.VITEST_VM_POOL = '1'
 
-  if (!vm.getVmContext)
-    throw new TypeError(`Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`)
+  if (!vm.getVmContext) {
+    throw new TypeError(
+      `Environment ${environment.name} doesn't provide "getVmContext" method. It should return a context created by "vm.createContext" method.`,
+    )
+  }
 
   const context: Context | null = vm.getVmContext()
 
-  if (!isContext(context))
-    throw new TypeError(`Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`)
+  if (!isContext(context)) {
+    throw new TypeError(
+      `Environment ${environment.name} doesn't provide a valid context. It should be created by "vm.createContext" method.`,
+    )
+  }
 
   provideWorkerState(context, state)
 
@@ -48,7 +57,9 @@ export async function runVmTests(state: WorkerGlobalState) {
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
+  context.console = state.config.disableConsoleIntercept
+    ? console
+    : createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
@@ -74,7 +85,9 @@ export async function runVmTests(state: WorkerGlobalState) {
 
   context.__vitest_mocker__ = executor.mocker
 
-  const { run } = await executor.importExternalModule(entryFile) as typeof import('../runVmTests')
+  const { run } = (await executor.importExternalModule(
+    entryFile,
+  )) as typeof import('../runVmTests')
 
   try {
     await run(ctx.files, ctx.config, executor)

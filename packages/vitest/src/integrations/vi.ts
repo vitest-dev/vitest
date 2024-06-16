@@ -8,7 +8,13 @@ import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { isChildProcess } from '../utils/base'
 import { FakeTimers } from './mock/timers'
-import type { MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep, MockInstance } from './spy'
+import type {
+  MaybeMocked,
+  MaybeMockedDeep,
+  MaybePartiallyMocked,
+  MaybePartiallyMockedDeep,
+  MockInstance,
+} from './spy'
 import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
@@ -248,7 +254,9 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
-  importMock: <T = ESModuleExports>(path: string) => Promise<MaybeMockedDeep<T>>
+  importMock: <T = ESModuleExports>(
+    path: string
+  ) => Promise<MaybeMockedDeep<T>>
 
   /**
    * Type helper for TypeScript. Just returns the object that was passed.
@@ -267,7 +275,25 @@ export interface VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) & (<T>(item: T, deep: true) => MaybeMockedDeep<T>) & (<T>(item: T, options: { partial?: false; deep?: false }) => MaybeMocked<T>) & (<T>(item: T, options: { partial?: false; deep: true }) => MaybeMockedDeep<T>) & (<T>(item: T, options: { partial: true; deep?: false }) => MaybePartiallyMocked<T>) & (<T>(item: T, options: { partial: true; deep: true }) => MaybePartiallyMockedDeep<T>) & (<T>(item: T) => MaybeMocked<T>)
+  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
+  (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
+  (<T>(
+      item: T,
+      options: { partial?: false; deep?: false }
+    ) => MaybeMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial?: false; deep: true }
+    ) => MaybeMockedDeep<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep?: false }
+    ) => MaybePartiallyMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep: true }
+    ) => MaybePartiallyMockedDeep<T>) &
+    (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
@@ -304,7 +330,10 @@ export interface VitestUtils {
    * Changes the value of `import.meta.env` and `process.env`.
    * You can return it back to original value with `vi.unstubAllEnvs`, or by enabling `unstubEnvs` config option.
    */
-  stubEnv: <T extends string>(name: T, value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string) => VitestUtils
+  stubEnv: <T extends string>(
+    name: T,
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string
+  ) => VitestUtils
 
   /**
    * Reset the value to original value that was available before first `vi.stubGlobal` was called.
@@ -343,18 +372,22 @@ export interface VitestUtils {
 }
 
 function createVitest(): VitestUtils {
-  // @ts-expect-error injected by vite-nide
-  const _mocker: VitestMocker = typeof __vitest_mocker__ !== 'undefined'
+  const _mocker: VitestMocker
     // @ts-expect-error injected by vite-nide
-    ? __vitest_mocker__
-    : new Proxy({}, {
-      get(_, name) {
-        throw new Error(
-          'Vitest mocker was not initialized in this environment. '
-          + `vi.${String(name)}() is forbidden.`,
-        )
-      },
-    })
+    = typeof __vitest_mocker__ !== 'undefined'
+      // @ts-expect-error injected by vite-nide
+      ? __vitest_mocker__
+      : new Proxy(
+        {},
+        {
+          get(_, name) {
+            throw new Error(
+              'Vitest mocker was not initialized in this environment. '
+              + `vi.${String(name)}() is forbidden.`,
+            )
+          },
+        },
+      )
   let _mockedDate: Date | null = null
   let _config: null | ResolvedConfig = null
 
@@ -362,12 +395,16 @@ function createVitest(): VitestUtils {
 
   let _timers: FakeTimers
 
-  const timers = () => _timers ||= new FakeTimers({
-    global: globalThis,
-    config: workerState.config.fakeTimers,
-  })
+  const timers = () =>
+    (_timers ||= new FakeTimers({
+      global: globalThis,
+      config: workerState.config.fakeTimers,
+    }))
 
-  const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
+  const _stubsGlobal = new Map<
+    string | symbol | number,
+    PropertyDescriptor | undefined
+  >()
   const _stubsEnv = new Map()
 
   const _envBooleans = ['PROD', 'DEV', 'SSR']
@@ -386,17 +423,22 @@ function createVitest(): VitestUtils {
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
       if (isChildProcess()) {
-        if (config?.toFake?.includes('nextTick') || workerState.config?.fakeTimers?.toFake?.includes('nextTick')) {
+        if (
+          config?.toFake?.includes('nextTick')
+          || workerState.config?.fakeTimers?.toFake?.includes('nextTick')
+        ) {
           throw new Error(
             'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
           )
         }
       }
 
-      if (config)
+      if (config) {
         timers().configure({ ...workerState.config.fakeTimers, ...config })
-      else
+      }
+      else {
         timers().configure(workerState.config.fakeTimers)
+      }
 
       timers().useFakeTimers()
       return utils
@@ -493,38 +535,68 @@ function createVitest(): VitestUtils {
     },
 
     mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
-      if (typeof path !== 'string')
-        throw new Error(`vi.mock() expects a string path, but received a ${typeof path}`)
+      if (typeof path !== 'string') {
+        throw new TypeError(
+          `vi.mock() expects a string path, but received a ${typeof path}`,
+        )
+      }
       const importer = getImporter('mock')
       _mocker.queueMock(
         path,
         importer,
-        factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
+        factory
+          ? () =>
+              factory(() =>
+                _mocker.importActual(
+                  path,
+                  importer,
+                  _mocker.getMockContext().callstack,
+                ),
+              )
+          : undefined,
         true,
       )
     },
 
     unmock(path: string | Promise<unknown>) {
-      if (typeof path !== 'string')
-        throw new Error(`vi.unmock() expects a string path, but received a ${typeof path}`)
+      if (typeof path !== 'string') {
+        throw new TypeError(
+          `vi.unmock() expects a string path, but received a ${typeof path}`,
+        )
+      }
       _mocker.queueUnmock(path, getImporter('unmock'))
     },
 
     doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
-      if (typeof path !== 'string')
-        throw new Error(`vi.doMock() expects a string path, but received a ${typeof path}`)
+      if (typeof path !== 'string') {
+        throw new TypeError(
+          `vi.doMock() expects a string path, but received a ${typeof path}`,
+        )
+      }
       const importer = getImporter('doMock')
       _mocker.queueMock(
         path,
         importer,
-        factory ? () => factory(() => _mocker.importActual(path, importer, _mocker.getMockContext().callstack)) : undefined,
+        factory
+          ? () =>
+              factory(() =>
+                _mocker.importActual(
+                  path,
+                  importer,
+                  _mocker.getMockContext().callstack,
+                ),
+              )
+          : undefined,
         false,
       )
     },
 
     doUnmock(path: string | Promise<unknown>) {
-      if (typeof path !== 'string')
-        throw new Error(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
+      if (typeof path !== 'string') {
+        throw new TypeError(
+          `vi.doUnmock() expects a string path, but received a ${typeof path}`,
+        )
+      }
       _mocker.queueUnmock(path, getImporter('doUnmock'))
     },
 
@@ -565,8 +637,12 @@ function createVitest(): VitestUtils {
     },
 
     stubGlobal(name: string | symbol | number, value: any) {
-      if (!_stubsGlobal.has(name))
-        _stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
+      if (!_stubsGlobal.has(name)) {
+        _stubsGlobal.set(
+          name,
+          Object.getOwnPropertyDescriptor(globalThis, name),
+        )
+      }
       Object.defineProperty(globalThis, name, {
         value,
         writable: true,
@@ -577,21 +653,26 @@ function createVitest(): VitestUtils {
     },
 
     stubEnv(name: string, value: string | boolean) {
-      if (!_stubsEnv.has(name))
+      if (!_stubsEnv.has(name)) {
         _stubsEnv.set(name, process.env[name])
-      if (_envBooleans.includes(name))
+      }
+      if (_envBooleans.includes(name)) {
         process.env[name] = value ? '1' : ''
-      else
+      }
+      else {
         process.env[name] = String(value)
+      }
       return utils
     },
 
     unstubAllGlobals() {
       _stubsGlobal.forEach((original, name) => {
-        if (!original)
+        if (!original) {
           Reflect.deleteProperty(globalThis, name)
-        else
+        }
+        else {
           Object.defineProperty(globalThis, name, original)
+        }
       })
       _stubsGlobal.clear()
       return utils
@@ -599,10 +680,12 @@ function createVitest(): VitestUtils {
 
     unstubAllEnvs() {
       _stubsEnv.forEach((original, name) => {
-        if (original === undefined)
+        if (original === undefined) {
           delete process.env[name]
-        else
+        }
+        else {
           process.env[name] = original
+        }
       })
       _stubsEnv.clear()
       return utils
@@ -618,14 +701,16 @@ function createVitest(): VitestUtils {
     },
 
     setConfig(config: RuntimeConfig) {
-      if (!_config)
+      if (!_config) {
         _config = { ...workerState.config }
+      }
       Object.assign(workerState.config, config)
     },
 
     resetConfig() {
-      if (_config)
+      if (_config) {
         Object.assign(workerState.config, _config)
+      }
     },
   }
 

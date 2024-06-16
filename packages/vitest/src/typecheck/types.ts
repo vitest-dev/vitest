@@ -12,7 +12,7 @@ export interface CollectLineNumbers {
   prev?: number
 }
 export type CollectLines = {
-  [key in keyof CollectLineNumbers]: string
+  [key in keyof CollectLineNumbers]: string;
 }
 export interface RootAndTarget {
   root: string

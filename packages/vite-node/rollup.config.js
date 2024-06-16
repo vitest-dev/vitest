@@ -41,10 +41,9 @@ const plugins = [
   commonjs(),
   esbuild({
     target: 'node14',
-    define:
-      process.env.NO_VITE_TEST_WATCHER_DEBUG
-        ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
-        : {},
+    define: process.env.NO_VITE_TEST_WATCHER_DEBUG
+      ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
+      : {},
   }),
 ]
 
@@ -81,15 +80,14 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
+  }
   console.error(message)
 }

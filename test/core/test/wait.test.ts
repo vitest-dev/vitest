@@ -47,10 +47,12 @@ describe('waitFor', () => {
       finished = true
     }, 50)
     await vi.waitFor(async () => {
-      if (finished)
+      if (finished) {
         return Promise.resolve(true)
-      else
+      }
+      else {
         return Promise.reject(new Error('async function error'))
+      }
     })
   })
 

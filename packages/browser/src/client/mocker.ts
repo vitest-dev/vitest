@@ -21,25 +21,30 @@ export class VitestBrowserClientMocker {
   private spyModule!: SpyModule
 
   setupWorker() {
-    channel.addEventListener('message', async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
-      if (e.data.type === 'mock-factory:request') {
-        try {
-          const module = await this.resolve(e.data.id)
-          const exports = Object.keys(module)
-          channel.postMessage({
-            type: 'mock-factory:response',
-            exports,
-          })
+    channel.addEventListener(
+      'message',
+      async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
+        if (e.data.type === 'mock-factory:request') {
+          try {
+            const module = await this.resolve(e.data.id)
+            const exports = Object.keys(module)
+            channel.postMessage({
+              type: 'mock-factory:response',
+              exports,
+            })
+          }
+          catch (err: any) {
+            const { processError } = (await importId(
+              'vitest/browser',
+            )) as typeof import('vitest/browser')
+            channel.postMessage({
+              type: 'mock-factory:error',
+              error: processError(err),
+            })
+          }
         }
-        catch (err: any) {
-          const { processError } = await importId('vitest/browser') as typeof import('vitest/browser')
-          channel.postMessage({
-            type: 'mock-factory:error',
-            error: processError(err),
-          })
-        }
-      }
-    })
+      },
+    )
   }
 
   public setSpyModule(mod: SpyModule) {
@@ -48,8 +53,11 @@ export class VitestBrowserClientMocker {
 
   public async importActual(id: string, importer: string) {
     const resolved = await rpc().resolveId(id, importer)
-    if (resolved == null)
-      throw new Error(`[vitest] Cannot resolve ${id} imported from ${importer}`)
+    if (resolved == null) {
+      throw new Error(
+        `[vitest] Cannot resolve ${id} imported from ${importer}`,
+      )
+    }
     const ext = extname(resolved.id)
     const url = new URL(`/@id/${resolved.id}`, location.href)
     const query = `_vitest_original&ext.${ext}`
@@ -61,14 +69,20 @@ export class VitestBrowserClientMocker {
 
   public async importMock(rawId: string, importer: string) {
     await this.prepare()
-    const { resolvedId, type, mockPath } = await rpc().resolveMock(rawId, importer, false)
+    const { resolvedId, type, mockPath } = await rpc().resolveMock(
+      rawId,
+      importer,
+      false,
+    )
 
     const factoryReturn = this.get(resolvedId)
-    if (factoryReturn)
+    if (factoryReturn) {
       return factoryReturn
+    }
 
-    if (this.factories[resolvedId])
+    if (this.factories[resolvedId]) {
       return await this.resolve(resolvedId)
+    }
 
     if (type === 'redirect') {
       const url = new URL(`/@id/${mockPath}`, location.href)
@@ -90,8 +104,9 @@ export class VitestBrowserClientMocker {
 
   public async invalidate() {
     const ids = Array.from(this.ids)
-    if (!ids.length)
+    if (!ids.length) {
       return
+    }
     await rpc().invalidate(ids)
     channel.postMessage({ type: 'mock:invalidate' })
     this.ids.clear()
@@ -102,8 +117,9 @@ export class VitestBrowserClientMocker {
 
   public async resolve(id: string) {
     const factory = this.factories[id]
-    if (!factory)
+    if (!factory) {
       throw new Error(`Cannot resolve ${id} mock: no factory provided`)
+    }
     try {
       this.mockObjects[id] = await factory()
       return this.mockObjects[id]
@@ -120,13 +136,15 @@ export class VitestBrowserClientMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => any) {
-    const promise = rpc().resolveMock(id, importer, !!factory)
+    const promise = rpc()
+      .resolveMock(id, importer, !!factory)
       .then(async ({ mockPath, resolvedId }) => {
         this.ids.add(resolvedId)
         const urlPaths = resolveMockPaths(resolvedId)
-        const resolvedMock = typeof mockPath === 'string'
-          ? new URL(resolvedMockedPath(mockPath), location.href).toString()
-          : mockPath
+        const resolvedMock
+          = typeof mockPath === 'string'
+            ? new URL(resolvedMockedPath(mockPath), location.href).toString()
+            : mockPath
         urlPaths.forEach((url) => {
           this.mocks[url] = resolvedMock
           this.factories[url] = factory!
@@ -137,17 +155,20 @@ export class VitestBrowserClientMocker {
           mock: resolvedMock,
         })
         await waitForChannel('mock:done')
-      }).finally(() => {
+      })
+      .finally(() => {
         this.queue.delete(promise)
       })
     this.queue.add(promise)
   }
 
   public queueUnmock(id: string, importer: string) {
-    const promise = rpc().resolveId(id, importer)
+    const promise = rpc()
+      .resolveId(id, importer)
       .then(async (resolved) => {
-        if (!resolved)
+        if (!resolved) {
           return
+        }
         this.ids.delete(resolved.id)
         const urlPaths = resolveMockPaths(resolved.id)
         urlPaths.forEach((url) => {
@@ -168,15 +189,17 @@ export class VitestBrowserClientMocker {
   }
 
   public async prepare() {
-    if (!this.queue.size)
+    if (!this.queue.size) {
       return
-    await Promise.all([
-      ...this.queue.values(),
-    ])
+    }
+    await Promise.all([...this.queue.values()])
   }
 
   // TODO: move this logic into a util(?)
-  public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
+  public mockObject(
+    object: Record<Key, any>,
+    mockExports: Record<Key, any> = {},
+  ) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
 
@@ -190,10 +213,16 @@ export class VitestBrowserClientMocker {
       }
     }
 
-    const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
+    const mockPropertiesOf = (
+      container: Record<Key, any>,
+      newContainer: Record<Key, any>,
+    ) => {
       const containerType = /* #__PURE__ */ getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(
+        container,
+        isModule,
+      )) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule && descriptor.get) {
           try {
@@ -206,8 +235,9 @@ export class VitestBrowserClientMocker {
         }
 
         // Skip special read-only props, we don't want to mess with those.
-        if (isSpecialProp(property, containerType))
+        if (isSpecialProp(property, containerType)) {
           continue
+        }
 
         const value = container[property]
 
@@ -215,7 +245,9 @@ export class VitestBrowserClientMocker {
         // recursion in circular objects.
         const refId = refs.getId(value)
         if (refId !== undefined) {
-          finalizers.push(() => define(newContainer, property, refs.getMockedValue(refId)))
+          finalizers.push(() =>
+            define(newContainer, property, refs.getMockedValue(refId)),
+          )
           continue
         }
 
@@ -226,38 +258,54 @@ export class VitestBrowserClientMocker {
           continue
         }
 
-        const isFunction = type.includes('Function') && typeof value === 'function'
-        if ((!isFunction || value.__isMockFunction) && type !== 'Object' && type !== 'Module') {
+        const isFunction
+          = type.includes('Function') && typeof value === 'function'
+        if (
+          (!isFunction || value.__isMockFunction)
+          && type !== 'Object'
+          && type !== 'Module'
+        ) {
           define(newContainer, property, value)
           continue
         }
 
         // Sometimes this assignment fails for some unknown reason. If it does,
         // just move along.
-        if (!define(newContainer, property, isFunction ? value : {}))
+        if (!define(newContainer, property, isFunction ? value : {})) {
           continue
+        }
 
         if (isFunction) {
           const spyModule = this.spyModule
-          if (!spyModule)
-            throw new Error('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
+          if (!spyModule) {
+            throw new Error(
+              '[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.',
+            )
+          }
           function mockFunction(this: any) {
             // detect constructor call and mock each instance's methods
             // so that mock states between prototype/instances don't affect each other
             // (jest reference https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691)
             if (this instanceof newContainer[property]) {
-              for (const { key, descriptor } of getAllMockableProperties(this, false)) {
+              for (const { key, descriptor } of getAllMockableProperties(
+                this,
+                false,
+              )) {
                 // skip getter since it's not mocked on prototype as well
-                if (descriptor.get)
+                if (descriptor.get) {
                   continue
+                }
 
                 const value = this[key]
                 const type = /* #__PURE__ */ getType(value)
-                const isFunction = type.includes('Function') && typeof value === 'function'
+                const isFunction
+                  = type.includes('Function') && typeof value === 'function'
                 if (isFunction) {
                   // mock and delegate calls to original prototype method, which should be also mocked already
                   const original = this[key]
-                  const mock = spyModule.spyOn(this, key as string).mockImplementation(original)
+                  const mock = spyModule
+                    .spyOn(this, key as string)
+                    .mockImplementation(original)
                   mock.mockRestore = () => {
                     mock.mockReset()
                     mock.mockImplementation(original)
@@ -267,7 +315,9 @@ export class VitestBrowserClientMocker {
               }
             }
           }
-          const mock = spyModule.spyOn(newContainer, property).mockImplementation(mockFunction)
+          const mock = spyModule
+            .spyOn(newContainer, property)
+            .mockImplementation(mockFunction)
           mock.mockRestore = () => {
             mock.mockReset()
             mock.mockImplementation(mockFunction)
@@ -286,17 +336,20 @@ export class VitestBrowserClientMocker {
     mockPropertiesOf(object, mockedObject)
 
     // Plug together refs
-    for (const finalizer of finalizers)
+    for (const finalizer of finalizers) {
       finalizer()
+    }
 
     return mockedObject
   }
 }
 
 function isSpecialProp(prop: Key, parentType: string) {
-  return parentType.includes('Function')
+  return (
+    parentType.includes('Function')
     && typeof prop === 'string'
     && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
+  )
 }
 
 class RefTracker {
@@ -322,39 +375,56 @@ class RefTracker {
 type Key = string | symbol
 
 export function getAllMockableProperties(obj: any, isModule: boolean) {
-  const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
+  const allProps = new Map<
+    string | symbol,
+    { key: string | symbol; descriptor: PropertyDescriptor }
+  >()
   let curr = obj
   do {
     // we don't need properties from these
-    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
+    if (
+      curr === Object.prototype
+      || curr === Function.prototype
+      || curr === RegExp.prototype
+    ) {
       break
+    }
 
     collectOwnProperties(curr, (key) => {
       const descriptor = Object.getOwnPropertyDescriptor(curr, key)
-      if (descriptor)
+      if (descriptor) {
         allProps.set(key, { key, descriptor })
+      }
     })
-  // eslint-disable-next-line no-cond-assign
-  } while (curr = Object.getPrototypeOf(curr))
+    // eslint-disable-next-line no-cond-assign
+  } while ((curr = Object.getPrototypeOf(curr)))
   // default is not specified in ownKeys, if module is interoped
   if (isModule && !allProps.has('default') && 'default' in obj) {
     const descriptor = Object.getOwnPropertyDescriptor(obj, 'default')
-    if (descriptor)
+    if (descriptor) {
       allProps.set('default', { key: 'default', descriptor })
+    }
   }
   return Array.from(allProps.values())
 }
 
-function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
-  const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
+function collectOwnProperties(
+  obj: any,
+  collector: Set<string | symbol> | ((key: string | symbol) => void),
+) {
+  const collect
+    = typeof collector === 'function'
+      ? collector
+      : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
 function resolvedMockedPath(path: string) {
   const config = getBrowserState().viteConfig
-  if (path.startsWith(config.root))
+  if (path.startsWith(config.root)) {
     return path.slice(config.root.length)
+  }
   return path
 }
 
@@ -365,11 +435,13 @@ function resolveMockPaths(path: string) {
   const paths = [path, join('/@fs/', path)]
 
   // URL can be /file/path.js, but path is resolved to /file/path
-  if (path.startsWith(config.root))
+  if (path.startsWith(config.root)) {
     paths.push(path.slice(config.root.length))
+  }
 
-  if (path.startsWith(fsRoot))
+  if (path.startsWith(fsRoot)) {
     paths.push(path.slice(fsRoot.length))
+  }
 
   return paths
 }

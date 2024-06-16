@@ -1,3 +1,1 @@
-export {
-  getSafeTimers,
-} from '@vitest/utils'
+export { getSafeTimers } from '@vitest/utils'

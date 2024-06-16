@@ -2,7 +2,17 @@ import type { TransformResult } from 'vite'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { ViteNodeResolveId } from 'vite-node'
-import type { AfterSuiteRunMeta, File, ModuleGraphData, ProvidedContext, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
+import type {
+  AfterSuiteRunMeta,
+  File,
+  ModuleGraphData,
+  ProvidedContext,
+  Reporter,
+  ResolvedConfig,
+  SnapshotResult,
+  TaskResultPack,
+  UserConsoleLog,
+} from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
   source?: string
@@ -15,8 +25,16 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<[{ name: string; root: string }, file: string][]>
   getPaths: () => string[]
   getConfig: () => ResolvedConfig
-  getModuleGraph: (projectName: string, id: string, browser?: boolean) => Promise<ModuleGraphData>
-  getTransformResult: (projectName: string, id: string, browser?: boolean) => Promise<TransformResultWithSource | undefined>
+  getModuleGraph: (
+    projectName: string,
+    id: string,
+    browser?: boolean
+  ) => Promise<ModuleGraphData>
+  getTransformResult: (
+    projectName: string,
+    id: string,
+    browser?: boolean
+  ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
   rerun: (files: string[]) => Promise<void>
@@ -40,20 +58,43 @@ export interface WebSocketBrowserHandlers {
   finishBrowserTests: (contextId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
-  resolveId: (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
-  triggerCommand: <T>(contextId: string, command: string, testPath: string | undefined, payload: unknown[]) => Promise<T>
-  resolveMock: (id: string, importer: string, hasFactory: boolean) => Promise<{
+  resolveId: (
+    id: string,
+    importer?: string
+  ) => Promise<ViteNodeResolveId | null>
+  triggerCommand: <T>(
+    contextId: string,
+    command: string,
+    testPath: string | undefined,
+    payload: unknown[]
+  ) => Promise<T>
+  resolveMock: (
+    id: string,
+    importer: string,
+    hasFactory: boolean
+  ) => Promise<{
     type: 'factory' | 'redirect' | 'automock'
     mockPath?: string | null
     resolvedId: string
   }>
   automock: (id: string) => Promise<string>
   invalidate: (ids: string[]) => void
-  getBrowserFileSourceMap: (id: string) => Promise<TransformResult['map'] | undefined>
+  getBrowserFileSourceMap: (
+    id: string
+  ) => Promise<TransformResult['map'] | undefined>
   getProvidedContext: () => ProvidedContext
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected' | 'onSpecsCollected'> {
+export interface WebSocketEvents
+  extends Pick<
+    Reporter,
+    | 'onCollected'
+    | 'onFinished'
+    | 'onTaskUpdate'
+    | 'onUserConsoleLog'
+    | 'onPathsCollected'
+    | 'onSpecsCollected'
+  > {
   onFinishedReportCoverage: () => void
 }
 
@@ -64,4 +105,7 @@ export interface WebSocketBrowserEvents {
 }
 
 export type WebSocketRPC = BirpcReturn<WebSocketEvents, WebSocketHandlers>
-export type WebSocketBrowserRPC = BirpcReturn<WebSocketBrowserEvents, WebSocketBrowserHandlers>
+export type WebSocketBrowserRPC = BirpcReturn<
+  WebSocketBrowserEvents,
+  WebSocketBrowserHandlers
+>

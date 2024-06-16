@@ -1,15 +1,27 @@
 import { processError } from '@vitest/utils/error'
 import type { File, SuiteHooks } from './types'
 import type { VitestRunner } from './types/runner'
-import { calculateSuiteHash, createFileTask, interpretTaskModes, someTasksAreOnly } from './utils/collect'
-import { clearCollectorContext, createSuiteHooks, getDefaultSuite } from './suite'
+import {
+  calculateSuiteHash,
+  createFileTask,
+  interpretTaskModes,
+  someTasksAreOnly,
+} from './utils/collect'
+import {
+  clearCollectorContext,
+  createSuiteHooks,
+  getDefaultSuite,
+} from './suite'
 import { getHooks, setHooks } from './map'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
 const now = Date.now
 
-export async function collectTests(paths: string[], runner: VitestRunner): Promise<File[]> {
+export async function collectTests(
+  paths: string[],
+  runner: VitestRunner,
+): Promise<File[]> {
   const files: File[] = []
 
   const config = runner.config
@@ -66,13 +78,20 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
     calculateSuiteHash(file)
 
     const hasOnlyTasks = someTasksAreOnly(file)
-    interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
+    interpretTaskModes(
+      file,
+      config.testNamePattern,
+      hasOnlyTasks,
+      false,
+      config.allowOnly,
+    )
 
     file.tasks.forEach((task) => {
       // task.suite refers to the internal default suite object
       // it should not be reported
-      if (task.suite?.id === '')
+      if (task.suite?.id === '') {
         delete task.suite
+      }
     })
     files.push(file)
   }
@@ -83,7 +102,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
 function mergeHooks(baseHooks: SuiteHooks, hooks: SuiteHooks): SuiteHooks {
   for (const _key in hooks) {
     const key = _key as keyof SuiteHooks
-    baseHooks[key].push(...hooks[key] as any)
+    baseHooks[key].push(...(hooks[key] as any))
   }
 
   return baseHooks

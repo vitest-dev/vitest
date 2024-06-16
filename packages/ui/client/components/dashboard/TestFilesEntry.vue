@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { files, unhandledErrors } from '~/composables/client'
-import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composables/summary'
+import { files, unhandledErrors } from "~/composables/client";
+import {
+  filesFailed,
+  filesSnapshotFailed,
+  filesSuccess,
+  time,
+} from "~/composables/summary";
 </script>
 
 <template>
   <div
     data-testid="test-files-entry"
     grid="~ cols-[min-content_1fr_min-content]"
-    items-center gap="x-2 y-3" p="x4" relative font-light w-80
+    items-center
+    gap="x-2 y-3"
+    p="x4"
+    relative
+    font-light
+    w-80
     op80
   >
     <div i-carbon-document />
@@ -26,9 +36,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
 
     <template v-if="filesFailed.length">
       <div i-carbon-close />
-      <div>
-        Fail
-      </div>
+      <div>Fail</div>
       <div class="number" text-red5>
         {{ filesFailed.length }}
       </div>
@@ -36,9 +44,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
 
     <template v-if="filesSnapshotFailed.length">
       <div i-carbon-compare />
-      <div>
-        Snapshot Fail
-      </div>
+      <div>Snapshot Fail</div>
       <div class="number" text-red5>
         {{ filesSnapshotFailed.length }}
       </div>
@@ -46,9 +52,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
 
     <template v-if="unhandledErrors.length">
       <div i-carbon-checkmark-outline-error />
-      <div>
-        Errors
-      </div>
+      <div>Errors</div>
       <div class="number" text-red5>
         {{ unhandledErrors.length }}
       </div>
@@ -62,17 +66,23 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
   </div>
   <template v-if="unhandledErrors.length">
     <div bg="red500/10" text="red500" p="x3 y2" max-w-xl m-2 rounded>
-      <h3 text-center mb-2>
-        Unhandled Errors
-      </h3>
+      <h3 text-center mb-2>Unhandled Errors</h3>
       <p text="sm" font-thin mb-2 data-testid="unhandled-errors">
-        Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
-        This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+        Vitest caught {{ unhandledErrors.length }} error{{
+          unhandledErrors.length > 1 ? "s" : ""
+        }}
+        during the test run.<br />
+        This might cause false positive tests. Resolve unhandled errors to make
+        sure your tests are not affected.
       </p>
       <details
         data-testid="unhandled-errors-details"
         class="scrolls unhandled-errors"
-        text="sm" font-thin pe-2.5 open:max-h-52 overflow-auto
+        text="sm"
+        font-thin
+        pe-2.5
+        open:max-h-52
+        overflow-auto
       >
         <summary font-bold cursor-pointer>Errors</summary>
         <ErrorEntry v-for="e in unhandledErrors" :error="e" />
@@ -88,7 +98,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
 }
 
 .unhandled-errors {
-  --cm-ttc-c-thumb: #CCC;
+  --cm-ttc-c-thumb: #ccc;
 }
 
 html.dark .unhandled-errors {

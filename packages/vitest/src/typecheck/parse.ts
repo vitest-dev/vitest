@@ -28,21 +28,25 @@ export async function makeTscErrorInfo(
   const [errFilePath, errPos] = errFilePathPos
     .slice(0, -1) // removes the ')'
     .split('(')
-  if (!errFilePath || !errPos)
+  if (!errFilePath || !errPos) {
     return ['unknown filepath', null]
+  }
 
   const [errLine, errCol] = errPos.split(',')
-  if (!errLine || !errCol)
+  if (!errLine || !errCol) {
     return [errFilePath, null]
+  }
 
   // get errCode, errMsg
   const execArr = errCodeRegExp.exec(errMsgRaw)
-  if (!execArr)
+  if (!execArr) {
     return [errFilePath, null]
+  }
 
   const errCodeStr = execArr.groups?.errCode ?? ''
-  if (!errCodeStr)
+  if (!errCodeStr) {
     return [errFilePath, null]
+  }
 
   const line = Number(errLine)
   const col = Number(errCol)
@@ -67,10 +71,14 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
 
   const tsconfig = getTsconfigContent(configSearchPath, configName)
 
-  if (!tsconfig)
+  if (!tsconfig) {
     throw new Error('no tsconfig.json found')
+  }
 
-  const tempConfigPath = join(dirname(tsconfig.path), 'tsconfig.vitest-temp.json')
+  const tempConfigPath = join(
+    dirname(tsconfig.path),
+    'tsconfig.vitest-temp.json',
+  )
 
   try {
     const tmpTsConfig: Record<string, any> = { ...tsconfig.config }
@@ -92,9 +100,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
   }
 }
 
-export async function getRawErrsMapFromTsCompile(
-  tscErrorStdout: string,
-) {
+export async function getRawErrsMapFromTsCompile(tscErrorStdout: string) {
   const rawErrsMap: RawErrsMap = new Map()
 
   // Merge details line with main line (i.e. which contains file path)
@@ -102,28 +108,31 @@ export async function getRawErrsMapFromTsCompile(
     tscErrorStdout
       .split(newLineRegExp)
       .reduce<string[]>((prev, next) => {
-        if (!next)
+        if (!next) {
           return prev
-
-        else if (!next.startsWith(' '))
+        }
+        else if (!next.startsWith(' ')) {
           prev.push(next)
-
-        else
+        }
+        else {
           prev[prev.length - 1] += `\n${next}`
+        }
 
         return prev
       }, [])
       .map(errInfoLine => makeTscErrorInfo(errInfoLine)),
   )
   infos.forEach(([errFilePath, errInfo]) => {
-    if (!errInfo)
+    if (!errInfo) {
       return
+    }
 
-    if (!rawErrsMap.has(errFilePath))
+    if (!rawErrsMap.has(errFilePath)) {
       rawErrsMap.set(errFilePath, [errInfo])
-
-    else
+    }
+    else {
       rawErrsMap.get(errFilePath)?.push(errInfo)
+    }
   })
   return rawErrsMap
 }

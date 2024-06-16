@@ -8,7 +8,10 @@ import { resolveFsAllow } from '../../node/plugins/utils'
 import { setupBrowserRpc } from '../../api/browser'
 import { setup as setupUiRpc } from '../../api/setup'
 
-export async function createBrowserServer(project: WorkspaceProject, configFile: string | undefined) {
+export async function createBrowserServer(
+  project: WorkspaceProject,
+  configFile: string | undefined,
+) {
   const root = project.config.root
 
   await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
@@ -28,7 +31,7 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
       preTransformRequests: false,
     },
     plugins: [
-      ...project.options?.plugins || [],
+      ...(project.options?.plugins || []),
       MocksPlugin(),
       (await import('@vitest/browser')).default(project, '/'),
       CoverageTransform(project.ctx),
@@ -36,7 +39,10 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
         enforce: 'post',
         name: 'vitest:browser:config',
         async config(config) {
-          const server = resolveApiServerConfig(config.test?.browser || {}, defaultBrowserPort) || {
+          const server = resolveApiServerConfig(
+            config.test?.browser || {},
+            defaultBrowserPort,
+          ) || {
             port: defaultBrowserPort,
           }
 
@@ -70,8 +76,9 @@ export async function createBrowserServer(project: WorkspaceProject, configFile:
   await server.listen()
 
   setupBrowserRpc(project, server)
-  if (project.config.browser.ui)
+  if (project.config.browser.ui) {
     setupUiRpc(project.ctx, server)
+  }
 
   return server
 }

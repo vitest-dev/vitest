@@ -10,7 +10,11 @@ import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, hijackVitePluginInject, resolveFsAllow } from './utils'
+import {
+  deleteDefineConfig,
+  hijackVitePluginInject,
+  resolveFsAllow,
+} from './utils'
 import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
@@ -20,7 +24,10 @@ interface WorkspaceOptions extends UserWorkspaceConfig {
   workspacePath: string | number
 }
 
-export function WorkspaceVitestPlugin(project: WorkspaceProject, options: WorkspaceOptions) {
+export function WorkspaceVitestPlugin(
+  project: WorkspaceProject,
+  options: WorkspaceOptions,
+) {
   return <VitePlugin[]>[
     {
       name: 'vitest:project',
@@ -42,10 +49,12 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
               ? options.workspacePath.slice(0, -1)
               : dirname(options.workspacePath)
             const pkgJsonPath = resolve(dir, 'package.json')
-            if (existsSync(pkgJsonPath))
+            if (existsSync(pkgJsonPath)) {
               name = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
-            if (typeof name !== 'string' || !name)
+            }
+            if (typeof name !== 'string' || !name) {
               name = basename(dir)
+            }
           }
           else {
             name = options.workspacePath.toString()
@@ -85,19 +94,29 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
           test: {
             name,
           },
-        }
+        };
 
-        ;(config.test as ResolvedConfig).defines = defines
+        (config.test as ResolvedConfig).defines = defines
 
-        const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
+        const classNameStrategy
+          = (typeof testConfig.css !== 'boolean'
+          && testConfig.css?.modules?.classNameStrategy)
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
           if (config.css.modules) {
-            config.css.modules.generateScopedName = (name: string, filename: string) => {
+            config.css.modules.generateScopedName = (
+              name: string,
+              filename: string,
+            ) => {
               const root = project.config.root
-              return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+              return generateScopedClassName(
+                classNameStrategy,
+                name,
+                relative(root, filename),
+              )!
             }
           }
         }
@@ -108,11 +127,7 @@ export function WorkspaceVitestPlugin(project: WorkspaceProject, options: Worksp
         hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
-        const options = deepMerge(
-          {},
-          configDefaults,
-          server.config.test || {},
-        )
+        const options = deepMerge({}, configDefaults, server.config.test || {})
         await project.setServer(options, server)
 
         await server.watcher.close()

@@ -24,22 +24,30 @@ export function isRunningInBenchmark() {
 export const relativePath = relative
 export { resolve } from 'pathe'
 
-export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
+export function removeUndefinedValues<T extends Record<string, any>>(
+  obj: T,
+): T {
   for (const key in Object.keys(obj)) {
-    if (obj[key] === undefined)
+    if (obj[key] === undefined) {
       delete obj[key]
+    }
   }
   return obj
 }
 
-export function objectAttr(source: any, path: string, defaultValue = undefined) {
+export function objectAttr(
+  source: any,
+  path: string,
+  defaultValue = undefined,
+) {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
   for (const p of paths) {
     result = Object(result)[p]
-    if (result === undefined)
+    if (result === undefined) {
       return defaultValue
+    }
   }
   return result
 }

@@ -8,12 +8,14 @@ export const isWindows = process.platform === 'win32'
 
 const drive = isWindows ? process.cwd()[0] : null
 const driveOpposite = drive
-  ? (drive === drive.toUpperCase()
-      ? drive.toLowerCase()
-      : drive.toUpperCase())
+  ? drive === drive.toUpperCase()
+    ? drive.toLowerCase()
+    : drive.toUpperCase()
   : null
 const driveRegexp = drive ? new RegExp(`(?:^|/@fs/)${drive}(\:[\\/])`) : null
-const driveOppositeRegext = driveOpposite ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`) : null
+const driveOppositeRegext = driveOpposite
+  ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`)
+  : null
 
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
@@ -22,12 +24,14 @@ export function slash(str: string) {
 export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {
-  if (base && id.startsWith(withTrailingSlash(base)))
+  if (base && id.startsWith(withTrailingSlash(base))) {
     id = `/${id.slice(base.length)}`
+  }
 
   // keep drive the same as in process cwd
-  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id))
+  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id)) {
     id = id.replace(driveOppositeRegext, `${drive}$1`)
+  }
 
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
@@ -50,20 +54,17 @@ export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
 
-const internalRequests = [
-  '@vite/client',
-  '@vite/env',
-]
+const internalRequests = ['@vite/client', '@vite/env']
 
-const internalRequestRegexp = new RegExp(`^/?(?:${internalRequests.join('|')})$`)
+const internalRequestRegexp = new RegExp(
+  `^/?(?:${internalRequests.join('|')})$`,
+)
 
 export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
-const prefixedBuiltins = new Set([
-  'node:test',
-])
+const prefixedBuiltins = new Set(['node:test'])
 
 const builtins = new Set([
   ...builtinModules,
@@ -84,8 +85,9 @@ const builtins = new Set([
 
 export function normalizeModuleId(id: string) {
   // unique id that is not available as "test"
-  if (prefixedBuiltins.has(id))
+  if (prefixedBuiltins.has(id)) {
     return id
+  }
   return id
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
@@ -98,38 +100,49 @@ export function isPrimitive(v: any) {
   return v !== Object(v)
 }
 
-export function toFilePath(id: string, root: string): { path: string; exists: boolean } {
+export function toFilePath(
+  id: string,
+  root: string,
+): { path: string; exists: boolean } {
   let { absolute, exists } = (() => {
-    if (id.startsWith('/@fs/'))
+    if (id.startsWith('/@fs/')) {
       return { absolute: id.slice(4), exists: true }
+    }
     // check if /src/module.js -> <root>/src/module.js
     if (!id.startsWith(withTrailingSlash(root)) && id.startsWith('/')) {
       const resolved = resolve(root, id.slice(1))
-      if (existsSync(cleanUrl(resolved)))
+      if (existsSync(cleanUrl(resolved))) {
         return { absolute: resolved, exists: true }
+      }
     }
-    else if (id.startsWith(withTrailingSlash(root)) && existsSync(cleanUrl(id))) {
+    else if (
+      id.startsWith(withTrailingSlash(root))
+      && existsSync(cleanUrl(id))
+    ) {
       return { absolute: id, exists: true }
     }
     return { absolute: id, exists: false }
   })()
 
-  if (absolute.startsWith('//'))
+  if (absolute.startsWith('//')) {
     absolute = absolute.slice(1)
+  }
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
-    path: (isWindows && absolute.startsWith('/'))
-      ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
-      : absolute,
+    path:
+      isWindows && absolute.startsWith('/')
+        ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
+        : absolute,
     exists,
   }
 }
 
 const NODE_BUILTIN_NAMESPACE = 'node:'
 export function isNodeBuiltin(id: string): boolean {
-  if (prefixedBuiltins.has(id))
+  if (prefixedBuiltins.has(id)) {
     return true
+  }
   return builtins.has(
     id.startsWith(NODE_BUILTIN_NAMESPACE)
       ? id.slice(NODE_BUILTIN_NAMESPACE.length)
@@ -143,11 +156,13 @@ export function isNodeBuiltin(id: string): boolean {
  * @category Array
  */
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined)
+  if (array === null || array === undefined) {
     array = []
+  }
 
-  if (Array.isArray(array))
+  if (Array.isArray(array)) {
     return array
+  }
 
   return [array]
 }
@@ -199,35 +214,37 @@ function traverseBetweenDirs(
 }
 
 export function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/')
+  if (path[path.length - 1] !== '/') {
     return `${path}/`
+  }
 
   return path
 }
 
 export function createImportMetaEnvProxy() {
   // packages/vitest/src/node/plugins/index.ts:146
-  const booleanKeys = [
-    'DEV',
-    'PROD',
-    'SSR',
-  ]
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
   return new Proxy(process.env, {
     get(_, key) {
-      if (typeof key !== 'string')
+      if (typeof key !== 'string') {
         return undefined
-      if (booleanKeys.includes(key))
+      }
+      if (booleanKeys.includes(key)) {
         return !!process.env[key]
+      }
       return process.env[key]
     },
     set(_, key, value) {
-      if (typeof key !== 'string')
+      if (typeof key !== 'string') {
         return true
+      }
 
-      if (booleanKeys.includes(key))
+      if (booleanKeys.includes(key)) {
         process.env[key] = value ? '1' : ''
-      else
+      }
+      else {
         process.env[key] = value
+      }
 
       return true
     },
@@ -236,26 +253,31 @@ export function createImportMetaEnvProxy() {
 
 const packageCache = new Map<string, { type?: 'module' | 'commonjs' }>()
 
-export async function findNearestPackageData(basedir: string): Promise<{ type?: 'module' | 'commonjs' }> {
+export async function findNearestPackageData(
+  basedir: string,
+): Promise<{ type?: 'module' | 'commonjs' }> {
   const originalBasedir = basedir
   while (basedir) {
     const cached = getCachedData(packageCache, basedir, originalBasedir)
-    if (cached)
+    if (cached) {
       return cached
+    }
 
     const pkgPath = join(basedir, 'package.json')
     if ((await fsp.stat(pkgPath).catch(() => {}))?.isFile()) {
       const pkgData = JSON.parse(await fsp.readFile(pkgPath, 'utf8'))
 
-      if (packageCache)
+      if (packageCache) {
         setCacheData(packageCache, pkgData, basedir, originalBasedir)
+      }
 
       return pkgData
     }
 
     const nextBasedir = dirname(basedir)
-    if (nextBasedir === basedir)
+    if (nextBasedir === basedir) {
       break
+    }
     basedir = nextBasedir
   }
 

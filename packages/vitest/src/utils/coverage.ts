@@ -11,14 +11,24 @@ interface ResolvedThreshold {
   thresholds: Partial<Record<Threshold, number | undefined>>
 }
 
-const THRESHOLD_KEYS: Readonly<Threshold[]> = ['lines', 'functions', 'statements', 'branches']
+const THRESHOLD_KEYS: Readonly<Threshold[]> = [
+  'lines',
+  'functions',
+  'statements',
+  'branches',
+]
 const GLOBAL_THRESHOLDS_KEY = 'global'
 
 export class BaseCoverageProvider {
   /**
    * Check if current coverage is above configured thresholds and bump the thresholds if needed
    */
-  updateThresholds({ thresholds: allThresholds, perFile, configurationFile, onUpdate }: {
+  updateThresholds({
+    thresholds: allThresholds,
+    perFile,
+    configurationFile,
+    onUpdate,
+  }: {
     thresholds: ResolvedThreshold[]
     perFile?: boolean
     configurationFile: unknown // ProxifiedModule from magicast
@@ -31,22 +41,29 @@ export class BaseCoverageProvider {
 
     for (const { coverageMap, thresholds, name } of allThresholds) {
       const summaries = perFile
-        ? coverageMap.files()
-          .map((file: string) => coverageMap.fileCoverageFor(file).toSummary())
+        ? coverageMap
+          .files()
+          .map((file: string) =>
+            coverageMap.fileCoverageFor(file).toSummary(),
+          )
         : [coverageMap.getCoverageSummary()]
 
       const thresholdsToUpdate: [Threshold, number][] = []
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
-        const actual = Math.min(...summaries.map(summary => summary[key].pct))
+        const actual = Math.min(
+          ...summaries.map(summary => summary[key].pct),
+        )
 
-        if (actual > threshold)
+        if (actual > threshold) {
           thresholdsToUpdate.push([key, actual])
+        }
       }
 
-      if (thresholdsToUpdate.length === 0)
+      if (thresholdsToUpdate.length === 0) {
         continue
+      }
 
       updatedThresholds = true
 
@@ -55,7 +72,9 @@ export class BaseCoverageProvider {
           config.test.coverage.thresholds[threshold] = newValue
         }
         else {
-          const glob = config.test.coverage.thresholds[name as Threshold] as ResolvedThreshold['thresholds']
+          const glob = config.test.coverage.thresholds[
+            name as Threshold
+          ] as ResolvedThreshold['thresholds']
           glob[threshold] = newValue
         }
       }
@@ -63,7 +82,9 @@ export class BaseCoverageProvider {
 
     if (updatedThresholds) {
       // eslint-disable-next-line no-console
-      console.log('Updating thresholds to configuration file. You may want to push with updated coverage thresholds.')
+      console.log(
+        'Updating thresholds to configuration file. You may want to push with updated coverage thresholds.',
+      )
       onUpdate()
     }
   }
@@ -71,30 +92,44 @@ export class BaseCoverageProvider {
   /**
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
-  checkThresholds({ thresholds: allThresholds, perFile }: { thresholds: ResolvedThreshold[]; perFile?: boolean }) {
+  checkThresholds({
+    thresholds: allThresholds,
+    perFile,
+  }: {
+    thresholds: ResolvedThreshold[]
+    perFile?: boolean
+  }) {
     for (const { coverageMap, thresholds, name } of allThresholds) {
-      if (thresholds.branches === undefined
+      if (
+        thresholds.branches === undefined
         && thresholds.functions === undefined
         && thresholds.lines === undefined
-        && thresholds.statements === undefined) {
+        && thresholds.statements === undefined
+      ) {
         continue
       }
 
       // Construct list of coverage summaries where thresholds are compared against
       const summaries = perFile
-        ? coverageMap.files()
-          .map((file: string) => ({
-            file,
-            summary: coverageMap.fileCoverageFor(file).toSummary(),
-          }))
-        : [{
-            file: null,
-            summary: coverageMap.getCoverageSummary(),
-          }]
+        ? coverageMap.files().map((file: string) => ({
+          file,
+          summary: coverageMap.fileCoverageFor(file).toSummary(),
+        }))
+        : [
+            {
+              file: null,
+              summary: coverageMap.getCoverageSummary(),
+            },
+          ]
 
       // Check thresholds of each summary
       for (const { summary, file } of summaries) {
-        for (const thresholdKey of ['lines', 'functions', 'statements', 'branches'] as const) {
+        for (const thresholdKey of [
+          'lines',
+          'functions',
+          'statements',
+          'branches',
+        ] as const) {
           const threshold = thresholds[thresholdKey]
 
           if (threshold !== undefined) {
@@ -108,10 +143,16 @@ export class BaseCoverageProvider {
                * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
                * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
                */
-              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`} threshold (${threshold}%)`
+              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${
+                name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+              } threshold (${threshold}%)`
 
-              if (perFile && file)
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
+              if (perFile && file) {
+                errorMessage += ` for ${relative('./', file).replace(
+                  /\\/g,
+                  '/',
+                )}`
+              }
 
               console.error(errorMessage)
             }
@@ -126,7 +167,12 @@ export class BaseCoverageProvider {
    * where each threshold set holds their own coverage maps. Threshold set is either
    * for specific files defined by glob pattern or global for all other files.
    */
-  resolveThresholds({ coverageMap, thresholds, createCoverageMap, root }: {
+  resolveThresholds({
+    coverageMap,
+    thresholds,
+    createCoverageMap,
+    root,
+  }: {
     coverageMap: CoverageMap
     thresholds: NonNullable<BaseCoverageOptions['thresholds']>
     createCoverageMap: () => CoverageMap
@@ -137,15 +183,25 @@ export class BaseCoverageProvider {
     const filesMatchedByGlobs: string[] = []
     const globalCoverageMap = createCoverageMap()
 
-    for (const key of Object.keys(thresholds) as (`${keyof typeof thresholds}`[])) {
-      if (key === 'perFile' || key === 'autoUpdate' || key === '100' || THRESHOLD_KEYS.includes(key))
+    for (const key of Object.keys(
+      thresholds,
+    ) as `${keyof typeof thresholds}`[]) {
+      if (
+        key === 'perFile'
+        || key === 'autoUpdate'
+        || key === '100'
+        || THRESHOLD_KEYS.includes(key)
+      ) {
         continue
+      }
 
       const glob = key
       const globThresholds = resolveGlobThresholds(thresholds[glob])
       const globCoverageMap = createCoverageMap()
 
-      const matchingFiles = files.filter(file => mm.isMatch(relative(root, file), glob))
+      const matchingFiles = files.filter(file =>
+        mm.isMatch(relative(root, file), glob),
+      )
       filesMatchedByGlobs.push(...matchingFiles)
 
       for (const file of matchingFiles) {
@@ -161,7 +217,9 @@ export class BaseCoverageProvider {
     }
 
     // Global threshold is for all files that were not included by glob patterns
-    for (const file of files.filter(file => !filesMatchedByGlobs.includes(file))) {
+    for (const file of files.filter(
+      file => !filesMatchedByGlobs.includes(file),
+    )) {
       const fileCoverage = coverageMap.fileCoverageFor(file)
       globalCoverageMap.addFileCoverage(fileCoverage)
     }
@@ -183,10 +241,13 @@ export class BaseCoverageProvider {
   /**
    * Resolve reporters from various configuration options
    */
-  resolveReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): ResolvedCoverageOptions['reporter'] {
+  resolveReporters(
+    configReporters: NonNullable<BaseCoverageOptions['reporter']>,
+  ): ResolvedCoverageOptions['reporter'] {
     // E.g. { reporter: "html" }
-    if (!Array.isArray(configReporters))
+    if (!Array.isArray(configReporters)) {
       return [[configReporters, {}]]
+    }
 
     const resolvedReporters: ResolvedCoverageOptions['reporter'] = []
 
@@ -205,11 +266,13 @@ export class BaseCoverageProvider {
   }
 
   hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']) {
-    return reporters.some(([reporter]) =>
-      reporter === 'text'
-      || reporter === 'text-summary'
-      || reporter === 'text-lcov'
-      || reporter === 'teamcity')
+    return reporters.some(
+      ([reporter]) =>
+        reporter === 'text'
+        || reporter === 'text-summary'
+        || reporter === 'text-lcov'
+        || reporter === 'teamcity',
+    )
   }
 
   toSlices<T>(array: T[], size: number): T[][] {
@@ -218,11 +281,12 @@ export class BaseCoverageProvider {
       const lastChunk = chunks[index] || []
       chunks[index] = lastChunk
 
-      if (lastChunk.length >= size)
+      if (lastChunk.length >= size) {
         chunks.push([item])
-
-      else
+      }
+      else {
         lastChunk.push(item)
+      }
 
       return chunks
     }, [])
@@ -232,27 +296,51 @@ export class BaseCoverageProvider {
 /**
  * Narrow down `unknown` glob thresholds to resolved ones
  */
-function resolveGlobThresholds(thresholds: unknown): ResolvedThreshold['thresholds'] {
-  if (!thresholds || typeof thresholds !== 'object')
-    return { }
+function resolveGlobThresholds(
+  thresholds: unknown,
+): ResolvedThreshold['thresholds'] {
+  if (!thresholds || typeof thresholds !== 'object') {
+    return {}
+  }
 
   return {
-    lines: 'lines' in thresholds && typeof thresholds.lines === 'number' ? thresholds.lines : undefined,
-    branches: 'branches' in thresholds && typeof thresholds.branches === 'number' ? thresholds.branches : undefined,
-    functions: 'functions' in thresholds && typeof thresholds.functions === 'number' ? thresholds.functions : undefined,
-    statements: 'statements' in thresholds && typeof thresholds.statements === 'number' ? thresholds.statements : undefined,
+    lines:
+      'lines' in thresholds && typeof thresholds.lines === 'number'
+        ? thresholds.lines
+        : undefined,
+    branches:
+      'branches' in thresholds && typeof thresholds.branches === 'number'
+        ? thresholds.branches
+        : undefined,
+    functions:
+      'functions' in thresholds && typeof thresholds.functions === 'number'
+        ? thresholds.functions
+        : undefined,
+    statements:
+      'statements' in thresholds && typeof thresholds.statements === 'number'
+        ? thresholds.statements
+        : undefined,
   }
 }
 
-function assertConfigurationModule(config: unknown): asserts config is { test: { coverage: { thresholds: NonNullable<BaseCoverageOptions['thresholds']> } } } {
+function assertConfigurationModule(config: unknown): asserts config is {
+  test: {
+    coverage: { thresholds: NonNullable<BaseCoverageOptions['thresholds']> }
+  }
+} {
   try {
     // @ts-expect-error -- Intentional unsafe null pointer check as wrapped in try-catch
-    if (typeof config.test.coverage.thresholds !== 'object')
-      throw new Error('Expected config.test.coverage.thresholds to be an object')
+    if (typeof config.test.coverage.thresholds !== 'object') {
+      throw new TypeError(
+        'Expected config.test.coverage.thresholds to be an object',
+      )
+    }
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Unable to parse thresholds from configuration file: ${message}`)
+    throw new Error(
+      `Unable to parse thresholds from configuration file: ${message}`,
+    )
   }
 }
 
@@ -261,19 +349,22 @@ function resolveConfig(configModule: any) {
 
   try {
     // Check for "export default { test: {...} }"
-    if (mod.$type === 'object')
+    if (mod.$type === 'object') {
       return mod
+    }
 
     // "export default defineConfig(...)"
     let config = resolveDefineConfig(mod)
-    if (config)
+    if (config) {
       return config
+    }
 
     // "export default mergeConfig(..., defineConfig(...))"
     if (mod.$type === 'function-call' && mod.$callee === 'mergeConfig') {
       config = resolveMergeConfig(mod)
-      if (config)
+      if (config) {
         return config
+      }
     }
   }
   catch (error) {
@@ -281,14 +372,17 @@ function resolveConfig(configModule: any) {
     throw new Error(error instanceof Error ? error.message : String(error))
   }
 
-  throw new Error('Failed to update coverage thresholds. Configuration file is too complex.')
+  throw new Error(
+    'Failed to update coverage thresholds. Configuration file is too complex.',
+  )
 }
 
 function resolveDefineConfig(mod: any) {
   if (mod.$type === 'function-call' && mod.$callee === 'defineConfig') {
     // "export default defineConfig({ test: {...} })"
-    if (mod.$args[0].$type === 'object')
+    if (mod.$args[0].$type === 'object') {
       return mod.$args[0]
+    }
 
     if (mod.$args[0].$type === 'arrow-function-expression') {
       if (mod.$args[0].$body.$type === 'object') {
@@ -298,8 +392,9 @@ function resolveDefineConfig(mod: any) {
 
       // "export default defineConfig(() => mergeConfig({...}, ...))"
       const config = resolveMergeConfig(mod.$args[0].$body)
-      if (config)
+      if (config) {
         return config
+      }
     }
   }
 }
@@ -308,8 +403,9 @@ function resolveMergeConfig(mod: any): any {
   if (mod.$type === 'function-call' && mod.$callee === 'mergeConfig') {
     for (const arg of mod.$args) {
       const config = resolveDefineConfig(arg)
-      if (config)
+      if (config) {
         return config
+      }
     }
   }
 }

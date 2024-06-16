@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { Task } from 'vitest'
+import { hasFailedSnapshot } from "@vitest/ws-client";
+import type { Task } from "vitest";
 
-defineProps<{ task: Task }>()
+defineProps<{ task: Task }>();
 </script>
 
 <template>
@@ -40,11 +40,5 @@ defineProps<{ task: Task }>()
     i-carbon:redo
     rotate-90
   />
-  <div
-    v-else
-    text-yellow-500
-    flex-shrink-0
-    i-carbon:circle-dash
-    animate-spin
-  />
+  <div v-else text-yellow-500 flex-shrink-0 i-carbon:circle-dash animate-spin />
 </template>

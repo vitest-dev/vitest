@@ -5,7 +5,13 @@ import type { File, Suite, TaskBase } from '../types'
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, allowOnly?: boolean) {
+export function interpretTaskModes(
+  suite: Suite,
+  namePattern?: string | RegExp,
+  onlyMode?: boolean,
+  parentIsOnly?: boolean,
+  allowOnly?: boolean,
+) {
   const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
   suite.tasks.forEach((t) => {
@@ -28,21 +34,25 @@ export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, 
       }
     }
     if (t.type === 'test') {
-      if (namePattern && !getTaskFullName(t).match(namePattern))
+      if (namePattern && !getTaskFullName(t).match(namePattern)) {
         t.mode = 'skip'
+      }
     }
     else if (t.type === 'suite') {
-      if (t.mode === 'skip')
+      if (t.mode === 'skip') {
         skipAllTasks(t)
-      else
+      }
+      else {
         interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly)
+      }
     }
   })
 
   // if all subtasks are skipped, mark as skip
   if (suite.mode === 'run') {
-    if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
+    if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run')) {
       suite.mode = 'skip'
+    }
   }
 }
 
@@ -51,23 +61,31 @@ function getTaskFullName(task: TaskBase): string {
 }
 
 export function someTasksAreOnly(suite: Suite): boolean {
-  return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+  return suite.tasks.some(
+    t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+  )
 }
 
 function skipAllTasks(suite: Suite) {
   suite.tasks.forEach((t) => {
     if (t.mode === 'run') {
       t.mode = 'skip'
-      if (t.type === 'suite')
+      if (t.type === 'suite') {
         skipAllTasks(t)
+      }
     }
   })
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly)
+  if (allowOnly) {
     return
-  const error = processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error'))
+  }
+  const error = processError(
+    new Error(
+      '[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error',
+    ),
+  )
   task.result = {
     state: 'fail',
     errors: [error],
@@ -76,8 +94,9 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
 
 export function generateHash(str: string): string {
   let hash = 0
-  if (str.length === 0)
+  if (str.length === 0) {
     return `${hash}`
+  }
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i)
     hash = (hash << 5) - hash + char
@@ -89,12 +108,17 @@ export function generateHash(str: string): string {
 export function calculateSuiteHash(parent: Suite) {
   parent.tasks.forEach((t, idx) => {
     t.id = `${parent.id}_${idx}`
-    if (t.type === 'suite')
+    if (t.type === 'suite') {
       calculateSuiteHash(t)
+    }
   })
 }
 
-export function createFileTask(filepath: string, root: string, projectName: string) {
+export function createFileTask(
+  filepath: string,
+  root: string,
+  projectName: string,
+) {
   const path = relative(root, filepath)
   const file: File = {
     id: generateHash(`${path}${projectName || ''}`),

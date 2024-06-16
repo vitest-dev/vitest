@@ -54,10 +54,12 @@ describe('server correctly caches data', () => {
         name: 'test',
         transform(code, id, options) {
           // this should be called only once if cached is configured correctly
-          if (options?.ssr)
+          if (options?.ssr) {
             ssrFiles.push(id)
-          else
+          }
+          else {
             webFiles.push(id)
+          }
         },
       }
       await use(plugin)

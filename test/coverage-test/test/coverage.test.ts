@@ -18,10 +18,11 @@ const provider = globalThis.process?.env.COVERAGE_PROVIDER
 const skipDynamicFiles = '__vitest_browser__' in globalThis || provider === 'istanbul' || !provider
 
 const { pythagoras } = await (() => {
-  if ('__vitest_browser__' in globalThis)
+  if ('__vitest_browser__' in globalThis) {
     // TODO: remove workaround after vite 4.3.2
     // @ts-expect-error extension is not specified
     return import('../src/index')
+  }
   const dynamicImport = '../src/index.mjs'
   return import(dynamicImport)
 })()

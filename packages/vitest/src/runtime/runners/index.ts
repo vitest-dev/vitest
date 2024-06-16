@@ -10,18 +10,32 @@ import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
-async function getTestRunnerConstructor(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunnerConstructor> {
+async function getTestRunnerConstructor(
+  config: ResolvedConfig,
+  executor: VitestExecutor,
+): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(runnersFile)
-    return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as VitestRunnerConstructor
+    const { VitestTestRunner, NodeBenchmarkRunner }
+      = await executor.executeFile(runnersFile)
+    return (
+      config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+    ) as VitestRunnerConstructor
   }
   const mod = await executor.executeId(config.runner)
-  if (!mod.default && typeof mod.default !== 'function')
-    throw new Error(`Runner must export a default function, but got ${typeof mod.default} imported from ${config.runner}`)
+  if (!mod.default && typeof mod.default !== 'function') {
+    throw new Error(
+      `Runner must export a default function, but got ${typeof mod.default} imported from ${
+        config.runner
+      }`,
+    )
+  }
   return mod.default as VitestRunnerConstructor
 }
 
-export async function resolveTestRunner(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunner> {
+export async function resolveTestRunner(
+  config: ResolvedConfig,
+  executor: VitestExecutor,
+): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, executor)
   const testRunner = new TestRunner(config)
 
@@ -32,11 +46,13 @@ export async function resolveTestRunner(config: ResolvedConfig, executor: Vitest
     configurable: false,
   })
 
-  if (!testRunner.config)
+  if (!testRunner.config) {
     testRunner.config = config
+  }
 
-  if (!testRunner.importFile)
+  if (!testRunner.importFile) {
     throw new Error('Runner must implement "importFile" method.')
+  }
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor),

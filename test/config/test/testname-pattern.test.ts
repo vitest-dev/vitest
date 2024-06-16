@@ -81,6 +81,7 @@ test.each([
 ])('filter with slash $filter', async ({ filter, files }) => {
   const { stdout } = await runVitest({ root: './fixtures/filters-slash' }, [filter])
   expect(stdout).toMatch(`Test Files  ${files.length} passed (${files.length})`)
-  for (const file of files)
+  for (const file of files) {
     expect(stdout).toMatch(`✓ ${file}`)
+  }
 })

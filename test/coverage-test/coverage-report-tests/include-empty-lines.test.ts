@@ -32,8 +32,9 @@ test('lines are included', async () => {
 })
 
 test('lines with ignore hints are ignored', () => {
-  for (const line of range(6, { base: 38 }))
+  for (const line of range(6, { base: 38 })) {
     expect(uncoveredFileLines[line], `Line #${line}`).toBe(undefined)
+  }
 })
 
 function range(count: number, options: { base: number } = { base: 1 }) {

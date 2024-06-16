@@ -9,9 +9,10 @@ const PAGE_TYPE = getBrowserState().type
 
 export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const SESSION_ID = PAGE_TYPE === 'orchestrator'
-  ? getBrowserState().contextId
-  : crypto.randomUUID()
+export const SESSION_ID
+  = PAGE_TYPE === 'orchestrator'
+    ? getBrowserState().contextId
+    : crypto.randomUUID()
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}`
@@ -27,7 +28,10 @@ export interface VitestBrowserClient {
   waitForConnection: () => Promise<void>
 }
 
-export type BrowserRPC = BirpcReturn<WebSocketBrowserHandlers, WebSocketBrowserEvents>
+export type BrowserRPC = BirpcReturn<
+  WebSocketBrowserHandlers,
+  WebSocketBrowserEvents
+>
 
 function createClient() {
   const autoReconnect = true
@@ -44,46 +48,55 @@ function createClient() {
 
   let onMessage: Function
 
-  ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>({
-    onCancel: setCancel,
-    async startMocking(id: string) {
-      // @ts-expect-error not typed global
-      if (typeof __vitest_mocker__ === 'undefined')
-        throw new Error(`Cannot mock modules in the orchestrator process`)
-      // @ts-expect-error not typed global
-      const mocker = __vitest_mocker__ as VitestBrowserClientMocker
-      const exports = await mocker.resolve(id)
-      return Object.keys(exports)
-    },
-    async createTesters(files: string[]) {
-      if (PAGE_TYPE !== 'orchestrator')
-        return
-      getBrowserState().createTesters?.(files)
-    },
-  }, {
-    post: msg => ctx.ws.send(msg),
-    on: fn => (onMessage = fn),
-    serialize: e => stringify(e, (_, v) => {
-      if (v instanceof Error) {
-        return {
-          name: v.name,
-          message: v.message,
-          stack: v.stack,
+  ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
+    {
+      onCancel: setCancel,
+      async startMocking(id: string) {
+        // @ts-expect-error not typed global
+        if (typeof __vitest_mocker__ === 'undefined') {
+          throw new TypeError(
+            `Cannot mock modules in the orchestrator process`,
+          )
         }
-      }
-      return v
-    }),
-    deserialize: parse,
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-browser]: Timeout calling "${functionName}"`)
+        // @ts-expect-error not typed global
+        const mocker = __vitest_mocker__ as VitestBrowserClientMocker
+        const exports = await mocker.resolve(id)
+        return Object.keys(exports)
+      },
+      async createTesters(files: string[]) {
+        if (PAGE_TYPE !== 'orchestrator') {
+          return
+        }
+        getBrowserState().createTesters?.(files)
+      },
     },
-  })
+    {
+      post: msg => ctx.ws.send(msg),
+      on: fn => (onMessage = fn),
+      serialize: e =>
+        stringify(e, (_, v) => {
+          if (v instanceof Error) {
+            return {
+              name: v.name,
+              message: v.message,
+              stack: v.stack,
+            }
+          }
+          return v
+        }),
+      deserialize: parse,
+      onTimeoutError(functionName) {
+        throw new Error(`[vitest-browser]: Timeout calling "${functionName}"`)
+      },
+    },
+  )
 
   let openPromise: Promise<void>
 
   function reconnect(reset = false) {
-    if (reset)
+    if (reset) {
       tries = reconnectTries
+    }
     ctx.ws = new WebSocket(ENTRY_URL)
     registerWS()
   }
@@ -91,10 +104,15 @@ function createClient() {
   function registerWS() {
     openPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Cannot connect to the server in ${connectTimeout / 1000} seconds`))
+        reject(
+          new Error(
+            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
+          ),
+        )
       }, connectTimeout)?.unref?.()
-      if (ctx.ws.OPEN === ctx.ws.readyState)
+      if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
+      }
       // still have a listener even if it's already open to update tries
       ctx.ws.addEventListener('open', () => {
         tries = reconnectTries
@@ -107,8 +125,9 @@ function createClient() {
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0)
+      if (autoReconnect && tries > 0) {
         setTimeout(reconnect, reconnectInterval)
+      }
     })
   }
 

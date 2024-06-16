@@ -34,8 +34,9 @@ export function guessCJSversion(id: string): string | undefined {
       id.replace(ESM_EXT_RE, '.cjs.js'),
       id.replace(ESM_EXT_RE, '.js'),
     ]) {
-      if (existsSync(i))
+      if (existsSync(i)) {
         return i
+      }
     }
   }
   if (id.match(ESM_FOLDER_RE)) {
@@ -45,8 +46,9 @@ export function guessCJSversion(id: string): string | undefined {
       id.replace(ESM_FOLDER_RE, '/lib/$1'),
       id.replace(ESM_FOLDER_RE, '/$1'),
     ]) {
-      if (existsSync(i))
+      if (existsSync(i)) {
         return i
+      }
     }
   }
 }
@@ -55,21 +57,25 @@ export function guessCJSversion(id: string): string | undefined {
 async function isValidNodeImport(id: string) {
   const extension = extname(id)
 
-  if (BUILTIN_EXTENSIONS.has(extension))
+  if (BUILTIN_EXTENSIONS.has(extension)) {
     return true
+  }
 
-  if (extension !== '.js')
+  if (extension !== '.js') {
     return false
+  }
 
   id = id.replace('file:///', '')
 
   const package_ = await findNearestPackageData(dirname(id))
 
-  if (package_.type === 'module')
+  if (package_.type === 'module') {
     return true
+  }
 
-  if (/\.(?:\w+-)?esm?(?:-\w+)?\.js$|\/esm?\//.test(id))
+  if (/\.(?:\w+-)?esm?(?:-\w+)?\.js$|\/esm?\//.test(id)) {
     return false
+  }
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
 
@@ -82,8 +88,9 @@ export async function shouldExternalize(
   options?: DepsHandlingOptions,
   cache = _defaultExternalizeCache,
 ) {
-  if (!cache.has(id))
+  if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
+  }
   return cache.get(id)!
 }
 
@@ -91,66 +98,85 @@ async function _shouldExternalize(
   id: string,
   options?: DepsHandlingOptions,
 ): Promise<string | false> {
-  if (isNodeBuiltin(id))
+  if (isNodeBuiltin(id)) {
     return id
+  }
 
   // data: should be processed by native import,
   // since it is a feature of ESM.
   // also externalize network imports since nodejs allows it when --experimental-network-imports
-  if (id.startsWith('data:') || /^(?:https?:)?\/\//.test(id))
+  if (id.startsWith('data:') || /^(?:https?:)?\/\//.test(id)) {
     return id
+  }
 
   id = patchWindowsImportPath(id)
 
   // always externalize Vite deps, they are too big to inline
-  if (options?.cacheDir && id.includes(options.cacheDir))
+  if (options?.cacheDir && id.includes(options.cacheDir)) {
     return id
+  }
 
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
-  if (matchExternalizePattern(id, moduleDirectories, options?.inline))
+  if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
     return false
-  if (matchExternalizePattern(id, moduleDirectories, options?.external))
+  }
+  if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
     return id
+  }
 
   const isLibraryModule = moduleDirectories.some(dir => id.includes(dir))
   const guessCJS = isLibraryModule && options?.fallbackCJS
-  id = guessCJS ? (guessCJSversion(id) || id) : id
+  id = guessCJS ? guessCJSversion(id) || id : id
 
-  if (matchExternalizePattern(id, moduleDirectories, defaultInline))
+  if (matchExternalizePattern(id, moduleDirectories, defaultInline)) {
     return false
-  if (matchExternalizePattern(id, moduleDirectories, depsExternal))
+  }
+  if (matchExternalizePattern(id, moduleDirectories, depsExternal)) {
     return id
+  }
 
-  if (isLibraryModule && await isValidNodeImport(id))
+  if (isLibraryModule && (await isValidNodeImport(id))) {
     return id
+  }
 
   return false
 }
 
-function matchExternalizePattern(id: string, moduleDirectories: string[], patterns?: (string | RegExp)[] | true) {
-  if (patterns == null)
+function matchExternalizePattern(
+  id: string,
+  moduleDirectories: string[],
+  patterns?: (string | RegExp)[] | true,
+) {
+  if (patterns == null) {
     return false
-  if (patterns === true)
+  }
+  if (patterns === true) {
     return true
+  }
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (moduleDirectories.some(dir => id.includes(join(dir, ex))))
+      if (moduleDirectories.some(dir => id.includes(join(dir, ex)))) {
         return true
+      }
     }
     else {
-      if (ex.test(id))
+      if (ex.test(id)) {
         return true
+      }
     }
   }
   return false
 }
 
 function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\\/))
+  if (path.match(/^\w:\\/)) {
     return `file:///${slash(path)}`
-  else if (path.match(/^\w:\//))
+  }
+  else if (path.match(/^\w:\//)) {
     return `file:///${path}`
-  else
+  }
+  else {
     return path
+  }
 }

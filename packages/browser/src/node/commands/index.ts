@@ -1,9 +1,5 @@
 import { click } from './click'
-import {
-  readFile,
-  removeFile,
-  writeFile,
-} from './fs'
+import { readFile, removeFile, writeFile } from './fs'
 import { sendKeys } from './keyboard'
 import { screenshot } from './screenshot'
 

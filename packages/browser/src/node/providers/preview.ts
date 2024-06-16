@@ -22,14 +22,18 @@ export class PreviewBrowserProvider implements BrowserProvider {
   async initialize(ctx: WorkspaceProject) {
     this.ctx = ctx
     this.open = false
-    if (ctx.config.browser.headless)
-      throw new Error('You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser#configuration')
+    if (ctx.config.browser.headless) {
+      throw new Error(
+        'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser#configuration',
+      )
+    }
   }
 
   async openPage(_contextId: string, url: string) {
     this.open = true
-    if (!this.ctx.browser)
+    if (!this.ctx.browser) {
       throw new Error('Browser is not initialized')
+    }
     const options = this.ctx.browser.config.server
     const _open = options.open
     options.open = url
@@ -37,6 +41,5 @@ export class PreviewBrowserProvider implements BrowserProvider {
     options.open = _open
   }
 
-  async close() {
-  }
+  async close() {}
 }

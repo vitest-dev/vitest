@@ -4,23 +4,46 @@ import { getConfig, importId } from './utils'
 const { Date, console } = globalThis
 
 export async function setupConsoleLogSpy() {
-  const { stringify, format, inspect } = await importId('vitest/utils') as typeof import('vitest/utils')
-  const { log, info, error, dir, dirxml, trace, time, timeEnd, timeLog, warn, debug, count, countReset } = console
+  const { stringify, format, inspect } = (await importId(
+    'vitest/utils',
+  )) as typeof import('vitest/utils')
+  const {
+    log,
+    info,
+    error,
+    dir,
+    dirxml,
+    trace,
+    time,
+    timeEnd,
+    timeLog,
+    warn,
+    debug,
+    count,
+    countReset,
+  } = console
   const formatInput = (input: unknown) => {
-    if (input instanceof Node)
+    if (input instanceof Node) {
       return stringify(input)
+    }
     return format(input)
   }
   const processLog = (args: unknown[]) => args.map(formatInput).join(' ')
-  const sendLog = (type: 'stdout' | 'stderr', content: string, disableStack?: boolean) => {
-    if (content.startsWith('[vite]'))
+  const sendLog = (
+    type: 'stdout' | 'stderr',
+    content: string,
+    disableStack?: boolean,
+  ) => {
+    if (content.startsWith('[vite]')) {
       return
+    }
     const unknownTestId = '__vitest__unknown_test__'
     // @ts-expect-error untyped global
     const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-    const origin = getConfig().printConsoleTrace && !disableStack
-      ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
-      : undefined
+    const origin
+      = getConfig().printConsoleTrace && !disableStack
+        ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
+        : undefined
     rpc().sendLog({
       origin,
       content,
@@ -31,14 +54,18 @@ export async function setupConsoleLogSpy() {
       size: content.length,
     })
   }
-  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    sendLog('stdout', processLog(args))
-    return base(...args)
-  }
-  const stderr = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    sendLog('stderr', processLog(args))
-    return base(...args)
-  }
+  const stdout
+    = (base: (...args: unknown[]) => void) =>
+      (...args: unknown[]) => {
+        sendLog('stdout', processLog(args))
+        return base(...args)
+      }
+  const stderr
+    = (base: (...args: unknown[]) => void) =>
+      (...args: unknown[]) => {
+        sendLog('stderr', processLog(args))
+        return base(...args)
+      }
   console.log = stdout(log)
   console.debug = stdout(debug)
   console.info = stdout(info)
@@ -77,10 +104,12 @@ export async function setupConsoleLogSpy() {
 
   console.timeLog = (label = 'default') => {
     timeLog(label)
-    if (!(label in timeLabels))
+    if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
-    else
+    }
+    else {
       sendLog('stdout', `${label}: ${timeLabels[label]} ms`)
+    }
   }
 
   console.timeEnd = (label = 'default') => {

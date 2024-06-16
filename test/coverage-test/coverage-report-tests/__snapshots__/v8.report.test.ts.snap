@@ -1542,7 +1542,7 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 25,
+            "line": 27,
           },
           "start": {
             "column": 0,
@@ -1553,7 +1553,7 @@ exports[`v8 json report 1`] = `
           {
             "end": {
               "column": 1,
-              "line": 25,
+              "line": 27,
             },
             "start": {
               "column": 0,
@@ -1564,26 +1564,26 @@ exports[`v8 json report 1`] = `
         "type": "branch",
       },
       "1": {
-        "line": 9,
+        "line": 8,
         "loc": {
           "end": {
-            "column": 20,
-            "line": 9,
+            "column": 3,
+            "line": 10,
           },
           "start": {
-            "column": 4,
-            "line": 9,
+            "column": 28,
+            "line": 8,
           },
         },
         "locations": [
           {
             "end": {
-              "column": 20,
-              "line": 9,
+              "column": 3,
+              "line": 10,
             },
             "start": {
-              "column": 4,
-              "line": 9,
+              "column": 28,
+              "line": 8,
             },
           },
         ],
@@ -1593,22 +1593,22 @@ exports[`v8 json report 1`] = `
         "line": 22,
         "loc": {
           "end": {
-            "column": 48,
-            "line": 22,
+            "column": 3,
+            "line": 24,
           },
           "start": {
-            "column": 4,
+            "column": 32,
             "line": 22,
           },
         },
         "locations": [
           {
             "end": {
-              "column": 48,
-              "line": 22,
+              "column": 3,
+              "line": 24,
             },
             "start": {
-              "column": 4,
+              "column": 32,
               "line": 22,
             },
           },
@@ -1616,78 +1616,78 @@ exports[`v8 json report 1`] = `
         "type": "branch",
       },
       "3": {
-        "line": 27,
+        "line": 29,
         "loc": {
           "end": {
             "column": 1,
-            "line": 47,
+            "line": 51,
           },
           "start": {
             "column": 0,
-            "line": 27,
+            "line": 29,
           },
         },
         "locations": [
           {
             "end": {
               "column": 1,
-              "line": 47,
+              "line": 51,
             },
             "start": {
               "column": 0,
-              "line": 27,
+              "line": 29,
             },
           },
         ],
         "type": "branch",
       },
       "4": {
-        "line": 31,
+        "line": 32,
         "loc": {
           "end": {
-            "column": 20,
-            "line": 31,
+            "column": 3,
+            "line": 34,
           },
           "start": {
-            "column": 4,
-            "line": 31,
+            "column": 28,
+            "line": 32,
           },
         },
         "locations": [
           {
             "end": {
-              "column": 20,
-              "line": 31,
+              "column": 3,
+              "line": 34,
             },
             "start": {
-              "column": 4,
-              "line": 31,
+              "column": 28,
+              "line": 32,
             },
           },
         ],
         "type": "branch",
       },
       "5": {
-        "line": 44,
+        "line": 46,
         "loc": {
           "end": {
-            "column": 48,
-            "line": 44,
+            "column": 3,
+            "line": 48,
           },
           "start": {
-            "column": 4,
-            "line": 44,
+            "column": 32,
+            "line": 46,
           },
         },
         "locations": [
           {
             "end": {
-              "column": 48,
-              "line": 44,
+              "column": 3,
+              "line": 48,
             },
             "start": {
-              "column": 4,
-              "line": 44,
+              "column": 32,
+              "line": 46,
             },
           },
         ],
@@ -1703,7 +1703,7 @@ exports[`v8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 25,
+            "line": 27,
           },
           "start": {
             "column": 0,
@@ -1714,7 +1714,7 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 25,
+            "line": 27,
           },
           "start": {
             "column": 0,
@@ -1727,22 +1727,22 @@ exports[`v8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 47,
+            "line": 51,
           },
           "start": {
             "column": 0,
-            "line": 27,
+            "line": 29,
           },
         },
-        "line": 27,
+        "line": 29,
         "loc": {
           "end": {
             "column": 1,
-            "line": 47,
+            "line": 51,
           },
           "start": {
             "column": 0,
-            "line": 27,
+            "line": 29,
           },
         },
         "name": "runDynamicFileCJS",
@@ -1752,29 +1752,33 @@ exports[`v8 json report 1`] = `
     "s": {
       "0": 1,
       "1": 1,
-      "10": 1,
-      "16": 1,
-      "18": 1,
+      "11": 1,
+      "17": 1,
+      "19": 1,
       "2": 1,
-      "20": 1,
       "21": 1,
-      "23": 1,
-      "24": 1,
+      "22": 0,
+      "23": 0,
+      "25": 1,
       "26": 1,
-      "27": 1,
+      "28": 1,
       "29": 1,
-      "30": 1,
-      "32": 1,
-      "38": 1,
+      "31": 1,
+      "32": 0,
+      "33": 0,
+      "35": 1,
       "4": 1,
-      "40": 1,
-      "42": 1,
+      "41": 1,
       "43": 1,
       "45": 1,
-      "46": 1,
+      "46": 0,
+      "47": 0,
+      "49": 1,
       "5": 1,
+      "50": 1,
       "7": 1,
-      "8": 1,
+      "8": 0,
+      "9": 0,
     },
     "statementMap": {
       "0": {
@@ -1797,34 +1801,34 @@ exports[`v8 json report 1`] = `
           "line": 2,
         },
       },
-      "10": {
+      "11": {
         "end": {
           "column": 27,
-          "line": 11,
+          "line": 12,
         },
         "start": {
           "column": 0,
-          "line": 11,
+          "line": 12,
         },
       },
-      "16": {
+      "17": {
         "end": {
           "column": 20,
-          "line": 17,
+          "line": 18,
         },
         "start": {
           "column": 0,
-          "line": 17,
+          "line": 18,
         },
       },
-      "18": {
+      "19": {
         "end": {
           "column": 40,
-          "line": 19,
+          "line": 20,
         },
         "start": {
           "column": 0,
-          "line": 19,
+          "line": 20,
         },
       },
       "2": {
@@ -1837,29 +1841,29 @@ exports[`v8 json report 1`] = `
           "line": 3,
         },
       },
-      "20": {
-        "end": {
-          "column": 31,
-          "line": 21,
-        },
-        "start": {
-          "column": 0,
-          "line": 21,
-        },
-      },
       "21": {
         "end": {
-          "column": 48,
+          "column": 33,
           "line": 22,
         },
         "start": {
           "column": 0,
           "line": 22,
+        },
+      },
+      "22": {
+        "end": {
+          "column": 48,
+          "line": 23,
+        },
+        "start": {
+          "column": 0,
+          "line": 23,
         },
       },
       "23": {
         "end": {
-          "column": 18,
+          "column": 3,
           "line": 24,
         },
         "start": {
@@ -1867,19 +1871,19 @@ exports[`v8 json report 1`] = `
           "line": 24,
         },
       },
-      "24": {
+      "25": {
         "end": {
-          "column": 1,
-          "line": 25,
+          "column": 18,
+          "line": 26,
         },
         "start": {
           "column": 0,
-          "line": 25,
+          "line": 26,
         },
       },
       "26": {
         "end": {
-          "column": 43,
+          "column": 1,
           "line": 27,
         },
         "start": {
@@ -1887,19 +1891,19 @@ exports[`v8 json report 1`] = `
           "line": 27,
         },
       },
-      "27": {
+      "28": {
         "end": {
-          "column": 91,
-          "line": 28,
+          "column": 43,
+          "line": 29,
         },
         "start": {
           "column": 0,
-          "line": 28,
+          "line": 29,
         },
       },
       "29": {
         "end": {
-          "column": 27,
+          "column": 91,
           "line": 30,
         },
         "start": {
@@ -1907,19 +1911,19 @@ exports[`v8 json report 1`] = `
           "line": 30,
         },
       },
-      "30": {
+      "31": {
         "end": {
-          "column": 20,
-          "line": 31,
+          "column": 29,
+          "line": 32,
         },
         "start": {
           "column": 0,
-          "line": 31,
+          "line": 32,
         },
       },
       "32": {
         "end": {
-          "column": 27,
+          "column": 20,
           "line": 33,
         },
         "start": {
@@ -1927,14 +1931,24 @@ exports[`v8 json report 1`] = `
           "line": 33,
         },
       },
-      "38": {
+      "33": {
         "end": {
-          "column": 20,
-          "line": 39,
+          "column": 3,
+          "line": 34,
         },
         "start": {
           "column": 0,
-          "line": 39,
+          "line": 34,
+        },
+      },
+      "35": {
+        "end": {
+          "column": 27,
+          "line": 36,
+        },
+        "start": {
+          "column": 0,
+          "line": 36,
         },
       },
       "4": {
@@ -1947,29 +1961,19 @@ exports[`v8 json report 1`] = `
           "line": 5,
         },
       },
-      "40": {
+      "41": {
         "end": {
-          "column": 58,
-          "line": 41,
+          "column": 20,
+          "line": 42,
         },
         "start": {
           "column": 0,
-          "line": 41,
-        },
-      },
-      "42": {
-        "end": {
-          "column": 31,
-          "line": 43,
-        },
-        "start": {
-          "column": 0,
-          "line": 43,
+          "line": 42,
         },
       },
       "43": {
         "end": {
-          "column": 48,
+          "column": 58,
           "line": 44,
         },
         "start": {
@@ -1979,7 +1983,7 @@ exports[`v8 json report 1`] = `
       },
       "45": {
         "end": {
-          "column": 18,
+          "column": 33,
           "line": 46,
         },
         "start": {
@@ -1989,12 +1993,32 @@ exports[`v8 json report 1`] = `
       },
       "46": {
         "end": {
-          "column": 1,
+          "column": 48,
           "line": 47,
         },
         "start": {
           "column": 0,
           "line": 47,
+        },
+      },
+      "47": {
+        "end": {
+          "column": 3,
+          "line": 48,
+        },
+        "start": {
+          "column": 0,
+          "line": 48,
+        },
+      },
+      "49": {
+        "end": {
+          "column": 18,
+          "line": 50,
+        },
+        "start": {
+          "column": 0,
+          "line": 50,
         },
       },
       "5": {
@@ -2007,9 +2031,19 @@ exports[`v8 json report 1`] = `
           "line": 6,
         },
       },
+      "50": {
+        "end": {
+          "column": 1,
+          "line": 51,
+        },
+        "start": {
+          "column": 0,
+          "line": 51,
+        },
+      },
       "7": {
         "end": {
-          "column": 27,
+          "column": 29,
           "line": 8,
         },
         "start": {
@@ -2025,6 +2059,16 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 9,
+        },
+      },
+      "9": {
+        "end": {
+          "column": 3,
+          "line": 10,
+        },
+        "start": {
+          "column": 0,
+          "line": 10,
         },
       },
     },
@@ -2762,7 +2806,7 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 8,
+            "line": 9,
           },
           "start": {
             "column": 7,
@@ -2773,7 +2817,7 @@ exports[`v8 json report 1`] = `
           {
             "end": {
               "column": 1,
-              "line": 8,
+              "line": 9,
             },
             "start": {
               "column": 7,
@@ -2792,7 +2836,7 @@ exports[`v8 json report 1`] = `
         "decl": {
           "end": {
             "column": 1,
-            "line": 8,
+            "line": 9,
           },
           "start": {
             "column": 7,
@@ -2803,7 +2847,7 @@ exports[`v8 json report 1`] = `
         "loc": {
           "end": {
             "column": 1,
-            "line": 8,
+            "line": 9,
           },
           "start": {
             "column": 7,
@@ -2819,8 +2863,9 @@ exports[`v8 json report 1`] = `
       "1": 1,
       "3": 1,
       "4": 1,
-      "6": 1,
+      "5": 1,
       "7": 1,
+      "8": 1,
     },
     "statementMap": {
       "0": {
@@ -2845,7 +2890,7 @@ exports[`v8 json report 1`] = `
       },
       "3": {
         "end": {
-          "column": 16,
+          "column": 18,
           "line": 4,
         },
         "start": {
@@ -2863,24 +2908,34 @@ exports[`v8 json report 1`] = `
           "line": 5,
         },
       },
-      "6": {
+      "5": {
         "end": {
-          "column": 10,
-          "line": 7,
+          "column": 3,
+          "line": 6,
         },
         "start": {
           "column": 0,
-          "line": 7,
+          "line": 6,
         },
       },
       "7": {
         "end": {
-          "column": 1,
+          "column": 10,
           "line": 8,
         },
         "start": {
           "column": 0,
           "line": 8,
+        },
+      },
+      "8": {
+        "end": {
+          "column": 1,
+          "line": 9,
+        },
+        "start": {
+          "column": 0,
+          "line": 9,
         },
       },
     },
@@ -4611,26 +4666,26 @@ exports[`v8 json report 1`] = `
         "type": "branch",
       },
       "3": {
-        "line": 16,
+        "line": 15,
         "loc": {
           "end": {
-            "column": 51,
-            "line": 16,
+            "column": 3,
+            "line": 17,
           },
           "start": {
-            "column": 4,
-            "line": 16,
+            "column": 13,
+            "line": 15,
           },
         },
         "locations": [
           {
             "end": {
-              "column": 51,
-              "line": 16,
+              "column": 3,
+              "line": 17,
             },
             "start": {
-              "column": 4,
-              "line": 16,
+              "column": 13,
+              "line": 15,
             },
           },
         ],
@@ -4799,7 +4854,8 @@ exports[`v8 json report 1`] = `
       "11": 0,
       "13": 1,
       "14": 1,
-      "15": 1,
+      "15": 0,
+      "16": 0,
       "17": 1,
       "18": 1,
       "2": 1,
@@ -4864,7 +4920,7 @@ exports[`v8 json report 1`] = `
       },
       "14": {
         "end": {
-          "column": 12,
+          "column": 14,
           "line": 15,
         },
         "start": {
@@ -4880,6 +4936,16 @@ exports[`v8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 16,
+        },
+      },
+      "16": {
+        "end": {
+          "column": 3,
+          "line": 17,
+        },
+        "start": {
+          "column": 0,
+          "line": 17,
         },
       },
       "17": {

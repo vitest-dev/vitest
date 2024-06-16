@@ -3,7 +3,9 @@ import { COVERAGE_STORE_KEY } from './constants'
 export async function getProvider() {
   // to not bundle the provider
   const providerPath = './provider.js'
-  const { IstanbulCoverageProvider } = await import(providerPath) as typeof import('./provider')
+  const { IstanbulCoverageProvider } = (await import(
+    providerPath
+  )) as typeof import('./provider')
   return new IstanbulCoverageProvider()
 }
 

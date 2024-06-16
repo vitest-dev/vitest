@@ -1,8 +1,9 @@
 import { add } from './add'
 
 export function fibonacci(n: number): number {
-  if (n < 2)
+  if (n < 2) {
     return n
+  }
   return add(fibonacci(n - 1), fibonacci(n - 2))
 }
 

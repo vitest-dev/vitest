@@ -28,7 +28,11 @@ export {
 }
 export type { BaseReporter, Reporter }
 
-export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './json'
+export type {
+  JsonAssertionResult,
+  JsonTestResult,
+  JsonTestResults,
+} from './json'
 
 export const ReportersMap = {
   'default': DefaultReporter,

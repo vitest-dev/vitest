@@ -101,18 +101,22 @@ export async function runCli(command: string, _options?: Options | string, ...ar
 
   // Manually stop the processes so that each test don't have to do this themselves
   afterEach(async () => {
-    if (subprocess.exitCode === null)
+    if (subprocess.exitCode === null) {
       subprocess.kill()
+    }
 
     await isDone
   })
 
-  if (args.includes('--inspect') || args.includes('--inspect-brk'))
+  if (args.includes('--inspect') || args.includes('--inspect-brk')) {
     return output()
+  }
 
   if (args.includes('--watch')) {
-    if (command === 'vitest') // Wait for initial test run to complete
+    if (command === 'vitest') {
+      // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')
+    }
     // make sure watcher is ready
     await cli.waitForStdout('[debug] watcher is ready')
     cli.stdout = cli.stdout.replace('[debug] watcher is ready\n', '')
@@ -148,8 +152,9 @@ afterEach(() => {
     fs.writeFileSync(file, content, 'utf-8')
   })
   createdFiles.forEach((file) => {
-    if (fs.existsSync(file))
+    if (fs.existsSync(file)) {
       fs.unlinkSync(file)
+    }
   })
   originalFiles.clear()
   createdFiles.clear()
@@ -163,8 +168,9 @@ export function createFile(file: string, content: string) {
 
 export function editFile(file: string, callback: (content: string) => string) {
   const content = fs.readFileSync(file, 'utf-8')
-  if (!originalFiles.has(file))
+  if (!originalFiles.has(file)) {
     originalFiles.set(file, content)
+  }
   fs.writeFileSync(file, callback(content), 'utf-8')
 }
 

@@ -1,7 +1,13 @@
 import type { Custom } from '@vitest/runner'
 import type { ChainableFunction } from '@vitest/runner/utils'
 import type { Arrayable } from '@vitest/utils'
-import type { Bench as BenchFactory, Options as BenchOptions, Task as BenchTask, TaskResult as BenchTaskResult, TaskResult as TinybenchResult } from 'tinybench'
+import type {
+  Bench as BenchFactory,
+  Options as BenchOptions,
+  Task as BenchTask,
+  TaskResult as BenchTaskResult,
+  TaskResult as TinybenchResult,
+} from 'tinybench'
 import type { BenchmarkBuiltinReporters } from '../node/reporters'
 import type { Reporter } from './reporter'
 
@@ -38,7 +44,10 @@ export interface BenchmarkUserOptions {
    * Write test results to a file when the `--reporter=json` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */
-  outputFile?: string | (Partial<Record<BenchmarkBuiltinReporters, string>> & Record<string, string>)
+  outputFile?:
+    | string
+    | (Partial<Record<BenchmarkBuiltinReporters, string>> &
+    Record<string, string>)
 
   /**
    * benchmark output file to compare against
@@ -73,9 +82,4 @@ export type BenchmarkAPI = ChainableBenchmarkAPI & {
   runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
-export {
-  BenchTaskResult,
-  BenchOptions,
-  BenchFactory,
-  BenchTask,
-}
+export { BenchTaskResult, BenchOptions, BenchFactory, BenchTask }

@@ -12,19 +12,35 @@ export class VerboseReporter extends DefaultReporter {
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
-    if (this.isTTY)
+    if (this.isTTY) {
       return
+    }
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+      if (
+        task
+        && task.type === 'test'
+        && task.result?.state
+        && task.result?.state !== 'run'
+      ) {
         let title = ` ${getStateSymbol(task)} `
-        if (task.file.projectName)
+        if (task.file.projectName) {
           title += formatProjectName(task.file.projectName)
+        }
         title += getFullName(task, c.dim(' > '))
-        if (task.result.duration != null && task.result.duration > this.ctx.config.slowTestThreshold)
-          title += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
-        if (this.ctx.config.logHeapUsage && task.result.heap != null)
-          title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+        if (
+          task.result.duration != null
+          && task.result.duration > this.ctx.config.slowTestThreshold
+        ) {
+          title += c.yellow(
+            ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+          )
+        }
+        if (this.ctx.config.logHeapUsage && task.result.heap != null) {
+          title += c.magenta(
+            ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+          )
+        }
         this.ctx.logger.log(title)
         if (task.result.state === 'fail') {
           task.result.errors?.forEach((error) => {

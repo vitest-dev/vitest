@@ -1,11 +1,22 @@
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Benchmark, BenchmarkResult, SuiteHooks, Task, VitestRunMode } from '../../../types'
+import type {
+  Benchmark,
+  BenchmarkResult,
+  SuiteHooks,
+  Task,
+  VitestRunMode,
+} from '../../../types'
 import { getTests, notNullish } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
-import { formatProjectName, getCols, getHookStateSymbol, getStateSymbol } from './utils'
+import {
+  formatProjectName,
+  getCols,
+  getHookStateSymbol,
+  getStateSymbol,
+} from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -21,23 +32,36 @@ function formatFilepath(path: string) {
   const lastSlash = Math.max(path.lastIndexOf('/') + 1, 0)
   const basename = path.slice(lastSlash)
   let firstDot = basename.indexOf('.')
-  if (firstDot < 0)
+  if (firstDot < 0) {
     firstDot = basename.length
+  }
   firstDot += lastSlash
 
-  return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
+  return (
+    c.dim(path.slice(0, lastSlash))
+    + path.slice(lastSlash, firstDot)
+    + c.dim(path.slice(firstDot))
+  )
 }
 
 function formatNumber(number: number) {
   const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',')
-    + (res[1] ? `.${res[1]}` : '')
+  return (
+    res[0].replace(/(?=(?:\d{3})+$)\B/g, ',') + (res[1] ? `.${res[1]}` : '')
+  )
 }
 
-function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0): string {
+function renderHookState(
+  task: Task,
+  hookName: keyof SuiteHooks,
+  level = 0,
+): string {
   const state = task.result?.hooks?.[hookName]
-  if (state && state === 'run')
-    return `${'  '.repeat(level)} ${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
+  if (state && state === 'run') {
+    return `${'  '.repeat(level)} ${getHookStateSymbol(task, hookName)} ${c.dim(
+      `[ ${hookName} ]`,
+    )}`
+  }
 
   return ''
 }
@@ -54,20 +78,19 @@ function renderBenchmarkItems(result: BenchmarkResult) {
 
 function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   const result = task.result?.benchmark
-  if (!result)
+  if (!result) {
     return task.name
+  }
 
   const benches = tasks
-    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
+    .map(i => (i.meta?.benchmark ? i.result?.benchmark : undefined))
     .filter(notNullish)
 
   const allItems = benches.map(renderBenchmarkItems)
   const items = renderBenchmarkItems(result)
   const padded = items.map((i, idx) => {
     const width = Math.max(...allItems.map(i => i[idx].length))
-    return idx
-      ? i.padStart(width, ' ')
-      : i.padEnd(width, ' ') // name
+    return idx ? i.padStart(width, ' ') : i.padEnd(width, ' ') // name
   })
 
   return [
@@ -79,13 +102,18 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.dim(` (${padded[4]} samples)`),
     result.rank === 1
       ? c.bold(c.green(' fastest'))
-      : (result.rank === benches.length && benches.length > 2)
-          ? c.bold(c.gray(' slowest'))
-          : '',
+      : result.rank === benches.length && benches.length > 2
+        ? c.bold(c.gray(' slowest'))
+        : '',
   ].join('')
 }
 
-function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
+function renderTree(
+  tasks: Task[],
+  options: ListRendererOptions,
+  level = 0,
+  maxRows?: number,
+): string {
   const output: string[] = []
   let currentRowCount = 0
 
@@ -96,34 +124,53 @@ function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxR
     let suffix = ''
     let prefix = ` ${getStateSymbol(task)} `
 
-    if (level === 0 && task.type === 'suite' && 'projectName' in task)
+    if (level === 0 && task.type === 'suite' && 'projectName' in task) {
       prefix += formatProjectName(task.projectName)
+    }
 
-    if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 0)
+    if (
+      task.type === 'test'
+      && task.result?.retryCount
+      && task.result.retryCount > 0
+    ) {
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
+    }
 
     if (task.type === 'suite') {
       const tests = getTests(task)
       suffix += c.dim(` (${tests.length})`)
     }
 
-    if (task.mode === 'skip' || task.mode === 'todo')
+    if (task.mode === 'skip' || task.mode === 'todo') {
       suffix += ` ${c.dim(c.gray('[skipped]'))}`
-
-    if (task.type === 'test' && task.result?.repeatCount && task.result.repeatCount > 0)
-      suffix += c.yellow(` (repeat x${task.result.repeatCount})`)
-
-    if (task.result?.duration != null) {
-      if (task.result.duration > options.slowTestThreshold)
-        suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
-    if (options.showHeap && task.result?.heap != null)
-      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+    if (
+      task.type === 'test'
+      && task.result?.repeatCount
+      && task.result.repeatCount > 0
+    ) {
+      suffix += c.yellow(` (repeat x${task.result.repeatCount})`)
+    }
+
+    if (task.result?.duration != null) {
+      if (task.result.duration > options.slowTestThreshold) {
+        suffix += c.yellow(
+          ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+        )
+      }
+    }
+
+    if (options.showHeap && task.result?.heap != null) {
+      suffix += c.magenta(
+        ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+      )
+    }
 
     let name = task.name
-    if (level === 0)
+    if (level === 0) {
       name = formatFilepath(name)
+    }
 
     const padding = '  '.repeat(level)
     const body = task.meta?.benchmark
@@ -132,12 +179,13 @@ function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxR
 
     taskOutput.push(padding + prefix + body + suffix)
 
-    if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
+    if (task.result?.state !== 'pass' && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
       if (typeof data === 'string') {
         data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
-        if (data === '')
+        if (data === '') {
           data = undefined
+        }
       }
 
       if (data != null) {
@@ -149,10 +197,18 @@ function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxR
     taskOutput.push(renderHookState(task, 'beforeAll', level + 1))
     taskOutput.push(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
-      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)) {
+      if (
+        task.result?.state === 'fail'
+        || task.result?.state === 'run'
+        || options.renderSucceed
+      ) {
         if (options.logger.ctx.config.hideSkippedTests) {
-          const filteredTasks = task.tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
-          taskOutput.push(renderTree(filteredTasks, options, level + 1, maxRows))
+          const filteredTasks = task.tasks.filter(
+            t => t.mode !== 'skip' && t.mode !== 'todo',
+          )
+          taskOutput.push(
+            renderTree(filteredTasks, options, level + 1, maxRows),
+          )
         }
         else {
           taskOutput.push(renderTree(task.tasks, options, level + 1, maxRows))
@@ -166,15 +222,19 @@ function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxR
     output.push(rows.join('\n'))
     currentRowCount += rows.length
 
-    if (maxRows && currentRowCount >= maxRows)
+    if (maxRows && currentRowCount >= maxRows) {
       break
+    }
   }
 
   // TODO: moving windows
   return output.reverse().join('\n')
 }
 
-export function createListRenderer(_tasks: Task[], options: ListRendererOptions) {
+export function createListRenderer(
+  _tasks: Task[],
+  options: ListRendererOptions,
+) {
   let tasks = _tasks
   let timer: any
 
@@ -182,32 +242,39 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
 
   function update() {
     if (options.logger.ctx.config.hideSkippedTests) {
-      const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
-      log(renderTree(
-        filteredTasks,
-        options,
-        0,
-        // log-update already limits the amount of printed rows to fit the current terminal
-        // but we can optimize performance by doing it ourselves
-        process.stdout.rows,
-      ))
+      const filteredTasks = tasks.filter(
+        t => t.mode !== 'skip' && t.mode !== 'todo',
+      )
+      log(
+        renderTree(
+          filteredTasks,
+          options,
+          0,
+          // log-update already limits the amount of printed rows to fit the current terminal
+          // but we can optimize performance by doing it ourselves
+          process.stdout.rows,
+        ),
+      )
     }
     else {
-      log(renderTree(
-        tasks,
-        options,
-        0,
-        // log-update already limits the amount of printed rows to fit the current terminal
-        // but we can optimize performance by doing it ourselves
-        process.stdout.rows,
-      ))
+      log(
+        renderTree(
+          tasks,
+          options,
+          0,
+          // log-update already limits the amount of printed rows to fit the current terminal
+          // but we can optimize performance by doing it ourselves
+          process.stdout.rows,
+        ),
+      )
     }
   }
 
   return {
     start() {
-      if (timer)
+      if (timer) {
         return this
+      }
       timer = setInterval(update, 16)
       return this
     },
@@ -222,7 +289,9 @@ export function createListRenderer(_tasks: Task[], options: ListRendererOptions)
       }
       log.clear()
       if (options.logger.ctx.config.hideSkippedTests) {
-        const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+        const filteredTasks = tasks.filter(
+          t => t.mode !== 'skip' && t.mode !== 'todo',
+        )
         // Note that at this point the renderTree should output all tasks
         options.logger.log(renderTree(filteredTasks, options))
       }

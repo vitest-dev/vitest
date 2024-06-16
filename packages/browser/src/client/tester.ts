@@ -6,7 +6,11 @@ import { browserHashMap, initiateRunner } from './runner'
 import { getBrowserState, getConfig, importId } from './utils'
 import { loadSafeRpc } from './rpc'
 import { VitestBrowserClientMocker } from './mocker'
-import { registerUnexpectedErrors, registerUnhandledErrors, serializeError } from './unhandled'
+import {
+  registerUnexpectedErrors,
+  registerUnhandledErrors,
+  serializeError,
+} from './unhandled'
 
 const stopErrorHandler = registerUnhandledErrors()
 
@@ -15,26 +19,44 @@ const reloadStart = url.searchParams.get('__reloadStart')
 
 function debug(...args: unknown[]) {
   const debug = getConfig().env.VITEST_BROWSER_DEBUG
-  if (debug && debug !== 'false')
+  if (debug && debug !== 'false') {
     client.rpc.debug(...args.map(String))
+  }
 }
 
-async function tryCall<T>(fn: () => Promise<T>): Promise<T | false | undefined> {
+async function tryCall<T>(
+  fn: () => Promise<T>,
+): Promise<T | false | undefined> {
   try {
     return await fn()
   }
   catch (err: any) {
     const now = Date.now()
     // try for 30 seconds
-    const canTry = !reloadStart || (now - Number(reloadStart) < 30_000)
+    const canTry = !reloadStart || now - Number(reloadStart) < 30_000
     const errorStack = (() => {
-      if (!err)
+      if (!err) {
         return null
-      return err.stack?.includes(err.message) ? err.stack : `${err.message}\n${err.stack}`
+      }
+      return err.stack?.includes(err.message)
+        ? err.stack
+        : `${err.message}\n${err.stack}`
     })()
-    debug('failed to resolve runner', 'trying again:', canTry, 'time is', now, 'reloadStart is', reloadStart, ':\n', errorStack)
+    debug(
+      'failed to resolve runner',
+      'trying again:',
+      canTry,
+      'time is',
+      now,
+      'reloadStart is',
+      reloadStart,
+      ':\n',
+      errorStack,
+    )
     if (!canTry) {
-      const error = serializeError(new Error('Vitest failed to load its runner after 30 seconds.'))
+      const error = serializeError(
+        new Error('Vitest failed to load its runner after 30 seconds.'),
+      )
       error.cause = serializeError(err)
 
       await client.rpc.onUnhandledError(error, 'Preload Error')
@@ -114,14 +136,17 @@ async function prepareTestEnvironment(files: string[]) {
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
-    if (!currentVersion || currentVersion[1] !== version)
+    if (!currentVersion || currentVersion[1] !== version) {
       browserHashMap.set(filename, [true, version])
+    }
   })
 
-  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all([
-    initiateRunner(state, mocker, config),
-    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-  ])
+  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all(
+    [
+      initiateRunner(state, mocker, config),
+      importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+    ],
+  )
 
   mocker.setSpyModule(SpyModule)
   mocker.setupWorker()
@@ -155,7 +180,10 @@ async function runTests(files: string[]) {
 
   debug('client is connected to ws server')
 
-  let preparedData: Awaited<ReturnType<typeof prepareTestEnvironment>> | undefined | false
+  let preparedData:
+    | Awaited<ReturnType<typeof prepareTestEnvironment>>
+    | undefined
+    | false
 
   // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
   try {
@@ -191,8 +219,9 @@ async function runTests(files: string[]) {
 
   try {
     await setupCommonEnv(config)
-    for (const file of files)
+    for (const file of files) {
       await startTests([file], runner)
+    }
   }
   finally {
     state.environmentTeardownRun = true

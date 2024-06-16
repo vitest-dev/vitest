@@ -5,7 +5,10 @@ import type { ResolvedConfig } from '../types/config'
 
 export interface GlobalSetupContext {
   config: ResolvedConfig
-  provide: <T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) => void
+  provide: <T extends keyof ProvidedContext>(
+    key: T,
+    value: ProvidedContext[T]
+  ) => void
 }
 
 export interface GlobalSetupFile {
@@ -14,16 +17,27 @@ export interface GlobalSetupFile {
   teardown?: Function
 }
 
-export async function loadGlobalSetupFiles(runner: ViteNodeRunner, globalSetup: string | string[]): Promise<GlobalSetupFile[]> {
+export async function loadGlobalSetupFiles(
+  runner: ViteNodeRunner,
+  globalSetup: string | string[],
+): Promise<GlobalSetupFile[]> {
   const globalSetupFiles = toArray(globalSetup)
-  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
+  return Promise.all(
+    globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)),
+  )
 }
 
-async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promise<GlobalSetupFile> {
+async function loadGlobalSetupFile(
+  file: string,
+  runner: ViteNodeRunner,
+): Promise<GlobalSetupFile> {
   const m = await runner.executeFile(file)
   for (const exp of ['default', 'setup', 'teardown']) {
-    if (m[exp] != null && typeof m[exp] !== 'function')
-      throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)
+    if (m[exp] != null && typeof m[exp] !== 'function') {
+      throw new Error(
+        `invalid export in globalSetup file ${file}: ${exp} must be a function`,
+      )
+    }
   }
   if (m.default) {
     return {
@@ -39,6 +53,8 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
     }
   }
   else {
-    throw new Error(`invalid globalSetup file ${file}. Must export setup, teardown or have a default export`)
+    throw new Error(
+      `invalid globalSetup file ${file}. Must export setup, teardown or have a default export`,
+    )
   }
 }

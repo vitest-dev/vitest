@@ -9,9 +9,7 @@ import type {
   Plugin as PrettyFormatPlugin,
   Plugins as PrettyFormatPlugins,
 } from 'pretty-format'
-import {
-  plugins as prettyFormatPlugins,
-} from 'pretty-format'
+import { plugins as prettyFormatPlugins } from 'pretty-format'
 
 import MockSerializer from './mockSerializer'
 

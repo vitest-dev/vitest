@@ -19,8 +19,9 @@ export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
         }
         else {
           const taskTests = getTests(task)
-          for (const test of taskTests)
+          for (const test of taskTests) {
             tests.push(test)
+          }
         }
       }
     }
@@ -29,19 +30,28 @@ export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
 }
 
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {
-  return toArray(tasks).flatMap(s => isAtomTest(s) ? [s] : [s, ...getTasks(s.tasks)])
+  return toArray(tasks).flatMap(s =>
+    isAtomTest(s) ? [s] : [s, ...getTasks(s.tasks)],
+  )
 }
 
 export function getSuites(suite: Arrayable<Task>): Suite[] {
-  return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [])
+  return toArray(suite).flatMap(s =>
+    s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [],
+  )
 }
 
 export function hasTests(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.tasks.some(c => isAtomTest(c) || hasTests(c)))
+  return toArray(suite).some(s =>
+    s.tasks.some(c => isAtomTest(c) || hasTests(c)),
+  )
 }
 
 export function hasFailed(suite: Arrayable<Task>): boolean {
-  return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
+  return toArray(suite).some(
+    s =>
+      s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)),
+  )
 }
 
 export function getNames(task: Task) {
@@ -50,12 +60,14 @@ export function getNames(task: Task) {
 
   while (current?.suite) {
     current = current.suite
-    if (current?.name)
+    if (current?.name) {
       names.unshift(current.name)
+    }
   }
 
-  if (current !== task.file)
+  if (current !== task.file) {
     names.unshift(task.file.name)
+  }
 
   return names
 }

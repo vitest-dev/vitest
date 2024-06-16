@@ -7,7 +7,11 @@ export function CoverageTransform(ctx: Vitest): VitePlugin | null {
   return {
     name: 'vitest:coverage-transform',
     transform(srcCode, id) {
-      return ctx.coverageProvider?.onFileTransform?.(srcCode, normalizeRequestId(id), this)
+      return ctx.coverageProvider?.onFileTransform?.(
+        srcCode,
+        normalizeRequestId(id),
+        this,
+      )
     },
   }
 }

@@ -7,8 +7,9 @@ export function MocksPlugin(): Plugin {
     name: 'vitest:mocks',
     enforce: 'post',
     transform(code, id) {
-      if (id.includes(distDir))
+      if (id.includes(distDir)) {
         return
+      }
       return hoistMocks(code, id, this.parse)
     },
   }

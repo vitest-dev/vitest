@@ -1,5 +1,9 @@
-export type ChainableFunction<T extends string, F extends (...args: any) => any, C = {}> = F & {
-  [x in T]: ChainableFunction<T, F, C>
+export type ChainableFunction<
+  T extends string,
+  F extends (...args: any) => any,
+  C = {},
+> = F & {
+  [x in T]: ChainableFunction<T, F, C>;
 } & {
   fn: (this: Record<T, any>, ...args: Parameters<F>) => ReturnType<F>
 } & C

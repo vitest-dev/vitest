@@ -34,8 +34,9 @@ afterEach(() => {
 })
 
 // TODO: Fix flakiness and enable on CI
-if (process.env.GITHUB_ACTIONS)
+if (process.env.GITHUB_ACTIONS) {
   test.only('skip tests on CI', () => {})
+}
 
 test('editing source file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
@@ -121,8 +122,9 @@ test("dynamic test case", () => {
 
 test('editing source file generates new test report to file system', async () => {
   const report = 'fixtures/test-results/junit.xml'
-  if (existsSync(report))
+  if (existsSync(report)) {
     rmSync(report)
+  }
 
   // Test report should not be present before test run
   expect(existsSync(report)).toBe(false)

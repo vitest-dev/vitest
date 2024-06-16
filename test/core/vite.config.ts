@@ -6,8 +6,9 @@ export default defineConfig({
     {
       name: 'example',
       resolveId(source) {
-        if (source === 'virtual-module')
+        if (source === 'virtual-module') {
           return source
+        }
       },
       load(id) {
         if (id === 'virtual-module') {
@@ -93,8 +94,9 @@ export default defineConfig({
       CUSTOM_ENV: 'foo',
     },
     resolveSnapshotPath: (path, extension) => {
-      if (path.includes('moved-snapshot'))
+      if (path.includes('moved-snapshot')) {
         return path + extension
+      }
       return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
     },
     sequence: {
@@ -126,10 +128,12 @@ export default defineConfig({
       },
     ],
     onConsoleLog(log) {
-      if (log.includes('Failed to load url') && log.includes('web-worker'))
+      if (log.includes('Failed to load url') && log.includes('web-worker')) {
         return false
-      if (log.includes('Importing WebAssembly '))
+      }
+      if (log.includes('Importing WebAssembly ')) {
         return false
+      }
     },
   },
 })

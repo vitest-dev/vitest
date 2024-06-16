@@ -45,10 +45,12 @@ export class Cli {
   write(data: string) {
     this.resetOutput()
 
-    if (((this.stdin as Readable).readable))
+    if (((this.stdin as Readable).readable)) {
       this.stdin.emit('data', data)
-    else if (isWritable(this.stdin))
+    }
+    else if (isWritable(this.stdin)) {
       this.stdin.write(data)
+    }
   }
 
   resetOutput() {
@@ -69,8 +71,9 @@ export class Cli {
     Error.captureStackTrace(error, caller)
 
     return new Promise<void>((resolve, reject) => {
-      if (this[source].includes(expected))
+      if (this[source].includes(expected)) {
         return resolve()
+      }
 
       const timeout = setTimeout(() => {
         error.message = `Timeout when waiting for error "${expected}".\nReceived:\n${this[source]}`
@@ -79,8 +82,9 @@ export class Cli {
 
       const listener = () => {
         if (this[source].includes(expected)) {
-          if (timeout)
+          if (timeout) {
             clearTimeout(timeout)
+          }
 
           resolve()
         }

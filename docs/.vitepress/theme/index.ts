@@ -10,8 +10,9 @@ import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
 import '@shikijs/vitepress-twoslash/style.css'
 
-if (inBrowser)
+if (inBrowser) {
   import('./pwa')
+}
 
 export default {
   ...Theme,

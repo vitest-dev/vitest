@@ -19,12 +19,24 @@ export interface FsOptions {
   flag?: string | number
 }
 
-export interface TypePayload { type: string }
-export interface PressPayload { press: string }
-export interface DownPayload { down: string }
-export interface UpPayload { up: string }
+export interface TypePayload {
+  type: string
+}
+export interface PressPayload {
+  press: string
+}
+export interface DownPayload {
+  down: string
+}
+export interface UpPayload {
+  up: string
+}
 
-export type SendKeysPayload = TypePayload | PressPayload | DownPayload | UpPayload
+export type SendKeysPayload =
+  | TypePayload
+  | PressPayload
+  | DownPayload
+  | UpPayload
 
 export interface ScreenshotOptions {
   element?: Element
@@ -35,8 +47,15 @@ export interface ScreenshotOptions {
 }
 
 export interface BrowserCommands {
-  readFile: (path: string, options?: BufferEncoding | FsOptions) => Promise<string>
-  writeFile: (path: string, content: string, options?: BufferEncoding | FsOptions & { mode?: number | string }) => Promise<void>
+  readFile: (
+    path: string,
+    options?: BufferEncoding | FsOptions
+  ) => Promise<string>
+  writeFile: (
+    path: string,
+    content: string,
+    options?: BufferEncoding | (FsOptions & { mode?: number | string })
+  ) => Promise<void>
   removeFile: (path: string) => Promise<void>
   sendKeys: (payload: SendKeysPayload) => Promise<void>
 }

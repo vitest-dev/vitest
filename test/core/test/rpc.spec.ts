@@ -10,8 +10,9 @@ function delay(timeout: number) {
 
 function checkExtraTimers(location: string) {
   const count = vi.getTimerCount()
-  if (count > 0)
+  if (count > 0) {
     throw new Error(`got extra timers (${location}): ${count}`)
+  }
 }
 
 beforeAll(() => {

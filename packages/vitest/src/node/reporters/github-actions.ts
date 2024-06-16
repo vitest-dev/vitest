@@ -14,7 +14,11 @@ export class GithubActionsReporter implements Reporter {
 
   onFinished(files: File[] = [], errors: unknown[] = []) {
     // collect all errors and associate them with projects
-    const projectErrors = new Array<{ project: WorkspaceProject; title: string; error: unknown }>()
+    const projectErrors = new Array<{
+      project: WorkspaceProject
+      title: string
+      error: unknown
+    }>()
     for (const error of errors) {
       projectErrors.push({
         project: this.ctx.getCoreWorkspaceProject(),
@@ -26,8 +30,9 @@ export class GithubActionsReporter implements Reporter {
       const tasks = getTasks(file)
       const project = this.ctx.getProjectByTaskId(file.id)
       for (const task of tasks) {
-        if (task.result?.state !== 'fail')
+        if (task.result?.state !== 'fail') {
           continue
+        }
 
         const title = getFullName(task, ' > ')
         for (const error of task.result?.errors ?? []) {
@@ -44,8 +49,9 @@ export class GithubActionsReporter implements Reporter {
     for (const { project, title, error } of projectErrors) {
       const result = capturePrintError(error, this.ctx, project)
       const stack = result?.nearest
-      if (!stack)
+      if (!stack) {
         continue
+      }
       const formatted = formatMessage({
         command: 'error',
         properties: {

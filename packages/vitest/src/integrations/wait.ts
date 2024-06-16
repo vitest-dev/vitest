@@ -19,14 +19,20 @@ export interface WaitForOptions {
 }
 
 function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined)
+  if (source.stack !== undefined) {
     target.stack = source.stack.replace(source.message, target.message)
+  }
   return target
 }
 
-export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitForOptions = {}) {
-  const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
-  const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
+export function waitFor<T>(
+  callback: WaitForCallback<T>,
+  options: number | WaitForOptions = {},
+) {
+  const { setTimeout, setInterval, clearTimeout, clearInterval }
+    = getSafeTimers()
+  const { interval = 50, timeout = 1000 }
+    = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<T>((resolve, reject) => {
@@ -36,30 +42,39 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
     let intervalId: ReturnType<typeof setInterval>
 
     const onResolve = (result: T) => {
-      if (timeoutId)
+      if (timeoutId) {
         clearTimeout(timeoutId)
-      if (intervalId)
+      }
+      if (intervalId) {
         clearInterval(intervalId)
+      }
 
       resolve(result)
     }
 
     const handleTimeout = () => {
-      if (intervalId)
+      if (intervalId) {
         clearInterval(intervalId)
+      }
       let error = lastError
-      if (!error)
-        error = copyStackTrace(new Error('Timed out in waitFor!'), STACK_TRACE_ERROR)
+      if (!error) {
+        error = copyStackTrace(
+          new Error('Timed out in waitFor!'),
+          STACK_TRACE_ERROR,
+        )
+      }
 
       reject(error)
     }
 
     const checkCallback = () => {
-      if (vi.isFakeTimers())
+      if (vi.isFakeTimers()) {
         vi.advanceTimersByTime(interval)
+      }
 
-      if (promiseStatus === 'pending')
+      if (promiseStatus === 'pending') {
         return
+      }
       try {
         const result = callback()
         if (
@@ -90,8 +105,9 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
       }
     }
 
-    if (checkCallback() === true)
+    if (checkCallback() === true) {
       return
+    }
 
     timeoutId = setTimeout(handleTimeout, timeout)
     intervalId = setInterval(checkCallback, interval)
@@ -100,13 +116,19 @@ export function waitFor<T>(callback: WaitForCallback<T>, options: number | WaitF
 
 export type WaitUntilCallback<T> = () => T | Promise<T>
 
-export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
+export interface WaitUntilOptions
+  extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
 
 type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
 
-export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | WaitUntilOptions = {}) {
-  const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
-  const { interval = 50, timeout = 1000 } = typeof options === 'number' ? { timeout: options } : options
+export function waitUntil<T>(
+  callback: WaitUntilCallback<T>,
+  options: number | WaitUntilOptions = {},
+) {
+  const { setTimeout, setInterval, clearTimeout, clearInterval }
+    = getSafeTimers()
+  const { interval = 50, timeout = 1000 }
+    = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<Truthy<T>>((resolve, reject) => {
@@ -115,32 +137,42 @@ export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | W
     let intervalId: ReturnType<typeof setInterval>
 
     const onReject = (error?: Error) => {
-      if (intervalId)
+      if (intervalId) {
         clearInterval(intervalId)
-      if (!error)
-        error = copyStackTrace(new Error('Timed out in waitUntil!'), STACK_TRACE_ERROR)
+      }
+      if (!error) {
+        error = copyStackTrace(
+          new Error('Timed out in waitUntil!'),
+          STACK_TRACE_ERROR,
+        )
+      }
       reject(error)
     }
 
     const onResolve = (result: T) => {
-      if (!result)
+      if (!result) {
         return
+      }
 
-      if (timeoutId)
+      if (timeoutId) {
         clearTimeout(timeoutId)
-      if (intervalId)
+      }
+      if (intervalId) {
         clearInterval(intervalId)
+      }
 
       resolve(result as Truthy<T>)
       return true
     }
 
     const checkCallback = () => {
-      if (vi.isFakeTimers())
+      if (vi.isFakeTimers()) {
         vi.advanceTimersByTime(interval)
+      }
 
-      if (promiseStatus === 'pending')
+      if (promiseStatus === 'pending') {
         return
+      }
       try {
         const result = callback()
         if (
@@ -170,8 +202,9 @@ export function waitUntil<T>(callback: WaitUntilCallback<T>, options: number | W
       }
     }
 
-    if (checkCallback() === true)
+    if (checkCallback() === true) {
       return
+    }
 
     timeoutId = setTimeout(onReject, timeout)
     intervalId = setInterval(checkCallback, interval)

@@ -34,11 +34,7 @@ export const config: UserConfig = {
       },
     }),
     Unocss({
-      presets: [
-        presetUno(),
-        presetAttributify(),
-        presetIcons(),
-      ],
+      presets: [presetUno(), presetAttributify(), presetIcons()],
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -60,14 +56,8 @@ export const config: UserConfig = {
     }),
     AutoImport({
       dts: resolve(__dirname, './client/auto-imports.d.ts'),
-      dirs: [
-        './client/composables',
-      ],
-      imports: [
-        'vue',
-        'vue-router',
-        '@vueuse/core',
-      ],
+      dirs: ['./client/composables'],
+      imports: ['vue', 'vue-router', '@vueuse/core'],
       injectAtEnd: true,
     }),
     // {
@@ -82,10 +72,7 @@ export const config: UserConfig = {
     outDir: './dist/client',
   },
   optimizeDeps: {
-    include: [
-      'vue',
-      '@vue/test-utils',
-    ],
+    include: ['vue', '@vue/test-utils'],
   },
   test: {
     browser: {

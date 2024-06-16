@@ -1,6 +1,12 @@
 import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
-import type { File, ModuleGraphData, ResolvedConfig, WebSocketEvents, WebSocketHandlers } from 'vitest'
+import type {
+  File,
+  ModuleGraphData,
+  ResolvedConfig,
+  WebSocketEvents,
+  WebSocketHandlers,
+} from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
 import { StateManager } from '../../../../vitest/src/node/state'
@@ -86,7 +92,10 @@ export function createStaticClient(): VitestClient {
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
     const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (contentType.includes('application/gzip') || contentType.includes('application/x-gzip')) {
+    if (
+      contentType.includes('application/gzip')
+      || contentType.includes('application/x-gzip')
+    ) {
       const compressed = new Uint8Array(await res.arrayBuffer())
       const decompressed = strFromU8(decompressSync(compressed))
       metadata = parse(decompressed) as HTMLReportMetadata

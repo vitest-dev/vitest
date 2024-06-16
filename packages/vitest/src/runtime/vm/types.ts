@@ -8,8 +8,18 @@ interface ModuleEvaluateOptions {
   breakOnSigint?: vm.RunningScriptOptions['breakOnSigint'] | undefined
 }
 
-type ModuleLinker = (specifier: string, referencingModule: VMModule, extra: { assert: Object }) => VMModule | Promise<VMModule>
-type ModuleStatus = 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluated' | 'errored'
+type ModuleLinker = (
+  specifier: string,
+  referencingModule: VMModule,
+  extra: { assert: Object }
+) => VMModule | Promise<VMModule>
+type ModuleStatus =
+  | 'unlinked'
+  | 'linking'
+  | 'linked'
+  | 'evaluating'
+  | 'evaluated'
+  | 'errored'
 export declare class VMModule {
   dependencySpecifiers: readonly string[]
   error: any
@@ -37,7 +47,11 @@ export declare class VMSyntheticModule extends VMModule {
    * @param exportNames Array of names that will be exported from the module.
    * @param evaluateCallback Called when the module is evaluated.
    */
-  constructor(exportNames: string[], evaluateCallback: (this: VMSyntheticModule) => void, options?: SyntheticModuleOptions)
+  constructor(
+    exportNames: string[],
+    evaluateCallback: (this: VMSyntheticModule) => void,
+    options?: SyntheticModuleOptions
+  )
   /**
    * This method is used after the module is linked to set the values of exports.
    * If it is called before the module is linked, an `ERR_VM_MODULE_STATUS` error will be thrown.
@@ -48,7 +62,9 @@ export declare class VMSyntheticModule extends VMModule {
 }
 
 export declare interface ImportModuleDynamically {
-  (specifier: string, script: VMModule, importAssertions: Object): VMModule | Promise<VMModule>
+  (specifier: string, script: VMModule, importAssertions: Object):
+    | VMModule
+    | Promise<VMModule>
 }
 
 export interface SourceTextModuleOptions {
@@ -60,7 +76,9 @@ export interface SourceTextModuleOptions {
   /**
    * Called during evaluation of this module to initialize the `import.meta`.
    */
-  initializeImportMeta?: ((meta: ImportMeta, module: VMSourceTextModule) => void) | undefined
+  initializeImportMeta?:
+    | ((meta: ImportMeta, module: VMSourceTextModule) => void)
+    | undefined
   importModuleDynamically?: ImportModuleDynamically
 }
 export declare class VMSourceTextModule extends VMModule {

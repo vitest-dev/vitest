@@ -13,7 +13,11 @@ const debug = createDebugger('vitest:browser:pool')
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const waitForTests = async (contextId: string, project: WorkspaceProject, files: string[]) => {
+  const waitForTests = async (
+    contextId: string,
+    project: WorkspaceProject,
+    files: string[],
+  ) => {
     const defer = createDefer<void>()
     project.browserState.set(contextId, {
       files,
@@ -47,8 +51,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     const resolvedUrls = project.browser?.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
-    if (!origin)
-      throw new Error(`Can't find browser origin URL for project "${project.config.name}"`)
+    if (!origin) {
+      throw new Error(
+        `Can't find browser origin URL for project "${project.config.name}"`,
+      )
+    }
 
     const filesPerThread = Math.ceil(files.length / threadsCount)
 
@@ -95,7 +102,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         )
         const url = new URL('/', origin)
         url.searchParams.set('contextId', contextId)
-        const page = provider.openPage(contextId, url.toString()).then(() => waitPromise)
+        const page = provider
+          .openPage(contextId, url.toString())
+          .then(() => waitPromise)
         promises.push(page)
       }
     })
@@ -112,8 +121,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
 
     // TODO: paralellize tests instead of running them sequentially (based on CPU?)
-    for (const [project, files] of groupedFiles.entries())
+    for (const [project, files] of groupedFiles.entries()) {
       await runTests(project, files)
+    }
   }
 
   const numCpus
@@ -123,11 +133,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   function getThreadsCount(project: WorkspaceProject) {
     const config = project.config.browser
-    if (!config.headless || !project.browserProvider!.supportsParallelism)
+    if (!config.headless || !project.browserProvider!.supportsParallelism) {
       return 1
+    }
 
-    if (!config.fileParallelism)
+    if (!config.fileParallelism) {
       return 1
+    }
 
     return ctx.config.watch
       ? Math.max(Math.floor(numCpus / 2), 1)

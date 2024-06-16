@@ -9,8 +9,9 @@ const isCI = process.env.GITHUB_ACTIONS
 process.env.COVERAGE_PROVIDER = provider
 
 // TODO: Fix flakiness and enable on CI -- browser picks test files that don't exist and fails, issue #5165
-if (isCI && isBrowser)
+if (isCI && isBrowser) {
   process.exit(0)
+}
 
 const poolConfigs = [
   { pool: 'threads', poolOptions: { threads: { } } },
@@ -22,8 +23,9 @@ const poolConfigs = [
 ]
 
 // Threads have no effect in browser mode
-if (isBrowser)
+if (isBrowser) {
   poolConfigs.splice(1)
+}
 
 const configs = [
   // Run test cases. Generates coverage report.

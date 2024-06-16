@@ -6,7 +6,16 @@ import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
 import { getTasks } from '../utils'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import type {
+  Awaitable,
+  File,
+  ParsedStack,
+  Task,
+  TaskResultPack,
+  TaskState,
+  TscErrorInfo,
+  Vitest,
+} from '../types'
 import type { WorkspaceProject } from '../node/workspace'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -27,7 +36,9 @@ export interface TypecheckResults {
   time: number
 }
 
-type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void>
+type Callback<Args extends Array<any> = []> = (
+  ...args: Args
+) => Awaitable<void>
 
 export class Typechecker {
   private _onParseStart?: Callback
@@ -48,7 +59,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected ctx: WorkspaceProject) { }
+  constructor(protected ctx: WorkspaceProject) {}
 
   public setFiles(files: string[]) {
     this.files = files
@@ -66,7 +77,9 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
-  protected async collectFileTests(filepath: string): Promise<FileInformation | null> {
+  protected async collectFileTests(
+    filepath: string,
+  ): Promise<FileInformation | null> {
     return collectTests(this.ctx, filepath)
   }
 
@@ -78,11 +91,14 @@ export class Typechecker {
   }
 
   public async collectTests() {
-    const tests = (await Promise.all(
-      this.getFiles().map(filepath => this.collectFileTests(filepath)),
-    )).reduce((acc, data) => {
-      if (!data)
+    const tests = (
+      await Promise.all(
+        this.getFiles().map(filepath => this.collectFileTests(filepath)),
+      )
+    ).reduce((acc, data) => {
+      if (!data) {
         return acc
+      }
       acc[data.filepath] = data
       return acc
     }, {} as Record<string, FileInformation>)
@@ -98,8 +114,9 @@ export class Typechecker {
     }
     const markTasks = (tasks: Task[]): void => {
       for (const task of tasks) {
-        if ('tasks' in task)
+        if ('tasks' in task) {
           markTasks(task.tasks)
+        }
         if (!task.result?.state && task.mode === 'run') {
           task.result = {
             state: 'pass',
@@ -114,8 +131,9 @@ export class Typechecker {
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.getFiles())
 
-    if (!this._tests)
+    if (!this._tests) {
       this._tests = await this.collectTests()
+    }
 
     const sourceErrors: TypeCheckError[] = []
     const files: File[] = []
@@ -128,18 +146,23 @@ export class Typechecker {
         this.markPassed(file)
         return
       }
-      const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
+      const sortedDefinitions = [
+        ...definitions.sort((a, b) => b.start - a.start),
+      ]
       // has no map for ".js" files that use // @ts-check
       const traceMap = map && new TraceMap(map as unknown as RawSourceMap)
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: (task.mode === 'run' || task.mode === 'only') ? state : task.mode,
+          state:
+            task.mode === 'run' || task.mode === 'only' ? state : task.mode,
         }
-        if (task.suite)
+        if (task.suite) {
           markState(task.suite, state)
-        else if (task.file && task !== task.file)
+        }
+        else if (task.file && task !== task.file) {
           markState(task.file, state)
+        }
       }
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
@@ -152,9 +175,14 @@ export class Typechecker {
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
-        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
+        const definition
+          = index != null
+          && sortedDefinitions.find(
+            def => def.start <= index && def.end >= index,
+          )
         const suite = definition ? definition.task : file
-        const state: TaskState = (suite.mode === 'run' || suite.mode === 'only') ? 'fail' : suite.mode
+        const state: TaskState
+          = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,
@@ -162,10 +190,12 @@ export class Typechecker {
         }
         errors.push(error)
         if (state === 'fail') {
-          if (suite.suite)
+          if (suite.suite) {
             markState(suite.suite, 'fail')
-          else if (suite.file && suite !== suite.file)
+          }
+          else if (suite.file && suite !== suite.file) {
             markState(suite.file, 'fail')
+          }
         }
       })
 
@@ -173,8 +203,9 @@ export class Typechecker {
     })
 
     typeErrors.forEach((errors, path) => {
-      if (!testFiles.has(path))
+      if (!testFiles.has(path)) {
         sourceErrors.push(...errors.map(({ error }) => error))
+      }
     })
 
     return {
@@ -186,14 +217,20 @@ export class Typechecker {
 
   protected async parseTscLikeOutput(output: string) {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
-    const typesErrors = new Map<string, { error: TypeCheckError; originalError: TscErrorInfo }[]>()
+    const typesErrors = new Map<
+      string,
+      { error: TypeCheckError; originalError: TscErrorInfo }[]
+    >()
     errorsMap.forEach((errors, path) => {
       const filepath = resolve(this.ctx.config.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
         // Some expect-type errors have the most useful information on the second line e.g. `This expression is not callable.\n  Type 'ExpectString<number>' has no call signatures.`
-        const errMsg = info.errMsg.replace(/\r?\n\s*(Type .* has no call signatures)/g, ' $1')
+        const errMsg = info.errMsg.replace(
+          /\r?\n\s*(Type .* has no call signatures)/g,
+          ' $1',
+        )
         const error = new TypeCheckError(errMsg, [
           {
             file: filepath,
@@ -221,8 +258,9 @@ export class Typechecker {
   }
 
   public async clear() {
-    if (this.tempConfigPath)
+    if (this.tempConfigPath) {
       await rm(this.tempConfigPath, { force: true })
+    }
   }
 
   public async stop() {
@@ -231,8 +269,9 @@ export class Typechecker {
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
-    if (checker !== 'tsc' && checker !== 'vue-tsc')
+    if (checker !== 'tsc' && checker !== 'vue-tsc') {
       return
+    }
     const packageName = checker === 'tsc' ? 'typescript' : 'vue-tsc'
     await ctx.packageInstaller.ensureInstalled(packageName, ctx.config.root)
   }
@@ -255,17 +294,20 @@ export class Typechecker {
   }
 
   public async start() {
-    if (!this.tempConfigPath)
+    if (!this.tempConfigPath) {
       throw new Error('tsconfig was not initialized')
+    }
 
     const { root, watch, typecheck } = this.ctx.config
 
     const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
     // use builtin watcher, because it's faster
-    if (watch)
+    if (watch) {
       args.push('--watch')
-    if (typecheck.allowJs)
+    }
+    if (typecheck.allowJs) {
       args.push('--allowJs', '--checkJs')
+    }
     this._output = ''
     this._startTime = performance.now()
     const child = execa(typecheck.checker, args, {
@@ -278,8 +320,9 @@ export class Typechecker {
     let rerunTriggered = false
     child.stdout?.on('data', (chunk) => {
       this._output += chunk
-      if (!watch)
+      if (!watch) {
         return
+      }
       if (this._output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
         this._startTime = performance.now()

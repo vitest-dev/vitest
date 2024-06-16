@@ -8,7 +8,14 @@
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack } from '../../../utils/src/index'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
-import type { SnapshotData, SnapshotEnvironment, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../types'
+import type {
+  SnapshotData,
+  SnapshotEnvironment,
+  SnapshotMatchOptions,
+  SnapshotResult,
+  SnapshotStateOptions,
+  SnapshotUpdateState,
+} from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
@@ -64,10 +71,7 @@ export default class SnapshotState {
     snapshotContent: string | null,
     options: SnapshotStateOptions,
   ) {
-    const { data, dirty } = getSnapshotData(
-      snapshotContent,
-      options,
-    )
+    const { data, dirty } = getSnapshotData(snapshotContent, options)
     this._fileExists = snapshotContent != null // TODO: update on watch?
     this._initialData = data
     this._snapshotData = data
@@ -90,12 +94,13 @@ export default class SnapshotState {
     this._environment = options.snapshotEnvironment
   }
 
-  static async create(
-    testFilePath: string,
-    options: SnapshotStateOptions,
-  ) {
-    const snapshotPath = await options.snapshotEnvironment.resolvePath(testFilePath)
-    const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
+  static async create(testFilePath: string, options: SnapshotStateOptions) {
+    const snapshotPath = await options.snapshotEnvironment.resolvePath(
+      testFilePath,
+    )
+    const content = await options.snapshotEnvironment.readSnapshotFile(
+      snapshotPath,
+    )
     return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
@@ -105,20 +110,26 @@ export default class SnapshotState {
 
   markSnapshotsAsCheckedForTest(testName: string): void {
     this._uncheckedKeys.forEach((uncheckedKey) => {
-      if (keyToTestName(uncheckedKey) === testName)
+      if (keyToTestName(uncheckedKey) === testName) {
         this._uncheckedKeys.delete(uncheckedKey)
+      }
     })
   }
 
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]) {
     // if called inside resolves/rejects, stacktrace is different
-    const promiseIndex = stacks.findIndex(i => i.method.match(/__VITEST_(RESOLVES|REJECTS)__/))
-    if (promiseIndex !== -1)
+    const promiseIndex = stacks.findIndex(i =>
+      i.method.match(/__VITEST_(RESOLVES|REJECTS)__/),
+    )
+    if (promiseIndex !== -1) {
       return stacks[promiseIndex + 3]
+    }
 
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
-    const stackIndex = stacks.findIndex(i => i.method.includes('__INLINE_SNAPSHOT__'))
+    const stackIndex = stacks.findIndex(i =>
+      i.method.includes('__INLINE_SNAPSHOT__'),
+    )
     return stackIndex !== -1 ? stacks[stackIndex + 2] : null
   }
 
@@ -129,11 +140,16 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), { ignoreStackEntries: [] })
+      const stacks = parseErrorStacktrace(
+        options.error || new Error('snapshot'),
+        { ignoreStackEntries: [] },
+      )
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
-          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
+          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
+            stacks,
+          )}`,
         )
       }
       // removing 1 column, because source map points to the wrong
@@ -171,7 +187,8 @@ export default class SnapshotState {
     const hasExternalSnapshots = Object.keys(this._snapshotData).length
     const hasInlineSnapshots = this._inlineSnapshots.length
     const hasRawSnapshots = this._rawSnapshots.length
-    const isEmpty = !hasExternalSnapshots && !hasInlineSnapshots && !hasRawSnapshots
+    const isEmpty
+      = !hasExternalSnapshots && !hasInlineSnapshots && !hasRawSnapshots
 
     const status: SaveStatus = {
       deleted: false,
@@ -180,13 +197,19 @@ export default class SnapshotState {
 
     if ((this._dirty || this._uncheckedKeys.size) && !isEmpty) {
       if (hasExternalSnapshots) {
-        await saveSnapshotFile(this._environment, this._snapshotData, this.snapshotPath)
+        await saveSnapshotFile(
+          this._environment,
+          this._snapshotData,
+          this.snapshotPath,
+        )
         this._fileExists = true
       }
-      if (hasInlineSnapshots)
+      if (hasInlineSnapshots) {
         await saveInlineSnapshots(this._environment, this._inlineSnapshots)
-      if (hasRawSnapshots)
+      }
+      if (hasRawSnapshots) {
         await saveRawSnapshots(this._environment, this._rawSnapshots)
+      }
 
       status.saved = true
     }
@@ -230,26 +253,35 @@ export default class SnapshotState {
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
 
-    if (!key)
+    if (!key) {
       key = testNameToKey(testName, count)
+    }
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be
     // removed with `--updateSnapshot`.
-    if (!(isInline && this._snapshotData[key] !== undefined))
+    if (!(isInline && this._snapshotData[key] !== undefined)) {
       this._uncheckedKeys.delete(key)
+    }
 
-    let receivedSerialized = (rawSnapshot && typeof received === 'string')
-      ? received as string
-      : serialize(received, undefined, this._snapshotFormat)
+    let receivedSerialized
+      = rawSnapshot && typeof received === 'string'
+        ? (received as string)
+        : serialize(received, undefined, this._snapshotFormat)
 
-    if (!rawSnapshot)
+    if (!rawSnapshot) {
       receivedSerialized = addExtraLineBreaks(receivedSerialized)
+    }
 
     if (rawSnapshot) {
       // normalize EOL when snapshot contains CRLF but received is LF
-      if (rawSnapshot.content && rawSnapshot.content.match(/\r\n/) && !receivedSerialized.match(/\r\n/))
+      if (
+        rawSnapshot.content
+        && rawSnapshot.content.match(/\r\n/)
+        && !receivedSerialized.match(/\r\n/)
+      ) {
         rawSnapshot.content = normalizeNewlines(rawSnapshot.content)
+      }
     }
 
     const expected = isInline
@@ -260,7 +292,10 @@ export default class SnapshotState {
     const expectedTrimmed = prepareExpected(expected)
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted = isInline || this._fileExists || (rawSnapshot && rawSnapshot.content != null)
+    const snapshotIsPersisted
+      = isInline
+      || this._fileExists
+      || (rawSnapshot && rawSnapshot.content != null)
 
     if (pass && !isInline && !rawSnapshot) {
       // Executing a snapshot file as JavaScript and writing the strings back
@@ -286,19 +321,29 @@ export default class SnapshotState {
     ) {
       if (this._updateSnapshot === 'all') {
         if (!pass) {
-          if (hasSnapshot)
+          if (hasSnapshot) {
             this.updated++
-          else
+          }
+          else {
             this.added++
+          }
 
-          this._addSnapshot(key, receivedSerialized, { error, isInline, rawSnapshot })
+          this._addSnapshot(key, receivedSerialized, {
+            error,
+            isInline,
+            rawSnapshot,
+          })
         }
         else {
           this.matched++
         }
       }
       else {
-        this._addSnapshot(key, receivedSerialized, { error, isInline, rawSnapshot })
+        this._addSnapshot(key, receivedSerialized, {
+          error,
+          isInline,
+          rawSnapshot,
+        })
         this.added++
       }
 
@@ -317,9 +362,9 @@ export default class SnapshotState {
           actual: removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
-          expectedTrimmed !== undefined
-            ? removeExtraLineBreaks(expectedTrimmed)
-            : undefined,
+            expectedTrimmed !== undefined
+              ? removeExtraLineBreaks(expectedTrimmed)
+              : undefined,
           key,
           pass: false,
         }
@@ -350,8 +395,9 @@ export default class SnapshotState {
     }
     const uncheckedCount = this.getUncheckedCount()
     const uncheckedKeys = this.getUncheckedKeys()
-    if (uncheckedCount)
+    if (uncheckedCount) {
       this.removeUncheckedKeys()
+    }
 
     const status = await this.save()
     snapshot.fileDeleted = status.deleted

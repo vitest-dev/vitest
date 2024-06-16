@@ -4,8 +4,6 @@
     "jsx": "preserve",
     "skipLibCheck": true
   },
-  "include": [
-    "./client/**/*"
-  ],
+  "include": ["./client/**/*"],
   "exclude": ["dist", "node_modules"]
 }

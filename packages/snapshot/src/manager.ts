@@ -1,11 +1,17 @@
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
-import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from './types'
+import type {
+  SnapshotResult,
+  SnapshotStateOptions,
+  SnapshotSummary,
+} from './types'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!
   extension = '.snap'
 
-  constructor(public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>) {
+  constructor(
+    public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
+  ) {
     this.clear()
   }
 
@@ -18,28 +24,27 @@ export class SnapshotManager {
   }
 
   resolvePath(testPath: string) {
-    const resolver = this.options.resolveSnapshotPath || (() => {
-      return join(
-        join(
-          dirname(testPath),
-          '__snapshots__',
-        ),
-        `${basename(testPath)}${this.extension}`,
-      )
-    })
+    const resolver
+      = this.options.resolveSnapshotPath
+      || (() => {
+        return join(
+          join(dirname(testPath), '__snapshots__'),
+          `${basename(testPath)}${this.extension}`,
+        )
+      })
 
     const path = resolver(testPath, this.extension)
     return path
   }
 
   resolveRawPath(testPath: string, rawPath: string) {
-    return isAbsolute(rawPath)
-      ? rawPath
-      : resolve(dirname(testPath), rawPath)
+    return isAbsolute(rawPath) ? rawPath : resolve(dirname(testPath), rawPath)
   }
 }
 
-export function emptySummary(options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>): SnapshotSummary {
+export function emptySummary(
+  options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
+): SnapshotSummary {
   const summary = {
     added: 0,
     failure: false,
@@ -59,15 +64,22 @@ export function emptySummary(options: Omit<SnapshotStateOptions, 'snapshotEnviro
   return summary
 }
 
-export function addSnapshotResult(summary: SnapshotSummary, result: SnapshotResult): void {
-  if (result.added)
+export function addSnapshotResult(
+  summary: SnapshotSummary,
+  result: SnapshotResult,
+): void {
+  if (result.added) {
     summary.filesAdded++
-  if (result.fileDeleted)
+  }
+  if (result.fileDeleted) {
     summary.filesRemoved++
-  if (result.unmatched)
+  }
+  if (result.unmatched) {
     summary.filesUnmatched++
-  if (result.updated)
+  }
+  if (result.updated) {
     summary.filesUpdated++
+  }
 
   summary.added += result.added
   summary.matched += result.matched
@@ -81,5 +93,6 @@ export function addSnapshotResult(summary: SnapshotSummary, result: SnapshotResu
 
   summary.unmatched += result.unmatched
   summary.updated += result.updated
-  summary.total += result.added + result.matched + result.unmatched + result.updated
+  summary.total
+    += result.added + result.matched + result.unmatched + result.updated
 }

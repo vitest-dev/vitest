@@ -25,8 +25,9 @@ getBrowserState().createTesters = async (files) => {
 
 function debug(...args: unknown[]) {
   const debug = getConfig().env.VITEST_BROWSER_DEBUG
-  if (debug && debug !== 'false')
+  if (debug && debug !== 'false') {
     client.rpc.debug(...args.map(String))
+  }
 }
 
 function createIframe(container: HTMLDivElement, file: string) {
@@ -37,7 +38,12 @@ function createIframe(container: HTMLDivElement, file: string) {
 
   const iframe = document.createElement('iframe')
   iframe.setAttribute('loading', 'eager')
-  iframe.setAttribute('src', `${url.pathname}__vitest_test__/__test__/${getBrowserState().contextId}/${encodeURIComponent(file)}`)
+  iframe.setAttribute(
+    'src',
+    `${url.pathname}__vitest_test__/__test__/${
+      getBrowserState().contextId
+    }/${encodeURIComponent(file)}`,
+  )
   iframe.setAttribute('data-vitest', 'true')
 
   iframe.style.display = 'block'
@@ -84,89 +90,106 @@ client.ws.addEventListener('open', async () => {
 
   const mocker = createModuleMocker()
 
-  channel.addEventListener('message', async (e: MessageEvent<IframeChannelIncomingEvent>): Promise<void> => {
-    debug('channel event', JSON.stringify(e.data))
-    switch (e.data.type) {
-      case 'viewport': {
-        const { width, height, id } = e.data
-        const iframe = iframes.get(id)
-        if (!iframe) {
-          const error = new Error(`Cannot find iframe with id ${id}`)
-          channel.postMessage({ type: 'viewport:fail', id, error: error.message })
-          await client.rpc.onUnhandledError({
-            name: 'Teardown Error',
-            message: error.message,
-          }, 'Teardown Error')
-          return
-        }
-        await setIframeViewport(iframe, width, height)
-        channel.postMessage({ type: 'viewport:done', id })
-        break
-      }
-      case 'done': {
-        const filenames = e.data.filenames
-        filenames.forEach(filename => runningFiles.delete(filename))
-
-        if (!runningFiles.size) {
-          const ui = getUiAPI()
-          // in isolated mode we don't change UI because it will slow down tests,
-          // so we only select it when the run is done
-          if (ui && filenames.length > 1) {
-            const id = generateFileId(filenames[filenames.length - 1])
-            ui.setCurrentFileId(id)
+  channel.addEventListener(
+    'message',
+    async (e: MessageEvent<IframeChannelIncomingEvent>): Promise<void> => {
+      debug('channel event', JSON.stringify(e.data))
+      switch (e.data.type) {
+        case 'viewport': {
+          const { width, height, id } = e.data
+          const iframe = iframes.get(id)
+          if (!iframe) {
+            const error = new Error(`Cannot find iframe with id ${id}`)
+            channel.postMessage({
+              type: 'viewport:fail',
+              id,
+              error: error.message,
+            })
+            await client.rpc.onUnhandledError(
+              {
+                name: 'Teardown Error',
+                message: error.message,
+              },
+              'Teardown Error',
+            )
+            return
           }
-          await done()
+          await setIframeViewport(iframe, width, height)
+          channel.postMessage({ type: 'viewport:done', id })
+          break
         }
-        else {
-          // keep the last iframe
-          const iframeId = e.data.id
-          iframes.get(iframeId)?.remove()
-          iframes.delete(iframeId)
-        }
-        break
-      }
-      // error happened at the top level, this should never happen in user code, but it can trigger during development
-      case 'error': {
-        const iframeId = e.data.id
-        iframes.delete(iframeId)
-        await client.rpc.onUnhandledError(e.data.error, e.data.errorType)
-        if (iframeId === ID_ALL)
-          runningFiles.clear()
-        else
-          runningFiles.delete(iframeId)
-        if (!runningFiles.size)
-          await done()
-        break
-      }
-      case 'mock:invalidate':
-        mocker.invalidate()
-        break
-      case 'unmock':
-        await mocker.unmock(e.data)
-        break
-      case 'mock':
-        await mocker.mock(e.data)
-        break
-      case 'mock-factory:error':
-      case 'mock-factory:response':
-        // handled manually
-        break
-      default: {
-        e.data satisfies never
+        case 'done': {
+          const filenames = e.data.filenames
+          filenames.forEach(filename => runningFiles.delete(filename))
 
-        await client.rpc.onUnhandledError({
-          name: 'Unexpected Event',
-          message: `Unexpected event: ${(e.data as any).type}`,
-        }, 'Unexpected Event')
-        await done()
+          if (!runningFiles.size) {
+            const ui = getUiAPI()
+            // in isolated mode we don't change UI because it will slow down tests,
+            // so we only select it when the run is done
+            if (ui && filenames.length > 1) {
+              const id = generateFileId(filenames[filenames.length - 1])
+              ui.setCurrentFileId(id)
+            }
+            await done()
+          }
+          else {
+            // keep the last iframe
+            const iframeId = e.data.id
+            iframes.get(iframeId)?.remove()
+            iframes.delete(iframeId)
+          }
+          break
+        }
+        // error happened at the top level, this should never happen in user code, but it can trigger during development
+        case 'error': {
+          const iframeId = e.data.id
+          iframes.delete(iframeId)
+          await client.rpc.onUnhandledError(e.data.error, e.data.errorType)
+          if (iframeId === ID_ALL) {
+            runningFiles.clear()
+          }
+          else {
+            runningFiles.delete(iframeId)
+          }
+          if (!runningFiles.size) {
+            await done()
+          }
+          break
+        }
+        case 'mock:invalidate':
+          mocker.invalidate()
+          break
+        case 'unmock':
+          await mocker.unmock(e.data)
+          break
+        case 'mock':
+          await mocker.mock(e.data)
+          break
+        case 'mock-factory:error':
+        case 'mock-factory:response':
+          // handled manually
+          break
+        default: {
+          e.data satisfies never
+
+          await client.rpc.onUnhandledError(
+            {
+              name: 'Unexpected Event',
+              message: `Unexpected event: ${(e.data as any).type}`,
+            },
+            'Unexpected Event',
+          )
+          await done()
+        }
       }
-    }
-  })
+    },
+  )
 
   // if page was refreshed, there will be no test files
   // createTesters will be called again when tests are running in the UI
-  if (testFiles.length)
+  if (testFiles.length) {
     await createTesters(testFiles)
+  }
 })
 
 async function createTesters(testFiles: string[]) {
@@ -186,10 +209,7 @@ async function createTesters(testFiles: string[]) {
   iframes.clear()
 
   if (config.isolate === false) {
-    const iframe = createIframe(
-      container,
-      ID_ALL,
-    )
+    const iframe = createIframe(container, ID_ALL)
 
     await setIframeViewport(iframe, width, height)
   }
@@ -197,21 +217,21 @@ async function createTesters(testFiles: string[]) {
     // otherwise, we need to wait for each iframe to finish before creating the next one
     // this is the most stable way to run tests in the browser
     for (const file of testFiles) {
-      const iframe = createIframe(
-        container,
-        file,
-      )
+      const iframe = createIframe(container, file)
 
       await setIframeViewport(iframe, width, height)
 
       await new Promise<void>((resolve) => {
-        channel.addEventListener('message', function handler(e: MessageEvent<IframeChannelEvent>) {
-          // done and error can only be triggered by the previous iframe
-          if (e.data.type === 'done' || e.data.type === 'error') {
-            channel.removeEventListener('message', handler)
-            resolve()
-          }
-        })
+        channel.addEventListener(
+          'message',
+          function handler(e: MessageEvent<IframeChannelEvent>) {
+            // done and error can only be triggered by the previous iframe
+            if (e.data.type === 'done' || e.data.type === 'error') {
+              channel.removeEventListener('message', handler)
+              resolve()
+            }
+          },
+        )
       })
     }
   }
@@ -224,7 +244,11 @@ function generateFileId(file: string) {
   return generateHash(`${path}${project}`)
 }
 
-async function setIframeViewport(iframe: HTMLIFrameElement, width: number, height: number) {
+async function setIframeViewport(
+  iframe: HTMLIFrameElement,
+  width: number,
+  height: number,
+) {
   const ui = getUiAPI()
   if (ui) {
     await ui.setIframeViewport(width, height)

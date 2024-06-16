@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { client, isConnected, isConnecting, browserState } from '~/composables/client'
+import {
+  client,
+  isConnected,
+  isConnecting,
+  browserState,
+} from "~/composables/client";
 </script>
 
 <template>
   <template v-if="!isConnected">
     <div
-      fixed inset-0 p2 z-10
+      fixed
+      inset-0
+      p2
+      z-10
       select-none
       text="center sm"
       bg="overlay"
@@ -16,18 +24,27 @@ import { client, isConnected, isConnecting, browserState } from '~/composables/c
       <div
         h-full
         flex="~ col gap-2"
-        items-center justify-center
+        items-center
+        justify-center
         :class="isConnecting ? 'animate-pulse' : ''"
       >
         <div
           text="5xl"
-          :class="isConnecting ? 'i-carbon:renew animate-spin animate-reverse' : 'i-carbon-wifi-off'"
+          :class="
+            isConnecting
+              ? 'i-carbon:renew animate-spin animate-reverse'
+              : 'i-carbon-wifi-off'
+          "
         />
         <div text-2xl>
-          {{ isConnecting ? 'Connecting...' : 'Disconnected' }}
+          {{ isConnecting ? "Connecting..." : "Disconnected" }}
         </div>
         <div text-lg op50>
-          Check your terminal or start a new server with `{{ browserState ? `vitest --browser=${browserState.config.browser.name}` : 'vitest --ui' }}`
+          Check your terminal or start a new server with `{{
+            browserState
+              ? `vitest --browser=${browserState.config.browser.name}`
+              : "vitest --ui"
+          }}`
         </div>
       </div>
     </div>

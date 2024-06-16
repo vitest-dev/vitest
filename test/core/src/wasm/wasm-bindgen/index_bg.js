@@ -25,8 +25,9 @@ cachedTextDecoder.decode()
 let cachedUint8Memory0 = new Uint8Array()
 
 function getUint8Memory0() {
-  if (cachedUint8Memory0.byteLength === 0)
+  if (cachedUint8Memory0.byteLength === 0) {
     cachedUint8Memory0 = new Uint8Array(wasm.memory.buffer)
+  }
 
   return cachedUint8Memory0
 }
@@ -82,8 +83,9 @@ const encodeString
     }
 
 function passStringToWasm0(arg, malloc, realloc) {
-  if (typeof arg !== 'string')
-    throw new Error('expected a string argument')
+  if (typeof arg !== 'string') {
+    throw new TypeError('expected a string argument')
+  }
 
   if (realloc === undefined) {
     const buf = cachedTextEncoder.encode(arg)
@@ -104,20 +106,23 @@ function passStringToWasm0(arg, malloc, realloc) {
 
   for (; offset < len; offset++) {
     const code = arg.charCodeAt(offset)
-    if (code > 0x7F)
+    if (code > 0x7F) {
       break
+    }
     mem[ptr + offset] = code
   }
 
   if (offset !== len) {
-    if (offset !== 0)
+    if (offset !== 0) {
       arg = arg.slice(offset)
+    }
 
     ptr = realloc(ptr, len, (len = offset + arg.length * 3))
     const view = getUint8Memory0().subarray(ptr + offset, ptr + len)
     const ret = encodeString(arg, view)
-    if (ret.read !== arg.length)
+    if (ret.read !== arg.length) {
       throw new Error('failed to pass whole string')
+    }
     offset += ret.written
   }
 

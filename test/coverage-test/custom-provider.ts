@@ -13,8 +13,9 @@ const CustomCoverageProviderModule: CoverageProviderModule = {
     globalThis.CUSTOM_PROVIDER_TAKE_COVERAGE = true
 
     // @ts-expect-error -- untyped
-    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE)
+    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE) {
       throw new Error('takeCoverage was called before startCoverage!')
+    }
 
     return { customCoverage: 'Coverage report passed from workers to main thread' }
   },
@@ -26,12 +27,14 @@ const CustomCoverageProviderModule: CoverageProviderModule = {
 
   stopCoverage() {
     // @ts-expect-error -- untyped
-    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE)
+    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE) {
       throw new Error('stopCoverage was called before startCoverage!')
+    }
 
     // @ts-expect-error -- untyped
-    if (!globalThis.CUSTOM_PROVIDER_TAKE_COVERAGE)
+    if (!globalThis.CUSTOM_PROVIDER_TAKE_COVERAGE) {
       throw new Error('stopCoverage was called before takeCoverage!')
+    }
   },
 }
 
@@ -82,8 +85,9 @@ class CustomCoverageProvider implements CoverageProvider {
       transformedFiles: Array.from(this.transformedFiles.values()).sort(),
     }, null, 2)
 
-    if (existsSync('./coverage'))
+    if (existsSync('./coverage')) {
       rmSync('./coverage', { maxRetries: 10, recursive: true })
+    }
 
     mkdirSync('./coverage')
     writeFileSync('./coverage/custom-coverage-provider-report.json', jsonReport, 'utf-8')
@@ -92,8 +96,9 @@ class CustomCoverageProvider implements CoverageProvider {
   onFileTransform(code: string, id: string) {
     const filename = normalizeFilename(id).split('?')[0]
 
-    if (/\/src\//.test(filename))
+    if (/\/src\//.test(filename)) {
       this.transformedFiles.add(filename)
+    }
 
     return { code }
   }

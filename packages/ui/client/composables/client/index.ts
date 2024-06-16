@@ -33,8 +33,9 @@ export const client = (function createVitestClient() {
         onFinishedReportCoverage() {
           // reload coverage iframe
           const iframe = document.querySelector('iframe#vitest-ui-coverage')
-          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow)
+          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
             iframe.contentWindow.location.reload()
+          }
         },
       },
     })
@@ -48,8 +49,15 @@ function sort(a: File, b: File) {
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const files = computed(() => client.state.getFiles().sort(sort))
-export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
-export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
+export const current = computed(() =>
+  files.value.find(file => file.id === activeFileId.value),
+)
+export const currentLogs = computed(
+  () =>
+    getTasks(current.value)
+      .map(i => i?.logs || [])
+      .flat() || [],
+)
 
 export function findById(id: string) {
   return files.value.find(file => file.id === id)
@@ -72,12 +80,15 @@ export function runFiles(files: File[]) {
 }
 
 export function runCurrent() {
-  if (current.value)
+  if (current.value) {
     return runFiles([current.value])
+  }
 }
 
 // @ts-expect-error not typed global
-export const browserState = window.__vitest_browser_runner__ as BrowserRunnerState | undefined
+export const browserState = window.__vitest_browser_runner__ as
+  | BrowserRunnerState
+  | undefined
 
 watch(
   () => client.ws,
@@ -108,8 +119,9 @@ watch(
 
     ws.addEventListener('close', () => {
       setTimeout(() => {
-        if (status.value === 'CONNECTING')
+        if (status.value === 'CONNECTING') {
           status.value = 'CLOSED'
+        }
       }, 1000)
     })
   },
