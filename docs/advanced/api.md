@@ -110,7 +110,7 @@ Technically, `provide` is a method of `WorkspaceProject`, so it is limited to th
 :::
 
 ::: tip
-This method is also available to [global setup files](/config#globalsetup) for cases where you don't want to use the public API:
+This method is also available to [global setup files](/config/#globalsetup) for cases where you don't want to use the public API:
 
 ```js
 export default function setup({ provide }) {

@@ -53,10 +53,11 @@
 | `--browser.api.port [port]` | Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to `63315` |
 | `--browser.api.host [host]` | Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or `true` to listen on all addresses, including LAN and public addresses |
 | `--browser.api.strictPort` | Set to true to exit if port is already in use, instead of automatically trying the next available port |
-| `--browser.provider <name>` | Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"webdriverio"`) |
+| `--browser.provider <name>` | Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`) |
 | `--browser.providerOptions <options>` | Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information |
 | `--browser.isolate` | Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`) |
 | `--browser.ui` | Show Vitest UI when running tests (default: `!process.env.CI`) |
+| `--browser.fileParallelism` | Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`) |
 | `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`) |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`) |
 | `--poolOptions.threads.singleThread` | Run tests inside a single thread (default: `false`) |
@@ -117,6 +118,7 @@
 | `--expect.requireAssertions` | Require that all tests have at least one assertion |
 | `--expect.poll.interval <interval>` | Poll interval in milliseconds for `expect.poll()` assertions (default: `50`) |
 | `--expect.poll.timeout <timeout>` | Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`) |
+| `--printConsoleTrace` | Always print console stack traces |
 | `--run` | Disable watch mode |
 | `--no-color` | Removes colors from the console output |
 | `--clearScreen` | Clear terminal screen when re-running tests during watch mode (default: `true`) |
