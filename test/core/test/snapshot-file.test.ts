@@ -18,3 +18,7 @@ describe('snapshots', () => {
     })
   }
 })
+
+test('handle empty file', () => {
+  expect('').toMatchFileSnapshot('./fixtures/snapshot-empty.txt')
+})
