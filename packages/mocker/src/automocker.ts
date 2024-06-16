@@ -33,21 +33,23 @@ export function automockModule(code: string, parse: Rollup.ParseAst, spyModule: 
         // export const [test, ...rest] = [1, 2, 3]
         else if (expression.type === 'ArrayPattern') {
           expression.elements.forEach((element) => {
-            if (!element)
+            if (!element) {
               return
+            }
             traversePattern(element)
           })
         }
         else if (expression.type === 'ObjectPattern') {
           expression.properties.forEach((property) => {
             // export const { ...rest } = {}
-            if (property.type === 'RestElement')
+            if (property.type === 'RestElement') {
               traversePattern(property)
+            }
             // export const { test, test2: alias } = {}
-            else if (property.type === 'Property')
+            else if (property.type === 'Property') {
               traversePattern(property.value)
-            else
-              property satisfies never
+            }
+            else { property satisfies never }
           })
         }
         else if (expression.type === 'RestElement') {

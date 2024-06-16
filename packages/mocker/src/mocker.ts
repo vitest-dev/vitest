@@ -32,8 +32,9 @@ export function mockObject(
       }
 
       // Skip special read-only props, we don't want to mess with those.
-      if (isSpecialProp(property, containerType))
+      if (isSpecialProp(property, containerType)) {
         continue
+      }
 
       const value = container[property]
 
@@ -60,12 +61,14 @@ export function mockObject(
 
       // Sometimes this assignment fails for some unknown reason. If it does,
       // just move along.
-      if (!define(newContainer, property, isFunction ? value : {}))
+      if (!define(newContainer, property, isFunction ? value : {})) {
         continue
+      }
 
       if (isFunction) {
-        if (!spyModule)
+        if (!spyModule) {
           throw new Error('[vitest] `spyModule` is not defined. This is Vitest error. Please open a new issue with reproduction.')
+        }
         function mockFunction(this: any) {
           // detect constructor call and mock each instance's methods
           // so that mock states between prototype/instances don't affect each other
@@ -73,8 +76,9 @@ export function mockObject(
           if (this instanceof newContainer[property]) {
             for (const { key, descriptor } of getAllMockableProperties(this, false)) {
               // skip getter since it's not mocked on prototype as well
-              if (descriptor.get)
+              if (descriptor.get) {
                 continue
+              }
 
               const value = this[key]
               const type = /* #__PURE__ */ getType(value)
@@ -111,8 +115,9 @@ export function mockObject(
   mockPropertiesOf(object, mockedObject)
 
   // Plug together refs
-  for (const finalizer of finalizers)
+  for (const finalizer of finalizers) {
     finalizer()
+  }
 
   return mockedObject
 }
@@ -150,21 +155,24 @@ function getAllMockableProperties(obj: any, isModule: boolean) {
   let curr = obj
   do {
   // we don't need properties from these
-    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype) {
       break
+    }
 
     collectOwnProperties(curr, (key) => {
       const descriptor = Object.getOwnPropertyDescriptor(curr, key)
-      if (descriptor)
+      if (descriptor) {
         allProps.set(key, { key, descriptor })
+      }
     })
     // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   // default is not specified in ownKeys, if module is interoped
   if (isModule && !allProps.has('default') && 'default' in obj) {
     const descriptor = Object.getOwnPropertyDescriptor(obj, 'default')
-    if (descriptor)
+    if (descriptor) {
       allProps.set('default', { key: 'default', descriptor })
+    }
   }
   return Array.from(allProps.values())
 }
