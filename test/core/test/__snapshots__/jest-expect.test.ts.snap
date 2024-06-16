@@ -163,14 +163,15 @@ exports[`asymmetric matcher error 12`] = `
 - ObjectContaining {
 + Object {
     "k": "v",
+    "k2": "v2",
 -   "k3": "v3",
-+   "k2": "v2",
   }",
   "expected": "ObjectContaining {
   "k": "v",
+  "k2": "v2",
   "k3": "v3",
 }",
-  "message": "expected { k: 'v', k2: 'v2' } to deeply equal ObjectContaining {"k": "v", "k3": "v3"}",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal ObjectContaining{…}",
 }
 `;
 
