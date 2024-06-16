@@ -641,6 +641,22 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
 
+  packages/mocker:
+    dependencies:
+      '@vitest/spy':
+        specifier: workspace:*
+        version: link:../spy
+      magic-string:
+        specifier: ^0.30.10
+        version: 0.30.10
+    devDependencies:
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
+      vite:
+        specifier: ^5.2.6
+        version: 5.2.10(@types/node@20.14.2)
+
   packages/runner:
     dependencies:
       '@vitest/utils':
@@ -5123,7 +5139,7 @@ packages:
       devalue: 4.3.2
       esm-env: 1.0.0
       kleur: 4.1.5
-      magic-string: 0.30.5
+      magic-string: 0.30.10
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.6.0

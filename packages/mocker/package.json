@@ -1,0 +1,52 @@
+{
+  "name": "@vitest/mocker",
+  "type": "module",
+  "version": "2.0.0-beta.10",
+  "description": "Module mocker implementation as a Vite plugin",
+  "author": "Vladimir Sheremet",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/mocker#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/mocker"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./mocker": {
+      "types": "./dist/mocker.d.ts",
+      "default": "./dist/mocker.js"
+    }
+  },
+  "main": "./dist/plugin.js",
+  "module": "./dist/plugin.js",
+  "types": "./dist/plugin.d.ts",
+  "files": [
+    "*.d.ts",
+    "*.mjs",
+    "dist"
+  ],
+  "engines": {
+    "node": "^18.0.0 || >=20.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vitest/spy": "workspace:*",
+    "magic-string": "^0.30.10"
+  },
+  "devDependencies": {
+    "@vitest/utils": "workspace:*",
+    "vite": "^5.2.6"
+  }
+}
