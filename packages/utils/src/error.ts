@@ -45,7 +45,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   if (typeof val.asymmetricMatch === 'function')
     return `${val.toString()} ${format(val.sample)}`
   if (typeof val.toJSON === 'function')
-    return val.toJSON()
+    return serializeError(val.toJSON(), seen)
 
   if (seen.has(val))
     return seen.get(val)
