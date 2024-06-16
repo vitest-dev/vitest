@@ -195,9 +195,7 @@ export function setupBrowserRpc(
                 () => null,
               )
               : sourcemap
-          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(
-            JSON.stringify(combinedMap),
-          ).toString('base64')}`
+          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
         },
         resolveMock(rawId, importer, hasFactory) {
           return project.browserMocker.resolveMock(rawId, importer, hasFactory)
