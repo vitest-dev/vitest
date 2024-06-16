@@ -79,7 +79,7 @@ You can start running tests or benchmarks with `start` method. You can pass an a
 
 ### `provide`
 
-Vitest exposes `provide` method which is a shorthand for `this.getCoreWorkspaceProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
+Vitest exposes `provide` method which is a shorthand for `vitest.getCoreWorkspaceProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
 To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
 
