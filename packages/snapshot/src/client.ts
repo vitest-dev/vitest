@@ -159,7 +159,7 @@ export class SnapshotClient {
       options.filepath ||= filepath
       // resolve and read the raw snapshot file
       rawSnapshot.file = await snapshotState.environment.resolveRawPath(filepath, rawSnapshot.file)
-      rawSnapshot.content = await snapshotState.environment.readSnapshotFile(rawSnapshot.file) || undefined
+      rawSnapshot.content = await snapshotState.environment.readSnapshotFile(rawSnapshot.file) ?? undefined
     }
 
     return this.assert(options)
