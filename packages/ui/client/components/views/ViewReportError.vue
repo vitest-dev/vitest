@@ -1,30 +1,32 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from "vitest";
-import { openInEditor, shouldOpenInEditor } from "~/composables/error";
-import { escapeHtml } from "~/utils/escape";
+import type { ErrorWithDiff } from 'vitest'
+import { openInEditor, shouldOpenInEditor } from '~/composables/error'
+import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
-  root: string;
-  filename?: string;
-  error: ErrorWithDiff;
-}>();
+  root: string
+  filename?: string
+  error: ErrorWithDiff
+}>()
 
 function relative(p: string) {
-  if (p.startsWith(props.root)) return p.slice(props.root.length);
-  return p;
+  if (p.startsWith(props.root)) {
+    return p.slice(props.root.length)
+  }
+  return p
 }
 
-const filter = computed(() => createAnsiToHtmlFilter(isDark.value));
+const filter = computed(() => createAnsiToHtmlFilter(isDark.value))
 
 const isDiffShowable = computed(() => {
-  return !!props.error?.diff;
-});
+  return !!props.error?.diff
+})
 
 const diff = computed(() =>
   props.error.diff
     ? filter.value.toHtml(escapeHtml(props.error.diff))
-    : undefined
-);
+    : undefined,
+)
 </script>
 
 <template>
@@ -37,8 +39,7 @@ const diff = computed(() =>
       data-testid="stack"
     >
       <pre>
- - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre
-      >
+ - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
       <div
         v-if="shouldOpenInEditor(stack.file, filename)"
         v-tooltip.bottom="'Open in Editor'"

@@ -1,93 +1,96 @@
 <script setup lang="ts">
-import type { ComputedRef } from "vue";
-import type { File, Task } from "vitest";
-import { findById, testRunState } from "~/composables/client";
-import { activeFileId } from "~/composables/params";
-import { caseInsensitiveMatch, isSuite } from "~/utils/task";
-import { hasFailedSnapshot } from "@vitest/ws-client";
+import type { ComputedRef } from 'vue'
+import type { File, Task } from 'vitest'
+import { hasFailedSnapshot } from '@vitest/ws-client'
+import { findById } from '~/composables/client'
+import { activeFileId } from '~/composables/params'
+import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
-defineOptions({ inheritAttrs: false });
+defineOptions({ inheritAttrs: false })
 
-// eslint-disable-next-line unused-imports/no-unused-vars
 const {
   tasks,
-  indent = 0,
+  // indent = 0,
   nested = false,
   groupByType = false,
   onItemClick,
 } = defineProps<{
-  tasks: Task[];
-  indent?: number;
-  nested?: boolean;
-  groupByType?: boolean;
-  onItemClick?: (task: Task) => void;
-}>();
+  tasks: Task[]
+  indent?: number
+  nested?: boolean
+  groupByType?: boolean
+  onItemClick?: (task: Task) => void
+}>()
 
 const emit = defineEmits<{
-  (event: "run", files?: File[]): void;
-}>();
+  (event: 'run', files?: File[]): void
+}>()
 
-const search = ref<string>("");
-const searchBox = ref<HTMLInputElement | undefined>();
-const isFiltered = computed(() => search.value.trim() !== "");
+const search = ref<string>('')
+const searchBox = ref<HTMLInputElement | undefined>()
+const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
-  if (!search.value.trim()) return tasks;
+  if (!search.value.trim()) {
+    return tasks
+  }
 
-  return tasks.filter((task) => matchTasks([task], search.value));
-});
+  return tasks.filter(task => matchTasks([task], search.value))
+})
 const filteredTests: ComputedRef<File[]> = computed(() =>
   isFiltered.value
-    ? filtered.value.map((task) => findById(task.id)!).filter(Boolean)
-    : []
-);
+    ? filtered.value.map(task => findById(task.id)!).filter(Boolean)
+    : [],
+)
 
 const failed = computed(() =>
-  filtered.value.filter((task) => task.result?.state === "fail")
-);
+  filtered.value.filter(task => task.result?.state === 'fail'),
+)
 const success = computed(() =>
-  filtered.value.filter((task) => task.result?.state === "pass")
-);
+  filtered.value.filter(task => task.result?.state === 'pass'),
+)
 const skipped = computed(() =>
-  filtered.value.filter((task) => task.mode === "skip" || task.mode === "todo")
-);
+  filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'),
+)
 const running = computed(() =>
   filtered.value.filter(
-    (task) =>
-      !failed.value.includes(task) &&
-      !success.value.includes(task) &&
-      !skipped.value.includes(task)
-  )
-);
+    task =>
+      !failed.value.includes(task)
+      && !success.value.includes(task)
+      && !skipped.value.includes(task),
+  ),
+)
 
-const disableClearSearch = computed(() => search.value === "");
+const disableClearSearch = computed(() => search.value === '')
 
-const throttledRunning = useThrottle(running, 250);
+const throttledRunning = useThrottle(running, 250)
 
 function clearSearch(focus: boolean) {
-  search.value = "";
-  focus && searchBox.value?.focus();
+  search.value = ''
+  focus && searchBox.value?.focus()
 }
 
 function matchTasks(tasks: Task[], search: string): boolean {
-  let result = false;
+  let result = false
 
   for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i];
+    const task = tasks[i]
 
     if (caseInsensitiveMatch(task.name, search)) {
-      result = true;
-      break;
+      result = true
+      break
     }
 
     // walk whole task tree
     if (isSuite(task) && task.tasks) {
-      result = matchTasks(task.tasks, search);
-      if (result) break;
+      result = matchTasks(task.tasks, search)
+      if (result) {
+        break
+      }
     }
   }
 
-  return result;
+  return result
 }
 </script>
 
@@ -115,7 +118,7 @@ function matchTasks(tasks: Task[], search: string): boolean {
           :op="search.length ? '100' : '50'"
           @keydown.esc="clearSearch(false)"
           @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
-        />
+        >
         <IconButton
           v-tooltip.bottom="'Clear search'"
           :disabled="disableClearSearch"
@@ -130,7 +133,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
       <template v-if="groupByType">
         <DetailsPanel v-if="failed.length">
           <template #summary>
-            <div text-red5>FAIL ({{ failed.length }})</div>
+            <div text-red5>
+              FAIL ({{ failed.length }})
+            </div>
           </template>
           <TaskTree
             v-for="task in failed"
@@ -146,7 +151,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
         </DetailsPanel>
         <DetailsPanel v-if="throttledRunning.length">
           <template #summary>
-            <div text-yellow5>RUNNING ({{ throttledRunning.length }})</div>
+            <div text-yellow5>
+              RUNNING ({{ throttledRunning.length }})
+            </div>
           </template>
           <TaskTree
             v-for="task in throttledRunning"
@@ -162,7 +169,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
         </DetailsPanel>
         <DetailsPanel v-if="success.length">
           <template #summary>
-            <div text-green5>PASS ({{ success.length }})</div>
+            <div text-green5>
+              PASS ({{ success.length }})
+            </div>
           </template>
           <TaskTree
             v-for="task in success"
@@ -178,7 +187,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
         </DetailsPanel>
         <DetailsPanel v-if="skipped.length">
           <template #summary>
-            <div class="text-purple5:50">SKIP ({{ skipped.length }})</div>
+            <div class="text-purple5:50">
+              SKIP ({{ skipped.length }})
+            </div>
           </template>
           <TaskTree
             v-for="task in skipped"
@@ -211,7 +222,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
       <!-- empty-state -->
       <template v-if="isFiltered && filtered.length === 0">
         <div flex="~ col" items-center p="x4 y4" font-light>
-          <div op30>No matched test</div>
+          <div op30>
+            No matched test
+          </div>
           <button
             font-light
             op="50 hover:100"
