@@ -155,7 +155,7 @@ function matchState(task: Task, filter: Filter) {
     if ('result' in task) {
       if (filter.success && task.result?.state === 'pass')
         return true
-      if (filter.success && task.result?.state === 'fail')
+      if (filter.failed && task.result?.state === 'fail')
         return true
     }
   }
