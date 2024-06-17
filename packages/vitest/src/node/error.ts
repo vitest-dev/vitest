@@ -76,7 +76,7 @@ export function printError(
     } as any
   }
 
-  // Error may have occured even before the configuration was resolved
+  // Error may have occurred even before the configuration was resolved
   if (!project) {
     printErrorMessage(e, logger)
     return

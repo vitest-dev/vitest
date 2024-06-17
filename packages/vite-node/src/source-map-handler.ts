@@ -175,7 +175,7 @@ function mapSourcePosition(position: OriginalMapping) {
   }
   let sourceMap = sourceMapCache[position.source]
   if (!sourceMap) {
-    // Call the (overrideable) retrieveSourceMap function to get the source map.
+    // Call the (overridable) retrieveSourceMap function to get the source map.
     const urlAndMap = retrieveSourceMap(position.source)
     if (urlAndMap && urlAndMap.map) {
       sourceMap = sourceMapCache[position.source] = {
@@ -300,7 +300,7 @@ function CallSiteToString(this: CallSite) {
   const isMethodCall = !(this.isToplevel() || isConstructor)
   if (isMethodCall) {
     let typeName = this.getTypeName()
-    // Fixes shim to be backward compatable with Node v0 to v4
+    // Fixes shim to be backward compatible with Node v0 to v4
     if (typeName === '[object Object]') {
       typeName = 'null'
     }

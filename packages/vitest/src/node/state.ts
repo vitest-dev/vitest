@@ -104,7 +104,7 @@ export class StateManager {
       const currentFile = existing.find(
         i => i.projectName === file.projectName,
       )
-      // keep logs for the previous file because it should alway be initiated before the collections phase
+      // keep logs for the previous file because it should always be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests
       if (currentFile) {
         file.logs = currentFile.logs
@@ -115,7 +115,7 @@ export class StateManager {
     })
   }
 
-  // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
+  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
   clearFiles(
     _project: { config: { name: string | undefined; root: string } },
     paths: string[] = [],
