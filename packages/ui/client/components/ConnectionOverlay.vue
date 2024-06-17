@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {
+  browserState,
   client,
   isConnected,
   isConnecting,
-  browserState,
-} from "~/composables/client";
+} from '~/composables/client'
 </script>
 
 <template>

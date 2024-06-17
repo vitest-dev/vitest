@@ -13,6 +13,6 @@ defineProps({
     rounded-1
     p-0.5
   >
-    <span block :class="icon" op65 class="dark:op85 hover:op100"></span>
+    <span block :class="icon" op65 class="dark:op85 hover:op100" />
   </button>
 </template>

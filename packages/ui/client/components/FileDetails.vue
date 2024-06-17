@@ -1,96 +1,107 @@
 <script setup lang="ts">
 import {
+  browserState,
   client,
   current,
   currentLogs,
   isReport,
-  browserState,
-  config,
-} from "~/composables/client";
-import type { Params } from "~/composables/params";
-import { viewMode } from "~/composables/params";
-import type { ModuleGraph } from "~/composables/module-graph";
-import { getModuleGraph } from "~/composables/module-graph";
-import { getProjectNameColor } from "~/utils/task";
+} from '~/composables/client'
+import type { Params } from '~/composables/params'
+import { viewMode } from '~/composables/params'
+import type { ModuleGraph } from '~/composables/module-graph'
+import { getModuleGraph } from '~/composables/module-graph'
+import { getProjectNameColor } from '~/utils/task'
 
-const graph = ref<ModuleGraph>({ nodes: [], links: [] });
-const draft = ref(false);
-const hasGraphBeenDisplayed = ref(false);
-const loadingModuleGraph = ref(false);
-const currentFilepath = ref<string | undefined>(undefined);
+const graph = ref<ModuleGraph>({ nodes: [], links: [] })
+const draft = ref(false)
+const hasGraphBeenDisplayed = ref(false)
+const loadingModuleGraph = ref(false)
+const currentFilepath = ref<string | undefined>(undefined)
 
 const graphData = computed(() => {
-  const c = current.value;
-  if (!c || !c.filepath) return;
+  const c = current.value
+  if (!c || !c.filepath) {
+    return
+  }
 
   return {
     filepath: c.filepath,
-    projectName: c.file.projectName || "",
-  };
-});
+    projectName: c.file.projectName || '',
+  }
+})
 
 function open() {
-  const filePath = current.value?.filepath;
-  if (filePath) fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`);
+  const filePath = current.value?.filepath
+  if (filePath) {
+    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
+  }
 }
 
-function changeViewMode(view: Params["view"]) {
-  if (view === "graph") hasGraphBeenDisplayed.value = true;
+function changeViewMode(view: Params['view']) {
+  if (view === 'graph') {
+    hasGraphBeenDisplayed.value = true
+  }
 
-  viewMode.value = view;
+  viewMode.value = view
 }
 const consoleCount = computed(() => {
-  return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0;
-});
+  return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0
+})
 
 function onDraft(value: boolean) {
-  draft.value = value;
+  draft.value = value
 }
 
 async function loadModuleGraph() {
   if (
-    loadingModuleGraph.value ||
-    graphData.value?.filepath === currentFilepath.value
-  )
-    return;
+    loadingModuleGraph.value
+    || graphData.value?.filepath === currentFilepath.value
+  ) {
+    return
+  }
 
-  loadingModuleGraph.value = true;
+  loadingModuleGraph.value = true
 
-  await nextTick();
+  await nextTick()
 
   try {
-    const gd = graphData.value;
-    if (!gd) return;
+    const gd = graphData.value
+    if (!gd) {
+      return
+    }
 
     if (
-      !currentFilepath.value ||
-      gd.filepath !== currentFilepath.value ||
-      (!graph.value.nodes.length && !graph.value.links.length)
+      !currentFilepath.value
+      || gd.filepath !== currentFilepath.value
+      || (!graph.value.nodes.length && !graph.value.links.length)
     ) {
       graph.value = getModuleGraph(
         await client.rpc.getModuleGraph(
           gd.projectName,
           gd.filepath,
-          !!browserState
+          !!browserState,
         ),
-        gd.filepath
-      );
-      currentFilepath.value = gd.filepath;
+        gd.filepath,
+      )
+      currentFilepath.value = gd.filepath
     }
-    changeViewMode("graph");
-  } finally {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    loadingModuleGraph.value = false;
+    changeViewMode('graph')
+  }
+  finally {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    loadingModuleGraph.value = false
   }
 }
 
 debouncedWatch(
   () => [graphData.value, viewMode.value] as const,
   ([, vm]) => {
-    if (vm === "graph") loadModuleGraph();
+    if (vm === 'graph') {
+      loadModuleGraph()
+    }
   },
-  { debounce: 100, immediate: true }
-);
+  { debounce: 100, immediate: true },
+)
 </script>
 
 <template>
@@ -137,7 +148,7 @@ debouncedWatch(
           data-testid="btn-report"
           @click="changeViewMode(null)"
         >
-          <span class="block w-1.4em h-1.4em i-carbon:report"></span>
+          <span class="block w-1.4em h-1.4em i-carbon:report" />
           Report
         </button>
         <button
@@ -150,11 +161,11 @@ debouncedWatch(
           <span
             v-if="loadingModuleGraph"
             class="block w-1.4em h-1.4em i-carbon:circle-dash animate-spin animate-2s"
-          ></span>
+          />
           <span
             v-else
             class="block w-1.4em h-1.4em i-carbon:chart-relationship"
-          ></span>
+          />
           Module Graph
         </button>
         <button
@@ -165,7 +176,7 @@ debouncedWatch(
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
-          <span class="block w-1.4em h-1.4em i-carbon:code"></span>
+          <span class="block w-1.4em h-1.4em i-carbon:code" />
           {{ draft ? "*&#160;" : "" }}Code
         </button>
         <button
@@ -174,11 +185,11 @@ debouncedWatch(
           class="flex items-center gap-2"
           :class="{
             'tab-button-active': viewMode === 'console',
-            op20: viewMode !== 'console' && consoleCount === 0,
+            'op20': viewMode !== 'console' && consoleCount === 0,
           }"
           @click="changeViewMode('console')"
         >
-          <span class="block w-1.4em h-1.4em i-carbon:terminal-3270"></span>
+          <span class="block w-1.4em h-1.4em i-carbon:terminal-3270" />
           Console ({{ consoleCount }})
         </button>
       </div>

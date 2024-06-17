@@ -2,6 +2,7 @@ import antfu, { GLOB_SRC } from '@antfu/eslint-config'
 
 export default antfu(
   {
+    vue: true,
     // Disable tests rules because we need to test with various setup
     test: false,
     // This replaces the old `.gitignore`

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Task } from "vitest";
-import { nextTick } from "vue";
-import { runFiles, client } from "~/composables/client";
-import { caseInsensitiveMatch } from "~/utils/task";
-import { openedTreeItems, coverageEnabled } from "~/composables/navigation";
+import type { Task } from 'vitest'
+import { nextTick } from 'vue'
+import { client, runFiles } from '~/composables/client'
+import { caseInsensitiveMatch } from '~/utils/task'
+import { coverageEnabled, openedTreeItems } from '~/composables/navigation'
 
-defineOptions({ inheritAttrs: false });
+defineOptions({ inheritAttrs: false })
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -16,41 +16,42 @@ const {
   onItemClick,
   opened = false,
 } = defineProps<{
-  task: Task;
-  failedSnapshot: boolean;
-  indent?: number;
-  opened?: boolean;
-  nested?: boolean;
-  search?: string;
-  onItemClick?: (task: Task) => void;
-}>();
+  task: Task
+  failedSnapshot: boolean
+  indent?: number
+  opened?: boolean
+  nested?: boolean
+  search?: string
+  onItemClick?: (task: Task) => void
+}>()
 
 const isOpened = computed(
-  () => opened || openedTreeItems.value.includes(task.id)
-);
+  () => opened || openedTreeItems.value.includes(task.id),
+)
 
 function toggleOpen() {
   if (isOpened.value) {
-    const tasksIds = "tasks" in task ? task.tasks.map((t) => t.id) : [];
+    const tasksIds = 'tasks' in task ? task.tasks.map(t => t.id) : []
     openedTreeItems.value = openedTreeItems.value.filter(
-      (id) => id !== task.id && !tasksIds.includes(id)
-    );
-  } else {
-    openedTreeItems.value = [...openedTreeItems.value, task.id];
+      id => id !== task.id && !tasksIds.includes(id),
+    )
+  }
+  else {
+    openedTreeItems.value = [...openedTreeItems.value, task.id]
   }
 }
 
 async function onRun() {
-  onItemClick?.(task);
+  onItemClick?.(task)
   if (coverageEnabled.value) {
-    disableCoverage.value = true;
-    await nextTick();
+    disableCoverage.value = true
+    await nextTick()
   }
-  await runFiles([task.file]);
+  await runFiles([task.file])
 }
 
 function updateSnapshot() {
-  return client.rpc.updateSnapshot(task);
+  return client.rpc.updateSnapshot(task.file)
 }
 </script>
 
