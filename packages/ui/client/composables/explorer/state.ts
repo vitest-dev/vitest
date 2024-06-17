@@ -47,17 +47,7 @@ export const isFilteredByStatus = computed(() => {
 export const filteredFiles = shallowRef<File[]>([])
 export const initialized = ref(false)
 export const shouldShowExpandAll = computed(() => {
-  // openedTreeItems will be empty when expanding all
-  // expand all will be enabled when (check tree.ts::expandCollapseAll):
-  // - no openedTreeItems and expandAll = true
-  // - or expandAll = false (openedTreeItems can be empty or have entries, filteredFiles doesn't matter here)
-  // - or no openedTreeItems and expandAll = false (filtered items)
-  // - or openedTreeItems and expandAll = undefined (filtered items) **remove**
-
-  // const noItems = openedTreeItems.value.length === 0
   return treeFilter.value.expandAll !== false
-
-  // return (noItems && expandAll === false) || expandAll === false/* || (!noItems && expandAll === undefined) */
 })
 export const testsTotal = computed<FilteredTests>(() => {
   const filtered = isFiltered.value

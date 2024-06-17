@@ -73,11 +73,6 @@ export function* filterTask(
     filesToShow,
   )].reverse()
 
-  // if (nodesToExpand.size === 0 && treeFilter.value.expandAll !== false) {
-  //   yield * entries
-  //   return
-  // }
-
   // we need to remove any child added when filtering: we traverse the full tree
   const parents = new Set(
     entries.filter(e => isParentNode(e) && e.expanded).map(e => e.id),

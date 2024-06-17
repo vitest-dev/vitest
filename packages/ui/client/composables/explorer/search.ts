@@ -44,13 +44,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     clearSearch(true)
   }
 
-  /* const defaultShowOnlyTests: TreeTaskFilter = {
-    matcher: node => matchTask(client.state.idMap.get(node.id) as Task),
-    showOnlyTests: false,
-  }
-
-  const taskId = ref<ReturnType<typeof setTimeout>>() */
-
   function updateFilterStorage(
     searchValue: string,
     failedValue: boolean,
@@ -77,14 +70,8 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
       filter.onlyTests,
     ] as const,
     ([search, failed, success, skipped, onlyTests]) => {
-      // clearTimeout(taskId.value)
-      // defaultShowOnlyTests.showOnlyTests = onlyTests
       updateFilterStorage(search, failed, success, skipped, onlyTests)
       explorerTree.filterNodes()
-      // taskId.value = explorerTree.buildNavigationEntries(
-      //   !shouldShowExpandAll.value,
-      //   search.length > 0 || failed || skipped || success ? defaultShowOnlyTests : undefined,
-      // )
     },
     { flush: 'post' },
   )
@@ -109,40 +96,3 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     uiEntries,
   }
 }
-/*
-function matchState(task: Task) {
-  if (successFilter.value || failedFilter.value) {
-    if ('result' in task) {
-      if (successFilter.value && task.result?.state === 'pass')
-        return true
-      if (failedFilter.value && task.result?.state === 'fail')
-        return true
-    }
-  }
-
-  if (skipFilter.value && 'mode' in task)
-    return task.mode === 'skip' || task.mode === 'todo'
-
-  return false
-}
-
-function matchTask(task: Task) {
-  // if (!task)
-  //   return false
-
-  const match = search.value.length === 0 || caseInsensitiveMatch(task.name, search.value)
-
-  // search and filter will apply together
-  if (match) {
-    if (successFilter.value || failedFilter.value || skipFilter.value) {
-      if (matchState(task))
-        return true
-    }
-    else {
-      return true
-    }
-  }
-
-  return false
-}
-*/
