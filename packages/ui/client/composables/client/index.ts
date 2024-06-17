@@ -26,7 +26,7 @@ export const client = (function createVitestClient() {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
-        onTaskUpdate(packs: TaskResultPack[]) {
+        onTaskUpdate(_packs: TaskResultPack[]) {
           // eslint-disable-next-line no-console
           console.log('onTaskUpdate')
           if (testRunState.value === 'idle' && !onTaskUpdateCalled.value) {
