@@ -181,7 +181,7 @@ describe('dom related activity', () => {
 
     await userEvent.dragAndDrop(source, target)
 
-    expect(target.textContent).toBe('Drag me')
+    await expect.poll(() => target.textContent).toBe('Drag me')
   })
 })
 
