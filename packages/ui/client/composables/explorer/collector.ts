@@ -111,18 +111,17 @@ function doRunFilter(
     runFilter(rootTasks, nodes, search, filter)
   })
 
-  // expand all nodes
-  queueMicrotask(() => {
-    if (applyExpandNodes) {
+  if (applyExpandNodes) {
+    // expand all nodes
+    queueMicrotask(() => {
       expandNodesOnEndRun(ids, nodes, end)
       if (resetExpandAll || filtered)
         treeFilter.value.expandAll = false
-    }
-  })
+    })
 
-  // refresh explorer
-  if (applyExpandNodes)
+    // refresh explorer
     queueMicrotask(() => runFilter(rootTasks, nodes, search, filter))
+  }
 }
 
 function createOrUpdateEntry(tasks: Task[], nodes: Map<string, UITaskTreeNode>) {
