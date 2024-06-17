@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import type {Task, TaskState} from '@vitest/runner'
 import { nextTick } from 'vue'
-import {runFiles, client, findById} from '~/composables/client'
+import { runFiles, client, } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
-// import { useSearchTasks } from '~/composables/search'
-// import {UISuite, UITest} from '~/composables/explorer/types'
-// import { collapseUIEntry, expandUIEntry } from '~/composables/explorer'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -35,17 +31,12 @@ const {
   projectName?: string
   projectNameColor: string
   onItemClick?: (task: Task) => void
-  // onExpanded?: (id: string, height: number, fromChild: boolean) => void
-  // onCollapsed?: (id: string, height: number, fromChild: boolean) => void
 }>()
-
-// defineOptions({ inheritAttrs: false })
 
 function toggleOpen() {
   if (!expandable)
     return
 
-  console.log(`toggleOpen[${taskId}]`, opened, expandable)
   if (opened) {
     explorerTree.collapseNode(taskId)
   }
