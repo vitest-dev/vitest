@@ -29,7 +29,7 @@ function createChildProcessChannel(project: WorkspaceProject) {
     postMessage: message => emitter.emit(events.response, message),
   }
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),

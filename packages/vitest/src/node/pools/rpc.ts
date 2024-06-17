@@ -8,8 +8,13 @@ import type { WorkspaceProject } from '../workspace'
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
 
-export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
+interface MethodsOptions {
+  cacheFs?: boolean
+}
+
+export function createMethodsRPC(project: WorkspaceProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.ctx
+  const cacheFs = options.cacheFs ?? false
   return {
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
@@ -30,7 +35,7 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     async fetch(id, transformMode) {
       const result = await project.vitenode.fetchResult(id, transformMode)
       const code = result.code
-      if (result.externalize) {
+      if (result.externalize || !cacheFs) {
         return result
       }
       if ('id' in result && typeof result.id === 'string') {
