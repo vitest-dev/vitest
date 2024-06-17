@@ -2,8 +2,7 @@ import type { File, Task } from '@vitest/runner'
 import { isAtomTest } from '@vitest/runner/utils'
 import type { FileTreeNode, ParentTreeNode, SuiteTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
 import { client } from '~/composables/client'
-import { getProjectNameColor, isTaskDone, isSuite as isTaskSuite } from '~/utils/task'
-import { explorerTree } from '~/composables/explorer/index'
+import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
@@ -25,9 +24,9 @@ export function createOrUpdateFileNode(
   let fileNode = nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
-    if (explorerTree.isUITaskDone(fileNode)) {
-      return
-    }
+    // if (explorerTree.isUITaskDone(fileNode)) {
+    //   return
+    // }
 
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
@@ -67,9 +66,9 @@ export function createOrUpdateFileNode(
     }
   }
 
-  if (isTaskDone(file)) {
-    explorerTree.taskDone(fileNode.id)
-  }
+  // if (isTaskDone(file)) {
+  //   explorerTree.taskDone(fileNode.id)
+  // }
 }
 
 export function createOrUpdateSuiteTask(
@@ -78,7 +77,7 @@ export function createOrUpdateSuiteTask(
   all: boolean,
 ) {
   const node = nodes.get(id)
-  if (!node || !isParentNode(node) || explorerTree.isUITaskDone(node)) {
+  if (!node || !isParentNode(node)/* || explorerTree.isUITaskDone(node) */) {
     return
   }
 
@@ -91,9 +90,9 @@ export function createOrUpdateSuiteTask(
   // update the node
   createOrUpdateNode(node.parentId, task, nodes, all && task.tasks.length > 0)
 
-  if (isTaskDone(task)) {
-    explorerTree.taskDone(task.id)
-  }
+  // if (isTaskDone(task)) {
+  //   explorerTree.taskDone(task.id)
+  // }
 
   return [node, task] as const
 }
@@ -103,7 +102,7 @@ export function createOrUpdateNodeTask(
   nodes: Map<string, UITaskTreeNode>,
 ) {
   const node = nodes.get(id)
-  if (!node || explorerTree.isUITaskDone(node)) {
+  if (!node/* || explorerTree.isUITaskDone(node) */) {
     return
   }
 
@@ -127,9 +126,9 @@ export function createOrUpdateNode(
   if (node) {
     taskNode = nodes.get(task.id) as UITaskTreeNode | undefined
     if (taskNode) {
-      if (explorerTree.isUITaskDone(taskNode)) {
+      /* if (explorerTree.isUITaskDone(taskNode)) {
         return
-      }
+      } */
 
       taskNode.mode = task.mode
       taskNode.duration = task.result?.duration
@@ -178,8 +177,8 @@ export function createOrUpdateNode(
       }
     }
 
-    if (isTaskDone(task)) {
+    /* if (isTaskDone(task)) {
       explorerTree.taskDone(task.id)
-    }
+    } */
   }
 }

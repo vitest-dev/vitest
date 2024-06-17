@@ -1,6 +1,6 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig } from 'vitest'
+import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
@@ -26,7 +26,7 @@ export const client = (function createVitestClient() {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
-        onTaskUpdate() {
+        onTaskUpdate(packs: TaskResultPack[]) {
           // eslint-disable-next-line no-console
           console.log('onTaskUpdate')
           if (testRunState.value === 'idle' && !onTaskUpdateCalled.value) {
@@ -83,7 +83,7 @@ function clearResults(useFiles: File[]) {
     delete f.result
     getTasks(f).forEach((i) => {
       delete i.result
-      explorerTree.removeTaskDone(i.id)
+      // explorerTree.removeTaskDone(i.id)
       if (map.has(i.id)) {
         map.get(i.id)!.state = undefined
       }
