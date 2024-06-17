@@ -51,6 +51,8 @@ export class ExplorerTree {
       failedSnapshotEnabled: false,
     }),
   ) {
+    // will run runCollect every ~100ms: 1000/10 = 100ms
+    // (beware increasing fpsLimit, it can be too much for the browser)
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
