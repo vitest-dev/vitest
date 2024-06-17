@@ -107,7 +107,11 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_fill', xpath, text, options)
   },
-  // TODO: add dragTo
+  dragAndDrop(source: Element, target: Element, options = {}) {
+    const sourceXpath = convertElementToXPath(source)
+    const targetXpath = convertElementToXPath(target)
+    return triggerCommand('__vitest_dragAndDrop', sourceXpath, targetXpath, options)
+  },
 }
 
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {

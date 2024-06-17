@@ -307,6 +307,12 @@ export const userEvent: {
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
   fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
+  /**
+   * Drags a source element on top of the target element. This API is not supported by "preview" provider.
+   * @see {@link https://playwright.dev/docs/api/class-frame#frame-drag-and-drop} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
+   */
+  dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
 }
 
 /**
@@ -657,6 +663,36 @@ References:
 - [Playwright `locator.hover` API](https://playwright.dev/docs/api/class-locator#locator-hover)
 - [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
 - [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
+
+### userEvent.dragAndDrop
+
+- **Type:** `(source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>`
+
+Drags the source element on top of the target element. Don't forget that the `source` element has to have the `draggable` attribute set to `true`.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+import '@testing-library/jest-dom' // adds support for "toHaveTextContent"
+
+test('drag and drop works', async () => {
+  const source = screen.getByRole('img', { name: /logo/ })
+  const target = screen.getByTestId('logo-target')
+
+  await userEvent.dragAndDrop(source, target)
+
+  expect(target).toHaveTextContent('Logo is processed')
+})
+```
+
+::: warning
+This API is not supported by the `preview` provider.
+:::
+
+References:
+
+- [Playwright `frame.dragAndDrop` API](https://playwright.dev/docs/api/class-frame#frame-drag-and-drop)
+- [WebdriverIO `element.dragAndDrop` API](https://webdriver.io/docs/api/element/dragAndDrop/)
 
 ## Commands
 

@@ -28,6 +28,7 @@ type PWDoubleClickOptions = Parameters<Page['dblclick']>[1]
 type PWFillOptions = Parameters<Page['fill']>[2]
 type PWScreenshotOptions = Parameters<Page['screenshot']>[0]
 type PWSelectOptions = Parameters<Page['selectOption']>[2]
+type PWDragAndDropOptions = Parameters<Page['dragAndDrop']>[2]
 
 declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
@@ -35,6 +36,7 @@ declare module '@vitest/browser/context' {
   export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
   export interface UserEventFillOptions extends PWFillOptions {}
   export interface UserEventSelectOptions extends PWSelectOptions {}
+  export interface UserEventDragOptions extends UserEventDragAndDropOptions {}
 
   export interface ScreenshotOptions extends PWScreenshotOptions {}
 }

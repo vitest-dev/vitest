@@ -96,6 +96,9 @@ function getUserEvent(provider: BrowserProvider) {
   fill: async (element, text) => {
     await __vitest_user_event__.clear(element)
     await __vitest_user_event__.type(element, text)
+  },
+  dragAndDrop: async () => {
+    throw new Error('Provider "preview" does not support dragging elements')
   }
 }`
 }

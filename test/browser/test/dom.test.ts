@@ -126,6 +126,39 @@ describe('dom related activity', () => {
     await userEvent.keyboard('Hello')
     expect(input.value).toBe('Hello')
   })
+
+  test('drag and drop works', async () => {
+    const source = document.createElement('div')
+    source.textContent = 'Drag me'
+    source.style.width = '100px'
+    source.style.height = '100px'
+    source.style.background = 'red'
+    source.draggable = true
+
+    let dragData = ''
+
+    source.addEventListener('dragstart', () => {
+      dragData = source.textContent
+    })
+
+    const target = document.createElement('div')
+    target.style.width = '100px'
+    target.style.height = '100px'
+    target.style.background = 'blue'
+
+    target.addEventListener('dragover', () => {
+      target.textContent = dragData
+    })
+
+    document.body.appendChild(source)
+    document.body.appendChild(target)
+
+    expect(target.textContent).toBe('')
+
+    await userEvent.dragAndDrop(source, target)
+
+    expect(target.textContent).toBe('Drag me')
+  })
 })
 
 describe.each([

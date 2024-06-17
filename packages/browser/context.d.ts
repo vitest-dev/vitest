@@ -148,6 +148,12 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
   fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
+  /**
+   * Drags a source element on top of the target element. This API is not supported by "preview" provider.
+   * @see {@link https://playwright.dev/docs/api/class-frame#frame-drag-and-drop} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
+   */
+  dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
 }
 
 export interface UserEventFillOptions {}
@@ -155,6 +161,7 @@ export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
 export interface UserEventDoubleClickOptions {}
+export interface UserEventDragAndDropOptions {}
 
 export interface UserEventTabOptions {
   shift?: boolean

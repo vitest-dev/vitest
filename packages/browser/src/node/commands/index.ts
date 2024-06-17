@@ -5,6 +5,7 @@ import { fill } from './fill'
 import { selectOptions } from './select'
 import { tab } from './tab'
 import { keyboard } from './keyboard'
+import { dragAndDrop } from './drag'
 import {
   readFile,
   removeFile,
@@ -25,4 +26,5 @@ export default {
   __vitest_tab: tab,
   __vitest_keyboard: keyboard,
   __vitest_selectOptions: selectOptions,
+  __vitest_dragAndDrop: dragAndDrop,
 }
