@@ -53,7 +53,8 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "picocolors": "^1.0.1",
-    "sirv": "^2.0.4"
+    "sirv": "^2.0.4",
+    "vue-virtual-scroller": "2.0.0-beta.8"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
