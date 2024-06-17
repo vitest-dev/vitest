@@ -2,10 +2,13 @@ import type { File, Task } from '@vitest/runner'
 import { isAtomTest } from '@vitest/runner/utils'
 import type { FileTreeNode, ParentTreeNode, SuiteTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
 import { client } from '~/composables/client'
-import { isSuite as isTaskSuite } from '~/utils/task'
+import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
+}
+export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
+  return node.type === 'suite'
 }
 
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
@@ -43,6 +46,7 @@ export function createOrUpdateFileNode(
       duration: file.result?.duration,
       filepath: file.filepath,
       projectName: file.projectName || '',
+      projectNameColor: getProjectNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -108,6 +112,8 @@ export function createOrUpdateNode(
       taskNode.mode = task.mode
       taskNode.duration = task.result?.duration
       taskNode.state = task.result?.state
+      if (isSuiteNode(taskNode))
+        taskNode.typecheck = task.meta?.typecheck
     }
     else {
       if (isAtomTest(task)) {
@@ -130,6 +136,7 @@ export function createOrUpdateNode(
           parentId,
           name: task.name,
           mode: task.mode,
+          typecheck: task.meta?.typecheck,
           type: 'suite',
           expandable: true,
           expanded: false,

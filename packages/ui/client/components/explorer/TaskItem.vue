@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { getProjectNameColor } from '~/utils/task'
-import { activeFileId } from '~/composables/params'
 import { isReport } from '~/constants'
 import { client } from '~/composables/client'
-import type { Task } from '@vitest/runner'
+import type { Task, TaskState } from '@vitest/runner'
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { TaskTreeNodeType } from '~/composables/explorer/types'
 
 const props = defineProps<{
   taskId: string
+  name: string
+  typecheck?: boolean
+  duration?: number
+  projectName?: string
+  projectNameColor: string
+  type: TaskTreeNodeType
+  state?: TaskState
   opened: boolean
   current: boolean
 }>()
@@ -23,11 +29,6 @@ const task = computed(() => {
 })
 
 const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
-
-const duration = computed(() => {
-  const duration = task.value?.result?.duration || 0
-  return Math.round(duration)
-})
 </script>
 
 <template>
@@ -40,27 +41,27 @@ const duration = computed(() => {
     cursor-pointer
     hover="bg-active"
     class="item-wrapper"
-    :aria-label="task.name"
+    :aria-label="name"
     :data-current="current"
   >
-    <div v-if="task.type === 'suite'" pr-1>
+    <div v-if="type === 'suite'" pr-1>
       <div :class="opened ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right op20'"  op20 />
     </div>
     <StatusIcon :task="task" mr-2 />
-    <div v-if="task.type === 'suite' && task.meta.typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
-    <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''" overflow-hidden>
+    <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
+    <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>
         <!-- only show [] in files view -->
-        <span v-if="'filepath' in task && task.projectName" :style="{ color: getProjectNameColor(task.file.projectName) }">
-          [{{ task.file.projectName }}]
+        <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
+          [{{ projectName }}]
         </span>
-        {{ task.name }}
+        {{ name }}
       </span>
       <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div v-if="task.type === 'suite' && 'filepath' in task" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+    <div v-if="type === 'file'" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
       <IconAction
         v-if="!isReport && failedSnapshot"
         v-tooltip.bottom="'Fix failed snapshot(s)'"

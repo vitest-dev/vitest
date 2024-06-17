@@ -1,17 +1,4 @@
-import type { Custom, RunMode, TaskState, Test } from '@vitest/runner'
-
-export type TreeTaskMatcher = (node: UITaskTreeNode | Custom | Test) => boolean
-
-export interface TreeTaskFilter {
-  /**
-   * When this flag is true, only tests that match the filter are shown in the tree.
-   * Any parent nodes that contain at least one child that matches the filter are also shown.
-   * If this flag is false, all parent nodes are shown if at least one child matches the filter.
-   * **NOTE**: this flag is ignored if `matcher` is not provided.
-   */
-  showOnlyTests?: boolean
-  matcher?: TreeTaskMatcher
-}
+import type { RunMode, TaskState } from '@vitest/runner'
 
 export type FilterResult = [match: boolean, node: UITaskTreeNode]
 
@@ -56,13 +43,15 @@ export interface ParentTreeNode extends UITaskTreeNode {
 
 export interface SuiteTreeNode extends UITaskTreeNode {
   type: 'suite'
+  typecheck?: boolean
   tasks: UITaskTreeNode[]
 }
 
 export interface FileTreeNode extends ParentTreeNode {
   type: 'file'
   filepath: string
-  projectName: string
+  projectName?: string
+  projectNameColor: string
   collectDuration?: number
   setupDuration?: number
   environmentLoad?: number

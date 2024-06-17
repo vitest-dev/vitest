@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task } from '@vitest/runner'
+import type {Task, TaskState} from '@vitest/runner'
 import { nextTick } from 'vue'
 import {runFiles, client, findById} from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
@@ -12,21 +12,28 @@ import { explorerTree } from '~/composables/explorer'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
-  indent,
   taskId,
+  indent,
+  duration,
   current,
   opened,
   expandable,
   type,
   onItemClick,
 } = defineProps<{
-  indent: number
   taskId: string
+  name: string
+  indent: number
+  typecheck?: boolean
+  duration?: number
+  state?: TaskState
   current: boolean
   type: TaskTreeNodeType
   opened: boolean
   expandable: boolean
   search?: string
+  projectName?: string
+  projectNameColor: string
   onItemClick?: (task: Task) => void
   // onExpanded?: (id: string, height: number, fromChild: boolean) => void
   // onCollapsed?: (id: string, height: number, fromChild: boolean) => void
@@ -45,7 +52,6 @@ function toggleOpen() {
   else {
     explorerTree.expandNode(taskId)
   }
-  // explorerTree.toggleExpand(taskId)
 }
 
 async function onRun(task: Task) {
@@ -87,6 +93,13 @@ useResizeObserver(containerRef, (entries) => {
     <TaskItem
       :task-id="taskId"
       :opened="opened"
+      :state="state"
+      :duration="duration"
+      :type="type"
+      :name="name"
+      :typecheck="typecheck"
+      :project-name="projectName"
+      :project-name-color="projectNameColor"
       :current="current"
       @click="toggleOpen()"
       @run="task => onRun(task)"
