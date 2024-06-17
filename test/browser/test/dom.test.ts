@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { page, server, userEvent } from '@vitest/browser/context'
 import { createNode } from '#src/createNode'
 import '../src/button.css'
@@ -159,20 +159,17 @@ describe('dom related activity', () => {
     source.style.background = 'red'
     source.draggable = true
 
-    let dragData = ''
+    const dragstart = vi.fn()
+    const dragover = vi.fn()
 
-    source.addEventListener('dragstart', () => {
-      dragData = source.textContent
-    })
+    source.addEventListener('dragstart', dragstart)
 
     const target = document.createElement('div')
     target.style.width = '100px'
     target.style.height = '100px'
     target.style.background = 'blue'
 
-    target.addEventListener('dragover', () => {
-      target.textContent = dragData
-    })
+    target.addEventListener('dragover', dragover)
 
     document.body.appendChild(source)
     document.body.appendChild(target)
@@ -181,7 +178,8 @@ describe('dom related activity', () => {
 
     await userEvent.dragAndDrop(source, target)
 
-    await expect.poll(() => target.textContent).toBe('Drag me')
+    await expect.poll(() => dragstart).toHaveBeenCalled()
+    await expect.poll(() => dragover).toHaveBeenCalled()
   })
 })
 
