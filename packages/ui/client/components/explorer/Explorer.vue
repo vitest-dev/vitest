@@ -21,6 +21,7 @@ const emit = defineEmits<{
 const searchBox = ref<HTMLInputElement | undefined>()
 
 const {
+  initialized,
   filter,
   search,
   disableFilter,
@@ -134,7 +135,7 @@ useResizeObserver(testExplorerRef, (entries) => {
         </template>
         <!-- empty-state -->
         <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
-          <div flex="~ col" items-center p="x4 y4" font-light>
+          <div v-show="initialized" flex="~ col" items-center p="x4 y4" font-light>
             <div op30>
               No matched test
             </div>
@@ -195,8 +196,11 @@ useResizeObserver(testExplorerRef, (entries) => {
             <template #default="{ item }">
               <ExplorerItem
                 :task-id="item.id"
-                :entry="item"
-                :search="search"
+                :expandable="item.expandable"
+                :type="item.type"
+                :current="activeFileId === item.id"
+                :indent="item.indent"
+                :opened="item.expanded"
                 class="h-28px m-0 p-0"
                 :class="activeFileId === item.id ? 'bg-active' : ''"
                 :on-item-click="onItemClick"

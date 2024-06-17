@@ -13,6 +13,8 @@ export interface TreeTaskFilter {
   matcher?: TreeTaskMatcher
 }
 
+export type FilterResult = [match: boolean, node: UITaskTreeNode]
+
 export interface FilteredTests {
   failed: number
   success: number
@@ -36,7 +38,10 @@ export interface RootTreeNode extends TaskTreeNode {
   tasks: FileTreeNode[]
 }
 
+export type TaskTreeNodeType = 'file' | 'suite' | 'test' | 'custom'
+
 export interface UITaskTreeNode extends TaskTreeNode {
+  type: TaskTreeNodeType
   name: string
   parentId: string
   mode: RunMode
@@ -49,7 +54,13 @@ export interface ParentTreeNode extends UITaskTreeNode {
   tasks: UITaskTreeNode[]
 }
 
+export interface SuiteTreeNode extends UITaskTreeNode {
+  type: 'suite'
+  tasks: UITaskTreeNode[]
+}
+
 export interface FileTreeNode extends ParentTreeNode {
+  type: 'file'
   filepath: string
   projectName: string
   collectDuration?: number
@@ -63,4 +74,29 @@ export interface Filter {
   success: boolean
   skipped: boolean
   onlyTests: boolean
+}
+
+export interface TreeFilterState extends Filter {
+  search: string
+  expandAll?: boolean
+}
+
+export interface CollectorInfo {
+  files: number
+  time: string
+  filesFailed: number
+  filesSuccess: number
+  filesIgnore: number
+  filesRunning: number
+  filesSkipped: number
+  filesTodo: number
+  filesSnapshotFailed: number
+  testsFailed: number
+  testsSuccess: number
+  testsIgnore: number
+  testsSkipped: number
+  testsTodo: number
+  totalTests: number
+  failedSnapshot: boolean
+  failedSnapshotEnabled: boolean
 }

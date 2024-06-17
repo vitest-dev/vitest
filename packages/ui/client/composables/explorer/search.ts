@@ -1,21 +1,16 @@
-import type { Task } from '@vitest/runner'
 import type { Ref } from 'vue'
 import {
-  allExpanded,
-  failedFilter,
   filter,
   filteredFiles,
+  initialized,
   isFiltered,
   isFilteredByStatus,
   search,
-  skipFilter,
-  successFilter,
   testsTotal,
+  treeFilter,
+  uiEntries,
 } from './state'
-import type { TreeTaskFilter } from '~/composables/explorer/types'
-import { taskTree, uiEntries } from '~/composables/explorer/tree'
-import { caseInsensitiveMatch } from '~/utils/task'
-import { client } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
 
 export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableFilter = computed(() => {
@@ -49,30 +44,57 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     clearSearch(true)
   }
 
-  const defaultShowOnlyTests: TreeTaskFilter = {
+  /* const defaultShowOnlyTests: TreeTaskFilter = {
     matcher: node => matchTask(client.state.idMap.get(node.id) as Task),
     showOnlyTests: false,
   }
 
-  const taskId = ref<ReturnType<typeof setTimeout>>()
+  const taskId = ref<ReturnType<typeof setTimeout>>() */
 
-  watch(() => [
-    debouncedSearch.value.length > 0,
-    filter.failed,
-    filter.success,
-    filter.skipped,
-    filter.onlyTests,
-    allExpanded.value,
-  ], ([search, failed, success, skipped, onlyTests, expandAllFlag]) => {
-    clearTimeout(taskId.value)
-    defaultShowOnlyTests.showOnlyTests = onlyTests
-    taskId.value = taskTree.buildNavigationEntries(
-      expandAllFlag,
-      search || failed || skipped || success ? defaultShowOnlyTests : undefined,
-    )
-  }, { flush: 'post' })
+  function updateFilterStorage(
+    searchValue: string,
+    failedValue: boolean,
+    successValue: boolean,
+    skippedValue: boolean,
+    onlyTestsValue: boolean,
+  ) {
+    if (!initialized.value)
+      return
+
+    treeFilter.value.search = searchValue?.trim() ?? ''
+    treeFilter.value.failed = failedValue
+    treeFilter.value.success = successValue
+    treeFilter.value.skipped = skippedValue
+    treeFilter.value.onlyTests = onlyTestsValue
+  }
+
+  watch(
+    () => [
+      debouncedSearch.value,
+      filter.failed,
+      filter.success,
+      filter.skipped,
+      filter.onlyTests,
+    ] as const,
+    ([search, failed, success, skipped, onlyTests]) => {
+      // clearTimeout(taskId.value)
+      // defaultShowOnlyTests.showOnlyTests = onlyTests
+      updateFilterStorage(search, failed, success, skipped, onlyTests)
+      explorerTree.filterNodes()
+      // taskId.value = explorerTree.buildNavigationEntries(
+      //   !shouldShowExpandAll.value,
+      //   search.length > 0 || failed || skipped || success ? defaultShowOnlyTests : undefined,
+      // )
+    },
+    { flush: 'post' },
+  )
+
+  onMounted(() => {
+    nextTick(() => (initialized.value = true))
+  })
 
   return {
+    initialized,
     filter,
     search,
     disableFilter,
@@ -87,7 +109,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     uiEntries,
   }
 }
-
+/*
 function matchState(task: Task) {
   if (successFilter.value || failedFilter.value) {
     if ('result' in task) {
@@ -105,6 +127,9 @@ function matchState(task: Task) {
 }
 
 function matchTask(task: Task) {
+  // if (!task)
+  //   return false
+
   const match = search.value.length === 0 || caseInsensitiveMatch(task.name, search.value)
 
   // search and filter will apply together
@@ -120,3 +145,4 @@ function matchTask(task: Task) {
 
   return false
 }
+*/

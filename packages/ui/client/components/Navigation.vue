@@ -15,8 +15,8 @@ import { client, findById, runFiles } from '~/composables/client'
 import { isDark, toggleDark } from '~/composables'
 import { isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
-import { taskTree } from '~/composables/explorer/tree'
-import { allExpanded } from '~/composables/explorer/state'
+import { explorerTree } from '~/composables/explorer'
+import { initialized, shouldShowExpandAll} from '~/composables/explorer/state'
 
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
@@ -46,17 +46,11 @@ async function onRunAll(files?: File[]) {
 }
 
 function collapseTests() {
-  allExpanded.value = false
-  // openedTreeItems.value = []
+  explorerTree.collapseAllNodes()
 }
 
 function expandTests() {
-  allExpanded.value = true
-  /*files.value.forEach(file => {
-    if (!openedTreeItems.value.includes(file.id)) {
-      openedTreeItems.value.push(file.id)
-    }
-  })*/
+  explorerTree.expandAllNodes()
 }
 </script>
 
@@ -68,15 +62,17 @@ function expandTests() {
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
         <IconButton
-          v-show="allExpanded"
+          v-show="!shouldShowExpandAll"
           v-tooltip.bottom="'Collapse tests'"
           title="Collapse tests"
+          :disabled="!initialized"
           icon="i-carbon:collapse-all"
           @click="collapseTests()"
         />
         <IconButton
-          v-show="!allExpanded"
+          v-show="shouldShowExpandAll"
           v-tooltip.bottom="'Expand tests'"
+          :disabled="!initialized"
           title="Expand tests"
           icon="i-carbon:expand-all"
           @click="expandTests()"
@@ -118,11 +114,11 @@ function expandTests() {
           @click="showCoverage()"
         />
         <IconButton
-          v-if="(taskTree.summary.failedSnapshot && !isReport)"
+          v-if="(explorerTree.summary.failedSnapshot && !isReport)"
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon:result-old"
-          :disabled="!taskTree.summary.failedSnapshotEnabled"
-          @click="taskTree.summary.failedSnapshotEnabled && updateSnapshot()"
+          :disabled="!explorerTree.summary.failedSnapshotEnabled"
+          @click="explorerTree.summary.failedSnapshotEnabled && updateSnapshot()"
         />
         <IconButton
           v-if="!isReport"

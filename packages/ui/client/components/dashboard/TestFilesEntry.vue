@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { unhandledErrors } from '~/composables/client'
-import { taskTree } from '~/composables/explorer/tree'
+import { unhandledErrors } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
 </script>
 
 <template>
@@ -13,34 +13,34 @@ import { taskTree } from '~/composables/explorer/tree'
     <div i-carbon-document />
     <div>Files</div>
     <div class="number" data-testid="num-files">
-      {{ taskTree.summary.files }}
+      {{ explorerTree.summary.files }}
     </div>
 
-    <template v-if="taskTree.summary.filesSuccess">
+    <template v-if="explorerTree.summary.filesSuccess">
       <div i-carbon-checkmark />
       <div>Pass</div>
       <div class="number">
-        {{ taskTree.summary.filesSuccess }}
+        {{ explorerTree.summary.filesSuccess }}
       </div>
     </template>
 
-    <template v-if="taskTree.summary.filesFailed">
+    <template v-if="explorerTree.summary.filesFailed">
       <div i-carbon-close />
       <div>
         Fail
       </div>
       <div class="number" text-red5>
-        {{ taskTree.summary.filesFailed }}
+        {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
 
-    <template v-if="taskTree.summary.filesSnapshotFailed">
+    <template v-if="explorerTree.summary.filesSnapshotFailed">
       <div i-carbon-compare />
       <div>
         Snapshot Fail
       </div>
       <div class="number" text-red5>
-        {{ taskTree.summary.filesSnapshotFailed }}
+        {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
 
@@ -57,7 +57,7 @@ import { taskTree } from '~/composables/explorer/tree'
     <div i-carbon-timer />
     <div>Time</div>
     <div class="number" data-testid="run-time">
-      {{ taskTree.summary.time }}
+      {{ explorerTree.summary.time }}
     </div>
   </div>
   <template v-if="unhandledErrors.length">

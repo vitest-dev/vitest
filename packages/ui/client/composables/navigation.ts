@@ -1,5 +1,6 @@
-import type { File } from 'vitest'
-import { client, config, findById, testRunState } from './client'
+import type { File } from '@vitest/runner'
+import { client, config, findById } from './client'
+import { testRunState } from './client/state'
 import { activeFileId } from './params'
 
 export const currentModule = ref<File>()
@@ -16,7 +17,6 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>('vites
   initOnMounted: true,
 })
 
-export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [])
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.

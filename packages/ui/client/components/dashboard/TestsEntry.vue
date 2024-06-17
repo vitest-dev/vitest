@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { taskTree } from '~/composables/explorer/tree'
+import { explorerTree } from '~/composables/explorer'
 </script>
 
 <template>
@@ -9,31 +9,31 @@ import { taskTree } from '~/composables/explorer/tree'
         Pass
       </template>
       <template #body>
-        {{ taskTree.summary.testsSuccess }}
+        {{ explorerTree.summary.testsSuccess }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :class="{ 'text-red5': taskTree.summary.testsFailed, 'op50': !taskTree.summary.testsFailed }" data-testid="fail-entry">
+    <DashboardEntry :class="{ 'text-red5': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }" data-testid="fail-entry">
       <template #header>
         Fail
       </template>
       <template #body>
-        {{ taskTree.summary.testsFailed }}
+        {{ explorerTree.summary.testsFailed }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="taskTree.summary.testsSkipped" op50 data-testid="skipped-entry">
+    <DashboardEntry v-if="explorerTree.summary.testsSkipped" op50 data-testid="skipped-entry">
       <template #header>
         Skip
       </template>
       <template #body>
-        {{ taskTree.summary.testsSkipped }}
+        {{ explorerTree.summary.testsSkipped }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="taskTree.summary.testsTodo" op50 data-testid="todo-entry">
+    <DashboardEntry v-if="explorerTree.summary.testsTodo" op50 data-testid="todo-entry">
       <template #header>
         Todo
       </template>
       <template #body>
-        {{ taskTree.summary.testsTodo }}
+        {{ explorerTree.summary.testsTodo }}
       </template>
     </DashboardEntry>
     <DashboardEntry :tail="true" data-testid="total-entry">
@@ -41,7 +41,7 @@ import { taskTree } from '~/composables/explorer/tree'
         Total
       </template>
       <template #body>
-        {{ taskTree.summary.totalTests }}
+        {{ explorerTree.summary.totalTests }}
       </template>
     </DashboardEntry>
   </div>

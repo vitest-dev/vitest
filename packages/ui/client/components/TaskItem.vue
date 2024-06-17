@@ -3,22 +3,26 @@ import { getProjectNameColor } from '~/utils/task'
 import { activeFileId } from '~/composables/params'
 import { isReport } from '~/constants'
 import { client } from '~/composables/client'
+import type { Task } from '@vitest/runner'
+import { hasFailedSnapshot } from '@vitest/ws-client'
 
 const props = defineProps<{
   taskId: string
   opened: boolean
-  failedSnapshot: boolean
+  current: boolean
 }>()
 
 const emit = defineEmits<{
-  run: []
-  preview: []
-  fixSnapshot: [],
+  (event: 'preview', value: Task): void
+  (event: 'run', value: Task): void
+  (event: 'fixSnapshot', value: Task): void
 }>()
 
 const task = computed(() => {
   return client.state.idMap.get(props.taskId)
 })
+
+const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
 
 const duration = computed(() => {
   const duration = task.value?.result?.duration || 0
@@ -37,11 +41,10 @@ const duration = computed(() => {
     hover="bg-active"
     class="item-wrapper"
     :aria-label="task.name"
-    :data-current="activeFileId === task.id"
+    :data-current="current"
   >
     <div v-if="task.type === 'suite'" pr-1>
-      <div v-if="opened" i-carbon-chevron-down op20 />
-      <div v-else i-carbon-chevron-right op20 />
+      <div :class="opened ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right op20'"  op20 />
     </div>
     <StatusIcon :task="task" mr-2 />
     <div v-if="task.type === 'suite' && task.meta.typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
@@ -64,14 +67,14 @@ const duration = computed(() => {
         data-testid="btn-fix-snapshot"
         title="Fix failed snapshot(s)"
         icon="i-carbon-result-old"
-        @click.prevent.stop="emit('fixSnapshot')"
+        @click.prevent.stop="emit('fixSnapshot', task)"
       />
       <IconAction
         v-tooltip.bottom="'Open test details'"
         data-testid="btn-open-details"
         title="Open test details"
         icon="i-carbon-intrusion-prevention"
-        @click.prevent.stop="emit('preview')"
+        @click.prevent.stop="emit('preview', task)"
       />
       <IconAction
         v-if="!isReport"
@@ -80,7 +83,7 @@ const duration = computed(() => {
         title="Run current test"
         icon="i-carbon:play-filled-alt"
         text-green5
-        @click.prevent.stop="emit('run')"
+        @click.prevent.stop="emit('run', task)"
       />
     </div>
   </div>

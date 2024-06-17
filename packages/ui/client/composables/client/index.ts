@@ -8,19 +8,19 @@ import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
-import { files, /* prepareUIEntries, */testRunState, unhandledErrors } from './state'
-import { taskTree, uiFiles } from '~/composables/explorer/tree'
+import { testRunState, unhandledErrors } from './state'
+import { uiFiles } from '~/composables/explorer/state'
+import { explorerTree } from '~/composables/explorer'
 
 export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
-export { files, testRunState, unhandledErrors }
+const onTaskUpdateCalled = ref(false)
 
 export const client = (function createVitestClient() {
   if (isReport) {
     return createStaticClient()
   }
   else {
-    let onTaskUpdateCalled = false
     return createClient(ENTRY_URL, {
       reactive: (data, ctxKey) => {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
@@ -29,18 +29,17 @@ export const client = (function createVitestClient() {
         onTaskUpdate() {
           // eslint-disable-next-line no-console
           console.log('onTaskUpdate')
-          if (testRunState.value === 'idle' && !onTaskUpdateCalled) {
-            onTaskUpdateCalled = true
-            taskTree.resumeRun()
+          if (testRunState.value === 'idle' && !onTaskUpdateCalled.value) {
+            onTaskUpdateCalled.value = true
+            explorerTree.resumeRun()
           }
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
           // eslint-disable-next-line no-console
           console.log('onFinished', _files?.length, errors?.length)
-          taskTree.endRun()
+          explorerTree.endRun()
           testRunState.value = 'idle'
-          onTaskUpdateCalled = false
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
@@ -97,7 +96,7 @@ function clearResults(useFiles: File[]) {
 export function runFiles(useFiles: File[]/* , fromAll = false */) {
   clearResults(useFiles)
 
-  taskTree.startRun()
+  explorerTree.startRun()
 
   return client.rpc.rerun(useFiles.map(i => i.filepath))
 }
@@ -131,15 +130,9 @@ watch(
         client.state.collectFiles(files)
       }
       else {
-        taskTree.loadFiles(remoteFiles)
+        explorerTree.loadFiles(remoteFiles)
         client.state.collectFiles(remoteFiles)
-        taskTree.startRun()
-        /* prepareUIEntries(remoteFiles, () => {
-          client.state.collectFiles(remoteFiles)
-          console.log(client.state.idMap)
-          // must be called after collectFiles
-          startRun()
-        }) */
+        explorerTree.startRun(!onTaskUpdateCalled.value)
       }
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
