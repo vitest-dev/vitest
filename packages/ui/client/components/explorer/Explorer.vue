@@ -101,7 +101,7 @@ useResizeObserver(testExplorerRef, (entries) => {
       >
         <div :class="filterHeaderClass" flex="~ gap-2 items-center">
           <div aria-hidden="true" class="i-carbon:filter" />
-          <div flex-grow-1>
+          <div flex-grow-1 text-sm font-bold="">
             Filter
           </div>
           <IconButton

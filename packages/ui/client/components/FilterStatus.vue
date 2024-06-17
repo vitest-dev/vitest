@@ -5,7 +5,7 @@ const modelValue = defineModel<boolean | null>()
 
 <template>
   <label
-    class="font-light text-sm checkbox flex items-center cursor-pointer py-1 text-md w-full gap-y-1 mb-1px"
+    class="font-light text-sm checkbox flex items-center cursor-pointer py-1 text-sm w-full gap-y-1 mb-1px"
     v-bind="$attrs"
     @click.prevent="modelValue = !modelValue"
   >
