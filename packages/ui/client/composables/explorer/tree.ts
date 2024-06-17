@@ -23,6 +23,7 @@ export class ExplorerTree {
     // todo: remove this and resumeEndRunId when vitest runner fix the problem
     // todo: remove also client/index.ts logic with onTaskUpdateCalled
     private resumeEndTimeout = 500,
+    private done = new Set<string>(),
     private root = <RootTreeNode>{
       id: 'vitest-root-node',
       expandable: true,
@@ -51,6 +52,22 @@ export class ExplorerTree {
     }),
   ) {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
+  }
+
+  isUITaskDone(node: UITaskTreeNode) {
+    return this.done.has(node.id)
+  }
+
+  taskDone(id: string) {
+    this.done.add(id)
+  }
+
+  removeTaskDone(id: string) {
+    this.done.delete(id)
+  }
+
+  clearDone() {
+    this.done.clear()
   }
 
   loadFiles(remoteFiles: File[]) {

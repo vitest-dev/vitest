@@ -77,13 +77,15 @@ export function runAll() {
 }
 
 function clearResults(useFiles: File[]) {
-  // todo: do we need to reflect server result?
-  // if so, we need to add a new filtered flag to the ui file and reset it properly
-  // we will need to change collect logic in summary.ts
   const map = new Map(uiFiles.value.map(i => [i.id, i]))
   useFiles.forEach((f) => {
     delete f.result
-    getTasks(f).forEach(i => delete i.result)
+    getTasks(f).forEach((i) => {
+      delete i.result
+      explorerTree.removeTaskDone(i.id)
+      if (map.has(i.id))
+        map.get(i.id)!.state = undefined
+    })
     const file = map.get(f.id)
     if (file) {
       file.state = undefined
@@ -93,7 +95,7 @@ function clearResults(useFiles: File[]) {
   })
 }
 
-export function runFiles(useFiles: File[]/* , fromAll = false */) {
+export function runFiles(useFiles: File[]) {
   clearResults(useFiles)
 
   explorerTree.startRun()
