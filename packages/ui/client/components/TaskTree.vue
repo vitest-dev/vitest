@@ -51,7 +51,7 @@ async function onRun() {
 }
 
 function updateSnapshot() {
-  return client.rpc.updateSnapshot(task)
+  return client.rpc.updateSnapshot(task.file)
 }
 </script>
 
