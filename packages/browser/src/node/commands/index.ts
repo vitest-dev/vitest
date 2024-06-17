@@ -5,7 +5,7 @@ import { fill } from './fill'
 import { selectOptions } from './select'
 import { tab } from './tab'
 import { keyboard } from './keyboard'
-import { dragAndDrop } from './drag'
+import { dragAndDrop } from './dragAndDrop'
 import { hover } from './hover'
 import {
   readFile,
