@@ -14,7 +14,7 @@ export interface VitestClientOptions {
   reconnectInterval?: number
   reconnectTries?: number
   connectTimeout?: number
-  reactive?: <T>(v: T) => T
+  reactive?: <T>(v: T, forKey: 'state' | 'idMap' | 'filesMap') => T
   ref?: <T>(v: T) => { value: T }
   WebSocketConstructor?: typeof WebSocket
 }
@@ -44,10 +44,10 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     state: new StateManager(),
     waitForConnection,
     reconnect,
-  }) as VitestClient
+  }, 'state') as VitestClient
 
-  ctx.state.filesMap = reactive(ctx.state.filesMap)
-  ctx.state.idMap = reactive(ctx.state.idMap)
+  ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
+  ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
 
   let onMessage: Function
   const functions: WebSocketEvents = {
