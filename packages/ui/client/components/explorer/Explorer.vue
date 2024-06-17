@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
+
+// @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
+
 import { activeFileId } from '~/composables/params'
 import { useSearch } from '~/composables/explorer/search'
-// @ts-expect-error missing types
 
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 

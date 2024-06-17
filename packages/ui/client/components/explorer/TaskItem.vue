@@ -44,11 +44,11 @@ const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value
     :aria-label="name"
     :data-current="current"
   >
-    <div v-if="type === 'suite'" pr-1>
-      <div :class="opened ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right op20'" op20 />
+    <div v-if="type === 'file' || type === 'suite'" pr-1>
+      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :task="task" mr-2 />
-    <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
+    <div v-if="type === 'file' || type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>
         <!-- only show [] in files view -->
