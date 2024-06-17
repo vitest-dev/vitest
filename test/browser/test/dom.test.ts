@@ -22,6 +22,30 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(/__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/)
   })
 
+  test('hover works correctly', async () => {
+    const target = document.createElement('div')
+    target.style.width = '100px'
+    target.style.height = '100px'
+
+    let hovered = false
+    target.addEventListener('mouseover', () => {
+      hovered = true
+    })
+    target.addEventListener('mouseout', () => {
+      hovered = false
+    })
+
+    document.body.appendChild(target)
+
+    await userEvent.hover(target)
+
+    expect(hovered).toBe(true)
+
+    await userEvent.unhover(target)
+
+    expect(hovered).toBe(false)
+  })
+
   test('types into an input', async () => {
     const input = document.createElement('input')
     input.type = 'text'

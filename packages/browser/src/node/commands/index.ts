@@ -6,6 +6,7 @@ import { selectOptions } from './select'
 import { tab } from './tab'
 import { keyboard } from './keyboard'
 import { dragAndDrop } from './drag'
+import { hover } from './hover'
 import {
   readFile,
   removeFile,
@@ -27,4 +28,5 @@ export default {
   __vitest_keyboard: keyboard,
   __vitest_selectOptions: selectOptions,
   __vitest_dragAndDrop: dragAndDrop,
+  __vitest_hover: hover,
 }
