@@ -47,7 +47,19 @@ export const isFilteredByStatus = computed(() => {
 export const filteredFiles = shallowRef<File[]>([])
 export const initialized = ref(false)
 export const shouldShowExpandAll = computed(() => {
-  return treeFilter.value.expandAll !== false
+  const expandAll = treeFilter.value.expandAll
+  const opened = openedTreeItems.value
+  const filtered = isFiltered.value
+  const filteredStatus = isFilteredByStatus.value
+
+  if (opened.length > 0)
+    return expandAll !== true
+
+  // don't remove this: we need to force a rerender
+  if (filtered || filteredStatus)
+    return expandAll !== false
+
+  return expandAll !== false
 })
 export const testsTotal = computed<FilteredTests>(() => {
   const filtered = isFiltered.value

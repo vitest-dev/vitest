@@ -5,6 +5,7 @@ import {
   initialized,
   isFiltered,
   isFilteredByStatus,
+  openedTreeItems,
   search,
   testsTotal,
   treeFilter,
@@ -75,6 +76,11 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     },
     { flush: 'post' },
   )
+
+  watch(() => openedTreeItems.value.length, (size) => {
+    if (size)
+      treeFilter.value.expandAll = undefined
+  }, { flush: 'post' })
 
   onMounted(() => {
     nextTick(() => (initialized.value = true))

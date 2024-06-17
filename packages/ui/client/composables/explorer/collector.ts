@@ -20,7 +20,7 @@ import {
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
-import { expandAllNodes } from '~/composables/explorer/expand'
+import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 
 export function runCollect(
   start: boolean,
@@ -51,18 +51,30 @@ export function runCollect(
 
   collectData(rootTasks, summary)
 
-  // expand all nodes
+  // refresh explorer
+  runFilter(rootTasks, nodes, search, filter)
+
   if (end) {
     summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
       uiFiles.value.map(f => findById(f.id)!),
     )
     summary.failedSnapshotEnabled = true
-    if (openedTreeItems.value.length === 0 && treeFilter.value.expandAll !== false)
-      expandAllNodes(rootTasks, true)
+  }
+
+  // expand all nodes
+  const expandAll = treeFilter.value.expandAll
+  const filtered = search.trim().length > 0 || filter.failed || filter.success || filter.skipped || filter.onlyTests
+  const resetExpandAll = expandAll !== true
+  const ids = new Set(openedTreeItems.value)
+  const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
+  if (applyExpandNodes) {
+    expandNodesOnEndRun(ids, nodes, end)
+    if (resetExpandAll || filtered)
+      treeFilter.value.expandAll = false
   }
 
   // refresh explorer
-  runFilter(rootTasks, nodes, search, filter)
+  applyExpandNodes && runFilter(rootTasks, nodes, search, filter)
 }
 
 function createOrUpdateEntry(tasks: Task[], nodes: Map<string, UITaskTreeNode>) {

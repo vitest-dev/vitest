@@ -106,6 +106,22 @@ export function runExpandAll(
   filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
 }
 
+export function expandNodesOnEndRun(
+  ids: Set<string>,
+  nodes: Map<string, UITaskTreeNode>,
+  updateState: boolean,
+) {
+  if (ids.size) {
+    for (const node of nodes.values()) {
+      if (ids.has(node.id))
+        node.expanded = true
+    }
+  }
+  else {
+    expandAllNodes(uiEntries.value.filter(isFileNode), updateState)
+  }
+}
+
 export function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   for (const node of nodes) {
     if (isParentNode(node)) {
