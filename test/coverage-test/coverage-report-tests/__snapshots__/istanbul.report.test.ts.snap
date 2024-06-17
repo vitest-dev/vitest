@@ -267,7 +267,7 @@ exports[`istanbul json report 1`] = `
         "loc": {
           "end": {
             "column": null,
-            "line": 8,
+            "line": 10,
           },
           "start": {
             "column": 0,
@@ -278,7 +278,7 @@ exports[`istanbul json report 1`] = `
           {
             "end": {
               "column": null,
-              "line": 8,
+              "line": 10,
             },
             "start": {
               "column": 0,
@@ -288,10 +288,10 @@ exports[`istanbul json report 1`] = `
           {
             "end": {
               "column": null,
-              "line": 8,
+              "line": 10,
             },
             "start": {
-              "column": 2,
+              "column": 5,
               "line": 8,
             },
           },
@@ -323,7 +323,7 @@ exports[`istanbul json report 1`] = `
       "1": {
         "end": {
           "column": null,
-          "line": 8,
+          "line": 10,
         },
         "start": {
           "column": 0,
@@ -343,21 +343,21 @@ exports[`istanbul json report 1`] = `
       "3": {
         "end": {
           "column": null,
-          "line": 8,
+          "line": 9,
         },
         "start": {
           "column": 2,
-          "line": 8,
+          "line": 9,
         },
       },
       "4": {
         "end": {
           "column": null,
-          "line": 12,
+          "line": 14,
         },
         "start": {
           "column": 5,
-          "line": 12,
+          "line": 14,
         },
       },
     },
