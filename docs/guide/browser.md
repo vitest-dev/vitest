@@ -276,7 +276,7 @@ export const userEvent: {
    */
   unhover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
   /**
-   * Fills an input element with text. This will remove any existing text in the input before typing the new text.
+   * Fills an input element with text. This will remove any existing text in the input before typing the new value.
    * Uses provider's API under the hood.
    * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
    * @example
@@ -312,6 +312,263 @@ export const page: {
   screenshot: (options?: ScreenshotOptions) => Promise<string>
 }
 ```
+
+## Interactivity API
+
+Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) APIs instead of faking events which makes the browser behaviour more reliable and consistent.
+
+Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types to your `tsconfig.json` file:
+
+::: code-group
+```json [playwright]
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/playwright"
+    ]
+  }
+}
+```
+```json [webdriverio]
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/webdriverio"
+    ]
+  }
+}
+```
+:::
+
+### userEvent.click
+
+- **Type:** `(element: Element, options?: UserEventClickOptions) => Promise<void>`
+
+Clicks on an element. Inherits provider's options. Please refer to your provider's documentation for detailed explanaition about how this method works.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('clicks on an element', () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.click(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.click` API](https://playwright.dev/docs/api/class-locator#locator-click)
+- [WebdriverIO `element.click` API](https://webdriver.io/docs/api/element/click/)
+- [testing-library `click` API](https://testing-library.com/docs/user-event/convenience/#click)
+
+### userEvent.fill
+
+- **Type:** `(element: Element, text: string) => Promise<void>`
+
+Fills an input/textarea/conteneditable element with text. This will remove any existing text in the input before typing the new value.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('update input', () => {
+  const input = screen.getByRole('input')
+
+  await userEvent.fill(input, 'foo') // input.value == foo
+  await userEvent.fill(input, '{{a[[') // input.value == {{a[[
+  await userEvent.fill(input, '{Shift}') // input.value == {Shift}
+})
+```
+
+::: tip
+This API is faster than using [`userEvent.type`](#userevent-type) or [`userEvent.keyboard`](#userevent-keyboard), but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}{selectall}`).
+
+We recommend using this API over [`userEvent.type`](#userevent-type) in situations when you don't need to enter special characters.
+:::
+
+References:
+
+- [Playwright `locator.fill` API](https://playwright.dev/docs/api/class-locator#locator-fill)
+- [WebdriverIO `element.setValue` API](https://webdriver.io/docs/api/element/setValue)
+- [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
+
+### userEvent.keyboard
+
+- **Type:** `(text: string) => Promise<void>`
+
+The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
+
+This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('trigger keystrokes', () => {
+  await userEvent.keyboard('foo') // translates to: f, o, o
+  await userEvent.keyboard('{{a[[') // translates to: {, a, [
+  await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
+  await userEvent.keyboard('{a>5}') // press a without releasing it and trigger 5 keydown
+  await userEvent.keyboard('{a>5/}') // press a for 5 keydown and then release it
+})
+```
+
+References:
+
+- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
+
+### userEvent.tab
+
+- **Type:** `(options?: UserEventTabOptions) => Promise<void>`
+
+Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+import '@testing-library/jest-dom' // adds support for "toHaveValue"
+
+test('tab works', () => {
+  const [input1, input2] = screen.getAllByRole('input')
+
+  expect(input1).toHaveFocus()
+
+  await userEvent.tab()
+
+  expect(input2).toHaveFocus()
+
+  await userEvent.tab({ shift: true })
+
+  expect(input1).toHaveFocus()
+})
+```
+
+References:
+
+- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [testing-library `tab` API](https://testing-library.com/docs/user-event/convenience/#tab)
+
+### userEvent.type
+
+- **Type:** `(element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>`
+
+::: warning
+If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead.
+:::
+
+The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
+
+This function allows you to type characters into an input/textarea/conteneditable element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+
+If you just need to press characters without an input, use [`userEvent.keyboard`](#userevent-keyboard) API.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('update input', () => {
+  const input = screen.getByRole('input')
+
+  await userEvent.type(input, 'foo') // input.value == foo
+  await userEvent.type(input, '{{a[[') // input.value == foo{a[
+  await userEvent.type(input, '{Shift}') // input.value == foo{a[
+})
+```
+
+References:
+
+- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
+
+### userEvent.clear
+
+- **Type:** `(element: Element) => Promise<void>`
+
+This method clear the input element content.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+import '@testing-library/jest-dom' // adds support for "toHaveValue"
+
+test('clears input', () => {
+  const input = screen.getByRole('input')
+
+  await userEvent.fill(input, 'foo')
+  expect(input).toHaveValue('foo')
+
+  await userEvent.clear(input)
+  expect(input).toHaveValue('')
+})
+```
+
+References:
+
+- [Playwright `locator.clear` API](https://playwright.dev/docs/api/class-locator#locator-clear)
+- [WebdriverIO `element.clearValue` API](https://webdriver.io/docs/api/element/clearValue)
+- [testing-library `clear` API](https://testing-library.com/docs/user-event/utility/#clear)
+
+### userEvent.hover
+
+- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+
+This method moves the cursor position to selected element. Please refer to your provider's documentation for detailed explanaition about how this method works.
+
+::: warning
+If you are using `webdriverio` provider, the cursor will move to the center of the element by default.
+
+If you are using `playwright` provider, the cursor moves to "some" visible point of the element.
+:::
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('unhover logo element', () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.unhover(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.hover` API](https://playwright.dev/docs/api/class-locator#locator-hover)
+- [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
+- [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
+
+### userEvent.unhover
+
+- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+
+This works the same as [`userEvent.hover`](#userevent-hover), but moves the cursor to the `document.body` element instead.
+
+::: warning
+By default, the cursor position is in the center (in `webdriverio` provider) or in "some" visible place (in `playwright` provider) of the body element, so if the currently hovered element is already in the same position, this method will have no effect.
+:::
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('unhover logo element', () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.unhover(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.hover` API](https://playwright.dev/docs/api/class-locator#locator-hover)
+- [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
+- [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
 
 ## Commands
 
