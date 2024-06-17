@@ -60,7 +60,7 @@ export class ExplorerTree {
   }
 
   loadFiles(remoteFiles: File[]) {
-    remoteFiles.map(f => [`${f.projectName || ''}:${f.filepath}`, f] as const)
+    remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, f]) => createOrUpdateFileNode(f, this.nodes, this.root.tasks))
 
