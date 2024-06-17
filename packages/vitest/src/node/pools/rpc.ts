@@ -35,7 +35,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
     async fetch(id, transformMode) {
       const result = await project.vitenode.fetchResult(id, transformMode)
       const code = result.code
-      if (result.externalize || !cacheFs) {
+      if (!cacheFs || result.externalize) {
         return result
       }
       if ('id' in result && typeof result.id === 'string') {
