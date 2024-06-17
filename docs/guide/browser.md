@@ -430,7 +430,7 @@ Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
 ```ts
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
-import '@testing-library/jest-dom' // adds support for "toHaveValue"
+import '@testing-library/jest-dom' // adds support for "toHaveFocus"
 
 test('tab works', () => {
   const [input1, input2] = screen.getAllByRole('input')
@@ -530,10 +530,10 @@ If you are using `playwright` provider, the cursor moves to "some" visible point
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
 
-test('unhover logo element', () => {
+test('hovers logo element', () => {
   const logo = screen.getByRole('img', { name: /logo/ })
 
-  await userEvent.unhover(logo)
+  await userEvent.hover(logo)
 })
 ```
 
