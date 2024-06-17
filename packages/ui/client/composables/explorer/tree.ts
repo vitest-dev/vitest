@@ -2,23 +2,19 @@ import type { File } from '@vitest/runner'
 import {
   filter,
   search,
-  uiFiles,
 } from '~/composables/explorer/state'
 import type {
   CollectorInfo,
   FilteredTests,
   RootTreeNode,
-  TreeTaskFilter,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { createOrUpdateFileNode } from '~/composables/explorer/utils'
-import { collectTestsTotalData, runCollect } from '~/composables/explorer/collector'
+import { collectTestsTotalData, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 
 export class ExplorerTree {
-  public filter: TreeTaskFilter | undefined
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
@@ -54,18 +50,11 @@ export class ExplorerTree {
       failedSnapshotEnabled: false,
     }),
   ) {
-    // this.firstRun = true
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
-    // this.reloadTasksId = undefined
   }
 
   loadFiles(remoteFiles: File[]) {
-    remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, f]) => createOrUpdateFileNode(f, this.nodes, this.root.tasks))
-
-    uiFiles.value = [...this.root.tasks]
-    runFilter(this.root.tasks, this.nodes, search.value.trim(), {
+    runLoadFiles(remoteFiles, this.root.tasks, this.nodes, search.value.trim(), {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
@@ -90,20 +79,22 @@ export class ExplorerTree {
   }
 
   private collect(start: boolean, end: boolean) {
-    runCollect(
-      start,
-      end,
-      this.root.tasks,
-      this.nodes,
-      this.summary,
-      search.value.trim(),
-      {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        onlyTests: filter.onlyTests,
-      },
-    )
+    queueMicrotask(() => {
+      runCollect(
+        start,
+        end,
+        this.root.tasks,
+        this.nodes,
+        this.summary,
+        search.value.trim(),
+        {
+          failed: filter.failed,
+          success: filter.success,
+          skipped: filter.skipped,
+          onlyTests: filter.onlyTests,
+        },
+      )
+    })
   }
 
   startRun(registerResumeEndRun = false) {
@@ -128,37 +119,47 @@ export class ExplorerTree {
   }
 
   collapseNode(id: string) {
-    runCollapseNode(id, this.nodes)
+    queueMicrotask(() => {
+      runCollapseNode(id, this.nodes)
+    })
   }
 
   expandNode(id: string) {
-    runExpandNode(id, this.nodes, search.value.trim(), {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      onlyTests: filter.onlyTests,
+    queueMicrotask(() => {
+      runExpandNode(id, this.nodes, search.value.trim(), {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        onlyTests: filter.onlyTests,
+      })
     })
   }
 
   collapseAllNodes() {
-    runCollapseAllTask(this.root.tasks)
+    queueMicrotask(() => {
+      runCollapseAllTask(this.root.tasks)
+    })
   }
 
   expandAllNodes() {
-    runExpandAll(this.root.tasks, this.nodes, search.value.trim(), {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      onlyTests: filter.onlyTests,
+    queueMicrotask(() => {
+      runExpandAll(this.root.tasks, this.nodes, search.value.trim(), {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        onlyTests: filter.onlyTests,
+      })
     })
   }
 
   filterNodes() {
-    runFilter(this.root.tasks, this.nodes, search.value.trim(), {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      onlyTests: filter.onlyTests,
+    queueMicrotask(() => {
+      runFilter(this.root.tasks, this.nodes, search.value.trim(), {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        onlyTests: filter.onlyTests,
+      })
     })
   }
 }

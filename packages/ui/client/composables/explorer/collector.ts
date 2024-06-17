@@ -22,6 +22,28 @@ import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 
+export function runLoadFiles(
+  remoteFiles: File[],
+  rootTasks: FileTreeNode[],
+  nodes: Map<string, UITaskTreeNode>,
+  search: string,
+  filter: Filter,
+) {
+  remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, f]) => createOrUpdateFileNode(f, nodes, rootTasks))
+
+  uiFiles.value = [...rootTasks]
+  queueMicrotask(() => {
+    runFilter(rootTasks, nodes, search.trim(), {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      onlyTests: filter.onlyTests,
+    })
+  })
+}
+
 export function runCollect(
   start: boolean,
   end: boolean,
@@ -32,47 +54,75 @@ export function runCollect(
   filter: Filter,
 ) {
   if (start)
-    resetCollectorInfo(summary)
+    queueMicrotask(() => resetCollectorInfo(summary))
 
-  // collect remote children
-  for (let i = 0; i < rootTasks.length; i++) {
-    const fileNode = rootTasks[i]
-    const file = findById(fileNode.id)
-    if (!file)
-      continue
+  queueMicrotask(() => {
+    // collect remote children
+    for (let i = 0; i < rootTasks.length; i++) {
+      const fileNode = rootTasks[i]
+      const file = findById(fileNode.id)
+      if (!file)
+        continue
 
-    createOrUpdateFileNode(file, nodes, rootTasks, !start)
-    const tasks = file.tasks
-    if (!tasks?.length)
-      continue
+      createOrUpdateFileNode(file, nodes, rootTasks, !start)
+      const tasks = file.tasks
+      if (!tasks?.length)
+        continue
 
-    createOrUpdateEntry(file.tasks, nodes)
-  }
+      createOrUpdateEntry(file.tasks, nodes)
+    }
+  })
 
-  collectData(rootTasks, summary)
+  queueMicrotask(() => {
+    collectData(rootTasks, summary)
+  })
 
-  if (end) {
-    summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
-      uiFiles.value.map(f => findById(f.id)!),
-    )
-    summary.failedSnapshotEnabled = true
-    // refresh explorer
+  queueMicrotask(() => {
+    if (end) {
+      summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
+        uiFiles.value.map(f => findById(f.id)!),
+      )
+      summary.failedSnapshotEnabled = true
+    }
+  })
+
+  queueMicrotask(() => {
+    doRunFilter(rootTasks, nodes, search, filter)
+  })
+}
+
+function doRunFilter(
+  rootTasks: FileTreeNode[],
+  nodes: Map<string, UITaskTreeNode>,
+  search: string,
+  filter: Filter,
+  end = false,
+) {
+  // refresh explorer
+
+  const expandAll = treeFilter.value.expandAll
+  const filtered = search.trim().length > 0 || filter.failed || filter.success || filter.skipped || filter.onlyTests
+  const resetExpandAll = expandAll !== true
+  const ids = new Set(openedTreeItems.value)
+  const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
+
+  // refresh explorer
+  queueMicrotask(() => {
     runFilter(rootTasks, nodes, search, filter)
-    // expand all nodes
-    const expandAll = treeFilter.value.expandAll
-    const filtered = search.trim().length > 0 || filter.failed || filter.success || filter.skipped || filter.onlyTests
-    const resetExpandAll = expandAll !== true
-    const ids = new Set(openedTreeItems.value)
-    const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
+  })
+
+  // expand all nodes
+  queueMicrotask(() => {
     if (applyExpandNodes) {
       expandNodesOnEndRun(ids, nodes, end)
       if (resetExpandAll || filtered)
         treeFilter.value.expandAll = false
     }
-  }
+  })
 
   // refresh explorer
-  runFilter(rootTasks, nodes, search, filter)
+  if (applyExpandNodes)
+    queueMicrotask(() => runFilter(rootTasks, nodes, search, filter))
 }
 
 function createOrUpdateEntry(tasks: Task[], nodes: Map<string, UITaskTreeNode>) {

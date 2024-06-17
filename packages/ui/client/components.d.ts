@@ -28,7 +28,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
-    TaskItem: typeof import('./components/TaskItem.vue')['default']
+    TaskItem: typeof import('./components/explorer/TaskItem.vue')['default']
     TestFilesEntry: typeof import('./components/dashboard/TestFilesEntry.vue')['default']
     TestsEntry: typeof import('./components/dashboard/TestsEntry.vue')['default']
     TestsFilesContainer: typeof import('./components/dashboard/TestsFilesContainer.vue')['default']
