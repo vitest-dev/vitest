@@ -115,8 +115,9 @@ export async function keyboardImplementation(
         acc.push(specialArray)
       }
       else {
-        if (releasePrevious)
+        if (releasePrevious) {
           return acc
+        }
         const last = acc[acc.length - 1]
         const value = key.repeat(repeat)
         if (last && !('special' in last)) {

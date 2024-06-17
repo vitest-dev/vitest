@@ -24,6 +24,7 @@ declare module 'vitest/node' {
 
 type PWHoverOptions = Parameters<Page['hover']>[1]
 type PWClickOptions = Parameters<Page['click']>[1]
+type PWDoubleClickOptions = Parameters<Page['dblclick']>[1]
 type PWFillOptions = Parameters<Page['fill']>[2]
 type PWScreenshotOptions = Parameters<Page['screenshot']>[0]
 type PWSelectOptions = Parameters<Page['selectOption']>[2]
@@ -31,6 +32,7 @@ type PWSelectOptions = Parameters<Page['selectOption']>[2]
 declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
   export interface UserEventClickOptions extends PWClickOptions {}
+  export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
   export interface UserEventFillOptions extends PWFillOptions {}
   export interface UserEventSelectOptions extends PWSelectOptions {}
 

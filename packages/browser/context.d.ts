@@ -49,7 +49,32 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
    */
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
-  dblClick: (element: Element, options?: UserEventClickOptions) => Promise<void>
+  /**
+   * Triggers a double click event on an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-dblclick} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
+   */
+  dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  /**
+   * Choose one or more values from a select element. Uses provider's API under the hood.
+   * If select doesn't have `multiple` attribute, only the first value will be selected.
+   * @example
+   * await userEvent.selectOptions(select, 'Option 1')
+   * expect(select).toHaveValue('option-1')
+   *
+   * await userEvent.selectOptions(select, 'option-1')
+   * expect(select).toHaveValue('option-1')
+   *
+   * await userEvent.selectOptions(select, [
+   *  screen.getByRole('option', { name: 'Option 1' }),
+   *  screen.getByRole('option', { name: 'Option 2' }),
+   * ])
+   * expect(select).toHaveValue(['option-1', 'option-2'])
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-select-option} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
+   */
   selectOptions: (
     element: Element,
     values: HTMLElement | HTMLElement[] | string | string[],
@@ -129,6 +154,7 @@ export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
+export interface UserEventDoubleClickOptions {}
 
 export interface UserEventTabOptions {
   shift?: boolean

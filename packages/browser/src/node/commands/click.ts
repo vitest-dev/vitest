@@ -14,10 +14,9 @@ export const click: UserEventCommand<UserEvent['click']> = async (
     await tester.locator(`xpath=${xpath}`).click(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
-    const page = provider.browser!
+    const browser = context.browser
     const markedXpath = `//${xpath}`
-    const element = await page.$(markedXpath)
-    await element.click(options as any)
+    await browser.$(markedXpath).click(options as any)
   }
   else {
     throw new TypeError(`Provider "${provider.name}" doesn't support click command`)
@@ -35,10 +34,9 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
     await tester.locator(`xpath=${xpath}`).dblclick(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
-    const page = provider.browser!
+    const browser = context.browser
     const markedXpath = `//${xpath}`
-    const element = await page.$(markedXpath)
-    await element.doubleClick()
+    await browser.$(markedXpath).doubleClick()
   }
   else {
     throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)

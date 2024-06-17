@@ -58,6 +58,8 @@ function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
 }
 
+const provider = runner().provider
+
 export const userEvent: UserEvent = {
   // TODO: actually setup userEvent with config options
   setup() {
@@ -72,9 +74,9 @@ export const userEvent: UserEvent = {
     return triggerCommand('__vitest_dblClick', xpath, options)
   },
   selectOptions(element, value) {
-    const values = (Array.isArray(value) ? value : [value]).map(
-      v => typeof v === 'string' ? v : { element: convertElementToXPath(v) },
-    )
+    const values = provider === 'webdriverio'
+      ? getWebdriverioSelectOptions(element, value)
+      : getSimpleSelectOptions(element, value)
     return triggerCommand('__vitest_selectOptions', convertElementToXPath(element), values)
   },
   type(element: Element, text: string, options: UserEventTypeOptions = {}) {
@@ -106,6 +108,53 @@ export const userEvent: UserEvent = {
     return triggerCommand('__vitest_fill', xpath, text, options)
   },
   // TODO: add dragTo
+}
+
+function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
+  const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
+
+  const arrayValues = Array.isArray(value) ? value : [value]
+
+  if (!arrayValues.length) {
+    return []
+  }
+
+  if (arrayValues.length > 1) {
+    throw new Error('Provider "webdriverio" doesn\'t support selecting multiple values at once')
+  }
+
+  const optionValue = arrayValues[0]
+
+  if (typeof optionValue !== 'string') {
+    const index = options.indexOf(optionValue as HTMLOptionElement)
+    if (index === -1) {
+      throw new Error(`The element ${convertElementToXPath(optionValue)} was not found in the "select" options.`)
+    }
+
+    return [{ index }]
+  }
+
+  const valueIndex = options.findIndex(option => option.value === optionValue)
+  if (valueIndex !== -1) {
+    return [{ index: valueIndex }]
+  }
+
+  const labelIndex = options.findIndex(option => option.textContent?.trim() === optionValue || option.ariaLabel === optionValue)
+
+  if (labelIndex === -1) {
+    throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
+  }
+
+  return [{ index: labelIndex }]
+}
+
+function getSimpleSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
+  return (Array.isArray(value) ? value : [value]).map((v) => {
+    if (typeof v !== 'string') {
+      return { element: convertElementToXPath(v) }
+    }
+    return v
+  })
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}

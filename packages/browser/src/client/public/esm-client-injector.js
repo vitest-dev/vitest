@@ -23,6 +23,7 @@ window.__vitest_browser_runner__ = {
   files: { __VITEST_FILES__ },
   type: { __VITEST_TYPE__ },
   contextId: { __VITEST_CONTEXT_ID__ },
+  provider: { __VITEST_PROVIDER__ },
 };
 
 const config = __vitest_browser_runner__.config;

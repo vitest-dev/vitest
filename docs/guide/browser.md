@@ -221,6 +221,25 @@ export const userEvent: {
    */
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
   /**
+   * Triggers a double click event on an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-dblclick} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
+   */
+  dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  /**
+   * Choose one or more values from a select element. Uses provider's API under the hood.
+   * If select doesn't have `multiple` attribute, only the first value will be selected.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-select-option} Playwright API
+   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
+   */
+  selectOptions: (
+    element: Element,
+    values: HTMLElement | HTMLElement[] | string | string[],
+    options?: UserEventSelectOptions,
+  ) => Promise<void>
+  /**
    * Type text on the keyboard. If any input is focused, it will receive the text,
    * otherwise it will be typed on the document. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
@@ -362,6 +381,31 @@ References:
 - [Playwright `locator.click` API](https://playwright.dev/docs/api/class-locator#locator-click)
 - [WebdriverIO `element.click` API](https://webdriver.io/docs/api/element/click/)
 - [testing-library `click` API](https://testing-library.com/docs/user-event/convenience/#click)
+
+### userEvent.dblClick
+
+- **Type:** `(element: Element, options?: UserEventDoubleClickOptions) => Promise<void>`
+
+Triggers a double click event on an element
+
+Please refer to your provider's documentation for detailed explanaition about how this method works.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('triggers a double click on an element', () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.dblClick(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.dblclick` API](https://playwright.dev/docs/api/class-locator#locator-dblclick)
+- [WebdriverIO `element.doubleClick` API](https://webdriver.io/docs/api/element/doubleClick/)
+- [testing-library `dblClick` API](https://testing-library.com/docs/user-event/convenience/#dblClick)
 
 ### userEvent.fill
 
@@ -513,6 +557,50 @@ References:
 - [Playwright `locator.clear` API](https://playwright.dev/docs/api/class-locator#locator-clear)
 - [WebdriverIO `element.clearValue` API](https://webdriver.io/docs/api/element/clearValue)
 - [testing-library `clear` API](https://testing-library.com/docs/user-event/utility/#clear)
+
+### userEvent.selectOptions
+
+- **Type:** `(element: Element, values: HTMLElement | HTMLElement[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
+
+The `userEvent.selectOptions` allows selecting a value in a `<select>` element.
+
+::: warning
+If select element doesn't have [`multiple`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select#attr-multiple) attribute, Vitest will select only the first element in the array.
+
+Unlike `@testing-library`, Vitest doesn't support [listbox](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role) at the moment, but we plan to add support for it in the future.
+:::
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+import '@testing-library/jest-dom' // adds support for "toHaveValue"
+
+test('clears input', () => {
+  const select = screen.getByRole('select')
+
+  await userEvent.selectOptions(select, 'Option 1')
+  expect(select).toHaveValue('option-1')
+
+  await userEvent.selectOptions(select, 'option-1')
+  expect(select).toHaveValue('option-1')
+
+  await userEvent.selectOptions(select, [
+    screen.getByRole('option', { name: 'Option 1' }),
+    screen.getByRole('option', { name: 'Option 2' }),
+  ])
+  expect(select).toHaveValue(['option-1', 'option-2'])
+})
+```
+
+::: warning
+`webdriverio` provider doesn't support selecting multiple elements because it doesn't provide API to do so.
+:::
+
+References:
+
+- [Playwright `locator.selectOption` API](https://playwright.dev/docs/api/class-locator#locator-select-option)
+- [WebdriverIO `element.selectByIndex` API](https://webdriver.io/docs/api/element/selectByIndex)
+- [testing-library `selectOptions` API](https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions)
 
 ### userEvent.hover
 

@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, test } from 'vitest'
-import { page, userEvent } from '@vitest/browser/context'
+import { page, server, userEvent } from '@vitest/browser/context'
 import { createNode } from '#src/createNode'
 import '../src/button.css'
 
-describe('dom related activity', () => {
-  beforeEach(() => {
-    document.body.replaceChildren()
-  })
+beforeEach(() => {
+  document.body.replaceChildren()
+})
 
+describe('dom related activity', () => {
   test('renders div', async () => {
     document.body.style.background = '#f3f3f3'
     const wrapper = document.createElement('div')
@@ -125,5 +125,112 @@ describe('dom related activity', () => {
     input.focus()
     await userEvent.keyboard('Hello')
     expect(input.value).toBe('Hello')
+  })
+})
+
+describe.each([
+  [
+    'select',
+    function createSelect() {
+      const select = document.createElement('select')
+      const option1 = document.createElement('option')
+      option1.value = '1'
+      option1.textContent = 'Option 1'
+      const option2 = document.createElement('option')
+      option2.value = '2'
+      option2.textContent = 'Option 2'
+      select.appendChild(option1)
+      select.appendChild(option2)
+      document.body.appendChild(select)
+
+      return { select, options: [option1, option2] }
+    },
+  ],
+  // TODO: support listbox
+  // [
+  //   'listbox',
+  //   function createSelect() {
+  //     const select = document.createElement('div')
+  //     select.setAttribute('role', 'listbox')
+  //     const option1 = document.createElement('div')
+  //     option1.setAttribute('role', 'option')
+  //     // option1.value = '1'
+  //     option1.textContent = 'Option 1'
+  //     const option2 = document.createElement('div')
+  //     option2.setAttribute('role', 'option')
+  //     // option2.value = '2'
+  //     option2.textContent = 'Option 2'
+  //     select.appendChild(option1)
+  //     select.appendChild(option2)
+  //     document.body.appendChild(select)
+
+  //     return { select, options: [option1, option2] }
+  //   },
+  // ],
+])('selectOptions in "%s" works correctly', (_, createSelect) => {
+  test('can select a single primitive value', async () => {
+    const { select } = createSelect()
+
+    await userEvent.selectOptions(select, '2')
+
+    expect(select.value).toBe('2')
+  })
+
+  test('can select a single primitive value by label', async () => {
+    const { select } = createSelect()
+
+    await userEvent.selectOptions(select, 'Option 2')
+
+    expect(select.value).toBe('2')
+  })
+
+  test('can select a single element value', async () => {
+    const { select, options } = createSelect()
+
+    await userEvent.selectOptions(select, options[1])
+
+    expect(select.value).toBe('2')
+  })
+
+  // webdriverio doesn't support selecting multiple values
+  describe.skipIf(server.provider === 'webdriverio')('multiple values', () => {
+    test('can select multiple values', async () => {
+      const { select, options } = createSelect()
+      select.multiple = true
+
+      await userEvent.selectOptions(select, ['1', '2'])
+
+      const selected = document.querySelectorAll('option:checked')
+
+      expect(selected).toHaveLength(2)
+      expect(selected[0]).toBe(options[0])
+      expect(selected[1]).toBe(options[1])
+    })
+
+    test('can select multiple values by label', async () => {
+      const { select, options } = createSelect()
+      select.multiple = true
+
+      await userEvent.selectOptions(select, ['Option 1', 'Option 2'])
+
+      const selected = document.querySelectorAll('option:checked')
+
+      expect(selected).toHaveLength(2)
+      expect(selected[0]).toBe(options[0])
+      expect(selected[1]).toBe(options[1])
+    })
+
+    test('can select multiple element values', async () => {
+      const { select, options } = createSelect()
+      select.multiple = true
+
+      await userEvent.selectOptions(select, options)
+
+      const selected = document.querySelectorAll('option:checked')
+
+      expect(selected).toHaveLength(2)
+      expect(selected[0]).toBe(options[0])
+      expect(selected[1]).toBe(options[1])
+    })
   })
 })

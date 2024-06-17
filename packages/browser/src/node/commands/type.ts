@@ -36,7 +36,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     const markedXpath = `//${xpath}`
-    const element = await browser.$(markedXpath)
+    const element = browser.$(markedXpath)
 
     if (!skipClick && !await element.isFocused()) {
       await element.click()

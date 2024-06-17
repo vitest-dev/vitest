@@ -17,8 +17,7 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     const markedXpath = `//${xpath}`
-    const element = await browser.$(markedXpath)
-    await element.setValue(text)
+    await browser.$(markedXpath).setValue(text)
   }
   else {
     throw new TypeError(`Provider "${context.provider.name}" does not support clearing elements`)
