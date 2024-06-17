@@ -82,4 +82,17 @@ export default () =>
         respectExternal: true,
       })],
     },
+    {
+      input: './src/client/jest-dom.ts',
+      output: {
+        file: './jest-dom.d.ts',
+        format: 'esm',
+      },
+      external: [],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
+    },
   ])

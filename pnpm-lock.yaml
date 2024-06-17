@@ -451,6 +451,9 @@ importers:
         specifier: ^8.17.1
         version: 8.17.1
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.4.6
+        version: 6.4.6(vitest@packages+vitest)
       '@types/ws':
         specifier: ^8.5.10
         version: 8.5.10
@@ -1400,6 +1403,10 @@ packages:
 
   /@adobe/css-tools@4.3.3:
     resolution: {integrity: sha512-rE0Pygv0sEZ4vBWHlAgJLGDU7Pm8xoO6p3wsEceb7GYAjScrOHpEo8KK/eVkAcnSM+slAEtXjA2JpdjLp4fJQQ==}
+    dev: true
+
+  /@adobe/css-tools@4.4.0:
+    resolution: {integrity: sha512-Ff9+ksdQQB3rMncgqDK78uLznstjyfIf2Arnh22pW8kBpLs6rpKDwgnZT46hin5Hl1WzazzK64DOrhSwYpS7bQ==}
     dev: true
 
   /@algolia/autocomplete-core@1.9.3(algoliasearch@4.20.0)(search-insights@2.9.0):
@@ -5250,6 +5257,38 @@ packages:
         optional: true
     dependencies:
       '@adobe/css-tools': 4.3.3
+      '@babel/runtime': 7.24.4
+      aria-query: 5.3.0
+      chalk: 3.0.0
+      css.escape: 1.5.1
+      dom-accessibility-api: 0.6.3
+      lodash: 4.17.21
+      redent: 3.0.0
+      vitest: link:packages/vitest
+    dev: true
+
+  /@testing-library/jest-dom@6.4.6(vitest@packages+vitest):
+    resolution: {integrity: sha512-8qpnGVincVDLEcQXWaHOf6zmlbwTKc6Us6PPu4CRnPXCzo2OGBS5cwgMMOWdxDpEz1mkbvXHpEy99M5Yvt682w==}
+    engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
+    peerDependencies:
+      '@jest/globals': '>= 28'
+      '@types/bun': latest
+      '@types/jest': '>= 28'
+      jest: '>= 28'
+      vitest: workspace:*
+    peerDependenciesMeta:
+      '@jest/globals':
+        optional: true
+      '@types/bun':
+        optional: true
+      '@types/jest':
+        optional: true
+      jest:
+        optional: true
+      vitest:
+        optional: true
+    dependencies:
+      '@adobe/css-tools': 4.4.0
       '@babel/runtime': 7.24.4
       aria-query: 5.3.0
       chalk: 3.0.0
