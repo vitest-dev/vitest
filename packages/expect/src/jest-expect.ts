@@ -236,6 +236,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual,
     )
   })
+  // nothing interesting yet
   def('toContain', function (item) {
     const actual = this._obj as
       | Iterable<unknown>
