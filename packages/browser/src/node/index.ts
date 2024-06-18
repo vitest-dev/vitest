@@ -263,6 +263,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
               '@vitest/runner',
               '@vitest/spy',
               '@vitest/utils/error',
+              '@vitest/utils/source-map',
               '@vitest/snapshot',
               '@vitest/expect',
               'std-env',

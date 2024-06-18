@@ -81,7 +81,7 @@ export interface WebSocketBrowserHandlers {
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (
     id: string
-  ) => Promise<TransformResult['map'] | undefined>
+  ) => TransformResult['map'] | undefined
   getProvidedContext: () => ProvidedContext
 }
 

@@ -1,4 +1,4 @@
-import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { rpc } from './rpc'
@@ -28,6 +28,7 @@ export function createBrowserRunner(
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: ResolvedConfig
     hashMap = browserHashMap
+    public sourceMapCache = new Map<string, any>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -46,6 +47,22 @@ export function createBrowserRunner(
           this.onCancel?.('test-failure')
         }
       }
+    }
+
+    onBeforeRunSuite = async (suite: Suite | File) => {
+      await Promise.all([
+        super.onBeforeRunSuite?.(suite),
+        (async () => {
+          if ('filepath' in suite) {
+            const map = await rpc().getBrowserFileSourceMap(suite.filepath)
+            this.sourceMapCache.set(suite.filepath, map)
+            const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
+            if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
+              snapshotEnvironment.addSourceMap(suite.filepath, map)
+            }
+          }
+        })(),
+      ])
     }
 
     onAfterRunFiles = async (files: File[]) => {
@@ -103,6 +120,11 @@ export function createBrowserRunner(
 }
 
 let cachedRunner: VitestRunner | null = null
+let utils: typeof import('vitest/utils')
+
+export function getUtils() {
+  return utils
+}
 
 export async function initiateRunner(
   state: WorkerGlobalState,
@@ -115,10 +137,13 @@ export async function initiateRunner(
   const [
     { VitestTestRunner, NodeBenchmarkRunner },
     { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
+    _utils,
   ] = await Promise.all([
     importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
     importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
+    importId('vitest/utils') as Promise<typeof import('vitest/utils')>,
   ])
+  utils = _utils
   const runnerClass
     = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
@@ -143,10 +168,7 @@ export async function initiateRunner(
 }
 
 async function updateFilesLocations(files: File[]) {
-  const { loadSourceMapUtils } = (await importId(
-    'vitest/utils',
-  )) as typeof import('vitest/utils')
-  const { TraceMap, originalPositionFor } = await loadSourceMapUtils()
+  const { TraceMap, originalPositionFor } = utils
 
   const promises = files.map(async (file) => {
     const result = await rpc().getBrowserFileSourceMap(file.filepath)
