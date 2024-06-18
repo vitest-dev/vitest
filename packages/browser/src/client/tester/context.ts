@@ -1,7 +1,7 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
-import type { BrowserRPC } from './client'
+import type { BrowserRPC } from '../client'
 
 // this file should not import anything directly, only types
 

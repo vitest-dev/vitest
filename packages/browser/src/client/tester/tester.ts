@@ -2,12 +2,12 @@ import type { WorkerGlobalState } from 'vitest'
 import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
 import { setupDialogsSpy } from '../dialog'
 import { getBrowserState, getConfig } from '../utils'
+import { channel, client, onCancel } from '../client'
 import {
   registerUnexpectedErrors,
   registerUnhandledErrors,
   serializeError,
 } from './unhandled'
-import { channel, client, onCancel } from './client'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'

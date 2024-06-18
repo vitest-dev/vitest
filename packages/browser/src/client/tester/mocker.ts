@@ -2,8 +2,8 @@ import { getType } from '@vitest/utils'
 import { extname, join } from 'pathe'
 import { getBrowserState, importId } from '../utils'
 import type { IframeChannelOutgoingEvent } from '../channel'
+import { channel, waitForChannel } from '../client'
 import { rpc } from './rpc'
-import { channel, waitForChannel } from './client'
 
 const now = Date.now
 

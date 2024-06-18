@@ -7,7 +7,7 @@ import type {
   IframeUnmockEvent,
 } from '../channel'
 import { channel } from '../channel'
-import { client } from './client'
+import { client } from '../client'
 
 export function createModuleMocker() {
   const mocks: Map<string, string | null | undefined> = new Map()
