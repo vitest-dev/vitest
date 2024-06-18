@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { expect, onTestFailed, onTestFinished, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createFile, editFile } from '../../test-utils'
 import { runBrowserTests } from './utils'
 
@@ -20,9 +20,6 @@ test('update snapshot', async () => {
   })
   const { exitCode, ctx: vitest } = ctx
   onTestFinished(() => vitest.close())
-  onTestFailed(() => {
-    console.error(ctx.stderr)
-  })
 
   // test fails
   expect(exitCode).toBe(1)
