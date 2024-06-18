@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Task, TaskState } from '@vitest/runner'
 import { nextTick } from 'vue'
-import { client, runFiles } from '~/composables/client'
+import { hasFailedSnapshot } from 'vitest/src/utils'
+import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
@@ -14,6 +15,7 @@ const {
   current,
   opened,
   expandable,
+  typecheck,
   type,
   onItemClick,
 } = defineProps<{
@@ -32,6 +34,12 @@ const {
   projectNameColor: string
   onItemClick?: (task: Task) => void
 }>()
+
+const task = computed(() => {
+  return client.state.idMap.get(taskId)
+})
+
+const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
 
 function toggleOpen() {
   if (!expandable) {
@@ -59,59 +67,120 @@ function updateSnapshot(task: Task) {
   return client.rpc.updateSnapshot(task.file)
 }
 
-const styles = computed(() => {
-  if (indent === 0) {
-    return null
-  }
-
-  return {
-    paddingLeft: indent ? `${indent * 0.75 + (type === 'suite' ? 0.50 : 1.75)}rem` : '1rem',
-  }
+const data = computed(() => {
+  return indent <= 0 ? [] : Array.from({ length: indent }, (_, i) => `${taskId}-${i}`)
 })
-
-/* const containerRef = ref<HTMLDivElement | undefined>()
-const bottom = ref<number>(0)
-
-useResizeObserver(containerRef, (entries) => {
-  const { height } = entries[0].contentRect
-  if (isOpened.value) {
-    bottom.value = height
+const gridStyles = computed(() => {
+  const entries = data.value
+  const gridColumns: string[] = []
+  // folder icon
+  if (type === 'file' || type === 'suite') {
+    gridColumns.push('min-content')
   }
-}) */
+
+  // status icon
+  gridColumns.push('min-content')
+  // typecheck icon
+  if (type === 'suite' && typecheck) {
+    gridColumns.push('min-content')
+  }
+
+  // text content
+  gridColumns.push('minmax(0, 1fr)')
+  // buttons
+  if (type === 'file') {
+    gridColumns.push('min-content')
+  }
+
+  if (entries.length === 0) {
+    return `grid-template-columns: ${gridColumns.join(' ')};`
+  }
+
+  return `padding-left: 1.2rem; grid-template-columns: ${
+    entries.map((_, idx) => idx === 0 ? '1px' : '1.25rem').join(' ')
+  } ${gridColumns.join(' ')};`
+})
 </script>
 
 <template>
-  <div :style="styles">
-    <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
-    <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
-    <TaskItem
-      :task-id="taskId"
-      :opened="opened"
-      :state="state"
-      :duration="duration"
-      :type="type"
-      :name="name"
-      :typecheck="typecheck"
-      :project-name="projectName"
-      :project-name-color="projectNameColor"
-      :current="current"
-      @click="toggleOpen()"
-      @run="task => onRun(task)"
-      @fix-snapshot="task => updateSnapshot(task)"
-      @preview="task => onItemClick?.(task)"
-    />
-    <!--    <div
-      v-if="nested && task.type === 'suite' && task.tasks.length"
-      v-show="isOpened"
-      flex
-      relative
-    >
-      <div
-        v-if="isOpened"
-        flex mt&#45;&#45;3px ml-15px justify-center
-      >
-        <div w-1px border="x base" mb-9></div>
-      </div>
-    </div> -->
+  <div
+    v-if="task"
+    items-center
+    p="x-2 y-1"
+    grid="~ rows-1 items-center"
+    w-full
+    h-28px
+    border-rounded
+    hover="bg-active"
+    cursor-pointer
+    class="item-wrapper"
+    :style="gridStyles"
+    :aria-label="name"
+    :data-current="current"
+    @click="toggleOpen()"
+  >
+    <template v-if="indent > 0">
+      <div v-for="i in data" :key="i" border="solid border-v-line" class="vertical-line" h-28px inline-flex m-0 />
+    </template>
+    <div v-if="type === 'file' || type === 'suite'" :class="{ 'pr-1': type === 'file', 'pl-2': type === 'suite' }">
+      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    </div>
+    <StatusIcon :task="task" mr-2 :class="{ 'ml-2': type !== 'suite' && indent > 0, 'ml-1': type === 'suite' && indent > 0 }" />
+    <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
+    <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
+      <span text-sm truncate font-light>
+        <!-- only show [] in files view -->
+        <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
+          [{{ projectName }}]
+        </span>
+        {{ name }}
+      </span>
+      <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
+        {{ duration > 0 ? duration : '< 1' }}ms
+      </span>
+    </div>
+    <div v-if="type === 'file'" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+      <IconAction
+        v-if="!isReport && failedSnapshot"
+        v-tooltip.bottom="'Fix failed snapshot(s)'"
+        data-testid="btn-fix-snapshot"
+        title="Fix failed snapshot(s)"
+        icon="i-carbon-result-old"
+        @click.prevent.stop="updateSnapshot(task)"
+      />
+      <IconAction
+        v-tooltip.bottom="'Open test details'"
+        data-testid="btn-open-details"
+        title="Open test details"
+        icon="i-carbon-intrusion-prevention"
+        @click.prevent.stop="onItemClick?.(task)"
+      />
+      <IconAction
+        v-if="!isReport"
+        v-tooltip.bottom="'Run current test'"
+        data-testid="btn-run-test"
+        title="Run current test"
+        icon="i-carbon:play-filled-alt"
+        text-green5
+        @click.prevent.stop="onRun(task)"
+      />
+    </div>
   </div>
 </template>
+
+<style scoped>
+.vertical-line:first-of-type {
+  @apply border-l-2px;
+}
+.vertical-line + .vertical-line {
+  @apply border-r-1px;
+}
+.test-actions {
+  display: none;
+}
+
+.item-wrapper:hover .test-actions,
+.item-wrapper[data-current="true"] .test-actions {
+  display: flex;
+}
+</style>

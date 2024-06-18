@@ -193,11 +193,6 @@ useResizeObserver(testExplorerRef, (entries) => {
             :item-size="28"
             :items="uiEntries"
           >
-            <!--            <DynamicScrollerItem
-              :item="item"
-              :data-id="item.id"
-              :active="active"
-            > -->
             <template #default="{ item }">
               <ExplorerItem
                 :task-id="item.id"
@@ -206,7 +201,7 @@ useResizeObserver(testExplorerRef, (entries) => {
                 :current="activeFileId === item.id"
                 :indent="item.indent"
                 :name="item.name"
-                :typecheck="item.typecheck"
+                :typecheck="item.typecheck === true"
                 :project-name="item.projectName ?? ''"
                 :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
@@ -217,7 +212,6 @@ useResizeObserver(testExplorerRef, (entries) => {
                 :on-item-click="onItemClick"
               />
             </template>
-            <!--            </DynamicScrollerItem> -->
           </RecycleScroller>
         </template>
       </DetailsPanel>
