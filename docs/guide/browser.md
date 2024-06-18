@@ -248,7 +248,7 @@ export const userEvent: {
    * await userEvent.keyboard('{{a[[') // translates to: {, a, [
    * await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
+   * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/keyboard} testing-library API
    */
   keyboard: (text: string) => Promise<void>
@@ -260,7 +260,7 @@ export const userEvent: {
    * await userEvent.type(input, '{{a[[') // translates to: {, a, [
    * await userEvent.type(input, '{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
+   * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
   type: (element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>
@@ -468,7 +468,7 @@ test('trigger keystrokes', () => {
 References:
 
 - [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
-- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
 
 ### userEvent.tab
@@ -500,7 +500,7 @@ test('tab works', () => {
 References:
 
 - [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
-- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `tab` API](https://testing-library.com/docs/user-event/convenience/#tab)
 
 ### userEvent.type
@@ -533,7 +533,7 @@ test('update input', () => {
 References:
 
 - [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
-- [WebdriverIO `browser.keys` API](https://webdriver.io/docs/api/browser/keys)
+- [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
 
 ### userEvent.clear

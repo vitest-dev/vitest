@@ -13,25 +13,20 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   const { skipClick = false, skipAutoClose = false } = options
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const { frame, page } = context
+    const { frame } = context
     const element = frame.locator(`xpath=${xpath}`)
 
     if (!skipClick) {
       await element.focus()
     }
 
-    const { pressed } = await keyboardImplementation(
+    await keyboardImplementation(
       context.provider,
       context.contextId,
       text,
       () => element.selectText(),
+      skipAutoClose,
     )
-
-    if (!skipAutoClose) {
-      for (const key of pressed) {
-        await page.keyboard.up(key)
-      }
-    }
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
@@ -52,6 +47,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
           element.select()
         }
       }),
+      skipAutoClose,
     )
   }
   else {

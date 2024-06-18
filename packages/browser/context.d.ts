@@ -101,7 +101,7 @@ export interface UserEvent {
    * await userEvent.type(input, '{{a[[') // translates to: {, a, [
    * await userEvent.type(input, '{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
+   * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
   type: (element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>
