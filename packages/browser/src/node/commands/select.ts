@@ -8,6 +8,7 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
   context,
   xpath,
   userValues,
+  options = {},
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const value = userValues as any as (string | { element: string })[]
@@ -25,7 +26,10 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
       return elementHandler
     })) as (readonly string[]) | (readonly ElementHandle[])
 
-    await selectElement.selectOption(values)
+    await selectElement.selectOption(values, {
+      timeout: 1000,
+      ...options,
+    })
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const values = userValues as any as [({ index: number })]

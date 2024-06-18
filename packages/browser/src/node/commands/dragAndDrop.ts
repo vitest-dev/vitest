@@ -13,7 +13,10 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
     await context.frame.dragAndDrop(
       `xpath=${source}`,
       `xpath=${target}`,
-      options,
+      {
+        timeout: 1000,
+        ...options,
+      },
     )
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {

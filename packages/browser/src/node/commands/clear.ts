@@ -10,7 +10,9 @@ export const clear: UserEventCommand<UserEvent['clear']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { frame } = context
     const element = frame.locator(`xpath=${xpath}`)
-    await element.clear()
+    await element.clear({
+      timeout: 1000,
+    })
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
