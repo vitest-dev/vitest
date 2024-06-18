@@ -2,7 +2,7 @@ import type { CancelReason } from '@vitest/runner'
 import { type BirpcReturn, createBirpc } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from 'vitest'
 import { parse, stringify } from 'flatted'
-import { getBrowserState } from '../utils'
+import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
 
@@ -129,4 +129,4 @@ function createClient() {
 
 export const client = createClient()
 
-export { channel, waitForChannel } from '../channel'
+export { channel, waitForChannel } from './channel'

@@ -1,7 +1,7 @@
 import type { ResolvedConfig } from 'vitest'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
-import { channel, client } from './tester/client'
+import { channel, client } from './client'
 import { rpcDone } from './tester/rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
