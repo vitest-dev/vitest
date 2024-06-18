@@ -1,12 +1,10 @@
+import { format, inspect, stringify } from 'vitest/utils'
+import { getConfig } from '../utils'
 import { rpc } from './rpc'
-import { getConfig, importId } from './utils'
 
 const { Date, console } = globalThis
 
-export async function setupConsoleLogSpy() {
-  const { stringify, format, inspect } = (await importId(
-    'vitest/utils',
-  )) as typeof import('vitest/utils')
+export function setupConsoleLogSpy() {
   const {
     log,
     info,

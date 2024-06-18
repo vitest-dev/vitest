@@ -2,8 +2,7 @@ import type { CancelReason } from '@vitest/runner'
 import { type BirpcReturn, createBirpc } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from 'vitest'
 import { parse, stringify } from 'flatted'
-import type { VitestBrowserClientMocker } from './mocker'
-import { getBrowserState } from './utils'
+import { getBrowserState } from '../utils'
 
 const PAGE_TYPE = getBrowserState().type
 
@@ -51,18 +50,6 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       onCancel: setCancel,
-      async startMocking(id: string) {
-        // @ts-expect-error not typed global
-        if (typeof __vitest_mocker__ === 'undefined') {
-          throw new TypeError(
-            `Cannot mock modules in the orchestrator process`,
-          )
-        }
-        // @ts-expect-error not typed global
-        const mocker = __vitest_mocker__ as VitestBrowserClientMocker
-        const exports = await mocker.resolve(id)
-        return Object.keys(exports)
-      },
       async createTesters(files: string[]) {
         if (PAGE_TYPE !== 'orchestrator') {
           return
@@ -142,4 +129,4 @@ function createClient() {
 
 export const client = createClient()
 
-export { channel, waitForChannel } from './channel'
+export { channel, waitForChannel } from '../channel'

@@ -1,9 +1,9 @@
 import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
-import { rpc } from './rpc'
-import { importId } from './utils'
+import { importId } from '../utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
+import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
 
 interface BrowserRunnerOptions {
@@ -126,8 +126,7 @@ export async function initiateRunner(
       takeCoverageInsideWorker(config.coverage, { executeId: importId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
-    config.snapshotOptions.snapshotEnvironment
-      = new VitestBrowserSnapshotEnvironment()
+    config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
   }
   const runner = new BrowserRunner({
     config,
