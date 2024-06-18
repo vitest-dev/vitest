@@ -57,6 +57,20 @@ export default () =>
       ],
     },
     {
+      input: './src/client/tester/state.ts',
+      output: {
+        file: 'dist/state.js',
+        format: 'esm',
+      },
+      plugins: [
+        esbuild({
+          target: 'node18',
+          minifyWhitespace: true,
+        }),
+        resolve(),
+      ],
+    },
+    {
       input: input.index,
       output: {
         file: 'dist/index.d.ts',

@@ -1,6 +1,5 @@
-import type { WorkerGlobalState } from 'vitest'
 import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
-import { getBrowserState, getConfig } from '../utils'
+import { getBrowserState, getConfig, getWorkerState } from '../utils'
 import { channel, client, onCancel } from '../client'
 import { setupDialogsSpy } from './dialog'
 import {
@@ -77,53 +76,18 @@ async function tryCall<T>(
   }
 }
 
-const startTime = performance.now()
-
 async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
   const rpc = createSafeRpc(client)
 
-  const providedContext = await client.rpc.getProvidedContext()
+  const state = getWorkerState()
 
-  const state: WorkerGlobalState = {
-    ctx: {
-      pool: 'browser',
-      worker: './browser.js',
-      workerId: 1,
-      config,
-      projectName: config.name || '',
-      files,
-      environment: {
-        name: 'browser',
-        options: null,
-      },
-      providedContext,
-      invalidates: [],
-    },
-    onCancel,
-    mockMap: new Map(),
-    config,
-    environment: {
-      name: 'browser',
-      transformMode: 'web',
-      setup() {
-        throw new Error('Not called in the browser')
-      },
-    },
-    moduleCache: getBrowserState().moduleCache,
-    rpc: rpc as any,
-    durations: {
-      environment: 0,
-      prepare: startTime,
-    },
-    providedContext,
-  }
-  // @ts-expect-error untyped global for internal use
-  globalThis.__vitest_browser__ = true
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_worker__ = state
+  state.ctx.files = files
+  state.onCancel = onCancel
+  state.rpc = rpc as any
+
   const mocker = new VitestBrowserClientMocker()
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker

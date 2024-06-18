@@ -173,9 +173,6 @@ export function setupBrowserRpc(
           debug?.('[%s] Finishing browser tests for context', contextId)
           return project.browserState.get(contextId)?.resolve()
         },
-        getProvidedContext() {
-          return 'ctx' in project ? project.getProvidedContext() : ({} as any)
-        },
         // TODO: cache this automock result
         async automock(id) {
           const result = await project.browser!.transformRequest(id)

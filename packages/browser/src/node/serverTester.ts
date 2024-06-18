@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { stringify } from 'flatted'
 import { replacer } from './utils'
 import type { BrowserServerState } from './state'
 
@@ -45,6 +46,7 @@ export async function resolveTester(
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
   if (!state.testerScripts) {
@@ -52,7 +54,11 @@ export async function resolveTester(
       project.config.browser.testerScripts,
     )
     const clientScript = `<script type="module" src="${config.base || '/'}@vite/client"></script>`
-    state.testerScripts = `${clientScript}${testerScripts}`
+    const stateJs = typeof state.stateJs === 'string'
+      ? state.stateJs
+      : await state.stateJs
+    const stateScript = `<script type="module">${stateJs}</script>`
+    state.testerScripts = `${stateScript}${clientScript}${testerScripts}`
   }
 
   const testerHtml = typeof state.testerHtml === 'string'
