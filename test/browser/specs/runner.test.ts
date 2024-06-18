@@ -23,8 +23,8 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(16)
-    expect(passedTests).toHaveLength(14)
+    expect(browserResultJson.testResults).toHaveLength(17)
+    expect(passedTests).toHaveLength(15)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')

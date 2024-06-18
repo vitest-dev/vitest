@@ -923,7 +923,7 @@ Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minT
 ### testTimeout
 
 - **Type:** `number`
-- **Default:** `5000`
+- **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
 Default timeout of a test in milliseconds
@@ -931,7 +931,7 @@ Default timeout of a test in milliseconds
 ### hookTimeout
 
 - **Type:** `number`
-- **Default:** `10000`
+- **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
 Default timeout of a hook in milliseconds

@@ -15,6 +15,8 @@ describe('dom related activity', () => {
     const screenshotPath = await page.screenshot({
       element: wrapper,
     })
-    expect(screenshotPath).toMatch(/__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/)
+    expect(screenshotPath).toMatch(
+      /__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/,
+    )
   })
 })

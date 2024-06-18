@@ -102,12 +102,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public getCommandsContext(contextId: string) {
     const page = this.getPage(contextId)
-    const tester = page.frameLocator('iframe[data-vitest]')
     return {
       page,
-      tester,
-      get body() {
-        return page.frameLocator('iframe[data-vitest]').locator('body')
+      context: this.contexts.get(contextId)!,
+      get frame() {
+        return page.frame('vitest-iframe')!
       },
     }
   }

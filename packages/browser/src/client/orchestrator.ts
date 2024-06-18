@@ -52,6 +52,7 @@ function createIframe(container: HTMLDivElement, file: string) {
   iframe.style.position = 'relative'
   iframe.setAttribute('allowfullscreen', 'true')
   iframe.setAttribute('allow', 'clipboard-write;')
+  iframe.setAttribute('name', 'vitest-iframe')
 
   iframes.set(file, iframe)
   container.appendChild(iframe)
