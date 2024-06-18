@@ -134,7 +134,7 @@ export function createOrUpdateNode(
       taskNode.duration = task.result?.duration
       taskNode.state = task.result?.state
       if (isSuiteNode(taskNode)) {
-        taskNode.typecheck = task.meta?.typecheck
+        taskNode.typecheck = !!task.meta && 'typecheck' in task.meta
       }
     }
     else {
@@ -158,7 +158,7 @@ export function createOrUpdateNode(
           parentId,
           name: task.name,
           mode: task.mode,
-          typecheck: task.meta?.typecheck,
+          typecheck: !!task.meta && 'typecheck' in task.meta,
           type: 'suite',
           expandable: true,
           expanded: false,
