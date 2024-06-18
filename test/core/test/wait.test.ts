@@ -85,11 +85,11 @@ describe('waitFor', () => {
   })
 
   test('fakeTimer works', async () => {
-    vi.useFakeTimers()
-
     setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
+
+    vi.useFakeTimers()
 
     await vi.waitFor(() => {
       return new Promise<void>((resolve) => {
