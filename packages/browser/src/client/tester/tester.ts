@@ -1,8 +1,8 @@
 import type { WorkerGlobalState } from 'vitest'
 import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
-import { setupDialogsSpy } from '../dialog'
 import { getBrowserState, getConfig } from '../utils'
 import { channel, client, onCancel } from '../client'
+import { setupDialogsSpy } from './dialog'
 import {
   registerUnexpectedErrors,
   registerUnhandledErrors,
