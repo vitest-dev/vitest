@@ -36,6 +36,7 @@ const {
 }>()
 
 const task = computed(() => {
+  console.log(taskId)
   return client.state.idMap.get(taskId)
 })
 
@@ -84,20 +85,15 @@ const gridStyles = computed(() => {
   if (type === 'suite' && typecheck) {
     gridColumns.push('min-content')
   }
-
   // text content
   gridColumns.push('minmax(0, 1fr)')
   // buttons
   if (type === 'file') {
     gridColumns.push('min-content')
   }
-
-  if (entries.length === 0) {
-    return `grid-template-columns: ${gridColumns.join(' ')};`
-  }
-
-  return `padding-left: 1.2rem; grid-template-columns: ${
-    entries.map((_, idx) => idx === 0 ? '1px' : '1.25rem').join(' ')
+  // all the vertical lines with width 1rem and mx-2: always centered
+  return `grid-template-columns: ${
+    entries.map(() => '1rem').join(' ')
   } ${gridColumns.join(' ')};`
 })
 </script>
@@ -107,7 +103,7 @@ const gridStyles = computed(() => {
     v-if="task"
     items-center
     p="x-2 y-1"
-    grid="~ rows-1 items-center"
+    grid="~ rows-1 items-center gap-x-2"
     w-full
     h-28px
     border-rounded
@@ -120,12 +116,12 @@ const gridStyles = computed(() => {
     @click="toggleOpen()"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid border-v-line" class="vertical-line" h-28px inline-flex m-0 />
+      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
     </template>
-    <div v-if="type === 'file' || type === 'suite'" :class="{ 'pr-1': type === 'file', 'pl-2': type === 'suite' }">
+    <div v-if="type === 'file' || type === 'suite'" w-4>
       <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
-    <StatusIcon :task="task" mr-2 :class="{ 'ml-2': type !== 'suite' && indent > 0, 'ml-1': type === 'suite' && indent > 0 }" />
+    <StatusIcon :task="task" w-4 />
     <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>

@@ -42,7 +42,6 @@ export const config: UserConfig = {
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
-        'border-v-line': 'border-gray-500:20',
         'focus-base': 'border-gray-500 dark:border-gray-400',
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
