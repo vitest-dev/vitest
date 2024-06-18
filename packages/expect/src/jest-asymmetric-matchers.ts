@@ -145,8 +145,6 @@ export class ObjectContaining extends AsymmetricMatcher<
     let result = true
 
     const matcherContext = this.getMatcherContext()
-    const otherProperties = Object.keys(other)
-
     for (const property in this.sample) {
       if (
         !this.hasProperty(other, property)
@@ -156,11 +154,6 @@ export class ObjectContaining extends AsymmetricMatcher<
           matcherContext.customTesters,
         )
       ) {
-        for (const property of otherProperties) {
-          if (!this.hasProperty(this.sample, property)) {
-            this.sample[property] = other[property]
-          }
-        }
         result = false
         break
       }
