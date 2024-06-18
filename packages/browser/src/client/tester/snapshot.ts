@@ -2,6 +2,13 @@ import type { SnapshotEnvironment } from 'vitest/snapshot'
 import type { VitestBrowserClient } from '../client'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
+  private sourceMaps = new Map<string, any>()
+  private traceMaps = new Map<string, TraceMap>()
+
+  public addSourceMap(filepath: string, map: any) {
+    this.sourceMaps.set(filepath, map)
+  }
+
   getVersion(): string {
     return '1'
   }
@@ -28,6 +35,24 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
 
   removeSnapshotFile(filepath: string): Promise<void> {
     return rpc().removeSnapshotFile(filepath)
+  }
+
+  processStackTrace(stack: ParsedStack): ParsedStack {
+    const map = this.sourceMaps.get(stack.file)
+    if (!map) {
+      return stack
+    }
+    const { TraceMap, originalPositionFor } = getUtils()
+    let traceMap = this.traceMaps.get(stack.file)
+    if (!traceMap) {
+      traceMap = new TraceMap(map)
+      this.traceMaps.set(stack.file, traceMap)
+    }
+    const { line, column } = originalPositionFor(traceMap, stack)
+    if (line != null && column != null) {
+      return { ...stack, line, column }
+    }
+    return stack
   }
 }
 

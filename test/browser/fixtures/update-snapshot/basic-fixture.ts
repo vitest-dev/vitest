@@ -1,5 +1,10 @@
 import { expect, test, vi } from 'vitest'
 
+interface _BasicInterface {
+  willBeRemoved: boolean
+  leavingSourceMapIncorrect: boolean
+}
+
 test('inline snapshot', () => {
   expect(1).toMatchInlineSnapshot('1')
 })
@@ -10,7 +15,7 @@ test('basic', () => {
 
 test('renders inline mock snapshot', () => {
   const fn = vi.fn()
-  expect(fn).toMatchInlineSnapshot('[MockFunction spy]')
+  expect(fn).toMatchInlineSnapshot()
   fn('hello', 'world', 2)
   expect(fn).toMatchInlineSnapshot()
 })

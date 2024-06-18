@@ -151,11 +151,11 @@ afterEach(() => {
   originalFiles.forEach((content, file) => {
     fs.writeFileSync(file, content, 'utf-8')
   })
-  createdFiles.forEach((file) => {
-    if (fs.existsSync(file)) {
-      fs.unlinkSync(file)
-    }
-  })
+  // createdFiles.forEach((file) => {
+  //   if (fs.existsSync(file)) {
+  //     fs.unlinkSync(file)
+  //   }
+  // })
   originalFiles.clear()
   createdFiles.clear()
 })
