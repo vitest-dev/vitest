@@ -45,7 +45,7 @@ export default () =>
       plugins,
     },
     {
-      input: './src/client/context.ts',
+      input: './src/client/tester/context.ts',
       output: {
         file: 'dist/context.js',
         format: 'esm',
