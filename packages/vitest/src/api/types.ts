@@ -6,7 +6,6 @@ import type {
   AfterSuiteRunMeta,
   File,
   ModuleGraphData,
-  ProvidedContext,
   Reporter,
   ResolvedConfig,
   SnapshotResult,
@@ -81,8 +80,7 @@ export interface WebSocketBrowserHandlers {
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (
     id: string
-  ) => Promise<TransformResult['map'] | undefined>
-  getProvidedContext: () => ProvidedContext
+  ) => TransformResult['map'] | undefined
 }
 
 export interface WebSocketEvents

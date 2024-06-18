@@ -31,6 +31,7 @@ export async function resolveOrchestrator(
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_PROVIDED_CONTEXT__: '{}',
   })
 
   // disable CSP for the orchestrator as we are the ones controlling it

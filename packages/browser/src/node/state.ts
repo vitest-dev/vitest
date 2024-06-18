@@ -17,6 +17,7 @@ export class BrowserServerState {
   public testerHtml: Promise<string> | string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
+  public stateJs: Promise<string> | string
 
   constructor(
     public project: WorkspaceProject,
@@ -36,7 +37,7 @@ export class BrowserServerState {
     })().then(manifest => (this.manifest = manifest))
 
     this.testerHtml = readFile(
-      resolve(distRoot, 'client/tester.html'),
+      resolve(distRoot, 'client/tester/tester.html'),
       'utf8',
     ).then(html => (this.testerHtml = html))
     this.orchestratorHtml = (project.config.browser.ui
@@ -47,6 +48,10 @@ export class BrowserServerState {
       resolve(distRoot, 'client/esm-client-injector.js'),
       'utf8',
     ).then(js => (this.injectorJs = js))
+    this.stateJs = readFile(
+      resolve(distRoot, 'state.js'),
+      'utf-8',
+    ).then(js => (this.stateJs = js))
   }
 
   getSerializableConfig() {

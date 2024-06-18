@@ -24,6 +24,7 @@ window.__vitest_browser_runner__ = {
   type: { __VITEST_TYPE__ },
   contextId: { __VITEST_CONTEXT_ID__ },
   provider: { __VITEST_PROVIDER__ },
+  providedContext: { __VITEST_PROVIDED_CONTEXT__ },
 };
 
 const config = __vitest_browser_runner__.config;

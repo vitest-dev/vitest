@@ -36,7 +36,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           server,
           base,
         )
-        server.middlewares.use((_req, res, next) => {
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestHeaders(_req, res, next) {
           const headers = server.config.server.headers
           if (headers) {
             for (const name in headers) {
@@ -45,7 +46,8 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           }
           next()
         })
-        server.middlewares.use(async (req, res, next) => {
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(async function vitestBrowserMode(req, res, next) {
           if (!req.url) {
             return next()
           }
@@ -114,15 +116,16 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           file => getFilePoolName(project, file) === 'browser',
         )
         const setupFiles = toArray(project.config.setupFiles)
-        const vitestPaths = [
-          resolve(vitestDist, 'index.js'),
-          resolve(vitestDist, 'browser.js'),
-          resolve(vitestDist, 'runners.js'),
-          resolve(vitestDist, 'utils.js'),
-        ]
         return {
           optimizeDeps: {
-            entries: [...browserTestFiles, ...setupFiles, ...vitestPaths],
+            entries: [
+              ...browserTestFiles,
+              ...setupFiles,
+              resolve(vitestDist, 'index.js'),
+              resolve(vitestDist, 'browser.js'),
+              resolve(vitestDist, 'runners.js'),
+              resolve(vitestDist, 'utils.js'),
+            ],
             exclude: [
               'vitest',
               'vitest/utils',
