@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Task, TaskState } from '@vitest/runner'
 import { nextTick } from 'vue'
-import { hasFailedSnapshot } from 'vitest/src/utils'
+import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
@@ -35,10 +35,7 @@ const {
   onItemClick?: (task: Task) => void
 }>()
 
-const task = computed(() => {
-  console.log(taskId)
-  return client.state.idMap.get(taskId)
-})
+const task = computed(() => client.state.idMap.get(taskId))
 
 const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
 
