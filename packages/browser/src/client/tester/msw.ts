@@ -5,8 +5,8 @@ import type {
   IframeMockEvent,
   IframeMockingDoneEvent,
   IframeUnmockEvent,
-} from './channel'
-import { channel } from './channel'
+} from '../channel'
+import { channel } from '../channel'
 import { client } from './client'
 
 export function createModuleMocker() {

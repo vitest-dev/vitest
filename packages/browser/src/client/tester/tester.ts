@@ -1,16 +1,17 @@
 import type { WorkerGlobalState } from 'vitest'
-import { channel, client, onCancel } from './client'
-import { setupDialogsSpy } from './dialog'
-import { setupConsoleLogSpy } from './logger'
-import { browserHashMap, initiateRunner } from './runner'
-import { getBrowserState, getConfig, importId } from './utils'
-import { loadSafeRpc } from './rpc'
-import { VitestBrowserClientMocker } from './mocker'
+import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
+import { setupDialogsSpy } from '../dialog'
+import { getBrowserState, getConfig } from '../utils'
 import {
   registerUnexpectedErrors,
   registerUnhandledErrors,
   serializeError,
 } from './unhandled'
+import { channel, client, onCancel } from './client'
+import { setupConsoleLogSpy } from './logger'
+import { createSafeRpc } from './rpc'
+import { browserHashMap, initiateRunner } from './runner'
+import { VitestBrowserClientMocker } from './mocker'
 
 const stopErrorHandler = registerUnhandledErrors()
 
@@ -82,10 +83,7 @@ async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
-  const viteClientPath = `/@vite/client`
-  await import(viteClientPath)
-
-  const rpc: any = await loadSafeRpc(client)
+  const rpc = createSafeRpc(client)
 
   const providedContext = await client.rpc.getProvidedContext()
 
@@ -115,7 +113,7 @@ async function prepareTestEnvironment(files: string[]) {
       },
     },
     moduleCache: getBrowserState().moduleCache,
-    rpc,
+    rpc: rpc as any,
     durations: {
       environment: 0,
       prepare: startTime,
@@ -130,8 +128,10 @@ async function prepareTestEnvironment(files: string[]) {
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
-  await setupConsoleLogSpy()
+  setupConsoleLogSpy()
   setupDialogsSpy()
+
+  const runner = await initiateRunner(state, mocker, config)
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
@@ -140,13 +140,6 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, [true, version])
     }
   })
-
-  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all(
-    [
-      initiateRunner(state, mocker, config),
-      importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-    ],
-  )
 
   mocker.setSpyModule(SpyModule)
   mocker.setupWorker()

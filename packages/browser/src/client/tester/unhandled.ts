@@ -1,6 +1,6 @@
+import { getBrowserState, importId } from '../utils'
 import type { client } from './client'
 import { channel } from './client'
-import { getBrowserState, importId } from './utils'
 
 function on(event: string, listener: (...args: any[]) => void) {
   window.addEventListener(event, listener)

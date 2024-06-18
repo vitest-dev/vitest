@@ -100,7 +100,6 @@ export interface WebSocketEvents
 
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
-  startMocking: (id: string) => Promise<string[]>
   createTesters: (files: string[]) => Promise<void>
 }
 

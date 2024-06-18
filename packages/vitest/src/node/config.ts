@@ -683,6 +683,12 @@ export function resolveConfig(
       resolved.browser.screenshotDirectory,
     )
   }
+  resolved.browser.testerScripts ??= []
+  resolved.browser.testerScripts.unshift({
+    type: 'module',
+    src: '/@vite/client',
+    id: '/@vite/client',
+  })
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
