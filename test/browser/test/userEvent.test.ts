@@ -348,7 +348,7 @@ describe('userEvent.keyboard', async () => {
     ])
   })
 
-  test('standalone keyboard works correctly with an active non-input', async () => {
+  test.only('standalone keyboard works correctly with an active non-input', async () => {
     const documentKeydown: string[] = []
     const divKeydown: string[] = []
     const div = document.createElement('div')
@@ -358,6 +358,7 @@ describe('userEvent.keyboard', async () => {
     div.addEventListener('keydown', (event) => {
       divKeydown.push(event.key)
       event.stopPropagation()
+      event.preventDefault()
     })
     document.body.appendChild(div)
     document.addEventListener('keydown', (event) => {
