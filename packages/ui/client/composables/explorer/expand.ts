@@ -1,8 +1,9 @@
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
-import type { FileTreeNode, Filter, UITaskTreeNode } from '~/composables/explorer/types'
+import type { Filter, UITaskTreeNode } from '~/composables/explorer/types'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
 import { filterAll, filterTask } from '~/composables/explorer/filter'
 import { findById } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer/index'
 
 /**
  * Expand the node: only direct children will be expanded
@@ -20,19 +21,16 @@ import { findById } from '~/composables/client'
  * - update uiEntries including child nodes
  *
  * @param id The node id to expand.
- * @param nodes Tree node map.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandNode(
   id: string,
-  nodes: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
   const entry = createOrUpdateSuiteTask(
     id,
-    nodes,
     false,
   )
   if (!entry) {
@@ -43,7 +41,7 @@ export function runExpandNode(
 
   // create only direct children
   for (const subtask of task.tasks) {
-    createOrUpdateNode(node.id, subtask, nodes, false)
+    createOrUpdateNode(node.id, subtask, false)
   }
 
   // expand the node
@@ -55,7 +53,6 @@ export function runExpandNode(
   // the first node is itself
   const children = new Set(filterTask(
     node,
-    nodes,
     search,
     filter,
   ))
@@ -84,21 +81,15 @@ export function runExpandNode(
  * - update the filtered expandAll state to true
  * - update uiEntries with child nodes
  *
- * @param nodes Tree node map.
- * @param nodeTree Tree node map.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandAll(
-  nodes: FileTreeNode[],
-  nodeTree: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
-  expandAllNodes(nodes, false)
+  expandAllNodes(explorerTree.root.tasks, false)
   const entries = [...filterAll(
-    nodes,
-    nodeTree,
     search,
     filter,
   )]
@@ -110,11 +101,10 @@ export function runExpandAll(
 
 export function expandNodesOnEndRun(
   ids: Set<string>,
-  nodes: Map<string, UITaskTreeNode>,
   updateState: boolean,
 ) {
   if (ids.size) {
-    for (const node of nodes.values()) {
+    for (const node of explorerTree.nodes.values()) {
       if (ids.has(node.id)) {
         node.expanded = true
       }

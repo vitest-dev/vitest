@@ -4,9 +4,11 @@ import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode
 import {
   isFileNode,
   isParentNode,
+  isTestNode,
 } from '~/composables/explorer/utils'
 import { client, findById } from '~/composables/client'
 import { filteredFiles, uiEntries } from '~/composables/explorer/state'
+import { explorerTree } from '~/composables/explorer/index'
 
 export function testMatcher(task: Task, search: string, filter: Filter) {
   return task ? matchTask(task, search, filter) : false
@@ -14,20 +16,14 @@ export function testMatcher(task: Task, search: string, filter: Filter) {
 /**
  * Filter child nodes using search, filter and only tests.
  *
- * @param nodes The file nodes.
- * @param nodeTree Tree node map.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runFilter(
-  nodes: FileTreeNode[],
-  nodeTree: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
   const entries = [...filterAll(
-    nodes,
-    nodeTree,
     search,
     filter,
   )]
@@ -36,19 +32,16 @@ export function runFilter(
 }
 
 export function* filterAll(
-  nodes: UITaskTreeNode[],
-  nodeTree: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
-  for (const node of nodes) {
-    yield * filterTask(node, nodeTree, search, filter)
+  for (const node of explorerTree.root.tasks) {
+    yield * filterTask(node, search, filter)
   }
 }
 
 export function* filterTask(
   node: UITaskTreeNode,
-  nodes: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
@@ -58,16 +51,16 @@ export function* filterTask(
 
   for (const entry of visitNode(
     node,
-    nodes,
     treeNodes,
     n => matcher(n, search, filter),
-  )) { list.push(entry) }
+  )) {
+    list.push(entry)
+  }
 
   const filesToShow = new Set<string>()
 
   const entries = [...filterParents(
     list,
-    nodes,
     filter.onlyTests,
     treeNodes,
     filesToShow,
@@ -75,11 +68,11 @@ export function* filterTask(
 
   // we need to remove any child added when filtering: we traverse the full tree
   const parents = new Set(
-    entries.filter(e => isParentNode(e) && e.expanded).map(e => e.id),
+    entries.filter(e => isParentNode(e)).map(e => e.id),
   )
   yield * entries.filter((node) => {
     // all file nodes, or expanded parents, or children of expanded parents
-    return isFileNode(node) || (isParentNode(node) ? node.expanded : parents.has(node.parentId))
+    return isFileNode(node) || (isParentNode(node) ? parents.has(node.id) : parents.has(node.parentId))
   })
 }
 
@@ -89,7 +82,6 @@ function expandCollapseNode(
   treeNodes: Set<string>,
   collapseParents: boolean,
   filesToShow: Set<string>,
-  nodes: Map<string, UITaskTreeNode>,
 ) {
   if (collapseParents) {
     if (isFileNode(child)) {
@@ -101,7 +93,7 @@ function expandCollapseNode(
     }
     // show the parent if at least one child matches the filter
     if (treeNodes.has(child.id)) {
-      const parent = nodes.get(child.parentId)
+      const parent = explorerTree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -112,7 +104,7 @@ function expandCollapseNode(
   else {
     // show the parent if matches the filter or at least one child matches the filter
     if (match || treeNodes.has(child.id) || filesToShow.has(child.id)) {
-      const parent = nodes.get(child.parentId)
+      const parent = explorerTree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -124,7 +116,6 @@ function expandCollapseNode(
 
 function* filterParents(
   list: FilterResult[],
-  nodes: Map<string, UITaskTreeNode>,
   collapseParents: boolean,
   treeNodes: Set<string>,
   filesToShow: Set<string>,
@@ -138,14 +129,13 @@ function* filterParents(
         treeNodes,
         collapseParents,
         filesToShow,
-        nodes,
       )
       if (node) {
         yield node
       }
     }
     else if (match) {
-      const parent = nodes.get(child.parentId)
+      const parent = explorerTree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -198,20 +188,31 @@ function matchTask(
 
 function* visitNode(
   node: UITaskTreeNode,
-  nodes: Map<string, UITaskTreeNode>,
   treeNodes: Set<string>,
   matcher: (node: UITaskTreeNode) => boolean,
 ): Generator<[match: boolean, node: UITaskTreeNode]> {
   const match = matcher(node)
 
   if (match) {
-    treeNodes.add(node.parentId)
+    if (isTestNode(node)) {
+      let parent = explorerTree.nodes.get(node.parentId)
+      while (parent) {
+        treeNodes.add(parent.id)
+        parent = explorerTree.nodes.get(parent.parentId)
+      }
+    }
+    else if (isFileNode(node)) {
+      treeNodes.add(node.id)
+    }
+    else {
+      treeNodes.add(node.parentId)
+    }
   }
 
   yield [match, node]
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      yield * visitNode(node.tasks[i], nodes, treeNodes, matcher)
+      yield * visitNode(node.tasks[i], treeNodes, matcher)
     }
   }
 }

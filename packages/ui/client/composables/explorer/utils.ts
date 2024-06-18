@@ -3,10 +3,16 @@ import { isAtomTest } from '@vitest/runner/utils'
 import type { FileTreeNode, ParentTreeNode, SuiteTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
 import { client } from '~/composables/client'
 import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { explorerTree } from '~/composables/explorer/index'
+
+export function isTestNode(node: UITaskTreeNode): node is FileTreeNode {
+  return node.type === 'test' || node.type === 'custom'
+}
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
 }
+
 export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
   return node.type === 'suite'
 }
@@ -17,11 +23,9 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
 
 export function createOrUpdateFileNode(
   file: File,
-  nodes: Map<string, UITaskTreeNode>,
-  rootTasks: FileTreeNode[],
   collect = false,
 ) {
-  let fileNode = nodes.get(file.id) as FileTreeNode | undefined
+  let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
     // if (explorerTree.isUITaskDone(fileNode)) {
@@ -45,6 +49,7 @@ export function createOrUpdateFileNode(
       expandable: true,
       expanded: false,
       type: 'file',
+      children: new Set(),
       tasks: [],
       indent: 0,
       duration: file.result?.duration,
@@ -57,12 +62,12 @@ export function createOrUpdateFileNode(
       prepareDuration: file.prepareDuration,
       state: file.result?.state,
     }
-    nodes.set(file.id, fileNode)
-    rootTasks.push(fileNode)
+    explorerTree.nodes.set(file.id, fileNode)
+    explorerTree.root.tasks.push(fileNode)
   }
   if (collect) {
     for (let i = 0; i < file.tasks.length; i++) {
-      createOrUpdateNode(file.id, file.tasks[i], nodes, true)
+      createOrUpdateNode(file.id, file.tasks[i], true)
     }
   }
 
@@ -73,10 +78,9 @@ export function createOrUpdateFileNode(
 
 export function createOrUpdateSuiteTask(
   id: string,
-  nodes: Map<string, UITaskTreeNode>,
   all: boolean,
 ) {
-  const node = nodes.get(id)
+  const node = explorerTree.nodes.get(id)
   if (!node || !isParentNode(node)/* || explorerTree.isUITaskDone(node) */) {
     return
   }
@@ -88,7 +92,7 @@ export function createOrUpdateSuiteTask(
   }
 
   // update the node
-  createOrUpdateNode(node.parentId, task, nodes, all && task.tasks.length > 0)
+  createOrUpdateNode(node.parentId, task, all && task.tasks.length > 0)
 
   // if (isTaskDone(task)) {
   //   explorerTree.taskDone(task.id)
@@ -97,11 +101,8 @@ export function createOrUpdateSuiteTask(
   return [node, task] as const
 }
 
-export function createOrUpdateNodeTask(
-  id: string,
-  nodes: Map<string, UITaskTreeNode>,
-) {
-  const node = nodes.get(id)
+export function createOrUpdateNodeTask(id: string) {
+  const node = explorerTree.nodes.get(id)
   if (!node/* || explorerTree.isUITaskDone(node) */) {
     return
   }
@@ -112,20 +113,23 @@ export function createOrUpdateNodeTask(
     return
   }
 
-  createOrUpdateNode(node.parentId, task, nodes, false)
+  createOrUpdateNode(node.parentId, task, false)
 }
 
 export function createOrUpdateNode(
   parentId: string,
   task: Task,
-  nodes: Map<string, UITaskTreeNode>,
   createAll: boolean,
 ) {
-  const node = nodes.get(parentId) as ParentTreeNode | undefined
+  const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
   if (node) {
-    taskNode = nodes.get(task.id) as UITaskTreeNode | undefined
+    taskNode = explorerTree.nodes.get(task.id) as UITaskTreeNode | undefined
     if (taskNode) {
+      if (!node.children.has(task.id)) {
+        node.tasks.push(taskNode)
+        node.children.add(task.id)
+      }
       /* if (explorerTree.isUITaskDone(taskNode)) {
         return
       } */
@@ -162,18 +166,21 @@ export function createOrUpdateNode(
           type: 'suite',
           expandable: true,
           expanded: false,
+          children: new Set(),
           tasks: [],
           indent: node.indent + 1,
           duration: task.result?.duration,
           state: task.result?.state,
         } as SuiteTreeNode
       }
-      nodes.set(task.id, taskNode)
+      explorerTree.nodes.set(task.id, taskNode)
       node.tasks.push(taskNode)
+      node.children.add(task.id)
     }
-    if (createAll && isTaskSuite(task)) {
+
+    if (taskNode && createAll && isTaskSuite(task)) {
       for (let i = 0; i < task.tasks.length; i++) {
-        createOrUpdateNode(task.id, task.tasks[i], nodes, createAll)
+        createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
     }
 

@@ -24,13 +24,13 @@ export class ExplorerTree {
     // todo: remove also client/index.ts logic with onTaskUpdateCalled
     private resumeEndTimeout = 500,
     private done = new Set<string>(),
-    private root = <RootTreeNode>{
+    public root = <RootTreeNode>{
       id: 'vitest-root-node',
       expandable: true,
       expanded: true,
       tasks: [],
     },
-    private nodes = new Map<string, UITaskTreeNode>(),
+    public nodes = new Map<string, UITaskTreeNode>(),
     public summary = reactive<CollectorInfo>({
       files: 0,
       time: '',
@@ -73,7 +73,7 @@ export class ExplorerTree {
   }
 
   loadFiles(remoteFiles: File[]) {
-    runLoadFiles(remoteFiles, this.root.tasks, this.nodes, search.value.trim(), {
+    runLoadFiles(remoteFiles, search.value.trim(), {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
@@ -102,8 +102,6 @@ export class ExplorerTree {
       runCollect(
         start,
         end,
-        this.root.tasks,
-        this.nodes,
         this.summary,
         search.value.trim(),
         {
@@ -140,13 +138,13 @@ export class ExplorerTree {
 
   collapseNode(id: string) {
     queueMicrotask(() => {
-      runCollapseNode(id, this.nodes)
+      runCollapseNode(id)
     })
   }
 
   expandNode(id: string) {
     queueMicrotask(() => {
-      runExpandNode(id, this.nodes, search.value.trim(), {
+      runExpandNode(id, search.value.trim(), {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -157,13 +155,13 @@ export class ExplorerTree {
 
   collapseAllNodes() {
     queueMicrotask(() => {
-      runCollapseAllTask(this.root.tasks)
+      runCollapseAllTask()
     })
   }
 
   expandAllNodes() {
     queueMicrotask(() => {
-      runExpandAll(this.root.tasks, this.nodes, search.value.trim(), {
+      runExpandAll(search.value.trim(), {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -174,7 +172,7 @@ export class ExplorerTree {
 
   filterNodes() {
     queueMicrotask(() => {
-      runFilter(this.root.tasks, this.nodes, search.value.trim(), {
+      runFilter(search.value.trim(), {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,

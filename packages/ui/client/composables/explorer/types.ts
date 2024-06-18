@@ -38,13 +38,13 @@ export interface UITaskTreeNode extends TaskTreeNode {
 }
 
 export interface ParentTreeNode extends UITaskTreeNode {
+  children: Set<string>
   tasks: UITaskTreeNode[]
 }
 
-export interface SuiteTreeNode extends UITaskTreeNode {
+export interface SuiteTreeNode extends ParentTreeNode {
   type: 'suite'
   typecheck?: boolean
-  tasks: UITaskTreeNode[]
 }
 
 export interface FileTreeNode extends ParentTreeNode {

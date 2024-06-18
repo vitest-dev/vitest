@@ -1,6 +1,7 @@
-import type { FileTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
+import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { isFileNode, isParentNode } from '~/composables/explorer/utils'
 import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
+import { explorerTree } from '~/composables/explorer/index'
 
 /**
  * Collapse all nodes: all children collapsed.
@@ -17,13 +18,9 @@ import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/s
  * - update uiEntries without child nodes
  *
  * @param id The node id to collapse.
- * @param nodes Tree node map.
  */
-export function runCollapseNode(
-  id: string,
-  nodes: Map<string, UITaskTreeNode>,
-) {
-  const node = nodes.get(id)
+export function runCollapseNode(id: string) {
+  const node = explorerTree.nodes.get(id)
   if (!node || !isParentNode(node)) {
     return
   }
@@ -50,11 +47,10 @@ export function runCollapseNode(
  * - update the filtered expandAll state to false
  * - update uiEntries without child nodes
  *
- * @param nodes The file nodes.
  */
-export function runCollapseAllTask(nodes: FileTreeNode[]) {
+export function runCollapseAllTask() {
   // collapse all nodes
-  collapseAllNodes(nodes)
+  collapseAllNodes(explorerTree.root.tasks)
   const entries = [...uiEntries.value.filter(isFileNode)]
   collapseAllNodes(entries)
   // collapse all nodes

@@ -6,10 +6,8 @@ import { hasFailedSnapshot } from '@vitest/ws-client'
 import type {
   CollectFilteredTests,
   CollectorInfo,
-  FileTreeNode,
   Filter,
   FilteredTests,
-  UITaskTreeNode,
 } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
@@ -21,21 +19,20 @@ import {
 import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
+import { explorerTree } from '~/composables/explorer/index'
 
 export function runLoadFiles(
   remoteFiles: File[],
-  rootTasks: FileTreeNode[],
-  nodes: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, f]) => createOrUpdateFileNode(f, nodes, rootTasks))
+    .map(([, f]) => createOrUpdateFileNode(f))
 
-  uiFiles.value = [...rootTasks]
+  uiFiles.value = [...explorerTree.root.tasks]
   queueMicrotask(() => {
-    runFilter(rootTasks, nodes, search.trim(), {
+    runFilter(search.trim(), {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
@@ -47,8 +44,6 @@ export function runLoadFiles(
 export function runCollect(
   start: boolean,
   end: boolean,
-  rootTasks: FileTreeNode[],
-  nodes: Map<string, UITaskTreeNode>,
   summary: CollectorInfo,
   search: string,
   filter: Filter,
@@ -58,6 +53,7 @@ export function runCollect(
   }
 
   queueMicrotask(() => {
+    const rootTasks = explorerTree.root.tasks
     // collect remote children
     for (let i = 0; i < rootTasks.length; i++) {
       const fileNode = rootTasks[i]
@@ -66,18 +62,18 @@ export function runCollect(
         continue
       }
 
-      createOrUpdateFileNode(file, nodes, rootTasks, !start)
+      createOrUpdateFileNode(file, !start)
       const tasks = file.tasks
       if (!tasks?.length) {
         continue
       }
 
-      createOrUpdateEntry(file.tasks, nodes)
+      createOrUpdateEntry(file.tasks)
     }
   })
 
   queueMicrotask(() => {
-    collectData(rootTasks, summary)
+    collectData(summary)
   })
 
   queueMicrotask(() => {
@@ -90,13 +86,11 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    doRunFilter(rootTasks, nodes, search, filter)
+    doRunFilter(search, filter)
   })
 }
 
 function doRunFilter(
-  rootTasks: FileTreeNode[],
-  nodes: Map<string, UITaskTreeNode>,
   search: string,
   filter: Filter,
   end = false,
@@ -111,30 +105,32 @@ function doRunFilter(
 
   // refresh explorer
   queueMicrotask(() => {
-    runFilter(rootTasks, nodes, search, filter)
+    runFilter(search, filter)
   })
 
   if (applyExpandNodes) {
     // expand all nodes
     queueMicrotask(() => {
-      expandNodesOnEndRun(ids, nodes, end)
+      expandNodesOnEndRun(ids, end)
       if (resetExpandAll || filtered) {
         treeFilter.value.expandAll = false
       }
     })
 
     // refresh explorer
-    queueMicrotask(() => runFilter(rootTasks, nodes, search, filter))
+    queueMicrotask(() => runFilter(search, filter))
   }
 }
 
-function createOrUpdateEntry(tasks: Task[], nodes: Map<string, UITaskTreeNode>) {
+function createOrUpdateEntry(tasks: Task[]) {
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i]
     if (isSuite(task)) {
-      createOrUpdateSuiteTask(task.id, nodes, true)
+      createOrUpdateSuiteTask(task.id, true)
     }
-    else { createOrUpdateNodeTask(task.id, nodes) }
+    else {
+      createOrUpdateNodeTask(task.id)
+    }
   }
 }
 
@@ -156,12 +152,9 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.failedSnapshotEnabled = false
 }
 
-function collectData(
-  files: FileTreeNode[],
-  summary: CollectorInfo,
-) {
+function collectData(summary: CollectorInfo) {
   const idMap = client.state.idMap
-  const filesMap = new Map(files.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
+  const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
   const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
