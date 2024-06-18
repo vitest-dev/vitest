@@ -94,6 +94,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
             const files = project.browserState.get(contextId!)?.files ?? []
 
             const injector = replacer(await injectorJs, {
+              __VITEST_PROVIDER__: JSON.stringify(project.browserProvider!.name),
               __VITEST_CONFIG__: JSON.stringify(config),
               __VITEST_VITE_CONFIG__: JSON.stringify({
                 root: project.browser!.config.root,
@@ -169,6 +170,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const files = project.browserState.get(contextId)?.files ?? []
 
           const injector = replacer(await injectorJs, {
+            __VITEST_PROVIDER__: JSON.stringify(project.browserProvider!.name),
             __VITEST_CONFIG__: JSON.stringify(config),
             __VITEST_FILES__: JSON.stringify(files),
             __VITEST_VITE_CONFIG__: JSON.stringify({

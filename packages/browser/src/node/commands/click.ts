@@ -10,16 +10,38 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.tester
-    await tester.locator(`xpath=${xpath}`).click(options)
-    return
+    const tester = context.frame
+    await tester.locator(`xpath=${xpath}`).click({
+      timeout: 1000,
+      ...options,
+    })
   }
-  if (provider instanceof WebdriverBrowserProvider) {
-    const page = provider.browser!
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
     const markedXpath = `//${xpath}`
-    const element = await page.$(markedXpath)
-    await element.click(options)
-    return
+    await browser.$(markedXpath).click(options as any)
   }
-  throw new Error(`Provider "${provider.name}" doesn't support click command`)
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support click command`)
+  }
+}
+
+export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
+  context,
+  xpath,
+  options = {},
+) => {
+  const provider = context.provider
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const tester = context.frame
+    await tester.locator(`xpath=${xpath}`).dblclick(options)
+  }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
+    const markedXpath = `//${xpath}`
+    await browser.$(markedXpath).doubleClick()
+  }
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)
+  }
 }

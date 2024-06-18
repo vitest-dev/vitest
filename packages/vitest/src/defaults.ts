@@ -106,8 +106,6 @@ const config = {
   mockReset: false,
   include: defaultInclude,
   exclude: defaultExclude,
-  testTimeout: 5000,
-  hookTimeout: 10000,
   teardownTimeout: 10000,
   forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,

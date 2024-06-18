@@ -85,11 +85,11 @@ describe('waitFor', () => {
   })
 
   test('fakeTimer works', async () => {
-    vi.useFakeTimers()
-
     setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
+
+    vi.useFakeTimers()
 
     await vi.waitFor(() => {
       return new Promise<void>((resolve) => {
@@ -103,7 +103,6 @@ describe('waitFor', () => {
   })
 
   test('callback stops running after timeout', async () => {
-    vi.useFakeTimers()
     let timedOut = false
     let callbackRanAfterTimeout = false
     try {
@@ -111,17 +110,15 @@ describe('waitFor', () => {
         callbackRanAfterTimeout = timedOut
         throw new Error('waitFor error')
       }, {
-        interval: 100,
-        timeout: 200,
+        interval: 10,
+        timeout: 50,
       })
     }
     catch (error) {
       timedOut = true
     }
-    await vi.advanceTimersByTimeAsync(100)
     expect(timedOut).toBe(true)
     expect(callbackRanAfterTimeout).toBe(false)
-    vi.useRealTimers()
   })
 })
 
@@ -188,11 +185,11 @@ describe('waitUntil', () => {
   })
 
   test('fakeTimer works', async () => {
-    vi.useFakeTimers()
-
     setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
+
+    vi.useFakeTimers()
 
     await vi.waitUntil(() => {
       return new Promise<boolean>((resolve) => {
@@ -206,7 +203,6 @@ describe('waitUntil', () => {
   })
 
   test('callback stops running after timeout', async () => {
-    vi.useFakeTimers()
     let timedOut = false
     let callbackRanAfterTimeout = false
     try {
@@ -214,16 +210,14 @@ describe('waitUntil', () => {
         callbackRanAfterTimeout = timedOut
         return false
       }, {
-        interval: 100,
-        timeout: 200,
+        interval: 10,
+        timeout: 50,
       })
     }
     catch (error) {
       timedOut = true
     }
-    await vi.advanceTimersByTimeAsync(100)
     expect(timedOut).toBe(true)
     expect(callbackRanAfterTimeout).toBe(false)
-    vi.useRealTimers()
   })
 })

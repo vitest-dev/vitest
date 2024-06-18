@@ -14,6 +14,7 @@ export interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
+  provider: string
   viteConfig: {
     root: string
   }
