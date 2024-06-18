@@ -34,20 +34,23 @@ function createChildProcessChannel(project: WorkspaceProject) {
     postMessage: message => emitter.emit(events.response, message),
   }
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
-    eventNames: ['onCancel'],
-    serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
-    post(v) {
-      emitter.emit(events.message, v)
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
+    createMethodsRPC(project, { cacheFs: true }),
+    {
+      eventNames: ['onCancel'],
+      serialize: v8.serialize,
+      deserialize: v => v8.deserialize(Buffer.from(v)),
+      post(v) {
+        emitter.emit(events.message, v)
+      },
+      on(fn) {
+        emitter.on(events.response, fn)
+      },
+      onTimeoutError(functionName) {
+        throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
+      },
     },
-    on(fn) {
-      emitter.on(events.response, fn)
-    },
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-    },
-  })
+  )
 
   project.ctx.onCancel(reason => rpc.onCancel(reason))
 

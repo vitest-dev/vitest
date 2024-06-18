@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import type { Task } from "vitest";
-import { getProjectNameColor } from "~/utils/task";
-import { activeFileId } from "~/composables/params";
-import { isReport } from "~/constants";
+import type { Task } from 'vitest'
+import { getProjectNameColor } from '~/utils/task'
+import { activeFileId } from '~/composables/params'
+import { isReport } from '~/constants'
 
 const props = defineProps<{
-  task: Task;
-  opened: boolean;
-  failedSnapshot: boolean;
-}>();
+  task: Task
+  opened: boolean
+  failedSnapshot: boolean
+}>()
 
 const emit = defineEmits<{
-  run: [];
-  preview: [];
-  fixSnapshot: [];
-}>();
+  run: []
+  preview: []
+  fixSnapshot: []
+}>()
 
 const duration = computed(() => {
-  const { result } = props.task;
-  return result && Math.round(result.duration || 0);
-});
+  const { result } = props.task
+  return result && Math.round(result.duration || 0)
+})
 </script>
 
 <template>

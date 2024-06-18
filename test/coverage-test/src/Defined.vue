@@ -2,10 +2,12 @@
 const defined = MY_CONSTANT
 
 /* eslint-disable no-console */
-if (defined)
+if (defined) {
   console.log('Covered condition')
-else
+}
+else {
   console.log('Uncovered condition')
+}
 </script>
 
 <template>

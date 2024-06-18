@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { UserConsoleLog } from "vitest";
+import type { UserConsoleLog } from 'vitest'
 
 defineProps<{
-  taskName: string;
-  type: UserConsoleLog["type"];
-  time: UserConsoleLog["time"];
-  content: UserConsoleLog["content"];
-}>();
+  taskName: string
+  type: UserConsoleLog['type']
+  time: UserConsoleLog['time']
+  content: UserConsoleLog['content']
+}>()
 
 function formatTime(t: number) {
-  return new Date(t).toLocaleTimeString();
+  return new Date(t).toLocaleTimeString()
 }
 </script>
 

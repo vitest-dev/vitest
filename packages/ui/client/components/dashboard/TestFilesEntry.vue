@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { files, unhandledErrors } from "~/composables/client";
+import { files, unhandledErrors } from '~/composables/client'
 import {
   filesFailed,
   filesSnapshotFailed,
   filesSuccess,
   time,
-} from "~/composables/summary";
+} from '~/composables/summary'
 </script>
 
 <template>
@@ -66,12 +66,14 @@ import {
   </div>
   <template v-if="unhandledErrors.length">
     <div bg="red500/10" text="red500" p="x3 y2" max-w-xl m-2 rounded>
-      <h3 text-center mb-2>Unhandled Errors</h3>
+      <h3 text-center mb-2>
+        Unhandled Errors
+      </h3>
       <p text="sm" font-thin mb-2 data-testid="unhandled-errors">
         Vitest caught {{ unhandledErrors.length }} error{{
           unhandledErrors.length > 1 ? "s" : ""
         }}
-        during the test run.<br />
+        during the test run.<br>
         This might cause false positive tests. Resolve unhandled errors to make
         sure your tests are not affected.
       </p>
@@ -84,8 +86,10 @@ import {
         open:max-h-52
         overflow-auto
       >
-        <summary font-bold cursor-pointer>Errors</summary>
-        <ErrorEntry v-for="e in unhandledErrors" :error="e" />
+        <summary font-bold cursor-pointer>
+          Errors
+        </summary>
+        <ErrorEntry v-for="(e, idx) in unhandledErrors" :key="idx" :error="e" />
       </details>
     </div>
   </template>

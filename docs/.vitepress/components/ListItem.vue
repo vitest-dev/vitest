@@ -9,8 +9,9 @@ function reset() {
   state.value = 0
   setTimeout(() => {
     state.value = Math.random() > 0.9 ? 2 : 1
-    if (state.value === 2)
+    if (state.value === 2) {
       setTimeout(reset, 1000)
+    }
   }, Math.round(Math.random() * 3000) + 400)
 }
 

@@ -1,64 +1,67 @@
 <script setup lang="ts">
-import type { ResizeContext } from "d3-graph-controller";
+import type { ResizeContext } from 'd3-graph-controller'
 import {
   GraphController,
   Markers,
   PositionInitializers,
   defineGraphConfig,
-} from "d3-graph-controller";
-import type { Selection } from "d3-selection";
-import { isReport } from "~/composables/client";
+} from 'd3-graph-controller'
+import type { Selection } from 'd3-selection'
+import { isReport } from '~/composables/client'
 import type {
   ModuleGraph,
   ModuleGraphController,
   ModuleLink,
   ModuleNode,
   ModuleType,
-} from "~/composables/module-graph";
+} from '~/composables/module-graph'
 
 const props = defineProps<{
-  graph: ModuleGraph;
-  projectName: string;
-}>();
+  graph: ModuleGraph
+  projectName: string
+}>()
 
-const { graph } = toRefs(props);
+const { graph } = toRefs(props)
 
-const el = ref<HTMLDivElement>();
+const el = ref<HTMLDivElement>()
 
-const modalShow = ref(false);
-const selectedModule = ref<string | null>();
-const controller = ref<ModuleGraphController | undefined>();
+const modalShow = ref(false)
+const selectedModule = ref<string | null>()
+const controller = ref<ModuleGraphController | undefined>()
 
 watchEffect(
   () => {
-    if (modalShow.value === false)
-      setTimeout(() => (selectedModule.value = undefined), 300);
+    if (modalShow.value === false) {
+      setTimeout(() => (selectedModule.value = undefined), 300)
+    }
   },
-  { flush: "post" }
-);
+  { flush: 'post' },
+)
 
 onMounted(() => {
-  resetGraphController();
-});
+  resetGraphController()
+})
 
 onUnmounted(() => {
-  controller.value?.shutdown();
-});
+  controller.value?.shutdown()
+})
 
-watch(graph, resetGraphController);
+watch(graph, resetGraphController)
 
 function setFilter(name: ModuleType, value: boolean) {
-  controller.value?.filterNodesByType(value, name);
+  controller.value?.filterNodesByType(value, name)
 }
 
 function setSelectedModule(id: string) {
-  selectedModule.value = id;
-  modalShow.value = true;
+  selectedModule.value = id
+  modalShow.value = true
 }
 
 function resetGraphController() {
-  controller.value?.shutdown();
-  if (!graph.value || !el.value) return;
+  controller.value?.shutdown()
+  if (!graph.value || !el.value) {
+    return
+  }
 
   controller.value = new GraphController(
     el.value!,
@@ -71,9 +74,11 @@ function resetGraphController() {
         alphas: {
           initialize: 1,
           resize: ({ newHeight, newWidth }: ResizeContext) => {
-            const willBeHidden = newHeight === 0 && newWidth === 0;
-            if (willBeHidden) return 0;
-            return 0.25;
+            const willBeHidden = newHeight === 0 && newWidth === 0
+            if (willBeHidden) {
+              return 0
+            }
+            return 0.25
           },
         },
         forces: {
@@ -97,37 +102,51 @@ function resetGraphController() {
         min: 0.5,
         max: 2,
       },
-    })
-  );
+    }),
+  )
 }
 
 function bindOnClick(
-  selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>
+  selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
 ) {
-  if (isReport) return;
+  if (isReport) {
+    return
+  }
   // Only trigger on left-click and primary touch
-  const isValidClick = (event: PointerEvent) => event.button === 0;
+  const isValidClick = (event: PointerEvent) => event.button === 0
 
-  let px = 0;
-  let py = 0;
-  let pt = 0;
+  let px = 0
+  let py = 0
+  let pt = 0
 
   selection
-    .on("pointerdown", (event: PointerEvent, node) => {
-      if (node.type === "external") return;
-      if (!node.x || !node.y || !isValidClick(event)) return;
-      px = node.x;
-      py = node.y;
-      pt = Date.now();
+    .on('pointerdown', (event: PointerEvent, node) => {
+      if (node.type === 'external') {
+        return
+      }
+      if (!node.x || !node.y || !isValidClick(event)) {
+        return
+      }
+      px = node.x
+      py = node.y
+      pt = Date.now()
     })
-    .on("pointerup", (event: PointerEvent, node: ModuleNode) => {
-      if (node.type === "external") return;
-      if (!node.x || !node.y || !isValidClick(event)) return;
-      if (Date.now() - pt > 500) return;
-      const dx = node.x - px;
-      const dy = node.y - py;
-      if (dx ** 2 + dy ** 2 < 100) setSelectedModule(node.id);
-    });
+    .on('pointerup', (event: PointerEvent, node: ModuleNode) => {
+      if (node.type === 'external') {
+        return
+      }
+      if (!node.x || !node.y || !isValidClick(event)) {
+        return
+      }
+      if (Date.now() - pt > 500) {
+        return
+      }
+      const dx = node.x - px
+      const dy = node.y - py
+      if (dx ** 2 + dy ** 2 < 100) {
+        setSelectedModule(node.id)
+      }
+    })
 }
 </script>
 
@@ -147,7 +166,7 @@ function bindOnClick(
             type="checkbox"
             :checked="controller?.nodeTypeFilter.includes(node)"
             @change="setFilter(node, ($event as any).target.checked)"
-          />
+          >
           <label
             font-light
             text-sm
@@ -158,8 +177,7 @@ function bindOnClick(
             :for="`type-${node}`"
             border-b-2
             :style="{ 'border-color': `var(--color-node-${node})` }"
-            >{{ node }} Modules</label
-          >
+          >{{ node }} Modules</label>
         </div>
         <div flex-auto />
         <div>
