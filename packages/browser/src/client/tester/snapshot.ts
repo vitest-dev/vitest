@@ -1,4 +1,5 @@
 import type { SnapshotEnvironment } from 'vitest/snapshot'
+import { type ParsedStack, TraceMap, originalPositionFor } from 'vitest/utils'
 import type { VitestBrowserClient } from '../client'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
@@ -42,7 +43,6 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
     if (!map) {
       return stack
     }
-    const { TraceMap, originalPositionFor } = getUtils()
     let traceMap = this.traceMaps.get(stack.file)
     if (!traceMap) {
       traceMap = new TraceMap(map)
