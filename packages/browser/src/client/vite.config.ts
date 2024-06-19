@@ -27,7 +27,7 @@ export default defineConfig({
       name: 'virtual:msw',
       enforce: 'pre',
       resolveId(id) {
-        if (id.startsWith('msw') || id.startsWith('vitest')) {
+        if (id.startsWith('msw') || id.startsWith('vitest') || id.startsWith('@vitest/browser')) {
           return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
         }
       },

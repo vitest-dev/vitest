@@ -26,6 +26,7 @@ test('update snapshot', async () => {
   const { exitCode, ctx: vitest } = ctx
   onTestFinished(() => vitest.close())
   onTestFailed(() => {
+    console.error(ctx.stdout)
     console.error(ctx.stderr)
   })
 

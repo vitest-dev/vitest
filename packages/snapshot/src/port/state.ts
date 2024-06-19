@@ -140,8 +140,9 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
+      const error = options.error || new Error('snapshot')
       const stacks = parseErrorStacktrace(
-        options.error || new Error('snapshot'),
+        error,
         { ignoreStackEntries: [] },
       )
       const _stack = this._inferInlineSnapshotStack(stacks)
