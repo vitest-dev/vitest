@@ -16,7 +16,6 @@ import { explorerTree } from '~/composables/explorer/index'
  * will be there, we only need to filter the children of the node to expand.
  *
  * Calling this method will:
- * - update the filtered expandAll state
  * - remove opened tree items for the node and any children
  * - update uiEntries including child nodes
  *
@@ -80,7 +79,7 @@ export function runExpandNode(
  * Calling this method will:
  * - expand all nodes
  * - add stored opened tree items
- * - update the filtered expandAll state to true
+ * - update the filtered expandAll state to false
  * - update uiEntries with child nodes
  *
  * @param search The search applied.

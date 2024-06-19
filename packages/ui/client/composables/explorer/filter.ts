@@ -68,9 +68,9 @@ export function* filterNode(
 
   // We show only the files and parents whose parent is expanded.
   // Filtering will return all the nodes matching the filter and their parents.
-  // Once we've the tree, we need to remove the children of not expanded parents.
-  // For example, if we filter a test inside a suite, when collapsing the suite
-  // we still need to show the suite, but the test must be removed from the rendered tree.
+  // Once we've the tree, we need to remove the children from not expanded parents.
+  // For example, if we have a suite with only one test, when collapsing the suite node,
+  // we still need to show the suite, but the test must be removed from the list to render.
 
   const map = explorerTree.nodes
   // collect files and all suites whose parent is expanded
@@ -203,7 +203,6 @@ function* visitNode(
 
   if (match) {
     if (isTestNode(node)) {
-      // treeNodes.add(node.parentId)
       let parent = explorerTree.nodes.get(node.parentId)
       while (parent) {
         treeNodes.add(parent.id)

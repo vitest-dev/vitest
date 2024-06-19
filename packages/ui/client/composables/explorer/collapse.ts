@@ -13,7 +13,6 @@ import { explorerTree } from '~/composables/explorer/index'
  *
  * Calling this method will:
  * - collapse all nodes
- * - update the filtered expandAll state
  * - remove opened tree items for the node and any children
  * - update uiEntries without child nodes
  *
@@ -46,7 +45,7 @@ export function runCollapseNode(id: string) {
  * Calling this method will:
  * - collapse all nodes
  * - clear stored opened tree items
- * - update the filtered expandAll state to false
+ * - update the filtered expandAll state to true
  * - update uiEntries without child nodes
  *
  */
