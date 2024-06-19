@@ -358,7 +358,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
 function resolveCoverageFolder(project: WorkspaceProject) {
   const options = project.ctx.config
   const htmlReporter = options.coverage?.enabled
-    ? options.coverage.reporter.find((reporter) => {
+    ? toArray(options.coverage.reporter).find((reporter) => {
       if (typeof reporter === 'string') {
         return reporter === 'html'
       }
