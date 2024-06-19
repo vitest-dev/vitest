@@ -1050,8 +1050,10 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         return Promise.allSettled(closePromises).then((results) => {
-          results.filter(r => r.status === 'rejected').forEach((err) => {
-            this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+          results.forEach((r) => {
+            if (r.status === 'rejected') {
+              this.logger.error('error during close', r.reason)
+            }
           })
           this.logger.logUpdate.done() // restore terminal cursor
         })

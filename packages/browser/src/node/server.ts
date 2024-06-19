@@ -135,10 +135,7 @@ export class BrowserServer {
   }
 
   async close() {
-    await Promise.all([
-      this.vite.close(),
-      this.provider?.close(),
-    ])
+    await this.vite.close()
   }
 }
 
