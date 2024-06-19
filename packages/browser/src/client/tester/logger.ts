@@ -1,4 +1,4 @@
-import { format, inspect, stringify } from 'vitest/utils'
+import { format, stringify } from 'vitest/utils'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 
@@ -21,8 +21,11 @@ export function setupConsoleLogSpy() {
     countReset,
   } = console
   const formatInput = (input: unknown) => {
-    if (input instanceof Node) {
-      return stringify(input)
+    if (typeof input === 'object') {
+      return stringify(input, undefined, {
+        printBasicPrototype: false,
+        escapeString: false,
+      })
     }
     return format(input)
   }
@@ -52,18 +55,14 @@ export function setupConsoleLogSpy() {
       size: content.length,
     })
   }
-  const stdout
-    = (base: (...args: unknown[]) => void) =>
-      (...args: unknown[]) => {
-        sendLog('stdout', processLog(args))
-        return base(...args)
-      }
-  const stderr
-    = (base: (...args: unknown[]) => void) =>
-      (...args: unknown[]) => {
-        sendLog('stderr', processLog(args))
-        return base(...args)
-      }
+  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
+    base(...args)
+    sendLog('stdout', processLog(args))
+  }
+  const stderr = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
+    base(...args)
+    sendLog('stderr', processLog(args))
+  }
   console.log = stdout(log)
   console.debug = stdout(debug)
   console.info = stdout(info)
@@ -72,16 +71,17 @@ export function setupConsoleLogSpy() {
   console.warn = stderr(warn)
 
   console.dir = (item, options) => {
-    sendLog('stdout', inspect(item, options))
-    return dir(item, options)
+    dir(item, options)
+    sendLog('stdout', formatInput(item))
   }
 
   console.dirxml = (...args) => {
+    dirxml(...args)
     sendLog('stdout', processLog(args))
-    return dirxml(...args)
   }
 
   console.trace = (...args: unknown[]) => {
+    trace(...args)
     const content = processLog(args)
     const error = new Error('$$Trace')
     const stack = (error.stack || '')
@@ -89,14 +89,13 @@ export function setupConsoleLogSpy() {
       .slice(error.stack?.includes('$$Trace') ? 2 : 1)
       .join('\n')
     sendLog('stderr', `${content}\n${stack}`, true)
-    return trace(...args)
   }
 
   const timeLabels: Record<string, number> = {}
 
   console.time = (label = 'default') => {
-    const now = performance.now()
     time(label)
+    const now = performance.now()
     timeLabels[label] = now
   }
 
@@ -111,8 +110,8 @@ export function setupConsoleLogSpy() {
   }
 
   console.timeEnd = (label = 'default') => {
-    const end = performance.now()
     timeEnd(label)
+    const end = performance.now()
     const start = timeLabels[label]
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
@@ -126,14 +125,14 @@ export function setupConsoleLogSpy() {
   const countLabels: Record<string, number> = {}
 
   console.count = (label = 'default') => {
+    count(label)
     const counter = (countLabels[label] ?? 0) + 1
     countLabels[label] = counter
     sendLog('stdout', `${label}: ${counter}`)
-    return count(label)
   }
 
   console.countReset = (label = 'default') => {
+    countReset(label)
     countLabels[label] = 0
-    return countReset(label)
   }
 }
