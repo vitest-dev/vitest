@@ -113,7 +113,7 @@ export function setupBrowserRpc(
           }
           return fs.unlink(id)
         },
-        async getBrowserFileSourceMap(id) {
+        getBrowserFileSourceMap(id) {
           const mod = project.browser?.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
