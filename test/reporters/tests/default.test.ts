@@ -57,4 +57,15 @@ describe('default reporter', async () => {
     expect(vitest.stdout).not.toContain('✓ b1 test')
     expect(vitest.stdout).not.toContain('✓ b2 test')
   })
+
+  test('doesn\'t print error properties', async () => {
+    const result = await runVitest({
+      root: 'fixtures/error-props',
+      reporters: 'default',
+      env: { CI: '1' },
+    })
+
+    expect(result.stderr).not.toContain(`Serialized Error`)
+    expect(result.stderr).not.toContain(`status: 'not found'`)
+  })
 }, 120000)

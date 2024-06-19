@@ -2,11 +2,11 @@ import type { ResolvedConfig } from 'vitest'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { channel, client } from './client'
-import { rpcDone } from './rpc'
+import { rpcDone } from './tester/rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
 import type { IframeChannelEvent, IframeChannelIncomingEvent } from './channel'
-import { createModuleMocker } from './msw'
+import { createModuleMocker } from './tester/msw'
 
 const url = new URL(location.href)
 

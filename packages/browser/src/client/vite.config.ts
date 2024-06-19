@@ -17,7 +17,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         orchestrator: resolve(__dirname, './orchestrator.html'),
-        tester: resolve(__dirname, './tester.html'),
+        tester: resolve(__dirname, './tester/tester.html'),
       },
       external: [/__virtual_vitest__/],
     },
@@ -27,8 +27,8 @@ export default defineConfig({
       name: 'virtual:msw',
       enforce: 'pre',
       resolveId(id) {
-        if (id.startsWith('msw')) {
-          return `/__virtual_vitest__:${id}`
+        if (id.startsWith('msw') || id.startsWith('vitest')) {
+          return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
         }
       },
     },

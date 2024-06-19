@@ -1,17 +1,19 @@
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vitest/config'
-import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
+import type { BrowserProvider } from 'vitest/node'
 import { dirname, resolve } from 'pathe'
 import type { PluginContext } from 'rollup'
 import { slash } from '@vitest/utils'
 import builtinCommands from '../commands/index'
+import type { BrowserServer } from '../server'
 
 const VIRTUAL_ID_CONTEXT = '\0@vitest/browser/context'
 const ID_CONTEXT = '@vitest/browser/context'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-export default function BrowserContext(project: WorkspaceProject): Plugin {
+export default function BrowserContext(server: BrowserServer): Plugin {
+  const project = server.project
   project.config.browser.commands ??= {}
   for (const [name, command] of Object.entries(builtinCommands)) {
     project.config.browser.commands[name] ??= command
@@ -36,7 +38,7 @@ export default function BrowserContext(project: WorkspaceProject): Plugin {
     },
     load(id) {
       if (id === VIRTUAL_ID_CONTEXT) {
-        return generateContextFile.call(this, project)
+        return generateContextFile.call(this, server)
       }
     },
   }
@@ -44,12 +46,12 @@ export default function BrowserContext(project: WorkspaceProject): Plugin {
 
 async function generateContextFile(
   this: PluginContext,
-  project: WorkspaceProject,
+  server: BrowserServer,
 ) {
-  const commands = Object.keys(project.config.browser.commands ?? {})
+  const commands = Object.keys(server.project.config.browser.commands ?? {})
   const filepathCode
     = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
-  const provider = project.browserProvider!
+  const provider = server.provider
 
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
@@ -75,7 +77,7 @@ export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
   provider: ${JSON.stringify(provider.name)},
-  browser: ${JSON.stringify(project.config.browser.name)},
+  browser: ${JSON.stringify(server.project.config.browser.name)},
   commands: {
     ${commandsCode}
   }

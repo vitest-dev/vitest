@@ -6,6 +6,8 @@ import { DefaultReporter } from './default'
 import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
+  protected verbose = true
+
   constructor() {
     super()
     this.rendererOptions.renderSucceed = true

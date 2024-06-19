@@ -1,5 +1,5 @@
 import type { SnapshotEnvironment } from 'vitest/snapshot'
-import type { VitestBrowserClient } from './client'
+import type { VitestBrowserClient } from '../client'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   getVersion(): string {

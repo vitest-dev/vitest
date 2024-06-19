@@ -1,33 +1,30 @@
 import { existsSync, promises as fs } from 'node:fs'
-
 import { dirname } from 'pathe'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed, parseAst } from 'vite'
-import type { ViteDevServer } from 'vite'
-import type { EncodedSourceMap } from '@ampproject/remapping'
-import remapping from '@ampproject/remapping'
-import { BROWSER_API_PATH } from '../constants'
-import { stringifyReplace } from '../utils'
-import type { WorkspaceProject } from '../node/workspace'
-import { createDebugger } from '../utils/debugger'
-import { automockModule } from '../node/automockBrowser'
-import type { BrowserCommandContext } from '../types/browser'
+import { isFileServingAllowed } from 'vite'
+import type { BrowserCommandContext } from 'vitest/node'
+import { createDebugger } from 'vitest/node'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
+import type { BrowserServer } from './server'
+import { resolveMock } from './resolveMock'
 
 const debug = createDebugger('vitest:browser:api')
 
+const BROWSER_API_PATH = '/__vitest_browser_api__'
+
 export function setupBrowserRpc(
-  project: WorkspaceProject,
-  server: ViteDevServer,
+  server: BrowserServer,
 ) {
+  const project = server.project
+  const vite = server.vite
   const ctx = project.ctx
 
   const wss = new WebSocketServer({ noServer: true })
 
-  server.httpServer?.on('upgrade', (request, socket, head) => {
+  vite.httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url) {
       return
     }
@@ -43,9 +40,9 @@ export function setupBrowserRpc(
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(sessionId, ws)
-      const rpcs = project.browserRpc
-      const clients = type === 'tester' ? rpcs.testers : rpcs.orchestrators
+      const rpc = setupClient(ws)
+      const state = server.state
+      const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(sessionId, rpc)
 
       debug?.('[%s] Browser API connected to %s', sessionId, type)
@@ -58,14 +55,14 @@ export function setupBrowserRpc(
   })
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, server)) {
+    if (!isFileServingAllowed(path, vite)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
   }
 
-  function setupClient(sessionId: string, ws: WebSocket) {
+  function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
@@ -113,8 +110,8 @@ export function setupBrowserRpc(
           }
           return fs.unlink(id)
         },
-        async getBrowserFileSourceMap(id) {
-          const mod = project.browser?.moduleGraph.getModuleById(id)
+        getBrowserFileSourceMap(id) {
+          const mod = server.vite.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
         onCancel(reason) {
@@ -138,7 +135,7 @@ export function setupBrowserRpc(
         },
         async triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
-          const provider = project.browserProvider
+          const provider = server.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
@@ -171,38 +168,14 @@ export function setupBrowserRpc(
         },
         finishBrowserTests(contextId: string) {
           debug?.('[%s] Finishing browser tests for context', contextId)
-          return project.browserState.get(contextId)?.resolve()
-        },
-        getProvidedContext() {
-          return 'ctx' in project ? project.getProvidedContext() : ({} as any)
-        },
-        // TODO: cache this automock result
-        async automock(id) {
-          const result = await project.browser!.transformRequest(id)
-          if (!result) {
-            throw new Error(`Module "${id}" not found.`)
-          }
-          const ms = automockModule(result.code, parseAst)
-          const code = ms.toString()
-          const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
-          const combinedMap
-            = result.map && result.map.mappings
-              ? remapping(
-                [
-                  { ...sourcemap, version: 3 },
-                  result.map as EncodedSourceMap,
-                ],
-                () => null,
-              )
-              : sourcemap
-          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
+          return server.state.getContext(contextId)?.resolve()
         },
         resolveMock(rawId, importer, hasFactory) {
-          return project.browserMocker.resolveMock(rawId, importer, hasFactory)
+          return resolveMock(project, rawId, importer, hasFactory)
         },
         invalidate(ids) {
           ids.forEach((id) => {
-            const moduleGraph = project.browser!.moduleGraph
+            const moduleGraph = server.vite.moduleGraph
             const module = moduleGraph.getModuleById(id)
             if (module) {
               moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
@@ -225,5 +198,37 @@ export function setupBrowserRpc(
     ctx.onCancel(reason => rpc.onCancel(reason))
 
     return rpc
+  }
+}
+// Serialization support utils.
+
+function cloneByOwnProperties(value: any) {
+  // Clones the value's properties into a new Object. The simpler approach of
+  // Object.assign() won't work in the case that properties are not enumerable.
+  return Object.getOwnPropertyNames(value).reduce(
+    (clone, prop) => ({
+      ...clone,
+      [prop]: value[prop],
+    }),
+    {},
+  )
+}
+
+/**
+ * Replacer function for serialization methods such as JS.stringify() or
+ * flatted.stringify().
+ */
+export function stringifyReplace(key: string, value: any) {
+  if (value instanceof Error) {
+    const cloned = cloneByOwnProperties(value)
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+      ...cloned,
+    }
+  }
+  else {
+    return value
   }
 }

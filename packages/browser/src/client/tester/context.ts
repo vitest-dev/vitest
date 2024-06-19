@@ -1,7 +1,7 @@
 import type { Task, WorkerGlobalState } from 'vitest'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../context'
-import type { BrowserRPC } from './client'
-import type { BrowserRunnerState } from './utils'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserRunnerState } from '../utils'
+import type { BrowserRPC } from '../client'
 
 // this file should not import anything directly, only types
 
@@ -143,7 +143,9 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
     return [{ index: valueIndex }]
   }
 
-  const labelIndex = options.findIndex(option => option.textContent?.trim() === optionValue || option.ariaLabel === optionValue)
+  const labelIndex = options.findIndex(option =>
+    option.textContent?.trim() === optionValue || option.ariaLabel === optionValue,
+  )
 
   if (labelIndex === -1) {
     throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
