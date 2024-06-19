@@ -12,7 +12,7 @@ export async function resolveOrchestrator(
   // it's possible to open the page without a context
   if (!contextId) {
     const contexts = [...project.browserRpc.orchestrators.keys()]
-    contextId = contexts[contexts.length - 1]
+    contextId = contexts[contexts.length - 1] ?? 'none'
   }
 
   const files = project.browserState.get(contextId!)?.files ?? []
