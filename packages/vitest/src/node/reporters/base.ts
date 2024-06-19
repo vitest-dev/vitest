@@ -65,6 +65,8 @@ export abstract class BaseReporter implements Reporter {
   isTTY: boolean
   ctx: Vitest = undefined!
 
+  protected verbose = false
+
   private _filesInWatchMode = new Map<string, number>()
   private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
@@ -601,7 +603,7 @@ export abstract class BaseReporter implements Reporter {
         )
       }
       const project = this.ctx.getProjectByTaskId(tasks[0].id)
-      this.ctx.logger.printError(error, { project })
+      this.ctx.logger.printError(error, { project, verbose: this.verbose })
       errorDivider()
     }
   }

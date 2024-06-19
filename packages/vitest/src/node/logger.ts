@@ -16,6 +16,7 @@ interface ErrorOptions {
   type?: string
   fullStack?: boolean
   project?: WorkspaceProject
+  verbose?: boolean
 }
 
 const ESC = '\x1B['
@@ -89,8 +90,7 @@ export class Logger {
 
   printError(err: unknown, options: ErrorOptions = {}) {
     const { fullStack = false, type } = options
-    const project
-      = options.project
+    const project = options.project
       ?? this.ctx.getCoreWorkspaceProject()
       ?? this.ctx.projects[0]
     printError(err, project, {
@@ -98,6 +98,7 @@ export class Logger {
       type,
       showCodeFrame: true,
       logger: this,
+      printProperties: options.verbose,
     })
   }
 
