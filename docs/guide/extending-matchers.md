@@ -26,13 +26,13 @@ expect.extend({
 If you are using TypeScript, you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
-import type { Assertion, AsymmetricMatchersContaining } from 'vitest'
+import type { Assertion, AsymmetricMatchersContaining } from '@vitest/expect'
 
 interface CustomMatchers<R = unknown> {
   toBeFoo: () => R
 }
 
-declare module 'vitest' {
+declare module '@vitest/expect' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
