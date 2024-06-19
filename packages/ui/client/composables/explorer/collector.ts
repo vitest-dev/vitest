@@ -85,7 +85,7 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    doRunFilter(search, filter)
+    doRunFilter(search, filter, end)
   })
 }
 
@@ -97,7 +97,6 @@ function doRunFilter(
   // refresh explorer
 
   const expandAll = treeFilter.value.expandAll
-  const filtered = search.trim().length > 0 || filter.failed || filter.success || filter.skipped || filter.onlyTests
   const resetExpandAll = expandAll !== true
   const ids = new Set(openedTreeItems.value)
   const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
@@ -111,7 +110,7 @@ function doRunFilter(
     // expand all nodes
     queueMicrotask(() => {
       expandNodesOnEndRun(ids, end)
-      if (resetExpandAll || filtered) {
+      if (resetExpandAll) {
         treeFilter.value.expandAll = false
       }
     })

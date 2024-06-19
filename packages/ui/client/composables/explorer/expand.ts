@@ -59,7 +59,9 @@ export function runExpandNode(
 
   const entries = [...collectExpandedNode(node, children)]
   openedTreeItems.value = Array.from(treeItems)
-  treeFilter.value.expandAll = false
+  // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
+  // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
+  // treeFilter.value.expandAll = false
   uiEntries.value = entries
 }
 

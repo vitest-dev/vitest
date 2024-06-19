@@ -49,16 +49,9 @@ export const initialized = ref(false)
 export const shouldShowExpandAll = computed(() => {
   const expandAll = treeFilter.value.expandAll
   const opened = openedTreeItems.value
-  const filtered = isFiltered.value
-  const filteredStatus = isFilteredByStatus.value
 
   if (opened.length > 0) {
     return expandAll !== true
-  }
-
-  // don't remove this: we need to force a rerender
-  if (filtered || filteredStatus) {
-    return expandAll !== false
   }
 
   return expandAll !== false

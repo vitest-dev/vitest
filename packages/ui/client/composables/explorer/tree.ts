@@ -16,9 +16,11 @@ import { runFilter } from '~/composables/explorer/filter'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
+  private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
     private onTaskUpdateCalled: boolean = false,
     private done = new Set<string>(),
+    private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
       id: 'vitest-root-node',
       expandable: true,
@@ -82,11 +84,13 @@ export class ExplorerTree {
   }
 
   startRun() {
+    this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
 
   resumeRun() {
     if (!this.onTaskUpdateCalled) {
+      clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
       this.collect(true, false, false)
       this.rafCollector.resume()

@@ -29,7 +29,9 @@ export function runCollapseNode(id: string) {
   treeItems.delete(node.id)
   const entries = [...collectCollapseNode(node)]
   openedTreeItems.value = Array.from(treeItems)
-  treeFilter.value.expandAll = true
+  // Keep expandAll state as it is: collapsing individual shouldn't prevent collapsing all the nodes ("collapse all" button)
+  // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
+  // treeFilter.value.expandAll = true
   uiEntries.value = entries
 }
 
