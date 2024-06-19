@@ -45,9 +45,6 @@ export async function createBrowserServer(
   await vite.listen()
 
   setupBrowserRpc(server)
-  // if (project.config.browser.ui) {
-  //   setupUiRpc(project.ctx, server)
-  // }
 
   return server
 }
