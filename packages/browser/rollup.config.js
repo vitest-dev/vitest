@@ -15,6 +15,7 @@ const external = [
   /^@?vitest(\/|$)/,
   'worker_threads',
   'node:worker_threads',
+  'vite',
 ]
 
 const plugins = [
@@ -77,6 +78,8 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins: [dts()],
+      plugins: [dts({
+        respectExternal: true,
+      })],
     },
   ])

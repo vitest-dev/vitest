@@ -1,32 +1,32 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { BrowserServerState } from './state'
+import type { BrowserServer } from './server'
 import { replacer } from './utils'
 
 export async function resolveOrchestrator(
-  state: BrowserServerState,
+  server: BrowserServer,
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ) {
-  const project = state.project
+  const project = server.project
   let contextId = url.searchParams.get('contextId')
   // it's possible to open the page without a context
   if (!contextId) {
-    const contexts = [...project.browserRpc.orchestrators.keys()]
+    const contexts = [...server.state.orchestrators.keys()]
     contextId = contexts[contexts.length - 1] ?? 'none'
   }
 
-  const files = project.browserState.get(contextId!)?.files ?? []
+  const files = server.state.getContext(contextId!)?.files ?? []
 
-  const config = state.getSerializableConfig()
-  const injectorJs = typeof state.injectorJs === 'string'
-    ? state.injectorJs
-    : await state.injectorJs
+  const config = server.getSerializableConfig()
+  const injectorJs = typeof server.injectorJs === 'string'
+    ? server.injectorJs
+    : await server.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(project.browserProvider!.name),
+    __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
     __VITEST_CONFIG__: JSON.stringify(config),
     __VITEST_VITE_CONFIG__: JSON.stringify({
-      root: project.browser!.config.root,
+      root: server.vite.config.root,
     }),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
@@ -37,23 +37,23 @@ export async function resolveOrchestrator(
   // disable CSP for the orchestrator as we are the ones controlling it
   res.removeHeader('Content-Security-Policy')
 
-  if (!state.orchestratorScripts) {
-    state.orchestratorScripts = await state.formatScripts(
+  if (!server.orchestratorScripts) {
+    server.orchestratorScripts = await server.formatScripts(
       project.config.browser.orchestratorScripts,
     )
   }
 
-  let baseHtml = typeof state.orchestratorHtml === 'string'
-    ? state.orchestratorHtml
-    : await state.orchestratorHtml
+  let baseHtml = typeof server.orchestratorHtml === 'string'
+    ? server.orchestratorHtml
+    : await server.orchestratorHtml
 
   // if UI is enabled, use UI HTML and inject the orchestrator script
   if (project.config.browser.ui) {
-    const manifestContent = state.manifest instanceof Promise
-      ? await state.manifest
-      : state.manifest
+    const manifestContent = server.manifest instanceof Promise
+      ? await server.manifest
+      : server.manifest
     const jsEntry = manifestContent['orchestrator.html'].file
-    const base = project.browser!.config.base || '/'
+    const base = server.vite.config.base || '/'
     baseHtml = baseHtml
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(
@@ -67,9 +67,9 @@ export async function resolveOrchestrator(
   }
 
   return replacer(baseHtml, {
-    __VITEST_FAVICON__: state.faviconUrl,
+    __VITEST_FAVICON__: server.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
-    __VITEST_SCRIPTS__: state.orchestratorScripts,
+    __VITEST_SCRIPTS__: server.orchestratorScripts,
     __VITEST_INJECTOR__: injector,
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
   })

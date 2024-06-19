@@ -7,6 +7,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 
 // will import vitest declare test in module 'vite'
 export {
+  defaultBrowserPort,
   configDefaults,
   defaultInclude,
   defaultExclude,

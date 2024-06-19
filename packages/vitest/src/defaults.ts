@@ -7,6 +7,8 @@ import type {
 } from './types'
 import { isCI } from './utils/env'
 
+export { defaultBrowserPort } from './constants'
+
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude = [
   '**/node_modules/**',

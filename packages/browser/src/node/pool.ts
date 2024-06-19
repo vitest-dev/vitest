@@ -1,12 +1,8 @@
 import * as nodeos from 'node:os'
 import crypto from 'node:crypto'
-import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
-import type { Vitest } from '../core'
-import type { ProcessPool } from '../pool'
-import type { WorkspaceProject } from '../workspace'
-import type { BrowserProvider } from '../../types/browser'
-import { createDebugger } from '../../utils/debugger'
+import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject } from 'vitest/node'
+import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')
 
@@ -18,16 +14,8 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     project: WorkspaceProject,
     files: string[],
   ) => {
-    const defer = createDefer<void>()
-    project.browserState.set(contextId, {
-      files,
-      resolve: () => {
-        defer.resolve()
-        project.browserState.delete(contextId)
-      },
-      reject: defer.reject,
-    })
-    return await defer
+    const context = project.browser!.state.createAsyncContext(contextId, files)
+    return await context
   }
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
@@ -45,10 +33,10 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     //   isCancelled = true
     // })
 
-    const provider = project.browserProvider!
+    const provider = project.browser!.provider!
     providers.add(provider)
 
-    const resolvedUrls = project.browser?.resolvedUrls
+    const resolvedUrls = project.browser?.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
     if (!origin) {
@@ -76,7 +64,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       threadsCount,
     )
 
-    const orchestrators = [...project.browserRpc.orchestrators.entries()]
+    const orchestrators = [...project.browser!.state.orchestrators.entries()]
 
     const promises: Promise<void>[] = []
 
@@ -133,7 +121,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   function getThreadsCount(project: WorkspaceProject) {
     const config = project.config.browser
-    if (!config.headless || !project.browserProvider!.supportsParallelism) {
+    if (!config.headless || !project.browser!.provider!.supportsParallelism) {
       return 1
     }
 

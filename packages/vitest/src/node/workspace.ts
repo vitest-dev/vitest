@@ -18,7 +18,7 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import { createBrowserServer } from '../integrations/browser/server'
+import type { BrowserServer } from '@vitest/browser'
 import type {
   ProvidedContext,
   ResolvedConfig,
@@ -27,16 +27,15 @@ import type {
   Vitest,
 } from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
-import type { BrowserProvider } from '../types/browser'
-import { getBrowserProvider } from '../integrations/browser'
 import { deepMerge, nanoid } from '../utils/base'
-import { VitestBrowserServerMocker } from '../integrations/browser/mocker'
-import type { WebSocketBrowserRPC } from '../api/types'
+import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
+import { MocksPlugins } from './plugins/mocks'
+import { CoverageTransform } from './plugins/coverageTransform'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -89,28 +88,10 @@ export class WorkspaceProject {
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
-  browser?: ViteDevServer
+  browser?: BrowserServer
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
-
-  // TODO: abstract browser related things and move to @vitest/browser
-  browserProvider: BrowserProvider | undefined
-  browserMocker = new VitestBrowserServerMocker(this)
-  // TODO: I mean, we really need to abstract it
-  browserRpc = {
-    orchestrators: new Map<string, WebSocketBrowserRPC>(),
-    testers: new Map<string, WebSocketBrowserRPC>(),
-  }
-
-  browserState = new Map<
-    string,
-    {
-      files: string[]
-      resolve: () => void
-      reject: (v: unknown) => void
-    }
-  >()
 
   testFilesList: string[] | null = null
 
@@ -208,14 +189,14 @@ export class WorkspaceProject {
   getModulesByFilepath(file: string) {
     const set
       = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.moduleGraph.getModulesByFile(file)
+      || this.browser?.vite.moduleGraph.getModulesByFile(file)
     return set || new Set()
   }
 
   getModuleById(id: string) {
     return (
       this.server.moduleGraph.getModuleById(id)
-      || this.browser?.moduleGraph.getModuleById(id)
+      || this.browser?.vite.moduleGraph.getModuleById(id)
     )
   }
 
@@ -227,7 +208,7 @@ export class WorkspaceProject {
   getBrowserSourceMapModuleById(
     id: string,
   ): TransformResult['map'] | undefined {
-    return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
+    return this.browser?.vite.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -360,8 +341,19 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled()) {
       return
     }
+    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root)
+    const { createBrowserServer } = await import('@vitest/browser')
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, configFile)
+    const browser = await createBrowserServer(
+      this,
+      configFile,
+      [...MocksPlugins()],
+      [CoverageTransform(this.ctx)],
+    )
+    this.browser = browser
+    if (this.config.browser.ui) {
+      setup(this.ctx, browser.vite)
+    }
   }
 
   static createBasicProject(ctx: Vitest) {
@@ -535,29 +527,6 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled()) {
       return
     }
-    if (this.browserProvider) {
-      return
-    }
-    const Provider = await getBrowserProvider(this.config.browser, this)
-    this.browserProvider = new Provider()
-    const browser = this.config.browser.name
-    if (!browser) {
-      throw new Error(
-        `[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
-      )
-    }
-    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
-    if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
-      throw new Error(
-        `[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${
-          this.browserProvider.name
-        }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
-      )
-    }
-    const providerOptions = this.config.browser.providerOptions
-    await this.browserProvider.initialize(this, {
-      browser,
-      options: providerOptions,
-    })
+    await this.browser?.initBrowserProvider()
   }
 }

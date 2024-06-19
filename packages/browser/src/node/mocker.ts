@@ -1,23 +1,16 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { basename, dirname, extname, join, resolve } from 'pathe'
-import { isNodeBuiltin } from 'vite-node/utils'
-import type { WorkspaceProject } from '../../node/workspace'
+import { builtinModules } from 'node:module'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
+import type { PartialResolvedId } from 'rollup'
+import type { WorkspaceProject } from 'vitest/node'
 
 export class VitestBrowserServerMocker {
-  // string means it will read from __mocks__ folder
-  // undefined means there is a factory mock that will be called on the server
-  // null means it should be auto mocked
-  public mocks = new Map<
-    string,
-    { sessionId: string; mock: string | null | undefined }
-  >()
-
   // private because the typecheck fails on build if it's exposed
   // due to a self reference
-  #project: WorkspaceProject
+  project: WorkspaceProject
 
   constructor(project: WorkspaceProject) {
-    this.#project = project
+    this.project = project
   }
 
   public async resolveMock(
@@ -41,14 +34,32 @@ export class VitestBrowserServerMocker {
   }
 
   private async resolveId(rawId: string, importer: string) {
-    const resolved = await this.#project.browser!.pluginContainer.resolveId(
+    const resolved = await this.project.browser!.vite.pluginContainer.resolveId(
       rawId,
       importer,
       {
         ssr: false,
       },
     )
-    return this.#project.vitenode.resolveModule(rawId, resolved)
+    return this.resolveModule(rawId, resolved)
+  }
+
+  private async resolveModule(rawId: string, resolved: PartialResolvedId | null) {
+    const id = resolved?.id || rawId
+    const external
+      = !isAbsolute(id) || this.isModuleDirectory(id) ? rawId : null
+    return {
+      id,
+      fsPath: cleanUrl(id),
+      external,
+    }
+  }
+
+  private isModuleDirectory(path: string) {
+    const moduleDirectories = this.project.config.server.deps?.moduleDirectories || [
+      '/node_modules/',
+    ]
+    return moduleDirectories.some((dir: string) => path.includes(dir))
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
@@ -59,7 +70,7 @@ export class VitestBrowserServerMocker {
     if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
       const mockFolder = join(
-        this.#project.config.root,
+        this.project.config.root,
         '__mocks__',
         mockDirname,
       )
@@ -86,4 +97,40 @@ export class VitestBrowserServerMocker {
     const fullPath = resolve(dir, '__mocks__', baseId)
     return existsSync(fullPath) ? fullPath : null
   }
+}
+
+const prefixedBuiltins = new Set(['node:test'])
+
+const builtins = new Set([
+  ...builtinModules,
+  'assert/strict',
+  'diagnostics_channel',
+  'dns/promises',
+  'fs/promises',
+  'path/posix',
+  'path/win32',
+  'readline/promises',
+  'stream/consumers',
+  'stream/promises',
+  'stream/web',
+  'timers/promises',
+  'util/types',
+  'wasi',
+])
+
+const NODE_BUILTIN_NAMESPACE = 'node:'
+export function isNodeBuiltin(id: string): boolean {
+  if (prefixedBuiltins.has(id)) {
+    return true
+  }
+  return builtins.has(
+    id.startsWith(NODE_BUILTIN_NAMESPACE)
+      ? id.slice(NODE_BUILTIN_NAMESPACE.length)
+      : id,
+  )
+}
+
+const postfixRE = /[?#].*$/
+export function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

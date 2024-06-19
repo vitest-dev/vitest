@@ -870,8 +870,8 @@ export class Vitest {
         serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
 
         if (browser) {
-          const browserMods = browser.moduleGraph.getModulesByFile(filepath)
-          browserMods?.forEach(mod => browser.moduleGraph.invalidateModule(mod))
+          const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
+          browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
         }
       })
     }
