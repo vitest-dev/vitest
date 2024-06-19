@@ -95,7 +95,7 @@ export function createBrowserRunner(
 
       if (this.config.includeTaskLocation) {
         try {
-          await updateFilesLocations(files)
+          await updateFilesLocations(files, this.sourceMapCache)
         }
         catch (_) {}
       }
@@ -154,9 +154,9 @@ export async function initiateRunner(
   return runner
 }
 
-async function updateFilesLocations(files: File[]) {
-  const promises = files.map(async (file) => {
-    const result = await rpc().getBrowserFileSourceMap(file.filepath)
+async function updateFilesLocations(files: File[], sourceMaps: Map<string, any>) {
+  files.forEach((file) => {
+    const result = sourceMaps.get(file.filepath)
     if (!result) {
       return null
     }
@@ -175,6 +175,4 @@ async function updateFilesLocations(files: File[]) {
     file.tasks.forEach(updateLocation)
     return null
   })
-
-  await Promise.all(promises)
 }
