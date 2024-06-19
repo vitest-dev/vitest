@@ -2,7 +2,7 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { dirname, extname, join } from 'pathe'
 import type { DepsHandlingOptions } from './types'
 import { findNearestPackageData, isNodeBuiltin, slash } from './utils'
-import { KNOWN_ASSET_TYPES } from './constants'
+import { KNOWN_ASSET_RE } from './constants'
 
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
 
@@ -18,7 +18,7 @@ const defaultInline = [
   // special Vite query strings
   /[?&](init|raw|url|inline)\b/,
   // Vite returns a string for assets imports, even if it's inside "node_modules"
-  new RegExp(`\\.(${KNOWN_ASSET_TYPES.join('|')})$`),
+  KNOWN_ASSET_RE,
 ]
 
 const depsExternal = [
