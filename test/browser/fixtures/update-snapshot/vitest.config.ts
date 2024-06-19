@@ -7,7 +7,7 @@ manually test snapshot by
   pnpm -C test/browser test-fixtures --root fixtures/update-snapshot
 */
 
-const provider = process.env.PROVIDER || 'webdriverio'
+const provider = process.env.PROVIDER || 'playwright'
 const browser =
   process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
 
