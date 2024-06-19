@@ -16,13 +16,8 @@ import { runFilter } from '~/composables/explorer/filter'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
-  private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
-    // if the user refreshes the page with finished tests, we don't receive onFinished event
-    // maybe we should send the event/data from the server when the client reconnects
-    // todo: remove this and resumeEndRunId when vitest runner fix the problem
-    // todo: remove also client/index.ts logic with onTaskUpdateCalled
-    private resumeEndTimeout = 500,
+    private onTaskUpdateCalled: boolean = false,
     private done = new Set<string>(),
     public root = <RootTreeNode>{
       id: 'vitest-root-node',
@@ -81,15 +76,21 @@ export class ExplorerTree {
     })
   }
 
+  startRun() {
+    this.collect(true, false)
+  }
+
   resumeRun() {
-    clearTimeout(this.resumeEndRunId)
-    this.rafCollector.resume()
+    if (!this.onTaskUpdateCalled) {
+      this.onTaskUpdateCalled = true
+      this.collect(true, false, false)
+      this.rafCollector.resume()
+    }
   }
 
   endRun() {
-    clearTimeout(this.resumeEndRunId)
-    // collect final state: rafCollector can be null on page refresh
     this.rafCollector.pause()
+    this.onTaskUpdateCalled = false
     this.collect(false, true)
   }
 
@@ -97,8 +98,24 @@ export class ExplorerTree {
     this.collect(false, false)
   }
 
-  private collect(start: boolean, end: boolean) {
-    queueMicrotask(() => {
+  private collect(start: boolean, end: boolean, task = true) {
+    if (task) {
+      queueMicrotask(() => {
+        runCollect(
+          start,
+          end,
+          this.summary,
+          search.value.trim(),
+          {
+            failed: filter.failed,
+            success: filter.success,
+            skipped: filter.skipped,
+            onlyTests: filter.onlyTests,
+          },
+        )
+      })
+    }
+    else {
       runCollect(
         start,
         end,
@@ -111,15 +128,7 @@ export class ExplorerTree {
           onlyTests: filter.onlyTests,
         },
       )
-    })
-  }
-
-  startRun(registerResumeEndRun = false) {
-    if (registerResumeEndRun) {
-      this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     }
-
-    this.collect(true, false)
   }
 
   collectTestsTotal(

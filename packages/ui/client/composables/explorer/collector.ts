@@ -49,7 +49,7 @@ export function runCollect(
   filter: Filter,
 ) {
   if (start) {
-    queueMicrotask(() => resetCollectorInfo(summary))
+    resetCollectorInfo(summary)
   }
 
   queueMicrotask(() => {
@@ -346,19 +346,14 @@ export function collectTestsTotalData(
 
 function* testsCollector(suite: Arrayable<Task>): Generator<Test | Custom> {
   const arraySuites = toArray(suite)
-  for (const s of arraySuites) {
+  let s: Task
+  for (let i = 0; i < arraySuites.length; i++) {
+    s = arraySuites[i]
     if (isAtomTest(s)) {
       yield s
     }
     else {
-      for (const task of s.tasks) {
-        if (isAtomTest(task)) {
-          yield task
-        }
-        else {
-          yield * testsCollector(task)
-        }
-      }
+      yield * testsCollector(s.tasks)
     }
   }
 }
