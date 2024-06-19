@@ -1,6 +1,5 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { EXIT_CODE_RESTART } from '../../constants'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { getEnvPackageName } from '../../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../../types'
@@ -86,11 +85,6 @@ export async function startVitest(
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
-
-    // if it's in a CLI wrapper, exit with a special code to request restart
-    if (process.env.VITEST_CLI_WRAPPER) {
-      process.exit(EXIT_CODE_RESTART)
-    }
   })
 
   ctx.onAfterSetServer(() => {

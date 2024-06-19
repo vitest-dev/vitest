@@ -261,9 +261,14 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
   }
   catch (e) {
     const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
+    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
     console.error(e)
     console.error('\n\n')
-    process.exit(1)
+
+    if (process.exitCode == null) {
+      process.exitCode = 1
+    }
+
+    process.exit()
   }
 }
