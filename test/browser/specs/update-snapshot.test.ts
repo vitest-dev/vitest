@@ -17,6 +17,11 @@ test('update snapshot', async () => {
     root: './fixtures/update-snapshot',
     reporters: ['default'], // use simple reporter to not pollute stdout
     browser: { headless: true },
+  }, [], {
+    server: {
+      // ignore the watcher update
+      watch: null,
+    },
   })
   const { exitCode, ctx: vitest } = ctx
   onTestFinished(() => vitest.close())
