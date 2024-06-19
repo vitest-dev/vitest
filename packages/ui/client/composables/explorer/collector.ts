@@ -23,21 +23,20 @@ import { explorerTree } from '~/composables/explorer/index'
 
 export function runLoadFiles(
   remoteFiles: File[],
+  collect: boolean,
   search: string,
   filter: Filter,
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, f]) => createOrUpdateFileNode(f))
+    .map(([, f]) => createOrUpdateFileNode(f, collect))
 
   uiFiles.value = [...explorerTree.root.tasks]
-  queueMicrotask(() => {
-    runFilter(search.trim(), {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      onlyTests: filter.onlyTests,
-    })
+  runFilter(search.trim(), {
+    failed: filter.failed,
+    success: filter.success,
+    skipped: filter.skipped,
+    onlyTests: filter.onlyTests,
   })
 }
 

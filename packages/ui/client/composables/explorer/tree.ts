@@ -68,12 +68,17 @@ export class ExplorerTree {
   }
 
   loadFiles(remoteFiles: File[]) {
-    runLoadFiles(remoteFiles, search.value.trim(), {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      onlyTests: filter.onlyTests,
-    })
+    runLoadFiles(
+      remoteFiles,
+      true,
+      search.value.trim(),
+      {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        onlyTests: filter.onlyTests,
+      },
+    )
   }
 
   startRun() {
