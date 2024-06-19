@@ -155,8 +155,8 @@ export async function initiateRunner(
 }
 
 async function updateFilesLocations(files: File[], sourceMaps: Map<string, any>) {
-  files.forEach((file) => {
-    const result = sourceMaps.get(file.filepath)
+  const promises = files.map(async (file) => {
+    const result = sourceMaps.get(file.filepath) || await rpc().getBrowserFileSourceMap(file.filepath)
     if (!result) {
       return null
     }
@@ -175,4 +175,6 @@ async function updateFilesLocations(files: File[], sourceMaps: Map<string, any>)
     file.tasks.forEach(updateLocation)
     return null
   })
+
+  await Promise.all(promises)
 }
