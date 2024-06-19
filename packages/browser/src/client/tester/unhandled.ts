@@ -1,6 +1,5 @@
-import { getBrowserState, importId } from '../utils'
+import { processError } from 'vitest/browser'
 import type { client } from '../client'
-import { channel } from '../client'
 
 function on(event: string, listener: (...args: any[]) => void) {
   window.addEventListener(event, listener)
@@ -14,18 +13,6 @@ export function serializeError(unhandledError: any) {
     message: unhandledError.message,
     stack: String(unhandledError.stack),
   }
-}
-
-// we can't import "processError" yet because error might've been thrown before the module was loaded
-async function defaultErrorReport(type: string, unhandledError: any) {
-  const error = serializeError(unhandledError)
-  channel.postMessage({
-    type: 'error',
-    files: getBrowserState().runningFiles,
-    error,
-    errorType: type,
-    id: getBrowserState().iframeId!,
-  })
 }
 
 function catchWindowErrors(cb: (e: ErrorEvent) => void) {
@@ -62,18 +49,6 @@ function catchWindowErrors(cb: (e: ErrorEvent) => void) {
   }
 }
 
-export function registerUnhandledErrors() {
-  const stopErrorHandler = catchWindowErrors(e =>
-    defaultErrorReport('Error', e.error),
-  )
-  const stopRejectionHandler = on('unhandledrejection', e =>
-    defaultErrorReport('Unhandled Rejection', e.reason))
-  return () => {
-    stopErrorHandler()
-    stopRejectionHandler()
-  }
-}
-
 export function registerUnexpectedErrors(rpc: typeof client.rpc) {
   catchWindowErrors(event =>
     reportUnexpectedError(rpc, 'Error', event.error),
@@ -87,9 +62,6 @@ async function reportUnexpectedError(
   type: string,
   error: any,
 ) {
-  const { processError } = (await importId(
-    'vitest/browser',
-  )) as typeof import('vitest/browser')
   const processedError = processError(error)
   await rpc.onUnhandledError(processedError, type)
 }

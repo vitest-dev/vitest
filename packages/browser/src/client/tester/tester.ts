@@ -4,15 +4,12 @@ import { channel, client, onCancel } from '../client'
 import { setupDialogsSpy } from './dialog'
 import {
   registerUnexpectedErrors,
-  registerUnhandledErrors,
   serializeError,
 } from './unhandled'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { VitestBrowserClientMocker } from './mocker'
-
-const stopErrorHandler = registerUnhandledErrors()
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
@@ -112,7 +109,6 @@ async function prepareTestEnvironment(files: string[]) {
     runner.onCancel?.(reason)
   })
 
-  stopErrorHandler()
   registerUnexpectedErrors(rpc)
 
   return {
