@@ -1,7 +1,7 @@
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import type { Filter, UITaskTreeNode } from '~/composables/explorer/types'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
-import { filterAll, filterTask } from '~/composables/explorer/filter'
+import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 
@@ -50,8 +50,8 @@ export function runExpandNode(
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
   // collect children
-  // the first node is itself
-  const children = new Set(filterTask(
+  // the first node is itself only when it is a file
+  const children = new Set(filterNode(
     node,
     search,
     filter,
@@ -101,17 +101,17 @@ export function runExpandAll(
 
 export function expandNodesOnEndRun(
   ids: Set<string>,
-  updateState: boolean,
+  end: boolean,
 ) {
   if (ids.size) {
-    for (const node of explorerTree.nodes.values()) {
+    for (const node of uiEntries.value) {
       if (ids.has(node.id)) {
         node.expanded = true
       }
     }
   }
-  else {
-    expandAllNodes(uiEntries.value.filter(isFileNode), updateState)
+  else if (end) {
+    expandAllNodes(uiEntries.value.filter(isFileNode), true)
   }
 }
 
@@ -134,13 +134,18 @@ function* collectExpandedNode(
   children: Set<UITaskTreeNode>,
 ) {
   const id = node.id
+  const ids = new Set(Array.from(children).map(n => n.id))
 
-  for (const node of uiEntries.value) {
-    if (node.id === id) {
+  for (const child of uiEntries.value) {
+    if (child.id === id) {
+      child.expanded = true
+      if (!ids.has(child.id)) {
+        yield node
+      }
       yield * children
     }
-    else {
-      yield node
+    else if (!ids.has(child.id)) {
+      yield child
     }
   }
 }

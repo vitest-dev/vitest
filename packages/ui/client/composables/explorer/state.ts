@@ -9,6 +9,7 @@ export const openedTreeItems = useLocalStorage<string[]>(
   [],
   { shallow: true },
 )
+export const openedTreeItemsSet = computed(() => new Set(openedTreeItems.value))
 export const treeFilter = useLocalStorage<TreeFilterState>(
   'vitest-ui_task-tree-filter',
   {
@@ -28,10 +29,6 @@ export const filter = reactive<Filter>({
   skipped: treeFilter.value.skipped,
   onlyTests: treeFilter.value.onlyTests,
 })
-export const failedFilter = computed(() => filter.failed)
-export const successFilter = computed(() => filter.success)
-export const skipFilter = computed(() => filter.skipped)
-export const onlyTestsFilter = computed(() => filter.onlyTests)
 export const isFilteredByStatus = computed(() => {
   if (filter.failed) {
     return true

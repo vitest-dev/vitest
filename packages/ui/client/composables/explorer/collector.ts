@@ -18,8 +18,8 @@ import {
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
-import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { explorerTree } from '~/composables/explorer/index'
+import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 
 export function runLoadFiles(
   remoteFiles: File[],
@@ -115,15 +115,15 @@ function doRunFilter(
         treeFilter.value.expandAll = false
       }
     })
-
     // refresh explorer
     queueMicrotask(() => runFilter(search, filter))
   }
 }
 
 function createOrUpdateEntry(tasks: Task[]) {
+  let task: Task
   for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i]
+    task = tasks[i]
     if (isSuite(task)) {
       createOrUpdateSuiteTask(task.id, true)
     }

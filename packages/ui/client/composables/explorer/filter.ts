@@ -36,11 +36,11 @@ export function* filterAll(
   filter: Filter,
 ) {
   for (const node of explorerTree.root.tasks) {
-    yield * filterTask(node, search, filter)
+    yield * filterNode(node, search, filter)
   }
 }
 
-export function* filterTask(
+export function* filterNode(
   node: UITaskTreeNode,
   search: string,
   filter: Filter,
@@ -66,13 +66,22 @@ export function* filterTask(
     filesToShow,
   )].reverse()
 
-  // we need to remove any child added when filtering: we traverse the full tree
+  // We show only the files and parents whose parent is expanded.
+  // Filtering will return all the nodes matching the filter and their parents.
+  // Once we've the tree, we need to remove the children of not expanded parents.
+  // For example, if we filter a test inside a suite, when collapsing the suite
+  // we still need to show the suite, but the test must be removed from the rendered tree.
+
+  const map = explorerTree.nodes
+  // collect files and all suites whose parent is expanded
   const parents = new Set(
-    entries.filter(e => isParentNode(e)).map(e => e.id),
+    entries.filter(e => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map(e => e.id),
   )
+
+  // collect files, and suites and tests whose parent is expanded
   yield * entries.filter((node) => {
-    // all file nodes, or expanded parents, or children of expanded parents
-    return isFileNode(node) || (isParentNode(node) ? parents.has(node.id) : parents.has(node.parentId))
+    // all file nodes or children of expanded parents
+    return isFileNode(node) || (parents.has(node.parentId) && map.get(node.parentId)?.expanded)
   })
 }
 
@@ -139,7 +148,6 @@ function* filterParents(
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
-
       yield child
     }
   }
@@ -195,6 +203,7 @@ function* visitNode(
 
   if (match) {
     if (isTestNode(node)) {
+      // treeNodes.add(node.parentId)
       let parent = explorerTree.nodes.get(node.parentId)
       while (parent) {
         treeNodes.add(parent.id)
@@ -205,7 +214,12 @@ function* visitNode(
       treeNodes.add(node.id)
     }
     else {
-      treeNodes.add(node.parentId)
+      treeNodes.add(node.id)
+      let parent = explorerTree.nodes.get(node.parentId)
+      while (parent) {
+        treeNodes.add(parent.id)
+        parent = explorerTree.nodes.get(parent.parentId)
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import type { FileTreeNode, ParentTreeNode, SuiteTreeNode, UITaskTreeNode } from
 import { client } from '~/composables/client'
 import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 import { explorerTree } from '~/composables/explorer/index'
+import { openedTreeItemsSet, treeFilter } from '~/composables/explorer/state'
 
 export function isTestNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'test' || node.type === 'custom'
@@ -47,7 +48,7 @@ export function createOrUpdateFileNode(
       name: file.name,
       mode: file.mode,
       expandable: true,
-      expanded: false,
+      expanded: openedTreeItemsSet.value.size > 0 ? openedTreeItemsSet.value.has(file.id) : treeFilter.value.expandAll !== false,
       type: 'file',
       children: new Set(),
       tasks: [],
@@ -124,7 +125,7 @@ export function createOrUpdateNode(
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
   if (node) {
-    taskNode = explorerTree.nodes.get(task.id) as UITaskTreeNode | undefined
+    taskNode = explorerTree.nodes.get(task.id)
     if (taskNode) {
       if (!node.children.has(task.id)) {
         node.tasks.push(taskNode)
@@ -165,7 +166,7 @@ export function createOrUpdateNode(
           typecheck: !!task.meta && 'typecheck' in task.meta,
           type: 'suite',
           expandable: true,
-          expanded: false,
+          expanded: openedTreeItemsSet.value.size > 0 ? openedTreeItemsSet.value.has(task.id) : treeFilter.value.expandAll !== false,
           children: new Set(),
           tasks: [],
           indent: node.indent + 1,
