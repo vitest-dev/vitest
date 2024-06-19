@@ -9,6 +9,7 @@ import type { BrowserCommandContext } from 'vitest/node'
 import { createDebugger } from 'vitest/node'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import type { BrowserServer } from './server'
+import { resolveMock } from './resolveMock'
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -169,29 +170,8 @@ export function setupBrowserRpc(
           debug?.('[%s] Finishing browser tests for context', contextId)
           return server.state.getContext(contextId)?.resolve()
         },
-        // TODO: cache this automock result
-        // async automock(id) {
-        //   const result = await project.browser!.transformRequest(id)
-        //   if (!result) {
-        //     throw new Error(`Module "${id}" not found.`)
-        //   }
-        //   const ms = automockModule(result.code, parseAst)
-        //   const code = ms.toString()
-        //   const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
-        //   const combinedMap
-        //     = result.map && result.map.mappings
-        //       ? remapping(
-        //         [
-        //           { ...sourcemap, version: 3 },
-        //           result.map as EncodedSourceMap,
-        //         ],
-        //         () => null,
-        //       )
-        //       : sourcemap
-        //   return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
-        // },
         resolveMock(rawId, importer, hasFactory) {
-          return server.mocker.resolveMock(rawId, importer, hasFactory)
+          return resolveMock(project, rawId, importer, hasFactory)
         },
         invalidate(ids) {
           ids.forEach((id) => {

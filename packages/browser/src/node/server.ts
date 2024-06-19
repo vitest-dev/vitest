@@ -12,7 +12,6 @@ import { slash } from '@vitest/utils'
 import type { ResolvedConfig } from 'vitest'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
-import { VitestBrowserServerMocker } from './mocker'
 
 export class BrowserServer implements IBrowserServer {
   public faviconUrl: string
@@ -31,14 +30,12 @@ export class BrowserServer implements IBrowserServer {
   public provider!: BrowserProvider
 
   public vite!: Vite.ViteDevServer
-  public mocker: VitestBrowserServerMocker
 
   constructor(
     public project: WorkspaceProject,
     public base: string,
   ) {
     this.state = new BrowserServerState()
-    this.mocker = new VitestBrowserServerMocker(project)
 
     const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
     const distRoot = resolve(pkgRoot, 'dist')
