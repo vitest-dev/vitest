@@ -28,7 +28,7 @@ export class BrowserServerState {
     const distRoot = resolve(pkgRoot, 'dist')
 
     this.prefixTesterUrl = `${base}__vitest_test__/__test__/`
-    this.faviconUrl = `${base}favicon.svg`
+    this.faviconUrl = `${base}__vitest__/favicon.svg`
 
     this.manifest = (async () => {
       return JSON.parse(

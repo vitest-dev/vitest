@@ -41,6 +41,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "*.d.ts",
+    "context.js",
     "dist",
     "providers"
   ],

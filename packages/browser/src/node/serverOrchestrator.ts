@@ -61,7 +61,7 @@ export async function resolveOrchestrator(
         [
           '<script>{__VITEST_INJECTOR__}</script>',
           '{__VITEST_SCRIPTS__}',
-          `<script type="module" crossorigin src="${jsEntry}"></script>`,
+          `<script type="module" crossorigin src="${base}${jsEntry}"></script>`,
         ].join('\n'),
       )
   }

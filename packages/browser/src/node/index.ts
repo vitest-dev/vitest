@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
+import { readFileSync } from 'node:fs'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
@@ -76,12 +77,14 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           res.write(html, 'utf-8')
           res.end()
         })
+
         server.middlewares.use(
-          base,
-          sirv(resolve(distRoot, 'client'), {
-            single: false,
-            dev: true,
-          }),
+          `${base}favicon.svg`,
+          (_, res) => {
+            const content = readFileSync(resolve(distRoot, 'client/favicon.svg'))
+            res.write(content, 'utf-8')
+            res.end()
+          },
         )
 
         const coverageFolder = resolveCoverageFolder(project)
@@ -181,17 +184,32 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId.startsWith('/__virtual_vitest__:')) {
-          let id = rawId.slice('/__virtual_vitest__:'.length)
-          // TODO: don't hardcode
-          if (id === 'mocker-worker.js') {
-            id = 'msw/mockServiceWorker.js'
+        if (rawId.startsWith('/__virtual_vitest__')) {
+          const url = new URL(rawId, 'http://localhost')
+          if (!url.searchParams.has('id')) {
+            throw new TypeError(`Invalid virtual module id: ${rawId}, requires "id" query.`)
           }
+
+          const id = decodeURIComponent(url.searchParams.get('id')!)
 
           const resolved = await this.resolve(id, distRoot, {
             skipSelf: true,
           })
           return resolved
+        }
+
+        if (rawId === '/__vitest_msw__') {
+          return this.resolve('msw/mockServiceWorker.js', distRoot, {
+            skipSelf: true,
+          })
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:assets',
+      resolveId(id) {
+        if (id.startsWith('/__vitest_browser__/') || id.startsWith('/__vitest__/')) {
+          return resolve(distRoot, 'client', id.slice(1))
         }
       },
     },

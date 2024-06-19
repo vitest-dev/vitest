@@ -68,7 +68,7 @@ export function createModuleMocker() {
     startPromise = worker
       .start({
         serviceWorker: {
-          url: '/__virtual_vitest__:mocker-worker.js',
+          url: '/__vitest_msw__',
         },
         quiet: true,
       })

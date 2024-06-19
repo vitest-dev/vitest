@@ -19,7 +19,7 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/__virtual_vitest__/, '/@vite/client'],
+      external: [/__virtual_vitest__/],
     },
   },
   plugins: [
@@ -28,7 +28,7 @@ export default defineConfig({
       enforce: 'pre',
       resolveId(id) {
         if (id.startsWith('msw') || id.startsWith('vitest')) {
-          return `/__virtual_vitest__:${id}`
+          return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
         }
       },
     },
