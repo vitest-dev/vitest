@@ -1,4 +1,4 @@
-import { format, inspect, stringify } from 'vitest/utils'
+import { format, stringify } from 'vitest/utils'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 
@@ -72,7 +72,7 @@ export function setupConsoleLogSpy() {
 
   console.dir = (item, options) => {
     dir(item, options)
-    sendLog('stdout', inspect(item, options))
+    sendLog('stdout', formatInput(item))
   }
 
   console.dirxml = (...args) => {

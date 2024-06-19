@@ -43,8 +43,16 @@ describe('running browser tests', async () => {
     expect(stdout).toContain('hello from console.log')
     expect(stdout).toContain('hello from console.info')
     expect(stdout).toContain('hello from console.debug')
-    expect(stdout).toContain('{ hello: \'from dir\' }')
-    expect(stdout).toContain('{ hello: \'from dirxml\' }')
+    expect(stdout).toContain(`
+{
+  "hello": "from dir",
+}
+      `.trim())
+    expect(stdout).toContain(`
+{
+  "hello": "from dirxml",
+}
+      `.trim())
     expect(stdout).toContain('dom <div />')
     expect(stdout).toContain('default: 1')
     expect(stdout).toContain('default: 2')
