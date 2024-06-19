@@ -5,15 +5,12 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed, parseAst } from 'vite'
+import { isFileServingAllowed } from 'vite'
 import type { ViteDevServer } from 'vite'
-import type { EncodedSourceMap } from '@ampproject/remapping'
-import remapping from '@ampproject/remapping'
 import { BROWSER_API_PATH } from '../constants'
 import { stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { createDebugger } from '../utils/debugger'
-import { automockModule } from '../node/automockBrowser'
 import type { BrowserCommandContext } from '../types/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 
@@ -175,27 +172,6 @@ export function setupBrowserRpc(
         },
         getProvidedContext() {
           return 'ctx' in project ? project.getProvidedContext() : ({} as any)
-        },
-        // TODO: cache this automock result
-        async automock(id) {
-          const result = await project.browser!.transformRequest(id)
-          if (!result) {
-            throw new Error(`Module "${id}" not found.`)
-          }
-          const ms = automockModule(result.code, parseAst)
-          const code = ms.toString()
-          const sourcemap = ms.generateMap({ hires: 'boundary', source: id })
-          const combinedMap
-            = result.map && result.map.mappings
-              ? remapping(
-                [
-                  { ...sourcemap, version: 3 },
-                  result.map as EncodedSourceMap,
-                ],
-                () => null,
-              )
-              : sourcemap
-          return `${code}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(combinedMap)).toString('base64')}`
         },
         resolveMock(rawId, importer, hasFactory) {
           return project.browserMocker.resolveMock(rawId, importer, hasFactory)

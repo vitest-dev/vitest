@@ -1,18 +1,13 @@
-import type {
-  Declaration,
-  ExportDefaultDeclaration,
-  ExportNamedDeclaration,
-  Expression,
-  Identifier,
-  Literal,
-  Pattern,
-  Positioned,
-  Program,
-} from '@vitest/utils/ast'
+import { join, resolve } from 'node:path'
+import type { Declaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Identifier, Literal, Pattern, Positioned } from '@vitest/utils/ast'
 import MagicString from 'magic-string'
+import type { Rollup } from 'vite'
+import { distDir } from './constants'
+
+const mocker = resolve(distDir, './mocker.js')
 
 // TODO: better source map replacement
-export function automockModule(code: string, parse: (code: string) => Program) {
+export function automockModule(code: string, parse: Rollup.ParseAst, spyModule: string) {
   const ast = parse(code)
 
   const m = new MagicString(code)
@@ -54,9 +49,7 @@ export function automockModule(code: string, parse: (code: string) => Program) {
             else if (property.type === 'Property') {
               traversePattern(property.value)
             }
-            else {
-              property satisfies never
-            }
+            else { property satisfies never }
           })
         }
         else if (expression.type === 'RestElement') {
@@ -65,16 +58,12 @@ export function automockModule(code: string, parse: (code: string) => Program) {
         // const [name[1], name[2]] = []
         // cannot be used in export
         else if (expression.type === 'AssignmentPattern') {
-          throw new Error(
-            `AssignmentPattern is not supported. Please open a new bug report.`,
-          )
+          throw new Error(`AssignmentPattern is not supported. Please open a new bug report.`)
         }
         // const test = thing.func()
         // cannot be used in export
         else if (expression.type === 'MemberExpression') {
-          throw new Error(
-            `MemberExpression is not supported. Please open a new bug report.`,
-          )
+          throw new Error(`MemberExpression is not supported. Please open a new bug report.`)
         }
         else {
           expression satisfies never
@@ -107,7 +96,9 @@ export function automockModule(code: string, parse: (code: string) => Program) {
           const exported = specifier.exported as Literal | Identifier
 
           allSpecifiers.push({
-            alias: exported.type === 'Literal' ? exported.raw! : exported.name,
+            alias: exported.type === 'Literal'
+              ? exported.raw!
+              : exported.name,
             name: specifier.local.name,
           })
         })
@@ -122,13 +113,13 @@ export function automockModule(code: string, parse: (code: string) => Program) {
           importNames.push([specifier.local.name, importedName])
           allSpecifiers.push({
             name: importedName,
-            alias: exported.type === 'Literal' ? exported.raw! : exported.name,
+            alias: exported.type === 'Literal'
+              ? exported.raw!
+              : exported.name,
           })
         })
 
-        const importString = `import { ${importNames
-          .map(([name, alias]) => `${name} as ${alias}`)
-          .join(', ')} } from '${source.value}'`
+        const importString = `import { ${importNames.map(([name, alias]) => `${name} as ${alias}`).join(', ')} } from '${source.value}'`
 
         m.overwrite(node.start, node.end, importString)
       }
@@ -141,23 +132,22 @@ export function automockModule(code: string, parse: (code: string) => Program) {
     }
   }
   const moduleObject = `
+import { mockObject } from '${slash(join('/@fs/', mocker))}'
+import { spyOn } from '${spyModule}'
+
 const __vitest_es_current_module__ = {
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
-const __vitest_mocked_module__ = __vitest_mocker__.mockObject(__vitest_es_current_module__)
+const __vitest_mocked_module__ = mockObject({ spyOn }, __vitest_es_current_module__)
 `
-  const assigning = allSpecifiers
-    .map(({ name }, index) => {
-      return `const __vitest_mocked_${index}__ = __vitest_mocked_module__["${name}"]`
-    })
-    .join('\n')
+  const assigning = allSpecifiers.map(({ name }, index) => {
+    return `const __vitest_mocked_${index}__ = __vitest_mocked_module__["${name}"]`
+  }).join('\n')
 
-  const redeclarations = allSpecifiers
-    .map(({ name, alias }, index) => {
-      return `  __vitest_mocked_${index}__ as ${alias || name},`
-    })
-    .join('\n')
+  const redeclarations = allSpecifiers.map(({ name, alias }, index) => {
+    return `  __vitest_mocked_${index}__ as ${alias || name},`
+  }).join('\n')
   const specifiersExports = `
 export {
 ${redeclarations}
@@ -165,4 +155,8 @@ ${redeclarations}
 `
   m.append(moduleObject + assigning + specifiersExports)
   return m
+}
+
+function slash(path: string) {
+  return path.replace(/\\/g, '/')
 }

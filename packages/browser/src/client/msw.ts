@@ -7,7 +7,6 @@ import type {
   IframeUnmockEvent,
 } from './channel'
 import { channel } from './channel'
-import { client } from './client'
 
 export function createModuleMocker() {
   const mocks: Map<string, string | null | undefined> = new Map()
@@ -46,12 +45,7 @@ export function createModuleMocker() {
         return Response.redirect(mock)
       }
 
-      const content = await client.rpc.automock(path)
-      return new Response(content, {
-        headers: {
-          'Content-Type': 'application/javascript',
-        },
-      })
+      return Response.redirect(injectQuery(path, 'mock=auto'))
     }),
   )
 
@@ -132,4 +126,24 @@ function passthrough() {
       'x-msw-intention': 'passthrough',
     },
   })
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
+}
+
+const replacePercentageRE = /%/g
+function injectQuery(url: string, queryToInject: string): string {
+  // encode percents for consistent behavior with pathToFileURL
+  // see #2614 for details
+  const resolvedUrl = new URL(
+    url.replace(replacePercentageRE, '%25'),
+    'relative:///',
+  )
+  const { search, hash } = resolvedUrl
+  const pathname = cleanUrl(url)
+  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
+    hash ?? ''
+  }`
 }
