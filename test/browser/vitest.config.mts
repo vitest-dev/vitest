@@ -27,6 +27,7 @@ export default defineConfig({
     include: ['@vitest/cjs-lib'],
   },
   test: {
+    testTimeout: process.env.CI ? 120_000 : 10_000,
     include: ['test/**.test.{ts,js}'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
