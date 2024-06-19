@@ -9,10 +9,10 @@ export async function resolveOrchestrator(
 ) {
   const project = state.project
   let contextId = url.searchParams.get('contextId')
-  // it's possible to open the page without a context,
-  // for now, let's assume it should be the first one
+  // it's possible to open the page without a context
   if (!contextId) {
-    contextId = project.browserState.keys().next().value ?? 'none'
+    const contexts = [...project.browserRpc.orchestrators.keys()]
+    contextId = contexts[contexts.length - 1]
   }
 
   const files = project.browserState.get(contextId!)?.files ?? []

@@ -19,16 +19,15 @@ export async function resolveTester(
   }
 
   const { contextId, testFile } = state.resolveTesterUrl(url.pathname)
-  const decodedTestFile = decodeURIComponent(testFile)
   const project = state.project
   const testFiles = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
-    = decodedTestFile === '__vitest_all__'
-    || !testFiles.includes(decodedTestFile)
+    = testFile === '__vitest_all__'
+    || !testFiles.includes(testFile)
       ? '__vitest_browser_runner__.files'
-      : JSON.stringify([decodedTestFile])
-  const iframeId = JSON.stringify(decodedTestFile)
+      : JSON.stringify([testFile])
+  const iframeId = JSON.stringify(testFile)
   const files = project.browserState.get(contextId)?.files ?? []
 
   const injectorJs = typeof state.injectorJs === 'string'

@@ -65,7 +65,8 @@ export class BrowserServerState {
     const [contextId, testFile] = pathname
       .slice(this.prefixTesterUrl.length)
       .split('/')
-    return { contextId, testFile }
+    const decodedTestFile = decodeURIComponent(testFile)
+    return { contextId, testFile: decodedTestFile }
   }
 
   async formatScripts(
