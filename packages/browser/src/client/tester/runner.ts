@@ -1,6 +1,9 @@
-import type { File, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
+import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
+import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
+import { TraceMap, originalPositionFor } from 'vitest/utils'
 import { importId } from '../utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { rpc } from './rpc'
@@ -28,6 +31,7 @@ export function createBrowserRunner(
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: ResolvedConfig
     hashMap = browserHashMap
+    public sourceMapCache = new Map<string, any>()
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -46,6 +50,22 @@ export function createBrowserRunner(
           this.onCancel?.('test-failure')
         }
       }
+    }
+
+    onBeforeRunSuite = async (suite: Suite | File) => {
+      await Promise.all([
+        super.onBeforeRunSuite?.(suite),
+        (async () => {
+          if ('filepath' in suite) {
+            const map = await rpc().getBrowserFileSourceMap(suite.filepath)
+            this.sourceMapCache.set(suite.filepath, map)
+            const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
+            if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
+              snapshotEnvironment.addSourceMap(suite.filepath, map)
+            }
+          }
+        })(),
+      ])
     }
 
     onAfterRunFiles = async (files: File[]) => {
@@ -75,7 +95,7 @@ export function createBrowserRunner(
 
       if (this.config.includeTaskLocation) {
         try {
-          await updateFilesLocations(files)
+          await updateFilesLocations(files, this.sourceMapCache)
         }
         catch (_) {}
       }
@@ -112,13 +132,6 @@ export async function initiateRunner(
   if (cachedRunner) {
     return cachedRunner
   }
-  const [
-    { VitestTestRunner, NodeBenchmarkRunner },
-    { takeCoverageInsideWorker, loadDiffConfig, loadSnapshotSerializers },
-  ] = await Promise.all([
-    importId('vitest/runners') as Promise<typeof import('vitest/runners')>,
-    importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-  ])
   const runnerClass
     = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
@@ -141,14 +154,9 @@ export async function initiateRunner(
   return runner
 }
 
-async function updateFilesLocations(files: File[]) {
-  const { loadSourceMapUtils } = (await importId(
-    'vitest/utils',
-  )) as typeof import('vitest/utils')
-  const { TraceMap, originalPositionFor } = await loadSourceMapUtils()
-
+async function updateFilesLocations(files: File[], sourceMaps: Map<string, any>) {
   const promises = files.map(async (file) => {
-    const result = await rpc().getBrowserFileSourceMap(file.filepath)
+    const result = sourceMaps.get(file.filepath) || await rpc().getBrowserFileSourceMap(file.filepath)
     if (!result) {
       return null
     }
