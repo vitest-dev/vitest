@@ -31,6 +31,10 @@ export type {
   BrowserScript,
   BrowserCommand,
   BrowserCommandContext,
+  BrowserServer,
+  BrowserServerState,
+  BrowserServerStateContext,
+  BrowserOrchestrator,
 } from '../types/browser'
 export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'

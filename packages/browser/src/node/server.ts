@@ -1,14 +1,20 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import type { BrowserProvider, BrowserScript, Vite, WorkspaceProject } from 'vitest/node'
+import type {
+  BrowserProvider,
+  BrowserScript,
+  BrowserServer as IBrowserServer,
+  Vite,
+  WorkspaceProject,
+} from 'vitest/node'
 import { join, resolve } from 'pathe'
 import { slash } from '@vitest/utils'
 import type { ResolvedConfig } from 'vitest'
-import { BrowserState } from './state'
+import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 import { VitestBrowserServerMocker } from './mocker'
 
-export class BrowserServer {
+export class BrowserServer implements IBrowserServer {
   public faviconUrl: string
   public prefixTesterUrl: string
 
@@ -21,7 +27,7 @@ export class BrowserServer {
   public injectorJs: Promise<string> | string
   public stateJs: Promise<string> | string
 
-  public state: BrowserState
+  public state: BrowserServerState
   public provider!: BrowserProvider
 
   public vite!: Vite.ViteDevServer
@@ -31,7 +37,7 @@ export class BrowserServer {
     public project: WorkspaceProject,
     public base: string,
   ) {
-    this.state = new BrowserState()
+    this.state = new BrowserServerState()
     this.mocker = new VitestBrowserServerMocker(project)
 
     const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')

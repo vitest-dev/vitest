@@ -1,18 +1,12 @@
 import { createDefer } from '@vitest/utils'
+import type { BrowserServerStateContext, BrowserServerState as IBrowserServerState } from 'vitest/node'
 import type { WebSocketBrowserRPC } from './types'
 
-export class BrowserState {
+export class BrowserServerState implements IBrowserServerState {
   public orchestrators = new Map<string, WebSocketBrowserRPC>()
   public testers = new Map<string, WebSocketBrowserRPC>()
 
-  private contexts = new Map<
-    string,
-    {
-      files: string[]
-      resolve: () => void
-      reject: (v: unknown) => void
-    }
-  >()
+  private contexts = new Map<string, BrowserServerStateContext >()
 
   getContext(contextId: string) {
     return this.contexts.get(contextId)

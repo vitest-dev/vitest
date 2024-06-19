@@ -18,7 +18,6 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { BrowserServer } from '@vitest/browser'
 import type {
   ProvidedContext,
   ResolvedConfig,
@@ -29,6 +28,7 @@ import type {
 import type { Typechecker } from '../typecheck/typechecker'
 import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
+import type { BrowserServer } from '../types/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'

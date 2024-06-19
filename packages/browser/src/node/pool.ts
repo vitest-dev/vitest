@@ -20,6 +20,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
+    const browser = project.browser!
     // const mocker = project.browserMocker
     // mocker.mocks.forEach((_, id) => {
     //   mocker.invalidateModuleById(id)
@@ -33,10 +34,10 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     //   isCancelled = true
     // })
 
-    const provider = project.browser!.provider!
+    const provider = browser.provider
     providers.add(provider)
 
-    const resolvedUrls = project.browser?.vite.resolvedUrls
+    const resolvedUrls = browser.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
     if (!origin) {
@@ -64,7 +65,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       threadsCount,
     )
 
-    const orchestrators = [...project.browser!.state.orchestrators.entries()]
+    const orchestrators = [...browser.state.orchestrators.entries()]
 
     const promises: Promise<void>[] = []
 
@@ -121,7 +122,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
   function getThreadsCount(project: WorkspaceProject) {
     const config = project.config.browser
-    if (!config.headless || !project.browser!.provider!.supportsParallelism) {
+    if (!config.headless || !project.browser!.provider.supportsParallelism) {
       return 1
     }
 
