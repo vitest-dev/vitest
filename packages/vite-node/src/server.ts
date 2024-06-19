@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
 import assert from 'node:assert'
-import { isAbsolute, join, normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type {
@@ -13,7 +13,6 @@ import type {
 } from './types'
 import { shouldExternalize } from './externalize'
 import {
-  cleanUrl,
   normalizeModuleId,
   toArray,
   toFilePath,
@@ -177,24 +176,6 @@ export class ViteNodeServer {
     return this.server.pluginContainer.resolveId(id, importer, {
       ssr: mode === 'ssr',
     })
-  }
-
-  async resolveModule(rawId: string, resolved: ViteNodeResolveId | null) {
-    const id = resolved?.id || rawId
-    const external
-      = !isAbsolute(id) || this.isModuleDirectory(id) ? rawId : null
-    return {
-      id,
-      fsPath: cleanUrl(id),
-      external,
-    }
-  }
-
-  private isModuleDirectory(path: string) {
-    const moduleDirectories = this.options.deps?.moduleDirectories || [
-      '/node_modules/',
-    ]
-    return moduleDirectories.some((dir: string) => path.includes(dir))
   }
 
   getSourceMap(source: string) {

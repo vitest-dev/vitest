@@ -15,7 +15,7 @@ import { defaultPort } from '../../constants'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
-import { MocksPlugin } from './mocks'
+import { MocksPlugins } from './mocks'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
@@ -247,7 +247,7 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     options.ui ? await UIPlugin() : null,
-    MocksPlugin(),
+    ...MocksPlugins(),
     VitestResolver(ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),

@@ -10,6 +10,9 @@ export type { WorkspaceSpec, ProcessPool } from './pool'
 export { createMethodsRPC } from './pools/rpc'
 export { getFilePoolName } from './pool'
 export { VitestPackageInstaller } from './packageInstaller'
+export { createDebugger } from '../utils/debugger'
+export { resolveFsAllow } from './plugins/utils'
+export { resolveApiServerConfig, resolveConfig } from './config'
 
 export { distDir, rootDir } from '../paths'
 
@@ -22,13 +25,20 @@ export { BaseSequencer } from './sequencers/BaseSequencer'
 export type {
   BrowserProviderInitializationOptions,
   BrowserProvider,
+  BrowserProviderModule,
+  ResolvedBrowserOptions,
   BrowserProviderOptions,
   BrowserScript,
   BrowserCommand,
   BrowserCommandContext,
+  BrowserServer,
+  BrowserServerState,
+  BrowserServerStateContext,
+  BrowserOrchestrator,
 } from '../types/browser'
 export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'
 export type { HTMLOptions } from './reporters/html'
 
-export { isFileServingAllowed } from 'vite'
+export { isFileServingAllowed, createServer } from 'vite'
+export type * as Vite from 'vite'

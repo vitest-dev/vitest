@@ -1,18 +1,15 @@
-import type { WorkerGlobalState } from 'vitest'
-import { channel, client, onCancel } from './client'
+import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
+import { getBrowserState, getConfig, getWorkerState } from '../utils'
+import { channel, client, onCancel } from '../client'
 import { setupDialogsSpy } from './dialog'
-import { setupConsoleLogSpy } from './logger'
-import { browserHashMap, initiateRunner } from './runner'
-import { getBrowserState, getConfig, importId } from './utils'
-import { loadSafeRpc } from './rpc'
-import { VitestBrowserClientMocker } from './mocker'
 import {
   registerUnexpectedErrors,
-  registerUnhandledErrors,
   serializeError,
 } from './unhandled'
-
-const stopErrorHandler = registerUnhandledErrors()
+import { setupConsoleLogSpy } from './logger'
+import { createSafeRpc } from './rpc'
+import { browserHashMap, initiateRunner } from './runner'
+import { VitestBrowserClientMocker } from './mocker'
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
@@ -76,62 +73,26 @@ async function tryCall<T>(
   }
 }
 
-const startTime = performance.now()
-
 async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
-  const viteClientPath = `/@vite/client`
-  await import(viteClientPath)
+  const rpc = createSafeRpc(client)
 
-  const rpc: any = await loadSafeRpc(client)
+  const state = getWorkerState()
 
-  const providedContext = await client.rpc.getProvidedContext()
+  state.ctx.files = files
+  state.onCancel = onCancel
+  state.rpc = rpc as any
 
-  const state: WorkerGlobalState = {
-    ctx: {
-      pool: 'browser',
-      worker: './browser.js',
-      workerId: 1,
-      config,
-      projectName: config.name || '',
-      files,
-      environment: {
-        name: 'browser',
-        options: null,
-      },
-      providedContext,
-      invalidates: [],
-    },
-    onCancel,
-    mockMap: new Map(),
-    config,
-    environment: {
-      name: 'browser',
-      transformMode: 'web',
-      setup() {
-        throw new Error('Not called in the browser')
-      },
-    },
-    moduleCache: getBrowserState().moduleCache,
-    rpc,
-    durations: {
-      environment: 0,
-      prepare: startTime,
-    },
-    providedContext,
-  }
-  // @ts-expect-error untyped global for internal use
-  globalThis.__vitest_browser__ = true
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_worker__ = state
   const mocker = new VitestBrowserClientMocker()
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
-  await setupConsoleLogSpy()
+  setupConsoleLogSpy()
   setupDialogsSpy()
+
+  const runner = await initiateRunner(state, mocker, config)
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
@@ -141,13 +102,6 @@ async function prepareTestEnvironment(files: string[]) {
     }
   })
 
-  const [runner, { startTests, setupCommonEnv, SpyModule }] = await Promise.all(
-    [
-      initiateRunner(state, mocker, config),
-      importId('vitest/browser') as Promise<typeof import('vitest/browser')>,
-    ],
-  )
-
   mocker.setSpyModule(SpyModule)
   mocker.setupWorker()
 
@@ -155,7 +109,6 @@ async function prepareTestEnvironment(files: string[]) {
     runner.onCancel?.(reason)
   })
 
-  stopErrorHandler()
   registerUnexpectedErrors(rpc)
 
   return {

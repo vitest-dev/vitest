@@ -34,10 +34,10 @@ export class PreviewBrowserProvider implements BrowserProvider {
     if (!this.ctx.browser) {
       throw new Error('Browser is not initialized')
     }
-    const options = this.ctx.browser.config.server
+    const options = this.ctx.browser.vite.config.server
     const _open = options.open
     options.open = url
-    this.ctx.browser.openBrowser()
+    this.ctx.browser.vite.openBrowser()
     options.open = _open
   }
 
