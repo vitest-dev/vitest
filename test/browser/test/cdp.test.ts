@@ -1,7 +1,7 @@
 import { cdp, server } from '@vitest/browser/context'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
-describe.skipIf(server.provider !== 'playwright')('cdp in chromium browsers', () => {
+describe.skipIf(server.provider !== 'playwright' || server.browser !== 'chromium')('cdp in chromium browsers', () => {
   it('cdp sends events correctly', async () => {
     const div = document.createElement('div')
     document.body.appendChild(div)
