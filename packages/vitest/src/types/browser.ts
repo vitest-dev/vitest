@@ -9,6 +9,14 @@ export interface BrowserProviderInitializationOptions {
   options?: BrowserProviderOptions
 }
 
+export interface CDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+  on: (event: string, listener: (...args: unknown[]) => void) => void
+  once: (event: string, listener: (...args: unknown[]) => void) => void
+  off: (event: string, listener: (...args: unknown[]) => void) => void
+  detach: () => Promise<void>
+}
+
 export interface BrowserProvider {
   name: string
   /**
@@ -20,6 +28,7 @@ export interface BrowserProvider {
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (contextId: string) => Record<string, unknown>
   openPage: (contextId: string, url: string) => Promise<void>
+  getCDPSession?: (contextId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(

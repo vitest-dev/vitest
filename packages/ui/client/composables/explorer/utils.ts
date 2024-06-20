@@ -1,13 +1,24 @@
 import type { File, Task } from '@vitest/runner'
 import { isAtomTest } from '@vitest/runner/utils'
-import type { FileTreeNode, ParentTreeNode, SuiteTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
+import type {
+  CustomTestTreeNode,
+  FileTreeNode,
+  ParentTreeNode,
+  SuiteTreeNode,
+  TestTreeNode,
+  UITaskTreeNode,
+} from '~/composables/explorer/types'
 import { client } from '~/composables/client'
 import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 
-export function isTestNode(node: UITaskTreeNode): node is FileTreeNode {
+export function isTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
   return node.type === 'test' || node.type === 'custom'
+}
+
+export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
+  return node.mode === 'run' && (node.type === 'test' || node.type === 'custom')
 }
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {

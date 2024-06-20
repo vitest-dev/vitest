@@ -163,6 +163,10 @@ function getSimpleSelectOptions(element: Element, value: string | string[] | HTM
   })
 }
 
+export function cdp() {
+  return runner().cdp!
+}
+
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   get config() {

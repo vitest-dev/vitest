@@ -25,6 +25,13 @@ export interface BrowserRunnerState {
   contextId: string
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
+  cdp?: {
+    on: (event: string, listener: (payload: any) => void) => void
+    once: (event: string, listener: (payload: any) => void) => void
+    off: (event: string, listener: (payload: any) => void) => void
+    send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+    emit: (event: string, payload: unknown) => void
+  }
 }
 
 /* @__NO_SIDE_EFFECTS__ */
