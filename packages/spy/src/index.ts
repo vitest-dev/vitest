@@ -295,14 +295,20 @@ export interface MockInstance<T extends Procedure = UnknownProcedure> {
 }
 /* eslint-enable ts/method-signature-style */
 
-export interface Mock<T extends Procedure = UnknownProcedure> extends MockInstance<T> {
+export interface Mock<T extends Procedure = UnknownProcedure>
+  extends MockInstance<T> {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
 
-type PartialMaybePromise<T> = T extends Promise<Awaited<T>> ? Promise<Partial<Awaited<T>>> : Partial<T>
+type PartialMaybePromise<T> = T extends Promise<Awaited<T>>
+  ? Promise<Partial<Awaited<T>>>
+  : Partial<T>
 
-export interface PartialMock<T extends Procedure = UnknownProcedure> extends MockInstance<(...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>> {
+export interface PartialMock<T extends Procedure = UnknownProcedure>
+  extends MockInstance<
+    (...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>
+  > {
   new (...args: Parameters<T>): ReturnType<T>
   (...args: Parameters<T>): ReturnType<T>
 }
@@ -318,8 +324,10 @@ export type MockedFunction<T extends Procedure> = Mock<T> & {
 export type PartiallyMockedFunction<T extends Procedure> = PartialMock<T> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = Mock<T> & MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T> & MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = Mock<T> &
+  MockedObjectDeep<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T> &
+  MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];
 } & { [K in Properties<T>]: T[K] }
