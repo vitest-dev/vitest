@@ -407,6 +407,10 @@ browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
 If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
+::: tip
+You can also use [Browser Mode](/guide/browser) to run integration or unit tests in the browser without mocking the environment.
+:::
+
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
 

@@ -1,5 +1,5 @@
 import * as matchers from '@testing-library/jest-dom/matchers'
-import type { ExpectPollOptions } from '@vitest/expect'
+import type { ExpectPollOptions } from 'vitest'
 import { expect } from 'vitest'
 
 export async function setupExpectDom() {

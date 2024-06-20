@@ -32,4 +32,5 @@ export type {
   AsymmetricMatchersContaining,
   JestAssertion,
   Assertion,
+  ExpectPollOptions,
 } from '@vitest/expect'
