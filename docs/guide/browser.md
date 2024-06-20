@@ -453,6 +453,8 @@ export const page: {
    */
   screenshot: (options?: ScreenshotOptions) => Promise<string>
 }
+
+export const cdp: () => CDPSession
 ```
 
 ## Interactivity API
@@ -840,6 +842,29 @@ it('handles files', async () => {
   await removeFile(file)
 })
 ```
+
+## CDP Session
+
+Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `@vitest/browser/context`. It is mostly useful to library authors to build tools on top of it.
+
+```ts
+import { cdp } from '@vitest/browser/context'
+
+const input = document.createElement('input')
+document.body.appendChild(input)
+input.focus()
+
+await cdp().send('Input.dispatchKeyEvent', {
+  type: 'keyDown',
+  text: 'a',
+})
+
+expect(input).toHaveValue('a')
+```
+
+::: warning
+CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+:::
 
 ## Custom Commands
 

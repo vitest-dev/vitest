@@ -19,6 +19,10 @@ export interface FsOptions {
   flag?: string | number
 }
 
+export interface CDPSession {
+  // methods are defined by the provider type augmentation
+}
+
 export interface ScreenshotOptions {
   element?: Element
   /**
@@ -242,3 +246,4 @@ export interface BrowserPage {
 }
 
 export const page: BrowserPage
+export const cdp: () => CDPSession
