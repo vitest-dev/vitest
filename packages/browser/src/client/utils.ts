@@ -1,5 +1,4 @@
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
-import type { CDPSession } from '../../context'
 
 export async function importId(id: string) {
   const name = `/@id/${id}`
@@ -26,7 +25,11 @@ export interface BrowserRunnerState {
   contextId: string
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
-  cdp?: CDPSession & {
+  cdp?: {
+    on: (event: string, listener: (payload: any) => void) => void
+    once: (event: string, listener: (payload: any) => void) => void
+    off: (event: string, listener: (payload: any) => void) => void
+    send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
     emit: (event: string, payload: unknown) => void
   }
 }

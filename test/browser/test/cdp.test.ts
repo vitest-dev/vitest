@@ -27,4 +27,21 @@ describe.skipIf(server.provider !== 'playwright')('cdp in chromium browsers', ()
       })
     })
   })
+
+  it('cdp keyboard works correctly', async () => {
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    await cdp().send('Input.dispatchKeyEvent', {
+      type: 'keyDown',
+      text: 'a',
+    })
+    expect(input).toHaveValue('a')
+
+    await cdp().send('Input.insertText', {
+      text: 'some text',
+    })
+    expect(input).toHaveValue('asome text')
+  })
 })

@@ -42,7 +42,7 @@ export interface WebSocketBrowserHandlers {
   ) => SourceMap | null | { mappings: '' } | undefined
 
   // cdp
-  sendCdpEvent: (contextId: string, event: string, payload: Record<string, unknown>) => unknown
+  sendCdpEvent: (contextId: string, event: string, payload?: Record<string, unknown>) => unknown
   trackCdpEvent: (contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
 }
 

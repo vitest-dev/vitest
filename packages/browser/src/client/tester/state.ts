@@ -69,7 +69,7 @@ function createCdp() {
   }
 
   const cdp = {
-    send(method: string, params: Record<string, any>) {
+    send(method: string, params?: Record<string, any>) {
       return rpc().sendCdpEvent(contextId, method, params)
     },
     on(event: string, listener: (payload: any) => void) {

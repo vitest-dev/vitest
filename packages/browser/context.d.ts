@@ -20,10 +20,7 @@ export interface FsOptions {
 }
 
 export interface CDPSession {
-  on(event: string, listener: (payload: any) => void): void
-  once(event: string, listener: (payload: any) => void): void
-  off(event: string, listener: (payload: any) => void): void
-  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+  // methods are defined by the provider type augmentation
 }
 
 export interface ScreenshotOptions {

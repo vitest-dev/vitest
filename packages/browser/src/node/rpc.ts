@@ -185,7 +185,7 @@ export function setupBrowserRpc(
         },
 
         // CDP
-        async sendCdpEvent(contextId: string, event: string, payload: Record<string, unknown>) {
+        async sendCdpEvent(contextId: string, event: string, payload?: Record<string, unknown>) {
           const cdp = await server.ensureCDPHandler(contextId, sessionId)
           return cdp.send(event, payload)
         },
