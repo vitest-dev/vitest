@@ -80,15 +80,20 @@ This change also removes the file from `expect.getState().currentTestName` and m
 
 ### Simplified generic types of mock functions (e.g. `vi.fn<T>`, `Mock<T>`)
 
-Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguemnts and return value. This is changed to directly accept single function type `vi.fn<T>` to improve the usability.
+Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguemnts and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
 
 ```ts
 import { type Mock, vi } from 'vitest'
 
 const add = (x: number, y: number): number => x + y
 
+// using vi.fn<T>
 const mockAdd = vi.fn<Parameters<typeof add>, ReturnType<typeof add>>() // [!code --]
 const mockAdd = vi.fn<typeof add>() // [!code ++]
+
+// using Mock<T>
+const mockAdd: Mock<Parameters<typeof add>, ReturnType<typeof add>> = vi.fn() // [!code --]
+const mockAdd: Mock<typeof add> = vi.fn() // [!code ++]
 ```
 
 ## Migrating to Vitest 1.0
