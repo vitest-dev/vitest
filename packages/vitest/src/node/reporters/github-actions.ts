@@ -1,11 +1,8 @@
-import { Console } from 'node:console'
-import { Writable } from 'node:stream'
 import { getTasks } from '@vitest/runner/utils'
 import stripAnsi from 'strip-ansi'
 import type { File, Reporter, Vitest } from '../../types'
 import { getFullName } from '../../utils'
-import { printError } from '../error'
-import { Logger } from '../logger'
+import { capturePrintError } from '../error'
 import type { WorkspaceProject } from '../workspace'
 
 export class GithubActionsReporter implements Reporter {
@@ -15,9 +12,13 @@ export class GithubActionsReporter implements Reporter {
     this.ctx = ctx
   }
 
-  async onFinished(files: File[] = [], errors: unknown[] = []) {
+  onFinished(files: File[] = [], errors: unknown[] = []) {
     // collect all errors and associate them with projects
-    const projectErrors = new Array<{ project: WorkspaceProject; title: string; error: unknown }>()
+    const projectErrors = new Array<{
+      project: WorkspaceProject
+      title: string
+      error: unknown
+    }>()
     for (const error of errors) {
       projectErrors.push({
         project: this.ctx.getCoreWorkspaceProject(),
@@ -29,8 +30,9 @@ export class GithubActionsReporter implements Reporter {
       const tasks = getTasks(file)
       const project = this.ctx.getProjectByTaskId(file.id)
       for (const task of tasks) {
-        if (task.result?.state !== 'fail')
+        if (task.result?.state !== 'fail') {
           continue
+        }
 
         const title = getFullName(task, ' > ')
         for (const error of task.result?.errors ?? []) {
@@ -45,10 +47,11 @@ export class GithubActionsReporter implements Reporter {
 
     // format errors via `printError`
     for (const { project, title, error } of projectErrors) {
-      const result = await printErrorWrapper(error, this.ctx, project)
+      const result = capturePrintError(error, this.ctx, project)
       const stack = result?.nearest
-      if (!stack)
+      if (!stack) {
         continue
+      }
       const formatted = formatMessage({
         command: 'error',
         properties: {
@@ -62,23 +65,6 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
-}
-
-// use Logger with custom Console to extract messgage from `processError` util
-// TODO: maybe refactor `processError` to require single function `(message: string) => void` instead of full Logger?
-async function printErrorWrapper(error: unknown, ctx: Vitest, project: WorkspaceProject) {
-  let output = ''
-  const writable = new Writable({
-    write(chunk, _encoding, callback) {
-      output += String(chunk)
-      callback()
-    },
-  })
-  const result = await printError(error, project, {
-    showCodeFrame: false,
-    logger: new Logger(ctx, new Console(writable, writable)),
-  })
-  return { nearest: result?.nearest, output }
 }
 
 // workflow command formatting based on

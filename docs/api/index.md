@@ -47,7 +47,7 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Since Vitest 1.3.0 most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
 
 :::code-group
 ```ts [dot-syntax] twoslash
@@ -57,7 +57,7 @@ test.skip('skipped test', () => {
   // some logic that fails right now
 })
 ```
-```ts [object-syntax <Version>1.3.0</Version>] twoslash
+```ts [object-syntax] twoslash
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
@@ -82,7 +82,7 @@ test('should work as expected', () => {
 })
 ```
 
-### test.extend <Version>0.32.3</Version> {#test-extended}
+### test.extend {#test-extended}
 
 - **Alias:** `it.extend`
 
@@ -306,6 +306,11 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 - **Alias:** `it.each`
 
+::: tip
+While `test.each` is provided for Jest compatibility,
+Vitest also has [`test.for`](#test-for) with an additional feature to integrate [`TestContext`](/guide/test-context).
+:::
+
 Use `test.each` when you need to run the same test with different variables.
 You can inject parameters with [printf formatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
@@ -392,8 +397,6 @@ test.each`
 })
 ```
 
-If you want to have access to `TestContext`, use `describe.each` with a single test.
-
 ::: tip
 Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
 :::
@@ -401,6 +404,47 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
+
+### test.for
+
+- **Alias:** `it.for`
+
+Alternative of `test.each` to provide [`TestContext`](/guide/test-context).
+
+The difference from `test.each` is how array case is provided in the arguments.
+Other non array case (including template string usage) works exactly same.
+
+```ts
+// `each` spreads array case
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => { // [!code --]
+  expect(a + b).toBe(expected)
+})
+
+// `for` doesn't spread array case
+test.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => { // [!code ++]
+  expect(a + b).toBe(expected)
+})
+```
+
+2nd argument is [`TestContext`](/guide/test-context) and it can be used for concurrent snapshot, for example,
+
+```ts
+test.concurrent.for([
+  [1, 1],
+  [1, 2],
+  [2, 1],
+])('add(%i, %i)', ([a, b], { expect }) => {
+  expect(a + b).matchSnapshot()
+})
+```
 
 ## bench
 
@@ -574,8 +618,9 @@ You can also nest describe blocks if you have a hierarchy of tests or benchmarks
 import { describe, expect, test } from 'vitest'
 
 function numberToCurrency(value: number | string) {
-  if (typeof value !== 'number')
-    throw new Error('Value must be a number')
+  if (typeof value !== 'number') {
+    throw new TypeError('Value must be a number')
+  }
 
   return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
@@ -684,15 +729,18 @@ In order to do that run `vitest` with specific file containing the tests in ques
 
 - **Alias:** `suite.concurrent`
 
-`describe.concurrent` in a suite marks every tests as concurrent
+`describe.concurrent` runs all inner suites and tests in parallel
 
 ```ts twoslash
 import { describe, test } from 'vitest'
 // ---cut---
-// All tests within this suite will be run in parallel
+// All suites and tests within this suite will be run in parallel
 describe.concurrent('suite', () => {
   test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
+  describe('concurrent suite 2', async () => {
+    test('concurrent test inner 1', async () => { /* ... */ })
+    test('concurrent test inner 2', async () => { /* ... */ })
+  })
   test.concurrent('concurrent test 3', async () => { /* ... */ })
 })
 ```
@@ -856,7 +904,7 @@ beforeEach(async () => {
 
 Here, the `beforeEach` ensures that user is added for each test.
 
-Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+`beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
 
 ```ts
 import { beforeEach } from 'vitest'
@@ -914,7 +962,7 @@ beforeAll(async () => {
 
 Here the `beforeAll` ensures that the mock data is set up before tests run.
 
-Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+`beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
 
 ```ts
 import { beforeAll } from 'vitest'
@@ -957,7 +1005,7 @@ Vitest provides a few hooks that you can call _during_ the test execution to cle
 These hooks will throw an error if they are called outside of the test body.
 :::
 
-### onTestFinished <Version>1.3.0</Version> {#ontestfinished}
+### onTestFinished {#ontestfinished}
 
 This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
 
@@ -1009,6 +1057,10 @@ test('performs an organization query', async () => {
   ).toEqual([])
 })
 ```
+
+::: tip
+This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+:::
 
 ### onTestFailed
 

@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
-import type { UserConfig } from 'vitest/config'
+import type { UserConfig } from 'vitest'
 import { version } from 'vitest/package.json'
 
 import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
-function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
-  return testUtils.runVitest(config, ['fixtures/test/'])
+function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
+  return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -49,13 +49,6 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('c8 coverage provider is not supported', async () => {
-  // @ts-expect-error -- check for removed API option
-  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'c8' } })
-
-  expect(stderr).toMatch('Error: "coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
-})
-
 test('v8 coverage provider cannot be used with browser', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
@@ -70,6 +63,7 @@ test('v8 coverage provider cannot be used with browser in workspace', async () =
 
 test('coverage reportsDirectory cannot be current working directory', async () => {
   const { stderr } = await runVitest({
+    root: undefined,
     coverage: {
       enabled: true,
       reportsDirectory: './',
@@ -88,7 +82,7 @@ test('coverage reportsDirectory cannot be current working directory', async () =
 
 test('coverage reportsDirectory cannot be root', async () => {
   const { stderr } = await runVitest({
-    root: './fixtures',
+    root: './fixtures/test',
     coverage: {
       enabled: true,
       reportsDirectory: './',
@@ -101,7 +95,7 @@ test('coverage reportsDirectory cannot be root', async () => {
     },
   })
 
-  const directory = normalize(resolve('./fixtures'))
+  const directory = normalize(resolve('./fixtures/test'))
   expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
 })
 
@@ -143,9 +137,8 @@ test('boolean flag 100 should not crash CLI', async () => {
 
 test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
-    pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
-    include: ['./fixtures/test/fake-timers.test.ts'],
+    include: ['./fake-timers.test.ts'],
   })
 
   expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.')
@@ -153,9 +146,16 @@ test('nextTick cannot be mocked inside child_process', async () => {
 
 test('nextTick can be mocked inside worker_threads', async () => {
   const { stderr } = await runVitest({
+    pool: 'threads',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fixtures/test/fake-timers.test.ts'],
   })
 
   expect(stderr).not.toMatch('Error')
+})
+
+test('mergeReports doesn\'t work with watch mode enabled', async () => {
+  const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
+
+  expect(stderr).toMatch('Cannot merge reports with --watch enabled')
 })

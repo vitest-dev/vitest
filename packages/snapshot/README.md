@@ -12,7 +12,8 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 const client = new SnapshotClient({
   // you need to provide your own equality check implementation if you use it
   // this function is called when `.toMatchSnapshot({ property: 1 })` is called
-  isEqual: (received, expected) => equals(received, expected, [iterableEquality, subsetEquality]),
+  isEqual: (received, expected) =>
+    equals(received, expected, [iterableEquality, subsetEquality]),
 })
 
 // class that implements snapshot saving and reading
@@ -53,7 +54,11 @@ const options = {
   snapshotEnvironment: environment,
 }
 
-await client.startCurrentRun(getCurrentFilepath(), getCurrentTestName(), options)
+await client.startCurrentRun(
+  getCurrentFilepath(),
+  getCurrentTestName(),
+  options
+)
 
 // this will save snapshot to a file which is returned by "snapshotEnvironment.resolvePath"
 client.assert({

@@ -20,7 +20,23 @@ interface MockResultThrow {
   value: any
 }
 
-type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
+interface MockSettledResultFulfilled<T> {
+  type: 'fulfilled'
+  value: T
+}
+
+interface MockSettledResultRejected {
+  type: 'rejected'
+  value: any
+}
+
+export type MockResult<T> =
+  | MockResultReturn<T>
+  | MockResultThrow
+  | MockResultIncomplete
+export type MockSettledResult<T> =
+  | MockSettledResultFulfilled<T>
+  | MockSettledResultRejected
 
 export interface MockContext<T extends Procedure> {
   /**
@@ -60,7 +76,7 @@ export interface MockContext<T extends Procedure> {
   /**
    * This is an array containing all values that were `returned` from the function.
    *
-   * The `value` property contains the returned value or thrown error. If the function returned a promise, the `value` will be the _resolved_ value, not the actual `Promise`, unless it was never resolved.
+   * The `value` property contains the returned value or thrown error. If the function returned a `Promise`, then `result` will always be `'return'` even if the promise was rejected.
    *
    * @example
    * const fn = vi.fn()
@@ -87,6 +103,34 @@ export interface MockContext<T extends Procedure> {
    */
   results: MockResult<ReturnType<T>>[]
   /**
+   * An array containing all values that were `resolved` or `rejected` from the function.
+   *
+   * This array will be empty if the function was never resolved or rejected.
+   *
+   * @example
+   * const fn = vi.fn().mockResolvedValueOnce('result')
+   *
+   * const result = fn()
+   *
+   * fn.mock.settledResults === []
+   * fn.mock.results === [
+   *   {
+   *     type: 'return',
+   *     value: Promise<'result'>,
+   *   },
+   * ]
+   *
+   * await result
+   *
+   * fn.mock.settledResults === [
+   *   {
+   *     type: 'fulfilled',
+   *     value: 'result',
+   *   },
+   * ]
+   */
+  settledResults: MockSettledResult<Awaited<TReturns>>[]
+  /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
   lastCall: Parameters<T> | undefined
@@ -99,11 +143,13 @@ type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
 }
 type Properties<T> = {
-  [K in keyof T]: T[K] extends Procedure ? never : K
-}[keyof T] & (string | symbol)
+  [K in keyof T]: T[K] extends Procedure ? never : K;
+}[keyof T] &
+(string | symbol)
 type Classes<T> = {
-  [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
-}[keyof T] & (string | symbol)
+  [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never;
+}[keyof T] &
+(string | symbol)
 
 /*
 cf. https://typescript-eslint.io/rules/method-signature-style/
@@ -275,14 +321,10 @@ export type PartiallyMockedFunction<T extends Procedure> = PartialMock<T> & {
 export type MockedFunctionDeep<T extends Procedure> = Mock<T> & MockedObjectDeep<T>
 export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
-  [K in Methods<T>]: T[K] extends Procedure
-    ? MockedFunction<T[K]>
-    : T[K];
+  [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];
 } & { [K in Properties<T>]: T[K] }
 export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
-  [K in Methods<T>]: T[K] extends Procedure
-    ? MockedFunctionDeep<T[K]>
-    : T[K];
+  [K in Methods<T>]: T[K] extends Procedure ? MockedFunctionDeep<T[K]> : T[K];
 } & { [K in Properties<T>]: MaybeMockedDeep<T[K]> }
 
 export type MaybeMockedDeep<T> = T extends Procedure
@@ -322,16 +364,15 @@ export type Mocked<T> = {
     ? MockInstance<T[P]>
     : T[P] extends Constructable
       ? MockedClass<T[P]>
-      : T[P]
-} &
-T
+      : T[P];
+} & T
 
 export const mocks = new Set<MockInstance>()
 
 export function isMockFunction(fn: any): fn is MockInstance {
-  return typeof fn === 'function'
-    && '_isMockFunction' in fn
-    && fn._isMockFunction
+  return (
+    typeof fn === 'function' && '_isMockFunction' in fn && fn._isMockFunction
+  )
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(
@@ -381,7 +422,7 @@ function enhanceSpy<T extends Procedure>(
 
   const state = tinyspy.getInternalState(spy)
 
-  const mockContext = {
+  const mockContext: MockContext<TArgs, TReturns> = {
     get calls() {
       return state.calls
     },
@@ -393,7 +434,15 @@ function enhanceSpy<T extends Procedure>(
     },
     get results() {
       return state.results.map(([callType, value]) => {
-        const type = callType === 'error' ? 'throw' : 'return'
+        const type
+          = callType === 'error' ? ('throw' as const) : ('return' as const)
+        return { type, value }
+      })
+    },
+    get settledResults() {
+      return state.resolves.map(([callType, value]) => {
+        const type
+          = callType === 'error' ? ('rejected' as const) : ('fulfilled' as const)
         return { type, value }
       })
     },
@@ -408,7 +457,12 @@ function enhanceSpy<T extends Procedure>(
   function mockCall(this: unknown, ...args: any) {
     instances.push(this)
     invocations.push(++callOrder)
-    const impl = implementationChangedTemporarily ? implementation! : (onceImplementations.shift() || implementation || state.getOriginal() || (() => {}))
+    const impl = implementationChangedTemporarily
+      ? implementation!
+      : onceImplementations.shift()
+      || implementation
+      || state.getOriginal()
+      || (() => {})
     return impl.apply(this, args)
   }
 
@@ -518,8 +572,9 @@ export function fn<T extends Procedure = UnknownProcedure>(
   implementation?: T,
 ): Mock<T> {
   const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
-  if (implementation)
+  if (implementation) {
     enhancedSpy.mockImplementation(implementation)
+  }
 
   return enhancedSpy as any
 }

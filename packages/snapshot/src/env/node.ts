@@ -14,17 +14,12 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   async resolveRawPath(testPath: string, rawPath: string) {
-    return isAbsolute(rawPath)
-      ? rawPath
-      : resolve(dirname(testPath), rawPath)
+    return isAbsolute(rawPath) ? rawPath : resolve(dirname(testPath), rawPath)
   }
 
   async resolvePath(filepath: string): Promise<string> {
     return join(
-      join(
-        dirname(filepath),
-        this.options.snapshotsDirName ?? '__snapshots__',
-      ),
+      join(dirname(filepath), this.options.snapshotsDirName ?? '__snapshots__'),
       `${basename(filepath)}.snap`,
     )
   }
@@ -39,13 +34,15 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   }
 
   async readSnapshotFile(filepath: string): Promise<string | null> {
-    if (!existsSync(filepath))
+    if (!existsSync(filepath)) {
       return null
+    }
     return fs.readFile(filepath, 'utf-8')
   }
 
   async removeSnapshotFile(filepath: string): Promise<void> {
-    if (existsSync(filepath))
+    if (existsSync(filepath)) {
       await fs.unlink(filepath)
+    }
   }
 }

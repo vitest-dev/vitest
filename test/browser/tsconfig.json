@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
       "#src/*": ["./src/*"]
     },
+    "types": ["vite/client"],
     "esModuleInterop": true
   }
 }

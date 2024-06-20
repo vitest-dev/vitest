@@ -17,6 +17,7 @@ This section describes the API that you can use when [mocking a module](/guide/m
 ### vi.mock
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -26,10 +27,6 @@ Substitutes all imported modules from provided `path` with another module. You c
 In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates that `vi` that was not directly imported from the `vitest` package (for example, from some utility file) cannot be used. Use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
 
 Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
-:::
-
-::: warning
-The [browser mode](/guide/browser) does not presently support mocking modules. You can track this feature in the GitHub [issue](https://github.com/vitest-dev/vitest/issues/3046).
 :::
 
 If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
@@ -63,6 +60,21 @@ vi.mock('./path/to/module.js', async (importOriginal) => {
   }
 })
 ```
+
+Vitest supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
+
+```ts
+vi.mock(import('./path/to/module.js'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    // replace some exports
+    namedExport: vi.fn(),
+  }
+})
+```
+
+Under the hood, Vitest still operates on a string and not a module object.
 
 ::: warning
 `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
@@ -427,7 +439,7 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
-### vi.stubEnv <Badge type="info">0.26.0+</Badge> {#vi-stubenv}
+### vi.stubEnv {#vi-stubenv}
 
 - **Type:** `(name: string, value: string) => Vitest`
 
@@ -455,7 +467,7 @@ import.meta.env.MODE = 'test'
 ```
 :::
 
-### vi.unstubAllEnvs <Badge type="info">0.26.0+</Badge> {#vi-unstuballenvs}
+### vi.unstubAllEnvs {#vi-unstuballenvs}
 
 - **Type:** `() => Vitest`
 
@@ -513,7 +525,7 @@ window.innerWidth = 100
 ```
 :::
 
-### vi.unstubAllGlobals <Badge type="info">0.26.0+</Badge> {#vi-unstuballglobals}
+### vi.unstubAllGlobals {#vi-unstuballglobals}
 
 - **Type:** `() => Vitest`
 
@@ -661,8 +673,9 @@ let i = 0
 setTimeout(() => console.log(++i))
 const interval = setInterval(() => {
   console.log(++i)
-  if (i === 3)
+  if (i === 3) {
     clearInterval(interval)
+  }
 }, 50)
 
 vi.runAllTimers()
@@ -769,11 +782,11 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
-Since version `0.35.0` `vi.useFakeTimers()` no longer automatically mocks `process.nextTick`.
-It can still be mocked by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+`vi.useFakeTimers()` does not automatically mock `process.nextTick`.
+But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 :::
 
-### vi.isFakeTimers <Badge type="info">0.34.5+</Badge> {#vi-isfaketimers}
+### vi.isFakeTimers {#vi-isfaketimers}
 
 - **Type:** `() => boolean`
 
@@ -789,7 +802,7 @@ When timers are run out, you may call this method to return mocked timers to its
 
 A set of useful helper functions that Vitest provides.
 
-### vi.waitFor <Badge type="info">0.34.5+</Badge> {#vi-waitfor}
+### vi.waitFor {#vi-waitfor}
 
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 
@@ -806,8 +819,9 @@ test('Server started successfully', async () => {
 
   await vi.waitFor(
     () => {
-      if (!server.isReady)
+      if (!server.isReady) {
         throw new Error('Server not started')
+      }
 
       console.log('Server started')
     },
@@ -848,7 +862,7 @@ test('Element exists in a DOM', async () => {
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
 
-### vi.waitUntil <Badge type="info">0.34.5+</Badge> {#vi-waituntil}
+### vi.waitUntil {#vi-waituntil}
 
 - **Type:** `<T>(callback: WaitUntilCallback<T>, options?: number | WaitUntilOptions) => Promise<T>`
 
@@ -873,7 +887,7 @@ test('Element render correctly', async () => {
 })
 ```
 
-### vi.hoisted <Badge type="info">0.31.0+</Badge> {#vi-hoisted}
+### vi.hoisted {#vi-hoisted}
 
 - **Type**: `<T>(factory: () => T) => T`
 

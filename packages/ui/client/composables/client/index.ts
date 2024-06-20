@@ -3,7 +3,8 @@ import type { WebSocketStatus } from '@vueuse/core'
 import type { ErrorWithDiff, File, ResolvedConfig } from 'vitest'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
-import type { RunState } from '../../../types'
+import { createFileTask } from '@vitest/runner/utils'
+import type { BrowserRunnerState, RunState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
@@ -32,19 +33,31 @@ export const client = (function createVitestClient() {
         onFinishedReportCoverage() {
           // reload coverage iframe
           const iframe = document.querySelector('iframe#vitest-ui-coverage')
-          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow)
+          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
             iframe.contentWindow.location.reload()
+          }
         },
       },
     })
   }
 })()
 
+function sort(a: File, b: File) {
+  return a.name.localeCompare(b.name)
+}
+
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
-export const files = computed(() => client.state.getFiles())
-export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
-export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
+export const files = computed(() => client.state.getFiles().sort(sort))
+export const current = computed(() =>
+  files.value.find(file => file.id === activeFileId.value),
+)
+export const currentLogs = computed(
+  () =>
+    getTasks(current.value)
+      .map(i => i?.logs || [])
+      .flat() || [],
+)
 
 export function findById(id: string) {
   return files.value.find(file => file.id === id)
@@ -67,9 +80,15 @@ export function runFiles(files: File[]) {
 }
 
 export function runCurrent() {
-  if (current.value)
+  if (current.value) {
     return runFiles([current.value])
+  }
 }
+
+// @ts-expect-error not typed global
+export const browserState = window.__vitest_browser_runner__ as
+  | BrowserRunnerState
+  | undefined
 
 watch(
   () => client.ws,
@@ -84,15 +103,25 @@ watch(
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
       ])
-      client.state.collectFiles(files)
+      if (_config.standalone) {
+        const filenames = await client.rpc.getTestFiles()
+        const files = filenames.map<File>(([{ name, root }, filepath]) => {
+          return /* #__PURE__ */ createFileTask(filepath, root, name)
+        })
+        client.state.collectFiles(files)
+      }
+      else {
+        client.state.collectFiles(files)
+      }
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })
 
     ws.addEventListener('close', () => {
       setTimeout(() => {
-        if (status.value === 'CONNECTING')
+        if (status.value === 'CONNECTING') {
           status.value = 'CLOSED'
+        }
       }, 1000)
     })
   },

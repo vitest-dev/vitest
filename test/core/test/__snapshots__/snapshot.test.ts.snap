@@ -7,6 +7,17 @@ exports[`multiline 1`] = `
 "
 `;
 
+exports[`multiline strings  1`] = `
+"
+export default function () {
+  function Foo() {
+  }
+
+  return Foo;
+}
+"
+`;
+
 exports[`object 1`] = `
 {
   "this": {

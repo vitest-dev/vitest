@@ -108,8 +108,8 @@ test('thresholds.autoUpdate updates thresholds', async () => {
   expect(summary.functions.pct).toBe(60)
 
   if (process.env.COVERAGE_PROVIDER === 'v8') {
-    expect(summary.statements.pct).toBe(86.11)
-    expect(summary.lines.pct).toBe(86.11)
+    expect(summary.statements.pct).toBe(70.58)
+    expect(summary.lines.pct).toBe(70.58)
   }
   else {
     expect(summary.statements.pct).toBe(71.42)

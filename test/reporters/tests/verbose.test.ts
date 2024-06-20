@@ -14,3 +14,13 @@ test('duration', async () => {
  ✓ basic.test.ts > slow [...]ms
 `)
 })
+
+test('prints error properties', async () => {
+  const result = await runVitest({
+    root: 'fixtures/error-props',
+    reporters: 'verbose',
+    env: { CI: '1' },
+  })
+
+  expect(result.stderr).toContain(`Serialized Error: { code: 404, status: 'not found' }`)
+})

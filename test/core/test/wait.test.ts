@@ -47,10 +47,12 @@ describe('waitFor', () => {
       finished = true
     }, 50)
     await vi.waitFor(async () => {
-      if (finished)
+      if (finished) {
         return Promise.resolve(true)
-      else
+      }
+      else {
         return Promise.reject(new Error('async function error'))
+      }
     })
   })
 
@@ -78,16 +80,16 @@ describe('waitFor', () => {
     }
     catch (error) {
       expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
-      expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*\)?/)
+      expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*/)
     }
   })
 
   test('fakeTimer works', async () => {
-    vi.useFakeTimers()
-
     setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
+
+    vi.useFakeTimers()
 
     await vi.waitFor(() => {
       return new Promise<void>((resolve) => {
@@ -98,6 +100,25 @@ describe('waitFor', () => {
     }, 200)
 
     vi.useRealTimers()
+  })
+
+  test('callback stops running after timeout', async () => {
+    let timedOut = false
+    let callbackRanAfterTimeout = false
+    try {
+      await vi.waitFor(() => {
+        callbackRanAfterTimeout = timedOut
+        throw new Error('waitFor error')
+      }, {
+        interval: 10,
+        timeout: 50,
+      })
+    }
+    catch (error) {
+      timedOut = true
+    }
+    expect(timedOut).toBe(true)
+    expect(callbackRanAfterTimeout).toBe(false)
   })
 })
 
@@ -164,11 +185,11 @@ describe('waitUntil', () => {
   })
 
   test('fakeTimer works', async () => {
-    vi.useFakeTimers()
-
     setTimeout(() => {
       vi.advanceTimersByTime(200)
     }, 50)
+
+    vi.useFakeTimers()
 
     await vi.waitUntil(() => {
       return new Promise<boolean>((resolve) => {
@@ -179,5 +200,24 @@ describe('waitUntil', () => {
     }, 200)
 
     vi.useRealTimers()
+  })
+
+  test('callback stops running after timeout', async () => {
+    let timedOut = false
+    let callbackRanAfterTimeout = false
+    try {
+      await vi.waitUntil(() => {
+        callbackRanAfterTimeout = timedOut
+        return false
+      }, {
+        interval: 10,
+        timeout: 50,
+      })
+    }
+    catch (error) {
+      timedOut = true
+    }
+    expect(timedOut).toBe(true)
+    expect(callbackRanAfterTimeout).toBe(false)
   })
 })

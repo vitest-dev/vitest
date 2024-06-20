@@ -16,8 +16,9 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
     ...(!resetMocks ? [/^mock:/] : []),
   ]
   modules.forEach((mod, path) => {
-    if (skipPaths.some(re => re.test(path)))
+    if (skipPaths.some(re => re.test(path))) {
       return
+    }
     modules.invalidateModule(mod)
   })
 }
@@ -33,13 +34,16 @@ export async function waitForImportsToResolve() {
   const promises: Promise<unknown>[] = []
   let resolvingCount = 0
   for (const mod of state.moduleCache.values()) {
-    if (mod.promise && !mod.evaluated)
+    if (mod.promise && !mod.evaluated) {
       promises.push(mod.promise)
-    if (mod.resolving)
+    }
+    if (mod.resolving) {
       resolvingCount++
+    }
   }
-  if (!promises.length && !resolvingCount)
+  if (!promises.length && !resolvingCount) {
     return
+  }
   await Promise.allSettled(promises)
   await waitForImportsToResolve()
 }

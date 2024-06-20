@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { tests, testsFailed, testsSkipped, testsSuccess, testsTodo } from '../../composables/summary'
+import {
+  tests,
+  testsFailed,
+  testsSkipped,
+  testsSuccess,
+  testsTodo,
+} from '~/composables/summary'
 
 const total = computed(() => tests.value.length)
 const pass = computed(() => testsSuccess.value.length)
@@ -22,7 +28,10 @@ const todo = computed(() => testsTodo.value.length)
         {{ pass }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :class="{ 'text-red5': failed, 'op50': !failed }" data-testid="fail-entry">
+    <DashboardEntry
+      :class="{ 'text-red5': failed, 'op50': !failed }"
+      data-testid="fail-entry"
+    >
       <template #header>
         Fail
       </template>

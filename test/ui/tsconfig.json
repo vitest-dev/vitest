@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "vitest/node": ["./packages/vitest/dist/node.js"]
+    }
+  }
+}

@@ -9,14 +9,14 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
-  VITEST_SEGFAULT_RETRY: 3
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-  CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
 
 jobs:
   lint:
@@ -32,22 +32,6 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     runs-on: ${{ matrix.os }}
 
@@ -57,6 +41,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node_version: [18, 20]
+        # node_version: [18, 20, 22] 22 when LTS is close enough
         include:
           - os: macos-14
             node_version: 20
@@ -85,31 +70,10 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
-      - name: Test No Threads
-        run: pnpm run test:ci:no-threads
-
-      - name: Test Vm Threads
-        run: pnpm run test:ci:vm-threads
+      - name: Test Examples
+        run: pnpm run test:examples
 
   test-ui:
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - name: Install
-        run: pnpm i
-
-      - name: Test UI
-        run: pnpm run ui:test
-
-  test-ui-e2e:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-14, windows-latest]
@@ -135,7 +99,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test
+      - name: Unit Test UI
+        run: pnpm run -C packages/ui test:ui
+
+      - name: E2E Test UI
         run: pnpm -C test/ui test-e2e
 
   test-browser:
@@ -147,8 +114,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -170,6 +135,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -185,8 +152,6 @@ jobs:
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -208,6 +173,8 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright

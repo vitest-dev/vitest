@@ -22,10 +22,15 @@ function getDefaultThreadsCount(config: ResolvedConfig) {
 export function getWorkerMemoryLimit(config: ResolvedConfig) {
   const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
 
-  if (memoryLimit)
+  if (memoryLimit) {
     return memoryLimit
+  }
 
-  return 1 / (config.poolOptions?.vmThreads?.maxThreads ?? getDefaultThreadsCount(config))
+  return (
+    1
+    / (config.poolOptions?.vmThreads?.maxThreads
+    ?? getDefaultThreadsCount(config))
+  )
 }
 
 /**
@@ -38,13 +43,15 @@ export function stringToBytes(
   input: string | number | null | undefined,
   percentageReference?: number,
 ): number | null | undefined {
-  if (input === null || input === undefined)
+  if (input === null || input === undefined) {
     return input
+  }
 
   if (typeof input === 'string') {
     if (Number.isNaN(Number.parseFloat(input.slice(-1)))) {
       let [, numericString, trailingChars]
-        = input.match(/(.*?)([^0-9.-]+)$/i) || []
+        // eslint-disable-next-line regexp/no-super-linear-backtracking
+        = input.match(/(.*?)([^0-9.-]+)$/) || []
 
       if (trailingChars && numericString) {
         const numericValue = Number.parseFloat(numericString)

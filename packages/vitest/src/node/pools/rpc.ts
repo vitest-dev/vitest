@@ -1,9 +1,20 @@
+import { createHash } from 'node:crypto'
+import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
+import { join } from 'pathe'
 import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
 
-export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
+const created = new Set()
+const promises = new Map<string, Promise<void>>()
+
+interface MethodsOptions {
+  cacheFs?: boolean
+}
+
+export function createMethodsRPC(project: WorkspaceProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.ctx
+  const cacheFs = options.cacheFs ?? false
   return {
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
@@ -14,14 +25,45 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     async getSourceMap(id, force) {
       if (force) {
         const mod = project.server.moduleGraph.getModuleById(id)
-        if (mod)
+        if (mod) {
           project.server.moduleGraph.invalidateModule(mod)
+        }
       }
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id, transformMode) {
-      return project.vitenode.fetchModule(id, transformMode)
+    async fetch(id, transformMode) {
+      const result = await project.vitenode.fetchResult(id, transformMode)
+      const code = result.code
+      if (!cacheFs || result.externalize) {
+        return result
+      }
+      if ('id' in result && typeof result.id === 'string') {
+        return { id: result.id as string }
+      }
+
+      if (code == null) {
+        throw new Error(`Failed to fetch module ${id}`)
+      }
+
+      const dir = join(project.tmpDir, transformMode)
+      const name = createHash('sha1').update(id).digest('hex')
+      const tmp = join(dir, name)
+      if (promises.has(tmp)) {
+        await promises.get(tmp)
+        return { id: tmp }
+      }
+      if (!created.has(dir)) {
+        await mkdir(dir, { recursive: true })
+        created.add(dir)
+      }
+      promises.set(
+        tmp,
+        writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)),
+      )
+      await promises.get(tmp)
+      Object.assign(result, { id: tmp })
+      return { id: tmp }
     },
     resolveId(id, importer, transformMode) {
       return project.vitenode.resolveId(id, importer, transformMode)

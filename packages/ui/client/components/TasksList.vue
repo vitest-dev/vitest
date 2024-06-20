@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
 import type { File, Task } from 'vitest'
-import { findById, testRunState } from '~/composables/client'
+import { hasFailedSnapshot } from '@vitest/ws-client'
+import { findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
 defineOptions({ inheritAttrs: false })
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const { tasks, indent = 0, nested = false, groupByType = false, onItemClick } = defineProps<{
+const {
+  tasks,
+  // indent = 0,
+  nested = false,
+  groupByType = false,
+  onItemClick,
+} = defineProps<{
   tasks: Task[]
   indent?: number
   nested?: boolean
@@ -25,21 +31,35 @@ const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
-  if (!search.value.trim())
+  if (!search.value.trim()) {
     return tasks
+  }
 
   return tasks.filter(task => matchTasks([task], search.value))
 })
-const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+const filteredTests: ComputedRef<File[]> = computed(() =>
+  isFiltered.value
+    ? filtered.value.map(task => findById(task.id)!).filter(Boolean)
+    : [],
+)
 
-const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
-const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
-const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => filtered.value.filter(task =>
-  !failed.value.includes(task)
-  && !success.value.includes(task)
-  && !skipped.value.includes(task),
-))
+const failed = computed(() =>
+  filtered.value.filter(task => task.result?.state === 'fail'),
+)
+const success = computed(() =>
+  filtered.value.filter(task => task.result?.state === 'pass'),
+)
+const skipped = computed(() =>
+  filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'),
+)
+const running = computed(() =>
+  filtered.value.filter(
+    task =>
+      !failed.value.includes(task)
+      && !success.value.includes(task)
+      && !skipped.value.includes(task),
+  ),
+)
 
 const disableClearSearch = computed(() => search.value === '')
 
@@ -64,8 +84,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
     // walk whole task tree
     if (isSuite(task) && task.tasks) {
       result = matchTasks(task.tasks, search)
-      if (result)
+      if (result) {
         break
+      }
     }
   }
 
@@ -77,15 +98,12 @@ function matchTasks(tasks: Task[], search: string): boolean {
   <div h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <slot name="header" :filtered-tests="isFiltered ? filteredTests : undefined" />
+        <slot
+          name="header"
+          :filtered-tests="isFiltered ? filteredTests : undefined"
+        />
       </div>
-      <div
-        p="l3 y2 r2"
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b-2 base"
-      >
+      <div p="l3 y2 r2" flex="~ gap-2" items-center bg-header border="b-2 base">
         <div class="i-carbon:search" flex-shrink-0 />
         <input
           ref="searchBox"
@@ -125,11 +143,13 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
         </DetailsPanel>
-        <DetailsPanel v-if="running.length || testRunState === 'running'">
+        <DetailsPanel v-if="throttledRunning.length">
           <template #summary>
             <div text-yellow5>
               RUNNING ({{ throttledRunning.length }})
@@ -141,6 +161,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :task="task"
             :nested="nested"
             :search="search"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -156,6 +178,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
             :key="task.id"
             :task="task"
             :nested="nested"
+            :opened="isFiltered"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -171,7 +195,9 @@ function matchTasks(tasks: Task[], search: string): boolean {
             v-for="task in skipped"
             :key="task.id"
             :task="task"
+            :opened="isFiltered"
             :nested="nested"
+            :failed-snapshot="hasFailedSnapshot(task)"
             :search="search"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
@@ -186,6 +212,8 @@ function matchTasks(tasks: Task[], search: string): boolean {
           :key="task.id"
           :task="task"
           :nested="nested"
+          :opened="isFiltered"
+          :failed-snapshot="hasFailedSnapshot(task)"
           :search="search"
           :class="activeFileId === task.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"

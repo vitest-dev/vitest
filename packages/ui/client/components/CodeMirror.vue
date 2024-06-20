@@ -55,12 +55,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    relative
-    font-mono
-    text-sm
-    class="codemirror-scrolls"
-  >
+  <div relative font-mono text-sm class="codemirror-scrolls">
     <textarea ref="el" />
   </div>
 </template>

@@ -117,7 +117,7 @@ assertType<string>(answr) //
 
 ## Run Typechecking
 
-Since Vitest 1.0, to enable typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
+To enable typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 
 ```json
 {

@@ -3,7 +3,7 @@ import { getNames } from '@vitest/ws-client'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { escapeHtml } from "~/utils/escape"
+import { escapeHtml } from '~/utils/escape'
 
 const formattedLogs = computed(() => {
   const data = logs.value
@@ -11,10 +11,15 @@ const formattedLogs = computed(() => {
     const filter = createAnsiToHtmlFilter(isDark.value)
     return data.map(({ taskId, type, time, content }) => ({ taskId, type, time, content: filter.toHtml(escapeHtml(content)) }))
   }
+
+  return undefined
 })
 
 function getTaskName(id?: string) {
   const task = id && client.state.idMap.get(id)
+  if (task && 'filepath' in task) {
+    return task.name
+  }
   return (task ? getNames(task).slice(1).join(' > ') : '-') || '-'
 }
 </script>

@@ -7,15 +7,18 @@ const fnMap = new WeakMap()
 const fixtureMap = new WeakMap()
 const hooksMap = new WeakMap()
 
-export function setFn(key: Test | Custom, fn: (() => Awaitable<void>)) {
+export function setFn(key: Test | Custom, fn: () => Awaitable<void>) {
   fnMap.set(key, fn)
 }
 
-export function getFn<Task = Test | Custom>(key: Task): (() => Awaitable<void>) {
+export function getFn<Task = Test | Custom>(key: Task): () => Awaitable<void> {
   return fnMap.get(key as any)
 }
 
-export function setFixture(key: TestContext, fixture: FixtureItem[] | undefined) {
+export function setFixture(
+  key: TestContext,
+  fixture: FixtureItem[] | undefined,
+) {
   fixtureMap.set(key, fixture)
 }
 

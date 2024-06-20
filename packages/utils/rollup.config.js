@@ -57,15 +57,14 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
+  }
   console.error(message)
 }

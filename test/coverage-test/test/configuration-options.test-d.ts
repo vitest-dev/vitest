@@ -106,6 +106,7 @@ test('provider module', () => {
       return {
         name: 'custom-provider',
         initialize(_: Vitest) {},
+        generateCoverage() {},
         resolveOptions(): ResolvedCoverageOptions {
           return {
             clean: true,

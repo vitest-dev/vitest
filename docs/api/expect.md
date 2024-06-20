@@ -59,6 +59,47 @@ test('expect.soft test', () => {
 `expect.soft` can only be used inside the [`test`](/api/#test) function.
 :::
 
+## poll
+
+- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+
+`expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
+
+If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
+
+```ts twoslash
+function asyncInjectElement() {
+  // example function
+}
+
+// ---cut---
+import { expect, test } from 'vitest'
+
+test('element exists', async () => {
+  asyncInjectElement()
+
+  await expect.poll(() => document.querySelector('.element')).toBeTruthy()
+})
+```
+
+::: warning
+`expect.poll` makes every assertion asynchronous, so do not forget to await it otherwise you might get unhandled promise rejections.
+
+`expect.poll` doesn't work with several matchers:
+
+- Snapshot matchers are not supported because they will always succeed. If your condition is flaky, consider using [`vi.waitFor`](/api/vi#vi-waitfor) instead to resolve it first:
+
+```ts
+import { expect, vi } from 'vitest'
+
+const flakyValue = await vi.waitFor(() => getFlakyValue())
+expect(flakyValue).toMatchSnapshot()
+```
+
+- `.resolves` and `.rejects` are not supported. `expect.poll` already awaits the condition if it's asynchronous.
+- `toThrow` and its aliases are not supported because the `expect.poll` condition is always resolved before the matcher gets the value
+:::
+
 ## not
 
 Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
@@ -151,8 +192,9 @@ Opposite of `toBeDefined`, `toBeUndefined` asserts that the value _is_ equal to 
 import { expect, test } from 'vitest'
 
 function getApplesFromStock(stock: string) {
-  if (stock === 'Bill')
+  if (stock === 'Bill') {
     return 13
+  }
 }
 
 test('mary doesn\'t have a stock', () => {
@@ -173,8 +215,9 @@ import { Stocks } from './stocks.js'
 
 const stocks = new Stocks()
 stocks.sync('Bill')
-if (stocks.getInfo('Bill'))
+if (stocks.getInfo('Bill')) {
   stocks.sell('apples', 'Bill')
+}
 ```
 
 So if you want to test that `stocks.getInfo` will be truthy, you could write:
@@ -206,8 +249,9 @@ import { Stocks } from './stocks.js'
 
 const stocks = new Stocks()
 stocks.sync('Bill')
-if (!stocks.stockFailed('Bill'))
+if (!stocks.stockFailed('Bill')) {
   stocks.sell('apples', 'Bill')
+}
 ```
 
 So if you want to test that `stocks.stockFailed` will be falsy, you could write:
@@ -619,8 +663,9 @@ For example, if we want to test that `getFruitStock('pineapples')` throws, we co
 import { expect, test } from 'vitest'
 
 function getFruitStock(type: string) {
-  if (type === 'pineapples')
+  if (type === 'pineapples') {
     throw new Error('Pineapples are not in stock')
+  }
 
   // Do some other stuff
 }
@@ -726,7 +771,7 @@ test('matches snapshot', () => {
 })
 ```
 
-## toMatchFileSnapshot <Badge type="info">0.30.0+</Badge> {#tomatchfilesnapshot}
+## toMatchFileSnapshot {#tomatchfilesnapshot}
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
 
@@ -913,7 +958,7 @@ test('spy function returned a value', () => {
 
 - **Type**: `(amount: number) => Awaitable<void>`
 
-This assertion checks if a function has successfully returned a value exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+This assertion checks if a function has successfully returned a value an exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
 ```ts twoslash
 import { expect, test, vi } from 'vitest'
@@ -950,7 +995,7 @@ test('spy function returns a product', () => {
 
 - **Type**: `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a value with certain parameters on its last invoking. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
 
 ```ts twoslash
 import { expect, test, vi } from 'vitest'
@@ -981,6 +1026,121 @@ test('spy function returns bananas on second call', () => {
   sell('bananas')
 
   expect(sell).toHaveNthReturnedWith(2, { product: 'bananas' })
+})
+```
+
+## toHaveResolved
+
+- **Type**: `() => Awaitable<void>`
+
+This assertion checks if a function has successfully resolved a value at least once (i.e., did not reject). Requires a spy function to be passed to `expect`.
+
+If the function returned a promise, but it was not resolved yet, this will fail.
+
+```ts twoslash
+// @filename: db/apples.js
+/** @type {any} */
+const db = {}
+export default db
+// @filename: test.ts
+// ---cut---
+import { expect, test, vi } from 'vitest'
+import db from './db/apples.js'
+
+async function getApplesPrice(amount: number) {
+  return amount * await db.get('price')
+}
+
+test('spy function resolved a value', async () => {
+  const getPriceSpy = vi.fn(getApplesPrice)
+
+  const price = await getPriceSpy(10)
+
+  expect(price).toBe(100)
+  expect(getPriceSpy).toHaveResolved()
+})
+```
+
+## toHaveResolvedTimes
+
+- **Type**: `(amount: number) => Awaitable<void>`
+
+This assertion checks if a function has successfully resolved a value an exact amount of times (i.e., did not reject). Requires a spy function to be passed to `expect`.
+
+This will only count resolved promises. If the function returned a promise, but it was not resolved yet, it will not be counted.
+
+```ts twoslash
+import { expect, test, vi } from 'vitest'
+
+test('spy function resolved a value two times', async () => {
+  const sell = vi.fn((product: string) => Promise.resolve({ product }))
+
+  await sell('apples')
+  await sell('bananas')
+
+  expect(sell).toHaveResolvedTimes(2)
+})
+```
+
+## toHaveResolvedWith
+
+- **Type**: `(returnValue: any) => Awaitable<void>`
+
+You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`.
+
+If the function returned a promise, but it was not resolved yet, this will fail.
+
+```ts twoslash
+import { expect, test, vi } from 'vitest'
+
+test('spy function resolved a product', async () => {
+  const sell = vi.fn((product: string) => Promise.resolve({ product }))
+
+  await sell('apples')
+
+  expect(sell).toHaveResolvedWith({ product: 'apples' })
+})
+```
+
+## toHaveLastResolvedWith
+
+- **Type**: `(returnValue: any) => Awaitable<void>`
+
+You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
+
+If the function returned a promise, but it was not resolved yet, this will fail.
+
+```ts twoslash
+import { expect, test, vi } from 'vitest'
+
+test('spy function resolves bananas on a last call', async () => {
+  const sell = vi.fn((product: string) => Promise.resolve({ product }))
+
+  await sell('apples')
+  await sell('bananas')
+
+  expect(sell).toHaveLastResolvedWith({ product: 'bananas' })
+})
+```
+
+## toHaveNthResolvedWith
+
+- **Type**: `(time: number, returnValue: any) => Awaitable<void>`
+
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+
+If the function returned a promise, but it was not resolved yet, this will fail.
+
+```ts twoslash
+import { expect, test, vi } from 'vitest'
+
+test('spy function returns bananas on second call', async () => {
+  const sell = vi.fn((product: string) => Promise.resolve({ product }))
+
+  await sell('apples')
+  await sell('bananas')
+
+  expect(sell).toHaveNthResolvedWith(2, { product: 'bananas' })
 })
 ```
 
@@ -1047,8 +1207,9 @@ For example, if you have a function that fails when you call it, you may use thi
 import { expect, test } from 'vitest'
 
 async function buyApples(id) {
-  if (!id)
+  if (!id) {
     throw new Error('no id')
+  }
 }
 
 test('buyApples throws an error when no id provided', async () => {
@@ -1145,8 +1306,9 @@ For example, if we want to test that `build()` throws due to receiving directori
 import { expect, test } from 'vitest'
 
 async function build(dir) {
-  if (dir.includes('no-src'))
+  if (dir.includes('no-src')) {
     throw new Error(`${dir}/src does not exist`)
+  }
 }
 
 const errorDirs = [
@@ -1205,7 +1367,7 @@ test('"id" is a number', () => {
 })
 ```
 
-## expect.closeTo <Badge type="info">1.0.0+</Badge> {#expect-closeto}
+## expect.closeTo {#expect-closeto}
 
 - **Type:** `(expected: any, precision?: number) => any`
 
@@ -1403,7 +1565,7 @@ Don't forget to include the ambient declaration file in your `tsconfig.json`.
 If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
 :::
 
-## expect.addEqualityTesters <Badge type="info">1.2.0+</Badge> {#expect-addequalitytesters}
+## expect.addEqualityTesters {#expect-addequalitytesters}
 
 - **Type:** `(tester: Array<Tester>) => void`
 
@@ -1438,14 +1600,15 @@ function areAnagramsEqual(a: unknown, b: unknown): boolean | undefined {
   const isAAnagramComparator = isAnagramComparator(a)
   const isBAnagramComparator = isAnagramComparator(b)
 
-  if (isAAnagramComparator && isBAnagramComparator)
+  if (isAAnagramComparator && isBAnagramComparator) {
     return a.equals(b)
-
-  else if (isAAnagramComparator === isBAnagramComparator)
+  }
+  else if (isAAnagramComparator === isBAnagramComparator) {
     return undefined
-
-  else
+  }
+  else {
     return false
+  }
 }
 
 expect.addEqualityTesters([areAnagramsEqual])

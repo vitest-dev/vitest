@@ -1,4 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ViteDevServer } from 'vite'
+import type { CancelReason } from '@vitest/runner'
 import type { WorkspaceProject } from '../node/workspace'
 import type { ApiConfig } from './config'
 
@@ -9,8 +11,15 @@ export interface BrowserProviderInitializationOptions {
 
 export interface BrowserProvider {
   name: string
+  /**
+   * @experimental opt-in into file parallelisation
+   */
+  supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
-  openPage: (url: string) => Awaitable<void>
+  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
+  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
+  getCommandsContext: (contextId: string) => Record<string, unknown>
+  openPage: (contextId: string, url: string) => Promise<void>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -41,9 +50,9 @@ export interface BrowserConfigOptions {
   /**
    * Browser provider
    *
-   * @default 'webdriverio'
+   * @default 'preview'
    */
-  provider?: 'webdriverio' | 'playwright' | 'none' | (string & {})
+  provider?: 'webdriverio' | 'playwright' | 'preview' | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
@@ -72,15 +81,6 @@ export interface BrowserConfigOptions {
   api?: ApiConfig | number
 
   /**
-   * Update ESM imports so they can be spied/stubbed with vi.spyOn.
-   * Enabled by default when running in browser.
-   *
-   * @default false
-   * @experimental
-   */
-  slowHijackESM?: boolean
-
-  /**
    * Isolate test environment after each test
    *
    * @default true
@@ -88,16 +88,135 @@ export interface BrowserConfigOptions {
   isolate?: boolean
 
   /**
-   * Run test files in parallel. Fallbacks to `test.fileParallelism`.
+   * Run test files in parallel if provider supports this option
+   * This option only has effect in headless mode (enabled in CI by default)
    *
-   * @default test.fileParallelism
+   * @default // Same as "test.fileParallelism"
    */
   fileParallelism?: boolean
+
+  /**
+   * Show Vitest UI
+   *
+   * @default !process.env.CI
+   */
+  ui?: boolean
+
+  /**
+   * Default viewport size
+   */
+  viewport?: {
+    /**
+     * Width of the viewport
+     * @default 414
+     */
+    width: number
+    /**
+     * Height of the viewport
+     * @default 896
+     */
+    height: number
+  }
+
+  /**
+   * Directory where screenshots will be saved when page.screenshot() is called
+   * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
+   * If this is set, it will be resolved relative to the project root.
+   * @default __screenshots__
+   */
+  screenshotDirectory?: string
+  /**
+   * Scripts injected into the tester iframe.
+   */
+  testerScripts?: BrowserScript[]
+
+  /**
+   * Scripts injected into the main window.
+   */
+  orchestratorScripts?: BrowserScript[]
+
+  /**
+   * Commands that will be executed on the server
+   * via the browser `import("@vitest/browser/context").commands` API.
+   * @see {@link https://vitest.dev/guide/browser#commands}
+   */
+  commands?: Record<string, BrowserCommand<any>>
+}
+
+export interface BrowserCommandContext {
+  testPath: string | undefined
+  provider: BrowserProvider
+  project: WorkspaceProject
+  contextId: string
+}
+
+export interface BrowserServerStateContext {
+  files: string[]
+  resolve: () => void
+  reject: (v: unknown) => void
+}
+
+export interface BrowserOrchestrator {
+  createTesters: (files: string[]) => Promise<void>
+  onCancel: (reason: CancelReason) => Promise<void>
+}
+
+export interface BrowserServerState {
+  orchestrators: Map<string, BrowserOrchestrator>
+  getContext: (contextId: string) => BrowserServerStateContext | undefined
+  createAsyncContext: (contextId: string, files: string[]) => Promise<void>
+}
+
+export interface BrowserServer {
+  vite: ViteDevServer
+  state: BrowserServerState
+  provider: BrowserProvider
+  close: () => Promise<void>
+  initBrowserProvider: () => Promise<void>
+}
+
+export interface BrowserCommand<Payload extends unknown[]> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+}
+
+export interface BrowserScript {
+  /**
+   * If "content" is provided and type is "module", this will be its identifier.
+   *
+   * If you are using TypeScript, you can add `.ts` extension here for example.
+   * @default `injected-${index}.js`
+   */
+  id?: string
+  /**
+   * JavaScript content to be injected. This string is processed by Vite plugins if type is "module".
+   *
+   * You can use `id` to give Vite a hint about the file extension.
+   */
+  content?: string
+  /**
+   * Path to the script. This value is resolved by Vite so it can be a node module or a file path.
+   */
+  src?: string
+  /**
+   * If the script should be loaded asynchronously.
+   */
+  async?: boolean
+  /**
+   * Script type.
+   * @default 'module'
+   */
+  type?: string
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   enabled: boolean
   headless: boolean
   isolate: boolean
+  fileParallelism: boolean
   api: ApiConfig
+  ui: boolean
+  viewport: {
+    width: number
+    height: number
+  }
 }

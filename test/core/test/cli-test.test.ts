@@ -16,7 +16,7 @@ function parseArguments(commands: string, full = false) {
     delete options.color
   }
 
-  return { options, args }
+  return { options, args, matchedCommand: vitestCli.matchedCommand }
 }
 
 function getCLIOptions(commands: string) {
@@ -129,6 +129,24 @@ test('all coverage enable options are working correctly', () => {
 test('fails when an array is passed down for a single value', async () => {
   expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
+})
+
+test('bench only options', async () => {
+  expect(() =>
+    parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),
+  ).toThrowErrorMatchingInlineSnapshot(
+    `[CACError: Unknown option \`--compare\`]`,
+  )
+
+  expect(() =>
+    parseArguments(
+      'bench --compare file.json',
+    ).matchedCommand?.checkUnknownOptions(),
+  ).not.toThrow()
+
+  expect(parseArguments('bench --compare file.json').options).toEqual({
+    compare: 'file.json',
+  })
 })
 
 test('even if coverage is boolean, don\'t fail', () => {
@@ -274,7 +292,7 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig('test', vitestConfig, viteConfig)
+    const config = resolveConfig('test', vitestConfig, viteConfig, undefined as any)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`
@@ -290,6 +308,30 @@ test('clearScreen', async () => {
       false,
     ]
   `)
+})
+
+test('merge-reports', () => {
+  expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest-reports' })
+  expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
+  expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
+})
+
+test('configure expect', () => {
+  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>]`)
+  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax]`)
+  expect(getCLIOptions('vitest --expect.poll.interval=100 --expect.poll.timeout=300')).toEqual({
+    expect: {
+      poll: {
+        interval: 100,
+        timeout: 300,
+      },
+    },
+  })
+  expect(getCLIOptions('vitest --expect.requireAssertions')).toEqual({
+    expect: {
+      requireAssertions: true,
+    },
+  })
 })
 
 test('public parseCLI works correctly', () => {
@@ -364,6 +406,15 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space_1', 'space_2'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
+    filter: [],
+    options: {
+      'exclude': ['docs', 'demo'],
       '--': [],
       'color': true,
     },

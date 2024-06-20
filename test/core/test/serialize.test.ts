@@ -168,4 +168,32 @@ describe('error serialize', () => {
       message: 'test',
     })
   })
+
+  it('should serialize when toJSON does not return JSON-compatible object', () => {
+    class TestClass {}
+
+    const error = {
+      key: 'value',
+      // Still not serialized, thus second round of serialization is needed
+      toJSON() {
+        return {
+          key: 'value',
+          obj: {
+            fn: () => {},
+            class: TestClass,
+          },
+        }
+      },
+    }
+
+    const serialized = serializeError(error)
+
+    expect(serialized).toEqual({
+      key: 'value',
+      obj: {
+        fn: 'Function<fn>',
+        class: 'Function<TestClass>',
+      },
+    })
+  })
 })

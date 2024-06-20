@@ -42,6 +42,8 @@ export async function teardown() {
   }
   catch (err) {
     console.error(err)
+    // eslint-disable-next-line no-console
+    console.dir(results, { depth: null })
     process.exit(1)
   }
 }

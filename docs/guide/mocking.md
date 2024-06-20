@@ -27,8 +27,9 @@ function purchase() {
   const currentHour = new Date().getHours()
   const [open, close] = businessHours
 
-  if (currentHour > open && currentHour < close)
+  if (currentHour > open && currentHour < close) {
     return { message: 'Success' }
+  }
 
   return { message: 'Error' }
 }
@@ -79,16 +80,16 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 ```js twoslash
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-function getLatest(index = messages.items.length - 1) {
-  return messages.items[index]
-}
-
 const messages = {
   items: [
     { message: 'Simple test message', from: 'Testman' },
     // ...
   ],
   getLatest, // can also be a `getter or setter if supported`
+}
+
+function getLatest(index = messages.items.length - 1) {
+  return messages.items[index]
 }
 
 describe('reading messages', () => {
@@ -194,8 +195,9 @@ export default {
     {
       name: 'virtual-modules',
       resolveId(id) {
-        if (id === '$app/forms')
+        if (id === '$app/forms') {
           return 'virtual:$app/forms'
+        }
       }
     }
   ]
@@ -266,10 +268,6 @@ This is the intended behaviour. It is usually a sign of bad code when mocking is
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
 import { failure, success } from './handlers.js'
-
-// handlers
-export function success(data) {}
-export function failure(data) {}
 
 // get todos
 export async function getTodos(event, context) {
@@ -410,10 +408,6 @@ afterEach(() => server.resetHandlers())
 
 > Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
 
-### Example
-
-We have a full working example which uses MSW: [React Testing with MSW](https://github.com/vitest-dev/vitest/tree/main/examples/react-testing-lib-msw).
-
 ### More
 There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs).
 
@@ -474,14 +468,14 @@ describe('delayed execution', () => {
 
 I want to…
 
-- Spy on a `method`
+### Spy on a `method`
 
 ```ts
 const instance = new SomeClass()
 vi.spyOn(instance, 'method')
 ```
 
-- Mock exported variables
+### Mock exported variables
 ```js
 // some-path.js
 export const getter = 'variable'
@@ -493,9 +487,14 @@ import * as exports from './some-path.js'
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
-- Mock exported function
+### Mock an exported function
 
-Example with `vi.mock`:
+1. Example with `vi.mock`:
+
+::: warning
+Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
+:::
+
 ```ts
 // ./some-path.js
 export function method() {}
@@ -508,20 +507,16 @@ vi.mock('./some-path.js', () => ({
 }))
 ```
 
-::: warning
-Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `vi.mock` calls inside `beforeEach`, only one of these will actually mock a module.
-:::
-
-Example with `vi.spyOn`:
+2. Example with `vi.spyOn`:
 ```ts
 import * as exports from './some-path.js'
 
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
-- Mock exported class implementation
+### Mock an exported class implementation
 
-Example with `vi.mock` and prototype:
+1. Example with `vi.mock` and `.prototype`:
 ```ts
 // some-path.ts
 export class SomeClass {}
@@ -537,7 +532,7 @@ vi.mock('./some-path.js', () => {
 // SomeClass.mock.instances will have SomeClass
 ```
 
-Example with `vi.mock` and return value:
+2. Example with `vi.mock` and a return value:
 ```ts
 import { SomeClass } from './some-path.js'
 
@@ -550,7 +545,7 @@ vi.mock('./some-path.js', () => {
 // SomeClass.mock.returns will have returned object
 ```
 
-Example with `vi.spyOn`:
+3. Example with `vi.spyOn`:
 
 ```ts
 import * as exports from './some-path.js'
@@ -560,9 +555,9 @@ vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
 })
 ```
 
-- Spy on an object returned from a function
+### Spy on an object returned from a function
 
-Example using cache:
+1. Example using cache:
 
 ```ts
 // some-path.ts
@@ -603,7 +598,7 @@ const obj = useObject()
 expect(obj.method).toHaveBeenCalled()
 ```
 
-- Mock part of a module
+### Mock part of a module
 
 ```ts
 import { mocked, original } from './some-path.js'
@@ -619,7 +614,7 @@ original() // has original behaviour
 mocked() // is a spy function
 ```
 
-- Mock current date
+### Mock the current date
 
 To mock `Date`'s time, you can use `vi.setSystemTime` helper function. This value will **not** automatically reset between different tests.
 
@@ -634,7 +629,7 @@ expect(now.valueOf()).toBe(mockDate.valueOf())
 vi.useRealTimers()
 ```
 
-- Mock global variable
+### Mock a global variable
 
 You can set global variable by assigning a value to `globalThis` or using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. When using `vi.stubGlobal`, it will **not** automatically reset between different tests, unless you enable [`unstubGlobals`](/config/#unstubglobals) config option or call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals).
 
@@ -643,9 +638,13 @@ vi.stubGlobal('__VERSION__', '1.0.0')
 expect(__VERSION__).toBe('1.0.0')
 ```
 
-- Mock `import.meta.env`
+### Mock `import.meta.env`
 
-To change environmental variable, you can just assign a new value to it. This value will **not** automatically reset between different tests.
+1. To change environmental variable, you can just assign a new value to it.
+
+::: warning
+The environmental variable value will **_not_** automatically reset between different tests.
+:::
 
 ```ts
 import { beforeEach, expect, it } from 'vitest'
@@ -663,7 +662,7 @@ it('changes value', () => {
 })
 ```
 
-If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubenvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) manually in `beforeEach` hook):
+2. If you want to automatically reset the value(s), you can use the `vi.stubEnv` helper with the [`unstubEnvs`](/config/#unstubenvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) manually in a `beforeEach` hook):
 
 ```ts
 import { expect, it, vi } from 'vitest'

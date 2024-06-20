@@ -20,7 +20,11 @@ export interface ResolveResult {
 }
 
 export interface Resolver {
-  (url: string, context: ModuleContext, next: Resolver): Awaitable<ResolveResult>
+  (
+    url: string,
+    context: ModuleContext,
+    next: Resolver
+  ): Awaitable<ResolveResult>
 }
 
 interface LoaderContext extends Record<string, any> {

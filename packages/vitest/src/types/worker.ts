@@ -11,7 +11,10 @@ export interface WorkerContext extends ContextRPC {
   port: MessagePort
 }
 
-export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+export type ResolveIdFunction = (
+  id: string,
+  importer?: string
+) => Promise<ViteNodeResolveId | null>
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown

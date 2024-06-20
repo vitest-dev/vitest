@@ -9,19 +9,18 @@ export function positionToOffset(
   const nl = /\r\n/.test(source) ? 2 : 1
   let start = 0
 
-  if (lineNumber > lines.length)
+  if (lineNumber > lines.length) {
     return source.length
+  }
 
-  for (let i = 0; i < lineNumber - 1; i++)
+  for (let i = 0; i < lineNumber - 1; i++) {
     start += lines[i].length + nl
+  }
 
   return start + columnNumber
 }
 
-export function offsetToLineNumber(
-  source: string,
-  offset: number,
-): number {
+export function offsetToLineNumber(source: string, offset: number): number {
   if (offset > source.length) {
     throw new Error(
       `offset is longer than source length! offset ${offset} > length ${source.length}`,
@@ -33,8 +32,9 @@ export function offsetToLineNumber(
   let line = 0
   for (; line < lines.length; line++) {
     const lineLength = lines[line].length + nl
-    if (counted + lineLength >= offset)
+    if (counted + lineLength >= offset) {
       break
+    }
 
     counted += lineLength
   }

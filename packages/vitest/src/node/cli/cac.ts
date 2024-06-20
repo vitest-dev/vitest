@@ -1,20 +1,19 @@
 import { normalize } from 'pathe'
-import cac, { type CAC } from 'cac'
+import cac, { type CAC, type Command } from 'cac'
 import c from 'picocolors'
-import { version } from '../../../package.json'
-import { toArray } from '../../utils'
+import { version } from '../../../package.json' with { type: 'json' }
+import { toArray } from '../../utils/base'
 import type { Vitest, VitestRunMode } from '../../types'
-import { divider } from '../reporters/renderers/utils'
 import type { CliOptions } from './cli-api'
-import { startVitest } from './cli-api'
-import type { CLIOption } from './cli-config'
-import { cliOptionsConfig } from './cli-config'
+import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
+import { benchCliOptionsConfig, cliOptionsConfig } from './cli-config'
 
-function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
+function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
   let command = option.shorthand ? `-${option.shorthand}, --${commandName}` : `--${commandName}`
-  if ('argument' in option)
+  if ('argument' in option) {
     command += ` ${option.argument}`
+  }
 
   function transform(value: unknown) {
     if (!option.array && Array.isArray(value)) {
@@ -23,22 +22,26 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
         `Expected a single value for option "${command}", received [${received}]`,
       )
     }
-    if (option.transform)
+    if (option.transform) {
       return option.transform(value)
-    if (option.array)
+    }
+    if (option.array) {
       return toArray(value)
-    if (option.normalize)
+    }
+    if (option.normalize) {
       return normalize(String(value))
+    }
     return value
   }
 
   const hasSubcommands = 'subcommands' in option && option.subcommands
 
   if (option.description) {
-    let description = option.description
+    let description = option.description.replace(/\[.*\]\((.*)\)/, '$1').replace(/`/g, '')
 
-    if (hasSubcommands)
+    if (hasSubcommands) {
       description += `. Use '--help --${commandName}' for more info.`
+    }
 
     cli.option(command, description, {
       type: transform,
@@ -48,8 +51,9 @@ function addCommand(cli: CAC, name: string, option: CLIOption<any>) {
   if (hasSubcommands) {
     for (const commandName in option.subcommands) {
       const subcommand = option.subcommands[commandName]
-      if (subcommand)
+      if (subcommand) {
         addCommand(cli, `${name}.${commandName}`, subcommand)
+      }
     }
   }
 }
@@ -58,28 +62,33 @@ interface CLIOptions {
   allowUnknownOptions?: boolean
 }
 
+function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
+  for (const [optionName, option] of Object.entries(options)) {
+    if (option) {
+      addCommand(cli, optionName, option)
+    }
+  }
+}
+
 export function createCLI(options: CLIOptions = {}) {
   const cli = cac('vitest')
 
-  cli
-    .version(version)
+  cli.version(version)
 
-  for (const optionName in cliOptionsConfig) {
-    const option = (cliOptionsConfig as any)[optionName] as CLIOption<any> | null
-    if (option)
-      addCommand(cli, optionName, option)
-  }
+  addCliOptions(cli, cliOptionsConfig)
 
   cli.help((info) => {
     const helpSection = info.find(current => current.title?.startsWith('For more info, run any command'))
 
-    if (helpSection)
+    if (helpSection) {
       helpSection.body += '\n  $ vitest --help --expand-help'
+    }
 
     const options = info.find(current => current.title === 'Options')
 
-    if (typeof options !== 'object')
+    if (typeof options !== 'object') {
       return info
+    }
 
     const helpIndex = process.argv.findIndex(arg => arg === '--help')
     const subcommands = process.argv.slice(helpIndex + 1)
@@ -95,16 +104,18 @@ export function createCLI(options: CLIOptions = {}) {
       return info
     }
 
-    if (subcommands.length === 1 && (subcommands[0] === '--expand-help' || subcommands[0] === '--expandHelp'))
+    if (subcommands.length === 1 && (subcommands[0] === '--expand-help' || subcommands[0] === '--expandHelp')) {
       return info
+    }
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
 
-    const banner = info.find(current => /^vitest\/[0-9]+\.[0-9]+\.[0-9]+$/.test(current.body))
+    const banner = info.find(current => /^vitest\/\d+\.\d+\.\d+$/.test(current.body))
     function addBannerWarning(warning: string) {
       if (typeof banner?.body === 'string') {
-        if (banner?.body.includes(warning))
+        if (banner?.body.includes(warning)) {
           return
+        }
 
         banner.body = `${banner.body}\n WARN: ${warning}`
       }
@@ -160,16 +171,12 @@ export function createCLI(options: CLIOptions = {}) {
     .command('dev [...filters]', undefined, options)
     .action(watch)
 
-  cli
-    .command('bench [...filters]', undefined, options)
-    .action(benchmark)
-
-  // TODO: remove in Vitest 2.0
-  cli
-    .command('typecheck [...filters]')
-    .action(() => {
-      throw new Error(`Running typecheck via "typecheck" command is removed. Please use "--typecheck" to run your regular tests alongside typechecking, or "--typecheck.only" to run only typecheck tests.`)
-    })
+  addCliOptions(
+    cli
+      .command('bench [...filters]', undefined, options)
+      .action(benchmark),
+    benchCliOptionsConfig,
+  )
 
   cli
     .command('[...filters]', undefined, options)
@@ -183,17 +190,20 @@ export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
   options: CliOptions
 } {
   const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
-  if (arrayArgs[0] !== 'vitest')
+  if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
+  }
   arrayArgs[0] = '/index.js'
   arrayArgs.unshift('node')
   let { args, options } = createCLI(config).parse(arrayArgs, {
     run: false,
   })
-  if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev')
+  if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
-  if (arrayArgs[2] === 'run')
+  }
+  if (arrayArgs[2] === 'run') {
     options.run = true
+  }
   if (arrayArgs[2] === 'related') {
     options.related = args
     options.passWithNoTests ??= true
@@ -242,12 +252,15 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
   catch {}
 
   try {
+    const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.shouldKeepServer())
+    if (!ctx?.shouldKeepServer()) {
       await ctx?.exit()
+    }
     return ctx
   }
   catch (e) {
+    const { divider } = await import('../reporters/renderers/utils')
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
     console.error(e)
     console.error('\n\n')

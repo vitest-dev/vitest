@@ -6,8 +6,12 @@ export async function createViteServer(inlineConfig: InlineConfig) {
   // But Vitest works correctly either way
   const error = console.error
   console.error = (...args: any[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('WebSocket server error:'))
+    if (
+      typeof args[0] === 'string'
+      && args[0].includes('WebSocket server error:')
+    ) {
       return
+    }
     error(...args)
   }
 

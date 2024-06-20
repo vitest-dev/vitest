@@ -47,8 +47,6 @@ export default () => [
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
+    plugins: [dts({ respectExternal: true })],
   },
 ]

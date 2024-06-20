@@ -10,8 +10,9 @@ export function SsrReplacerPlugin(): Plugin {
     name: 'vitest:ssr-replacer',
     enforce: 'pre',
     transform(code, id) {
-      if (!/\bimport\.meta\.env\b/.test(code))
+      if (!/\bimport\.meta\.env\b/.test(code)) {
         return null
+      }
 
       let s: MagicString | null = null
       const cleanCode = stripLiteral(code)

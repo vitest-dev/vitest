@@ -134,3 +134,30 @@ test('renders inline mock snapshot', () => {
     }
   `)
 })
+
+function println() {
+  const message = `
+export default function () {
+  function Foo() {
+  }
+
+  return Foo;
+}
+`
+  return message
+}
+
+test('multiline strings ', () => {
+  expect(println()).toMatchSnapshot()
+})
+
+test('updateInlineSnapshot should not remove end whitespace', () => {
+  // issue #922
+  expect(`
+my string
+`).toMatchInlineSnapshot(`
+  "
+  my string
+  "
+`)
+})

@@ -11,7 +11,7 @@ const cache = new Map<string, any>()
  *
  * @experimental
  */
-export function runOnce<T>(fn: (() => T), key?: string): T {
+export function runOnce<T>(fn: () => T, key?: string): T {
   const filepath = getWorkerState().filepath || '__unknown_files__'
 
   if (!key) {
@@ -21,8 +21,9 @@ export function runOnce<T>(fn: (() => T), key?: string): T {
 
   const id = `${filepath}:${key}`
 
-  if (!cache.has(id))
+  if (!cache.has(id)) {
     cache.set(id, fn())
+  }
 
   return cache.get(id)
 }

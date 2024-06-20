@@ -1,0 +1,149 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[docs] add(1, 1) 1`] = `2`;
+
+exports[`[docs] add(1, 2) 1`] = `3`;
+
+exports[`[docs] add(2, 1) 1`] = `3`;
+
+exports[`array case1-x case1-y 1`] = `
+{
+  "args": [
+    "case1-x",
+    "case1-y",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`array case2-x case2-y 1`] = `
+{
+  "args": [
+    "case2-x",
+    "case2-y",
+  ],
+  "myFixture": 1234,
+}
+`;
+
+exports[`array destructure case1-x case1-y 1`] = `
+{
+  "myFixture": 1234,
+  "x": "case1-x",
+  "y": "case1-y",
+}
+`;
+
+exports[`array destructure case2-x case2-y 1`] = `
+{
+  "myFixture": 1234,
+  "x": "case2-x",
+  "y": "case2-y",
+}
+`;
+
+exports[`basic case1 1`] = `
+{
+  "args": "case1",
+}
+`;
+
+exports[`basic case2 1`] = `
+{
+  "args": "case2",
+}
+`;
+
+exports[`concurrent case1 1`] = `
+{
+  "args": "case1",
+  "myFixture": 1234,
+}
+`;
+
+exports[`concurrent case2 1`] = `
+{
+  "args": "case2",
+  "myFixture": 1234,
+}
+`;
+
+exports[`const case1 1`] = `
+{
+  "args": "case1",
+  "myFixture": 1234,
+}
+`;
+
+exports[`const case2 1`] = `
+{
+  "args": "case2",
+  "myFixture": 1234,
+}
+`;
+
+exports[`fixture case1 1`] = `
+{
+  "args": "case1",
+  "myFixture": 1234,
+}
+`;
+
+exports[`fixture case2 1`] = `
+{
+  "args": "case2",
+  "myFixture": 1234,
+}
+`;
+
+exports[`object 'case1' 1`] = `
+{
+  "args": {
+    "k": "case1",
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`object 'case2' 1`] = `
+{
+  "args": {
+    "k": "case2",
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`object destructure 'case1' 1`] = `
+{
+  "myFixture": 1234,
+  "v": "case1",
+}
+`;
+
+exports[`object destructure 'case2' 1`] = `
+{
+  "myFixture": 1234,
+  "v": "case2",
+}
+`;
+
+exports[`template 'x' true 1`] = `
+{
+  "args": {
+    "a": "x",
+    "b": true,
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`template 'y' false 1`] = `
+{
+  "args": {
+    "a": "y",
+    "b": false,
+  },
+  "myFixture": 1234,
+}
+`;

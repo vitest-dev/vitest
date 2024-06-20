@@ -1,18 +1,25 @@
-import type { BrowserProvider, BrowserProviderInitializationOptions, WorkspaceProject } from 'vitest/node'
+import type {
+  BrowserProvider,
+  BrowserProviderInitializationOptions,
+  WorkspaceProject,
+} from 'vitest/node'
 import type { RemoteOptions } from 'webdriverio'
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
-type WebdriverBrowser = typeof webdriverBrowsers[number]
+type WebdriverBrowser = (typeof webdriverBrowsers)[number]
 
-interface WebdriverProviderOptions extends BrowserProviderInitializationOptions {
+interface WebdriverProviderOptions
+  extends BrowserProviderInitializationOptions {
   browser: WebdriverBrowser
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
-  public name = 'webdriverio'
+  public name = 'webdriverio' as const
+  public supportsParallelism: boolean = false
 
-  private cachedBrowser: WebdriverIO.Browser | null = null
-  private browser!: WebdriverBrowser
+  public browser: WebdriverIO.Browser | null = null
+
+  private browserName!: WebdriverBrowser
   private ctx!: WorkspaceProject
 
   private options?: RemoteOptions
@@ -21,39 +28,65 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return webdriverBrowsers
   }
 
-  async initialize(ctx: WorkspaceProject, { browser, options }: WebdriverProviderOptions) {
+  async initialize(
+    ctx: WorkspaceProject,
+    { browser, options }: WebdriverProviderOptions,
+  ) {
     this.ctx = ctx
-    this.browser = browser
+    this.browserName = browser
     this.options = options as RemoteOptions
   }
 
+  async beforeCommand() {
+    const page = this.browser!
+    const iframe = await page.findElement(
+      'css selector',
+      'iframe[data-vitest]',
+    )
+    await page.switchToFrame(iframe)
+  }
+
+  async afterCommand() {
+    await this.browser!.switchToParentFrame()
+  }
+
+  getCommandsContext() {
+    return {
+      browser: this.browser,
+    }
+  }
+
   async openBrowser() {
-    if (this.cachedBrowser)
-      return this.cachedBrowser
+    if (this.browser) {
+      return this.browser
+    }
 
     const options = this.ctx.config.browser
 
-    if (this.browser === 'safari') {
-      if (options.headless)
-        throw new Error('You\'ve enabled headless mode for Safari but it doesn\'t currently support it.')
+    if (this.browserName === 'safari') {
+      if (options.headless) {
+        throw new Error(
+          'You\'ve enabled headless mode for Safari but it doesn\'t currently support it.',
+        )
+      }
     }
 
     const { remote } = await import('webdriverio')
 
     // TODO: close everything, if browser is closed from the outside
-    this.cachedBrowser = await remote({
+    this.browser = await remote({
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
     })
 
-    return this.cachedBrowser
+    return this.browser
   }
 
   private buildCapabilities() {
     const capabilities: RemoteOptions['capabilities'] = {
       ...this.options?.capabilities,
-      browserName: this.browser,
+      browserName: this.browserName,
     }
 
     const headlessMap = {
@@ -63,25 +96,25 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     } as const
 
     const options = this.ctx.config.browser
-    const browser = this.browser
+    const browser = this.browserName
     if (browser !== 'safari' && options.headless) {
       const [key, args] = headlessMap[browser]
       const currentValues = (this.options?.capabilities as any)?.[key] || {}
-      const newArgs = [...currentValues.args || [], ...args]
+      const newArgs = [...(currentValues.args || []), ...args]
       capabilities[key] = { ...currentValues, args: newArgs as any }
     }
 
     return capabilities
   }
 
-  async openPage(url: string) {
+  async openPage(_contextId: string, url: string) {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }
 
   async close() {
     await Promise.all([
-      this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
+      this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])
     // TODO: right now process can only exit with timeout, if we use browser
     // needs investigating

@@ -40,7 +40,7 @@ Vitest also isolates each file's environment so env mutations in one file don't 
 
 ## Test Filtering
 
-Vitest provided many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
+Vitest provides many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
 
 Learn more about [Test Filtering](/guide/filtering).
 
@@ -187,8 +187,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
-function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts twoslash
 import { bench, describe } from 'vitest'
@@ -210,9 +209,12 @@ describe('sort', () => {
 })
 ```
 
+<img alt="Benchmark report" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/6f0383ea-38ba-4f14-8a05-ab243afea01d">
+<img alt="Benchmark report" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/efbcb427-ecf1-4882-88de-210cd73415f6">
+
 ## Type Testing <Badge type="warning">Experimental</Badge> {#type-testing}
 
-Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
+You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
 ```ts
 import { assertType, expectTypeOf } from 'vitest'
@@ -226,3 +228,16 @@ test('my types work properly', () => {
   assertType(mount({ name: 42 }))
 })
 ```
+
+## Sharding
+
+Run tests on different machines using [`--shard`](/guide/cli#shard) and [`--reporter=blob`](/guide/reporters#blob-reporter) flags.
+All test and coverage results can be merged at the end of your CI pipeline using `--merge-reports` command:
+
+```bash
+vitest --shard=1/2 --reporter=blob
+vitest --shard=2/2 --reporter=blob
+vitest --merge-reports --reporter=junit --coverage.reporter=text
+```
+
+See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) for more information.

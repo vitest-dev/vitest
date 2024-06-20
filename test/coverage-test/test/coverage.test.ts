@@ -18,10 +18,11 @@ const provider = globalThis.process?.env.COVERAGE_PROVIDER
 const skipDynamicFiles = '__vitest_browser__' in globalThis || provider === 'istanbul' || !provider
 
 const { pythagoras } = await (() => {
-  if ('__vitest_browser__' in globalThis)
+  if ('__vitest_browser__' in globalThis) {
     // TODO: remove workaround after vite 4.3.2
     // @ts-expect-error extension is not specified
     return import('../src/index')
+  }
   const dynamicImport = '../src/index.mjs'
   return import(dynamicImport)
 })()
@@ -83,4 +84,11 @@ test.runIf(provider === 'v8' || provider === 'custom')('pre-transpiled code with
   const transpiled = await import('../src/transpiled.js')
 
   transpiled.hello()
+})
+
+test.runIf(provider === 'v8' || provider === 'custom')('file loaded outside Vite, #5639', async () => {
+  const { Module: { createRequire } } = await import('node:module')
+
+  const noop = createRequire(import.meta.url)('../src/load-outside-vite.cjs')
+  expect(noop).toBeTypeOf('function')
 })

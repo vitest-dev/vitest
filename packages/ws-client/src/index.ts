@@ -4,7 +4,6 @@ import { parse, stringify } from 'flatted'
 
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import type { CancelReason } from '@vitest/runner'
 import { StateManager } from '../../vitest/src/node/state'
 
 export * from '../../vitest/src/utils/tasks'
@@ -15,7 +14,7 @@ export interface VitestClientOptions {
   reconnectInterval?: number
   reconnectTries?: number
   connectTimeout?: number
-  reactive?: <T>(v: T) => T
+  reactive?: <T>(v: T, forKey: 'state' | 'idMap' | 'filesMap') => T
   ref?: <T>(v: T) => { value: T }
   WebSocketConstructor?: typeof WebSocket
 }
@@ -45,13 +44,19 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     state: new StateManager(),
     waitForConnection,
     reconnect,
-  }) as VitestClient
+  }, 'state') as VitestClient
 
-  ctx.state.filesMap = reactive(ctx.state.filesMap)
-  ctx.state.idMap = reactive(ctx.state.idMap)
+  ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
+  ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
 
   let onMessage: Function
   const functions: WebSocketEvents = {
+    onSpecsCollected(specs) {
+      specs?.forEach(([config, file]) => {
+        ctx.state.clearFiles({ config }, [file])
+      })
+      handlers.onSpecsCollected?.(specs)
+    },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
       handlers.onPathsCollected?.(paths)
@@ -66,6 +71,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)
+      handlers.onUserConsoleLog?.(log)
     },
     onFinished(files, errors) {
       handlers.onFinished?.(files, errors)
@@ -73,15 +79,22 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     onFinishedReportCoverage() {
       handlers.onFinishedReportCoverage?.()
     },
-    onCancel(reason: CancelReason) {
-      handlers.onCancel?.(reason)
-    },
   }
 
   const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: stringify,
+    serialize: e =>
+      stringify(e, (_, v) => {
+        if (v instanceof Error) {
+          return {
+            name: v.name,
+            message: v.message,
+            stack: v.stack,
+          }
+        }
+        return v
+      }),
     deserialize: parse,
     onTimeoutError(functionName) {
       throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
@@ -96,8 +109,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   let openPromise: Promise<void>
 
   function reconnect(reset = false) {
-    if (reset)
+    if (reset) {
       tries = reconnectTries
+    }
     ctx.ws = new WebSocketConstructor(url)
     registerWS()
   }
@@ -105,10 +119,15 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   function registerWS() {
     openPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Cannot connect to the server in ${connectTimeout / 1000} seconds`))
+        reject(
+          new Error(
+            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
+          ),
+        )
       }, connectTimeout)?.unref?.()
-      if (ctx.ws.OPEN === ctx.ws.readyState)
+      if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
+      }
       // still have a listener even if it's already open to update tries
       ctx.ws.addEventListener('open', () => {
         tries = reconnectTries
@@ -121,8 +140,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0)
+      if (autoReconnect && tries > 0) {
         setTimeout(reconnect, reconnectInterval)
+      }
     })
   }
 

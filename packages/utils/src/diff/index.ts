@@ -67,8 +67,9 @@ const FALLBACK_FORMAT_OPTIONS = {
  * @returns {string | null} a string diff
  */
 export function diff(a: any, b: any, options?: DiffOptions): string | null {
-  if (Object.is(a, b))
+  if (Object.is(a, b)) {
     return ''
+  }
 
   const aType = getType(a)
   let expectedType = aType
@@ -89,7 +90,8 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
   }
 
   if (expectedType !== getType(b)) {
-    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator } = normalizeDiffOptions(options)
+    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
+      = normalizeDiffOptions(options)
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
     const aDisplay = prettyFormat(a, formatOptions)
     const bDisplay = prettyFormat(b, formatOptions)
@@ -98,8 +100,9 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
     return `${aDiff}\n\n${bDiff}`
   }
 
-  if (omitDifference)
+  if (omitDifference) {
     return null
+  }
 
   switch (aType) {
     case 'string':

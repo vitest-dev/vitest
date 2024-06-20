@@ -26,7 +26,11 @@ export class CommonjsExecutor {
 
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
   private builtinCache: Record<string, NodeModule> = Object.create(null)
-  private extensions: Record<string, (m: NodeModule, filename: string) => unknown> = Object.create(null)
+  private extensions: Record<
+    string,
+    (m: NodeModule, filename: string) => unknown
+  > = Object.create(null)
+
   private fs: FileMap
   private Module: typeof _Module
 
@@ -34,7 +38,10 @@ export class CommonjsExecutor {
     this.context = options.context
     this.fs = options.fileMap
 
-    const primitives = vm.runInContext('({ Object, Array, Error })', this.context) as {
+    const primitives = vm.runInContext(
+      '({ Object, Array, Error })',
+      this.context,
+    ) as {
       Object: typeof Object
       Array: typeof Array
       Error: typeof Error
@@ -66,8 +73,9 @@ export class CommonjsExecutor {
 
       get require() {
         const require = requiresCache.get(this)
-        if (require)
+        if (require) {
           return require
+        }
 
         const _require = Module.createRequire(this.id)
         requiresCache.set(this, _require)
@@ -75,7 +83,9 @@ export class CommonjsExecutor {
       }
 
       static register = () => {
-        throw new Error(`[vitest] "register" is not available when running in Vitest.`)
+        throw new Error(
+          `[vitest] "register" is not available when running in Vitest.`,
+        )
       }
 
       _compile(code: string, filename: string) {
@@ -99,7 +109,11 @@ export class CommonjsExecutor {
       }
 
       // exposed for external use, Node.js does the opposite
-      static _load = (request: string, parent: Module | undefined, _isMain: boolean) => {
+      static _load = (
+        request: string,
+        parent: Module | undefined,
+        _isMain: boolean,
+      ) => {
         const require = Module.createRequire(parent?.filename ?? request)
         return require(request)
       }
@@ -151,8 +165,8 @@ export class CommonjsExecutor {
   }
 
   private requireJs = (m: NodeModule, filename: string) => {
-    const content = this.fs.readFile(filename)
-    ;(m as PrivateNodeModule)._compile(content, filename)
+    const content = this.fs.readFile(filename);
+    (m as PrivateNodeModule)._compile(content, filename)
   }
 
   private requireJson = (m: NodeModule, filename: string) => {
@@ -165,8 +179,9 @@ export class CommonjsExecutor {
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
       const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved))
+      if (ext === '.node' || isNodeBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
+      }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
     }) as NodeRequire
@@ -199,10 +214,14 @@ export class CommonjsExecutor {
   }
 
   // very naive implementation for Node.js require
-  private loadCommonJSModule(module: NodeModule, filename: string): Record<string, unknown> {
+  private loadCommonJSModule(
+    module: NodeModule,
+    filename: string,
+  ): Record<string, unknown> {
     const cached = this.requireCache.get(filename)
-    if (cached)
+    if (cached) {
       return cached.exports
+    }
 
     const extension = this.findLongestRegisteredExtension(filename)
     const loader = this.extensions[extension] || this.extensions['.js']
@@ -219,27 +238,31 @@ export class CommonjsExecutor {
     // eslint-disable-next-line no-cond-assign
     while ((index = name.indexOf('.', startIndex)) !== -1) {
       startIndex = index + 1
-      if (index === 0)
-        continue // Skip dotfiles like .gitignore
-      currentExtension = (name.slice(index))
-      if (this.extensions[currentExtension])
+      if (index === 0) {
+        continue
+      } // Skip dotfiles like .gitignore
+      currentExtension = name.slice(index)
+      if (this.extensions[currentExtension]) {
         return currentExtension
+      }
     }
     return '.js'
   }
 
   public require(identifier: string) {
     const ext = extname(identifier)
-    if (ext === '.node' || isNodeBuiltin(identifier))
+    if (ext === '.node' || isNodeBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
+    }
     const module = new this.Module(identifier)
     return this.loadCommonJSModule(module, identifier)
   }
 
   private requireCoreModule(identifier: string) {
     const normalized = identifier.replace(/^node:/, '')
-    if (this.builtinCache[normalized])
+    if (this.builtinCache[normalized]) {
       return this.builtinCache[normalized].exports
+    }
     const moduleExports = _require(identifier)
     if (identifier === 'node:module' || identifier === 'module') {
       const module = new this.Module('/module.js') // path should not matter

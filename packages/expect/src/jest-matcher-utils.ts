@@ -49,12 +49,12 @@ export function getMatcherUtils() {
     }
 
     if (matcherName.includes('.')) {
-    // Old format: for backward compatibility,
-    // especially without promise or isNot options
+      // Old format: for backward compatibility,
+      // especially without promise or isNot options
       dimString += matcherName
     }
     else {
-    // New format: omit period from matcherName arg
+      // New format: omit period from matcherName arg
       hint += DIM_COLOR(`${dimString}.`) + matcherName
       dimString = ''
     }
@@ -64,16 +64,19 @@ export function getMatcherUtils() {
     }
     else {
       hint += DIM_COLOR(`${dimString}(`) + expectedColor(expected)
-      if (secondArgument)
+      if (secondArgument) {
         hint += DIM_COLOR(', ') + secondArgumentColor(secondArgument)
+      }
       dimString = ')'
     }
 
-    if (comment !== '')
+    if (comment !== '') {
       dimString += ` // ${comment}`
+    }
 
-    if (dimString !== '')
+    if (dimString !== '') {
       hint += DIM_COLOR(dimString)
+    }
 
     return hint
   }

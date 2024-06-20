@@ -16,7 +16,7 @@ export type Tester = (
   this: TesterContext,
   a: any,
   b: any,
-  customTesters: Array<Tester>,
+  customTesters: Array<Tester>
 ) => boolean | undefined
 
 export interface TesterContext {
@@ -24,7 +24,7 @@ export interface TesterContext {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean,
+    strictCheck?: boolean
   ) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -50,7 +50,7 @@ export interface MatcherState {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean,
+    strictCheck?: boolean
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
@@ -70,6 +70,7 @@ export interface MatcherState {
     subsetEquality: Tester
   }
   soft?: boolean
+  poll?: boolean
 }
 
 export interface SyncExpectationResult {
@@ -87,16 +88,16 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState> {
   (this: T, received: any, expected: any, options?: any): ExpectationResult
 }
 
-export type MatchersObject<T extends MatcherState = MatcherState> = Record<string, RawMatcherFn<T>>
+export type MatchersObject<T extends MatcherState = MatcherState> = Record<
+  string,
+  RawMatcherFn<T>
+>
 
-export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+export interface ExpectStatic
+  extends Chai.ExpectStatic,
+  AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
-  unreachable: (message?: string) => never
-  soft: <T>(actual: T, message?: string) => Assertion<T>
   extend: (expects: MatchersObject) => void
-  addEqualityTesters: (testers: Array<Tester>) => void
-  assertions: (expected: number) => void
-  hasAssertions: () => void
   anything: () => any
   any: (constructor: unknown) => any
   getState: () => MatcherState
@@ -134,7 +135,10 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
   toBeInstanceOf: <E>(expected: E) => void
   toBeCalledTimes: (times: number) => void
   toHaveLength: (length: number) => void
-  toHaveProperty: <E>(property: string | (string | number)[], value?: E) => void
+  toHaveProperty: <E>(
+    property: string | (string | number)[],
+    value?: E
+  ) => void
   toBeCloseTo: (number: number, numDigits?: number) => void
   toHaveBeenCalledTimes: (times: number) => void
   toHaveBeenCalled: () => void
@@ -164,7 +168,7 @@ type VitestAssertion<A, T> = {
     ? Assertion<T>
     : A[K] extends (...args: any[]) => any
       ? A[K] // not converting function since they may contain overload
-      : VitestAssertion<A[K], T>
+      : VitestAssertion<A[K], T>;
 } & ((type: string, message?: string) => Assertion)
 
 type Promisify<O> = {
@@ -172,23 +176,42 @@ type Promisify<O> = {
     ? O extends R
       ? Promisify<O[K]>
       : (...args: A) => Promise<R>
-    : O[K]
+    : O[K];
 }
 
-export interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, JestAssertion<T> {
-  toBeTypeOf: (expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => void
+export type PromisifyAssertion<T> = Promisify<Assertion<T>>
+
+export interface Assertion<T = any>
+  extends VitestAssertion<Chai.Assertion, T>,
+  JestAssertion<T> {
+  toBeTypeOf: (
+    expected:
+      | 'bigint'
+      | 'boolean'
+      | 'function'
+      | 'number'
+      | 'object'
+      | 'string'
+      | 'symbol'
+      | 'undefined'
+  ) => void
   toHaveBeenCalledOnce: () => void
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
-  resolves: Promisify<Assertion<T>>
-  rejects: Promisify<Assertion<T>>
+  toHaveResolved: () => void
+  toHaveResolvedWith: <E>(value: E) => void
+  toHaveResolvedTimes: (times: number) => void
+  toHaveLastResolvedWith: <E>(value: E) => void
+  toHaveNthResolvedWith: <E>(nthCall: number, value: E) => void
+
+  resolves: PromisifyAssertion<T>
+  rejects: PromisifyAssertion<T>
 }
 
 declare global {
   // support augmenting jest.Matchers by other libraries
   // eslint-disable-next-line ts/no-namespace
   namespace jest {
-
     // eslint-disable-next-line unused-imports/no-unused-vars
     interface Matchers<R, T = {}> {}
   }

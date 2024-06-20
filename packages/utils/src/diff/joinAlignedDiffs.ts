@@ -9,28 +9,42 @@ import type { Diff } from './cleanupSemantic'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import type { DiffOptionsColor, DiffOptionsNormalized } from './types'
 
-function formatTrailingSpaces(line: string, trailingSpaceFormatter: DiffOptionsColor): string {
+function formatTrailingSpaces(
+  line: string,
+  trailingSpaceFormatter: DiffOptionsColor,
+): string {
   return line.replace(/\s+$/, match => trailingSpaceFormatter(match))
 }
 
-function printDiffLine(line: string, isFirstOrLast: boolean, color: DiffOptionsColor, indicator: string, trailingSpaceFormatter: DiffOptionsColor, emptyFirstOrLastLinePlaceholder: string): string {
+function printDiffLine(
+  line: string,
+  isFirstOrLast: boolean,
+  color: DiffOptionsColor,
+  indicator: string,
+  trailingSpaceFormatter: DiffOptionsColor,
+  emptyFirstOrLastLinePlaceholder: string,
+): string {
   return line.length !== 0
     ? color(
         `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
     )
     : indicator !== ' '
       ? color(indicator)
-      : (isFirstOrLast && emptyFirstOrLastLinePlaceholder.length !== 0)
-          ? color(`${indicator} ${emptyFirstOrLastLinePlaceholder}`)
-          : ''
+      : isFirstOrLast && emptyFirstOrLastLinePlaceholder.length !== 0
+        ? color(`${indicator} ${emptyFirstOrLastLinePlaceholder}`)
+        : ''
 }
 
-function printDeleteLine(line: string, isFirstOrLast: boolean, {
-  aColor,
-  aIndicator,
-  changeLineTrailingSpaceColor,
-  emptyFirstOrLastLinePlaceholder,
-}: DiffOptionsNormalized): string {
+function printDeleteLine(
+  line: string,
+  isFirstOrLast: boolean,
+  {
+    aColor,
+    aIndicator,
+    changeLineTrailingSpaceColor,
+    emptyFirstOrLastLinePlaceholder,
+  }: DiffOptionsNormalized,
+): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -41,12 +55,16 @@ function printDeleteLine(line: string, isFirstOrLast: boolean, {
   )
 }
 
-function printInsertLine(line: string, isFirstOrLast: boolean, {
-  bColor,
-  bIndicator,
-  changeLineTrailingSpaceColor,
-  emptyFirstOrLastLinePlaceholder,
-}: DiffOptionsNormalized): string {
+function printInsertLine(
+  line: string,
+  isFirstOrLast: boolean,
+  {
+    bColor,
+    bIndicator,
+    changeLineTrailingSpaceColor,
+    emptyFirstOrLastLinePlaceholder,
+  }: DiffOptionsNormalized,
+): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -57,12 +75,16 @@ function printInsertLine(line: string, isFirstOrLast: boolean, {
   )
 }
 
-function printCommonLine(line: string, isFirstOrLast: boolean, {
-  commonColor,
-  commonIndicator,
-  commonLineTrailingSpaceColor,
-  emptyFirstOrLastLinePlaceholder,
-}: DiffOptionsNormalized): string {
+function printCommonLine(
+  line: string,
+  isFirstOrLast: boolean,
+  {
+    commonColor,
+    commonIndicator,
+    commonLineTrailingSpaceColor,
+    emptyFirstOrLastLinePlaceholder,
+  }: DiffOptionsNormalized,
+): string {
   return printDiffLine(
     line,
     isFirstOrLast,
@@ -74,7 +96,13 @@ function printCommonLine(line: string, isFirstOrLast: boolean, {
 }
 
 // In GNU diff format, indexes are one-based instead of zero-based.
-function createPatchMark(aStart: number, aEnd: number, bStart: number, bEnd: number, { patchColor }: DiffOptionsNormalized): string {
+function createPatchMark(
+  aStart: number,
+  aEnd: number,
+  bStart: number,
+  bEnd: number,
+  { patchColor }: DiffOptionsNormalized,
+): string {
   return patchColor(
     `@@ -${aStart + 1},${aEnd - aStart} +${bStart + 1},${bEnd - bStart} @@`,
   )
@@ -84,7 +112,10 @@ function createPatchMark(aStart: number, aEnd: number, bStart: number, bEnd: num
 //
 // Given array of aligned strings with inverse highlight formatting,
 // return joined lines with diff formatting (and patch marks, if needed).
-export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
+export function joinAlignedDiffsNoExpand(
+  diffs: Array<Diff>,
+  options: DiffOptionsNormalized,
+): string {
   const iLength = diffs.length
   const nContextLines = options.contextLines
   const nContextLines2 = nContextLines + nContextLines
@@ -96,8 +127,9 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
   let i = 0
   while (i !== iLength) {
     const iStart = i
-    while (i !== iLength && diffs[i][0] === DIFF_EQUAL)
+    while (i !== iLength && diffs[i][0] === DIFF_EQUAL) {
       i += 1
+    }
 
     if (iStart !== i) {
       if (iStart === 0) {
@@ -125,23 +157,27 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
       }
     }
 
-    while (i !== iLength && diffs[i][0] !== DIFF_EQUAL)
+    while (i !== iLength && diffs[i][0] !== DIFF_EQUAL) {
       i += 1
+    }
   }
 
   const hasPatch = nExcessesBetweenChanges !== 0 || hasExcessAtStartOrEnd
-  if (nExcessesBetweenChanges !== 0)
-    jLength += nExcessesBetweenChanges + 1 // add patch lines
-  else if (hasExcessAtStartOrEnd)
-    jLength += 1 // add patch line
+  if (nExcessesBetweenChanges !== 0) {
+    jLength += nExcessesBetweenChanges + 1
+  } // add patch lines
+  else if (hasExcessAtStartOrEnd) {
+    jLength += 1
+  } // add patch line
 
   const jLast = jLength - 1
 
   const lines: Array<string> = []
 
   let jPatchMark = 0 // index of placeholder line for current patch mark
-  if (hasPatch)
-    lines.push('') // placeholder line for first patch mark
+  if (hasPatch) {
+    lines.push('')
+  } // placeholder line for first patch mark
 
   // Indexes of expected or received lines in current patch:
   let aStart = 0
@@ -172,8 +208,9 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
   i = 0
   while (i !== iLength) {
     let iStart = i
-    while (i !== iLength && diffs[i][0] === DIFF_EQUAL)
+    while (i !== iLength && diffs[i][0] === DIFF_EQUAL) {
       i += 1
+    }
 
     if (iStart !== i) {
       if (iStart === 0) {
@@ -186,15 +223,17 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
           bEnd = bStart
         }
 
-        for (let iCommon = iStart; iCommon !== i; iCommon += 1)
+        for (let iCommon = iStart; iCommon !== i; iCommon += 1) {
           pushCommonLine(diffs[iCommon][1])
+        }
       }
       else if (i === iLength) {
         // at end
         const iEnd = i - iStart > nContextLines ? iStart + nContextLines : i
 
-        for (let iCommon = iStart; iCommon !== iEnd; iCommon += 1)
+        for (let iCommon = iStart; iCommon !== iEnd; iCommon += 1) {
           pushCommonLine(diffs[iCommon][1])
+        }
       }
       else {
         // between changes
@@ -203,8 +242,9 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
         if (nCommon > nContextLines2) {
           const iEnd = iStart + nContextLines
 
-          for (let iCommon = iStart; iCommon !== iEnd; iCommon += 1)
+          for (let iCommon = iStart; iCommon !== iEnd; iCommon += 1) {
             pushCommonLine(diffs[iCommon][1])
+          }
 
           lines[jPatchMark] = createPatchMark(
             aStart,
@@ -222,12 +262,14 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
           aEnd = aStart
           bEnd = bStart
 
-          for (let iCommon = i - nContextLines; iCommon !== i; iCommon += 1)
+          for (let iCommon = i - nContextLines; iCommon !== i; iCommon += 1) {
             pushCommonLine(diffs[iCommon][1])
+          }
         }
         else {
-          for (let iCommon = iStart; iCommon !== i; iCommon += 1)
+          for (let iCommon = iStart; iCommon !== i; iCommon += 1) {
             pushCommonLine(diffs[iCommon][1])
+          }
         }
       }
     }
@@ -243,8 +285,9 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
     }
   }
 
-  if (hasPatch)
+  if (hasPatch) {
     lines[jPatchMark] = createPatchMark(aStart, aEnd, bStart, bEnd, options)
+  }
 
   return lines.join('\n')
 }
@@ -253,7 +296,10 @@ export function joinAlignedDiffsNoExpand(diffs: Array<Diff>, options: DiffOption
 //
 // Given array of aligned strings with inverse highlight formatting,
 // return joined lines with diff formatting.
-export function joinAlignedDiffsExpand(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
+export function joinAlignedDiffsExpand(
+  diffs: Array<Diff>,
+  options: DiffOptionsNormalized,
+): string {
   return diffs
     .map((diff: Diff, i: number, diffs: Array<Diff>): string => {
       const line = diff[1]

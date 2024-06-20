@@ -11,7 +11,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 // for debug:
 // open a static file serve to share the report json
 // and ui using the link to load the report json data
-const debugLink = 'http://127.0.0.1:4173/__vitest__'
+// const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
 export const config: UserConfig = {
   root: __dirname,
@@ -34,11 +34,7 @@ export const config: UserConfig = {
       },
     }),
     Unocss({
-      presets: [
-        presetUno(),
-        presetAttributify(),
-        presetIcons(),
-      ],
+      presets: [presetUno(), presetAttributify(), presetIcons()],
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -60,31 +56,29 @@ export const config: UserConfig = {
     }),
     AutoImport({
       dts: resolve(__dirname, './client/auto-imports.d.ts'),
-      dirs: [
-        './client/composables',
-      ],
-      imports: [
-        'vue',
-        'vue-router',
-        '@vueuse/core',
-      ],
+      dirs: ['./client/composables'],
+      imports: ['vue', 'vue-router', '@vueuse/core'],
       injectAtEnd: true,
     }),
-    {
-      name: 'debug-html-report',
-      apply: 'serve',
-      transformIndexHtml(html) {
-        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
-      },
-    },
+    // {
+    //   name: 'debug-html-report',
+    //   apply: 'serve',
+    //   transformIndexHtml(html) {
+    //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
+    //   },
+    // },
   ],
   build: {
     outDir: './dist/client',
   },
   optimizeDeps: {
-    include: [
-      'vue',
-    ],
+    include: ['vue', '@vue/test-utils'],
+  },
+  test: {
+    browser: {
+      name: 'chromium',
+      provider: 'playwright',
+    },
   },
 }
 

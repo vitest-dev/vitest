@@ -2,6 +2,7 @@ import antfu, { GLOB_SRC } from '@antfu/eslint-config'
 
 export default antfu(
   {
+    vue: true,
     // Disable tests rules because we need to test with various setup
     test: false,
     // This replaces the old `.gitignore`
@@ -13,14 +14,17 @@ export default antfu(
       '**/assets/**',
       '**/*.timestamp-*',
       'test/core/src/self',
-      'test/wasm-modules/src/wasm-bindgen-no-cyclic',
+      'test/cache/cache/.vitest-base/results.json',
+      'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
+      'test/workspaces-browser/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
+      'packages/browser/**/esm-client-injector.js',
     ],
   },
   {
@@ -38,8 +42,11 @@ export default antfu(
           singleline: { delimiter: 'semi' },
         },
       ],
-
+      // let TypeScript handle this
+      'no-undef': 'off',
       'ts/no-invalid-this': 'off',
+      'eslint-comments/no-unlimited-disable': 'off',
+      'curly': ['error', 'all'],
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
@@ -98,7 +105,7 @@ export default antfu(
     files: [
       `docs/${GLOB_SRC}`,
       `packages/web-worker/${GLOB_SRC}`,
-      `test/web-worker/${GLOB_SRC}`,
+      `test/core/${GLOB_SRC}`,
     ],
     rules: {
       'no-restricted-globals': 'off',

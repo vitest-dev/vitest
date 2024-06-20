@@ -13,6 +13,7 @@ export type * from './worker'
 export type * from './general'
 export type * from './coverage'
 export type * from './benchmark'
+export type { CancelReason } from '@vitest/runner'
 export type { DiffOptions } from '@vitest/utils/diff'
 export type {
   MockedFunction,
@@ -23,6 +24,7 @@ export type {
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+export type { BrowserUI } from './ui'
 
 export type {
   ExpectStatic,

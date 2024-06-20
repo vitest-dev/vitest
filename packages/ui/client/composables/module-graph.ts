@@ -1,4 +1,10 @@
-import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
+import type {
+  Graph,
+  GraphConfig,
+  GraphController,
+  GraphLink,
+  GraphNode,
+} from 'd3-graph-controller'
 import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
 import type { ModuleGraphData } from 'vitest'
 
@@ -6,7 +12,11 @@ export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>
 export type ModuleLink = GraphLink<ModuleType, ModuleNode>
 export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
-export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
+export type ModuleGraphController = GraphController<
+  ModuleType,
+  ModuleNode,
+  ModuleLink
+>
 export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
 
 export interface ModuleLabelItem {
@@ -17,7 +27,9 @@ export interface ModuleLabelItem {
   finished: boolean
 }
 
-export function calcExternalLabels(labels: ModuleLabelItem[]): Map<string, string> {
+export function calcExternalLabels(
+  labels: ModuleLabelItem[],
+): Map<string, string> {
   const result: Map<string, string> = new Map()
   const splitMap: Map<string, number[]> = new Map()
   const firsts: number[] = []
@@ -62,16 +74,18 @@ export function calcExternalLabels(labels: ModuleLabelItem[]): Map<string, strin
     })
     splitMap.clear()
     firsts.length = 0
-    if (finishedCount === labels.length)
+    if (finishedCount === labels.length) {
       break
+    }
   }
   return result
 }
 
 export function createModuleLabelItem(module: string): ModuleLabelItem {
   let raw = module
-  if (raw.includes('/node_modules/'))
+  if (raw.includes('/node_modules/')) {
     raw = module.split(/\/node_modules\//g).pop()!
+  }
   const splits = raw.split(/\//g)
   return {
     raw,
@@ -83,7 +97,9 @@ export function createModuleLabelItem(module: string): ModuleLabelItem {
 }
 
 function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
-  const labels: ModuleLabelItem[] = modules.map(module => createModuleLabelItem(module))
+  const labels: ModuleLabelItem[] = modules.map(module =>
+    createModuleLabelItem(module),
+  )
   const map = calcExternalLabels(labels)
   return labels.map(({ raw, id }) => {
     return defineNode<ModuleType, ModuleNode>({
@@ -114,28 +130,39 @@ function defineInlineModuleNode(module: string, isRoot: boolean): ModuleNode {
   })
 }
 
-export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefined): ModuleGraph {
-  if (!data)
+export function getModuleGraph(
+  data: ModuleGraphData,
+  rootPath: string | undefined,
+): ModuleGraph {
+  if (!data) {
     return defineGraph({})
+  }
 
   const externalizedNodes = defineExternalModuleNodes(data.externalized)
-  const inlinedNodes = data.inlined.map(module => defineInlineModuleNode(module, module === rootPath)) ?? []
+  const inlinedNodes
+    = data.inlined.map(module =>
+      defineInlineModuleNode(module, module === rootPath),
+    ) ?? []
   const nodes = [...externalizedNodes, ...inlinedNodes]
   const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
-  const links = Object
-    .entries(data.graph)
-    .flatMap(([module, deps]) => deps.map((dep) => {
-      const source = nodeMap[module]
-      const target = nodeMap[dep]
-      if (source === undefined || target === undefined)
-        return undefined
+  const links = Object.entries(data.graph).flatMap(
+    ([module, deps]) =>
+      deps
+        .map((dep) => {
+          const source = nodeMap[module]
+          const target = nodeMap[dep]
+          if (source === undefined || target === undefined) {
+            return undefined
+          }
 
-      return defineLink({
-        source,
-        target,
-        color: 'var(--color-link)',
-        label: false,
-      })
-    }).filter(link => link !== undefined) as ModuleLink[])
+          return defineLink({
+            source,
+            target,
+            color: 'var(--color-link)',
+            label: false,
+          })
+        })
+        .filter(link => link !== undefined) as ModuleLink[],
+  )
   return defineGraph({ nodes, links })
 }

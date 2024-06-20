@@ -123,8 +123,6 @@ test('image snapshot', () => {
 })
 ```
 
-You can learn more in the [`examples/image-snapshot`](https://github.com/vitest-dev/vitest/blob/main/examples/image-snapshot) example.
-
 ## Custom Serializer
 
 You can add your own logic to alter how your snapshots are serialized. Like Jest, Vitest has default serializers for built-in JavaScript types, HTML elements, ImmutableJS and for React elements.

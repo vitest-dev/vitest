@@ -8,10 +8,6 @@ Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-c
 
 ## Coverage Providers
 
-:::tip
-Since Vitest v0.22.0
-:::
-
 Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 
 You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
@@ -220,7 +216,7 @@ To see all configurable options for coverage, see the [coverage Config Reference
 
 ## Vitest UI
 
-Since Vitest 0.31.0, you can check your coverage report in [Vitest UI](/guide/ui).
+You can check your coverage report in [Vitest UI](/guide/ui).
 
 Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
 - enable `coverage.enabled=true` in your configuration or run Vitest with `--coverage.enabled=true` flag

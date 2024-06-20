@@ -12,15 +12,22 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
   const rerunTriggered = new WeakMap<WorkspaceProject, boolean>()
 
-  async function onParseEnd(project: WorkspaceProject, { files, sourceErrors }: TypecheckResults) {
+  async function onParseEnd(
+    project: WorkspaceProject,
+    { files, sourceErrors }: TypecheckResults,
+  ) {
     const checker = project.typechecker!
 
     await ctx.report('onTaskUpdate', checker.getTestPacks())
 
-    if (!project.config.typecheck.ignoreSourceErrors)
-      sourceErrors.forEach(error => ctx.state.catchError(error, 'Unhandled Source Error'))
+    if (!project.config.typecheck.ignoreSourceErrors) {
+      sourceErrors.forEach(error =>
+        ctx.state.catchError(error, 'Unhandled Source Error'),
+      )
+    }
 
-    const processError = !hasFailed(files) && !sourceErrors.length && checker.getExitCode()
+    const processError
+      = !hasFailed(files) && !sourceErrors.length && checker.getExitCode()
     if (processError) {
       const error = new Error(checker.getOutput())
       error.stack = ''
@@ -41,10 +48,14 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  async function createWorkspaceTypechecker(project: WorkspaceProject, files: string[]) {
+  async function createWorkspaceTypechecker(
+    project: WorkspaceProject,
+    files: string[],
+  ) {
     const checker = project.typechecker ?? new Typechecker(project)
-    if (project.typechecker)
+    if (project.typechecker) {
       return checker
+    }
 
     project.typechecker = checker
     checker.setFiles(files)
@@ -61,7 +72,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
       if (!ctx.runningPromise) {
         ctx.state.clearErrors()
-        await ctx.report('onWatcherRerun', files, 'File change detected. Triggering rerun.')
+        await ctx.report(
+          'onWatcherRerun',
+          files,
+          'File change detected. Triggering rerun.',
+        )
       }
 
       await checker.collectTests()
@@ -117,7 +132,9 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     name: 'typescript',
     runTests,
     async close() {
-      const promises = ctx.projects.map(project => project.typechecker?.stop())
+      const promises = ctx.projects.map(project =>
+        project.typechecker?.stop(),
+      )
       await Promise.all(promises)
     },
   }

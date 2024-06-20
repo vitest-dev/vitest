@@ -1,5 +1,2 @@
 export * from '@vitest/utils'
-
-export function loadSourceMapUtils() {
-  return import('@vitest/utils/source-map')
-}
+export * from '@vitest/utils/source-map'

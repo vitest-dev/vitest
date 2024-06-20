@@ -15,15 +15,8 @@ const configFileContent = readFileSync(configFile, 'utf-8')
 const forceTriggerFile = 'fixtures/force-watch/trigger.js'
 const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
 
-const cliArgs = ['--root', 'fixtures', '--watch']
+const options = { root: 'fixtures', watch: true }
 const cleanups: (() => void)[] = []
-
-async function runVitestCli(...args: string[]) {
-  const vitest = await testUtils.runVitestCli(...args)
-  if (args.includes('--watch'))
-    vitest.resetOutput()
-  return vitest
-}
 
 function editFile(fileContent: string) {
   return `// Modified by file-watching.test.ts
@@ -41,11 +34,12 @@ afterEach(() => {
 })
 
 // TODO: Fix flakiness and enable on CI
-if (process.env.GITHUB_ACTIONS)
+if (process.env.GITHUB_ACTIONS) {
   test.only('skip tests on CI', () => {})
+}
 
 test('editing source file triggers re-run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
@@ -55,7 +49,7 @@ test('editing source file triggers re-run', async () => {
 })
 
 test('editing file that was imported with a query reruns suite', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   testUtils.editFile(
     testUtils.resolvePath(import.meta.url, '../fixtures/42.txt'),
@@ -67,7 +61,7 @@ test('editing file that was imported with a query reruns suite', async () => {
 })
 
 test('editing force rerun trigger reruns all tests', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   writeFileSync(forceTriggerFile, editFile(forceTriggerFileContent), 'utf8')
 
@@ -79,7 +73,7 @@ test('editing force rerun trigger reruns all tests', async () => {
 })
 
 test('editing test file triggers re-run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   writeFileSync(testFile, editFile(testFileContent), 'utf8')
 
@@ -89,17 +83,16 @@ test('editing test file triggers re-run', async () => {
 })
 
 test('editing config file triggers re-run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   writeFileSync(configFile, editFile(configFileContent), 'utf8')
 
-  await vitest.waitForStdout('New code running')
   await vitest.waitForStdout('Restarting due to config changes')
   await vitest.waitForStdout('2 passed')
 })
 
 test('editing config file reloads new changes', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest({ ...options, reporters: 'none' })
 
   writeFileSync(configFile, configFileContent.replace('reporters: \'verbose\'', 'reporters: \'tap\''), 'utf8')
 
@@ -108,7 +101,7 @@ test('editing config file reloads new changes', async () => {
 })
 
 test('adding a new test file triggers re-run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await testUtils.runVitest(options)
 
   const testFile = 'fixtures/new-dynamic.test.ts'
   const testFileContent = `
@@ -129,20 +122,18 @@ test("dynamic test case", () => {
 
 test('editing source file generates new test report to file system', async () => {
   const report = 'fixtures/test-results/junit.xml'
-  if (existsSync(report))
+  if (existsSync(report)) {
     rmSync(report)
+  }
 
   // Test report should not be present before test run
   expect(existsSync(report)).toBe(false)
 
-  const vitest = await runVitestCli(
-    ...cliArgs,
-    '--reporter',
-    'verbose',
-    '--reporter',
-    'junit',
-    '--output-file',
-    'test-results/junit.xml',
+  const { vitest } = await testUtils.runVitest({
+    ...options,
+    reporters: ['verbose', 'junit'],
+    outputFile: './test-results/junit.xml',
+  },
   )
 
   // Test report should be generated on initial test run
@@ -152,6 +143,7 @@ test('editing source file generates new test report to file system', async () =>
   rmSync(report)
   expect(existsSync(report)).toBe(false)
 
+  vitest.resetOutput()
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
   await vitest.waitForStdout('JUNIT report written')
@@ -160,8 +152,15 @@ test('editing source file generates new test report to file system', async () =>
 })
 
 describe('browser', () => {
-  test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', async () => {
-    const vitest = await runVitestCli(...cliArgs, '--browser.enabled', '--browser.headless', '--browser.name=chrome')
+  test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', { retry: 3 }, async () => {
+    const { vitest } = await testUtils.runVitest({
+      ...options,
+      browser: {
+        name: 'chrome',
+        enabled: true,
+        headless: true,
+      },
+    })
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
@@ -170,5 +169,5 @@ describe('browser', () => {
     await vitest.waitForStdout('1 passed')
 
     vitest.write('q')
-  }, { retry: 3 })
+  })
 })

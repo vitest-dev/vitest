@@ -55,6 +55,7 @@ If you prefer to write scripts that don't need to be passed into Vite Node, you 
 Simply add `#!/usr/bin/env vite-node --script` at the top of your file:
 
 _file.ts_
+
 ```ts
 #!/usr/bin/env vite-node --script
 
@@ -62,11 +63,13 @@ console.log('argv:', process.argv.slice(2))
 ```
 
 And make the file executable:
+
 ```sh
 chmod +x ./file.ts
 ```
 
 Now, you can run the file without passing it into Vite Node:
+
 ```sh
 $ ./file.ts hello
 argv: [ 'hello' ]
@@ -145,7 +148,7 @@ const server = new ViteNodeServer(viteServer, {
   debug: {
     dumpModules: true,
     loadDumppedModules: true,
-  }
+  },
 })
 ```
 
@@ -163,7 +166,7 @@ Or programmatically:
 import { ViteNodeRunner } from 'vite-node/client'
 
 const runner = new ViteNodeRunner({
-  debug: true
+  debug: true,
 })
 ```
 

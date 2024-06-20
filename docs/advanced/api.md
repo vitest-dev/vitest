@@ -76,3 +76,45 @@ Benchmark mode calls `bench` functions and throws an error, when it encounters `
 ### start
 
 You can start running tests or benchmarks with `start` method. You can pass an array of strings to filter test files.
+
+### `provide`
+
+Vitest exposes `provide` method which is a shorthand for `vitest.getCoreWorkspaceProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
+
+To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+
+```ts
+import { inject } from 'vitest'
+const port = inject('wsPort') // 3000
+```
+
+For better type safety, we encourage you to augment the type of `ProvidedContext`:
+
+```ts
+import { createVitest } from 'vitest/node'
+
+const vitest = await createVitest('test', {
+  watch: false,
+})
+vitest.provide('wsPort', 3000)
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
+
+::: warning
+Technically, `provide` is a method of `WorkspaceProject`, so it is limited to the specific project. However, all projects inherit the values from the core project which makes `vitest.provide` universal way of passing down values to tests.
+:::
+
+::: tip
+This method is also available to [global setup files](/config/#globalsetup) for cases where you don't want to use the public API:
+
+```js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+```
+:::
