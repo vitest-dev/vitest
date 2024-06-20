@@ -83,7 +83,7 @@ export default () =>
       })],
     },
     {
-      input: './src/client/jest-dom.ts',
+      input: './src/client/tester/jest-dom.ts',
       output: {
         file: './jest-dom.d.ts',
         format: 'esm',
