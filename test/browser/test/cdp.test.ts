@@ -1,10 +1,10 @@
 import { cdp, server } from '@vitest/browser/context'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
-describe.skipIf(server.provider !== 'playwright' || server.browser !== 'chromium')('cdp in chromium browsers', () => {
+describe.runIf(
+  server.provider === 'playwright' && server.browser === 'chromium',
+)('cdp in chromium browsers', () => {
   it('cdp sends events correctly', async () => {
-    const div = document.createElement('div')
-    document.body.appendChild(div)
     const messageAdded = vi.fn()
 
     cdp().on('Console.messageAdded', messageAdded)
@@ -43,5 +43,30 @@ describe.skipIf(server.provider !== 'playwright' || server.browser !== 'chromium
       text: 'some text',
     })
     expect(input).toHaveValue('asome text')
+  })
+
+  it('click events are fired correctly', async () => {
+    const clickEvent = vi.fn()
+    document.body.addEventListener('click', clickEvent)
+
+    const parent = window.top
+    const iframePosition = parent.document.querySelector('iframe').getBoundingClientRect()
+
+    await cdp().send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x: iframePosition.x + 10,
+      y: iframePosition.y + 10,
+      button: 'left',
+      clickCount: 1,
+    })
+    await cdp().send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x: iframePosition.x + 10,
+      y: iframePosition.y + 10,
+      button: 'left',
+      clickCount: 1,
+    })
+
+    expect(clickEvent).toHaveBeenCalledOnce()
   })
 })
