@@ -129,7 +129,7 @@ export interface MockContext<T extends Procedure> {
    *   },
    * ]
    */
-  settledResults: MockSettledResult<Awaited<TReturns>>[]
+  settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    */
@@ -422,7 +422,7 @@ function enhanceSpy<T extends Procedure>(
 
   const state = tinyspy.getInternalState(spy)
 
-  const mockContext: MockContext<TArgs, TReturns> = {
+  const mockContext: MockContext<T> = {
     get calls() {
       return state.calls
     },
