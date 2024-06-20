@@ -17,6 +17,10 @@ export function isTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomT
   return node.type === 'test' || node.type === 'custom'
 }
 
+export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
+  return node.mode === 'run' && (node.type === 'test' || node.type === 'custom')
+}
+
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
 }
