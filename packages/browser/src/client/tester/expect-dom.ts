@@ -4,7 +4,7 @@ import { expect } from 'vitest'
 
 export async function setupExpectDom() {
   expect.extend(matchers)
-  expect.dom = <T extends Element>(element: T, options?: ExpectPollOptions) => {
+  expect.element = <T extends Element>(element: T, options?: ExpectPollOptions) => {
     return expect.poll(() => element, options)
   }
 }

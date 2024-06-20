@@ -11,7 +11,7 @@ describe('dom related activity', () => {
     document.body.appendChild(wrapper)
     const div = createNode()
     wrapper.appendChild(div)
-    await expect.dom(div).toHaveTextContent('Hello World!')
+    await expect.element(div).toHaveTextContent('Hello World!')
     const screenshotPath = await page.screenshot({
       element: wrapper,
     })
