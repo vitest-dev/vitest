@@ -1,6 +1,6 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig } from 'vitest'
+import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
@@ -25,8 +25,8 @@ export const client = (function createVitestClient() {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
-        onTaskUpdate() {
-          explorerTree.resumeRun()
+        onTaskUpdate(packs: TaskResultPack[]) {
+          explorerTree.resumeRun(packs)
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {

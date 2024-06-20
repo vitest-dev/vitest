@@ -1,4 +1,4 @@
-import type { File } from '@vitest/runner'
+import type { File, TaskResultPack } from '@vitest/runner'
 import {
   filter,
   search,
@@ -9,7 +9,7 @@ import type {
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { collectTestsTotalData, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
@@ -27,6 +27,7 @@ export class ExplorerTree {
       expanded: true,
       tasks: [],
     },
+    public pendingTasks = new Map<string, Set<string>>(),
     public nodes = new Map<string, UITaskTreeNode>(),
     public summary = reactive<CollectorInfo>({
       files: 0,
@@ -88,7 +89,8 @@ export class ExplorerTree {
     this.collect(true, false)
   }
 
-  resumeRun() {
+  resumeRun(packs: TaskResultPack[]) {
+    preparePendingTasks(packs)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true

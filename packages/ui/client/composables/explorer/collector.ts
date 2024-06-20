@@ -1,21 +1,12 @@
-import type { Custom, File, Task, Test } from '@vitest/runner'
+import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
 import { isAtomTest } from '@vitest/runner/utils'
 import type { Arrayable } from '@vitest/utils'
 import { toArray } from '@vitest/utils'
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type {
-  CollectFilteredTests,
-  CollectorInfo,
-  Filter,
-  FilteredTests,
-} from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
-import {
-  createOrUpdateFileNode,
-  createOrUpdateNodeTask,
-  createOrUpdateSuiteTask,
-} from '~/composables/explorer/utils'
+import { createOrUpdateFileNode, createOrUpdateNodeTask, createOrUpdateSuiteTask } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer/index'
@@ -40,6 +31,27 @@ export function runLoadFiles(
   })
 }
 
+export function preparePendingTasks(packs: TaskResultPack[]) {
+  queueMicrotask(() => {
+    const pending = explorerTree.pendingTasks
+    const idMap = client.state.idMap
+    for (const pack of packs) {
+      const result = pack[1]
+      if (result) {
+        const task = idMap.get(pack[0])
+        if (task) {
+          let file = pending.get(task.file.id)
+          if (!file) {
+            file = new Set()
+            pending.set(task.file.id, file)
+          }
+          file.add(task.id)
+        }
+      }
+    }
+  })
+}
+
 export function runCollect(
   start: boolean,
   end: boolean,
@@ -51,6 +63,7 @@ export function runCollect(
     resetCollectorInfo(summary)
   }
 
+  /* OLD CODE
   queueMicrotask(() => {
     const rootTasks = explorerTree.root.tasks
     // collect remote children
@@ -68,6 +81,31 @@ export function runCollect(
       }
 
       createOrUpdateEntry(file.tasks)
+    }
+  })
+*/
+
+  /*
+   * This new logic will only traverse files with pending TaskResultPack.
+   */
+  queueMicrotask(() => {
+    const rootTasks = explorerTree.root.tasks
+    const updatedFiles = new Map(explorerTree.pendingTasks.entries())
+    explorerTree.pendingTasks.clear()
+    const idMap = client.state.idMap
+    // collect remote children
+    for (let i = 0; i < rootTasks.length; i++) {
+      const fileNode = rootTasks[i]
+      const file = findById(fileNode.id)
+      if (!file) {
+        continue
+      }
+      const entries = updatedFiles.get(file.id)
+      if (!entries) {
+        continue
+      }
+      createOrUpdateFileNode(file, !start)
+      createOrUpdateEntry(Array.from(entries).map(id => idMap.get(id)).filter(Boolean) as Task[])
     }
   })
 
