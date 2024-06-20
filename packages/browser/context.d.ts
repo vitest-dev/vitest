@@ -19,6 +19,14 @@ export interface FsOptions {
   flag?: string | number
 }
 
+export interface CDPSession {
+  established(): Promise<void>
+  on(event: string, listener: (payload: any) => void): void
+  once(event: string, listener: (payload: any) => void): void
+  off(event: string, listener: (payload: any) => void): void
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+}
+
 export interface ScreenshotOptions {
   element?: Element
   /**
@@ -242,3 +250,4 @@ export interface BrowserPage {
 }
 
 export const page: BrowserPage
+export const cdp: () => CDPSession
