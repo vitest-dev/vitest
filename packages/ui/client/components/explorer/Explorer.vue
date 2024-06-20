@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
+import { hideAllPoppers } from 'floating-vue'
 
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
@@ -118,7 +119,7 @@ useResizeObserver(testExplorerRef, (entries) => {
         <FilterStatus v-model="filter.onlyTests" label="Only Tests" />
       </div>
     </div>
-    <div class="scrolls" flex-auto py-1>
+    <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
       <DetailsPanel>
         <template #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
