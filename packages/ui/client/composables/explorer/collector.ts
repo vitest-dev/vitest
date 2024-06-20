@@ -63,49 +63,13 @@ export function runCollect(
     resetCollectorInfo(summary)
   }
 
-  /* OLD CODE
+  const collect = !start
   queueMicrotask(() => {
-    const rootTasks = explorerTree.root.tasks
-    // collect remote children
-    for (let i = 0; i < rootTasks.length; i++) {
-      const fileNode = rootTasks[i]
-      const file = findById(fileNode.id)
-      if (!file) {
-        continue
-      }
-
-      createOrUpdateFileNode(file, !start)
-      const tasks = file.tasks
-      if (!tasks?.length) {
-        continue
-      }
-
-      createOrUpdateEntry(file.tasks)
+    if (end) {
+      traverseFiles(collect)
     }
-  })
-*/
-
-  /*
-   * This new logic will only traverse files with pending TaskResultPack.
-   */
-  queueMicrotask(() => {
-    const rootTasks = explorerTree.root.tasks
-    const updatedFiles = new Map(explorerTree.pendingTasks.entries())
-    explorerTree.pendingTasks.clear()
-    const idMap = client.state.idMap
-    // collect remote children
-    for (let i = 0; i < rootTasks.length; i++) {
-      const fileNode = rootTasks[i]
-      const file = findById(fileNode.id)
-      if (!file) {
-        continue
-      }
-      const entries = updatedFiles.get(file.id)
-      if (!entries) {
-        continue
-      }
-      createOrUpdateFileNode(file, !start)
-      createOrUpdateEntry(Array.from(entries).map(id => idMap.get(id)).filter(Boolean) as Task[])
+    else {
+      traverseReceivedFiles(collect)
     }
   })
 
@@ -125,6 +89,47 @@ export function runCollect(
   queueMicrotask(() => {
     doRunFilter(search, filter, end)
   })
+}
+
+function traverseFiles(collect: boolean) {
+  const rootTasks = explorerTree.root.tasks
+  // collect remote children
+  for (let i = 0; i < rootTasks.length; i++) {
+    const fileNode = rootTasks[i]
+    const file = findById(fileNode.id)
+    if (!file) {
+      continue
+    }
+
+    createOrUpdateFileNode(file, collect)
+    const tasks = file.tasks
+    if (!tasks?.length) {
+      continue
+    }
+
+    createOrUpdateEntry(file.tasks)
+  }
+}
+
+function traverseReceivedFiles(collect: boolean) {
+  const rootTasks = explorerTree.root.tasks
+  const updatedFiles = new Map(explorerTree.pendingTasks.entries())
+  explorerTree.pendingTasks.clear()
+  const idMap = client.state.idMap
+  // collect remote children
+  for (let i = 0; i < rootTasks.length; i++) {
+    const fileNode = rootTasks[i]
+    const file = findById(fileNode.id)
+    if (!file) {
+      continue
+    }
+    const entries = updatedFiles.get(file.id)
+    if (!entries) {
+      continue
+    }
+    createOrUpdateFileNode(file, collect)
+    createOrUpdateEntry(Array.from(entries).map(id => idMap.get(id)).filter(Boolean) as Task[])
+  }
 }
 
 function doRunFilter(
