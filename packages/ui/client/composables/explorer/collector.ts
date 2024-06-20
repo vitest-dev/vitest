@@ -180,7 +180,7 @@ function doRunFilter(
   // initialize the explorer
   if (!initialized.value) {
     queueMicrotask(() => {
-      if (uiFiles.value.length || end) {
+      if (uiEntries.value.length || end) {
         initialized.value = true
       }
     })
