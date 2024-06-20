@@ -1,8 +1,10 @@
 import type { WorkerGlobalState } from 'vitest'
 import { parse } from 'flatted'
 import { getBrowserState } from '../utils'
+import type { BrowserRPC } from '../client'
 
 const config = getBrowserState().config
+const contextId = getBrowserState().contextId
 
 const providedContext = parse(getBrowserState().providedContext)
 
@@ -44,3 +46,71 @@ const state: WorkerGlobalState = {
 globalThis.__vitest_browser__ = true
 // @ts-expect-error not typed global
 globalThis.__vitest_worker__ = state
+
+getBrowserState().cdp = createCdp()
+
+function rpc() {
+  return state.rpc as any as BrowserRPC
+}
+
+function createCdp() {
+  const listenersMap = new WeakMap<Function, string>()
+
+  function getId(listener: Function) {
+    const id = listenersMap.get(listener) || crypto.randomUUID()
+    listenersMap.set(listener, id)
+    return id
+  }
+
+  const listeners: Record<string, Function[]> = {}
+
+  const error = (err: unknown) => {
+    window.dispatchEvent(new ErrorEvent('error', { error: err }))
+  }
+
+  const cdp = {
+    send(method: string, params?: Record<string, any>) {
+      return rpc().sendCdpEvent(contextId, method, params)
+    },
+    on(event: string, listener: (payload: any) => void) {
+      const listenerId = getId(listener)
+      listeners[event] = listeners[event] || []
+      listeners[event].push(listener)
+      rpc().trackCdpEvent(contextId, 'on', event, listenerId).catch(error)
+      return cdp
+    },
+    once(event: string, listener: (payload: any) => void) {
+      const listenerId = getId(listener)
+      const handler = (data: any) => {
+        listener(data)
+        cdp.off(event, listener)
+      }
+      listeners[event] = listeners[event] || []
+      listeners[event].push(handler)
+      rpc().trackCdpEvent(contextId, 'once', event, listenerId).catch(error)
+      return cdp
+    },
+    off(event: string, listener: (payload: any) => void) {
+      const listenerId = getId(listener)
+      if (listeners[event]) {
+        listeners[event] = listeners[event].filter(l => l !== listener)
+      }
+      rpc().trackCdpEvent(contextId, 'off', event, listenerId).catch(error)
+      return cdp
+    },
+    emit(event: string, payload: unknown) {
+      if (listeners[event]) {
+        listeners[event].forEach((l) => {
+          try {
+            l(payload)
+          }
+          catch (err) {
+            error(err)
+          }
+        })
+      }
+    },
+  }
+
+  return cdp
+}

@@ -37,6 +37,14 @@ export interface UITaskTreeNode extends TaskTreeNode {
   duration?: number
 }
 
+export interface TestTreeNode extends UITaskTreeNode {
+  type: 'test'
+}
+
+export interface CustomTestTreeNode extends UITaskTreeNode {
+  type: 'custom'
+}
+
 export interface ParentTreeNode extends UITaskTreeNode {
   children: Set<string>
   tasks: UITaskTreeNode[]
