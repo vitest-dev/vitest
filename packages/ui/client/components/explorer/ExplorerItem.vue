@@ -6,11 +6,13 @@ import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
+import { search } from '~/composables/explorer/state'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
   taskId,
   indent,
+  name,
   duration,
   current,
   opened,
@@ -93,6 +95,18 @@ const gridStyles = computed(() => {
     entries.map(() => '1rem').join(' ')
   } ${gridColumns.join(' ')};`
 })
+
+const highlightRegex = computed(() => {
+  const searchString = search.value.toLowerCase()
+  return searchString.length ? new RegExp(`(${searchString})`, 'gi') : null
+})
+
+const highlighted = computed(() => {
+  const regex = highlightRegex.value
+  return regex
+    ? name.replace(regex, match => `<span class="highlight">${match}</span>`)
+    : name
+})
 </script>
 
 <template>
@@ -126,7 +140,7 @@ const gridStyles = computed(() => {
         <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
           [{{ projectName }}]
         </span>
-        {{ name }}
+        <span v-html="highlighted" />
       </span>
       <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
         {{ duration > 0 ? duration : '< 1' }}ms
@@ -171,7 +185,6 @@ const gridStyles = computed(() => {
 .test-actions {
   display: none;
 }
-
 .item-wrapper:hover .test-actions,
 .item-wrapper[data-current="true"] .test-actions {
   display: flex;
