@@ -69,9 +69,6 @@ function createCdp() {
   }
 
   const cdp = {
-    async established() {
-      await rpc().cdpEstablished(contextId)
-    },
     send(method: string, params: Record<string, any>) {
       return rpc().sendCdpEvent(contextId, method, params)
     },

@@ -20,7 +20,6 @@ export interface FsOptions {
 }
 
 export interface CDPSession {
-  established(): Promise<void>
   on(event: string, listener: (payload: any) => void): void
   once(event: string, listener: (payload: any) => void): void
   off(event: string, listener: (payload: any) => void): void

@@ -44,7 +44,6 @@ export interface WebSocketBrowserHandlers {
   // cdp
   sendCdpEvent: (contextId: string, event: string, payload: Record<string, unknown>) => unknown
   trackCdpEvent: (contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
-  cdpEstablished: (contextId: string) => Promise<void>
 }
 
 export interface WebSocketEvents

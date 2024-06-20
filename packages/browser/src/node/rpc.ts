@@ -193,9 +193,6 @@ export function setupBrowserRpc(
           const cdp = await server.ensureCDPHandler(contextId, sessionId)
           cdp[type](event, listenerId)
         },
-        async cdpEstablished(contextId: string) {
-          await server.ensureCDPHandler(contextId, sessionId)
-        },
       },
       {
         post: msg => ws.send(msg),
