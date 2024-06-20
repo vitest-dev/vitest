@@ -6,9 +6,14 @@ import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
-import { createOrUpdateFileNode, createOrUpdateNodeTask, createOrUpdateSuiteTask } from '~/composables/explorer/utils'
+import {
+  createOrUpdateFileNode,
+  createOrUpdateNodeTask,
+  createOrUpdateSuiteTask,
+  isTodoTestNodeRunning,
+} from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
-import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
+import { openedTreeItems, treeFilter, uiEntries, uiFiles } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer/index'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 
@@ -91,6 +96,25 @@ export function runCollect(
   })
 }
 
+function* collectTodoTestsMode() {
+  yield * uiEntries.value.filter(isTodoTestNodeRunning)
+}
+
+function updateTodoTestsMode() {
+  const idMap = client.state.idMap
+  let task: Task | undefined
+  for (const test of collectTodoTestsMode()) {
+    // lookup the parent
+    task = idMap.get(test.parentId)
+    if (task && isSuite(task) && task.mode === 'todo') {
+      task = idMap.get(test.id)
+      if (task) {
+        task.mode = 'todo'
+      }
+    }
+  }
+}
+
 function traverseFiles(collect: boolean) {
   const rootTasks = explorerTree.root.tasks
   // collect remote children
@@ -146,7 +170,7 @@ function doRunFilter(
 
   // refresh explorer
   queueMicrotask(() => {
-    runFilter(search, filter)
+    refreshExplorer(search, filter, end)
   })
 
   if (applyExpandNodes) {
@@ -158,8 +182,16 @@ function doRunFilter(
       }
     })
     // refresh explorer
-    queueMicrotask(() => runFilter(search, filter))
+    queueMicrotask(() => {
+      refreshExplorer(search, filter, end)
+    })
   }
+}
+
+function refreshExplorer(search: string, filter: Filter, end: boolean) {
+  runFilter(search, filter)
+  // update only at the end
+  end && updateTodoTestsMode()
 }
 
 function createOrUpdateEntry(tasks: Task[]) {
