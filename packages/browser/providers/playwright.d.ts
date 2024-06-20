@@ -5,6 +5,7 @@ import type {
   LaunchOptions,
   Page,
 } from 'playwright'
+import '../matchers.js'
 
 declare module 'vitest/node' {
   interface BrowserProviderOptions {
