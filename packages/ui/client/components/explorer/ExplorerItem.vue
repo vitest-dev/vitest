@@ -132,7 +132,7 @@ const highlighted = computed(() => {
     <div v-if="type === 'file' || type === 'suite'" w-4>
       <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
-    <StatusIcon :task="task" w-4 />
+    <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>
