@@ -363,7 +363,9 @@ interface Constructable {
   new (...args: any[]): any
 }
 
-export type MockedClass<T extends Constructable> = MockInstance<(...args: ConstructorParameters<T>) => InstanceType<T>> & {
+export type MockedClass<T extends Constructable> = MockInstance<
+  (...args: ConstructorParameters<T>) => InstanceType<T>
+> & {
   prototype: T extends { prototype: any } ? Mocked<T['prototype']> : never
 } & T
 
