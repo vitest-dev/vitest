@@ -378,17 +378,21 @@ export function isMockFunction(fn: any): fn is MockInstance {
 export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
-  accessType: 'get',
+  accessType: 'get'
 ): MockInstance<() => T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
-  accessType: 'set',
+  accessType: 'set'
 ): MockInstance<(arg: T[G]) => void>
-export function spyOn<T, M extends (Classes<Required<T>> | Methods<Required<T>>)>(
+export function spyOn<T, M extends Classes<Required<T>> | Methods<Required<T>>>(
   obj: T,
-  methodName: M,
-): Required<T>[M] extends ({ new (...args: infer A): infer R }) | ((...args: infer A) => infer R) ? MockInstance<(...args: A) => R> : never
+  methodName: M
+): Required<T>[M] extends
+| { new (...args: infer A): infer R }
+| ((...args: infer A) => infer R)
+  ? MockInstance<(...args: A) => R>
+  : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
