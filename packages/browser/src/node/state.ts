@@ -1,12 +1,14 @@
 import { createDefer } from '@vitest/utils'
 import type { BrowserServerStateContext, BrowserServerState as IBrowserServerState } from 'vitest/node'
 import type { WebSocketBrowserRPC } from './types'
+import type { BrowserServerCDPHandler } from './cdp'
 
 export class BrowserServerState implements IBrowserServerState {
-  public orchestrators = new Map<string, WebSocketBrowserRPC>()
-  public testers = new Map<string, WebSocketBrowserRPC>()
+  public readonly orchestrators = new Map<string, WebSocketBrowserRPC>()
+  public readonly testers = new Map<string, WebSocketBrowserRPC>()
+  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
 
-  private contexts = new Map<string, BrowserServerStateContext >()
+  private contexts = new Map<string, BrowserServerStateContext>()
 
   getContext(contextId: string) {
     return this.contexts.get(contextId)
@@ -23,5 +25,9 @@ export class BrowserServerState implements IBrowserServerState {
       reject: defer.reject,
     })
     return defer
+  }
+
+  async removeCDPHandler(sessionId: string) {
+    this.cdps.delete(sessionId)
   }
 }

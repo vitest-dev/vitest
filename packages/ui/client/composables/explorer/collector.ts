@@ -6,13 +6,18 @@ import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
-import { createOrUpdateFileNode, createOrUpdateNodeTask, createOrUpdateSuiteTask } from '~/composables/explorer/utils'
+import {
+  createOrUpdateFileNode,
+  createOrUpdateNodeTask,
+  createOrUpdateSuiteTask,
+  isRunningTestNode,
+} from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import {
   initialized,
   openedTreeItems,
   treeFilter,
-  uiFiles,
+ uiEntries, uiFiles,
 } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer/index'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
@@ -96,6 +101,25 @@ export function runCollect(
   })
 }
 
+function* collectRunningTodoTests() {
+  yield * uiEntries.value.filter(isRunningTestNode)
+}
+
+function updateRunningTodoTests() {
+  const idMap = client.state.idMap
+  let task: Task | undefined
+  for (const test of collectRunningTodoTests()) {
+    // lookup the parent
+    task = idMap.get(test.parentId)
+    if (task && isSuite(task) && task.mode === 'todo') {
+      task = idMap.get(test.id)
+      if (task) {
+        task.mode = 'todo'
+      }
+    }
+  }
+}
+
 function traverseFiles(collect: boolean) {
   const rootTasks = explorerTree.root.tasks
   // collect remote children
@@ -149,7 +173,7 @@ function doRunFilter(
 
   // refresh explorer
   queueMicrotask(() => {
-    runFilter(search, filter)
+    refreshExplorer(search, filter, end)
   })
 
   // initialize the explorer
@@ -170,8 +194,16 @@ function doRunFilter(
       }
     })
     // refresh explorer
-    queueMicrotask(() => runFilter(search, filter))
+    queueMicrotask(() => {
+      refreshExplorer(search, filter, end)
+    })
   }
+}
+
+function refreshExplorer(search: string, filter: Filter, end: boolean) {
+  runFilter(search, filter)
+  // update only at the end
+  end && updateRunningTodoTests()
 }
 
 function createOrUpdateEntry(tasks: Task[]) {

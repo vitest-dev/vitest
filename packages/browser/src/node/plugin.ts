@@ -182,7 +182,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         if (rawId.startsWith('/__virtual_vitest__')) {
           const url = new URL(rawId, 'http://localhost')
           if (!url.searchParams.has('id')) {
-            throw new TypeError(`Invalid virtual module id: ${rawId}, requires "id" query.`)
+            return
           }
 
           const id = decodeURIComponent(url.searchParams.get('id')!)
