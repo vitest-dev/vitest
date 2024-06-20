@@ -176,11 +176,11 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:resolve-virtual',
-      async resolveId(rawId, importer) {
+      async resolveId(rawId) {
         if (rawId.startsWith('/__virtual_vitest__')) {
           const url = new URL(rawId, 'http://localhost')
           if (!url.searchParams.has('id')) {
-            throw new TypeError(`Invalid virtual module id: ${rawId}, requires "id" query. Imported from ${importer}`)
+            return
           }
 
           const id = decodeURIComponent(url.searchParams.get('id')!)
