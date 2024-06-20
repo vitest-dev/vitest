@@ -10,7 +10,7 @@ export function isTestNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'test' || node.type === 'custom'
 }
 
-export function isTodoTestNodeRunning(node: UITaskTreeNode): node is FileTreeNode {
+export function isRunningTestNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.mode === 'run' && (node.type === 'test' || node.type === 'custom')
 }
 

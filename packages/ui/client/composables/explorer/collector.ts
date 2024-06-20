@@ -10,7 +10,7 @@ import {
   createOrUpdateFileNode,
   createOrUpdateNodeTask,
   createOrUpdateSuiteTask,
-  isTodoTestNodeRunning,
+  isRunningTestNode,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { openedTreeItems, treeFilter, uiEntries, uiFiles } from '~/composables/explorer/state'
@@ -96,14 +96,14 @@ export function runCollect(
   })
 }
 
-function* collectTodoTestsMode() {
-  yield * uiEntries.value.filter(isTodoTestNodeRunning)
+function* collectRunningTodoTests() {
+  yield * uiEntries.value.filter(isRunningTestNode)
 }
 
-function updateTodoTestsMode() {
+function updateRunningTodoTests() {
   const idMap = client.state.idMap
   let task: Task | undefined
-  for (const test of collectTodoTestsMode()) {
+  for (const test of collectRunningTodoTests()) {
     // lookup the parent
     task = idMap.get(test.parentId)
     if (task && isSuite(task) && task.mode === 'todo') {
@@ -191,7 +191,7 @@ function doRunFilter(
 function refreshExplorer(search: string, filter: Filter, end: boolean) {
   runFilter(search, filter)
   // update only at the end
-  end && updateTodoTestsMode()
+  end && updateRunningTodoTests()
 }
 
 function createOrUpdateEntry(tasks: Task[]) {
