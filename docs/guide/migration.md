@@ -324,12 +324,10 @@ export default defineConfig({
 Vitest doesn't have an equivalent to `jest` namespace, so you will need to import types directly from `vitest`:
 
 ```ts
-let fn: jest.Mock<string, [string]> // [!code --]
+let fn: jest.Mock<(name: string) => number> // [!code --]
 import type { Mock } from 'vitest' // [!code ++]
-let fn: Mock<[string], string> // [!code ++]
+let fn: Mock<(name: string) => number> // [!code ++]
 ```
-
-Also, Vitest has `Args` type as a first argument instead of `Returns`, as you can see in diff.
 
 ### Timers
 
