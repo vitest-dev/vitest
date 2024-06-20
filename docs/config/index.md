@@ -2285,6 +2285,8 @@ The `location` property has `column` and `line` values that correspond to the `t
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.
+
+This option is enabled by default in [Vitest UI](/guide/ui).
 :::
 
 ### snapshotEnvironment {#snapshotEnvironment}

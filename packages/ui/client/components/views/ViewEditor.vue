@@ -4,6 +4,7 @@ import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '~/composables/error'
 import { client } from '~/composables/client'
+import { codemirrorRef } from '~/composables/codemirror'
 
 const props = defineProps<{
   file?: File
@@ -56,11 +57,11 @@ function clearListeners() {
 }
 
 useResizeObserver(editor, () => {
-  cm.value?.refresh()
+  codemirrorRef.value?.refresh()
 })
 
 function codemirrorChanges() {
-  draft.value = serverCode.value !== cm.value!.getValue()
+  draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
 watch(
@@ -105,8 +106,8 @@ function createErrorElement(e: ErrorWithDiff) {
   }
   div.appendChild(span)
   listeners.push([span, el, () => destroyTooltip(span)])
-  handles.push(cm.value!.addLineClass(stack.line - 1, 'wrap', 'bg-red-500/10'))
-  widgets.push(cm.value!.addLineWidget(stack.line - 1, div))
+  handles.push(codemirrorRef.value!.addLineClass(stack.line - 1, 'wrap', 'bg-red-500/10'))
+  widgets.push(codemirrorRef.value!.addLineWidget(stack.line - 1, div))
 }
 
 watch(
@@ -120,7 +121,7 @@ watch(
     setTimeout(() => {
       clearListeners()
       widgets.forEach(widget => widget.clear())
-      handles.forEach(h => cm.value?.removeLineClass(h, 'wrap'))
+      handles.forEach(h => codemirrorRef.value?.removeLineClass(h, 'wrap'))
       widgets.length = 0
       handles.length = 0
 

@@ -9,6 +9,7 @@ import { activeFileId } from '~/composables/params'
 import { useSearch } from '~/composables/explorer/search'
 
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import { config } from '~/composables/client'
 
 defineOptions({ inheritAttrs: false })
 
@@ -20,6 +21,8 @@ const emit = defineEmits<{
   (event: 'item-click', files?: File[]): void
   (event: 'run', files?: File[]): void
 }>()
+
+const includeTaskLocation = computed(() => config.value.includeTaskLocation)
 
 const searchBox = ref<HTMLInputElement | undefined>()
 
@@ -197,6 +200,7 @@ useResizeObserver(testExplorerRef, (entries) => {
           >
             <template #default="{ item }">
               <ExplorerItem
+                class="h-28px m-0 p-0"
                 :task-id="item.id"
                 :expandable="item.expandable"
                 :type="item.type"
@@ -209,7 +213,7 @@ useResizeObserver(testExplorerRef, (entries) => {
                 :state="item.state"
                 :duration="item.duration"
                 :opened="item.expanded"
-                class="h-28px m-0 p-0"
+                :disable-task-location="!includeTaskLocation"
                 :class="activeFileId === item.id ? 'bg-active' : ''"
                 :on-item-click="onItemClick"
               />
