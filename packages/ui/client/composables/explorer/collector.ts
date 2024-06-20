@@ -17,7 +17,8 @@ import {
   initialized,
   openedTreeItems,
   treeFilter,
- uiEntries, uiFiles,
+  uiEntries,
+  uiFiles,
 } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer/index'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
