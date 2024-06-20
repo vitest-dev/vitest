@@ -2,7 +2,7 @@ import actualCreate from 'zustand'
 import { vi } from 'vitest'
 
 // when creating a store, we get its initial state, create a reset function and add it in the set
-const create = vi.fn((createState) => {
+const create = vi.fn((createState: any) => {
   const store = actualCreate(createState)
   return store
 })

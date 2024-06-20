@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 it(createVitest, async () => {
-  const onFinished = vi.fn()
+  const onFinished = vi.fn<any>()
   const ctx = await createVitest('test', {
     watch: false,
     root: 'fixtures/create-vitest',
