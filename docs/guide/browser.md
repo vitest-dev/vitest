@@ -79,7 +79,7 @@ export default defineConfig({
 })
 ```
 
-If you did not use Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
+If you have not used Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
 
 ::: code-group
 ```ts [vue]
@@ -148,7 +148,7 @@ export default defineConfig({
 `react` doesn't require a plugin to work, but `preact` requires [extra configuration](https://preactjs.com/guide/v10/getting-started/#create-a-vite-powered-preact-app) to make aliases work.
 :::
 
-If you need to run some tests using Node.js based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
+If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
 
 ```ts
 // vitest.workspace.ts
@@ -968,12 +968,12 @@ Browser Mode is framework agnostic so it doesn't provide any method to render yo
 We recommend using `testing-library` packages depending on your framework:
 
 - [`@testing-library/dom`](https://testing-library.com/docs/dom-testing-library/intro) if you don't use a framework
-- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) to render [Vue](https://vuejs.org) components
-- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [Svelte](https://svelte.dev) components
-- [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [React](https://react.dev) components
-- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [Preact](https://preactjs.com) components
-- [`@testing-library/solid`](https://testing-library.com/docs/solid-testing-library/intro) to render [Solid](https://www.solidjs.com) components
-- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [Marko](https://markojs.com) components
+- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) to render [vue](https://vuejs.org) components
+- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [svelte](https://svelte.dev) components
+- [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [react](https://react.dev) components
+- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
+- [`@testing-library/solid`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
+- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
 
 ::: warning
 `testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](#interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
