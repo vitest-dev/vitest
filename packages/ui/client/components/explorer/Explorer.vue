@@ -193,7 +193,6 @@ useResizeObserver(testExplorerRef, (entries) => {
             :item-size="28"
             :items="uiEntries"
             :buffer="100"
-            :update-interval="100"
           >
             <template #default="{ item }">
               <ExplorerItem
