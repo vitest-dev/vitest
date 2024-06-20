@@ -12,6 +12,7 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from 'pretty-format'
+import { deepClone, isObjectContaining } from '../helpers'
 import { getType } from './getType'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
@@ -185,6 +186,18 @@ function getFormatOptions(
   }
 }
 
+function replaceDiffData(a: any, b: any, expected?: string) {
+  if (isObjectContaining(expected)) {
+    Object.keys(b).forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(a.sample, key)) {
+        a.sample[key] = b[key]
+      }
+    })
+  }
+
+  return { replacedA: a, replacedB: b }
+}
+
 function getObjectsDifference(
   a: Record<string, any>,
   b: Record<string, any>,
@@ -197,6 +210,21 @@ function getObjectsDifference(
 
   if (aCompare === bCompare) {
     return getCommonMessage(NO_DIFF_MESSAGE, options)
+  }
+  else if (options?.expected) {
+    const clonedA = deepClone(a, { forceWritable: true })
+    const clonedB = deepClone(b, { forceWritable: true })
+    const { replacedA, replacedB } = replaceDiffData(clonedA, clonedB, options?.expected)
+    const aDisplay = prettyFormat(replacedA, formatOptions)
+    const bDisplay = prettyFormat(replacedB, formatOptions)
+
+    return diffLinesUnified2(
+      aDisplay.split('\n'),
+      bDisplay.split('\n'),
+      aCompare.split('\n'),
+      bCompare.split('\n'),
+      options,
+    )
   }
   else {
     const aDisplay = prettyFormat(a, formatOptions)

@@ -266,3 +266,9 @@ export function isNegativeNaN(val: number) {
 
   return isNegative
 }
+
+export function isObjectContaining(expected: any): boolean {
+  return typeof expected === 'object'
+    && typeof expected.asymmetricMatch === 'function'
+    && (expected.toString() === 'ObjectContaining' || expected.toString() === 'ObjectNotContaining')
+}
