@@ -85,10 +85,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     }
   }, { flush: 'post' })
 
-  onMounted(() => {
-    nextTick(() => (initialized.value = true))
-  })
-
   return {
     initialized,
     filter,

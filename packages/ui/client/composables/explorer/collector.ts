@@ -8,7 +8,12 @@ import { client, findById } from '~/composables/client'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
 import { createOrUpdateFileNode, createOrUpdateNodeTask, createOrUpdateSuiteTask } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
-import { openedTreeItems, treeFilter, uiFiles } from '~/composables/explorer/state'
+import {
+  initialized,
+  openedTreeItems,
+  treeFilter,
+  uiFiles,
+} from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer/index'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 
@@ -137,8 +142,6 @@ function doRunFilter(
   filter: Filter,
   end = false,
 ) {
-  // refresh explorer
-
   const expandAll = treeFilter.value.expandAll
   const resetExpandAll = expandAll !== true
   const ids = new Set(openedTreeItems.value)
@@ -148,6 +151,15 @@ function doRunFilter(
   queueMicrotask(() => {
     runFilter(search, filter)
   })
+
+  // initialize the explorer
+  if (!initialized.value) {
+    queueMicrotask(() => {
+      if (uiFiles.value.length || end) {
+        initialized.value = true
+      }
+    })
+  }
 
   if (applyExpandNodes) {
     // expand all nodes
