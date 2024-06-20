@@ -14,9 +14,11 @@ export interface BrowserRunnerState {
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
   config: ResolvedConfig
+  provider: string
   viteConfig: {
     root: string
   }
+  providedContext: string
   type: 'tester' | 'orchestrator'
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
@@ -25,7 +27,18 @@ export interface BrowserRunnerState {
   createTesters?: (files: string[]) => Promise<void>
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function getBrowserState(): BrowserRunnerState {
   // @ts-expect-error not typed global
   return window.__vitest_browser_runner__
+}
+
+/* @__NO_SIDE_EFFECTS__ */
+export function getWorkerState(): WorkerGlobalState {
+  // @ts-expect-error not typed global
+  const state = window.__vitest_worker__
+  if (!state) {
+    throw new Error('Worker state is not found. This is an issue with Vitest. Please, open an issue.')
+  }
+  return state
 }

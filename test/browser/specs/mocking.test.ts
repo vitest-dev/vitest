@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect, onTestFailed, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test.each([true, false])('mocking works correctly - isolated %s', async (isolate) => {
@@ -6,6 +6,12 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
     root: 'fixtures/mocking',
     isolate,
   })
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
   expect(result.stderr).toBe('')
   expect(result.stdout).toContain('automocked.test.ts')
   expect(result.stdout).toContain('mocked-__mocks__.test.ts')

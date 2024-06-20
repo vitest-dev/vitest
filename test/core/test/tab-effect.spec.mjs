@@ -1,4 +1,3 @@
-/* eslint-disable eslint-comments/no-unlimited-disable */
 /* eslint-disable */
 import { expect, test, vi } from 'vitest'
 import { join as joinPath } from 'node:path'

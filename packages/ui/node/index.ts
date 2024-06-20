@@ -4,6 +4,7 @@ import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
 import type { Vitest } from 'vitest'
+import { toArray } from '@vitest/utils'
 
 export default (ctx: Vitest): Plugin => {
   return <Plugin>{
@@ -50,7 +51,7 @@ function resolveCoverageFolder(ctx: Vitest) {
   const options = ctx.config
   const htmlReporter
     = options.api?.port && options.coverage?.enabled
-      ? options.coverage.reporter.find((reporter) => {
+      ? toArray(options.coverage.reporter).find((reporter) => {
         if (typeof reporter === 'string') {
           return reporter === 'html'
         }

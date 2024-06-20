@@ -15,6 +15,7 @@ const external = [
   /^@?vitest(\/|$)/,
   'worker_threads',
   'node:worker_threads',
+  'vite',
 ]
 
 const plugins = [
@@ -45,7 +46,7 @@ export default () =>
       plugins,
     },
     {
-      input: './src/client/context.ts',
+      input: './src/client/tester/context.ts',
       output: {
         file: 'dist/context.js',
         format: 'esm',
@@ -57,12 +58,43 @@ export default () =>
       ],
     },
     {
+      input: './src/client/tester/state.ts',
+      output: {
+        file: 'dist/state.js',
+        format: 'esm',
+      },
+      plugins: [
+        esbuild({
+          target: 'node18',
+          minifyWhitespace: true,
+        }),
+        resolve(),
+      ],
+    },
+    {
       input: input.index,
       output: {
         file: 'dist/index.d.ts',
         format: 'esm',
       },
       external,
-      plugins: [dts()],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
+    },
+    {
+      input: './src/client/tester/jest-dom.ts',
+      output: {
+        file: './jest-dom.d.ts',
+        format: 'esm',
+      },
+      external: [],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
     },
   ])

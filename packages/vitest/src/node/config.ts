@@ -701,6 +701,9 @@ export function resolveConfig(
 
   resolved.testTransformMode ??= {}
 
+  resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
+  resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
+
   return resolved
 }
 
