@@ -75,7 +75,6 @@ function clearResults(useFiles: File[]) {
     delete f.result
     getTasks(f).forEach((i) => {
       delete i.result
-      // explorerTree.removeTaskDone(i.id)
       if (map.has(i.id)) {
         const task = map.get(i.id)
         if (task) {

@@ -40,10 +40,6 @@ export function createOrUpdateFileNode(
   let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
-    // if (explorerTree.isUITaskDone(fileNode)) {
-    //   return
-    // }
-
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = file.result?.duration
@@ -83,10 +79,6 @@ export function createOrUpdateFileNode(
       createOrUpdateNode(file.id, file.tasks[i], true)
     }
   }
-
-  // if (isTaskDone(file)) {
-  //   explorerTree.taskDone(fileNode.id)
-  // }
 }
 
 export function createOrUpdateSuiteTask(
@@ -94,7 +86,7 @@ export function createOrUpdateSuiteTask(
   all: boolean,
 ) {
   const node = explorerTree.nodes.get(id)
-  if (!node || !isParentNode(node)/* || explorerTree.isUITaskDone(node) */) {
+  if (!node || !isParentNode(node)) {
     return
   }
 
@@ -107,16 +99,12 @@ export function createOrUpdateSuiteTask(
   // update the node
   createOrUpdateNode(node.parentId, task, all && task.tasks.length > 0)
 
-  // if (isTaskDone(task)) {
-  //   explorerTree.taskDone(task.id)
-  // }
-
   return [node, task] as const
 }
 
 export function createOrUpdateNodeTask(id: string) {
   const node = explorerTree.nodes.get(id)
-  if (!node/* || explorerTree.isUITaskDone(node) */) {
+  if (!node) {
     return
   }
 
@@ -143,9 +131,6 @@ export function createOrUpdateNode(
         node.tasks.push(taskNode)
         node.children.add(task.id)
       }
-      /* if (explorerTree.isUITaskDone(taskNode)) {
-        return
-      } */
 
       taskNode.mode = task.mode
       taskNode.duration = task.result?.duration
@@ -197,9 +182,5 @@ export function createOrUpdateNode(
         createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
     }
-
-    /* if (isTaskDone(task)) {
-      explorerTree.taskDone(task.id)
-    } */
   }
 }
