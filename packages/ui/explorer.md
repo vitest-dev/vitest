@@ -39,14 +39,14 @@ The logic is implemented in [runCollect](client/composables/explorer/collector.t
 
 Search and filtering are quite simple, we only need to apply some logic to the task name, mode and result state.
 The complexity lies in filtering the nodes of the entire tree. We need to traverse the tree several times:
-- from top to bottom to collect all tasks matching the search/filter criteria (full tree): `visitNodes` function.
+- from top to bottom to collect all tasks matching the search/filter criteria (full tree): `visitNodes` function in the [filter](client/composables/explorer/filter.ts) module.
 - from bottom to top to collect tasks and parent tasks containing children matching the search/filter criteria (full tree): `filterParents` in the [filter](client/composables/explorer/filter.ts) module.
 - from top to bottom to collect parent tasks for expanded files tasks, or parent tasks whose parent tasks are expanded (filtered tree from the previous step).
 - from top to button to collect tasks that are files, or the parent task included in the previous list and expanded (filtered tree).
 
 The main logic is the `expandNode` function in the [filter](client/composables/explorer/filter.ts) module, will apply previous logic.
 
-The search logic can be found in [filter](client/composables/explorer/filter.ts) module, and the `requestAnimationFrame` loop configured in the [tree class](client/composables/explorer/tree.ts), `collect` function.
+The search logic can be found in [filter](client/composables/explorer/filter.ts) module.
 
 ### Collapsing nodes
 
