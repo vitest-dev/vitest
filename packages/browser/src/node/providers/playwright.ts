@@ -130,6 +130,29 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await browserPage.goto(url)
   }
 
+  async getCDPSession(contextId: string) {
+    const page = this.getPage(contextId)
+    const cdp = await page.context().newCDPSession(page)
+    return {
+      async send(method: string, params: any) {
+        const result = await cdp.send(method as 'DOM.querySelector', params)
+        return result as unknown
+      },
+      on(event: string, listener: (...args: any[]) => void) {
+        cdp.on(event as 'Accessibility.loadComplete', listener)
+      },
+      off(event: string, listener: (...args: any[]) => void) {
+        cdp.off(event as 'Accessibility.loadComplete', listener)
+      },
+      once(event: string, listener: (...args: any[]) => void) {
+        cdp.once(event as 'Accessibility.loadComplete', listener)
+      },
+      detach() {
+        return cdp.detach()
+      },
+    }
+  }
+
   async close() {
     const browser = this.browser
     this.browser = null

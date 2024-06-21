@@ -78,8 +78,23 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins: [dts({
-        respectExternal: true,
-      })],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
+    },
+    {
+      input: './src/client/tester/jest-dom.ts',
+      output: {
+        file: './jest-dom.d.ts',
+        format: 'esm',
+      },
+      external: [],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
     },
   ])

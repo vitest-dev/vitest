@@ -56,6 +56,13 @@ function createClient() {
         }
         getBrowserState().createTesters?.(files)
       },
+      cdpEvent(event: string, payload: unknown) {
+        const cdp = getBrowserState().cdp
+        if (!cdp) {
+          return
+        }
+        cdp.emit(event, payload)
+      },
     },
     {
       post: msg => ctx.ws.send(msg),

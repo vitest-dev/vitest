@@ -407,6 +407,10 @@ browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
 If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
+::: tip
+You can also use [Browser Mode](/guide/browser) to run integration or unit tests in the browser without mocking the environment.
+:::
+
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
 
@@ -896,7 +900,7 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-### fileParallelism {#fileparallelism}
+### fileParallelism<NonProjectOption /> {#fileparallelism}
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -908,13 +912,13 @@ Should all test files run in parallel. Setting this to `false` will override `ma
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
 :::
 
-### maxWorkers {#maxworkers}
+### maxWorkers<NonProjectOption /> {#maxworkers}
 
 - **Type:** `number`
 
 Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
 
-### minWorkers {#minworkers}
+### minWorkers<NonProjectOption /> {#minworkers}
 
 - **Type:** `number`
 

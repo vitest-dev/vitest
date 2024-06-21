@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasFailedSnapshot } from '@vitest/ws-client'
 import {
   browserState,
   client,
@@ -28,6 +29,10 @@ const graphData = computed(() => {
     filepath: c.filepath,
     projectName: c.file.projectName || '',
   }
+})
+
+const failedSnapshot = computed(() => {
+  return current.value && hasFailedSnapshot(current.value)
 })
 
 function open() {
@@ -116,7 +121,7 @@ debouncedWatch(
   >
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <StatusIcon :task="current" />
+        <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
         <div
           v-if="current?.file.projectName"
           font-light

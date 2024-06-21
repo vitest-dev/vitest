@@ -12,6 +12,7 @@ export default antfu(
       '**/bench.json',
       '**/fixtures',
       '**/assets/**',
+      '**/*.d.ts',
       '**/*.timestamp-*',
       'test/core/src/self',
       'test/cache/cache/.vitest-base/results.json',

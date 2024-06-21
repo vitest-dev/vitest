@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import type {
   BrowserProvider,
   BrowserScript,
+  CDPSession,
   BrowserServer as IBrowserServer,
   Vite,
   WorkspaceProject,
@@ -12,6 +13,7 @@ import { slash } from '@vitest/utils'
 import type { ResolvedConfig } from 'vitest'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
+import { BrowserServerCDPHandler } from './cdp'
 
 export class BrowserServer implements IBrowserServer {
   public faviconUrl: string
@@ -135,6 +137,41 @@ export class BrowserServer implements IBrowserServer {
       browser,
       options: providerOptions,
     })
+  }
+
+  private cdpSessions = new Map<string, Promise<CDPSession>>()
+
+  async ensureCDPHandler(contextId: string, sessionId: string) {
+    const cachedHandler = this.state.cdps.get(sessionId)
+    if (cachedHandler) {
+      return cachedHandler
+    }
+
+    const provider = this.provider
+    if (!provider.getCDPSession) {
+      throw new Error(`CDP is not supported by the provider "${provider.name}".`)
+    }
+
+    const promise = this.cdpSessions.get(sessionId) ?? await (async () => {
+      const promise = provider.getCDPSession!(contextId).finally(() => {
+        this.cdpSessions.delete(sessionId)
+      })
+      this.cdpSessions.set(sessionId, promise)
+      return promise
+    })()
+
+    const session = await promise
+    const rpc = this.state.testers.get(sessionId)
+    if (!rpc) {
+      throw new Error(`Tester RPC "${sessionId}" was not established.`)
+    }
+
+    const handler = new BrowserServerCDPHandler(session, rpc)
+    this.state.cdps.set(
+      sessionId,
+      handler,
+    )
+    return handler
   }
 
   async close() {
