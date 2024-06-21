@@ -33,7 +33,7 @@ The new logic will traverse only the task files in the task result provided in t
 
 The main change in the new logic is about using `requestAnimationFrame` to collect ui updates every 100ms, collecting all changes received in `onTaskUpdate` callback. On every loop, the [uiEntries](client/composables/state.ts) will be recreated with collected changes, the virtual scroller will handle the updates properly.
 
-The logic is implemented in [runCollect](client/composables/explorer/collector.ts) function and the `requestAnimationFrame` loop configured in the [tree class](client/composables/explorer/tree.ts), `collect` function.
+The logic is implemented in [collect](client/composables/explorer/collector.ts) function and the `requestAnimationFrame` loop configured in the [tree class](client/composables/explorer/tree.ts), `runCollect` function.
 
 ### Searching
 
