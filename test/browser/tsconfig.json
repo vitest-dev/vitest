@@ -5,7 +5,10 @@
     "paths": {
       "#src/*": ["./src/*"]
     },
-    "types": ["vite/client"],
+    "types": [
+      "vite/client",
+      "@vitest/browser/providers/playwright"
+    ],
     "esModuleInterop": true
   }
 }

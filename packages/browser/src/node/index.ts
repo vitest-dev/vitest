@@ -32,7 +32,6 @@ export async function createBrowserServer(
     server: {
       hmr: false,
       watch: null,
-      preTransformRequests: false,
     },
     plugins: [
       ...prePlugins,

@@ -4,7 +4,10 @@ import type {
   Frame,
   LaunchOptions,
   Page,
+  CDPSession
 } from 'playwright'
+import { Protocol } from 'playwright-core/types/protocol'
+import '../matchers.js'
 
 declare module 'vitest/node' {
   interface BrowserProviderOptions {
@@ -39,4 +42,23 @@ declare module '@vitest/browser/context' {
   export interface UserEventDragOptions extends UserEventDragAndDropOptions {}
 
   export interface ScreenshotOptions extends PWScreenshotOptions {}
+
+  export interface CDPSession {
+    send<T extends keyof Protocol.CommandParameters>(
+      method: T,
+      params?: Protocol.CommandParameters[T]
+    ): Promise<Protocol.CommandReturnValues[T]>
+    on<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this;
+    once<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this;
+    off<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this;
+  }
 }
