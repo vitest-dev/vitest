@@ -24,7 +24,7 @@ The explorer logic splits the actions in three main parts:
 Whereas collecting and searching are complex operations, expanding/collapsing nodes is a simple operation. Why?:
 - collecting tasks: we need to traverse the full tree to update every test/suite/file in the ui tree: we're collecting `ws-client` messages from the server, and the nodes in the ui must be updated to reflect the state.
 - searching: we need to traverse the full tree to collect every test/suite/file in the tree matching applied search and/or the filter.
-- expanding/collapsing: simple operation that only requires traversing nodes present in the ui switching the `expanded` property (_expanding all nodes requires full searc_).
+- expanding/collapsing: simple operation that only requires traversing nodes present in the ui switching the `expanded` property (_expanding all nodes requires full search_).
 
 ### Collecting tasks
 
