@@ -2,9 +2,9 @@ import { expect, test, vi } from 'vitest'
 import { createTaskCollector } from 'vitest/suite'
 
 test('collector keeps the order of arguments', () => {
-  const fn = vi.fn<any>()
+  const fn = vi.fn()
   const collector = createTaskCollector(fn)
-  const cb = vi.fn<any>()
+  const cb = vi.fn()
   const options = {}
 
   collector('a', cb, options)

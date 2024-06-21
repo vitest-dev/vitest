@@ -46,10 +46,7 @@ describe('testing vi utils', () => {
     expectType<Mock<() => boolean>>(vi.fn<() => boolean>(() => true))
     expectType<() => boolean>(vi.fn(() => true))
 
-    // @ts-expect-error default unkonwn
     expectType<(v: number) => boolean>(vi.fn())
-
-    expectType<(v: number) => boolean>(vi.fn<any>())
   })
 
   test('vi partial mocked', () => {

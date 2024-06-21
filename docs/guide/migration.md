@@ -96,14 +96,6 @@ const mockAdd: Mock<Parameters<typeof add>, ReturnType<typeof add>> = vi.fn() //
 const mockAdd: Mock<typeof add> = vi.fn() // [!code ++]
 ```
 
-Also previously default generic types were `any`. However, they have been changed to `unknown` and thus strict in some cases.
-To maintain the previous loose typing, you can use `vi.fn<any>.`
-
-```ts
-const anyFn = vi.fn() // [!code --]
-const anyFn = vi.fn<any>() // [!code ++]
-```
-
 ## Migrating to Vitest 1.0
 
 <!-- introduction -->
