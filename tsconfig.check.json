@@ -16,6 +16,7 @@
     "./bench/**",
     "./test/typescript/**",
     "./test/browser/**",
+    "**/coverage/fixtures/**",
     "./test/watch/fixtures/**"
   ]
 }
