@@ -121,7 +121,7 @@ useResizeObserver(testExplorerRef, (entries) => {
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
       <DetailsPanel>
-        <template #summary>
+        <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
               FAIL ({{ testsTotal.failed }})
@@ -141,7 +141,7 @@ useResizeObserver(testExplorerRef, (entries) => {
         </template>
         <!-- empty-state -->
         <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
-          <div v-show="initialized" flex="~ col" items-center p="x4 y4" font-light>
+          <div v-if="initialized" flex="~ col" items-center p="x4 y4" font-light>
             <div op30>
               No matched test
             </div>
@@ -185,6 +185,12 @@ useResizeObserver(testExplorerRef, (entries) => {
             >
               Clear All
             </button>
+          </div>
+          <div v-else flex="~ col" items-center p="x4 y4" font-light>
+            <div class="i-carbon:circle-dash animate-spin" />
+            <div op30>
+              Loading...
+            </div>
           </div>
         </template>
         <template v-else>
