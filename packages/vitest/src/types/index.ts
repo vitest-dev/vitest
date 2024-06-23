@@ -18,7 +18,6 @@ export type { DiffOptions } from '@vitest/utils/diff'
 export type {
   MockedFunction,
   MockedObject,
-  SpyInstance,
   MockInstance,
   Mock,
   MockContext,
