@@ -19,7 +19,6 @@ export class ExplorerTree {
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
     private onTaskUpdateCalled: boolean = false,
-    private done = new Set<string>(),
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
       id: 'vitest-root-node',
@@ -52,22 +51,6 @@ export class ExplorerTree {
     // will run runCollect every ~100ms: 1000/10 = 100ms
     // (beware increasing fpsLimit, it can be too much for the browser)
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
-  }
-
-  isUITaskDone(node: UITaskTreeNode) {
-    return this.done.has(node.id)
-  }
-
-  taskDone(id: string) {
-    this.done.add(id)
-  }
-
-  removeTaskDone(id: string) {
-    this.done.delete(id)
-  }
-
-  clearDone() {
-    this.done.clear()
   }
 
   loadFiles(remoteFiles: File[]) {
