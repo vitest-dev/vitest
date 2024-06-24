@@ -260,7 +260,11 @@ async function generateWorkspaceFile(options: {
     `import { defineWorkspace } from 'vitest/config'`,
     '',
     'export default defineWorkspace([',
-    `  ${relativeRoot},`,
+    '  // This will keep running your existing tests.',
+    '  // If you don\'t need to run those in Node.js anymore,',
+    '  // You can safely remove it from the workspace file',
+    '  // Or move the browser test configuration to the config file.',
+    `  '${relativeRoot}',`,
     `  {`,
     `    extends: '${relativeRoot}',`,
     `    test: {`,
@@ -268,11 +272,11 @@ async function generateWorkspaceFile(options: {
     `        enabled: true,`,
     `        name: '${options.browser}',`,
     `        provider: '${options.provider}',`,
-    options.provider !== 'preview' && `        // Docs: ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `        providerOptions: {}`,
+    options.provider !== 'preview' && `        // ${getProviderDocsLink(options.provider)}`,
+    options.provider !== 'preview' && `        providerOptions: {},`,
     `      },`,
-    `    }`,
-    `  }`,
+    `    },`,
+    `  },`,
     `])`,
     '',
   ].filter(c => c != null).join('\n')
@@ -291,19 +295,19 @@ async function generateFrameworkConfigFile(options: {
     : `import ${options.framework} from '${options.frameworkPlugin}'`
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
-    options.frameworkPlugin && frameworkImport,
+    options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
-    options.frameworkPlugin && `  plugins: [${options.framework}()]`,
+    options.frameworkPlugin ? `  plugins: [${options.framework}()],` : null,
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
     `      name: '${options.browser}',`,
     `      provider: '${options.provider}',`,
-    options.provider !== 'preview' && `      // Docs: ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `      providerOptions: {}`,
+    options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
+    options.provider !== 'preview' && `      providerOptions: {},`,
     `    },`,
-    `  }`,
+    `  },`,
     `})`,
     '',
   ].join('\n')
@@ -318,13 +322,13 @@ async function updatePkgJsonScripts(pkgJsonPath: string, vitestScript: string) {
         'test:browser': vitestScript,
       },
     }
-    await writeFile(pkgJsonPath, JSON.stringify(pkg, null, 2))
+    await writeFile(pkgJsonPath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf-8')
   }
   else {
     const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
-    pkg.script = pkg.scripts || {}
+    pkg.scripts = pkg.scripts || {}
     pkg.scripts['test:browser'] = vitestScript
-    await writeFile(pkgJsonPath, JSON.stringify(pkg, null, 2), 'utf-8')
+    await writeFile(pkgJsonPath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf-8')
   }
   log(c.green('✔'), 'Added "test:browser" script to your package.json.')
 }
@@ -367,16 +371,6 @@ async function create() {
     return fail()
   }
 
-  const { nodeTests } = await prompt({
-    type: 'confirm',
-    name: 'nodeTests',
-    message: 'Do you want to keep running some tests in Node.js?',
-  })
-
-  if (nodeTests == null) {
-    return fail()
-  }
-
   const { provider } = await prompt({
     type: 'select',
     name: 'provider',
@@ -410,6 +404,16 @@ async function create() {
     return fail()
   }
 
+  const { nodeTests } = await prompt({
+    type: 'confirm',
+    name: 'nodeTests',
+    message: 'Do you want to keep running some tests in Node.js?',
+  })
+
+  if (nodeTests == null) {
+    return fail()
+  }
+
   const dependenciesToInstall = [
     '@vitest/browser',
     getFrameworkTestPackage(framework),
@@ -438,6 +442,8 @@ async function create() {
 
   let scriptCommand = 'vitest'
 
+  log()
+
   if (rootConfig) {
     let browserWorkspaceFile = resolve(dirname(rootConfig), `vitest.workspace.${lang}`)
     if (existsSync(browserWorkspaceFile)) {
@@ -451,7 +457,7 @@ async function create() {
       provider,
       browser,
     })
-    log(c.green('✔'), 'Created a workspace file for browser tests.')
+    log(c.green('✔'), 'Created a workspace file for browser tests:', c.bold(relative(process.cwd(), browserWorkspaceFile)))
   }
   else {
     const configPath = resolve(process.cwd(), `vitest.config.${lang}`)
@@ -462,7 +468,7 @@ async function create() {
       provider,
       browser,
     })
-    log(c.green('✔'), 'Created a config file for browser tests.')
+    log(c.green('✔'), 'Created a config file for browser tests', c.bold(relative(process.cwd(), configPath)))
   }
 
   if (lang === 'ts') {
@@ -478,14 +484,8 @@ async function create() {
     await execa('npx', ['playwright', 'install', '--with-deps'])
   }
 
+  log()
   log(c.cyan('◼'), 'All done! Run your tests with', c.bold(getRunScript(pkgManager)))
-
-  console.error('result', {
-    provider,
-    lang,
-    framework,
-    browser,
-  })
 }
 
 await create()
