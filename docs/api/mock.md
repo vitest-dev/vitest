@@ -357,7 +357,7 @@ fn.mock.settledResults === [
 
 ## mock.invocationCallOrder
 
-The order of mock's execution. This returns an array of numbers that are shared between all defined mocks.
+This property returns the order of the mock function's execution. It is an array of numbers that are shared between all defined mocks.
 
 ```js
 const fn1 = vi.fn()
@@ -371,9 +371,24 @@ fn1.mock.invocationCallOrder === [1, 3]
 fn2.mock.invocationCallOrder === [2]
 ```
 
+## mock.contexts
+
+This property is an array of `this` values used during each call to the mock function.
+
+```js
+const fn = vi.fn()
+const context = {}
+
+fn.apply(context)
+fn.call(context)
+
+fn.mock.contexts[0] === context
+fn.mock.contexts[1] === context
+```
+
 ## mock.instances
 
-This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
+This property is an array containing all instances that were created when the mock was called with the `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
 
 ::: warning
 If mock was instantiated with `new MyClass()`, then `mock.instances` will be an array with one value:

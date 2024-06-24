@@ -59,6 +59,10 @@ export interface MockContext<T extends Procedure> {
    */
   instances: ReturnType<T>[]
   /**
+   * An array of `this` values that were used during each call to the mock function.
+   */
+  contexts: ThisParameterType<T>[]
+  /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
    * @example
@@ -431,6 +435,7 @@ function enhanceSpy<T extends Procedure>(
   let implementation: T | undefined
 
   let instances: any[] = []
+  let contexts: any[] = []
   let invocations: number[] = []
 
   const state = tinyspy.getInternalState(spy)
@@ -438,6 +443,9 @@ function enhanceSpy<T extends Procedure>(
   const mockContext: MockContext<T> = {
     get calls() {
       return state.calls
+    },
+    get contexts() {
+      return contexts
     },
     get instances() {
       return instances
@@ -469,6 +477,7 @@ function enhanceSpy<T extends Procedure>(
 
   function mockCall(this: unknown, ...args: any) {
     instances.push(this)
+    contexts.push(this)
     invocations.push(++callOrder)
     const impl = implementationChangedTemporarily
       ? implementation!
@@ -490,6 +499,7 @@ function enhanceSpy<T extends Procedure>(
   stub.mockClear = () => {
     state.reset()
     instances = []
+    contexts = []
     invocations = []
     return stub
   }
@@ -584,7 +594,9 @@ function enhanceSpy<T extends Procedure>(
 export function fn<T extends Procedure = Procedure>(
   implementation?: T,
 ): Mock<T> {
-  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
+  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({
+    spy: implementation || function () {} as T,
+  }, 'spy'))
   if (implementation) {
     enhancedSpy.mockImplementation(implementation)
   }
