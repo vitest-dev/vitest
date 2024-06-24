@@ -2283,7 +2283,7 @@ Should `location` property be included when Vitest API receives tasks in [report
 
 The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
 
-This option will be auto enabled if you don't disable it explicitly, and you are running Vitest with:
+This option will be auto-enabled if you don't disable it explicitly, and you are running Vitest with:
 - [Vitest UI](/guide/ui)
 - or using the [Browser Mode](/guide/browser) without [headless](/guide/browser#headless) mode
 
