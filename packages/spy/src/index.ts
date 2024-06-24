@@ -594,7 +594,9 @@ function enhanceSpy<T extends Procedure>(
 export function fn<T extends Procedure = Procedure>(
   implementation?: T,
 ): Mock<T> {
-  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({ spy: implementation || (() => {}) }, 'spy'))
+  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({
+    spy: implementation || function () {} as T,
+  }, 'spy'))
   if (implementation) {
     enhancedSpy.mockImplementation(implementation)
   }
