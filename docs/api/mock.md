@@ -371,6 +371,21 @@ fn1.mock.invocationCallOrder === [1, 3]
 fn2.mock.invocationCallOrder === [2]
 ```
 
+## mock.contexts
+
+This is an array of `this` values that were used during each call to the mock function.
+
+```js
+const fn = vi.fn()
+const context = {}
+
+fn.apply(context)
+fn.call(context)
+
+fn.mock.contexts[0] === context
+fn.mock.contexts[1] === context
+```
+
 ## mock.instances
 
 This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
