@@ -183,7 +183,7 @@ export class Vitest {
     }
   }
 
-  public provide<T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) {
+  public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
     this.getCoreWorkspaceProject().provide(key, value)
   }
 
