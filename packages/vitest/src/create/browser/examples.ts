@@ -51,7 +51,7 @@ defineProps({
 </template>
 `,
   ts: `
-<script setup type="ts">
+<script setup lang="ts">
 defineProps<{
   name: string
 }>()
@@ -88,7 +88,7 @@ const svelteExample = {
 <h1>Hello {name}!</h1>
 `,
   ts: `
-<script>
+<script lang="ts">
   export let name: string
 </script>
 
@@ -132,7 +132,7 @@ import { expect, test } from 'vitest'
 import { render } from '@marko/testing-library'
 import HelloWorld from './HelloWorld.svelte'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = await render(HelloWorld, { name: 'Vitest' })
   const element = getByText('Hello Vitest!')
   expect(element).toBeInTheDocument()

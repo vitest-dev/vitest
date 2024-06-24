@@ -115,7 +115,7 @@ function getFrameworkTestPackage(framework: string) {
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
-      return '@testing-library/solid'
+      return 'solid-testing-library'
     case 'marko':
       return '@marko/testing-library'
   }
