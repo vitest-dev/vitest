@@ -179,6 +179,10 @@ export function createCLI(options: CLIOptions = {}) {
   )
 
   cli
+    .command('init <project>', undefined, options)
+    .action(init)
+
+  cli
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
@@ -266,4 +270,14 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     console.error('\n\n')
     process.exit(1)
   }
+}
+
+async function init(project: string) {
+  if (project !== 'browser') {
+    console.error(new Error('Only the "browser" project is supported. Use "vitest init browser" to create a new project.'))
+    process.exit(1)
+  }
+
+  const { create } = await import('../../create/browser/creator')
+  await create()
 }

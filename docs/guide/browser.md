@@ -8,7 +8,26 @@ This page provides information about the experimental browser mode feature in th
 
 ## Installation
 
-By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
+For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.
+
+::: code-group
+```bash [npm]
+npx vitest init browser
+```
+```bash [yarn]
+yarn exec vitest init browser
+```
+```bash [pnpm]
+pnpx vitest init browser
+```
+```bash [bun]
+bunx vitest init browser
+```
+:::
+
+### Manual Installation
+
+You can also install packages manually. By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
 
 ::: code-group
 ```bash [npm]

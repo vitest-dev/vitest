@@ -9,6 +9,7 @@ import { findUp } from 'find-up'
 import { execa } from 'execa'
 import type { BrowserBuiltinProvider } from '../../types/browser'
 import { configFiles } from '../../constants'
+import { generateExampleFiles } from './examples'
 
 // eslint-disable-next-line no-console
 const log = console.log
@@ -145,7 +146,7 @@ async function updateTsConfig(type: string | undefined | null) {
   }
   const msg = `Add "${c.bold(type)}" to your tsconfig.json "${c.bold('compilerOptions.types')}" field to have better intellisense support.`
   log()
-  log(c.bgYellow(` NOTE `), c.yellow(msg))
+  log(c.yellow('◼'), c.yellow(msg))
 }
 
 function getLanguageOptions(): prompt.Choice[] {
@@ -172,11 +173,8 @@ async function installPackages(pkgManager: string | null, packages: string[]) {
   log(c.cyan('◼'), c.bold('Installing packages...'))
   log(c.cyan('◼'), packages.join(', '))
 
-  // TODO: REMOVE
-  const _test: boolean = false
-  if (_test) {
-    await installPackage(packages, { dev: true, packageManager: pkgManager ?? undefined })
-  }
+  log()
+  await installPackage(packages, { dev: true, packageManager: pkgManager ?? undefined })
 }
 
 function readPkgJson(path: string) {
@@ -348,7 +346,22 @@ function getRunScript(pkgManager: Agent | null) {
   }
 }
 
-async function create() {
+function getPlaywrightRunArgs(pkgManager: Agent | null) {
+  switch (pkgManager) {
+    case 'yarn@berry':
+    case 'yarn':
+      return ['yarn', 'exec']
+    case 'pnpm@6':
+    case 'pnpm':
+      return ['pnpx']
+    case 'bun':
+      return ['bunx']
+    default:
+      return ['npx']
+  }
+}
+
+export async function create() {
   log(c.cyan('◼'), 'This utility will help you set up a browser testing environment.\n')
 
   const pkgJsonPath = resolve(process.cwd(), 'package.json')
@@ -401,16 +414,6 @@ async function create() {
     choices: sort(getFramework(), defaults?.framework),
   })
   if (!framework) {
-    return fail()
-  }
-
-  const { nodeTests } = await prompt({
-    type: 'confirm',
-    name: 'nodeTests',
-    message: 'Do you want to keep running some tests in Node.js?',
-  })
-
-  if (nodeTests == null) {
     return fail()
   }
 
@@ -471,21 +474,31 @@ async function create() {
     log(c.green('✔'), 'Created a config file for browser tests', c.bold(relative(process.cwd(), configPath)))
   }
 
+  log()
+  await updatePkgJsonScripts(pkgJsonPath, scriptCommand)
+
+  if (provider === 'playwright') {
+    log()
+    const [command, ...args] = getPlaywrightRunArgs(pkgManager)
+    const allArgs = [...args, 'playwright', 'install', '--with-deps']
+    log(c.cyan('◼'), `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`)
+    log()
+    await execa(command, allArgs, {
+      stdout: 'inherit',
+      stderr: 'inherit',
+    })
+  }
+
+  // TODO: can we do this ourselved?
   if (lang === 'ts') {
     await updateTsConfig(providerPkg?.types)
   }
 
   log()
-
-  await updatePkgJsonScripts(pkgJsonPath, scriptCommand)
-
-  if (provider === 'playwright') {
-    log()
-    await execa('npx', ['playwright', 'install', '--with-deps'])
-  }
+  const exampleTestFile = await generateExampleFiles(framework, lang)
+  log(c.green('✔'), 'Created example test file in', c.bold(relative(process.cwd(), exampleTestFile)))
+  log(c.dim('  You can safely delete this file once you have written your own tests.'))
 
   log()
   log(c.cyan('◼'), 'All done! Run your tests with', c.bold(getRunScript(pkgManager)))
 }
-
-await create()
