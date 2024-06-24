@@ -26,9 +26,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
-  v8-to-istanbul@9.2.0:
+  v8-to-istanbul@9.3.0:
     hash: 5pdyrbs4i7bdmssok6uzfxxdia
-    path: patches/v8-to-istanbul@9.2.0.patch
+    path: patches/v8-to-istanbul@9.3.0.patch
 
 importers:
 
@@ -613,8 +613,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       v8-to-istanbul:
-        specifier: ^9.2.0
-        version: 9.2.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia)
+        specifier: ^9.3.0
+        version: 9.3.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -4328,13 +4328,6 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.14
-    dev: true
-
-  /@jridgewell/trace-mapping@0.3.20:
-    resolution: {integrity: sha512-R8LcPeWZol2zR8mmH3JeKQ6QRCFb7XgUhV9ZlGhHLGyg4wpPiPZNQOOWhFZhxKw8u//yTbNGI42Bx/3paXEQ+Q==}
-    dependencies:
-      '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
   /@jridgewell/trace-mapping@0.3.23:
@@ -15610,11 +15603,11 @@ packages:
     hasBin: true
     dev: true
 
-  /v8-to-istanbul@9.2.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia):
-    resolution: {integrity: sha512-/EH/sDgxU2eGxajKdwLCDmQ4FWq+kpi3uCmBGpw1xJtnAxEjlD8j8PEiGWpCIMIs3ciNAgH0d3TTJiUkYzyZjA==}
+  /v8-to-istanbul@9.3.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia):
+    resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.20
+      '@jridgewell/trace-mapping': 0.3.25
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
     dev: true
