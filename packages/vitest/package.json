@@ -116,6 +116,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
+    "test-create-cli": "tsx src/create/browser/creator.ts",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {

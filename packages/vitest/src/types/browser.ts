@@ -43,6 +43,8 @@ export interface BrowserProviderModule {
 
 export interface BrowserProviderOptions {}
 
+export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+
 export interface BrowserConfigOptions {
   /**
    * if running tests in the browser should be the default
@@ -61,7 +63,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'preview'
    */
-  provider?: 'webdriverio' | 'playwright' | 'preview' | (string & {})
+  provider?: BrowserBuiltinProvider | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
