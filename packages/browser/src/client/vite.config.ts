@@ -8,6 +8,9 @@ export default defineConfig({
   server: {
     watch: { ignored: ['**/**'] },
   },
+  esbuild: {
+    legalComments: 'inline',
+  },
   build: {
     minify: false,
     outDir: '../../dist/client',
