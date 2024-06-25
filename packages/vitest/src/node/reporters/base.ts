@@ -18,6 +18,7 @@ import {
   hasFailed,
   hasFailedSnapshot,
   isCI,
+  isDeno,
   isNode,
   relativePath,
   toArray,
@@ -75,7 +76,7 @@ export abstract class BaseReporter implements Reporter {
   private _offUnhandledRejection?: () => void
 
   constructor(options: BaseOptions = {}) {
-    this.isTTY = options.isTTY ?? (isNode && process.stdout?.isTTY && !isCI)
+    this.isTTY = options.isTTY ?? ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
     this.registerUnhandledRejection()
   }
 
