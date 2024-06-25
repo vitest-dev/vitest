@@ -417,6 +417,18 @@ export async function create() {
     return fail()
   }
 
+  let installPlaywright = false
+  if (provider === 'playwright') {
+    ;({ installPlaywright } = await prompt({
+      type: 'confirm',
+      name: 'installPlaywright',
+      message: `Install Playwright browsers (can be done manually via 'pnpm exec playwright install')?`,
+    }))
+  }
+  if (installPlaywright == null) {
+    return fail()
+  }
+
   const dependenciesToInstall = [
     '@vitest/browser',
     getFrameworkTestPackage(framework),
@@ -477,7 +489,7 @@ export async function create() {
   log()
   await updatePkgJsonScripts(pkgJsonPath, scriptCommand)
 
-  if (provider === 'playwright') {
+  if (installPlaywright) {
     log()
     const [command, ...args] = getPlaywrightRunArgs(pkgManager)
     const allArgs = [...args, 'playwright', 'install', '--with-deps']
