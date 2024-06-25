@@ -135,6 +135,13 @@ export interface BrowserConfigOptions {
    * @default __screenshots__
    */
   screenshotDirectory?: string
+
+  /**
+   * Should Vitest take screenshots if the test failed
+   * @default !browser.ui
+   */
+  screenshotFailures?: boolean
+
   /**
    * Scripts injected into the tester iframe.
    */

@@ -92,8 +92,8 @@ async function runTests(files: string[]) {
   try {
     preparedData = await prepareTestEnvironment(files)
   }
-  catch (error) {
-    debug('data cannot be loaded because it threw an error')
+  catch (error: any) {
+    debug('data cannot be loaded because it threw an error', error.stack || error.message)
     await client.rpc.onUnhandledError(serializeError(error), 'Preload Error')
     done(files)
     return

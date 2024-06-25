@@ -19,7 +19,7 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/__virtual_vitest__/],
+      external: [/__virtual_vitest__/, '@vitest/browser/context'],
     },
   },
   plugins: [

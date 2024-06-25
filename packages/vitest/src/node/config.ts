@@ -683,6 +683,7 @@ export function resolveConfig(
       resolved.browser.screenshotDirectory,
     )
   }
+  resolved.browser.screenshotFailures ??= !resolved.browser.ui
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414

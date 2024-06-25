@@ -4,6 +4,7 @@ import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
+import { page } from '@vitest/browser/context'
 import { importId } from '../utils'
 import { globalChannel } from '../channel'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
@@ -50,6 +51,12 @@ export function createBrowserRunner(
           rpc().onCancel('test-failure')
           this.onCancel('test-failure')
         }
+      }
+    }
+
+    onTaskFinished = async (task: Task) => {
+      if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
+        await page.screenshot()
       }
     }
 

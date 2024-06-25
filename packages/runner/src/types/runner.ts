@@ -81,6 +81,10 @@ export interface VitestRunner {
     options: { retry: number; repeats: number }
   ) => unknown
   /**
+   * When the task has finished running, but before cleanup hooks are called
+   */
+  onTaskFinished?: (test: Task) => unknown
+  /**
    * Called after result and state are set.
    */
   onAfterRunTask?: (test: Task) => unknown
