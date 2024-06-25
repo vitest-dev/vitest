@@ -139,13 +139,11 @@ export function processError(
     const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(
       clonedActual,
       clonedExpected,
-      undefined,
-      undefined,
-      err,
     )
     err.diff = diff(replacedExpected, replacedActual, {
       ...diffOptions,
       ...err.diffOptions,
+      expected: err.expected,
     })
   }
 
@@ -191,13 +189,6 @@ function isAsymmetricMatcher(data: any) {
   return type === 'Object' && typeof data.asymmetricMatch === 'function'
 }
 
-function isObjectContaining(err: any): boolean {
-  return err
-    && typeof err.expected === 'object'
-    && typeof err.expected.asymmetricMatch === 'function'
-    && (err.expected.toString() === 'ObjectContaining' || err.expected.toString() === 'ObjectNotContaining')
-}
-
 function isReplaceable(obj1: any, obj2: any) {
   const obj1Type = getType(obj1)
   const obj2Type = getType(obj2)
@@ -211,7 +202,6 @@ export function replaceAsymmetricMatcher(
   expected: any,
   actualReplaced = new WeakSet(),
   expectedReplaced = new WeakSet(),
-  err?: any,
 ) {
   if (!isReplaceable(actual, expected)) {
     return { replacedActual: actual, replacedExpected: expected }
@@ -245,15 +235,6 @@ export function replaceAsymmetricMatcher(
       expected[key] = replaced.replacedExpected
     }
   })
-
-  if (isObjectContaining(err)) {
-    getOwnProperties(actual).forEach((key) => {
-      if (!Object.prototype.hasOwnProperty.call(expected.sample, key)) {
-        expected.sample[key] = actual[key]
-      }
-    })
-  }
-
   return {
     replacedActual: actual,
     replacedExpected: expected,

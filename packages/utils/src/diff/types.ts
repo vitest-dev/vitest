@@ -23,6 +23,7 @@ export interface DiffOptions {
   contextLines?: number
   emptyFirstOrLastLinePlaceholder?: string
   expand?: boolean
+  expected?: string
   includeChangeCounts?: boolean
   omitAnnotationLines?: boolean
   patchColor?: DiffOptionsColor
@@ -48,6 +49,7 @@ export interface DiffOptionsNormalized {
   contextLines: number
   emptyFirstOrLastLinePlaceholder: string
   expand: boolean
+  expected: string
   includeChangeCounts: boolean
   omitAnnotationLines: boolean
   patchColor: DiffOptionsColor
