@@ -115,7 +115,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           }
 
           const timeout = setTimeout(() => {
-            const err = new Error(`Cannot find "vitest-iframe" in the page. This is a bug in Vitest, please report it.`)
+            const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`)
             reject(err)
           }, 1000)
           page.on('frameattached', (frame) => {
