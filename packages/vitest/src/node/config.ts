@@ -683,7 +683,20 @@ export function resolveConfig(
       resolved.browser.screenshotDirectory,
     )
   }
-  resolved.browser.screenshotFailures ??= !resolved.browser.ui
+  const isPreview = resolved.browser.provider === 'preview'
+  if (isPreview && resolved.browser.screenshotFailures === true) {
+    console.warn(c.yellow(
+      [
+        `Browser provider "preview" doesn't support screenshots, `,
+        `so "browser.screenshotFailures" option is forcefully disabled. `,
+        `Set "browser.screenshotFailures" to false or remove it from the config to suppress this warning.`,
+      ].join(''),
+    ))
+    resolved.browser.screenshotFailures = false
+  }
+  else {
+    resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
+  }
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
