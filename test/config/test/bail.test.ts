@@ -49,7 +49,7 @@ for (const config of configs) {
   test(
     `should bail with "${JSON.stringify(config)}"`,
     {
-      // retry: config.browser?.enabled ? 3 : 0,
+      retry: config.browser?.enabled ? 3 : 0,
     },
     async () => {
       const isParallel

@@ -2,7 +2,6 @@ import type { ResolvedConfig } from 'vitest'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { channel, client } from './client'
-import { rpcDone } from './tester/rpc'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
 import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from './channel'
@@ -60,8 +59,8 @@ class IframeOrchestrator {
     }
 
     for (const file of testFiles) {
-      debug('run file', file, 'cancelled', this.cancelled, 'threads', process.env.THREADS)
       if (this.cancelled) {
+        done()
         return
       }
 
@@ -228,7 +227,6 @@ getBrowserState().createTesters = async (files) => {
 }
 
 async function done() {
-  await rpcDone()
   await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
 
