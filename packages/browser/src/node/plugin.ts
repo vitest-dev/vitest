@@ -122,17 +122,44 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           define[`import.meta.env.${env}`] = stringValue
         }
 
+        const entries: string[] = [
+          ...browserTestFiles,
+          ...setupFiles,
+          resolve(vitestDist, 'index.js'),
+          resolve(vitestDist, 'browser.js'),
+          resolve(vitestDist, 'runners.js'),
+          resolve(vitestDist, 'utils.js'),
+          ...(project.config.snapshotSerializers || []),
+        ]
+
+        if (project.config.diff) {
+          entries.push(project.config.diff)
+        }
+
+        if (project.ctx.coverageProvider) {
+          const coverage = project.ctx.config.coverage
+          const provider = coverage.provider
+          if (provider === 'v8') {
+            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+            }
+          }
+          else if (provider === 'istanbul') {
+            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+            }
+          }
+          else if (provider) {
+            entries.push(resolve(project.ctx.config.root, coverage.customProviderModule))
+          }
+        }
+
         return {
           define,
           optimizeDeps: {
-            entries: [
-              ...browserTestFiles,
-              ...setupFiles,
-              resolve(vitestDist, 'index.js'),
-              resolve(vitestDist, 'browser.js'),
-              resolve(vitestDist, 'runners.js'),
-              resolve(vitestDist, 'utils.js'),
-            ],
+            entries,
             exclude: [
               'vitest',
               'vitest/utils',
@@ -294,7 +321,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    const _require = createRequire(import.meta.url)
+                    const _require = getRequire()
                     build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
                       // resolve to CJS instead of the browser because the browser version expects a global Vue object
                       const resolved = _require.resolve(args.path, {
@@ -311,6 +338,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
   ]
+}
+
+function tryResolve(path: string, paths: string[]) {
+  try {
+    const _require = getRequire()
+    return _require.resolve(path, { paths })
+  }
+  catch {
+    return undefined
+  }
+}
+
+let _require: NodeRequire
+function getRequire() {
+  if (!_require) {
+    _require = createRequire(import.meta.url)
+  }
+  return _require
 }
 
 function resolveCoverageFolder(project: WorkspaceProject) {

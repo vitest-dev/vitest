@@ -235,6 +235,13 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {
+    resolved.coverage.customProviderModule = resolvePath(
+      resolved.coverage.customProviderModule,
+      resolved.root,
+    )
+  }
+
   resolved.expect ??= {}
 
   resolved.deps ??= {}
