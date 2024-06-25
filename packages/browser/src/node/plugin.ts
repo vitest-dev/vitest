@@ -113,7 +113,17 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           file => getFilePoolName(project, file) === 'browser',
         )
         const setupFiles = toArray(project.config.setupFiles)
+
+        // replace env values - cannot be reassign at runtime
+        const define: Record<string, string> = {}
+        for (const env in (project.config.env || {})) {
+          const stringValue = JSON.stringify(project.config.env[env])
+          define[`process.env.${env}`] = stringValue
+          define[`import.meta.env.${env}`] = stringValue
+        }
+
         return {
+          define,
           optimizeDeps: {
             entries: [
               ...browserTestFiles,
@@ -266,7 +276,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       config() {
         return {
           define: {
-            // testing-library/pract
+            // testing-library/preact
             'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
             // testing-library/react
             'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
