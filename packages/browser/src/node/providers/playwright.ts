@@ -144,6 +144,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
         console.error(
+          '[PW Error]',
           request.resourceType(),
           'request failed for',
           request.url(),
