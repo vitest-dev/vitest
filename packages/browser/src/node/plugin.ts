@@ -151,8 +151,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               entries.push(path)
             }
           }
-          else if (provider) {
-            entries.push(resolve(project.ctx.config.root, coverage.customProviderModule))
+          else if (provider === 'custom' && coverage.customProviderModule) {
+            entries.push(coverage.customProviderModule)
           }
         }
 
