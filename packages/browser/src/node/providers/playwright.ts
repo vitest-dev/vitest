@@ -141,6 +141,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = await context.newPage()
     this.pages.set(contextId, page)
 
+    if (process.env.VITEST_PW_DEBUG) {
+      page.on('requestfailed', (request) => {
+        console.error(
+          '[PW Error]',
+          request.resourceType(),
+          'request failed for',
+          request.url(),
+          'url:',
+          request.failure()?.errorText,
+        )
+      })
+    }
+
     return page
   }
 

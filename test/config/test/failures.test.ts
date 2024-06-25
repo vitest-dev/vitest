@@ -109,7 +109,8 @@ test('version number is printed when coverage provider fails to load', async () 
   })
 
   expect(stdout).toMatch(`RUN  v${version}`)
-  expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from ./non-existing-module.ts')
+  expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from')
+  expect(stderr).toMatch('non-existing-module.ts')
 })
 
 test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {

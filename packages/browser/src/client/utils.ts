@@ -1,8 +1,13 @@
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 
 export async function importId(id: string) {
-  const name = `/@id/${id}`
-  return getBrowserState().wrapModule(() => import(name))
+  const name = `/@id/${id}`.replace(/\\/g, '/')
+  return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
+}
+
+export async function importFs(id: string) {
+  const name = `/@fs/${id}`.replace(/\\/g, '/')
+  return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
 export function getConfig(): ResolvedConfig {

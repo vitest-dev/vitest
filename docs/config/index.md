@@ -1620,6 +1620,20 @@ Should Vitest UI be injected into the page. By default, injects UI iframe during
 
 Default iframe's viewport.
 
+#### browser.screenshotDirectory {#browser-screenshotdirectory}
+
+- **Type:** `string`
+- **Default:** `__snapshots__` in the test file directory
+
+Path to the snapshots directory relative to the `root`.
+
+#### browser.screenshotFailures {#browser-screenshotfailures}
+
+- **Type:** `boolean`
+- **Default:** `!browser.ui`
+
+Should Vitest take screenshots if the test fails.
+
 #### browser.orchestratorScripts {#browser-orchestratorscripts}
 
 - **Type:** `BrowserScript[]`
