@@ -10,7 +10,8 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   options,
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.dragAndDrop(
+    const frame = await context.frame()
+    await frame.dragAndDrop(
       `xpath=${source}`,
       `xpath=${target}`,
       {
