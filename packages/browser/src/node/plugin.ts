@@ -262,9 +262,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     // TODO: remove this when @testing-library/vue supports ESM
     {
-      name: 'vitest:browser:support-vue-testing-library',
+      name: 'vitest:browser:support-testing-library',
       config() {
         return {
+          define: {
+            // testing-library/pract
+            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
+            // testing-library/react
+            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
+            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
+            // testing-library/svelte, testing-library/solid
+            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
+            // testing-library/vue
+            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
+            // dom.debug()
+            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
+          },
           optimizeDeps: {
             esbuildOptions: {
               plugins: [
