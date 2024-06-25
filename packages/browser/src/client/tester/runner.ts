@@ -5,7 +5,7 @@ import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
 import { page } from '@vitest/browser/context'
-import { importId } from '../utils'
+import { importFs } from '../utils'
 import { globalChannel } from '../channel'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { rpc } from './rpc'
@@ -149,7 +149,7 @@ export async function initiateRunner(
     = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>
-      takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+      takeCoverageInsideWorker(config.coverage, { executeId: importFs }),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
@@ -157,7 +157,7 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
-  const executor = { executeId: importId } as VitestExecutor
+  const executor = { executeId: importFs } as VitestExecutor
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor),
     loadSnapshotSerializers(config, executor),
