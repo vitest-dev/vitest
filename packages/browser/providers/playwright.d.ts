@@ -1,6 +1,7 @@
 import type {
   BrowserContext,
   BrowserContextOptions,
+  Frame,
   FrameLocator,
   LaunchOptions,
   Page,
@@ -20,7 +21,8 @@ declare module 'vitest/node' {
 
   export interface BrowserCommandContext {
     page: Page
-    frame: FrameLocator
+    frame(): Promise<Frame>
+    iframe: FrameLocator
     context: BrowserContext
   }
 }

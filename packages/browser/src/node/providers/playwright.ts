@@ -1,7 +1,9 @@
 import type {
   Browser,
+
   BrowserContext,
   BrowserContextOptions,
+  Frame,
   LaunchOptions,
   Page,
 } from 'playwright'
@@ -105,7 +107,24 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       page,
       context: this.contexts.get(contextId)!,
-      get frame() {
+      frame() {
+        return new Promise<Frame>((resolve, reject) => {
+          const frame = page.frame('vitest-iframe')
+          if (frame) {
+            return resolve(frame)
+          }
+
+          const timeout = setTimeout(() => {
+            const err = new Error(`Cannot find "vitest-iframe" in the page. This is a bug in Vitest, please report it.`)
+            reject(err)
+          }, 1000)
+          page.on('frameattached', (frame) => {
+            clearTimeout(timeout)
+            resolve(frame)
+          })
+        })
+      },
+      get iframe() {
         return page.frameLocator('[data-vitest="true"]')!
       },
     }

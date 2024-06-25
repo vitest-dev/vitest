@@ -9,7 +9,7 @@ export const hover: UserEventCommand<UserEvent['hover']> = async (
   options = {},
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.locator(`xpath=${xpath}`).hover({
+    await context.iframe.locator(`xpath=${xpath}`).hover({
       timeout: 1000,
       ...options,
     })
