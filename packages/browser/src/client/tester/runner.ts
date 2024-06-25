@@ -1,10 +1,11 @@
-import type { File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
 import { importId } from '../utils'
+import { globalChannel } from '../channel'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -47,9 +48,14 @@ export function createBrowserRunner(
 
         if (currentFailures >= this.config.bail) {
           rpc().onCancel('test-failure')
-          this.onCancel?.('test-failure')
+          this.onCancel('test-failure')
         }
       }
+    }
+
+    onCancel = (reason: CancelReason) => {
+      super.onCancel?.(reason)
+      globalChannel.postMessage({ type: 'cancel', reason })
     }
 
     onBeforeRunSuite = async (suite: Suite | File) => {
