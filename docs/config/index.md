@@ -1632,7 +1632,7 @@ Path to the snapshots directory relative to the `root`.
 - **Type:** `boolean`
 - **Default:** `!browser.ui`
 
-Should Vitest take screenshots if the test failed.
+Should Vitest take screenshots if the test fails.
 
 #### browser.orchestratorScripts {#browser-orchestratorscripts}
 

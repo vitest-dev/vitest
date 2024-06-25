@@ -137,7 +137,7 @@ export interface BrowserConfigOptions {
   screenshotDirectory?: string
 
   /**
-   * Should Vitest take screenshots if the test failed
+   * Should Vitest take screenshots if the test fails
    * @default !browser.ui
    */
   screenshotFailures?: boolean
