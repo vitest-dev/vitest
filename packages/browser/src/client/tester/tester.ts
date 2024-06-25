@@ -22,58 +22,6 @@ function debug(...args: unknown[]) {
   }
 }
 
-async function tryCall<T>(
-  fn: () => Promise<T>,
-): Promise<T | false | undefined> {
-  try {
-    return await fn()
-  }
-  catch (err: any) {
-    const now = Date.now()
-    // try for 30 seconds
-    const canTry = !reloadStart || now - Number(reloadStart) < 30_000
-    const errorStack = (() => {
-      if (!err) {
-        return null
-      }
-      return err.stack?.includes(err.message)
-        ? err.stack
-        : `${err.message}\n${err.stack}`
-    })()
-    debug(
-      'failed to resolve runner',
-      'trying again:',
-      canTry,
-      'time is',
-      now,
-      'reloadStart is',
-      reloadStart,
-      ':\n',
-      errorStack,
-    )
-    if (!canTry) {
-      const error = serializeError(
-        new Error('Vitest failed to load its runner after 30 seconds.'),
-      )
-      error.cause = serializeError(err)
-
-      await client.rpc.onUnhandledError(error, 'Preload Error')
-      return false
-    }
-
-    if (!reloadStart) {
-      const newUrl = new URL(location.href)
-      newUrl.searchParams.set('__reloadStart', now.toString())
-      debug('set the new url because reload start is not set to', newUrl)
-      location.href = newUrl.toString()
-    }
-    else {
-      debug('reload the iframe because reload start is set', location.href)
-      location.reload()
-    }
-  }
-}
-
 async function prepareTestEnvironment(files: string[]) {
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
@@ -142,18 +90,11 @@ async function runTests(files: string[]) {
 
   // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
   try {
-    preparedData = await tryCall(() => prepareTestEnvironment(files))
+    preparedData = await prepareTestEnvironment(files)
   }
   catch (error) {
     debug('data cannot be loaded because it threw an error')
     await client.rpc.onUnhandledError(serializeError(error), 'Preload Error')
-    done(files)
-    return
-  }
-
-  // cannot load data, finish the test
-  if (preparedData === false) {
-    debug('data cannot be loaded, finishing the test')
     done(files)
     return
   }
