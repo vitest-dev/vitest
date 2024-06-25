@@ -17,6 +17,7 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  VITEST_PW_DEBUG: true
 
 jobs:
   lint:
