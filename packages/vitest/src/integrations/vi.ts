@@ -372,10 +372,13 @@ export interface VitestUtils {
 }
 
 function createVitest(): VitestUtils {
-  const _mocker: VitestMocker
+  let _mockedDate: Date | null = null
+  let _config: null | ResolvedConfig = null
+
+  function _mocker(): VitestMocker {
     // @ts-expect-error injected by vite-nide
-    = typeof __vitest_mocker__ !== 'undefined'
-      // @ts-expect-error injected by vite-nide
+    return typeof __vitest_mocker__ !== 'undefined'
+    // @ts-expect-error injected by vite-nide
       ? __vitest_mocker__
       : new Proxy(
         {},
@@ -388,8 +391,7 @@ function createVitest(): VitestUtils {
           },
         },
       )
-  let _mockedDate: Date | null = null
-  let _config: null | ResolvedConfig = null
+  }
 
   const workerState = getWorkerState()
 
@@ -541,16 +543,16 @@ function createVitest(): VitestUtils {
         )
       }
       const importer = getImporter('mock')
-      _mocker.queueMock(
+      _mocker().queueMock(
         path,
         importer,
         factory
           ? () =>
               factory(() =>
-                _mocker.importActual(
+                _mocker().importActual(
                   path,
                   importer,
-                  _mocker.getMockContext().callstack,
+                  _mocker().getMockContext().callstack,
                 ),
               )
           : undefined,
@@ -564,7 +566,7 @@ function createVitest(): VitestUtils {
           `vi.unmock() expects a string path, but received a ${typeof path}`,
         )
       }
-      _mocker.queueUnmock(path, getImporter('unmock'))
+      _mocker().queueUnmock(path, getImporter('unmock'))
     },
 
     doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
@@ -574,16 +576,16 @@ function createVitest(): VitestUtils {
         )
       }
       const importer = getImporter('doMock')
-      _mocker.queueMock(
+      _mocker().queueMock(
         path,
         importer,
         factory
           ? () =>
               factory(() =>
-                _mocker.importActual(
+                _mocker().importActual(
                   path,
                   importer,
-                  _mocker.getMockContext().callstack,
+                  _mocker().getMockContext().callstack,
                 ),
               )
           : undefined,
@@ -597,19 +599,19 @@ function createVitest(): VitestUtils {
           `vi.doUnmock() expects a string path, but received a ${typeof path}`,
         )
       }
-      _mocker.queueUnmock(path, getImporter('doUnmock'))
+      _mocker().queueUnmock(path, getImporter('doUnmock'))
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
-      return _mocker.importActual<T>(
+      return _mocker().importActual<T>(
         path,
         getImporter('importActual'),
-        _mocker.getMockContext().callstack,
+        _mocker().getMockContext().callstack,
       )
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-      return _mocker.importMock(path, getImporter('importMock'))
+      return _mocker().importMock(path, getImporter('importMock'))
     },
 
     // this is typed in the interface so it's not necessary to type it here

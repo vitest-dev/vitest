@@ -26,6 +26,7 @@ interface PrintErrorOptions {
   logger: Logger
   fullStack?: boolean
   showCodeFrame?: boolean
+  printProperties?: boolean
 }
 
 interface PrintErrorResult {
@@ -57,7 +58,7 @@ export function printError(
   project: WorkspaceProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
-  const { showCodeFrame = true, fullStack = false, type } = options
+  const { showCodeFrame = true, fullStack = false, type, printProperties = true } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
 
@@ -109,7 +110,9 @@ export function printError(
         }
       })
 
-  const errorProperties = getErrorProperties(e)
+  const errorProperties = printProperties
+    ? getErrorProperties(e)
+    : {}
 
   if (type) {
     printErrorType(type, project.ctx)
@@ -350,12 +353,19 @@ export function printStack(
   if (stack.length) {
     logger.error()
   }
-  const hasProperties = Object.keys(errorProperties).length > 0
-  if (hasProperties) {
+  if (hasProperties(errorProperties)) {
     logger.error(c.red(c.dim(divider())))
     const propertiesString = inspect(errorProperties)
     logger.error(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
+}
+
+function hasProperties(obj: any) {
+  // eslint-disable-next-line no-unreachable-loop
+  for (const _key in obj) {
+    return true
+  }
+  return false
 }
 
 export function generateCodeFrame(

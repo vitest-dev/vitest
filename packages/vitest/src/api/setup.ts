@@ -89,7 +89,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
-            ? await project.browser!.transformRequest(id)
+            ? await project.browser!.vite.transformRequest(id)
             : await project.vitenode.transformRequest(id)
           if (result) {
             try {

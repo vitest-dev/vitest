@@ -140,18 +140,20 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
+      const error = options.error || new Error('snapshot')
       const stacks = parseErrorStacktrace(
-        options.error || new Error('snapshot'),
+        error,
         { ignoreStackEntries: [] },
       )
-      const stack = this._inferInlineSnapshotStack(stacks)
-      if (!stack) {
+      const _stack = this._inferInlineSnapshotStack(stacks)
+      if (!_stack) {
         throw new Error(
           `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
             stacks,
           )}`,
         )
       }
+      const stack = this.environment.processStackTrace?.(_stack) || _stack
       // removing 1 column, because source map points to the wrong
       // location for js files, but `column-1` points to the same in both js/ts
       // https://github.com/vitejs/vite/issues/8657

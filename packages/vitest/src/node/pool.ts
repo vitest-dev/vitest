@@ -5,7 +5,6 @@ import { isWindows } from '../utils/env'
 import type { Vitest } from './core'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
-import { createBrowserPool } from './pools/browser'
 import { createVmThreadsPool } from './pools/vmThreads'
 import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
@@ -16,6 +15,8 @@ export type RunWithFiles = (
   files: WorkspaceSpec[],
   invalidates?: string[]
 ) => Awaitable<void>
+
+type LocalPool = Exclude<Pool, 'browser'>
 
 export interface ProcessPool {
   name: string
@@ -153,17 +154,17 @@ export function createPool(ctx: Vitest): ProcessPool {
       return poolInstance as ProcessPool
     }
 
-    const filesByPool: Record<Pool, WorkspaceSpec[]> = {
+    const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
       forks: [],
       threads: [],
-      browser: [],
+      // browser: [],
       vmThreads: [],
       vmForks: [],
       typescript: [],
     }
 
-    const factories: Record<Pool, () => ProcessPool> = {
-      browser: () => createBrowserPool(ctx),
+    const factories: Record<LocalPool, () => ProcessPool> = {
+      // browser: () => createBrowserPool(ctx),
       vmThreads: () => createVmThreadsPool(ctx, options),
       threads: () => createThreadsPool(ctx, options),
       forks: () => createForksPool(ctx, options),
@@ -200,6 +201,14 @@ export function createPool(ctx: Vitest): ProcessPool {
         if (pool in factories) {
           const factory = factories[pool]
           pools[pool] ??= factory()
+          return pools[pool]!.runTests(specs, invalidate)
+        }
+
+        if (pool === 'browser') {
+          pools[pool] ??= await (async () => {
+            const { createBrowserPool } = await import('@vitest/browser')
+            return createBrowserPool(ctx)
+          })()
           return pools[pool]!.runTests(specs, invalidate)
         }
 

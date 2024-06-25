@@ -23,7 +23,7 @@ export async function saveInlineSnapshots(
   await Promise.all(
     Array.from(files).map(async (file) => {
       const snaps = snapshots.filter(i => i.file === file)
-      const code = (await environment.readSnapshotFile(file)) as string
+      const code = await environment.readSnapshotFile(file) as string
       const s = new MagicString(code)
 
       for (const snap of snaps) {
@@ -116,22 +116,46 @@ function prepareSnapString(snap: string, source: string, index: number) {
     .replace(/\$\{/g, '\\${')}\n${indent}${quote}`
 }
 
+const toMatchInlineName = 'toMatchInlineSnapshot'
+const toThrowErrorMatchingInlineName = 'toThrowErrorMatchingInlineSnapshot'
+
+// on webkit, the line number is at the end of the method, not at the start
+function getCodeStartingAtIndex(code: string, index: number) {
+  const indexInline = index - toMatchInlineName.length
+  if (code.slice(indexInline, index) === toMatchInlineName) {
+    return {
+      code: code.slice(indexInline),
+      index: indexInline,
+    }
+  }
+  const indexThrowInline = index - toThrowErrorMatchingInlineName.length
+  if (code.slice(index - indexThrowInline, index) === toThrowErrorMatchingInlineName) {
+    return {
+      code: code.slice(index - indexThrowInline),
+      index: index - indexThrowInline,
+    }
+  }
+  return {
+    code: code.slice(index),
+    index,
+  }
+}
+
 const startRegex
   = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
 export function replaceInlineSnap(
   code: string,
   s: MagicString,
-  index: number,
+  currentIndex: number,
   newSnap: string,
 ) {
-  const codeStartingAtIndex = code.slice(index)
+  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex)
 
   const startMatch = startRegex.exec(codeStartingAtIndex)
 
-  const firstKeywordMatch
-    = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
-      codeStartingAtIndex,
-    )
+  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
+    codeStartingAtIndex,
+  )
 
   if (!startMatch || startMatch.index !== firstKeywordMatch?.index) {
     return replaceObjectSnap(code, s, index, newSnap)

@@ -1,10 +1,20 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ViteDevServer } from 'vite'
+import type { CancelReason } from '@vitest/runner'
 import type { WorkspaceProject } from '../node/workspace'
 import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
   options?: BrowserProviderOptions
+}
+
+export interface CDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+  on: (event: string, listener: (...args: unknown[]) => void) => void
+  once: (event: string, listener: (...args: unknown[]) => void) => void
+  off: (event: string, listener: (...args: unknown[]) => void) => void
+  detach: () => Promise<void>
 }
 
 export interface BrowserProvider {
@@ -18,6 +28,7 @@ export interface BrowserProvider {
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (contextId: string) => Record<string, unknown>
   openPage: (contextId: string, url: string) => Promise<void>
+  getCDPSession?: (contextId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -146,6 +157,31 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: WorkspaceProject
   contextId: string
+}
+
+export interface BrowserServerStateContext {
+  files: string[]
+  resolve: () => void
+  reject: (v: unknown) => void
+}
+
+export interface BrowserOrchestrator {
+  createTesters: (files: string[]) => Promise<void>
+  onCancel: (reason: CancelReason) => Promise<void>
+}
+
+export interface BrowserServerState {
+  orchestrators: Map<string, BrowserOrchestrator>
+  getContext: (contextId: string) => BrowserServerStateContext | undefined
+  createAsyncContext: (contextId: string, files: string[]) => Promise<void>
+}
+
+export interface BrowserServer {
+  vite: ViteDevServer
+  state: BrowserServerState
+  provider: BrowserProvider
+  close: () => Promise<void>
+  initBrowserProvider: () => Promise<void>
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {

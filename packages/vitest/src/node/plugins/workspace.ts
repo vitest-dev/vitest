@@ -9,7 +9,7 @@ import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { MocksPlugin } from './mocks'
+import { MocksPlugins } from './mocks'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
@@ -136,7 +136,7 @@ export function WorkspaceVitestPlugin(
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
-    MocksPlugin(),
+    ...MocksPlugins(),
     VitestResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),

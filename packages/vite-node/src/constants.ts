@@ -1,6 +1,7 @@
 export const KNOWN_ASSET_TYPES = [
   // images
   'apng',
+  'bmp',
   'png',
   'jpe?g',
   'jfif',

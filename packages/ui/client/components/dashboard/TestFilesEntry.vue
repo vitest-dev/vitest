@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import { files, unhandledErrors } from '~/composables/client'
-import {
-  filesFailed,
-  filesSnapshotFailed,
-  filesSuccess,
-  time,
-} from '~/composables/summary'
+import { unhandledErrors } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
 </script>
 
 <template>
@@ -23,36 +18,42 @@ import {
     <div i-carbon-document />
     <div>Files</div>
     <div class="number" data-testid="num-files">
-      {{ files.length }}
+      {{ explorerTree.summary.files }}
     </div>
 
-    <template v-if="filesSuccess.length">
+    <template v-if="explorerTree.summary.filesSuccess">
       <div i-carbon-checkmark />
       <div>Pass</div>
       <div class="number">
-        {{ filesSuccess.length }}
+        {{ explorerTree.summary.filesSuccess }}
       </div>
     </template>
 
-    <template v-if="filesFailed.length">
+    <template v-if="explorerTree.summary.filesFailed">
       <div i-carbon-close />
-      <div>Fail</div>
+      <div>
+        Fail
+      </div>
       <div class="number" text-red5>
-        {{ filesFailed.length }}
+        {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
 
-    <template v-if="filesSnapshotFailed.length">
+    <template v-if="explorerTree.summary.filesSnapshotFailed">
       <div i-carbon-compare />
-      <div>Snapshot Fail</div>
+      <div>
+        Snapshot Fail
+      </div>
       <div class="number" text-red5>
-        {{ filesSnapshotFailed.length }}
+        {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
 
     <template v-if="unhandledErrors.length">
       <div i-carbon-checkmark-outline-error />
-      <div>Errors</div>
+      <div>
+        Errors
+      </div>
       <div class="number" text-red5>
         {{ unhandledErrors.length }}
       </div>
@@ -61,7 +62,7 @@ import {
     <div i-carbon-timer />
     <div>Time</div>
     <div class="number" data-testid="run-time">
-      {{ time }}
+      {{ explorerTree.summary.time }}
     </div>
   </div>
   <template v-if="unhandledErrors.length">
@@ -70,12 +71,8 @@ import {
         Unhandled Errors
       </h3>
       <p text="sm" font-thin mb-2 data-testid="unhandled-errors">
-        Vitest caught {{ unhandledErrors.length }} error{{
-          unhandledErrors.length > 1 ? "s" : ""
-        }}
-        during the test run.<br>
-        This might cause false positive tests. Resolve unhandled errors to make
-        sure your tests are not affected.
+        Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
+        This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
       </p>
       <details
         data-testid="unhandled-errors-details"

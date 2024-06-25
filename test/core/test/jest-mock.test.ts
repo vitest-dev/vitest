@@ -43,6 +43,35 @@ describe('jest mock compat layer', () => {
     expect(Spy.mock.instances).toHaveLength(0)
   })
 
+  it('collects contexts', () => {
+    // eslint-disable-next-line prefer-arrow-callback
+    const Spy = vi.fn(function () {})
+
+    expect(Spy.mock.contexts).toHaveLength(0)
+    const ctx = new Spy()
+    expect(Spy.mock.contexts).toHaveLength(1)
+    expect(Spy.mock.contexts[0]).toBe(ctx)
+
+    Spy.mockReset()
+
+    expect(Spy.mock.contexts).toHaveLength(0)
+
+    const ctx2 = {}
+    Spy.call(ctx2)
+    expect(Spy.mock.contexts).toHaveLength(1)
+    expect(Spy.mock.contexts[0]).toBe(ctx2)
+
+    Spy.bind(ctx2)()
+
+    expect(Spy.mock.contexts).toHaveLength(2)
+    expect(Spy.mock.contexts[1]).toBe(ctx2)
+
+    Spy.apply(ctx2)
+
+    expect(Spy.mock.contexts).toHaveLength(3)
+    expect(Spy.mock.contexts[2]).toBe(ctx2)
+  })
+
   it('implementation is set correctly on init', () => {
     const impl = () => 1
     const mock1 = vi.fn(impl)

@@ -1,10 +1,15 @@
 import { readFile } from 'node:fs/promises'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 export const browser = process.env.BROWSER || (process.env.PROVIDER !== 'playwright' ? 'chromium' : 'chrome')
 
-export async function runBrowserTests(config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> }, include?: string[]) {
+export async function runBrowserTests(
+  config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> },
+  include?: string[],
+  viteOverrides?: Partial<ViteUserConfig>,
+) {
   const result = await runVitest({
     watch: false,
     reporters: 'none',
@@ -13,7 +18,7 @@ export async function runBrowserTests(config?: Omit<UserConfig, 'browser'> & { b
       headless: browser !== 'safari',
       ...config?.browser,
     } as UserConfig['browser'],
-  }, include)
+  }, include, 'test', viteOverrides)
 
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)

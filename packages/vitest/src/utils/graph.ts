@@ -29,7 +29,7 @@ export async function getModuleGraph(
     let id = clearId(mod.id)
     seen.set(mod, id)
     const rewrote = browser
-      ? mod.file?.includes(project.browser!.config.cacheDir)
+      ? mod.file?.includes(project.browser!.vite.config.cacheDir)
         ? mod.id
         : false
       : await project.vitenode.shouldExternalize(id)
@@ -50,7 +50,7 @@ export async function getModuleGraph(
     return id
   }
   if (browser && project.browser) {
-    await get(project.browser.moduleGraph.getModuleById(id))
+    await get(project.browser.vite.moduleGraph.getModuleById(id))
   }
   else {
     await get(project.server.moduleGraph.getModuleById(id))

@@ -183,7 +183,7 @@ export class Vitest {
     }
   }
 
-  public provide<T extends keyof ProvidedContext>(key: T, value: ProvidedContext[T]) {
+  public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
     this.getCoreWorkspaceProject().provide(key, value)
   }
 
@@ -870,8 +870,8 @@ export class Vitest {
         serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
 
         if (browser) {
-          const browserMods = browser.moduleGraph.getModulesByFile(filepath)
-          browserMods?.forEach(mod => browser.moduleGraph.invalidateModule(mod))
+          const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
+          browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
         }
       })
     }
@@ -1050,8 +1050,10 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         return Promise.allSettled(closePromises).then((results) => {
-          results.filter(r => r.status === 'rejected').forEach((err) => {
-            this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+          results.forEach((r) => {
+            if (r.status === 'rejected') {
+              this.logger.error('error during close', r.reason)
+            }
           })
           this.logger.logUpdate.done() // restore terminal cursor
         })

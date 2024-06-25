@@ -6,7 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
-import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
 
 // for debug:
 // open a static file serve to share the report json
@@ -42,10 +42,15 @@ export const config: UserConfig = {
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
+        'focus-base': 'border-gray-500 dark:border-gray-400',
+        'highlight': 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
         'tab-button-active': 'op100 bg-gray-500:10',
       },
+      transformers: [
+        transformerDirectives(),
+      ],
     }),
     Components({
       dirs: ['client/components'],

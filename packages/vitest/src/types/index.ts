@@ -13,11 +13,11 @@ export type * from './worker'
 export type * from './general'
 export type * from './coverage'
 export type * from './benchmark'
+export type { CancelReason } from '@vitest/runner'
 export type { DiffOptions } from '@vitest/utils/diff'
 export type {
   MockedFunction,
   MockedObject,
-  SpyInstance,
   MockInstance,
   Mock,
   MockContext,
@@ -31,4 +31,5 @@ export type {
   AsymmetricMatchersContaining,
   JestAssertion,
   Assertion,
+  ExpectPollOptions,
 } from '@vitest/expect'
