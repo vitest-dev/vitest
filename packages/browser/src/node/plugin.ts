@@ -190,6 +190,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'vitest > chai > loupe',
               'vitest > @vitest/runner > p-limit',
               'vitest > @vitest/utils > diff-sequences',
+              'vitest > @vitest/utils > loupe',
               '@vitest/browser > @testing-library/user-event',
               '@vitest/browser > @testing-library/dom',
             ],
@@ -262,10 +263,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        if (viteConfig.esbuild !== false) {
-          viteConfig.esbuild ||= {}
-          viteConfig.esbuild.legalComments = 'inline'
-        }
+        viteConfig.esbuild ||= {}
+        viteConfig.esbuild.legalComments = 'inline'
+
         const server = resolveApiServerConfig(
           viteConfig.test?.browser || {},
           defaultBrowserPort,
