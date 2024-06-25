@@ -25,7 +25,7 @@ export async function createBrowserServer(
   const vite = await createServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
-    logLevel: 'error',
+    logLevel: (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'error',
     mode: project.config.mode,
     configFile: configPath,
     // watch is handled by Vitest
