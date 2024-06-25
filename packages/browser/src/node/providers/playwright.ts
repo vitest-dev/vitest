@@ -106,7 +106,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       page,
       context: this.contexts.get(contextId)!,
       get frame() {
-        return page.frame('vitest-iframe')!
+        return page.frameLocator('[data-vitest="true"]')!
       },
     }
   }
@@ -146,9 +146,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       once(event: string, listener: (...args: any[]) => void) {
         cdp.once(event as 'Accessibility.loadComplete', listener)
-      },
-      detach() {
-        return cdp.detach()
       },
     }
   }

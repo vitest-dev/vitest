@@ -21,7 +21,11 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
   }
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.evaluate(focusIframe)
+    const frame = context.page.frame('vitest-iframe')
+    if (!frame) {
+      throw new Error(`Cannot find "vitest-iframe" in the page. This is a bug in Vitest, please report it.`)
+    }
+    await frame.evaluate(focusIframe)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     await context.browser.execute(focusIframe)
@@ -39,7 +43,11 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
         }
       }
       if (context.provider instanceof PlaywrightBrowserProvider) {
-        await context.frame.evaluate(selectAll)
+        const frame = context.page.frame('vitest-iframe')
+        if (!frame) {
+          throw new Error(`Cannot find "vitest-iframe" in the page. This is a bug in Vitest, please report it.`)
+        }
+        await frame.evaluate(selectAll)
       }
       else if (context.provider instanceof WebdriverBrowserProvider) {
         await context.browser.execute(selectAll)

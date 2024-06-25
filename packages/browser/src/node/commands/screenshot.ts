@@ -33,7 +33,10 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       await element.screenshot({ ...config, path: savePath })
     }
     else {
-      await context.frame.locator('body').screenshot({ ...options, path: savePath })
+      await context.frame.locator('body').screenshot({
+        ...options,
+        path: savePath,
+      })
     }
     return path
   }

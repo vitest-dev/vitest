@@ -10,7 +10,11 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   options,
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.dragAndDrop(
+    const frame = context.page.frame('vitest-iframe')
+    if (!frame) {
+      throw new Error(`Cannot find "vitest-iframe" in the page. This is a bug in Vitest, please report it.`)
+    }
+    await frame.dragAndDrop(
       `xpath=${source}`,
       `xpath=${target}`,
       {

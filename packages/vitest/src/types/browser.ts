@@ -14,7 +14,6 @@ export interface CDPSession {
   on: (event: string, listener: (...args: unknown[]) => void) => void
   once: (event: string, listener: (...args: unknown[]) => void) => void
   off: (event: string, listener: (...args: unknown[]) => void) => void
-  detach: () => Promise<void>
 }
 
 export interface BrowserProvider {
