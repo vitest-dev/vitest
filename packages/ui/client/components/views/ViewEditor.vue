@@ -3,7 +3,7 @@ import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '~/composables/error'
-import { client } from '~/composables/client'
+import { client, isReport } from '~/composables/client'
 import { codemirrorRef } from '~/composables/codemirror'
 
 const props = defineProps<{
@@ -25,7 +25,9 @@ watch(
       draft.value = false
       return
     }
-    code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
+    code.value = isReport
+      ? ('source' in props.file ? props.file.source : '') as string
+      : (await client.rpc.readTestFile(props.file.filepath)) || ''
     serverCode.value = code.value
     draft.value = false
   },
@@ -151,7 +153,7 @@ async function onSave(content: string) {
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{ lineNumbers: true }"
+    v-bind="{ lineNumbers: true, readOnly: isReport }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"

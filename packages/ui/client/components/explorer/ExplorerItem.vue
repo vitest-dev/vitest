@@ -91,9 +91,7 @@ const gridStyles = computed(() => {
   // text content
   gridColumns.push('minmax(0, 1fr)')
   // action buttons
-  if (!isReport || type === 'file') {
-    gridColumns.push('min-content')
-  }
+  gridColumns.push('min-content')
 
   // all the vertical lines with width 1rem and mx-2: always centered
   return `grid-template-columns: ${
@@ -169,13 +167,13 @@ function showDetails() {
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div v-if="isReport && type === 'file'" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
-      <IconAction
-        v-tooltip.bottom="'Open test details'"
+    <div v-if="isReport" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+      <IconButton
+        v-tooltip.bottom="showDetailsTooltip"
         data-testid="btn-open-details"
-        title="Open test details"
+        :title="showDetailsTooltip"
         icon="i-carbon:intrusion-prevention"
-        @click.prevent.stop="onItemClick?.(task)"
+        @click.prevent.stop="showDetails"
       />
     </div>
     <div v-if="!isReport" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
@@ -207,7 +205,7 @@ function showDetails() {
         v-else
         v-tooltip.bottom="showDetailsTooltip"
         data-testid="btn-open-details"
-        title="Open test details"
+        :title="showDetailsTooltip"
         icon="i-carbon:intrusion-prevention"
         @click.prevent.stop="showDetails"
       />

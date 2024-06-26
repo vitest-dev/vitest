@@ -32,9 +32,13 @@ function getOutputFile(config: PotentialConfig | undefined) {
   return config.outputFile.html
 }
 
+interface ReportFile extends File {
+  source?: string
+}
+
 interface HTMLReportData {
   paths: string[]
-  files: File[]
+  files: ReportFile[]
   config: ResolvedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
@@ -60,7 +64,16 @@ export default class HTMLReporter implements Reporter {
   async onFinished() {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
-      files: this.ctx.state.getFiles(),
+      files: await Promise.all(this.ctx.state.getFiles().map(async (file) => {
+        let source: string | undefined
+        try {
+          source = await fs.readFile(file.filepath, 'utf-8')
+        }
+        catch (_) {
+          // just ignore
+        }
+        return { ...file, source } satisfies ReportFile
+      })),
       config: this.ctx.config,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},

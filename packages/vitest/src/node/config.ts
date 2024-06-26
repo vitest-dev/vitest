@@ -730,6 +730,18 @@ export function resolveConfig(
     resolved.includeTaskLocation ??= true
   }
 
+  const htmlReporter = toArray(resolved.reporters).some((reporter) => {
+    if (Array.isArray(reporter)) {
+      return reporter[0] === 'html'
+    }
+
+    return false
+  })
+
+  if (htmlReporter) {
+    resolved.includeTaskLocation ??= true
+  }
+
   resolved.testTransformMode ??= {}
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
