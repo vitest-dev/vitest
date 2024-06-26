@@ -9,7 +9,17 @@ import { type Options, execa } from 'execa'
 import { dirname, resolve } from 'pathe'
 import { Cli } from './cli'
 
-export async function runVitest(config: UserConfig, cliFilters: string[] = [], mode: VitestRunMode = 'test', viteOverrides: ViteUserConfig = {}) {
+interface VitestRunnerCLIOptions {
+  std?: 'inherit'
+}
+
+export async function runVitest(
+  config: UserConfig,
+  cliFilters: string[] = [],
+  mode: VitestRunMode = 'test',
+  viteOverrides: ViteUserConfig = {},
+  runnerOptions: VitestRunnerCLIOptions = {},
+) {
   // Reset possible previous runs
   process.exitCode = 0
   let exitCode = process.exitCode
@@ -18,8 +28,22 @@ export async function runVitest(config: UserConfig, cliFilters: string[] = [], m
   const exit = process.exit
   process.exit = (() => { }) as never
 
-  const stdout = new Writable({ write: (_, __, callback) => callback() })
-  const stderr = new Writable({ write: (_, __, callback) => callback() })
+  const stdout = new Writable({
+    write(chunk, __, callback) {
+      if (runnerOptions.std === 'inherit') {
+        process.stdout.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+  const stderr = new Writable({
+    write(chunk, __, callback) {
+      if (runnerOptions.std === 'inherit') {
+        process.stderr.write(chunk.toString())
+      }
+      callback()
+    },
+  })
 
   // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
   const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream

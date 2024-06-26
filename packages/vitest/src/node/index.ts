@@ -29,6 +29,7 @@ export type {
   BrowserProviderModule,
   ResolvedBrowserOptions,
   BrowserProviderOptions,
+  BrowserBuiltinProvider,
   BrowserScript,
   BrowserCommand,
   BrowserCommandContext,

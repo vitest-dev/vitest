@@ -13,8 +13,8 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   const { skipClick = false, skipAutoClose = false } = options
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const { frame } = context
-    const element = frame.locator(`xpath=${xpath}`)
+    const { iframe } = context
+    const element = iframe.locator(`xpath=${xpath}`)
 
     if (!skipClick) {
       await element.focus()

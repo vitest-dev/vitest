@@ -1,10 +1,12 @@
-import type { File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
-import { importId } from '../utils'
+import { page } from '@vitest/browser/context'
+import { importFs, importId } from '../utils'
+import { globalChannel } from '../channel'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -47,9 +49,20 @@ export function createBrowserRunner(
 
         if (currentFailures >= this.config.bail) {
           rpc().onCancel('test-failure')
-          this.onCancel?.('test-failure')
+          this.onCancel('test-failure')
         }
       }
+    }
+
+    onTaskFinished = async (task: Task) => {
+      if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
+        await page.screenshot()
+      }
+    }
+
+    onCancel = (reason: CancelReason) => {
+      super.onCancel?.(reason)
+      globalChannel.postMessage({ type: 'cancel', reason })
     }
 
     onBeforeRunSuite = async (suite: Suite | File) => {
@@ -117,7 +130,7 @@ export function createBrowserRunner(
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `${test ? 'browserv' : 'v'}=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
-      await import(importpath)
+      await import(/* @vite-ignore */ importpath)
     }
   }
 }
@@ -134,9 +147,17 @@ export async function initiateRunner(
   }
   const runnerClass
     = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+
+  const executeId = (id: string) => {
+    if (id[0] === '/' || id[1] === ':') {
+      return importFs(id)
+    }
+    return importId(id)
+  }
+
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>
-      takeCoverageInsideWorker(config.coverage, { executeId: importId }),
+      takeCoverageInsideWorker(config.coverage, { executeId }),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
@@ -144,7 +165,7 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
-  const executor = { executeId: importId } as VitestExecutor
+  const executor = { executeId } as VitestExecutor
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor),
     loadSnapshotSerializers(config, executor),

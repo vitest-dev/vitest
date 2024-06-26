@@ -32,7 +32,10 @@ const stackIgnorePatterns = [
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
   // browser related deps
-  '/deps/',
+  '/deps/chunk-',
+  '/deps/@vitest',
+  '/deps/loupe',
+  '/deps/chai',
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,

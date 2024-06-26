@@ -6,7 +6,24 @@ const configs: UserConfig[] = []
 const pools: UserConfig[] = [{ pool: 'threads' }, { pool: 'forks' }, { pool: 'threads', poolOptions: { threads: { singleThread: true } } }]
 
 if (process.platform !== 'win32') {
-  pools.push({ browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+  pools.push(
+    {
+      browser: {
+        enabled: true,
+        name: 'chromium',
+        provider: 'playwright',
+        fileParallelism: false,
+      },
+    },
+    {
+      browser: {
+        enabled: true,
+        name: 'chromium',
+        provider: 'playwright',
+        fileParallelism: true,
+      },
+    },
+  )
 }
 
 for (const isolate of [true, false]) {
@@ -19,6 +36,10 @@ for (const isolate of [true, false]) {
           isolate,
         },
         forks: { isolate },
+      },
+      browser: {
+        ...pool.browser!,
+        isolate,
       },
     })
   }
@@ -34,6 +55,7 @@ for (const config of configs) {
       const isParallel
         = (config.pool === 'threads' && config.poolOptions?.threads?.singleThread !== true)
         || (config.pool === 'forks' && config.poolOptions?.forks?.singleFork !== true)
+        || (config.browser?.enabled && config.browser.fileParallelism)
 
       // THREADS here means that multiple tests are run parallel
       process.env.THREADS = isParallel ? 'true' : 'false'
@@ -42,6 +64,9 @@ for (const config of configs) {
         root: './fixtures/bail',
         bail: 1,
         ...config,
+        env: {
+          THREADS: process.env.THREADS,
+        },
       })
 
       expect(exitCode).toBe(1)
