@@ -63,7 +63,7 @@ export class Logger {
       return
     }
 
-    this.console.log(`${ERASE_SCROLLBACK}${CLEAR_SCREEN}${message}`)
+    this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
   }
 
   clearScreen(message: string, force = false) {
