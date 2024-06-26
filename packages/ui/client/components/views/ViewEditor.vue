@@ -25,9 +25,7 @@ watch(
       draft.value = false
       return
     }
-    code.value = isReport
-      ? ('source' in props.file ? props.file.source : '') as string
-      : (await client.rpc.readTestFile(props.file.filepath)) || ''
+    code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
     serverCode.value = code.value
     draft.value = false
   },

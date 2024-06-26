@@ -17,6 +17,8 @@ interface HTMLReportMetadata {
   config: ResolvedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
+  // filename -> source
+  sources: Record<string, string>
 }
 
 const noop: any = () => {}
@@ -51,13 +53,7 @@ export function createStaticClient(): VitestClient {
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
     },
-    getTransformResult: async (id) => {
-      return {
-        code: id,
-        source: '',
-        map: null,
-      }
-    },
+    getTransformResult: asyncNoop,
     onDone: noop,
     onCollected: asyncNoop,
     onTaskUpdate: noop,
@@ -73,7 +69,9 @@ export function createStaticClient(): VitestClient {
     resolveSnapshotRawPath: asyncNoop,
     readSnapshotFile: asyncNoop,
     saveSnapshotFile: asyncNoop,
-    readTestFile: asyncNoop,
+    readTestFile: async (id: string) => {
+      return metadata.sources[id]
+    },
     removeSnapshotFile: asyncNoop,
     onUnhandledError: noop,
     saveTestFile: asyncNoop,

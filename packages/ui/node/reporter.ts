@@ -32,16 +32,14 @@ function getOutputFile(config: PotentialConfig | undefined) {
   return config.outputFile.html
 }
 
-interface ReportFile extends File {
-  source?: string
-}
-
 interface HTMLReportData {
   paths: string[]
-  files: ReportFile[]
+  files: File[]
   config: ResolvedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
+  // filename -> source
+  sources: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -64,19 +62,11 @@ export default class HTMLReporter implements Reporter {
   async onFinished() {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
-      files: await Promise.all(this.ctx.state.getFiles().map(async (file) => {
-        let source: string | undefined
-        try {
-          source = await fs.readFile(file.filepath, 'utf-8')
-        }
-        catch (_) {
-          // just ignore
-        }
-        return { ...file, source } satisfies ReportFile
-      })),
+      files: this.ctx.state.getFiles(),
       config: this.ctx.config,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
+      sources: {},
     }
     await Promise.all(
       result.files.map(async (file) => {
@@ -87,6 +77,16 @@ export default class HTMLReporter implements Reporter {
           projectName,
           file.filepath,
         )
+        if (!result.sources[file.filepath]) {
+          try {
+            result.sources[file.filepath] = await fs.readFile(file.filepath, {
+              encoding: 'utf-8',
+            })
+          }
+          catch (_) {
+            // just ignore
+          }
+        }
       }),
     )
     await this.writeReport(stringify(result))
