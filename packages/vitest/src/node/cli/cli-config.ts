@@ -413,6 +413,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       commands: null,
       viewport: null,
       screenshotDirectory: null,
+      screenshotFailures: null,
     },
   },
   pool: {

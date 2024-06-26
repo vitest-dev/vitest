@@ -64,7 +64,7 @@ export class VitestBrowserClientMocker {
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
     }${url.hash}`
-    return getBrowserState().wrapModule(() => import(actualUrl))
+    return getBrowserState().wrapModule(() => import(/* @vite-ignore */ actualUrl))
   }
 
   public async importMock(rawId: string, importer: string) {
@@ -86,11 +86,11 @@ export class VitestBrowserClientMocker {
 
     if (type === 'redirect') {
       const url = new URL(`/@id/${mockPath}`, location.href)
-      return import(url.toString())
+      return import(/* @vite-ignore */ url.toString())
     }
     const url = new URL(`/@id/${resolvedId}`, location.href)
     const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
-    const moduleObject = await import(`${url.pathname}${query}${url.hash}`)
+    const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}${url.hash}`)
     return this.mockObject(moduleObject)
   }
 

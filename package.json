@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "2.0.0-beta.11",
+  "version": "2.0.0-beta.12",
   "private": true,
   "packageManager": "pnpm@8.15.8",
   "description": "Next generation testing framework powered by Vite",
@@ -85,7 +85,7 @@
       "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
-      "v8-to-istanbul@9.2.0": "patches/v8-to-istanbul@9.2.0.patch",
+      "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     }
   },

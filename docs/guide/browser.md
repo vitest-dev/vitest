@@ -8,7 +8,26 @@ This page provides information about the experimental browser mode feature in th
 
 ## Installation
 
-By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
+For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.
+
+::: code-group
+```bash [npm]
+npx vitest init browser
+```
+```bash [yarn]
+yarn exec vitest init browser
+```
+```bash [pnpm]
+pnpx vitest init browser
+```
+```bash [bun]
+bunx vitest init browser
+```
+:::
+
+### Manual Installation
+
+You can also install packages manually. By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
 
 ::: code-group
 ```bash [npm]
@@ -934,7 +953,8 @@ Custom functions will override built-in ones if they have the same name.
 Vitest exposes several `playwright` specific properties on the command context.
 
 - `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
-- `frame` is the tester [iframe instance](https://playwright.dev/docs/api/class-frame). It has a simillar API to the page, but it doesn't support certain methods.
+- `frame` is an async method that will resolve tester [`Frame`](https://playwright.dev/docs/api/class-frame). It has a simillar API to the `page`, but it doesn't support certain methods. If you need to query an element, you should prefer using `context.iframe` instead because it is more stable and faster.
+- `iframe` is a [`FrameLocator`](https://playwright.dev/docs/api/class-framelocator) that should be used to query other elements on the page.
 - `context` refers to the unique [BrowserContext](https://playwright.dev/docs/api/class-browsercontext).
 
 ```ts
@@ -942,7 +962,7 @@ import { defineCommand } from '@vitest/browser'
 
 export const myCommand = defineCommand(async (ctx, arg1, arg2) => {
   if (ctx.provider.name === 'playwright') {
-    const element = await ctx.frame.findByRole('alert')
+    const element = await ctx.iframe.findByRole('alert')
     const screenshot = await element.screenshot()
     // do something with the screenshot
     return difference
@@ -997,7 +1017,7 @@ We recommend using `testing-library` packages depending on your framework:
 - [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [svelte](https://svelte.dev) components
 - [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [react](https://react.dev) components
 - [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
-- [`@testing-library/solid`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
+- [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
 
 ::: warning

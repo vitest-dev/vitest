@@ -1,45 +1,99 @@
-/**
- * @vitest-environment happy-dom
- */
+import { resolve } from 'node:path'
+import { readdirSync } from 'node:fs'
+import { beforeAll, expect } from 'vitest'
+import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
-import { expect, test } from 'vitest'
-import { mount } from '@vue/test-utils'
-import Hello from '../src/Hello.vue'
-import Defined from '../src/Defined.vue'
-import { CounterVue } from '../src/Counter'
-
-test('vue 3 coverage', async () => {
-  expect(Hello).toBeTruthy()
-
-  const wrapper = mount(Hello, {
-    props: {
-      count: 4,
-    },
+beforeAll(async () => {
+  await runVitest({
+    include: ['fixtures/test/vue-fixture.test.ts'],
+    coverage: { reporter: ['json', 'html'], all: false },
   })
-
-  expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchSnapshot()
-
-  await wrapper.get('button').trigger('click')
-
-  expect(wrapper.text()).toContain('4 x 3 = 12')
-
-  await wrapper.get('button').trigger('click')
-
-  expect(wrapper.text()).toContain('4 x 4 = 16')
 })
 
-test('define package in vm', () => {
-  expect(Defined).toBeTruthy()
+test('files should not contain query parameters', () => {
+  const coveragePath = resolve('./coverage/Vue/Counter/')
+  const files = readdirSync(coveragePath)
 
-  const wrapper = mount(Defined)
-
-  expect(wrapper.text()).toContain(MY_CONSTANT)
+  expect(files).toContain('index.html')
+  expect(files).toContain('Counter.vue.html')
+  expect(files).toContain('Counter.component.ts.html')
+  expect(files).not.toContain('Counter.component.ts?vue&type=script&src=true&lang.ts.html')
 })
 
-test('vue non-SFC, uses query parameters in file imports', async () => {
-  const wrapper = mount(CounterVue)
+test('coverage results matches snapshot', async () => {
+  const coverageMap = await readCoverageMap()
+  const summary = coverageMap.getCoverageSummary()
 
-  await wrapper.find('button').trigger('click')
-  expect(wrapper.text()).contain(1)
+  if (isV8Provider()) {
+    expect(summary).toMatchInlineSnapshot(`
+      {
+        "branches": {
+          "covered": 5,
+          "pct": 83.33,
+          "skipped": 0,
+          "total": 6,
+        },
+        "branchesTrue": {
+          "covered": 0,
+          "pct": "Unknown",
+          "skipped": 0,
+          "total": 0,
+        },
+        "functions": {
+          "covered": 3,
+          "pct": 60,
+          "skipped": 0,
+          "total": 5,
+        },
+        "lines": {
+          "covered": 36,
+          "pct": 81.81,
+          "skipped": 0,
+          "total": 44,
+        },
+        "statements": {
+          "covered": 36,
+          "pct": 81.81,
+          "skipped": 0,
+          "total": 44,
+        },
+      }
+    `)
+  }
+  else {
+    expect(summary).toMatchInlineSnapshot(`
+      {
+        "branches": {
+          "covered": 5,
+          "pct": 83.33,
+          "skipped": 0,
+          "total": 6,
+        },
+        "branchesTrue": {
+          "covered": 0,
+          "pct": "Unknown",
+          "skipped": 0,
+          "total": 0,
+        },
+        "functions": {
+          "covered": 5,
+          "pct": 71.42,
+          "skipped": 0,
+          "total": 7,
+        },
+        "lines": {
+          "covered": 13,
+          "pct": 81.25,
+          "skipped": 0,
+          "total": 16,
+        },
+        "statements": {
+          "covered": 14,
+          "pct": 82.35,
+          "skipped": 0,
+          "total": 17,
+        },
+      }
+    `)
+  }
 })

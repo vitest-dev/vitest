@@ -95,9 +95,11 @@ export class BaseCoverageProvider {
   checkThresholds({
     thresholds: allThresholds,
     perFile,
+    onError,
   }: {
     thresholds: ResolvedThreshold[]
     perFile?: boolean
+    onError: (error: string) => void
   }) {
     for (const { coverageMap, thresholds, name } of allThresholds) {
       if (
@@ -154,7 +156,7 @@ export class BaseCoverageProvider {
                 )}`
               }
 
-              console.error(errorMessage)
+              onError(errorMessage)
             }
           }
         }

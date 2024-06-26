@@ -3,13 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "pnpm test:v8 && pnpm test:istanbul && pnpm test:custom && pnpm test:browser && pnpm test:options && pnpm test:types",
-    "test:v8": "node ./testing.mjs --provider v8",
-    "test:custom": "node ./testing.mjs --provider custom",
-    "test:istanbul": "node ./testing.mjs --provider istanbul",
-    "test:browser": "node ./testing.mjs --browser --provider istanbul",
-    "test:options": "node ./testing-options.mjs",
-    "test:types": "vitest --typecheck.only --typecheck.tsconfig ../../tsconfig.check.json --run --reporter verbose"
+    "test": "vitest --workspace=vitest.workspace.custom.ts"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
@@ -23,6 +17,7 @@
     "happy-dom": "latest",
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-report": "^3.0.1",
+    "magic-string": "^0.30.10",
     "magicast": "^0.3.3",
     "unplugin-swc": "^1.4.4",
     "vite": "latest",

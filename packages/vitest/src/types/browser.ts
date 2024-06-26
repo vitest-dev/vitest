@@ -14,7 +14,6 @@ export interface CDPSession {
   on: (event: string, listener: (...args: unknown[]) => void) => void
   once: (event: string, listener: (...args: unknown[]) => void) => void
   off: (event: string, listener: (...args: unknown[]) => void) => void
-  detach: () => Promise<void>
 }
 
 export interface BrowserProvider {
@@ -43,6 +42,8 @@ export interface BrowserProviderModule {
 
 export interface BrowserProviderOptions {}
 
+export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+
 export interface BrowserConfigOptions {
   /**
    * if running tests in the browser should be the default
@@ -61,7 +62,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'preview'
    */
-  provider?: 'webdriverio' | 'playwright' | 'preview' | (string & {})
+  provider?: BrowserBuiltinProvider | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
@@ -134,6 +135,13 @@ export interface BrowserConfigOptions {
    * @default __screenshots__
    */
   screenshotDirectory?: string
+
+  /**
+   * Should Vitest take screenshots if the test fails
+   * @default !browser.ui
+   */
+  screenshotFailures?: boolean
+
   /**
    * Scripts injected into the tester iframe.
    */
