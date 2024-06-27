@@ -15,10 +15,6 @@ export class BrowserServerCDPHandler {
     return this.session.send(method, params)
   }
 
-  detach() {
-    return this.session.detach()
-  }
-
   on(event: string, id: string, once = false) {
     if (!this.listenerIds[event]) {
       this.listenerIds[event] = []

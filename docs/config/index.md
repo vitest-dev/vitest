@@ -1620,6 +1620,20 @@ Should Vitest UI be injected into the page. By default, injects UI iframe during
 
 Default iframe's viewport.
 
+#### browser.screenshotDirectory {#browser-screenshotdirectory}
+
+- **Type:** `string`
+- **Default:** `__snapshots__` in the test file directory
+
+Path to the snapshots directory relative to the `root`.
+
+#### browser.screenshotFailures {#browser-screenshotfailures}
+
+- **Type:** `boolean`
+- **Default:** `!browser.ui`
+
+Should Vitest take screenshots if the test fails.
+
 #### browser.orchestratorScripts {#browser-orchestratorscripts}
 
 - **Type:** `BrowserScript[]`
@@ -2282,6 +2296,11 @@ You can disable isolation for specific pools by using [`poolOptions`](#pooloptio
 Should `location` property be included when Vitest API receives tasks in [reporters](#reporters). If you have a lot of tests, this might cause a small performance regression.
 
 The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
+
+This option will be auto-enabled if you don't disable it explicitly, and you are running Vitest with:
+- [Vitest UI](/guide/ui)
+- or using the [Browser Mode](/guide/browser) without [headless](/guide/browser#headless) mode
+- or using [HTML Reporter](/guide/reporters#html-reporter)
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.

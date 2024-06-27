@@ -10,7 +10,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.frame
+    const tester = context.iframe
     await tester.locator(`xpath=${xpath}`).click({
       timeout: 1000,
       ...options,
@@ -33,7 +33,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.frame
+    const tester = context.iframe
     await tester.locator(`xpath=${xpath}`).dblclick(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {

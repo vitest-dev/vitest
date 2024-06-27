@@ -8,7 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BrowserIframe: typeof import('./components/BrowserIframe.vue')['default']
-    CodeMirror: typeof import('./components/CodeMirror.vue')['default']
+    CodeMirrorContainer: typeof import('./components/CodeMirrorContainer.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
     Coverage: typeof import('./components/Coverage.vue')['default']
     Dashboard: typeof import('./components/Dashboard.vue')['default']

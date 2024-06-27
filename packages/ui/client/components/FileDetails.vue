@@ -174,7 +174,6 @@ debouncedWatch(
           Module Graph
         </button>
         <button
-          v-if="!isReport"
           tab-button
           data-testid="btn-code"
           class="flex items-center gap-2"

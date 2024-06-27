@@ -1,3 +1,4 @@
+import type { CancelReason } from '@vitest/runner'
 import { getBrowserState } from './utils'
 
 export interface IframeDoneEvent {
@@ -59,6 +60,13 @@ export interface IframeMockInvalidateEvent {
   type: 'mock:invalidate'
 }
 
+export interface GlobalChannelTestRunCanceledEvent {
+  type: 'cancel'
+  reason: CancelReason
+}
+
+export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent
+
 export type IframeChannelIncomingEvent =
   | IframeViewportEvent
   | IframeErrorEvent
@@ -81,6 +89,7 @@ export type IframeChannelEvent =
 export const channel = new BroadcastChannel(
   `vitest:${getBrowserState().contextId}`,
 )
+export const globalChannel = new BroadcastChannel('vitest:global')
 
 export function waitForChannel(event: IframeChannelOutgoingEvent['type']) {
   return new Promise<void>((resolve) => {

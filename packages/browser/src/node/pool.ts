@@ -21,18 +21,8 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   const runTests = async (project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
     const browser = project.browser!
-    // const mocker = project.browserMocker
-    // mocker.mocks.forEach((_, id) => {
-    //   mocker.invalidateModuleById(id)
-    // })
-    // mocker.mocks.clear()
 
     const threadsCount = getThreadsCount(project)
-    // TODO
-    // let isCancelled = false
-    // project.ctx.onCancel(() => {
-    //   isCancelled = true
-    // })
 
     const provider = browser.provider
     providers.add(provider)
@@ -109,8 +99,17 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       groupedFiles.set(project, files)
     }
 
+    let isCancelled = false
+    ctx.onCancel(() => {
+      isCancelled = true
+    })
+
     // TODO: paralellize tests instead of running them sequentially (based on CPU?)
     for (const [project, files] of groupedFiles.entries()) {
+      if (isCancelled) {
+        break
+      }
+
       await runTests(project, files)
     }
   }

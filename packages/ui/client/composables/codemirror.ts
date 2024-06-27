@@ -11,6 +11,10 @@ import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
 import 'codemirror/addon/scroll/simplescrollbars.css'
+import type { Task } from '@vitest/runner'
+import { navigateTo } from '~/composables/navigation'
+
+export const codemirrorRef = shallowRef<CodeMirror.EditorFromTextArea>()
 
 export function useCodeMirror(
   textarea: Ref<HTMLTextAreaElement | null | undefined>,
@@ -50,5 +54,13 @@ export function useCodeMirror(
     { immediate: true },
   )
 
+  onUnmounted(() => {
+    codemirrorRef.value = undefined
+  })
+
   return markRaw(cm)
+}
+
+export async function showSource(task: Task) {
+  navigateTo(task, task.location?.line ?? 0)
 }
