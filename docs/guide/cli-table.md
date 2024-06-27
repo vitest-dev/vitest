@@ -80,8 +80,8 @@
 | `--poolOptions.vmForks.minForks <workers>` | Minimum number of processes to run tests in |
 | `--poolOptions.vmForks.memoryLimit <limit>` | Memory limit for VM forks pool. If you see memory leaks, try to tinker this value. |
 | `--fileParallelism` | Should all test files run in parallel. Use `--no-file-parallelism` to disable (default: `true`) |
-| `--maxWorkers <workers>` | Maximum number of workers to run tests in |
-| `--minWorkers <workers>` | Minimum number of workers to run tests in |
+| `--maxWorkers <workers>` | Maximum number or percentage of workers to run tests in |
+| `--minWorkers <workers>` | Minimum number or percentage of workers to run tests in |
 | `--environment <name>` | Specify runner environment, if not running in the browser (default: `node`) |
 | `--passWithNoTests` | Pass when no tests are found |
 | `--logHeapUsage` | Show the size of heap for each test when running in node |
