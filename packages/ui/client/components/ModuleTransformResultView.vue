@@ -52,14 +52,14 @@ onKeyStroke('Escape', () => {
         <div p="x3 y-1" bg-overlay border="base b t">
           Transformed
         </div>
-        <CodeMirror
+        <CodeMirrorContainer
           h-full
           :model-value="source"
           read-only
           v-bind="{ lineNumbers: true }"
           :mode="ext"
         />
-        <CodeMirror
+        <CodeMirrorContainer
           h-full
           :model-value="code"
           read-only
@@ -71,7 +71,7 @@ onKeyStroke('Escape', () => {
         <div p="x3 y-1" bg-overlay border="base b t">
           Source map (v{{ sourceMap.version }})
         </div>
-        <CodeMirror
+        <CodeMirrorContainer
           :model-value="sourceMap.mappings"
           read-only
           v-bind="{ lineNumbers: true }"

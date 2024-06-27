@@ -5,6 +5,7 @@ import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '~/composables/error'
 import { client, isReport } from '~/composables/client'
 import { codemirrorRef } from '~/composables/codemirror'
+import { lineNumber } from '~/composables/params'
 
 const props = defineProps<{
   file?: File
@@ -15,22 +16,51 @@ const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
+const loading = ref(true)
 
 watch(
   () => props.file,
   async () => {
-    if (!props.file || !props.file?.filepath) {
-      code.value = ''
+    loading.value = true
+    try {
+      if (!props.file || !props.file?.filepath) {
+        code.value = ''
+        serverCode.value = code.value
+        draft.value = false
+        return
+      }
+
+      code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
       serverCode.value = code.value
       draft.value = false
-      return
     }
-    code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
-    serverCode.value = code.value
-    draft.value = false
+    finally {
+      // fire focusing editor after loading
+      nextTick(() => (loading.value = false))
+    }
   },
   { immediate: true },
 )
+
+watch(() => [loading.value, props.file, lineNumber.value] as const, ([loadingFile, _, l]) => {
+  if (!loadingFile) {
+    if (l != null) {
+      nextTick(() => {
+        const line = { line: l ?? 0, ch: 0 }
+        codemirrorRef.value?.scrollIntoView(line, 100)
+        nextTick(() => {
+          codemirrorRef.value?.focus()
+          codemirrorRef.value?.setCursor(line)
+        })
+      })
+    }
+    else {
+      nextTick(() => {
+        codemirrorRef.value?.focus()
+      })
+    }
+  }
+}, { flush: 'post' })
 
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
@@ -147,7 +177,7 @@ async function onSave(content: string) {
 </script>
 
 <template>
-  <CodeMirror
+  <CodeMirrorContainer
     ref="editor"
     v-model="code"
     h-full

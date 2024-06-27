@@ -1,7 +1,7 @@
 import type { File, Task } from '@vitest/runner'
 import { client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { activeFileId, viewMode } from './params'
+import { activeFileId, lineNumber, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -89,9 +89,14 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo(task: Task, editor = false) {
+export function navigateTo(task: Task, line: number | null = null) {
   activeFileId.value = task.file.id
-  if (editor) {
+  // reset line number
+  lineNumber.value = null
+  if (line != null) {
+    nextTick(() => {
+      lineNumber.value = line
+    })
     viewMode.value = 'editor'
   }
   currentModule.value = findById(task.file.id)

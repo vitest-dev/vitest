@@ -62,19 +62,5 @@ export function useCodeMirror(
 }
 
 export async function showSource(task: Task) {
-  const codeMirror = codemirrorRef.value
-  if (!codeMirror || activeFileId.value !== task.file.id) {
-    navigateTo(task, true)
-    // we need to await, CodeMirrow will take some time to initialize
-    await new Promise(r => setTimeout(r, 256))
-  }
-
-  nextTick(() => {
-    const line = { line: task.location?.line ?? 0, ch: 0 }
-    codemirrorRef.value?.scrollIntoView(line)
-    nextTick(() => {
-      codemirrorRef.value?.focus()
-      codemirrorRef.value?.setCursor(line)
-    })
-  })
+  navigateTo(task, task.location?.line ?? 0)
 }
