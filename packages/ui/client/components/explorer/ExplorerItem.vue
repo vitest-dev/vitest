@@ -43,7 +43,15 @@ const {
 
 const task = computed(() => client.state.idMap.get(taskId))
 
-const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
+const failedSnapshot = computed(() => {
+  // don't traverse the tree if it's a report
+  if (isReport) {
+    return false
+  }
+
+  const t = task.value
+  return t && hasFailedSnapshot(t)
+})
 
 function toggleOpen() {
   if (!expandable) {
@@ -119,6 +127,7 @@ const showDetailsTooltip = computed(() => {
       ? 'View Suite Source Code'
       : 'View Test Source Code'
 })
+const showDetailsClasses = computed(() => disableShowDetails.value ? 'color-red5 dark:color-#f43f5e' : null)
 
 function showDetails() {
   const t = task.value!
@@ -167,18 +176,9 @@ function showDetails() {
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div v-if="isReport" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
-      <IconButton
-        v-tooltip.bottom="showDetailsTooltip"
-        data-testid="btn-open-details"
-        :title="showDetailsTooltip"
-        icon="i-carbon:intrusion-prevention"
-        @click.prevent.stop="showDetails"
-      />
-    </div>
-    <div v-if="!isReport" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+    <div gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
       <IconAction
-        v-if="failedSnapshot"
+        v-if="!isReport && failedSnapshot"
         v-tooltip.bottom="'Fix failed snapshot(s)'"
         data-testid="btn-fix-snapshot"
         title="Fix failed snapshot(s)"
@@ -186,30 +186,30 @@ function showDetails() {
         @click.prevent.stop="updateSnapshot(task)"
       />
       <VueTooltip
-        v-if="disableShowDetails"
-        :title="showDetailsTooltip"
-        class="w-1.4em h-1.4em op100 rounded flex color-red5 dark:color-#f43f5e cursor-help"
+        placement="bottom"
+        class="w-1.4em h-1.4em op100 rounded flex"
+        :class="showDetailsClasses"
       >
-        <div class="i-carbon:intrusion-prevention ma" />
+        <IconButton
+          data-testid="btn-open-details"
+          icon="i-carbon:intrusion-prevention"
+          @click.prevent.stop="showDetails"
+        />
         <template #popper>
-          <div class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+          <div v-if="disableShowDetails" class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
             <div class="i-carbon:information-square w-1.5em h-1.5em" />
-            <div>This feature is not available, you have configured <span class="text-[#add467]">includeTaskLocation: false</span> in your configuration file.</div>
+            <div>{{ showDetailsTooltip }}: this feature is not available, you have disabled <span class="text-[#add467]">includeTaskLocation</span> in your configuration file.</div>
             <div style="grid-column: 2">
-              Check the documentation for further details about <span class="text-[#add467]">includeTaskLocation</span>.
+              Clicking this button the code tab will position the cursor at first line in the source code since the UI doesn't have the information available.
             </div>
+          </div>
+          <div v-else>
+            {{ showDetailsTooltip }}
           </div>
         </template>
       </VueTooltip>
       <IconButton
-        v-else
-        v-tooltip.bottom="showDetailsTooltip"
-        data-testid="btn-open-details"
-        :title="showDetailsTooltip"
-        icon="i-carbon:intrusion-prevention"
-        @click.prevent.stop="showDetails"
-      />
-      <IconButton
+        v-if="!isReport"
         v-tooltip.bottom="'Run current test'"
         data-testid="btn-run-test"
         title="Run current test"
