@@ -89,6 +89,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ...this.options?.context,
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
+      viewport: null,
     })
     this.contexts.set(contextId, context)
     return context
