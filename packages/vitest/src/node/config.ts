@@ -720,6 +720,28 @@ export function resolveConfig(
     port: defaultBrowserPort,
   }
 
+  // enable includeTaskLocation by default in UI mode
+  if (resolved.browser.enabled) {
+    if (resolved.browser.ui) {
+      resolved.includeTaskLocation ??= true
+    }
+  }
+  else if (resolved.ui) {
+    resolved.includeTaskLocation ??= true
+  }
+
+  const htmlReporter = toArray(resolved.reporters).some((reporter) => {
+    if (Array.isArray(reporter)) {
+      return reporter[0] === 'html'
+    }
+
+    return false
+  })
+
+  if (htmlReporter) {
+    resolved.includeTaskLocation ??= true
+  }
+
   resolved.testTransformMode ??= {}
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000

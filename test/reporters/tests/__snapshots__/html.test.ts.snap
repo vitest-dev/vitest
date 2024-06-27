@@ -28,6 +28,10 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         {
           "file": [Circular],
           "id": 0,
+          "location": {
+            "column": 1,
+            "line": 5,
+          },
           "logs": [
             {
               "content": "json-fail>should fail
@@ -93,6 +97,18 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   "paths": [
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
   ],
+  "sources": {
+    "<rootDir>/test/reporters/fixtures/json-fail.test.ts": "import { expect, test } from 'vitest'
+
+// I am comment1
+// I am comment2
+test('should fail', () => {
+  // eslint-disable-next-line no-console
+  console.log('json-fail>should fail')
+  expect(2).toEqual(1)
+})
+",
+  },
   "unhandledErrors": [],
 }
 `;
@@ -125,6 +141,10 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "file": [Circular],
           "id": 0,
+          "location": {
+            "column": 1,
+            "line": 3,
+          },
           "meta": {},
           "mode": "run",
           "name": "2 + 3 = 5",
@@ -144,6 +164,10 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "file": [Circular],
           "id": "1111755131_1",
+          "location": {
+            "column": 6,
+            "line": 7,
+          },
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
@@ -169,6 +193,18 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   "paths": [
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
   ],
+  "sources": {
+    "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'
+
+test('2 + 3 = 5', () => {
+  expect(2 + 3).toBe(5)
+})
+
+test.skip('3 + 3 = 6', () => {
+  expect(3 + 3).toBe(6)
+})
+",
+  },
   "unhandledErrors": [],
 }
 `;
