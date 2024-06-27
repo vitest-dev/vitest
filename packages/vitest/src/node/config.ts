@@ -17,6 +17,7 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
 import type { BuiltinPool } from '../types/pool-options'
+import { getWorkersCountByPercentage } from '../utils/workers'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -176,11 +177,21 @@ export function resolveConfig(
   }
 
   if (resolved.maxWorkers) {
-    resolved.maxWorkers = Number(resolved.maxWorkers)
+    if (typeof options.maxWorkers === 'string' && options.maxWorkers.trim().endsWith('%')) {
+      resolved.maxWorkers = getWorkersCountByPercentage(options.maxWorkers)
+    }
+    else {
+      resolved.maxWorkers = Number(resolved.maxWorkers)
+    }
   }
 
   if (resolved.minWorkers) {
-    resolved.minWorkers = Number(resolved.minWorkers)
+    if (typeof options.minWorkers === 'string' && options.minWorkers.trim().endsWith('%')) {
+      resolved.minWorkers = getWorkersCountByPercentage(options.minWorkers)
+    }
+    else {
+      resolved.minWorkers = Number(resolved.minWorkers)
+    }
   }
 
   resolved.browser ??= {} as any
