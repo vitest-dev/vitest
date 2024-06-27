@@ -73,6 +73,10 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_dblClick', xpath, options)
   },
+  tripleClick(element: Element, options: UserEventClickOptions = {}) {
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_tripleClick', xpath, options)
+  },
   selectOptions(element, value) {
     const values = provider === 'webdriverio'
       ? getWebdriverioSelectOptions(element, value)
