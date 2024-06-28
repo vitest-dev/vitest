@@ -56,7 +56,7 @@ References:
 
 - **Type:** `(element: Element, options?: UserEventDoubleClickOptions) => Promise<void>`
 
-Triggers a double click event on an element
+Triggers a double click event on an element.
 
 Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -77,11 +77,43 @@ References:
 - [WebdriverIO `element.doubleClick` API](https://webdriver.io/docs/api/element/doubleClick/)
 - [testing-library `dblClick` API](https://testing-library.com/docs/user-event/convenience/#dblClick)
 
+## userEvent.tripleClick
+
+- **Type:** `(element: Element, options?: UserEventTripleClickOptions) => Promise<void>`
+
+Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row, and so you must check [click event detail](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes) to filter the event: `evt.detail === 3`.
+
+Please refer to your provider's documentation for detailed explanation about how this method works.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('triggers a triple click on an element', async () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+  let tripleClickFired = false
+  logo.addEventListener('click', (evt) => {
+    if (evt.detail === 3) {
+      tripleClickFired = true
+    }
+  })
+
+  await userEvent.tripleClick(logo)
+  expect(tripleClickFired).toBe(true)
+})
+```
+
+References:
+
+- [Playwright `locator.click` API](https://playwright.dev/docs/api/class-locator#locator-click): implemented via `click` with `clickCount: 3` .
+- [WebdriverIO `browser.action` API](https://webdriver.io/docs/api/browser/action/): implemented via actions api with `move` plus three `down + up + pause` events in a row
+- [testing-library `tripleClick` API](https://testing-library.com/docs/user-event/convenience/#tripleClick)
+
 ## userEvent.fill
 
 - **Type:** `(element: Element, text: string) => Promise<void>`
 
-Fills an input/textarea/conteneditable element with text. This will remove any existing text in the input before typing the new value.
+Fill an `input/textarea/conteneditable` element with text. This will remove any existing text in the input before typing the new value.
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
@@ -203,7 +235,7 @@ References:
 
 - **Type:** `(element: Element) => Promise<void>`
 
-This method clear the input element content.
+This method clears the input element content.
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
@@ -273,7 +305,7 @@ References:
 
 - **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
 
-This method moves the cursor position to selected element. Please refer to your provider's documentation for detailed explanation about how this method works.
+This method moves the cursor position to the selected element. Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ::: warning
 If you are using `webdriverio` provider, the cursor will move to the center of the element by default.
