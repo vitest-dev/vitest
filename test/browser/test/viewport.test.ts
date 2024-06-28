@@ -13,7 +13,7 @@ describe.skipIf(server.provider === 'preview')('viewport window has been properl
     expect(actualHeight).toBe(height)
   })
 
-  it.skipIf(page.config.browser.headless)('window has been maximized', async () => {
+  it.skipIf(page.config.browser.headless)('window has been maximized', () => {
     let topWindow = window
     while (topWindow.parent && topWindow !== topWindow.parent) {
       topWindow = topWindow.parent as unknown as any
