@@ -80,6 +80,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       capabilities: this.buildCapabilities(),
     })
 
+    if (this.ctx.config.browser.launchViewport.maximized) {
+      await this.browser.maximizeWindow()
+    }
+
     return this.browser
   }
 

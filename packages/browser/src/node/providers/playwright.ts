@@ -1,6 +1,5 @@
 import type {
   Browser,
-
   BrowserContext,
   BrowserContextOptions,
   Frame,
@@ -67,10 +66,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       const playwright = await import('playwright')
 
-      const browser = await playwright[this.browserName].launch({
+      const launchOptions = {
         ...this.options?.launch,
         headless: options.headless,
-      })
+      } satisfies LaunchOptions
+
+      if (this.ctx.config.browser.launchViewport.maximized) {
+        if (!launchOptions.args) {
+          launchOptions.args = []
+        }
+        if (!launchOptions.args.includes('--start-maximized') && !launchOptions.args.includes('--start-fullscreen')) {
+          launchOptions.args.push('--start-maximized')
+        }
+      }
+
+      const browser = await playwright[this.browserName].launch(launchOptions)
       this.browser = browser
       this.browserPromise = null
       return this.browser
@@ -85,12 +95,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     const browser = await this.openBrowser()
-    const context = await browser.newContext({
+    const options = {
       ...this.options?.context,
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
-      viewport: null,
-    })
+    } satisfies BrowserContextOptions
+    if (this.ctx.config.browser.launchViewport.maximized) {
+      options.viewport = null
+    }
+    const context = await browser.newContext(options)
     this.contexts.set(contextId, context)
     return context
   }

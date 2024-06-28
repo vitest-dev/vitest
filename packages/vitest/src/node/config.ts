@@ -682,6 +682,8 @@ export function resolveConfig(
   resolved.browser.isolate ??= true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
+  // don't maximize it yet, only when the ui is enabled
+  resolved.browser.launchViewport = { maximized: false }
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   if (resolved.browser.screenshotDirectory) {
@@ -723,6 +725,7 @@ export function resolveConfig(
   // enable includeTaskLocation by default in UI mode
   if (resolved.browser.enabled) {
     if (resolved.browser.ui) {
+      resolved.browser.launchViewport.maximized = true
       resolved.includeTaskLocation ??= true
     }
   }
