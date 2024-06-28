@@ -603,8 +603,9 @@ export abstract class BaseReporter implements Reporter {
           )}${name}`,
         )
       }
+      const screenshots = tasks.filter(t => t.meta?.failScreenshotPath).map(t => t.meta?.failScreenshotPath as string)
       const project = this.ctx.getProjectByTaskId(tasks[0].id)
-      this.ctx.logger.printError(error, { project, verbose: this.verbose })
+      this.ctx.logger.printError(error, { project, verbose: this.verbose, screenshotPaths: screenshots })
       errorDivider()
     }
   }

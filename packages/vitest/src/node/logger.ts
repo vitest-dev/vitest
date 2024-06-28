@@ -17,6 +17,7 @@ interface ErrorOptions {
   fullStack?: boolean
   project?: WorkspaceProject
   verbose?: boolean
+  screenshotPaths?: string[]
 }
 
 const ESC = '\x1B['
@@ -99,6 +100,7 @@ export class Logger {
       showCodeFrame: true,
       logger: this,
       printProperties: options.verbose,
+      screenshotPaths: options.screenshotPaths,
     })
   }
 
