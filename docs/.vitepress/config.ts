@@ -244,10 +244,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/',
                 collapsed: true,
                 items: [{
-                  text: 'Headless',
-                  link: '/guide/browser/headless',
-                  docFooterText: 'Headless | Browser Mode',
-                }, {
                   text: 'Assertion API',
                   link: '/guide/browser/assertion-api',
                   docFooterText: 'Assertion API | Browser Mode',
@@ -271,10 +267,6 @@ export default ({ mode }: { mode: string }) => {
                   text: 'Examples',
                   link: '/guide/browser/examples',
                   docFooterText: 'Examples | Browser Mode',
-                }, {
-                  text: 'Limitations',
-                  link: '/guide/browser/limitations',
-                  docFooterText: 'Limitations | Browser Mode',
                 }],
               },
               {
