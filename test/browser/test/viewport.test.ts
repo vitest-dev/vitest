@@ -2,7 +2,7 @@ import { page, server } from '@vitest/browser/context'
 import { describe, expect, it } from 'vitest'
 
 describe.skipIf(server.provider === 'preview')('viewport window has been properly initialized', () => {
-  it.skipIf(!page.config.browser.headless)('viewport has proper width and size', () => {
+  it.skipIf(!page.config.browser.headless)('viewport has proper size', () => {
     const { width, height } = page.config.browser.viewport
     const { width: actualWidth, height: actualHeight } = window.document.documentElement.getBoundingClientRect()
 
