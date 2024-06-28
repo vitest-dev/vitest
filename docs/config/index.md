@@ -2300,6 +2300,7 @@ The `location` property has `column` and `line` values that correspond to the `t
 This option will be auto-enabled if you don't disable it explicitly, and you are running Vitest with:
 - [Vitest UI](/guide/ui)
 - or using the [Browser Mode](/guide/browser) without [headless](/guide/browser#headless) mode
+- or using [HTML Reporter](/guide/reporters#html-reporter)
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.

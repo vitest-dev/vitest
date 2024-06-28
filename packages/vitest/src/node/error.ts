@@ -27,6 +27,7 @@ interface PrintErrorOptions {
   fullStack?: boolean
   showCodeFrame?: boolean
   printProperties?: boolean
+  screenshotPaths?: string[]
 }
 
 interface PrintErrorResult {
@@ -110,14 +111,19 @@ export function printError(
         }
       })
 
-  const errorProperties = printProperties
-    ? getErrorProperties(e)
-    : {}
-
   if (type) {
     printErrorType(type, project.ctx)
   }
   printErrorMessage(e, logger)
+  if (options.screenshotPaths?.length) {
+    const length = options.screenshotPaths.length
+    logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
+    logger.error(options.screenshotPaths.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    if (!e.diff) {
+      logger.error()
+    }
+  }
+
   if (e.codeFrame) {
     logger.error(`${e.codeFrame}\n`)
   }
@@ -132,6 +138,10 @@ export function printError(
     logger.error(c.yellow(e.frame))
   }
   else {
+    const errorProperties = printProperties
+      ? getErrorProperties(e)
+      : {}
+
     printStack(logger, project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')

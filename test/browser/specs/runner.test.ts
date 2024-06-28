@@ -36,6 +36,8 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/- 2\s+\+ 1/)
     expect(stderr).toContain('Expected to be')
     expect(stderr).toContain('But got')
+    expect(stderr).toContain('Failure screenshot')
+    expect(stderr).toContain('__screenshots__/failing')
   })
 
   test('logs are redirected to stdout', () => {
