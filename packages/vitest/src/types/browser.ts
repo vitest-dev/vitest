@@ -236,7 +236,4 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     width: number
     height: number
   }
-  launchViewport: {
-    maximized: boolean
-  }
 }

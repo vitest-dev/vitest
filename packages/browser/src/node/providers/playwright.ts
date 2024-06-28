@@ -71,7 +71,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         headless: options.headless,
       } satisfies LaunchOptions
 
-      if (this.ctx.config.browser.launchViewport.maximized) {
+      if (this.ctx.config.browser.ui) {
         if (!launchOptions.args) {
           launchOptions.args = []
         }
@@ -100,7 +100,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
-    if (this.ctx.config.browser.launchViewport.maximized) {
+    if (this.ctx.config.browser.ui) {
       options.viewport = null
     }
     const context = await browser.newContext(options)
