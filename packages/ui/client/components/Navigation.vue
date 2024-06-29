@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { Tooltip as VueTooltip } from 'floating-vue'
-import type { File, Task } from 'vitest'
+import type { File } from 'vitest'
 import {
   coverageConfigured,
   coverageEnabled,
   coverageVisible,
-  currentModule,
   dashboardVisible,
   disableCoverage,
+  navigateTo,
   showCoverage,
   showDashboard,
 } from '~/composables/navigation'
-import { client, findById, isReport, runAll, runFiles } from '~/composables/client'
+import { client, isReport, runAll, runFiles } from '~/composables/client'
 import { isDark, toggleDark } from '~/composables'
-import { activeFileId } from '~/composables/params'
 import { explorerTree } from '~/composables/explorer'
 import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 
@@ -22,12 +21,6 @@ function updateSnapshot() {
 }
 
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
-
-function onItemClick(task: Task) {
-  activeFileId.value = task.file.id
-  currentModule.value = findById(task.file.id)
-  showDashboard(false)
-}
 
 async function onRunAll(files?: File[]) {
   if (coverageEnabled.value) {
@@ -57,7 +50,7 @@ function expandTests() {
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <Explorer border="r base" :on-item-click="onItemClick" :nested="true" @run="onRunAll">
+  <Explorer border="r base" :on-item-click="navigateTo" :nested="true" @run="onRunAll">
     <template #header="{ filteredFiles }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>

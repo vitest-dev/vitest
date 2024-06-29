@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type CodeMirror from 'codemirror'
+import { codemirrorRef } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
   mode?: string
@@ -30,12 +30,9 @@ const modeMap: Record<string, any> = {
 
 const el = ref<HTMLTextAreaElement>()
 
-const cm = shallowRef<CodeMirror.EditorFromTextArea>()
-
-defineExpose({ cm })
-
 onMounted(async () => {
-  cm.value = useCodeMirror(el, modelValue as unknown as Ref<string>, {
+  // useCodeMirror will remove the codemirrorRef.value on onUnmounted callback
+  const codemirror = useCodeMirror(el, modelValue as unknown as Ref<string>, {
     ...attrs,
     mode: modeMap[mode || ''] || mode,
     readOnly: readOnly ? true : undefined,
@@ -48,9 +45,10 @@ onMounted(async () => {
       },
     },
   })
-  cm.value.setSize('100%', '100%')
-  cm.value.clearHistory()
-  setTimeout(() => cm.value!.refresh(), 100)
+  codemirror.setSize('100%', '100%')
+  codemirror.clearHistory()
+  codemirrorRef.value = codemirror
+  setTimeout(() => codemirrorRef.value!.refresh(), 100)
 })
 </script>
 

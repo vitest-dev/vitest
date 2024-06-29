@@ -17,6 +17,7 @@ interface ErrorOptions {
   fullStack?: boolean
   project?: WorkspaceProject
   verbose?: boolean
+  screenshotPaths?: string[]
 }
 
 const ESC = '\x1B['
@@ -63,7 +64,7 @@ export class Logger {
       return
     }
 
-    this.console.log(`${ERASE_SCROLLBACK}${CLEAR_SCREEN}${message}`)
+    this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
   }
 
   clearScreen(message: string, force = false) {
@@ -99,6 +100,7 @@ export class Logger {
       showCodeFrame: true,
       logger: this,
       printProperties: options.verbose,
+      screenshotPaths: options.screenshotPaths,
     })
   }
 

@@ -3,7 +3,9 @@ import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '~/composables/error'
-import { client } from '~/composables/client'
+import { client, isReport } from '~/composables/client'
+import { codemirrorRef } from '~/composables/codemirror'
+import { lineNumber } from '~/composables/params'
 
 const props = defineProps<{
   file?: File
@@ -14,22 +16,51 @@ const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
+const loading = ref(true)
 
 watch(
   () => props.file,
   async () => {
-    if (!props.file || !props.file?.filepath) {
-      code.value = ''
+    loading.value = true
+    try {
+      if (!props.file || !props.file?.filepath) {
+        code.value = ''
+        serverCode.value = code.value
+        draft.value = false
+        return
+      }
+
+      code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
       serverCode.value = code.value
       draft.value = false
-      return
     }
-    code.value = (await client.rpc.readTestFile(props.file.filepath)) || ''
-    serverCode.value = code.value
-    draft.value = false
+    finally {
+      // fire focusing editor after loading
+      nextTick(() => (loading.value = false))
+    }
   },
   { immediate: true },
 )
+
+watch(() => [loading.value, props.file, lineNumber.value] as const, ([loadingFile, _, l]) => {
+  if (!loadingFile) {
+    if (l != null) {
+      nextTick(() => {
+        const line = { line: l ?? 0, ch: 0 }
+        codemirrorRef.value?.scrollIntoView(line, 100)
+        nextTick(() => {
+          codemirrorRef.value?.focus()
+          codemirrorRef.value?.setCursor(line)
+        })
+      })
+    }
+    else {
+      nextTick(() => {
+        codemirrorRef.value?.focus()
+      })
+    }
+  }
+}, { flush: 'post' })
 
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
@@ -56,11 +87,11 @@ function clearListeners() {
 }
 
 useResizeObserver(editor, () => {
-  cm.value?.refresh()
+  codemirrorRef.value?.refresh()
 })
 
 function codemirrorChanges() {
-  draft.value = serverCode.value !== cm.value!.getValue()
+  draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
 watch(
@@ -105,8 +136,8 @@ function createErrorElement(e: ErrorWithDiff) {
   }
   div.appendChild(span)
   listeners.push([span, el, () => destroyTooltip(span)])
-  handles.push(cm.value!.addLineClass(stack.line - 1, 'wrap', 'bg-red-500/10'))
-  widgets.push(cm.value!.addLineWidget(stack.line - 1, div))
+  handles.push(codemirrorRef.value!.addLineClass(stack.line - 1, 'wrap', 'bg-red-500/10'))
+  widgets.push(codemirrorRef.value!.addLineWidget(stack.line - 1, div))
 }
 
 watch(
@@ -120,7 +151,7 @@ watch(
     setTimeout(() => {
       clearListeners()
       widgets.forEach(widget => widget.clear())
-      handles.forEach(h => cm.value?.removeLineClass(h, 'wrap'))
+      handles.forEach(h => codemirrorRef.value?.removeLineClass(h, 'wrap'))
       widgets.length = 0
       handles.length = 0
 
@@ -146,11 +177,11 @@ async function onSave(content: string) {
 </script>
 
 <template>
-  <CodeMirror
+  <CodeMirrorContainer
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{ lineNumbers: true }"
+    v-bind="{ lineNumbers: true, readOnly: isReport }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"
