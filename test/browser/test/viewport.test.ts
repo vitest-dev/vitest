@@ -18,9 +18,19 @@ describe.skipIf(server.provider === 'preview')('viewport window has been properl
     while (topWindow.parent && topWindow !== topWindow.parent) {
       topWindow = topWindow.parent as unknown as any
     }
-    // eslint-disable-next-line no-console
-    console.log({ availWidth: screen.availWidth, innerWidth: topWindow.innerWidth })
 
-    expect(screen.availWidth - topWindow.innerWidth === 0).toBe(true)
+    // edge will show the Hub Apps right panel
+    if (server.browser === 'edge') {
+      // eslint-disable-next-line no-console
+      console.log({ availWidth: topWindow.visualViewport.width, innerWidth: topWindow.innerWidth })
+
+      expect(topWindow.visualViewport.width - topWindow.innerWidth === 0).toBe(true)
+    }
+    else {
+      // eslint-disable-next-line no-console
+      console.log({ availWidth: screen.availWidth, innerWidth: topWindow.innerWidth })
+
+      expect(screen.availWidth - topWindow.innerWidth === 0).toBe(true)
+    }
   })
 })
