@@ -17,7 +17,7 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
-import type { Pool, PoolOptions } from './pool-options'
+import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -969,7 +969,7 @@ export interface ResolvedConfig
 
   browser: ResolvedBrowserOptions
   pool: Pool
-  poolOptions?: PoolOptions
+  poolOptions?: ResolvedPoolOptions
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 

@@ -16,7 +16,7 @@ import {
 } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { isCI, stdProvider, toArray } from '../utils'
-import type { BuiltinPool } from '../types/pool-options'
+import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import { getWorkersCountByPercentage } from '../utils/workers'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
@@ -98,6 +98,15 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   return api
 }
 
+function resolveInlineWorkerOption(value: string | number): number {
+  if (typeof value === 'string' && value.trim().endsWith('%')) {
+    return getWorkersCountByPercentage(value)
+  }
+  else {
+    return Number(value)
+  }
+}
+
 export function resolveConfig(
   mode: VitestRunMode,
   options: UserConfig,
@@ -177,21 +186,11 @@ export function resolveConfig(
   }
 
   if (resolved.maxWorkers) {
-    if (typeof options.maxWorkers === 'string' && options.maxWorkers.trim().endsWith('%')) {
-      resolved.maxWorkers = getWorkersCountByPercentage(options.maxWorkers)
-    }
-    else {
-      resolved.maxWorkers = Number(resolved.maxWorkers)
-    }
+    resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
   if (resolved.minWorkers) {
-    if (typeof options.minWorkers === 'string' && options.minWorkers.trim().endsWith('%')) {
-      resolved.minWorkers = getWorkersCountByPercentage(options.minWorkers)
-    }
-    else {
-      resolved.minWorkers = Number(resolved.minWorkers)
-    }
+    resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
   }
 
   resolved.browser ??= {} as any
@@ -444,6 +443,48 @@ export function resolveConfig(
         ...resolved.poolOptions?.vmForks,
         minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
       },
+    }
+  }
+
+  const poolThreadsOptions = [
+    ['threads', 'minThreads'],
+    ['threads', 'maxThreads'],
+    ['vmThreads', 'minThreads'],
+    ['vmThreads', 'maxThreads'],
+  ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
+
+  for (const [poolOptionKey, workerOptionKey] of poolThreadsOptions) {
+    const workerInlineOption = resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]
+
+    if (workerInlineOption) {
+      resolved.poolOptions = {
+        ...resolved.poolOptions,
+        [poolOptionKey]: {
+          ...resolved.poolOptions?.[poolOptionKey],
+          [workerOptionKey]: resolveInlineWorkerOption(workerInlineOption),
+        },
+      }
+    }
+  }
+
+  const poolForksOptions = [
+    ['forks', 'minForks'],
+    ['forks', 'maxForks'],
+    ['vmForks', 'minForks'],
+    ['vmForks', 'maxForks'],
+  ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
+
+  for (const [poolOptionKey, workerOptionKey] of poolForksOptions) {
+    const workerInlineOption = resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]
+
+    if (workerInlineOption) {
+      resolved.poolOptions = {
+        ...resolved.poolOptions,
+        [poolOptionKey]: {
+          ...resolved.poolOptions?.[poolOptionKey],
+          [workerOptionKey]: resolveInlineWorkerOption(workerInlineOption),
+        },
+      }
     }
   }
 
