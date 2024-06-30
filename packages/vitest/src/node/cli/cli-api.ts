@@ -6,6 +6,7 @@ import type { UserConfig, Vitest, VitestRunMode } from '../../types'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { VitestOptions } from '../core'
+import { GitNotFoundError, NoTestsFoundError } from '../errors'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -108,6 +109,15 @@ export async function startVitest(
     }
   }
   catch (e) {
+    if (e instanceof NoTestsFoundError) {
+      return ctx
+    }
+
+    if (e instanceof GitNotFoundError) {
+      ctx.logger.error(e.message)
+      return ctx
+    }
+
     process.exitCode = 1
     ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')

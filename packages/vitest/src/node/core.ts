@@ -493,7 +493,7 @@ export class Vitest {
       if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         const exitCode = this.config.passWithNoTests ? 0 : 1
         process.exitCode = exitCode
-        throw new NoTestsFoundError()
+        throw new NoTestsFoundError(this.mode)
       }
     }
 
@@ -567,8 +567,6 @@ export class Vitest {
       if (!related) {
         process.exitCode = 1
         throw new GitNotFoundError()
-        // this.logger.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
-        // process.exit(1)
       }
       this.config.related = Array.from(new Set(related))
     }

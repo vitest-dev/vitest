@@ -1,6 +1,6 @@
 export class NoTestsFoundError extends Error {
-  constructor() {
-    super('No tests with specified filters found.')
+  constructor(mode: 'test' | 'benchmark') {
+    super(`No ${mode} files found`)
   }
 }
 
