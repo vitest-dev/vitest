@@ -148,4 +148,8 @@ export interface VitestRunner {
    * Publicly available configuration.
    */
   config: VitestRunnerConfig
+  /**
+   * The name of the current pool. Can affect how stack trace is inferred on the server side.
+   */
+  pool?: string
 }
