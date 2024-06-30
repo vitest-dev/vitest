@@ -108,11 +108,14 @@ export class Logger {
         // browser stack trace needs to be processed differently,
         // so there is a separate method for that
         if (options.task?.file.pool === 'browser' && project.browser) {
-          return project.browser.parseErrorStacktrace(error)
+          return project.browser.parseErrorStacktrace(error, {
+            ignoreStackEntries: fullStack ? [] : undefined,
+          })
         }
 
         // node.js stack trace already has correct source map locations
         return parseErrorStacktrace(error, {
+          frameFilter: project.config.onStackTrace,
           ignoreStackEntries: fullStack ? [] : undefined,
         })
       },
