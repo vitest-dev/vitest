@@ -100,6 +100,7 @@ export default antfu(
       'import/newline-after-import': 'off',
       'import/first': 'off',
       'unused-imports/no-unused-imports': 'off',
+      'ts/method-signature-style': 'off',
     },
   },
   {

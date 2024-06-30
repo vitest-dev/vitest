@@ -28,6 +28,8 @@ export class VitestTestRunner implements VitestRunner {
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
+  public pool = this.workerState.ctx.pool
+
   constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {

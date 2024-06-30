@@ -13,6 +13,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "meta": {},
       "mode": "run",
       "name": "json-fail.test.ts",
+      "pool": "forks",
       "prepareDuration": 0,
       "result": {
         "duration": 0,
@@ -126,6 +127,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "meta": {},
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
+      "pool": "forks",
       "prepareDuration": 0,
       "result": {
         "duration": 0,

@@ -465,12 +465,16 @@ export const page: {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport: (width: number | string, height: number | string) => Promise<void>
+  viewport(width: number | string, height: number | string): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
-   * @returns Path to the screenshot file.
+   * @returns Path to the screenshot file or path and base64.
    */
-  screenshot: (options?: ScreenshotOptions) => Promise<string>
+  screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: ScreenshotOptions): Promise<string>
 }
 
 export const cdp: () => CDPSession
