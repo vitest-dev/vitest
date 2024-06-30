@@ -4,7 +4,7 @@ title: Interactivity API | Browser Mode
 
 # Interactivity API
 
-Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) APIs instead of faking events which makes the browser behaviour more reliable and consistent.
+Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) APIs instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
 
 Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types to your `tsconfig.json` file:
 
@@ -379,7 +379,7 @@ test('drag and drop works', async () => {
 ```
 
 ::: warning
-This API is not supported by the `preview` provider.
+This API is not supported by the default `preview` provider.
 :::
 
 References:
