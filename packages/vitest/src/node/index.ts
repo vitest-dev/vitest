@@ -14,7 +14,7 @@ export { createDebugger } from '../utils/debugger'
 export { resolveFsAllow } from './plugins/utils'
 export { resolveApiServerConfig, resolveConfig } from './config'
 
-export { GitNotFoundError, NoTestsFoundError } from './errors'
+export { GitNotFoundError, TestsNotFoundError } from './errors'
 
 export { distDir, rootDir } from '../paths'
 
