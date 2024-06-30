@@ -36,6 +36,8 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/- 2\s+\+ 1/)
     expect(stderr).toContain('Expected to be')
     expect(stderr).toContain('But got')
+    expect(stderr).toContain('Failure screenshot')
+    expect(stderr).toContain('__screenshots__/failing')
   })
 
   test('logs are redirected to stdout', () => {
@@ -103,7 +105,10 @@ error with a stack
 
   test(`stack trace points to correct file in every browser`, () => {
     // dependeing on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:4:(12|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:5:(12|17)/)
+
+    // column is 18 in safari, 8 in others
+    expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
   })
 
   test('popup apis should log a warning', () => {

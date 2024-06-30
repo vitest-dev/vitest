@@ -75,6 +75,52 @@ describe('userEvent.dblClick', () => {
   })
 })
 
+describe('userEvent.tripleClick', () => {
+  test('correctly clicks a button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    const tripleClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+    button.addEventListener('click', tripleClick)
+
+    await userEvent.tripleClick(button)
+
+    expect(onClick).toHaveBeenCalledTimes(3)
+    expect(dblClick).toHaveBeenCalledTimes(1)
+    expect(tripleClick).toHaveBeenCalledTimes(3)
+    expect(tripleClick.mock.calls.length).toBe(3)
+    expect(tripleClick.mock.calls
+      .map(c => c[0] as MouseEvent)
+      .filter(c => c.detail === 3)).toHaveLength(1)
+  })
+
+  test('correctly doesn\'t click on a disabled button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    button.disabled = true
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    const tripleClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+    button.addEventListener('click', tripleClick)
+
+    await userEvent.tripleClick(button, {
+      // playwright requires force: true to click on a disabled button
+      force: true,
+    })
+
+    expect(onClick).not.toHaveBeenCalled()
+    expect(dblClick).not.toHaveBeenCalled()
+    expect(tripleClick).not.toHaveBeenCalled()
+  })
+})
+
 describe('userEvent.hover, userEvent.unhover', () => {
   test('hover works correctly', async () => {
     const target = document.createElement('div')

@@ -4,13 +4,11 @@ import { Writable } from 'node:stream'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import { inspect } from '@vitest/utils'
 import stripAnsi from 'strip-ansi'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import {
   lineSplitRE,
-  parseErrorStacktrace,
   positionToOffset,
 } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
@@ -18,18 +16,20 @@ import { TypeCheckError } from '../typecheck/typechecker'
 import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
+import type { ErrorOptions } from './logger'
 import { Logger } from './logger'
 import type { WorkspaceProject } from './workspace'
 
 interface PrintErrorOptions {
   type?: string
   logger: Logger
-  fullStack?: boolean
   showCodeFrame?: boolean
   printProperties?: boolean
+  screenshotPaths?: string[]
+  parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
 }
 
-interface PrintErrorResult {
+export interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
@@ -37,7 +37,7 @@ interface PrintErrorResult {
 export function capturePrintError(
   error: unknown,
   ctx: Vitest,
-  project: WorkspaceProject,
+  options: ErrorOptions,
 ) {
   let output = ''
   const writable = new Writable({
@@ -46,9 +46,10 @@ export function capturePrintError(
       callback()
     },
   })
-  const result = printError(error, project, {
+  const logger = new Logger(ctx, writable, writable)
+  const result = logger.printError(error, {
     showCodeFrame: false,
-    logger: new Logger(ctx, writable, writable),
+    ...options,
   })
   return { nearest: result?.nearest, output }
 }
@@ -58,7 +59,7 @@ export function printError(
   project: WorkspaceProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
-  const { showCodeFrame = true, fullStack = false, type, printProperties = true } = options
+  const { showCodeFrame = true, type, printProperties = true } = options
   const logger = options.logger
   let e = error as ErrorWithDiff
 
@@ -83,16 +84,7 @@ export function printError(
     return
   }
 
-  const parserOptions: StackTraceParserOptions = {
-    // only browser stack traces require remapping
-    getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-    frameFilter: project.config.onStackTrace,
-  }
-
-  if (fullStack) {
-    parserOptions.ignoreStackEntries = []
-  }
-  const stacks = parseErrorStacktrace(e, parserOptions)
+  const stacks = options.parseErrorStacktrace(e)
 
   const nearest
     = error instanceof TypeCheckError
@@ -110,14 +102,19 @@ export function printError(
         }
       })
 
-  const errorProperties = printProperties
-    ? getErrorProperties(e)
-    : {}
-
   if (type) {
     printErrorType(type, project.ctx)
   }
   printErrorMessage(e, logger)
+  if (options.screenshotPaths?.length) {
+    const length = options.screenshotPaths.length
+    logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
+    logger.error(options.screenshotPaths.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    if (!e.diff) {
+      logger.error()
+    }
+  }
+
   if (e.codeFrame) {
     logger.error(`${e.codeFrame}\n`)
   }
@@ -132,6 +129,10 @@ export function printError(
     logger.error(c.yellow(e.frame))
   }
   else {
+    const errorProperties = printProperties
+      ? getErrorProperties(e)
+      : {}
+
     printStack(logger, project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
@@ -185,9 +186,9 @@ export function printError(
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
     printError(e.cause, project, {
-      fullStack,
       showCodeFrame: false,
       logger: options.logger,
+      parseErrorStacktrace: options.parseErrorStacktrace,
     })
   }
 
