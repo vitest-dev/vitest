@@ -8,6 +8,9 @@ export default defineConfig({
   server: {
     watch: { ignored: ['**/**'] },
   },
+  esbuild: {
+    legalComments: 'inline',
+  },
   build: {
     minify: false,
     outDir: '../../dist/client',
@@ -19,7 +22,7 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/__virtual_vitest__/],
+      external: [/__virtual_vitest__/, '@vitest/browser/context'],
     },
   },
   plugins: [
@@ -27,7 +30,7 @@ export default defineConfig({
       name: 'virtual:msw',
       enforce: 'pre',
       resolveId(id) {
-        if (id.startsWith('msw') || id.startsWith('vitest')) {
+        if (id.startsWith('msw') || id.startsWith('vitest') || id.startsWith('@vitest/browser')) {
           return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
         }
       },

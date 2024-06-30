@@ -19,6 +19,10 @@ export interface FsOptions {
   flag?: string | number
 }
 
+export interface CDPSession {
+  // methods are defined by the provider type augmentation
+}
+
 export interface ScreenshotOptions {
   element?: Element
   /**
@@ -56,6 +60,13 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
    */
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  /**
+   * Triggers a triple click event on an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API: using `click` with `clickCount: 3`
+   * @see {@link https://webdriver.io/docs/api/browser/actions/} WebdriverIO API: using actions with `move` and 3 `down + up + down` events in a row
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#tripleclick} testing-library API
+   */
+  tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -161,6 +172,7 @@ export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
 export interface UserEventDoubleClickOptions {}
+export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 
 export interface UserEventTabOptions {
@@ -242,3 +254,4 @@ export interface BrowserPage {
 }
 
 export const page: BrowserPage
+export const cdp: () => CDPSession

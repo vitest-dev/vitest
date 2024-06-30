@@ -107,5 +107,20 @@ test.describe('ui', () => {
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+
+    // match only failing files when fail filter applied
+    await page.getByPlaceholder('Search...').fill('')
+    await page.getByText(/^Fail$/, { exact: true }).click()
+    await page.getByText('FAIL (1)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+
+    // match only pass files when fail filter applied
+    await page.getByPlaceholder('Search...').fill('console')
+    await page.getByText(/^Fail$/, { exact: true }).click()
+    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+    await page.getByText('PASS (1)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
   })
 })

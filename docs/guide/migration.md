@@ -78,6 +78,24 @@ This makes `.suite` optional; if the task is defined at the top level, it will n
 
 This change also removes the file from `expect.getState().currentTestName` and makes `expect.getState().testPath` required.
 
+### Simplified generic types of mock functions (e.g. `vi.fn<T>`, `Mock<T>`)
+
+Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguemnts and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
+
+```ts
+import { type Mock, vi } from 'vitest'
+
+const add = (x: number, y: number): number => x + y
+
+// using vi.fn<T>
+const mockAdd = vi.fn<Parameters<typeof add>, ReturnType<typeof add>>() // [!code --]
+const mockAdd = vi.fn<typeof add>() // [!code ++]
+
+// using Mock<T>
+const mockAdd: Mock<Parameters<typeof add>, ReturnType<typeof add>> = vi.fn() // [!code --]
+const mockAdd: Mock<typeof add> = vi.fn() // [!code ++]
+```
+
 ## Migrating to Vitest 1.0
 
 <!-- introduction -->
@@ -324,12 +342,10 @@ export default defineConfig({
 Vitest doesn't have an equivalent to `jest` namespace, so you will need to import types directly from `vitest`:
 
 ```ts
-let fn: jest.Mock<string, [string]> // [!code --]
+let fn: jest.Mock<(name: string) => number> // [!code --]
 import type { Mock } from 'vitest' // [!code ++]
-let fn: Mock<[string], string> // [!code ++]
+let fn: Mock<(name: string) => number> // [!code ++]
 ```
-
-Also, Vitest has `Args` type as a first argument instead of `Returns`, as you can see in diff.
 
 ### Timers
 

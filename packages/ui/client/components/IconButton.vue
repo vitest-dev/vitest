@@ -18,7 +18,7 @@ defineProps<{
     class="w-1.4em h-1.4em flex" :class="[{ 'bg-gray-500:35 op100': active }]"
   >
     <slot>
-      <div :class="icon" ma />
+      <span :class="icon" ma block />
     </slot>
   </button>
 </template>

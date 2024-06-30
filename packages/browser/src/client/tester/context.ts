@@ -73,11 +73,16 @@ export const userEvent: UserEvent = {
     const xpath = convertElementToXPath(element)
     return triggerCommand('__vitest_dblClick', xpath, options)
   },
+  tripleClick(element: Element, options: UserEventClickOptions = {}) {
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_tripleClick', xpath, options)
+  },
   selectOptions(element, value) {
     const values = provider === 'webdriverio'
       ? getWebdriverioSelectOptions(element, value)
       : getSimpleSelectOptions(element, value)
-    return triggerCommand('__vitest_selectOptions', convertElementToXPath(element), values)
+    const xpath = convertElementToXPath(element)
+    return triggerCommand('__vitest_selectOptions', xpath, values)
   },
   type(element: Element, text: string, options: UserEventTypeOptions = {}) {
     const xpath = convertElementToXPath(element)
@@ -163,6 +168,10 @@ function getSimpleSelectOptions(element: Element, value: string | string[] | HTM
   })
 }
 
+export function cdp() {
+  return runner().cdp!
+}
+
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   get config() {
@@ -206,7 +215,7 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount][taskName] = number + 1
 
     const name
-      = options.path || `${taskName.replace(/[^a-z0-9]/g, '-')}-${number}.png`
+      = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
     return triggerCommand('__vitest_screenshot', name, {
       ...options,

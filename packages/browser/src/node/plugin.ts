@@ -22,6 +22,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
 
+  let loupePath: string
+
   return [
     {
       enforce: 'pre',
@@ -111,22 +113,60 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           file => getFilePoolName(project, file) === 'browser',
         )
         const setupFiles = toArray(project.config.setupFiles)
+
+        // replace env values - cannot be reassign at runtime
+        const define: Record<string, string> = {}
+        for (const env in (project.config.env || {})) {
+          const stringValue = JSON.stringify(project.config.env[env])
+          define[`process.env.${env}`] = stringValue
+          define[`import.meta.env.${env}`] = stringValue
+        }
+
+        const entries: string[] = [
+          ...browserTestFiles,
+          ...setupFiles,
+          resolve(vitestDist, 'index.js'),
+          resolve(vitestDist, 'browser.js'),
+          resolve(vitestDist, 'runners.js'),
+          resolve(vitestDist, 'utils.js'),
+          ...(project.config.snapshotSerializers || []),
+        ]
+
+        if (project.config.diff) {
+          entries.push(project.config.diff)
+        }
+
+        if (project.ctx.coverageProvider) {
+          const coverage = project.ctx.config.coverage
+          const provider = coverage.provider
+          if (provider === 'v8') {
+            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+            }
+          }
+          else if (provider === 'istanbul') {
+            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+            }
+          }
+          else if (provider === 'custom' && coverage.customProviderModule) {
+            entries.push(coverage.customProviderModule)
+          }
+        }
+
         return {
+          define,
           optimizeDeps: {
-            entries: [
-              ...browserTestFiles,
-              ...setupFiles,
-              resolve(vitestDist, 'index.js'),
-              resolve(vitestDist, 'browser.js'),
-              resolve(vitestDist, 'runners.js'),
-              resolve(vitestDist, 'utils.js'),
-            ],
+            entries,
             exclude: [
               'vitest',
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
               '@vitest/utils',
+              '@vitest/utils/source-map',
               '@vitest/runner',
               '@vitest/spy',
               '@vitest/utils/error',
@@ -150,6 +190,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'vitest > chai > loupe',
               'vitest > @vitest/runner > p-limit',
               'vitest > @vitest/utils > diff-sequences',
+              'vitest > @vitest/utils > loupe',
               '@vitest/browser > @testing-library/user-event',
               '@vitest/browser > @testing-library/dom',
             ],
@@ -179,7 +220,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         if (rawId.startsWith('/__virtual_vitest__')) {
           const url = new URL(rawId, 'http://localhost')
           if (!url.searchParams.has('id')) {
-            throw new TypeError(`Invalid virtual module id: ${rawId}, requires "id" query.`)
+            return
           }
 
           const id = decodeURIComponent(url.searchParams.get('id')!)
@@ -204,6 +245,16 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
+      configResolved(config) {
+        loupePath = resolve(config.cacheDir, 'deps/loupe.js')
+      },
+      transform(code, id) {
+        if (id.startsWith(loupePath)) {
+          // loupe bundle has a nastry require('util') call that leaves a warning in the console
+          const utilRequire = 'nodeUtil = require_util();'
+          return code.replace(utilRequire, ' '.repeat(utilRequire.length))
+        }
+      },
     },
     BrowserContext(browserServer),
     DynamicImport(),
@@ -212,10 +263,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        if (viteConfig.esbuild !== false) {
-          viteConfig.esbuild ||= {}
-          viteConfig.esbuild.legalComments = 'inline'
-        }
+        viteConfig.esbuild ||= {}
+        viteConfig.esbuild.legalComments = 'inline'
+
         const server = resolveApiServerConfig(
           viteConfig.test?.browser || {},
           defaultBrowserPort,
@@ -249,17 +299,30 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     // TODO: remove this when @testing-library/vue supports ESM
     {
-      name: 'vitest:browser:support-vue-testing-library',
+      name: 'vitest:browser:support-testing-library',
       config() {
         return {
+          define: {
+            // testing-library/preact
+            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
+            // testing-library/react
+            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
+            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
+            // testing-library/svelte, testing-library/solid
+            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
+            // testing-library/vue
+            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
+            // dom.debug()
+            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
+          },
           optimizeDeps: {
             esbuildOptions: {
               plugins: [
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    const _require = createRequire(import.meta.url)
                     build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
+                      const _require = getRequire()
                       // resolve to CJS instead of the browser because the browser version expects a global Vue object
                       const resolved = _require.resolve(args.path, {
                         paths: [args.importer],
@@ -275,6 +338,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
   ]
+}
+
+function tryResolve(path: string, paths: string[]) {
+  try {
+    const _require = getRequire()
+    return _require.resolve(path, { paths })
+  }
+  catch {
+    return undefined
+  }
+}
+
+let _require: NodeRequire
+function getRequire() {
+  if (!_require) {
+    _require = createRequire(import.meta.url)
+  }
+  return _require
 }
 
 function resolveCoverageFolder(project: WorkspaceProject) {

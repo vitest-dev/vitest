@@ -25,14 +25,13 @@ export async function createBrowserServer(
   const vite = await createServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
-    logLevel: 'error',
+    logLevel: (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info',
     mode: project.config.mode,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
       hmr: false,
       watch: null,
-      preTransformRequests: false,
     },
     plugins: [
       ...prePlugins,
@@ -45,9 +44,6 @@ export async function createBrowserServer(
   await vite.listen()
 
   setupBrowserRpc(server)
-  // if (project.config.browser.ui) {
-  //   setupUiRpc(project.ctx, server)
-  // }
 
   return server
 }

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0-beta.12",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -27,6 +27,9 @@
     "./context": {
       "types": "./context.d.ts",
       "default": "./context.js"
+    },
+    "./matchers": {
+      "types": "./matchers.d.ts"
     },
     "./providers/webdriverio": {
       "types": "./providers/webdriverio.d.ts"
@@ -79,6 +82,7 @@
     "ws": "^8.17.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
     "@types/ws": "^8.5.10",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",

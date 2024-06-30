@@ -10,7 +10,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.frame
+    const tester = context.iframe
     await tester.locator(`xpath=${xpath}`).click({
       timeout: 1000,
       ...options,
@@ -33,7 +33,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
-    const tester = context.frame
+    const tester = context.iframe
     await tester.locator(`xpath=${xpath}`).dblclick(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
@@ -43,5 +43,44 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   }
   else {
     throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)
+  }
+}
+
+export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
+  context,
+  xpath,
+  options = {},
+) => {
+  const provider = context.provider
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const tester = context.iframe
+    await tester.locator(`xpath=${xpath}`).click({
+      timeout: 1000,
+      ...options,
+      clickCount: 3,
+    })
+  }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
+    const markedXpath = `//${xpath}`
+    await browser
+      .action('pointer', { parameters: { pointerType: 'mouse' } })
+      // move the pointer over the button
+      .move({ origin: await browser.$(markedXpath) })
+      // simulate 3 clicks
+      .down()
+      .up()
+      .pause(50)
+      .down()
+      .up()
+      .pause(50)
+      .down()
+      .up()
+      .pause(50)
+      // run the sequence
+      .perform()
+  }
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support tripleClick command`)
   }
 }

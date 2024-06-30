@@ -115,10 +115,10 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  provide = <T extends keyof ProvidedContext>(
+  provide<T extends keyof ProvidedContext & string>(
     key: T,
     value: ProvidedContext[T],
-  ) => {
+  ) {
     try {
       structuredClone(value)
     }
@@ -157,7 +157,7 @@ export class WorkspaceProject {
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.({
-        provide: this.provide,
+        provide: (key, value) => this.provide(key, value),
         config: this.config,
       })
       if (teardown == null || !!globalSetupFile.teardown) {

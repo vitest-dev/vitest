@@ -9,6 +9,13 @@ export interface BrowserProviderInitializationOptions {
   options?: BrowserProviderOptions
 }
 
+export interface CDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+  on: (event: string, listener: (...args: unknown[]) => void) => void
+  once: (event: string, listener: (...args: unknown[]) => void) => void
+  off: (event: string, listener: (...args: unknown[]) => void) => void
+}
+
 export interface BrowserProvider {
   name: string
   /**
@@ -20,6 +27,7 @@ export interface BrowserProvider {
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (contextId: string) => Record<string, unknown>
   openPage: (contextId: string, url: string) => Promise<void>
+  getCDPSession?: (contextId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -33,6 +41,8 @@ export interface BrowserProviderModule {
 }
 
 export interface BrowserProviderOptions {}
+
+export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
 export interface BrowserConfigOptions {
   /**
@@ -52,7 +62,7 @@ export interface BrowserConfigOptions {
    *
    * @default 'preview'
    */
-  provider?: 'webdriverio' | 'playwright' | 'preview' | (string & {})
+  provider?: BrowserBuiltinProvider | (string & {})
 
   /**
    * Options that are passed down to a browser provider.
@@ -125,6 +135,13 @@ export interface BrowserConfigOptions {
    * @default __screenshots__
    */
   screenshotDirectory?: string
+
+  /**
+   * Should Vitest take screenshots if the test fails
+   * @default !browser.ui
+   */
+  screenshotFailures?: boolean
+
   /**
    * Scripts injected into the tester iframe.
    */

@@ -1041,6 +1041,9 @@ export type ProjectConfig = Omit<
   | 'inspectBrk'
   | 'deps'
   | 'coverage'
+  | 'maxWorkers'
+  | 'minWorkers'
+  | 'fileParallelism'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>

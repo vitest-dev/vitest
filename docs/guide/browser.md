@@ -8,7 +8,26 @@ This page provides information about the experimental browser mode feature in th
 
 ## Installation
 
-By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
+For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.
+
+::: code-group
+```bash [npm]
+npx vitest init browser
+```
+```bash [yarn]
+yarn exec vitest init browser
+```
+```bash [pnpm]
+pnpx vitest init browser
+```
+```bash [bun]
+bunx vitest init browser
+```
+:::
+
+### Manual Installation
+
+You can also install packages manually. By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
 
 ::: code-group
 ```bash [npm]
@@ -77,6 +96,112 @@ export default defineConfig({
     },
   }
 })
+```
+
+If you have not used Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
+
+::: code-group
+```ts [vue]
+import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chrome',
+    }
+  }
+})
+```
+```ts [svelte]
+import { defineConfig } from 'vitest/config'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+
+export default defineConfig({
+  plugins: [svelte()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chrome',
+    }
+  }
+})
+```
+```ts [solid]
+import { defineConfig } from 'vitest/config'
+import solidPlugin from 'vite-plugin-solid'
+
+export default defineConfig({
+  plugins: [solidPlugin()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chrome',
+    }
+  }
+})
+```
+```ts [marko]
+import { defineConfig } from 'vitest/config'
+import marko from '@marko/vite'
+
+export default defineConfig({
+  plugins: [marko()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chrome',
+    }
+  }
+})
+```
+:::
+
+::: tip
+`react` doesn't require a plugin to work, but `preact` requires [extra configuration](https://preactjs.com/guide/v10/getting-started/#create-a-vite-powered-preact-app) to make aliases work.
+:::
+
+If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
+
+```ts
+// vitest.workspace.ts
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    test: {
+      // an example of file based convention,
+      // you don't have to follow it
+      include: [
+        'tests/unit/**/*.{test,spec}.ts',
+        'tests/**/*.unit.{test,spec}.ts',
+      ],
+      name: 'unit',
+      environment: 'node',
+    },
+  },
+  {
+    test: {
+      // an example of file based convention,
+      // you don't have to follow it
+      include: [
+        'tests/browser/**/*.{test,spec}.ts',
+        'tests/**/*.browser.{test,spec}.ts',
+      ],
+      name: 'browser',
+      browser: {
+        enabled: true,
+        name: 'chrome',
+      },
+    },
+  },
+])
 ```
 
 ## Browser Option Types
@@ -176,6 +301,102 @@ In this case, Vitest will run in headless mode using the Chrome browser.
 Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
 :::
 
+## Assertion API
+
+Vitest bundles [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. For detailed documentation, you can read the `jest-dom` readme:
+
+- [`toBeDisabled`](https://github.com/testing-library/jest-dom#toBeDisabled)
+- [`toBeEnabled`](https://github.com/testing-library/jest-dom#toBeEnabled)
+- [`toBeEmptyDOMElement`](https://github.com/testing-library/jest-dom#toBeEmptyDOMElement)
+- [`toBeInTheDocument`](https://github.com/testing-library/jest-dom#toBeInTheDocument)
+- [`toBeInvalid`](https://github.com/testing-library/jest-dom#toBeInvalid)
+- [`toBeRequired`](https://github.com/testing-library/jest-dom#toBeRequired)
+- [`toBeValid`](https://github.com/testing-library/jest-dom#toBeValid)
+- [`toBeVisible`](https://github.com/testing-library/jest-dom#toBeVisible)
+- [`toContainElement`](https://github.com/testing-library/jest-dom#toContainElement)
+- [`toContainHTML`](https://github.com/testing-library/jest-dom#toContainHTML)
+- [`toHaveAccessibleDescription`](https://github.com/testing-library/jest-dom#toHaveAccessibleDescription)
+- [`toHaveAccessibleErrorMessage`](https://github.com/testing-library/jest-dom#toHaveAccessibleErrorMessage)
+- [`toHaveAccessibleName`](https://github.com/testing-library/jest-dom#toHaveAccessibleName)
+- [`toHaveAttribute`](https://github.com/testing-library/jest-dom#toHaveAttribute)
+- [`toHaveClass`](https://github.com/testing-library/jest-dom#toHaveClass)
+- [`toHaveFocus`](https://github.com/testing-library/jest-dom#toHaveFocus)
+- [`toHaveFormValues`](https://github.com/testing-library/jest-dom#toHaveFormValues)
+- [`toHaveStyle`](https://github.com/testing-library/jest-dom#toHaveStyle)
+- [`toHaveTextContent`](https://github.com/testing-library/jest-dom#toHaveTextContent)
+- [`toHaveValue`](https://github.com/testing-library/jest-dom#toHaveValue)
+- [`toHaveDisplayValue`](https://github.com/testing-library/jest-dom#toHaveDisplayValue)
+- [`toBeChecked`](https://github.com/testing-library/jest-dom#toBeChecked)
+- [`toBePartiallyChecked`](https://github.com/testing-library/jest-dom#toBePartiallyChecked)
+- [`toHaveRole`](https://github.com/testing-library/jest-dom#toHaveRole)
+- [`toHaveErrorMessage`](https://github.com/testing-library/jest-dom#toHaveErrorMessage)
+
+If you are using TypeScript or want to have correct type hints in `expect`, make sure you have either `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` specified in your `tsconfig` depending on the provider you use. If you use the default `preview` provider, you can specify `@vitest/browser/matchers` instead.
+
+::: code-group
+```json [preview]
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/matchers"
+    ]
+  }
+}
+```
+```json [playwright]
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/playwright"
+    ]
+  }
+}
+```
+```json [webdriverio]
+{
+  "compilerOptions": {
+    "types": [
+      "@vitest/browser/providers/webdriverio"
+    ]
+  }
+}
+```
+:::
+
+## Retry-ability
+
+Tests in the browser might fail inconsistently due to their asynchronous nature. Because of this, it is important to have a way to guarantee that assertions succeed even if the condition is delayed (by a timeout, network request, or animation, for example). For this purpose, Vitest provides retriable assertions out of the box via the [`expect.poll`](/api/expect#poll) and `expect.element` APIs:
+
+```ts
+import { expect, test } from 'vitest'
+import { screen } from '@testing-library/dom'
+
+test('error banner is rendered', async () => {
+  triggerError()
+
+  // @testing-library provides queries with built-in retry-ability
+  // It will try to find the banner until it's rendered
+  const banner = await screen.findByRole('alert', {
+    name: /error/i,
+  })
+
+  // Vitest provides `expect.element` with built-in retry-ability
+  // It will check `element.textContent` until it's equal to "Error!"
+  await expect.element(banner).toHaveTextContent('Error!')
+})
+```
+
+::: tip
+`expect.element` is a shorthand for `expect.poll(() => element)` and works in exactly the same way.
+
+`toHaveTextContent` and all other [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
+
+```ts
+// will fail immediately if .textContent is not `'Error!'`
+expect(banner).toHaveTextContent('Error!')
+```
+:::
+
 ## Context
 
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
@@ -207,111 +428,26 @@ export const server: {
 }
 
 /**
- * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
+ * Handler for user interactions. The support is implemented by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
  * @experimental
  */
 export const userEvent: {
   setup: () => UserEvent
-  /**
-   * Click on an element. Uses provider's API under the hood and supports all its options.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/click/} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
-   */
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
-  /**
-   * Triggers a double click event on an element. Uses provider's API under the hood.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-dblclick} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
-   */
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
-  /**
-   * Choose one or more values from a select element. Uses provider's API under the hood.
-   * If select doesn't have `multiple` attribute, only the first value will be selected.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-select-option} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
-   */
   selectOptions: (
     element: Element,
     values: HTMLElement | HTMLElement[] | string | string[],
     options?: UserEventSelectOptions,
   ) => Promise<void>
-  /**
-   * Type text on the keyboard. If any input is focused, it will receive the text,
-   * otherwise it will be typed on the document. Uses provider's API under the hood.
-   * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
-   * @example
-   * await userEvent.keyboard('foo') // translates to: f, o, o
-   * await userEvent.keyboard('{{a[[') // translates to: {, a, [
-   * await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/keyboard} testing-library API
-   */
   keyboard: (text: string) => Promise<void>
-  /**
-   * Types text into an element. Uses provider's API under the hood.
-   * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
-   * @example
-   * await userEvent.type(input, 'foo') // translates to: f, o, o
-   * await userEvent.type(input, '{{a[[') // translates to: {, a, [
-   * await userEvent.type(input, '{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
-   */
   type: (element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>
-  /**
-   * Removes all text from an element. Uses provider's API under the hood.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-clear} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
-   */
   clear: (element: Element) => Promise<void>
-  /**
-   * Sends a `Tab` key event. Uses provider's API under the hood.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/keys} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/convenience/#tab} testing-library API
-   */
   tab: (options?: UserEventTabOptions) => Promise<void>
-  /**
-   * Hovers over an element. Uses provider's API under the hood.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-hover} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
-   */
   hover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
-  /**
-   * Moves cursor position to the body element. Uses provider's API under the hood.
-   * By default, the cursor position is in the center (in webdriverio) or in some visible place (in playwright)
-   * of the body element, so if the current element is already there, this will have no effect.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-hover} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
-   */
   unhover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
-  /**
-   * Fills an input element with text. This will remove any existing text in the input before typing the new value.
-   * Uses provider's API under the hood.
-   * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
-   * @example
-   * await userEvent.fill(input, 'foo') // translates to: f, o, o
-   * await userEvent.fill(input, '{{a[[') // translates to: {, {, a, [, [
-   * await userEvent.fill(input, '{Shift}') // translates to: {, S, h, i, f, t, }
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-fill} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/setValue} WebdriverIO API
-   * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
-   */
   fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
-  /**
-   * Drags a source element on top of the target element. This API is not supported by "preview" provider.
-   * @see {@link https://playwright.dev/docs/api/class-frame#frame-drag-and-drop} Playwright API
-   * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
-   */
   dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
 }
 
@@ -336,6 +472,8 @@ export const page: {
    */
   screenshot: (options?: ScreenshotOptions) => Promise<string>
 }
+
+export const cdp: () => CDPSession
 ```
 
 ## Interactivity API
@@ -413,6 +551,31 @@ References:
 - [WebdriverIO `element.doubleClick` API](https://webdriver.io/docs/api/element/doubleClick/)
 - [testing-library `dblClick` API](https://testing-library.com/docs/user-event/convenience/#dblClick)
 
+### userEvent.tripleClick
+
+- **Type:** `(element: Element, options?: UserEventTripleClickOptions) => Promise<void>`
+
+Triggers a triple click event on an element
+
+Please refer to your provider's documentation for detailed explanation about how this method works.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('triggers a triple click on an element', async () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.tripleClick(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.click` API](https://playwright.dev/docs/api/class-locator#locator-click)
+- [WebdriverIO `browser.action` API](https://webdriver.io/docs/api/browser/action/)
+- [testing-library `tripleClick` API](https://testing-library.com/docs/user-event/convenience/#tripleClick)
+
 ### userEvent.fill
 
 - **Type:** `(element: Element, text: string) => Promise<void>`
@@ -480,9 +643,8 @@ Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
 ```ts
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
-import '@testing-library/jest-dom' // adds support for "toHaveFocus"
 
-test('tab works', () => {
+test('tab works', async () => {
   const [input1, input2] = screen.getAllByRole('input')
 
   expect(input1).toHaveFocus()
@@ -545,7 +707,6 @@ This method clear the input element content.
 ```ts
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
-import '@testing-library/jest-dom' // adds support for "toHaveValue"
 
 test('clears input', () => {
   const input = screen.getByRole('input')
@@ -579,7 +740,6 @@ Unlike `@testing-library`, Vitest doesn't support [listbox](https://developer.mo
 ```ts
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
-import '@testing-library/jest-dom' // adds support for "toHaveValue"
 
 test('clears input', () => {
   const select = screen.getByRole('select')
@@ -727,6 +887,29 @@ it('handles files', async () => {
 })
 ```
 
+## CDP Session
+
+Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `@vitest/browser/context`. It is mostly useful to library authors to build tools on top of it.
+
+```ts
+import { cdp } from '@vitest/browser/context'
+
+const input = document.createElement('input')
+document.body.appendChild(input)
+input.focus()
+
+await cdp().send('Input.dispatchKeyEvent', {
+  type: 'keyDown',
+  text: 'a',
+})
+
+expect(input).toHaveValue('a')
+```
+
+::: warning
+CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+:::
+
 ## Custom Commands
 
 You can also add your own commands via [`browser.commands`](/config/#browser-commands) config option. If you develop a library, you can provide them via a `config` hook inside a plugin:
@@ -795,7 +978,8 @@ Custom functions will override built-in ones if they have the same name.
 Vitest exposes several `playwright` specific properties on the command context.
 
 - `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
-- `frame` is the tester [iframe instance](https://playwright.dev/docs/api/class-frame). It has a simillar API to the page, but it doesn't support certain methods.
+- `frame` is an async method that will resolve tester [`Frame`](https://playwright.dev/docs/api/class-frame). It has a simillar API to the `page`, but it doesn't support certain methods. If you need to query an element, you should prefer using `context.iframe` instead because it is more stable and faster.
+- `iframe` is a [`FrameLocator`](https://playwright.dev/docs/api/class-framelocator) that should be used to query other elements on the page.
 - `context` refers to the unique [BrowserContext](https://playwright.dev/docs/api/class-browsercontext).
 
 ```ts
@@ -803,7 +987,7 @@ import { defineCommand } from '@vitest/browser'
 
 export const myCommand = defineCommand(async (ctx, arg1, arg2) => {
   if (ctx.provider.name === 'playwright') {
-    const element = await ctx.frame.findByRole('alert')
+    const element = await ctx.iframe.findByRole('alert')
     const screenshot = await element.screenshot()
     // do something with the screenshot
     return difference
@@ -844,6 +1028,161 @@ If you are using TypeScript, don't forget to add `@vitest/browser/providers/webd
     ]
   }
 }
+```
+:::
+
+## Examples
+
+Browser Mode is framework agnostic so it doesn't provide any method to render your components. However, you should be able to use your framework's test utils packages.
+
+We recommend using `testing-library` packages depending on your framework:
+
+- [`@testing-library/dom`](https://testing-library.com/docs/dom-testing-library/intro) if you don't use a framework
+- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) to render [vue](https://vuejs.org) components
+- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [svelte](https://svelte.dev) components
+- [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [react](https://react.dev) components
+- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
+- [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
+- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+::: warning
+`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](#interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
+:::
+
+::: code-group
+```ts [vue]
+// based on @testing-library/vue example
+// https://testing-library.com/docs/vue-testing-library/examples
+
+import { userEvent } from '@vitest/browser/context'
+import { render, screen } from '@testing-library/vue'
+import Component from './Component.vue'
+
+test('properly handles v-model', async () => {
+  render(Component)
+
+  // Asserts initial state.
+  expect(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
+
+  // Get the input DOM node by querying the associated label.
+  const usernameInput = await screen.findByLabelText(/username/i)
+
+  // Type the name into the input. This already validates that the input
+  // is filled correctly, no need to check the value manually.
+  await userEvent.fill(usernameInput, 'Bob')
+
+  expect(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
+})
+```
+```ts [svelte]
+// based on @testing-library/svelte
+// https://testing-library.com/docs/svelte-testing-library/example
+
+import { render, screen } from '@testing-library/svelte'
+import { userEvent } from '@vitest/browser/context'
+import { expect, test } from 'vitest'
+
+import Greeter from './greeter.svelte'
+
+test('greeting appears on click', async () => {
+  const user = userEvent.setup()
+  render(Greeter, { name: 'World' })
+
+  const button = screen.getByRole('button')
+  await user.click(button)
+  const greeting = await screen.findByText(/hello world/iu)
+
+  expect(greeting).toBeInTheDocument()
+})
+```
+```tsx [react]
+// based on @testing-library/react example
+// https://testing-library.com/docs/react-testing-library/example-intro
+
+import { userEvent } from '@vitest/browser/context'
+import { render, screen } from '@testing-library/react'
+import Fetch from './fetch'
+
+test('loads and displays greeting', async () => {
+  // Render a React element into the DOM
+  render(<Fetch url="/greeting" />)
+
+  await userEvent.click(screen.getByText('Load Greeting'))
+  // wait before throwing an error if it cannot find an element
+  const heading = await screen.findByRole('heading')
+
+  // assert that the alert message is correct
+  expect(heading).toHaveTextContent('hello there')
+  expect(screen.getByRole('button')).toBeDisabled()
+})
+```
+```tsx [preact]
+// based on @testing-library/preact example
+// https://testing-library.com/docs/preact-testing-library/example
+
+import { h } from 'preact'
+import { userEvent } from '@vitest/browser/context'
+import { render } from '@testing-library/preact'
+
+import HiddenMessage from '../hidden-message'
+
+test('shows the children when the checkbox is checked', async () => {
+  const testMessage = 'Test Message'
+
+  const { queryByText, getByLabelText, getByText } = render(
+    <HiddenMessage>{testMessage}</HiddenMessage>,
+  )
+
+  // query* functions will return the element or null if it cannot be found.
+  // get* functions will return the element or throw an error if it cannot be found.
+  expect(queryByText(testMessage)).not.toBeInTheDocument()
+
+  // The queries can accept a regex to make your selectors more
+  // resilient to content tweaks and changes.
+  await userEvent.click(getByLabelText(/show/i))
+
+  expect(getByText(testMessage)).toBeInTheDocument()
+})
+```
+```tsx [solid]
+// baed on @testing-library/solid API
+// https://testing-library.com/docs/solid-testing-library/api
+
+import { render } from '@testing-library/solid'
+
+it('uses params', async () => {
+  const App = () => (
+    <>
+      <Route
+        path="/ids/:id"
+        component={() => (
+          <p>
+            Id:
+            {useParams()?.id}
+          </p>
+        )}
+      />
+      <Route path="/" component={() => <p>Start</p>} />
+    </>
+  )
+  const { findByText } = render(() => <App />, { location: 'ids/1234' })
+  expect(await findByText('Id: 1234')).toBeInTheDocument()
+})
+```
+```ts [marko]
+// baed on @testing-library/marko API
+// https://testing-library.com/docs/marko-testing-library/api
+
+import { render, screen } from '@marko/testing-library'
+import Greeting from './greeting.marko'
+
+test('renders a message', async () => {
+  const { container } = await render(Greeting, { name: 'Marko' })
+  expect(screen.getByText(/Marko/)).toBeInTheDocument()
+  expect(container.firstChild).toMatchInlineSnapshot(`
+    <h1>Hello, Marko!</h1>
+  `)
+})
 ```
 :::
 

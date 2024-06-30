@@ -26,6 +26,8 @@ When you modify your source code or the test files, Vitest smartly searches the 
 
 `vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 
+Start Vitest with the `--standalone` flag to keep it running in the background. It won't run any tests until they change. Vitest will not run tests if the source code is changed until the test that imports the source has been run
+
 ## Common Web Idioms Out-Of-The-Box
 
 Out-of-the-box ES Module / TypeScript / JSX support / PostCSS

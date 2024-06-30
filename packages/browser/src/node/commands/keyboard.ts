@@ -21,7 +21,8 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
   }
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.frame.evaluate(focusIframe)
+    const frame = await context.frame()
+    await frame.evaluate(focusIframe)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     await context.browser.execute(focusIframe)
@@ -39,7 +40,8 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
         }
       }
       if (context.provider instanceof PlaywrightBrowserProvider) {
-        await context.frame.evaluate(selectAll)
+        const frame = await context.frame()
+        await frame.evaluate(selectAll)
       }
       else if (context.provider instanceof WebdriverBrowserProvider) {
         await context.browser.execute(selectAll)

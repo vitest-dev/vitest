@@ -1,7 +1,9 @@
 import type {
   Browser,
+
   BrowserContext,
   BrowserContextOptions,
+  Frame,
   LaunchOptions,
   Page,
 } from 'playwright'
@@ -105,8 +107,25 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       page,
       context: this.contexts.get(contextId)!,
-      get frame() {
-        return page.frame('vitest-iframe')!
+      frame() {
+        return new Promise<Frame>((resolve, reject) => {
+          const frame = page.frame('vitest-iframe')
+          if (frame) {
+            return resolve(frame)
+          }
+
+          const timeout = setTimeout(() => {
+            const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`)
+            reject(err)
+          }, 1000)
+          page.on('frameattached', (frame) => {
+            clearTimeout(timeout)
+            resolve(frame)
+          })
+        })
+      },
+      get iframe() {
+        return page.frameLocator('[data-vitest="true"]')!
       },
     }
   }
@@ -122,12 +141,45 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = await context.newPage()
     this.pages.set(contextId, page)
 
+    if (process.env.VITEST_PW_DEBUG) {
+      page.on('requestfailed', (request) => {
+        console.error(
+          '[PW Error]',
+          request.resourceType(),
+          'request failed for',
+          request.url(),
+          'url:',
+          request.failure()?.errorText,
+        )
+      })
+    }
+
     return page
   }
 
   async openPage(contextId: string, url: string) {
     const browserPage = await this.openBrowserPage(contextId)
     await browserPage.goto(url)
+  }
+
+  async getCDPSession(contextId: string) {
+    const page = this.getPage(contextId)
+    const cdp = await page.context().newCDPSession(page)
+    return {
+      async send(method: string, params: any) {
+        const result = await cdp.send(method as 'DOM.querySelector', params)
+        return result as unknown
+      },
+      on(event: string, listener: (...args: any[]) => void) {
+        cdp.on(event as 'Accessibility.loadComplete', listener)
+      },
+      off(event: string, listener: (...args: any[]) => void) {
+        cdp.off(event as 'Accessibility.loadComplete', listener)
+      },
+      once(event: string, listener: (...args: any[]) => void) {
+        cdp.once(event as 'Accessibility.loadComplete', listener)
+      },
+    }
   }
 
   async close() {

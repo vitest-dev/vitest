@@ -25,9 +25,11 @@ export { BaseSequencer } from './sequencers/BaseSequencer'
 export type {
   BrowserProviderInitializationOptions,
   BrowserProvider,
+  CDPSession,
   BrowserProviderModule,
   ResolvedBrowserOptions,
   BrowserProviderOptions,
+  BrowserBuiltinProvider,
   BrowserScript,
   BrowserCommand,
   BrowserCommandContext,

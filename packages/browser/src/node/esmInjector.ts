@@ -26,11 +26,13 @@ export function injectDynamicImport(
       // s.update(node.start, node.end, viImportMetaKey)
     },
     onDynamicImport(node) {
-      const replace = '__vitest_browser_runner__.wrapModule(() => import('
+      const replaceString = '__vitest_browser_runner__.wrapModule(() => import('
+      const importSubstring = code.substring(node.start, node.end)
+      const hasIgnore = importSubstring.includes('/* @vite-ignore */')
       s.overwrite(
         node.start,
         (node.source as Positioned<Expression>).start,
-        replace,
+        replaceString + (hasIgnore ? '/* @vite-ignore */ ' : ''),
       )
       s.overwrite(node.end - 1, node.end, '))')
     },

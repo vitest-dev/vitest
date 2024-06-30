@@ -40,7 +40,7 @@ export function setupBrowserRpc(
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(ws)
+      const rpc = setupClient(sessionId, ws)
       const state = server.state
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(sessionId, rpc)
@@ -50,6 +50,7 @@ export function setupBrowserRpc(
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', sessionId, type)
         clients.delete(sessionId)
+        server.state.removeCDPHandler(sessionId)
       })
     })
   })
@@ -62,7 +63,7 @@ export function setupBrowserRpc(
     }
   }
 
-  function setupClient(ws: WebSocket) {
+  function setupClient(sessionId: string, ws: WebSocket) {
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
@@ -182,11 +183,21 @@ export function setupBrowserRpc(
             }
           })
         },
+
+        // CDP
+        async sendCdpEvent(contextId: string, event: string, payload?: Record<string, unknown>) {
+          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+          return cdp.send(event, payload)
+        },
+        async trackCdpEvent(contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+          cdp[type](event, listenerId)
+        },
       },
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onCancel'],
+        eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
         onTimeoutError(functionName) {

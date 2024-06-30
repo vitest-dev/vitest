@@ -1,6 +1,7 @@
-import type { File } from 'vitest'
-import { client, config, findById, testRunState } from './client'
-import { activeFileId } from './params'
+import type { File, Task } from '@vitest/runner'
+import { client, config, findById } from './client'
+import { testRunState } from './client/state'
+import { activeFileId, lineNumber, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -24,10 +25,6 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
   },
 )
 
-export const openedTreeItems = useLocalStorage<string[]>(
-  'vitest-ui_task-tree-opened',
-  [],
-)
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
@@ -50,6 +47,7 @@ export const coverageUrl = computed(() => {
 
   return undefined
 })
+
 watch(
   testRunState,
   (state) => {
@@ -57,6 +55,7 @@ watch(
   },
   { immediate: true },
 )
+
 export function initializeNavigation() {
   const file = activeFileId.value
   if (file && file.length > 0) {
@@ -88,6 +87,20 @@ export function showDashboard(show: boolean) {
     currentModule.value = undefined
     activeFileId.value = ''
   }
+}
+
+export function navigateTo(task: Task, line: number | null = null) {
+  activeFileId.value = task.file.id
+  // reset line number
+  lineNumber.value = null
+  if (line != null) {
+    nextTick(() => {
+      lineNumber.value = line
+    })
+    viewMode.value = 'editor'
+  }
+  currentModule.value = findById(task.file.id)
+  showDashboard(false)
 }
 
 export function showCoverage() {

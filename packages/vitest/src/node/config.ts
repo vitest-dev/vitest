@@ -235,6 +235,13 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {
+    resolved.coverage.customProviderModule = resolvePath(
+      resolved.coverage.customProviderModule,
+      resolved.root,
+    )
+  }
+
   resolved.expect ??= {}
 
   resolved.deps ??= {}
@@ -683,6 +690,20 @@ export function resolveConfig(
       resolved.browser.screenshotDirectory,
     )
   }
+  const isPreview = resolved.browser.provider === 'preview'
+  if (isPreview && resolved.browser.screenshotFailures === true) {
+    console.warn(c.yellow(
+      [
+        `Browser provider "preview" doesn't support screenshots, `,
+        `so "browser.screenshotFailures" option is forcefully disabled. `,
+        `Set "browser.screenshotFailures" to false or remove it from the config to suppress this warning.`,
+      ].join(''),
+    ))
+    resolved.browser.screenshotFailures = false
+  }
+  else {
+    resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
+  }
 
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
@@ -697,6 +718,28 @@ export function resolveConfig(
     defaultBrowserPort,
   ) || {
     port: defaultBrowserPort,
+  }
+
+  // enable includeTaskLocation by default in UI mode
+  if (resolved.browser.enabled) {
+    if (resolved.browser.ui) {
+      resolved.includeTaskLocation ??= true
+    }
+  }
+  else if (resolved.ui) {
+    resolved.includeTaskLocation ??= true
+  }
+
+  const htmlReporter = toArray(resolved.reporters).some((reporter) => {
+    if (Array.isArray(reporter)) {
+      return reporter[0] === 'html'
+    }
+
+    return false
+  })
+
+  if (htmlReporter) {
+    resolved.includeTaskLocation ??= true
   }
 
   resolved.testTransformMode ??= {}

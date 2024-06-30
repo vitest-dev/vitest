@@ -38,6 +38,8 @@ interface HTMLReportData {
   config: ResolvedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
+  // filename -> source
+  sources: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -64,6 +66,7 @@ export default class HTMLReporter implements Reporter {
       config: this.ctx.config,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
+      sources: {},
     }
     await Promise.all(
       result.files.map(async (file) => {
@@ -74,6 +77,16 @@ export default class HTMLReporter implements Reporter {
           projectName,
           file.filepath,
         )
+        if (!result.sources[file.filepath]) {
+          try {
+            result.sources[file.filepath] = await fs.readFile(file.filepath, {
+              encoding: 'utf-8',
+            })
+          }
+          catch (_) {
+            // just ignore
+          }
+        }
       }),
     )
     await this.writeReport(stringify(result))

@@ -28,12 +28,14 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     if (options.element) {
       const { element: elementXpath, ...config } = options
-      const iframe = context.frame
-      const element = iframe.locator(`xpath=${elementXpath}`)
+      const element = context.iframe.locator(`xpath=${elementXpath}`)
       await element.screenshot({ ...config, path: savePath })
     }
     else {
-      await context.frame.locator('body').screenshot({ ...options, path: savePath })
+      await context.iframe.locator('body').screenshot({
+        ...options,
+        path: savePath,
+      })
     }
     return path
   }

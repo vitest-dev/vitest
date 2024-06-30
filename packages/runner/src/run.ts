@@ -263,6 +263,13 @@ export async function runTest(test: Test | Custom, runner: VitestRunner) {
       }
 
       try {
+        await runner.onTaskFinished?.(test)
+      }
+      catch (e) {
+        failTask(test.result, e, runner.config.diffOptions)
+      }
+
+      try {
         await callSuiteHook(suite, test, 'afterEach', runner, [
           test.context,
           suite,
