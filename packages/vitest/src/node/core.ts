@@ -28,7 +28,7 @@ import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
-import { GitNotFoundError, TestsNotFoundError } from './errors'
+import { FilesNotFoundError, GitNotFoundError } from './errors'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -493,7 +493,7 @@ export class Vitest {
       if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         const exitCode = this.config.passWithNoTests ? 0 : 1
         process.exitCode = exitCode
-        throw new TestsNotFoundError(this.mode)
+        throw new FilesNotFoundError(this.mode)
       }
     }
 

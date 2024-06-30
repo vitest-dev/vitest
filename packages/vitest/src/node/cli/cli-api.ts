@@ -6,7 +6,7 @@ import type { UserConfig, Vitest, VitestRunMode } from '../../types'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { VitestOptions } from '../core'
-import { GitNotFoundError, TestsNotFoundError } from '../errors'
+import { FilesNotFoundError, GitNotFoundError } from '../errors'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -109,7 +109,7 @@ export async function startVitest(
     }
   }
   catch (e) {
-    if (e instanceof TestsNotFoundError) {
+    if (e instanceof FilesNotFoundError) {
       return ctx
     }
 
