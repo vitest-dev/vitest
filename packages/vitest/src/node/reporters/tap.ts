@@ -86,11 +86,11 @@ export class TapReporter implements Reporter {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = parseErrorStacktrace(error, {
-              getSourceMap: file =>
-                project.getBrowserSourceMapModuleById(file),
-              frameFilter: this.ctx.config.onStackTrace,
-            })
+            const stacks = task.file.pool === 'browser'
+              ? (project.browser?.parseErrorStacktrace(error) || [])
+              : parseErrorStacktrace(error, {
+                frameFilter: this.ctx.config.onStackTrace,
+              })
             const stack = stacks[0]
 
             this.logger.log('---')

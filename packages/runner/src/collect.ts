@@ -27,7 +27,7 @@ export async function collectTests(
   const config = runner.config
 
   for (const filepath of paths) {
-    const file = createFileTask(filepath, config.root, config.name)
+    const file = createFileTask(filepath, config.root, config.name, runner.pool)
 
     runner.onCollectStart?.(file)
 

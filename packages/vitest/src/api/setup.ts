@@ -4,7 +4,6 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
@@ -182,15 +181,18 @@ export class WebSocketReporter implements Reporter {
 
     packs.forEach(([taskId, result]) => {
       const project = this.ctx.getProjectByTaskId(taskId)
-
-      const parserOptions: StackTraceParserOptions = {
-        getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-      }
+      const task = this.ctx.state.idMap.get(taskId)
+      const isBrowser = task && task.file.pool === 'browser'
 
       result?.errors?.forEach((error) => {
-        if (!isPrimitive(error)) {
-          error.stacks = parseErrorStacktrace(error, parserOptions)
+        if (isPrimitive(error)) {
+          return
         }
+
+        const stacks = isBrowser
+          ? project.browser?.parseErrorStacktrace(error)
+          : parseErrorStacktrace(error)
+        error.stacks = stacks
       })
     })
 

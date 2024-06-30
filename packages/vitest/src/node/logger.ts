@@ -2,22 +2,26 @@ import { Console } from 'node:console'
 import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import type { ErrorWithDiff } from '../types'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import type { ErrorWithDiff, Task } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
 import { highlightCode } from '../utils/colors'
 import { divider } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
+import type { PrintErrorResult } from './error'
 import { printError } from './error'
 import type { WorkspaceProject } from './workspace'
 
-interface ErrorOptions {
+export interface ErrorOptions {
   type?: string
   fullStack?: boolean
   project?: WorkspaceProject
   verbose?: boolean
   screenshotPaths?: string[]
+  task?: Task
+  showCodeFrame?: boolean
 }
 
 const ESC = '\x1B['
@@ -89,18 +93,29 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, options: ErrorOptions = {}) {
+  printError(err: unknown, options: ErrorOptions = {}): PrintErrorResult | undefined {
     const { fullStack = false, type } = options
     const project = options.project
       ?? this.ctx.getCoreWorkspaceProject()
       ?? this.ctx.projects[0]
-    printError(err, project, {
-      fullStack,
+    return printError(err, project, {
       type,
-      showCodeFrame: true,
+      showCodeFrame: options.showCodeFrame ?? true,
       logger: this,
       printProperties: options.verbose,
       screenshotPaths: options.screenshotPaths,
+      parseErrorStacktrace: (error) => {
+        // browser stack trace needs to be processed differently,
+        // so there is a separate method for that
+        if (options.task?.file.pool === 'browser' && project.browser) {
+          return project.browser.parseErrorStacktrace(error)
+        }
+
+        // node.js stack trace already has correct source map locations
+        return parseErrorStacktrace(error, {
+          ignoreStackEntries: fullStack ? [] : undefined,
+        })
+      },
     })
   }
 
