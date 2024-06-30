@@ -654,17 +654,17 @@ export default defineConfig({
 
 ##### poolOptions.threads.maxThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ##### poolOptions.threads.minThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.threads.singleThread
 
@@ -726,17 +726,17 @@ export default defineConfig({
 
 ##### poolOptions.forks.maxForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of forks.
+Maximum number or percentage of forks.
 
 ##### poolOptions.forks.minForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of forks.
+Minimum number or percentage of forks.
 
 ##### poolOptions.forks.isolate
 
@@ -789,17 +789,17 @@ export default defineConfig({
 
 ##### poolOptions.vmThreads.maxThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.minThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.memoryLimit<NonProjectOption />
 
@@ -870,17 +870,17 @@ export default defineConfig({
 
 ##### poolOptions.vmForks.maxForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_FORKS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.vmForks.minForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
@@ -914,15 +914,15 @@ This option doesn't affect tests running in the same file. If you want to run th
 
 ### maxWorkers<NonProjectOption /> {#maxworkers}
 
-- **Type:** `number`
+- **Type:** `number | string`
 
-Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
 
 ### minWorkers<NonProjectOption /> {#minworkers}
 
-- **Type:** `number`
+- **Type:** `number | string`
 
-Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
 
 ### testTimeout
 
