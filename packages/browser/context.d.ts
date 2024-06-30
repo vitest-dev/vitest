@@ -29,6 +29,10 @@ export interface ScreenshotOptions {
    * Path relative to the `screenshotDirectory` in the test config.
    */
   path?: string
+  /**
+   * Will also return the base64 encoded screenshot alongside the path.
+   */
+  base64?: boolean
 }
 
 export interface BrowserCommands {
@@ -245,12 +249,16 @@ export interface BrowserPage {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport: (width: number, height: number) => Promise<void>
+  viewport(width: number, height: number): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
-   * @returns Path to the screenshot file.
+   * @returns Path to the screenshot file or path and base64.
    */
-  screenshot: (options?: ScreenshotOptions) => Promise<string>
+  screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: ScreenshotOptions): Promise<string>
 }
 
 export const page: BrowserPage
