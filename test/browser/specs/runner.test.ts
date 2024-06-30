@@ -108,7 +108,7 @@ error with a stack
     expect(stderr).toMatch(/test\/failing.test.ts:5:(12|17)/)
 
     // column is 18 in safari, 8 in others
-    expect(stderr).toMatch(/src\/error.ts:8:(18|8)/)
+    expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
   })
 
   test('popup apis should log a warning', () => {
