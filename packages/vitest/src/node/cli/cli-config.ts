@@ -62,11 +62,11 @@ const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
     description: 'Run tests inside a single thread (default: `false`)',
   },
   maxThreads: {
-    description: 'Maximum number of threads to run tests in',
+    description: 'Maximum number or percentage of threads to run tests in',
     argument: '<workers>',
   },
   minThreads: {
-    description: 'Minimum number of threads to run tests in',
+    description: 'Minimum number or percentage of threads to run tests in',
     argument: '<workers>',
   },
   useAtomics: {
@@ -84,11 +84,11 @@ const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
     description: 'Run tests inside a single child_process (default: `false`)',
   },
   maxForks: {
-    description: 'Maximum number of processes to run tests in',
+    description: 'Maximum number or percentage of processes to run tests in',
     argument: '<workers>',
   },
   minForks: {
-    description: 'Minimum number of processes to run tests in',
+    description: 'Minimum number or percentage of processes to run tests in',
     argument: '<workers>',
   },
   execArgv: null,
