@@ -6,9 +6,6 @@ describe.skipIf(server.provider === 'preview')('viewport window has been properl
     const { width, height } = page.config.browser.viewport
     const { width: actualWidth, height: actualHeight } = window.document.documentElement.getBoundingClientRect()
 
-    // eslint-disable-next-line no-console
-    console.log({ width, height, actualWidth, actualHeight })
-
     expect(actualWidth).toBe(width)
     expect(actualHeight).toBe(height)
   })
@@ -21,15 +18,9 @@ describe.skipIf(server.provider === 'preview')('viewport window has been properl
 
     // edge will show the Hub Apps right panel
     if (server.browser === 'edge') {
-      // eslint-disable-next-line no-console
-      console.log({ availWidth: topWindow.visualViewport.width, innerWidth: topWindow.innerWidth })
-
       expect(topWindow.visualViewport.width - topWindow.innerWidth === 0).toBe(true)
     }
     else {
-      // eslint-disable-next-line no-console
-      console.log({ availWidth: screen.availWidth, innerWidth: topWindow.innerWidth })
-
       expect(screen.availWidth - topWindow.innerWidth === 0).toBe(true)
     }
   })
