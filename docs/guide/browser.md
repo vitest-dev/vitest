@@ -465,12 +465,16 @@ export const page: {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport: (width: number | string, height: number | string) => Promise<void>
+  viewport(width: number | string, height: number | string): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
-   * @returns Path to the screenshot file.
+   * @returns Path to the screenshot file or path and base64.
    */
-  screenshot: (options?: ScreenshotOptions) => Promise<string>
+  screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: ScreenshotOptions): Promise<string>
 }
 
 export const cdp: () => CDPSession
@@ -550,6 +554,31 @@ References:
 - [Playwright `locator.dblclick` API](https://playwright.dev/docs/api/class-locator#locator-dblclick)
 - [WebdriverIO `element.doubleClick` API](https://webdriver.io/docs/api/element/doubleClick/)
 - [testing-library `dblClick` API](https://testing-library.com/docs/user-event/convenience/#dblClick)
+
+### userEvent.tripleClick
+
+- **Type:** `(element: Element, options?: UserEventTripleClickOptions) => Promise<void>`
+
+Triggers a triple click event on an element
+
+Please refer to your provider's documentation for detailed explanation about how this method works.
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+import { screen } from '@testing-library/dom'
+
+test('triggers a triple click on an element', async () => {
+  const logo = screen.getByRole('img', { name: /logo/ })
+
+  await userEvent.tripleClick(logo)
+})
+```
+
+References:
+
+- [Playwright `locator.click` API](https://playwright.dev/docs/api/class-locator#locator-click)
+- [WebdriverIO `browser.action` API](https://webdriver.io/docs/api/browser/action/)
+- [testing-library `tripleClick` API](https://testing-library.com/docs/user-event/convenience/#tripleClick)
 
 ### userEvent.fill
 

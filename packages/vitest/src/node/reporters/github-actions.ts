@@ -18,6 +18,7 @@ export class GithubActionsReporter implements Reporter {
       project: WorkspaceProject
       title: string
       error: unknown
+      file?: File
     }>()
     for (const error of errors) {
       projectErrors.push({
@@ -40,14 +41,15 @@ export class GithubActionsReporter implements Reporter {
             project,
             title,
             error,
+            file,
           })
         }
       }
     }
 
     // format errors via `printError`
-    for (const { project, title, error } of projectErrors) {
-      const result = capturePrintError(error, this.ctx, project)
+    for (const { project, title, error, file } of projectErrors) {
+      const result = capturePrintError(error, this.ctx, { project, task: file })
       const stack = result?.nearest
       if (!stack) {
         continue

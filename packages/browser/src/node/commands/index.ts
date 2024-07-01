@@ -1,4 +1,4 @@
-import { click, dblClick } from './click'
+import { click, dblClick, tripleClick } from './click'
 import { type } from './type'
 import { clear } from './clear'
 import { fill } from './fill'
@@ -20,6 +20,7 @@ export default {
   writeFile,
   __vitest_click: click,
   __vitest_dblClick: dblClick,
+  __vitest_tripleClick: tripleClick,
   __vitest_screenshot: screenshot,
   __vitest_type: type,
   __vitest_clear: clear,
