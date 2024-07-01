@@ -12,7 +12,7 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from 'pretty-format'
-import { deepClone, isObjectContaining } from '../helpers'
+import { isObjectContaining } from '../helpers'
 import { getType } from './getType'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
@@ -212,9 +212,7 @@ function getObjectsDifference(
     return getCommonMessage(NO_DIFF_MESSAGE, options)
   }
   else if (options?.expected) {
-    const clonedA = deepClone(a, { forceWritable: true })
-    const clonedB = deepClone(b, { forceWritable: true })
-    const { replacedA, replacedB } = replaceDiffData(clonedA, clonedB, options?.expected)
+    const { replacedA, replacedB } = replaceDiffData(a, b, options?.expected)
     const aDisplay = prettyFormat(replacedA, formatOptions)
     const bDisplay = prettyFormat(replacedB, formatOptions)
 
